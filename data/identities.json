@@ -98002,6 +98002,19 @@
       "confidence_weight": 1.0,
       "previous_version_id": 0,
       "metadata": {}
+    },
+    {
+      "event_id": "6c4ddb62-e475-4e31-bb49-632066f4d461",
+      "timestamp": "2026-03-09T21:48:46.894525+00:00",
+      "identity_id": "1668661f-f1d7-46e2-98e3-a46ad5707124",
+      "action": "create",
+      "face_ids": [
+        "inbox_aca56b9475f5"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
     }
   ]
 }

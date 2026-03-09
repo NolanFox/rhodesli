@@ -154,81 +154,6 @@ def health():
     }
 
 
-@rt("/api/debug/community-ids")
-def debug_community_ids(slug: str = "fox-family"):
-    """Temporary debug endpoint for photo ID alias diagnostics."""
-    from app.supabase_data import get_community_by_slug
-
-    community = get_community_by_slug(slug)
-    if not community:
-        return {"error": f"Community {slug} not found"}
-
-    community_photo_ids = _main_mod._get_community_photo_ids(community)
-    sample_cpids = list(community_photo_ids)[:5] if community_photo_ids else []
-
-    _main_mod._build_caches()
-    sample_cache_ids = list(_main_mod._photo_cache.keys())[:5] if _main_mod._photo_cache else []
-    alias_count = len(_main_mod._photo_id_aliases) if _main_mod._photo_id_aliases else 0
-    face_cache_count = len(_main_mod._face_to_photo_cache) if _main_mod._face_to_photo_cache else 0
-
-    # Check how many community photo IDs have aliases
-    resolved = 0
-    direct_match = 0
-    if community_photo_ids and _main_mod._photo_id_aliases:
-        for cpid in community_photo_ids:
-            if cpid in (_main_mod._photo_cache or {}):
-                direct_match += 1
-            alias = _main_mod._photo_id_aliases.get(cpid)
-            if alias:
-                resolved += 1
-
-    # Check resolved photo IDs vs face_to_photo_cache
-    resolved_photo_ids = set(community_photo_ids) if community_photo_ids else set()
-    if _main_mod._photo_id_aliases and community_photo_ids:
-        for cpid in community_photo_ids:
-            alias = _main_mod._photo_id_aliases.get(cpid)
-            if alias:
-                resolved_photo_ids.add(alias)
-
-    # How many faces map to resolved photos?
-    face_matches = 0
-    sample_face_photo = []
-    if _main_mod._face_to_photo_cache:
-        for fid, pid in _main_mod._face_to_photo_cache.items():
-            if pid in resolved_photo_ids:
-                face_matches += 1
-                if len(sample_face_photo) < 3:
-                    sample_face_photo.append({"face": fid, "photo": pid})
-
-    # Sample resolved IDs
-    sample_resolved = list(resolved_photo_ids - set(community_photo_ids or []))[:5]
-
-    # Sample face_to_photo entries
-    sample_f2p = []
-    if _main_mod._face_to_photo_cache:
-        for fid, pid in list(_main_mod._face_to_photo_cache.items())[:5]:
-            sample_f2p.append({"face": fid, "photo": pid})
-
-    community_identity_ids = _main_mod._get_community_identity_ids(community)
-
-    return {
-        "community": {"slug": community.get("slug"), "id": community.get("id")},
-        "photo_count": len(community_photo_ids) if community_photo_ids else 0,
-        "sample_community_photo_ids": sample_cpids,
-        "sample_cache_ids": sample_cache_ids,
-        "alias_count": alias_count,
-        "face_cache_count": face_cache_count,
-        "direct_matches": direct_match,
-        "alias_resolved": resolved,
-        "resolved_photo_ids_count": len(resolved_photo_ids),
-        "sample_resolved_aliases": sample_resolved,
-        "face_matches_in_resolved": face_matches,
-        "sample_face_photo_matches": sample_face_photo,
-        "sample_face_to_photo": sample_f2p,
-        "identity_count": len(community_identity_ids) if community_identity_ids else 0,
-    }
-
-
 def _compute_landing_stats() -> dict:
     """Compute live stats for the landing page."""
     registry = _main_mod.load_registry()
@@ -1816,9 +1741,11 @@ def get(
     community = getattr(request.state, "community", None) if request else None
 
     if section is None:
-        # Non-Rhodes community: always show community landing page
+        # Non-Rhodes community: show landing page for anonymous users, admin view for admins
         if community_slug != "rhodes" and community is not None:
-            return _community_landing_page(community, community_slug)
+            user_is_admin_check = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
+            if not user_is_admin_check:
+                return _community_landing_page(community, community_slug)
 
         if user is not None:
             # Smart redirect: skip empty inbox, go to Needs Help

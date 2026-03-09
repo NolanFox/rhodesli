@@ -13121,6 +13121,17 @@
       "width": 1412,
       "height": 2453,
       "date_taken": "2013-11-30 09:19:30"
+    },
+    "inbox_658979c2_0_family_search_david_capeloto_declaration_of_intent_image": {
+      "path": "raw_photos/family_search_david_capeloto_declaration_of_intent_image.jpg",
+      "face_ids": [
+        "inbox_aca56b9475f5"
+      ],
+      "source": "FamilySearch",
+      "collection": "Immigration Records",
+      "source_url": "",
+      "width": 1843,
+      "height": 2132
     }
   },
   "face_to_photo": {
@@ -15756,6 +15767,7 @@
     "inbox_277a13c1b9e7": "inbox_fox-charlie-001_632_01586_p_13akf5twbc0777",
     "inbox_cada65d15859": "inbox_fox-charlie-001_633_01974_p_13akf5twbc1874",
     "inbox_2bdfc1fcbc7a": "inbox_fox-charlie-001_634_01888_p_13akf5twbc1636",
-    "inbox_a0a612d21e6a": "inbox_fox-charlie-001_635_01630_p_13akf5twbc0934"
+    "inbox_a0a612d21e6a": "inbox_fox-charlie-001_635_01630_p_13akf5twbc0934",
+    "inbox_aca56b9475f5": "inbox_658979c2_0_family_search_david_capeloto_declaration_of_intent_image"
   }
 }

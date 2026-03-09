@@ -6992,6 +6992,13 @@
       ],
       "job_id": "fox-charlie-001",
       "filename": "01630_p_13akf5twbc0934.jpg"
+    },
+    "7a5db4c3fe325dfb87c59599eaf62e7a7832a4b111380b68fc37e53cd0f32ab3": {
+      "face_ids": [
+        "inbox_aca56b9475f5"
+      ],
+      "job_id": "658979c2",
+      "filename": "family_search_david_capeloto_declaration_of_intent_image.jpg"
     }
   }
 }

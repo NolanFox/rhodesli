@@ -22,9 +22,7 @@ class TestIntegrityChecker:
     def test_catches_test_collection(self, tmp_path):
         """Integrity checker flags 'Test Collection' as contamination."""
         pi = {
-            "photos": {
-                "photo1": {"path": "test.jpg", "collection": "Test Collection", "source": "Test"}
-            },
+            "photos": {"photo1": {"path": "test.jpg", "collection": "Test Collection", "source": "Test"}},
             "face_to_photo": {},
         }
         (tmp_path / "photo_index.json").write_text(json.dumps(pi))
@@ -32,6 +30,7 @@ class TestIntegrityChecker:
 
         # Import the module functions and override data_dir
         import scripts.check_data_integrity as checker
+
         original_data_dir = checker.data_dir
         checker.data_dir = tmp_path
         checker.errors = []
@@ -61,6 +60,7 @@ class TestIntegrityChecker:
         (tmp_path / "identities.json").write_text(json.dumps(ids))
 
         import scripts.check_data_integrity as checker
+
         original_data_dir = checker.data_dir
         checker.data_dir = tmp_path
         checker.errors = []
@@ -85,6 +85,7 @@ class TestIntegrityChecker:
         (tmp_path / "identities.json").write_text(json.dumps(ids))
 
         import scripts.check_data_integrity as checker
+
         original_data_dir = checker.data_dir
         checker.data_dir = tmp_path
         checker.errors = []
@@ -107,6 +108,7 @@ class TestIntegrityChecker:
         (tmp_path / "identities.json").write_text(json.dumps(ids))
 
         import scripts.check_data_integrity as checker
+
         original_data_dir = checker.data_dir
         checker.data_dir = tmp_path
         checker.errors = []
@@ -118,6 +120,59 @@ class TestIntegrityChecker:
             assert "INVALID STATE" in checker.errors[0]
         finally:
             checker.data_dir = original_data_dir
+
+
+class TestOrphanedIdentities:
+    """Prevent David Capeloto incident: identities whose faces don't exist in photo_index."""
+
+    def test_confirmed_anchors_in_face_to_photo(self):
+        """Every CONFIRMED identity's anchor faces must exist in photo_index.face_to_photo."""
+        ids_path = Path("data/identities.json")
+        pi_path = Path("data/photo_index.json")
+        if not ids_path.exists() or not pi_path.exists():
+            pytest.skip("Data files not present")
+
+        identities = json.loads(ids_path.read_text()).get("identities", {})
+        face_to_photo = json.loads(pi_path.read_text()).get("face_to_photo", {})
+
+        orphaned = []
+        for iid, ident in identities.items():
+            if ident.get("merged_into") or ident.get("state") != "CONFIRMED":
+                continue
+            for face_id in ident.get("anchor_ids", []):
+                if face_id not in face_to_photo:
+                    orphaned.append(f"{iid[:8]} ({ident.get('name', '?')}): face {face_id}")
+
+        assert not orphaned, "CONFIRMED identities with orphaned anchor faces (no photo_index entry):\n" + "\n".join(
+            orphaned
+        )
+
+    def test_face_to_photo_points_to_valid_photos(self):
+        """Every face_to_photo entry must reference an existing photo."""
+        pi_path = Path("data/photo_index.json")
+        if not pi_path.exists():
+            pytest.skip("Data files not present")
+
+        pi = json.loads(pi_path.read_text())
+        photos = pi.get("photos", {})
+        face_to_photo = pi.get("face_to_photo", {})
+
+        broken = [f"face {fid} -> photo {pid}" for fid, pid in face_to_photo.items() if pid not in photos]
+        assert not broken, "Broken face_to_photo links:\n" + "\n".join(broken[:20])
+
+    def test_no_none_identity_names(self):
+        """No identity should have name=None."""
+        ids_path = Path("data/identities.json")
+        if not ids_path.exists():
+            pytest.skip("Data files not present")
+
+        identities = json.loads(ids_path.read_text()).get("identities", {})
+        none_names = [
+            f"{iid[:8]} (state={ident.get('state')})"
+            for iid, ident in identities.items()
+            if not ident.get("merged_into") and ident.get("name") is None
+        ]
+        assert not none_names, "Identities with name=None:\n" + "\n".join(none_names)
 
 
 class TestRealDataIntegrity:
@@ -146,9 +201,7 @@ class TestRealDataIntegrity:
                 continue
             for field in ("collection", "source"):
                 val = p.get(field, "")
-                assert "test" not in val.lower(), (
-                    f"Photo {pid} has {field}='{val}' — test contamination!"
-                )
+                assert "test" not in val.lower(), f"Photo {pid} has {field}='{val}' — test contamination!"
 
     def test_no_test_data_in_annotations(self):
         """No test-created annotations exist in production annotations.json."""
@@ -159,15 +212,12 @@ class TestRealDataIntegrity:
         ann = json.loads(ann_path.read_text())
         annotations = ann.get("annotations", {})
 
-        test_patterns = ["test@test.com", "user@test.com", "admin@test.com",
-                         "target-123", "target-id", "source-456"]
+        test_patterns = ["test@test.com", "user@test.com", "admin@test.com", "target-123", "target-id", "source-456"]
 
         for ann_id, a in annotations.items():
             ann_str = json.dumps(a)
             for pattern in test_patterns:
-                assert pattern not in ann_str, (
-                    f"Annotation {ann_id} contains test pattern '{pattern}'"
-                )
+                assert pattern not in ann_str, f"Annotation {ann_id} contains test pattern '{pattern}'"
 
     def test_no_test_data_in_identity_history(self):
         """No test-created entries exist in production identity history."""
@@ -183,6 +233,4 @@ class TestRealDataIntegrity:
         for i, h in enumerate(history):
             meta_str = json.dumps(h.get("metadata", {}))
             for pattern in test_patterns:
-                assert pattern not in meta_str, (
-                    f"History entry [{i}] contains test pattern '{pattern}'"
-                )
+                assert pattern not in meta_str, f"History entry [{i}] contains test pattern '{pattern}'"
