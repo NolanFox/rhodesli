@@ -250,10 +250,22 @@ def get(
     # Gather photos with metadata
     photos = []
     collections_set = set()
+
+    # Build reverse alias map: SHA256 cache ID -> inbox_* photo_index ID
+    # Needed because community_photo_ids uses inbox_* IDs from Supabase,
+    # but _photo_cache keys are SHA256 IDs from embeddings.npy.
+    _reverse_aliases = {}
+    if community_photo_ids is not None and _main_mod._photo_id_aliases:
+        for inbox_id, cache_id in _main_mod._photo_id_aliases.items():
+            _reverse_aliases[cache_id] = inbox_id
+
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
         # Apply community filter (PRD-035)
-        if community_photo_ids is not None and photo_id_val not in community_photo_ids:
-            continue
+        if community_photo_ids is not None:
+            # Check both the cache ID and its alias (inbox_* ID)
+            alias_id = _reverse_aliases.get(photo_id_val)
+            if photo_id_val not in community_photo_ids and (alias_id is None or alias_id not in community_photo_ids):
+                continue
         collection = photo_data.get("collection", "")
         if collection:
             collections_set.add(collection)
