@@ -61,13 +61,16 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
 - [-] 2026-03-09: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix). Remaining: about page, tools photo picker. See BACKLOG.
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
-- [ ] COMMUNITY-003: Cross-community identity tagging — auto-tag identities into communities when they gain faces from that community's photos (AD-213 gap)
+- [-] 2026-03-09: COMMUNITY-003: Cross-community identity tagging — photo-derived identity sets + auto-tag identity_communities (AD-213, AD-216, Session 96c)
 - [ ] COMMUNITY-004: "Shared person" indicator on identity cards — show when a person appears in multiple archives
+- [-] 2026-03-09: COMMUNITY-005: Community-scoped sidebar counts — remove ML feature zeroing, enable Admin section for all communities (Session 96c)
+- [-] 2026-03-09: COMMUNITY-006: Community-aware discoveries — filter by photo-derived identity set (Session 96c)
 
 ### Near-Term — Post-Upload Intelligence (PRD-037)
-- [ ] UPLOAD-001: Charlie Fox collection ingest — 636 photos via local pipeline (Session 96b)
-- [ ] PRD037-001: Auto-cluster after upload — wire clustering into `_background_ingest()` (Session 96b)
-- [ ] PRD037-002: GEDCOM triage page — surface top identities by face count for linking (Session 96b)
+- [x] 2026-03-09: UPLOAD-001: Charlie Fox collection ingest — 636 photos via local pipeline (Session 96b)
+- [x] 2026-03-09: PRD037-001: Auto-cluster after upload — wire clustering into `_background_ingest()` (Session 96b)
+- [x] 2026-03-09: PRD037-002: GEDCOM triage page — surface top identities by face count for linking (Session 96b)
+- [-] 2026-03-09: PRD037-004: Wire cluster review into community sidebar (Session 96c)
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
 ### Near-Term — Infrastructure
@@ -123,6 +126,15 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Batch GEDCOM re-analyze (67/72 photos, AD-211)
 - GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
 - Prompt: docs/prompts/session-93-prompt.md
+
+### Session 96c: Community-Scoped Review + Cross-Community Identity Pipeline — PLANNED
+- Photo-derived community identity sets (AD-216) — fix "0 identities" for Fox Family
+- Enable sidebar Review + Admin sections for all communities
+- Community-aware discoveries pipeline
+- Cross-community search verification + manual merge path for Type 2 errors
+- Backfill identity_communities for Fox Family
+- Wire add_identity_to_community() into clustering pipeline
+- Prompt: docs/prompts/session-96c-prompt.md
 
 ### Session 95: Fox MVP + Standalone Tool Suite — COMPLETE
 - Multi-community platform: `/c/{slug}/` routing, Fox Family Archive live
