@@ -1,4 +1,4 @@
-# Session 97 Prompt — Charlie Fox Collection Ingest + Post-Upload Intelligence Pipeline
+# Session 96b Prompt — Charlie Fox Collection Ingest + Post-Upload Intelligence Pipeline
 
 ## Context
 - 636 photos from Uncle Charlie (Roland Fox's brother), digitized by cousin David
@@ -28,7 +28,7 @@
 7. Check current identity count — note starting size
 8. Log all numbers in session log for before/after comparison
 
-**Commit:** `docs: session 97 orient — {N} photos validated, starting state logged`
+**Commit:** `docs: session 96b orient — {N} photos validated, starting state logged`
 **/clear**
 
 ---
@@ -205,11 +205,11 @@ New page: `/admin/upload-review` — shows top identities by face count for GEDC
 2. Verify each act completed
 3. Browser-verify Fox Family at `/c/fox-family/?section=photos` shows Charlie Fox photos
 4. Browser-verify clustering results visible in triage/discoveries
-5. Write assessment: `docs/assessments/session-97-assessment.md`
+5. Write assessment: `docs/assessments/session-96b-assessment.md`
 6. Update: CHANGELOG, ROADMAP, BACKLOG, session log
 7. Run `make test-fast`
 
-**Commit:** `docs: session 97 assessment — Charlie Fox collection + PRD-037`
+**Commit:** `docs: session 96b assessment — Charlie Fox collection + PRD-037`
 
 ---
 
@@ -217,10 +217,10 @@ New page: `/admin/upload-review` — shows top identities by face count for GEDC
 - **Memory:** 636 photos × InsightFace face detection could OOM on laptop. Monitor RAM. If needed, batch in groups of 100.
 - **Clustering time:** ~1000 new faces × ~900 confirmed identities = ~900K distance computations. Should be <30s but monitor.
 - **R2 upload:** 636 photos × ~5MB = ~3.2GB upload. Use parallel uploads if possible.
-- **Gemini cost:** NOT running Gemini this session. GEDCOM linking first, then batch Gemini in Session 98.
+- **Gemini cost:** NOT running Gemini this session. GEDCOM linking first, then batch Gemini in a future session.
 
 ## What We Are NOT Doing This Session
-- Gemini batch estimation (Session 98, after GEDCOM linking)
+- Gemini batch estimation (a future session, after GEDCOM linking)
 - Google Drive API integration (TOOLS-006, future)
 - Cross-community identity merging
 - Non-admin upload flows
