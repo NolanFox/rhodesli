@@ -1,7 +1,7 @@
 # Session 96b Prompt — Charlie Fox Collection Ingest + Post-Upload Intelligence Pipeline
 
 ## Context
-- 636 photos from Uncle Charlie (Roland Fox's brother), digitized by cousin David
+- ~636 photos from Uncle Charlie (Roland Fox's brother), digitized by cousin David
 - Files located at: `~/Downloads/fox_photos_for_rhodesli/Charlie/`
 - All small JPGs (~5MB each)
 - Collection: "Charles Fox Dayton Ohio Collection"
@@ -19,9 +19,10 @@
 
 ## Act 1: Orient + Validate Photos (5 min)
 
-1. Count files in `~/Downloads/fox_photos_for_rhodesli/Charlie/`
-2. Verify file types (should be JPGs), check total size
-3. Spot-check a few filenames to understand naming convention
+1. Count files in `~/Downloads/fox_photos_for_rhodesli/Charlie/` (expect 637 = 636 JPGs + 1 Thumbs.db)
+2. Remove `Thumbs.db` (Windows thumbnail cache): `rm ~/Downloads/fox_photos_for_rhodesli/Charlie/Thumbs.db`
+3. Verify file types (should be JPGs), check total size. Filenames follow pattern: `NNNNN_[ps]_XXXXX.jpg`
+4. Spot-check a few filenames to understand naming convention
 4. Confirm Fox Family community exists in Supabase: `communities` table, slug=`fox-family`
 5. Confirm `photo_communities` table is ready for tagging
 6. Check current embeddings count (`data/embeddings.npy`) — note starting size
@@ -39,7 +40,7 @@
 
 1. **Activate venv:** `source venv/bin/activate`
 
-2. **Run ingest in batches** (to avoid memory issues with 636 photos):
+2. **Run ingest in batches** (to avoid memory issues with ~636 photos):
    ```bash
    # Check if ingest_inbox supports --dir or needs individual files
    python -m core.ingest_inbox --help
@@ -77,7 +78,7 @@
    - Log: photos processed, faces detected, identities created, errors
 
 5. **Lessons to capture:**
-   - How long did 636 photos take?
+   - How long did ~636 photos take?
    - Any memory issues? Peak RAM?
    - Any file format issues (despite being "all JPGs")?
    - Any face detection failures? Which photos?
@@ -214,9 +215,9 @@ New page: `/admin/upload-review` — shows top identities by face count for GEDC
 ---
 
 ## Key Risks
-- **Memory:** 636 photos × InsightFace face detection could OOM on laptop. Monitor RAM. If needed, batch in groups of 100.
+- **Memory:** ~636 photos × InsightFace face detection could OOM on laptop. Monitor RAM. If needed, batch in groups of 100.
 - **Clustering time:** ~1000 new faces × ~900 confirmed identities = ~900K distance computations. Should be <30s but monitor.
-- **R2 upload:** 636 photos × ~5MB = ~3.2GB upload. Use parallel uploads if possible.
+- **R2 upload:** ~636 photos × ~5MB = ~3.2GB upload. Use parallel uploads if possible.
 - **Gemini cost:** NOT running Gemini this session. GEDCOM linking first, then batch Gemini in a future session.
 
 ## What We Are NOT Doing This Session

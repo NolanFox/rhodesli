@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-106 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+107 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -147,3 +147,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 101 | **Subagent work MUST be browser-verified before declaring PASS** |
 | 102 | **Behavioral instructions are insufficient — only mechanical enforcement works (Lesson 89 violated twice)** |
 | 103 | **Behavioral enforcement failed THREE times — hard block hooks now exit 2 at 3+ commits** |
+| 107 | **Session prep must persist all research before writing prompts — prompt is last artifact, not first** |

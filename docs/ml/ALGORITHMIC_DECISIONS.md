@@ -2389,3 +2389,21 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Schema gaps identified**: Need `previous_date_estimate` JSONB and `gedcom_token_count` columns on `gemini_api_calls` for longitudinal tracking. See report Section 8.
 - **Cost**: ~$2.66 total ($0.037/photo), 100x cheaper than manual genealogical dating.
 - **Future**: Multi-GEDCOM support is the highest-ROI investment for improving enrichment coverage on distant branches. Local model fine-tuning viable at 500+ labeled photos.
+
+### AD-213: Cross-Community Identity Sharing
+- **Date**: 2026-03-09 | **Session**: 96
+- **Context**: First multi-community upload — Charlie Fox collection (636 photos) to Fox Family community. Betty Capeluto and Roland Fox are confirmed identities in Rhodes archive. Auto-clustering will match Fox Family faces against Rhodes identities.
+- **Decision**: When clustering matches a face from Community B to an identity in Community A, the face joins the existing Community A identity. No identity duplication. One person = one global identity.
+- **Rationale**: Duplicating identities per community creates data divergence (two Bettys with different face sets, different GEDCOM links, different confirmations). A single identity with faces from multiple communities is the correct model.
+- **Gap**: No automatic cross-tagging in `identity_communities` table. After clustering, Betty has Fox Family faces but isn't listed as a Fox Family identity. She won't appear in Fox Family's "People" sidebar or people page. Future: auto-tag identities into community when they gain faces from that community's photos.
+- **UX implications**: Person pages show all faces globally (correct). Fox Family users may see faces linking to Rhodes identities (acceptable, not confusing). Discovery suggestions surface on Rhodes triage (admin must check both). No "shared person" indicator exists yet.
+- **Context file**: `docs/session_context/session-96b-context.md`
+
+### AD-214: GEDCOM-First Estimation Workflow
+- **Date**: 2026-03-09 | **Session**: 96
+- **Context**: Planning Charlie Fox collection ingest. Many people in this collection are in Nolan's GEDCOM. Gemini date estimation quality scales directly with GEDCOM context richness (AD-211: 91% high confidence with GEDCOM, avg 4.5yr ranges).
+- **Decision**: Always prioritize GEDCOM linking before running Gemini estimation. Post-upload workflow: cluster → surface top identities by face count → admin links GEDCOM → batch Gemini with enriched context. This should be the standard flow after every upload (PRD-037).
+- **Rationale**: Without GEDCOM — Gemini guesses era from clothing ("c. 1950s"). With GEDCOM — birth year + apparent age math produces specific ranges ("1952-1956"). GEDCOM linking costs $0 (admin time). Gemini costs ~$0.04/photo (Pro). Do the free enrichment first to maximize per-dollar accuracy.
+- **Works for known AND unknown people**: Known people (Betty, Roland) get matched and linked immediately. Unknown people get identified first, then linked, then benefit from GEDCOM on re-analysis.
+- **Implementation**: PRD-037 (`docs/prds/037_post_upload_intelligence.md`). Phase 1: auto-cluster after upload. Phase 2: GEDCOM triage page. Phase 3: batch Gemini with cost estimate.
+- **Context file**: `docs/session_context/session-96b-context.md`

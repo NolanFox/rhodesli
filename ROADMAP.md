@@ -61,6 +61,14 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
 - [-] 2026-03-09: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix). Remaining: about page, tools photo picker. See BACKLOG.
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
+- [ ] COMMUNITY-003: Cross-community identity tagging — auto-tag identities into communities when they gain faces from that community's photos (AD-213 gap)
+- [ ] COMMUNITY-004: "Shared person" indicator on identity cards — show when a person appears in multiple archives
+
+### Near-Term — Post-Upload Intelligence (PRD-037)
+- [ ] UPLOAD-001: Charlie Fox collection ingest — 636 photos via local pipeline (Session 96b)
+- [ ] PRD037-001: Auto-cluster after upload — wire clustering into `_background_ingest()` (Session 96b)
+- [ ] PRD037-002: GEDCOM triage page — surface top identities by face count for linking (Session 96b)
+- [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
