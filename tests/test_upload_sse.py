@@ -14,6 +14,7 @@ import app.main
 def client():
     """Test client for the app."""
     from app.main import app
+
     return TestClient(app)
 
 
@@ -47,6 +48,7 @@ class TestSSEEndpoint:
     def test_stream_invalid_file_type(self, client, auth_disabled):
         """Invalid file type returns error event."""
         import io
+
         files = {"photo": ("test.txt", io.BytesIO(b"not an image"), "text/plain")}
         response = client.post("/api/upload/stream", files=files)
         lines = response.text.strip().split("\n")
@@ -62,6 +64,7 @@ class TestSSEEndpoint:
     def test_stream_file_too_large(self, client, auth_disabled):
         """Files >10MB return error event."""
         import io
+
         large_content = b"x" * (11 * 1024 * 1024)
         files = {"photo": ("test.jpg", io.BytesIO(large_content), "image/jpeg")}
         response = client.post("/api/upload/stream", files=files)
@@ -110,6 +113,7 @@ class TestProgressiveUI:
     def test_upload_stage_item_renders(self):
         """_upload_stage_item helper produces correct structure."""
         from app.main import _upload_stage_item
+
         item = _upload_stage_item("detecting", "Detecting faces", "pending")
         html = repr(item)
         assert "stage-detecting" in html
@@ -122,46 +126,23 @@ class TestProgressiveUI:
         assert "upload-progress" in html
 
 
-class TestFacecompareProgressiveUI:
-    """Test that /facecompare page has progressive upload UI."""
+class TestFacecompareRedirectsToToolsCompare:
+    """Test that /facecompare now redirects to /tools/compare (ROUTE-001)."""
 
-    def test_facecompare_has_progress_stages(self, client, auth_disabled):
-        """Facecompare page includes progress stage indicators."""
+    def test_facecompare_redirects(self, auth_disabled):
+        """GET /facecompare returns 301 redirect to /tools/compare."""
+        from app.main import app
+
+        no_follow = TestClient(app, follow_redirects=False)
+        response = no_follow.get("/facecompare")
+        assert response.status_code == 301
+        assert response.headers["location"] == "/tools/compare"
+
+    def test_facecompare_redirect_lands_on_compare(self, client, auth_disabled):
+        """Following the redirect lands on the tools compare page."""
         response = client.get("/facecompare")
         assert response.status_code == 200
-        html = response.text
-        assert "upload-progress" in html
-        assert "stage-detecting" in html
-        assert "stage-comparing" in html
-        assert "stage-estimating" in html
-
-    def test_facecompare_has_progress_script(self, client, auth_disabled):
-        """Facecompare page includes the progressive upload JS."""
-        response = client.get("/facecompare")
-        html = response.text
-        assert "startProgressUpload" in html
-        assert "handleStageEvent" in html
-
-    def test_facecompare_form_has_onsubmit(self, client, auth_disabled):
-        """Facecompare upload form has onsubmit for progressive upload."""
-        response = client.get("/facecompare")
-        html = response.text
-        assert "startProgressUpload(this,'facecompare')" in html
-
-    def test_facecompare_progress_hidden_by_default(self, client, auth_disabled):
-        """Progress stages hidden until upload starts on facecompare."""
-        response = client.get("/facecompare")
-        html = response.text
-        assert 'id="upload-progress"' in html
-        # Facecompare uses inline style display:none
-        assert 'display: none' in html or 'display:none' in html
-
-    def test_both_pages_share_same_sse_endpoint(self, client, auth_disabled):
-        """Both compare and facecompare point to the same SSE stream."""
-        compare = client.get("/compare").text
-        facecompare = client.get("/facecompare").text
-        assert "/api/upload/stream" in compare
-        assert "/api/upload/stream" in facecompare
+        assert "Compare" in response.text
 
 
 class TestClientSideValidation:
@@ -196,6 +177,7 @@ class TestSSEEdgeCases:
     def test_stream_webp_accepted(self, client, auth_disabled):
         """WebP files are accepted by the stream endpoint."""
         import io
+
         # A minimal valid WebP header (RIFF + WEBP)
         webp_header = b"RIFF\x00\x00\x00\x00WEBP"
         files = {"photo": ("test.webp", io.BytesIO(webp_header), "image/webp")}
@@ -211,6 +193,7 @@ class TestSSEEdgeCases:
     def test_stream_empty_file(self, client, auth_disabled):
         """Empty file gets handled gracefully."""
         import io
+
         files = {"photo": ("empty.jpg", io.BytesIO(b""), "image/jpeg")}
         response = client.post("/api/upload/stream", files=files)
         lines = response.text.strip().split("\n")
@@ -222,6 +205,7 @@ class TestSSEEdgeCases:
     def test_stream_flow_parameter_forwarded(self, client, auth_disabled):
         """The flow parameter is accepted without error."""
         import io
+
         files = {"photo": ("test.jpg", io.BytesIO(b"not-real"), "image/jpeg")}
         data = {"flow": "facecompare"}
         response = client.post("/api/upload/stream", files=files, data=data)
@@ -230,6 +214,7 @@ class TestSSEEdgeCases:
     def test_stream_returns_received_before_error(self, client, auth_disabled):
         """Valid file gets 'received' event before any potential ML errors."""
         import io
+
         # Create minimal JPEG bytes (invalid but passes extension check)
         files = {"photo": ("test.jpg", io.BytesIO(b"\xff\xd8\xff\xe0" + b"\x00" * 100), "image/jpeg")}
         response = client.post("/api/upload/stream", files=files)

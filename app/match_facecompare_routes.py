@@ -31,6 +31,7 @@ import app.main as _main_mod
 
 logger = logging.getLogger(__name__)
 
+
 def _log_match_decision(identity_a: str, identity_b: str, decision: str, confidence: int, sess=None):
     """
     Log a match decision for audit trail and future ML training.
@@ -945,11 +946,18 @@ def _fc_results_section(
 
 @rt("/facecompare")
 def get():
-    """Face Compare Standalone — the front door for strangers.
+    """Redirect /facecompare → /tools/compare (ROUTE-001).
 
-    Separate from /compare (archive-integrated tool).
-    No login required, no archive nav, museum-quality design.
+    /tools/compare is now the canonical standalone compare tool.
+    Keeping this redirect for any external links that point here.
     """
+    from starlette.responses import RedirectResponse
+
+    return RedirectResponse("/tools/compare", status_code=301)
+
+
+# --- Original /facecompare landing page (deprecated, kept for reference) ---
+def _facecompare_landing_DEPRECATED():  # noqa: N802
     return _fc_page(
         "Face Compare — Find Matches in Historical Archives",
         # Minimal header
@@ -1612,7 +1620,17 @@ def post(upload_id: str = "", face_idx: int = 0):
 
 @rt("/facecompare/result/{result_id}")
 def get(result_id: str):
-    """Shareable face compare result page — no upload needed."""
+    """Redirect /facecompare/result/{id} → /compare/result/{id} (ROUTE-001).
+
+    Preserves shareable links while consolidating to canonical compare routes.
+    """
+    from starlette.responses import RedirectResponse
+
+    return RedirectResponse(f"/compare/result/{result_id}", status_code=301)
+
+
+def _facecompare_result_DEPRECATED(result_id: str):  # noqa: N802
+    """Original shareable face compare result page — deprecated."""
     data = _main_mod._load_comparison_results()
     result = data.get("results", {}).get(result_id)
 
@@ -1747,4 +1765,3 @@ def get(filename: str):
 
     content_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
     return FileResponse(str(file_path), media_type=content_type)
-
