@@ -83,3 +83,38 @@ This document records deployment, infrastructure, and operational decisions for 
   present, re-run: `claude mcp add railway-mcp-server -- npx -y @railway/mcp-server`
 - **Breadcrumbs**: Session 54F (didn't use railway logs despite rule),
   HARNESS_DECISIONS.md HD-012, CLAUDE.md deployment section
+
+## OD-008: Dev vs Production Environment Separation
+- **Date**: 2026-03-09
+- **Session**: 95b
+- **Context**: Sentry error fired from local dev machine (Nolans-MBP-2) for `_load_corrections_log`
+  circular import (PYTHON-ASGI-7). Dev errors pollute production error stream — makes it hard to
+  distinguish real user-facing issues from development noise.
+- **Current state**: Sentry initializes whenever `SENTRY_DSN` is set (including `.env` on dev laptop).
+  Environment tag defaults to `"production"` unless `SENTRY_ENVIRONMENT` is explicitly set.
+- **Immediate fix**: Add `SENTRY_ENVIRONMENT=development` to local `.env`. This tags local errors
+  as "development" in Sentry so they can be filtered out. Zero code change needed.
+- **Medium-term**: Consider NOT initializing Sentry at all in local dev — only when `RAILWAY_ENVIRONMENT`
+  is set. This prevents dev noise entirely but loses visibility into local crashes.
+- **Long-term**: Full dev/staging/prod environment split with separate Railway projects, separate
+  Sentry DSNs, and separate Supabase projects. This is standard practice and would naturally solve
+  the problem. See BACKLOG.md for ENV-001.
+- **Breadcrumbs**: Session 95b Sentry error discussion, BACKLOG.md ENV-001
+
+## OD-009: Observability Data Retention & Long-Term Storage
+- **Date**: 2026-03-09
+- **Session**: 95b
+- **Context**: Nolan asked whether Sentry/PostHog preserve data in perpetuity on free tiers, and
+  whether we need to archive to our own database for long-term storage.
+- **Current retention limits**:
+  - **Sentry (Developer plan)**: 90-day event retention. Issues persist but individual events age out.
+  - **PostHog (free tier)**: 1-year retention for events. Generous for current scale.
+- **Decision**: No immediate action needed — 90 days of Sentry + 1 year of PostHog covers our
+  current needs. If we need longer retention:
+  - Option A: Export via API (Sentry REST API, PostHog batch export) to Supabase table
+  - Option B: Upgrade Sentry/PostHog tiers (costs money)
+  - Option C: Log critical errors to `gemini_api_calls`-style Supabase table (already have the pattern)
+- **Recommendation**: When error patterns matter for ML model improvement or recurring bug tracking,
+  add a lightweight `error_log` Supabase table. For now, Sentry's 90-day window + issue persistence
+  is sufficient — we rarely need to analyze errors older than 90 days.
+- **Breadcrumbs**: Session 95b observability discussion, BACKLOG.md OBS-001

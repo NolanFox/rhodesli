@@ -59,8 +59,12 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
-- [ ] COMMUNITY-001: Community data scoping — sidebar/upload/browse NOT scoped to active community (P0, PRD-035 Phase 1 gap)
-- [ ] COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (P1)
+- [-] 2026-03-09: COMMUNITY-001: Community data scoping — sidebar/upload/browse scoped to active community (Session 95b)
+- [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
+
+### Near-Term — Infrastructure
+- [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
+- [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
