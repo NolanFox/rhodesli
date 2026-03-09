@@ -189,7 +189,7 @@ class TestConnectPage:
         assert 'href="/photos"' in resp.text
         assert 'href="/people"' in resp.text
         assert 'href="/timeline"' in resp.text
-        assert 'href="/compare"' in resp.text
+        assert 'href="/tools/compare"' in resp.text
 
     def test_connect_og_tags(self, client):
         """Page has Open Graph tags for sharing."""

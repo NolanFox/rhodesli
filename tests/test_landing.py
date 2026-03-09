@@ -95,7 +95,7 @@ class TestLandingPageNavigation:
     def test_has_compare_link(self, client):
         """Nav has a link to the compare page."""
         response = client.get("/")
-        assert 'href="/compare"' in response.text
+        assert 'href="/tools/compare"' in response.text
 
 
 class TestLandingPageAnonymous:

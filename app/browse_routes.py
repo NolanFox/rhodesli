@@ -1503,7 +1503,7 @@ def get(slug: str, sess=None):
                     ),
                     A(
                         "Help Identify \u2192",
-                        href="/compare",
+                        href="/tools/compare",
                         cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4",
                     ),
                     cls="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",

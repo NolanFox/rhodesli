@@ -468,7 +468,7 @@ class TestCompareSidebarNav:
         counts = {"to_review": 5, "confirmed": 10, "skipped": 3, "rejected": 1, "photos": 50}
         result = sidebar(counts, current_section="photos", user=None)
         html = to_xml(result)
-        assert 'href="/compare"' in html
+        assert 'href="/tools/compare"' in html
         assert "Compare" in html
 
     def test_compare_between_timeline_and_about(self):

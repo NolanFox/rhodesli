@@ -376,7 +376,7 @@ def landing_page(stats, featured_photos):
         A("Timeline", href="/timeline", cls=_nav_cls),
         Span("|", cls="text-slate-700 hidden md:inline"),
         A("Tree", href="/tree", cls=_nav_cls),
-        A("Compare", href="/compare", cls=_nav_cls),
+        A("Compare", href="/tools/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
         A(
             "Help Identify",
@@ -1014,7 +1014,7 @@ def landing_page(stats, featured_photos):
                                 P("Upload a photo, find matches", cls="text-amber-100/40 text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
-                            href="/compare",
+                            href="/tools/compare",
                             cls="block",
                         ),
                         cls="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4",
@@ -4060,7 +4060,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
         P("Have a photo that might be this person?", cls="text-sm text-slate-400 mb-2"),
         A(
             "Compare faces with our photo tool",
-            href="/compare",
+            href="/tools/compare",
             cls="text-amber-300 hover:text-amber-200 text-sm font-medium",
             data_testid="identify-compare-cta",
         ),
@@ -6527,7 +6527,7 @@ def get(slug: str, sess=None):
                     ),
                     A(
                         "Help Identify →",
-                        href="/compare",
+                        href="/tools/compare",
                         cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4",
                     ),
                     cls="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",

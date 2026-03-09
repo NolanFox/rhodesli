@@ -964,7 +964,7 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
         ),
         A(
             "Try Another Photo",
-            href="/compare",
+            href="/tools/compare",
             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center",
         ),
         cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-800",
@@ -3273,7 +3273,7 @@ def get(result_id: str, sess=None):
                 P("Please upload your photo again to get fresh results.", cls="text-slate-500 text-sm mb-6"),
                 A(
                     "Upload a Photo to Compare \u2192",
-                    href="/compare",
+                    href="/tools/compare",
                     cls="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors inline-block",
                 ),
                 cls="max-w-4xl mx-auto px-6 py-20 text-center",
@@ -3671,7 +3671,7 @@ def get(result_id: str, sess=None):
                     Div(
                         A(
                             "Try Another Comparison",
-                            href="/compare",
+                            href="/tools/compare",
                             cls="text-indigo-400 hover:text-indigo-300 text-sm",
                         ),
                         cls="mt-6 text-center",
@@ -3837,7 +3837,7 @@ def get(sess=None):
                     P(
                         A(
                             "\u2190 Back to Compare",
-                            href="/compare",
+                            href="/tools/compare",
                             cls="text-indigo-400 hover:text-indigo-300 text-sm",
                         ),
                         cls="mt-2",
@@ -4264,7 +4264,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 A("Explore the full archive →", href="/photos", cls="text-xs text-indigo-400 hover:text-indigo-300"),
                 A(
                     "Know someone in this photo? Help identify them →",
-                    href="/compare",
+                    href="/tools/compare",
                     cls="text-xs text-indigo-400 hover:text-indigo-300 ml-4",
                 ),
                 cls="mt-4 flex flex-wrap gap-3 justify-center",

@@ -918,7 +918,7 @@ def _fc_results_section(
                 ),
                 A(
                     "Upload to the archive",
-                    href="/compare",
+                    href="/tools/compare",
                     style="display: inline-block; padding: 0.6rem 1.25rem; margin-left: 0.75rem; "
                     "border: 1px solid var(--fc-brown); color: var(--fc-warm); "
                     "border-radius: 0.5rem; text-decoration: none; font-size: 0.85rem;",

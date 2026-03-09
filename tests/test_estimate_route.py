@@ -445,7 +445,7 @@ class TestEstimatePageFixes:
         """Estimate should appear in the public nav bar."""
         resp = _run_with_patches(client, "/estimate")
         assert resp.status_code == 200
-        assert 'href="/estimate"' in resp.text
+        assert 'href="/tools/estimate"' in resp.text
 
     def test_estimate_nav_active_state(self, client):
         """On /estimate, the Estimate nav link should be highlighted."""
@@ -462,7 +462,7 @@ class TestEstimatePageFixes:
         counts = {"to_review": 5, "confirmed": 10, "skipped": 3, "rejected": 1, "photos": 50}
         result = sidebar(counts, current_section="photos", user=None)
         html = to_xml(result)
-        assert 'href="/estimate"' in html
+        assert 'href="/tools/estimate"' in html
         assert "Estimate" in html
 
     def test_no_evidence_shows_helpful_text(self, client):
