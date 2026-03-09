@@ -322,6 +322,39 @@ what that is and intend to check it out. Otherwise, very confusing UX.
 - Was "a bit of a pain"
 - Need to review why cap was set and find better solution
 
+## Part 9: Nolan's Answers to Architecture Questions (Round 4)
+
+### Q1: Collection Onboarding Flow Scope
+**Answer: Keep MVP simpler.** Create community + bulk upload with metadata.
+- Full enrichment chat flow is a future enhancement
+- Capture all the ideas, wire into roadmap/backlog/todo with breadcrumbs
+- Decision doc entries needed
+- Link to NL LLM chatbot (TOOLS-004) as a potential use case for context capture
+- Set as a "next step" after MVP
+
+### Q2: Photo Readiness
+**Answer: Ready to start with hundreds of digitized photos.**
+- Has literally thousands of photos needing scanning (ongoing effort)
+- Has hundreds already digitized across multiple family branches including Fox
+- Has been scanning for years + relatives have scanned their own
+- Will do more scanning later but ready to start now
+
+**TIFF/Format concern:**
+- Scans are often very high quality archival TIFF files
+- Need to downsize to manageable JPG/PNG
+- Did this manually for Rhodesli — wants automation for Fox
+- **New requirement: automated TIFF→JPG conversion in the upload pipeline**
+
+**Google Drive/Photos import:**
+- Would be ideal to automatically import from Google Drive or Google Photos albums
+- Not sure how easy this is
+- Fallback: download and re-upload manually
+- **New requirement: explore Google Drive/Photos API integration for bulk import**
+  - Google Photos API: read-only access to albums, can download media items
+  - Google Drive API: list files in folder, download
+  - OAuth consent screen needed
+  - Could be a significant accelerator for onboarding if feasible
+
 ---
 
 ## Breadcrumbs
