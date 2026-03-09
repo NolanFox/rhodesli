@@ -58,7 +58,9 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
-- [ ] ROUTE-001: Deprecate /facecompare → redirect to /tools/compare (P1, Nolan feedback). See `docs/BACKLOG.md`
+- [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
+- [ ] COMMUNITY-001: Community data scoping — sidebar/upload/browse NOT scoped to active community (P0, PRD-035 Phase 1 gap)
+- [ ] COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (P1)
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)

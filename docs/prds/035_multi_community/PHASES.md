@@ -6,17 +6,21 @@
 
 **Goal:** Fox Family Archive is live, browsable, and uses the ML workflow.
 
-| Task | Description | Files |
-|------|-------------|-------|
-| Community CRUD | Admin can create/edit communities | `app/admin_routes.py` |
-| Community routing | `/c/{slug}` URL prefix, community context in nav | `app/main.py`, new middleware |
-| Community-scoped browse | Browse page filters by active community | `app/page_routes.py` |
-| Community-scoped upload | Upload assigns photos to active community | `app/upload_routes.py` |
-| Bulk upload improvements | Raise cap (50→200), TIFF→JPG auto-conversion, batch metadata form | `app/upload_routes.py` |
-| Upload batches | Source/date/location per batch, stored in `upload_batches` table | New table + upload form |
-| Community landing pages | Per-community hero, stats, featured photos | `app/page_routes.py` |
-| Migrate existing data | Tag all existing photos/identities with `rhodes` community_id | Migration script |
-| Fox community setup | Create Fox community, import first batch of photos | Admin flow |
+| Task | Description | Files | Status |
+|------|-------------|-------|--------|
+| Community CRUD | Admin can create/edit communities | `app/admin_routes.py` | DONE (Session 95) |
+| Community routing | `/c/{slug}` URL prefix, community context in nav | `app/main.py`, middleware | DONE (Session 95) — but nav doesn't show community name |
+| Community-scoped browse | Browse page filters by active community | `app/page_routes.py` | **NOT DONE** — browse shows all Rhodes photos regardless of community |
+| Community-scoped upload | Upload assigns photos to active community | `app/upload_routes.py` | **NOT DONE** — upload page shows Rhodes sidebar, photos go to Rhodes |
+| Bulk upload improvements | Raise cap (50→200), TIFF→JPG auto-conversion, batch metadata form | `app/upload_routes.py` | PARTIAL — cap+TIFF done, batch metadata form NOT wired |
+| Upload batches | Source/date/location per batch, stored in `upload_batches` table | New table + upload form | PARTIAL — table exists, `create_upload_batch()` function exists, form NOT wired |
+| Community landing pages | Per-community hero, stats, featured photos | `app/page_routes.py` | DONE (Session 95) — empty state shown for Fox |
+| Migrate existing data | Tag all existing photos/identities with `rhodes` community_id | Migration script | DONE (Session 95) — 295 photos + 894 identities tagged |
+| Fox community setup | Create Fox community, import first batch of photos | Admin flow | PARTIAL — community exists in Supabase, no photos uploaded yet |
+| Sidebar data scoping | Sidebar counts (matches, photos, people) scoped to community | `app/main.py` sidebar | **NOT DONE** — sidebar shows global Rhodes data on all communities |
+| Workspace switcher | Admin can switch between communities | `app/main.py` nav | **NOT DONE** — no switcher UX |
+
+**Post-Session 95 assessment (Nolan feedback):** Infrastructure is 80% done. The critical gap is **data scoping** — the middleware routes URLs correctly but route handlers don't filter data by community. COMMUNITY-001 in BACKLOG tracks this. Without it, the platform doesn't actually function as separate workspaces.
 
 **Backward compatibility:** Existing `/browse`, `/identify`, etc. redirect to
 `/c/rhodes/browse`, `/c/rhodes/identify` (or serve Rhodes as default when no
