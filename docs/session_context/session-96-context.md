@@ -1,6 +1,6 @@
 # Session 96 Context — Community Data Scoping Hotfix + Bulk Upload Planning
 
-**Predecessor:** [Session 95b context](session-95b-context.md) (community data scoping)
+**Predecessor:** [Session 95 context](session-95-context.md) (Fox MVP + Standalone Tool Suite)
 **Date:** 2026-03-09
 **Type:** Hotfix + planning
 
