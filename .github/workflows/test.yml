@@ -17,9 +17,15 @@ jobs:
           cache: 'pip'
       - name: Install dependencies
         run: |
+          python -m venv venv
+          source venv/bin/activate
           pip install -r requirements.txt
           pip install pytest pytest-xdist pytest-timeout ruff
       - name: Lint
-        run: ruff check app/ core/ tests/
+        run: |
+          source venv/bin/activate
+          ruff check app/ core/ tests/
       - name: Run fast tests
-        run: make test-fast
+        run: |
+          source venv/bin/activate
+          make test-fast
