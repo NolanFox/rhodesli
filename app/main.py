@@ -459,7 +459,7 @@ app, rt = fast_app(
 # Default community is "rhodes" when no /c/ prefix is present.
 from starlette.middleware.base import BaseHTTPMiddleware
 
-_community_slug_pattern = re.compile(r"^/c/([a-z0-9_-]+)(/.*)$")
+_community_slug_pattern = re.compile(r"^/c/([a-z0-9_-]+)(/.*)?$")
 
 # Paths that should NOT be intercepted by community middleware
 _COMMUNITY_SKIP_PREFIXES = ("/static/", "/api/", "/_")
@@ -480,7 +480,7 @@ class CommunityMiddleware(BaseHTTPMiddleware):
         match = _community_slug_pattern.match(path)
         if match:
             slug = match.group(1)
-            remaining_path = match.group(2)
+            remaining_path = match.group(2) or "/"
             request.state.community_slug = slug
             # Rewrite the path to remove the /c/{slug} prefix
             request.scope["path"] = remaining_path
