@@ -3268,6 +3268,47 @@ def get(sess=None):
 
 
 # =============================================================================
+# COMMUNITY SWITCHER API
+# =============================================================================
+
+
+@rt("/api/communities/switcher")
+def get(sess=None):
+    """Returns HTML fragment with community list for workspace switcher dropdown."""
+    user = _main_mod.get_current_user(sess or {})
+    if not user or not user.is_admin:
+        return ""
+    from app.supabase_data import load_communities
+
+    communities = load_communities() or []
+    items = []
+    for c in communities:
+        slug = c.get("slug", "")
+        name = c.get("name", slug)
+        prefix = _main_mod.community_url_prefix(slug)
+        items.append(
+            A(
+                name,
+                href=f"{prefix}/",
+                cls="block px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded",
+            )
+        )
+    items.append(Hr(cls="border-slate-700 my-1"))
+    items.append(
+        A(
+            "Manage Communities",
+            href="/admin/communities",
+            cls="block px-3 py-2 text-xs text-slate-500 hover:text-slate-300",
+        )
+    )
+    return Div(
+        *items,
+        cls="py-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg",
+        data_testid="community-switcher-list",
+    )
+
+
+# =============================================================================
 # COMMUNITY ADMIN CRUD (PRD-035)
 # =============================================================================
 

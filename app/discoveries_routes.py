@@ -82,7 +82,7 @@ def confidence_tier_style(distance: float) -> tuple[str, str]:
 
 
 @rt("/discoveries")
-def get(sess=None):
+def get(sess=None, request=None):
     """
     Discovery inbox: high-confidence matches between unreviewed faces and confirmed identities.
     Admin-only: these are actionable items that can be resolved with one click.
@@ -91,6 +91,8 @@ def get(sess=None):
     if denied:
         return denied
     user = _main_mod.get_current_user(sess or {})
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
 
     style = Style("""
         html, body { height: 100%; margin: 0; }
@@ -188,7 +190,9 @@ def get(sess=None):
             _main_mod.toast_container(),
             _main_mod.mobile_header,
             sidebar_overlay,
-            _main_mod.sidebar(counts, current_section="discoveries", user=user),
+            _main_mod.sidebar(
+                counts, current_section="discoveries", user=user, community_slug=community_slug, community=community
+            ),
             Main(
                 Div(
                     Div(
