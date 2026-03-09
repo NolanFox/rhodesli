@@ -157,16 +157,11 @@ def health():
 @rt("/api/debug/community-ids")
 def debug_community_ids(slug: str = "fox-family"):
     """Temporary debug endpoint for photo ID alias diagnostics."""
-    from app.supabase_data import get_communities
+    from app.supabase_data import get_community_by_slug
 
-    communities = get_communities()
-    community = None
-    for c in communities or []:
-        if c.get("slug") == slug:
-            community = c
-            break
+    community = get_community_by_slug(slug)
     if not community:
-        return {"error": f"Community {slug} not found", "communities": [c.get("slug") for c in (communities or [])]}
+        return {"error": f"Community {slug} not found"}
 
     community_photo_ids = _main_mod._get_community_photo_ids(community)
     sample_cpids = list(community_photo_ids)[:5] if community_photo_ids else []
