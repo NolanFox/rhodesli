@@ -3481,13 +3481,17 @@
       ],
       "birth_year": 1935,
       "created_at": "2026-02-01T21:29:26.548826+00:00",
-      "updated_at": "2026-02-21T04:08:39.116730+00:00",
-      "version_id": 5,
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
+      "version_id": 9,
       "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
       "negative_ids": [],
       "candidate_ids": [
         "Image 978_compress:face0",
-        "Image 983_compress:face2"
+        "Image 983_compress:face2",
+        "inbox_a0934b7b2f66",
+        "inbox_025d45a171d1",
+        "inbox_42e0e2d7ba66",
+        "inbox_154c11a3d81a"
       ],
       "merge_history": [
         {
@@ -5100,12 +5104,42 @@
       },
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.550454+00:00",
-      "updated_at": "2026-02-02T22:38:52.683111+00:00",
-      "version_id": 3,
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
+      "version_id": 33,
       "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
       "negative_ids": [],
       "candidate_ids": [
-        "Image 978_compress:face1"
+        "Image 978_compress:face1",
+        "inbox_522343c418be",
+        "inbox_2b594266a5d0",
+        "inbox_83ff7a1ce30f",
+        "inbox_3eec3d5ae198",
+        "inbox_3b125ba29a46",
+        "inbox_fc6395726e9b",
+        "inbox_4e0a451198c7",
+        "inbox_6479fddf02c0",
+        "inbox_f054777a758f",
+        "inbox_56a178d9b2c9",
+        "inbox_a15d9f2dfee7",
+        "inbox_72eb5ff4bc99",
+        "inbox_b03f5c53a9f0",
+        "inbox_1cefd75962bb",
+        "inbox_47e86cbaf8b9",
+        "inbox_ba04f34d4aeb",
+        "inbox_d2dc275d7261",
+        "inbox_7231173eb61e",
+        "inbox_17805332b1b1",
+        "inbox_84856c7ebee2",
+        "inbox_1e0d62338030",
+        "inbox_c308feb10b62",
+        "inbox_8d96223be118",
+        "inbox_df048cc5c3bb",
+        "inbox_2fd645be8628",
+        "inbox_67749956670d",
+        "inbox_dd20be574373",
+        "inbox_5154b2c7b1ce",
+        "inbox_00b7e6887b72",
+        "inbox_c32e5c51d148"
       ]
     },
     "44fb6ab3-c98b-447a-8a5b-8d652418b337": {
@@ -9150,12 +9184,13 @@
       "metadata": {},
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.549590+00:00",
-      "updated_at": "2026-02-21T07:11:30.756738+00:00",
-      "version_id": 2,
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
+      "version_id": 3,
       "identity_id": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
       "negative_ids": [],
       "candidate_ids": [
-        "Image 968_compress:face6"
+        "Image 968_compress:face6",
+        "inbox_46f784dc0db5"
       ]
     },
     "3316e2c7-8d34-451c-a626-3a4d2dac27fa": {
@@ -10022,14 +10057,12 @@
       "identity_id": "ad947176-f8f8-4bac-84b8-6d637aa6d21e",
       "name": "Unidentified Person 402",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_46f784dc0db5"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-14T14:45:50.225016+00:00",
-      "updated_at": "2026-02-14T14:45:50.225016+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -10037,7 +10070,8 @@
         "ingested_at": "2026-02-14T14:45:50.225008+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "metadata": {},
+      "merged_into": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5"
     },
     "21e02a82-ad6d-4bfd-aac8-7a230527f0d6": {
       "identity_id": "21e02a82-ad6d-4bfd-aac8-7a230527f0d6",
@@ -21334,41 +21368,39 @@
       "identity_id": "80d1c9bf-8c7f-4f0e-9a9f-05e8d3cc504d",
       "name": "Unidentified Person 926",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_1cefd75962bb"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:47:46.421261+00:00",
-      "updated_at": "2026-03-09T18:47:46.421261+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01756_p_13akf5twbc3794.jpg",
         "ingested_at": "2026-03-09T18:47:46.421251+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "1f1cedf2-e068-49d9-b79d-e8d8621ab7cd": {
       "identity_id": "1f1cedf2-e068-49d9-b79d-e8d8621ab7cd",
       "name": "Unidentified Person 927",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_4e0a451198c7"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:47:46.913280+00:00",
-      "updated_at": "2026-03-09T18:47:46.913280+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01842_p_13akf5twbc3249_r.jpg",
         "ingested_at": "2026-03-09T18:47:46.913240+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "4ffbd04c-593e-49b5-a9ac-5d56661d946f": {
       "identity_id": "4ffbd04c-593e-49b5-a9ac-5d56661d946f",
@@ -22994,21 +23026,20 @@
       "identity_id": "34ba4495-c258-4822-a909-3718fa517b22",
       "name": "Unidentified Person 1009",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_5154b2c7b1ce"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:03.919335+00:00",
-      "updated_at": "2026-03-09T18:48:03.919335+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01591_p_13akf5twbc0783_r.jpg",
         "ingested_at": "2026-03-09T18:48:03.919322+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "7607549d-da36-463f-a3f3-0c9112f08941": {
       "identity_id": "7607549d-da36-463f-a3f3-0c9112f08941",
@@ -23474,21 +23505,20 @@
       "identity_id": "1ee29f44-8561-456d-9c3a-b9f43fc44f8b",
       "name": "Unidentified Person 1033",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_d2dc275d7261"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:09.585274+00:00",
-      "updated_at": "2026-03-09T18:48:09.585274+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01764_p_13akf5twbc1695_r.jpg",
         "ingested_at": "2026-03-09T18:48:09.585264+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "10059163-d0f4-47aa-bd63-7452bd85b7fd": {
       "identity_id": "10059163-d0f4-47aa-bd63-7452bd85b7fd",
@@ -25694,21 +25724,20 @@
       "identity_id": "f72c3f0c-211d-4ba2-be43-5415dbf7d391",
       "name": "Unidentified Person 1144",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_3b125ba29a46"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:37.495660+00:00",
-      "updated_at": "2026-03-09T18:48:37.495660+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01690_s_13akf5twbc0297.jpg",
         "ingested_at": "2026-03-09T18:48:37.495650+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "f5cae997-768f-4731-ac77-2a3f418fe04d": {
       "identity_id": "f5cae997-768f-4731-ac77-2a3f418fe04d",
@@ -26014,21 +26043,20 @@
       "identity_id": "b1fc0a8d-82e4-4554-baeb-09cfcc31d239",
       "name": "Unidentified Person 1160",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_7231173eb61e"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:42.076515+00:00",
-      "updated_at": "2026-03-09T18:48:42.076515+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01762_p_13akf5twbc3777.jpg",
         "ingested_at": "2026-03-09T18:48:42.076506+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "65f0e628-6d68-45b8-b68f-d9c6c3857a9d": {
       "identity_id": "65f0e628-6d68-45b8-b68f-d9c6c3857a9d",
@@ -26357,21 +26385,20 @@
       "identity_id": "9df37860-1bda-4f49-894a-8d4d9ca4dd5f",
       "name": "Unidentified Person 1177",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_154c11a3d81a"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:46.793028+00:00",
-      "updated_at": "2026-03-09T18:48:46.793028+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02052_p_13akf5twbc3581.jpg",
         "ingested_at": "2026-03-09T18:48:46.793019+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "609d7e34-38a3-4bdd-9879-35560b624bae"
     },
     "7c7d077b-d64b-43d3-aa38-0c0fcce2f0bb": {
       "identity_id": "7c7d077b-d64b-43d3-aa38-0c0fcce2f0bb",
@@ -26517,21 +26544,20 @@
       "identity_id": "ef519bd2-fc3c-43c6-b080-37831d811115",
       "name": "Unidentified Person 1185",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_84856c7ebee2"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:48.426824+00:00",
-      "updated_at": "2026-03-09T18:48:48.426824+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02076_p_13akf5twbc3915.jpg",
         "ingested_at": "2026-03-09T18:48:48.426814+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "f763d666-8f6c-4acb-8eec-38db5acf51ea": {
       "identity_id": "f763d666-8f6c-4acb-8eec-38db5acf51ea",
@@ -27057,21 +27083,20 @@
       "identity_id": "fa386da1-39e7-4765-ad1e-77c1ed8850d0",
       "name": "Unidentified Person 1212",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_fc6395726e9b"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:48:56.560232+00:00",
-      "updated_at": "2026-03-09T18:48:56.560232+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01578_p_13akf5twbc0710.jpg",
         "ingested_at": "2026-03-09T18:48:56.560192+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "d171461f-8e5b-4def-9200-9eb8e223b0c2": {
       "identity_id": "d171461f-8e5b-4def-9200-9eb8e223b0c2",
@@ -28845,21 +28870,20 @@
       "identity_id": "b5b500e4-d1db-4699-89ae-51643032976d",
       "name": "Unidentified Person 1301",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_a15d9f2dfee7"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:49:20.466866+00:00",
-      "updated_at": "2026-03-09T18:49:20.466866+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01825_p_13akf5twbc2201.jpg",
         "ingested_at": "2026-03-09T18:49:20.466858+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "1d7fac18-9176-41be-b521-c7ce8fe15304": {
       "identity_id": "1d7fac18-9176-41be-b521-c7ce8fe15304",
@@ -29605,21 +29629,20 @@
       "identity_id": "d9180040-342a-4174-8bcd-3dba53cad91b",
       "name": "Unidentified Person 1339",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_2fd645be8628"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:49:28.767184+00:00",
-      "updated_at": "2026-03-09T18:49:28.767184+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02176_p_13akf5twbc1898.jpg",
         "ingested_at": "2026-03-09T18:49:28.767174+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "12ff7736-1423-4b19-b8a6-b8120f97f580": {
       "identity_id": "12ff7736-1423-4b19-b8a6-b8120f97f580",
@@ -30565,21 +30588,20 @@
       "identity_id": "cf51058a-6e06-4900-9cae-2de3463ea2c0",
       "name": "Unidentified Person 1387",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_df048cc5c3bb"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:49:44.110899+00:00",
-      "updated_at": "2026-03-09T18:49:44.110899+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01560_p_13akf5twbc5219.jpg",
         "ingested_at": "2026-03-09T18:49:44.110889+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "a9a3addb-9152-45b3-8901-99da50857fa5": {
       "identity_id": "a9a3addb-9152-45b3-8901-99da50857fa5",
@@ -31425,21 +31447,20 @@
       "identity_id": "8ba41f34-dd9c-4d31-84a0-435cee2fdb0e",
       "name": "Unidentified Person 1430",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_ba04f34d4aeb"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:49:53.300428+00:00",
-      "updated_at": "2026-03-09T18:49:53.300428+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01942_p_13akf5twbc3713.jpg",
         "ingested_at": "2026-03-09T18:49:53.300417+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "ffd8c394-e4d2-40fa-b6d1-7af2f2df3cec": {
       "identity_id": "ffd8c394-e4d2-40fa-b6d1-7af2f2df3cec",
@@ -32005,21 +32026,20 @@
       "identity_id": "6371ca62-dc29-40e5-ae8a-06bace91b82d",
       "name": "Unidentified Person 1459",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_c32e5c51d148"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:50:01.104427+00:00",
-      "updated_at": "2026-03-09T18:50:01.104427+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01573_p_13akf5twbc0689.jpg",
         "ingested_at": "2026-03-09T18:50:01.104371+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "43efac3f-3f51-426e-9f92-525ba9edea01": {
       "identity_id": "43efac3f-3f51-426e-9f92-525ba9edea01",
@@ -32665,21 +32685,20 @@
       "identity_id": "6baa6063-7c33-40b1-ba3c-d77025c67099",
       "name": "Unidentified Person 1492",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_522343c418be"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:50:09.503244+00:00",
-      "updated_at": "2026-03-09T18:50:09.503244+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01959_p_13akf5twbc3732.jpg",
         "ingested_at": "2026-03-09T18:50:09.503233+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "12df162d-3269-4ab2-9ad5-8de0131ca6a4": {
       "identity_id": "12df162d-3269-4ab2-9ad5-8de0131ca6a4",
@@ -33405,21 +33424,20 @@
       "identity_id": "6122095e-2635-49cb-9b2d-ae18151b404e",
       "name": "Unidentified Person 1529",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_b03f5c53a9f0"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:50:18.651167+00:00",
-      "updated_at": "2026-03-09T18:50:18.651167+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01866_p_13akf5twbc2594.jpg",
         "ingested_at": "2026-03-09T18:50:18.651123+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "19bbaab4-03d5-4daa-9d6a-e129b2fa1825": {
       "identity_id": "19bbaab4-03d5-4daa-9d6a-e129b2fa1825",
@@ -33585,21 +33603,20 @@
       "identity_id": "3ea1f0d6-dc83-42e4-8abf-76cfe06ee63e",
       "name": "Unidentified Person 1538",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_67749956670d"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:50:20.818662+00:00",
-      "updated_at": "2026-03-09T18:50:20.818662+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01784_p_13akf5twbc1738_r.jpg",
         "ingested_at": "2026-03-09T18:50:20.818654+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "0632165d-db4e-4625-a02d-c90803751f96": {
       "identity_id": "0632165d-db4e-4625-a02d-c90803751f96",
@@ -34465,21 +34482,20 @@
       "identity_id": "b58f5bd7-d811-4d08-be70-ea5faa83e43c",
       "name": "Unidentified Person 1582",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_2b594266a5d0"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:50:31.948865+00:00",
-      "updated_at": "2026-03-09T18:50:31.948865+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01944_p_13akf5twbc3686.jpg",
         "ingested_at": "2026-03-09T18:50:31.948852+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "7be6bf03-087c-47f3-8484-b53237d0e259": {
       "identity_id": "7be6bf03-087c-47f3-8484-b53237d0e259",
@@ -36785,21 +36801,20 @@
       "identity_id": "0451966a-b938-49f5-bc40-8d73cdf06a28",
       "name": "Unidentified Person 1698",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_72eb5ff4bc99"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:51:00.832774+00:00",
-      "updated_at": "2026-03-09T18:51:00.832774+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01967_p_13akf5twbc3315.jpg",
         "ingested_at": "2026-03-09T18:51:00.832725+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "336bbe6c-fffd-474d-817c-73bfdb6b2317": {
       "identity_id": "336bbe6c-fffd-474d-817c-73bfdb6b2317",
@@ -40045,21 +40060,20 @@
       "identity_id": "eaed3483-aaf9-4497-8a32-5c1d35d01725",
       "name": "Unidentified Person 1861",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_f054777a758f"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:51:56.115133+00:00",
-      "updated_at": "2026-03-09T18:51:56.115133+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01800_p_13akf5twbc3040_r.jpg",
         "ingested_at": "2026-03-09T18:51:56.115122+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "b962ea79-ca47-4648-944e-36f3d7e80f88": {
       "identity_id": "b962ea79-ca47-4648-944e-36f3d7e80f88",
@@ -40929,21 +40943,20 @@
       "identity_id": "9b73a346-a68a-4be6-9cda-a020c07f6e2a",
       "name": "Unidentified Person 1905",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_025d45a171d1"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:52:13.804632+00:00",
-      "updated_at": "2026-03-09T18:52:13.804632+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01850_p_13akf5twbc4571.jpg",
         "ingested_at": "2026-03-09T18:52:13.804620+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "609d7e34-38a3-4bdd-9879-35560b624bae"
     },
     "18885c51-d575-4924-b6bb-9497ef1a4b36": {
       "identity_id": "18885c51-d575-4924-b6bb-9497ef1a4b36",
@@ -43249,21 +43262,20 @@
       "identity_id": "abcfc0f6-15a3-4710-bae8-dc56f7f4b7c5",
       "name": "Unidentified Person 2021",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_00b7e6887b72"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:52:53.489771+00:00",
-      "updated_at": "2026-03-09T18:52:53.489771+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01899_p_13akf5twbc3538_r.jpg",
         "ingested_at": "2026-03-09T18:52:53.489760+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "d5f2f6b1-86b2-4fbe-b614-bcccaa1c2a26": {
       "identity_id": "d5f2f6b1-86b2-4fbe-b614-bcccaa1c2a26",
@@ -46349,21 +46361,20 @@
       "identity_id": "733f937a-d303-4ddd-818b-035da53786b8",
       "name": "Unidentified Person 2176",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_47e86cbaf8b9"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:53:39.463587+00:00",
-      "updated_at": "2026-03-09T18:53:39.463587+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02011_p_13akf5twbc3050.jpg",
         "ingested_at": "2026-03-09T18:53:39.463542+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "adfc4200-8063-4b24-820f-aca106197e3a": {
       "identity_id": "adfc4200-8063-4b24-820f-aca106197e3a",
@@ -46449,21 +46460,20 @@
       "identity_id": "a5db4fd4-8313-44f0-ae90-fef81c9de251",
       "name": "Unidentified Person 2181",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_8d96223be118"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:53:41.098759+00:00",
-      "updated_at": "2026-03-09T18:53:41.098759+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02043_p_13akf5twbc3154.jpg",
         "ingested_at": "2026-03-09T18:53:41.098712+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "7b24e490-4d2f-43fd-b770-ef610514e83d": {
       "identity_id": "7b24e490-4d2f-43fd-b770-ef610514e83d",
@@ -47829,21 +47839,20 @@
       "identity_id": "9cebda4f-9c6e-4e75-b716-116121644348",
       "name": "Unidentified Person 2250",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_1e0d62338030"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:04.104691+00:00",
-      "updated_at": "2026-03-09T18:54:04.104691+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02020_p_13akf5twbc3075.jpg",
         "ingested_at": "2026-03-09T18:54:04.104680+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "b7951690-2c25-45e7-bbd6-fb5e9207c77a": {
       "identity_id": "b7951690-2c25-45e7-bbd6-fb5e9207c77a",
@@ -48989,21 +48998,20 @@
       "identity_id": "0d0a1f96-6040-422f-acf3-1d62f0ed1f7e",
       "name": "Unidentified Person 2308",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_42e0e2d7ba66"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:24.974912+00:00",
-      "updated_at": "2026-03-09T18:54:24.974912+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01819_p_13akf5twbc1212.jpg",
         "ingested_at": "2026-03-09T18:54:24.974901+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "609d7e34-38a3-4bdd-9879-35560b624bae"
     },
     "3bd0fdee-eeb7-4ad0-96a9-b29ab7fcd938": {
       "identity_id": "3bd0fdee-eeb7-4ad0-96a9-b29ab7fcd938",
@@ -49729,41 +49737,39 @@
       "identity_id": "bb665010-da49-4c06-8276-efb7e15ff8bf",
       "name": "Unidentified Person 2345",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_a0934b7b2f66"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:38.446733+00:00",
-      "updated_at": "2026-03-09T18:54:38.446733+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01913_p_13akf5twbc2233.jpg",
         "ingested_at": "2026-03-09T18:54:38.446723+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "609d7e34-38a3-4bdd-9879-35560b624bae"
     },
     "5d214756-80f6-4d34-b271-859acb0a7424": {
       "identity_id": "5d214756-80f6-4d34-b271-859acb0a7424",
       "name": "Unidentified Person 2346",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_6479fddf02c0"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:38.446763+00:00",
-      "updated_at": "2026-03-09T18:54:38.446763+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01913_p_13akf5twbc2233.jpg",
         "ingested_at": "2026-03-09T18:54:38.446752+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "76c8acf8-935d-4d0f-a575-8c57920aab85": {
       "identity_id": "76c8acf8-935d-4d0f-a575-8c57920aab85",
@@ -50829,21 +50835,20 @@
       "identity_id": "c1c6d7e6-25b9-41e0-9c3f-e7fcfb20a0a6",
       "name": "Unidentified Person 2400",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_83ff7a1ce30f"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:54.049221+00:00",
-      "updated_at": "2026-03-09T18:54:54.049221+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02123_p_13akf5twbc0711.jpg",
         "ingested_at": "2026-03-09T18:54:54.049209+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "b1a18072-872e-4b62-93d1-5f57bc2b3ec6": {
       "identity_id": "b1a18072-872e-4b62-93d1-5f57bc2b3ec6",
@@ -51029,21 +51034,20 @@
       "identity_id": "b5b61799-a3fb-45ba-a2f5-feb3516ccc83",
       "name": "Unidentified Person 2410",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_c308feb10b62"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:56.465563+00:00",
-      "updated_at": "2026-03-09T18:54:56.465563+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02006_p_13akf5twbc2926_o.jpg",
         "ingested_at": "2026-03-09T18:54:56.465518+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "86fdfc0d-0c76-4161-a77d-4db4a173aa19": {
       "identity_id": "86fdfc0d-0c76-4161-a77d-4db4a173aa19",
@@ -51329,21 +51333,20 @@
       "identity_id": "4f4ca29e-2e27-466c-a426-e90dbbf373cc",
       "name": "Unidentified Person 2425",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_17805332b1b1"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:54:59.603737+00:00",
-      "updated_at": "2026-03-09T18:54:59.603737+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "02149_p_13akf5twbc1866.jpg",
         "ingested_at": "2026-03-09T18:54:59.603729+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "07b08f30-5eac-4ac9-8282-2b5ae5bdd834": {
       "identity_id": "07b08f30-5eac-4ac9-8282-2b5ae5bdd834",
@@ -51569,21 +51572,20 @@
       "identity_id": "d5abc8f2-78e6-43fa-9db1-bb18c0acc79e",
       "name": "Unidentified Person 2437",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_3eec3d5ae198"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:55:02.622183+00:00",
-      "updated_at": "2026-03-09T18:55:02.622183+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01589_p_13akf5twbc5340.jpg",
         "ingested_at": "2026-03-09T18:55:02.622127+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "382ea81e-6897-4146-8e1e-18d60dd3c613": {
       "identity_id": "382ea81e-6897-4146-8e1e-18d60dd3c613",
@@ -52330,41 +52332,39 @@
       "identity_id": "c6c3b237-d109-4fa2-a7bb-42d1d6b761ec",
       "name": "Unidentified Person 2475",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_56a178d9b2c9"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:55:14.903429+00:00",
-      "updated_at": "2026-03-09T18:55:14.903429+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01661_p_13akf5twbc0990_r.jpg",
         "ingested_at": "2026-03-09T18:55:14.903418+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "fb5e6b90-1cdb-4492-9f60-134a714cda0b": {
       "identity_id": "fb5e6b90-1cdb-4492-9f60-134a714cda0b",
       "name": "Unidentified Person 2476",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_dd20be574373"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-03-09T18:55:15.513322+00:00",
-      "updated_at": "2026-03-09T18:55:15.513322+00:00",
+      "updated_at": "2026-03-09T18:57:29.161317+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "fox-charlie-001",
         "filename": "01843_p_13akf5twbc3222.jpg",
         "ingested_at": "2026-03-09T18:55:15.513280+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000"
     },
     "36ee7a75-9b57-4a5e-a9b6-9bcb2adb8908": {
       "identity_id": "36ee7a75-9b57-4a5e-a9b6-9bcb2adb8908",
