@@ -2407,3 +2407,21 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Works for known AND unknown people**: Known people (Betty, Roland) get matched and linked immediately. Unknown people get identified first, then linked, then benefit from GEDCOM on re-analysis.
 - **Implementation**: PRD-037 (`docs/prds/037_post_upload_intelligence.md`). Phase 1: auto-cluster after upload. Phase 2: GEDCOM triage page. Phase 3: batch Gemini with cost estimate.
 - **Context file**: `docs/session_context/session-96b-context.md`
+
+### AD-215: Cluster Review UX — Error Correction Must Be Effortless
+- **Date**: 2026-03-09 | **Session**: 96b
+- **Context**: After auto-clustering 636 Charlie Fox photos, 35 faces matched to existing identities (27 Roland, 4 Betty, 1 Ray Franco, 3 others). User feedback: false positives are likely (Ray Franco at distance 1.04 is marginal). The Google Photos pain point — correcting Type I and Type II clustering errors was manual and painful. Nolan's requirements:
+  1. **Highlighted, not hidden** — auto-clustered matches must be front and center, not buried in identity pages
+  2. **Easy to fix, not manual** — one-click reject/confirm, not navigate-find-detach
+  3. **Intuitive UX for cross-community splits** — if a Fox Family face was incorrectly matched to a Rhodes identity, detaching should create a new Fox Family identity effortlessly
+- **Decision**: Build a Cluster Review Dashboard at `/admin/cluster-review` that shows all auto-clustered matches from a batch, grouped by target identity, sorted by confidence (weakest first = most likely false positive at top). Each match gets:
+  - Face thumbnail + source photo context
+  - Confidence distance score + tier label
+  - **One-click Reject** — removes face from identity candidate_ids, adds to negative_ids, face becomes new INBOX identity
+  - **One-click Confirm** — promotes from candidate_ids to anchor_ids
+  - **Batch actions** — "Confirm All" for a given identity, "Reject All" for obvious false positives
+  - Community badges showing which community the face/identity belong to
+- **Rationale**: The entire value of auto-clustering is lost if errors are painful to fix. The review page IS the product — clustering without review is just noise. Google Photos failed here by hiding errors; we make them the first thing admin sees.
+- **Implementation**: New route in `app/identity_routes.py`. Uses existing `registry.reject_candidate()` for reject and confirm logic for confirm. Detach creates new identity via `registry.detach_face()`.
+- **Gap**: Currently `reject_candidate()` does NOT create a new identity for the rejected face — it just moves the face_id to negative_ids, leaving it associated with the original identity. For the review UX, rejecting a candidate should ALSO detach the face into a new INBOX identity so it's visible and actionable in the Fox Family community. Need a new `reject_and_detach()` operation.
+- **Origin**: Direct Nolan feedback during Session 96b ingest. "That's the thing that was really painful to do with Google Photos."
