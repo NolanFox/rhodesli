@@ -272,6 +272,45 @@ Pinecone to the architecture?
 
 ---
 
+## Part 8: Nolan's Answers to Architecture Questions (Round 3)
+
+### Q1: Admin Model
+- **Same admin (Nolan) for both Rhodes and Fox** in near term
+- Eventually want to set other relatives as admin if they want to contribute
+- Privacy (public/private photos) is deferred — most subjects are deceased
+- Sophisticated permissions come later
+- Near term: Nolan is sole admin across all communities
+
+### Q2: Cross-Community Face Matching — Critical UX Decision
+**Answer: Closest to Option A (automatic) but with nuance.**
+
+Key requirements:
+- **Same identity across communities** — Roland Fox in Rhodesli IS the same identity
+  as Roland Fox in Fox Family Archive. Not a copy, not a link — same person.
+- **All photos visible from identity page** — regardless of which community they're in
+- **Community provenance on photos** — just like upload source is shown, each photo
+  should indicate which community/super-collection it belongs to
+- **Need resilience to type I and type II errors** — both will occur in cross-community
+  face matching. Need a way to correct mistakes.
+- **May need manual override** — ability to move from automatic to manual linking
+- **Workspace transition UX concern:** If you're in Fox, click Roland, see a Rhodesli
+  photo, click that photo — how does the UI indicate you've "moved" to Rhodesli?
+  - Consider Notion workspace model
+  - Must not be confusing
+  - All photos of a person should be visible in the same identity regardless of
+    community origin
+
+**Nolan's framing:** "Essentially we'd want to see all the photos of a person in
+the same identity even if they were in rhodesli, fox family, etc."
+
+### Q3: 50-Photo Upload Cap
+- **Both UX and processing concerns**
+- Came up when uploading 2nd batch of 100+ photos
+- Was "a bit of a pain"
+- Need to review why cap was set and find better solution
+
+---
+
 ## Breadcrumbs
 
 - Platform vision feeds into: PRD-030 (multi-collection), MULTI_TENANT.md
