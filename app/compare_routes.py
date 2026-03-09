@@ -31,7 +31,14 @@ import app.main as _main_mod
 logger = logging.getLogger(__name__)
 
 
-@rt("/compare")
+def _tools_nav_bar(active_tool=None):
+    """Lazy import of tools_nav_bar to avoid circular imports."""
+    from app.tools_routes import tools_nav_bar
+
+    return tools_nav_bar(active_tool=active_tool)
+
+
+@rt("/tools/compare")
 def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     """
     Universal Comparison Workspace (PRD-026).
@@ -679,13 +686,13 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     )
 
     compare_og = _main_mod.og_tags(
-        "Compare Faces \u2014 Rhodesli Heritage Archive",
-        "Find connections across the Rhodes Jewish heritage photo archive",
-        canonical_url="/compare",
+        "Compare Faces \u2014 Face Comparison Tool",
+        "Find connections across photos using AI-powered face comparison",
+        canonical_url="/tools/compare",
     )
 
     return (
-        Title("Compare Faces \u2014 Rhodesli Heritage Archive"),
+        Title("Compare Faces \u2014 Face Comparison Tool"),
         *compare_og,
         page_style,
         NotStr(_main_mod._upload_progress_script()),
@@ -698,11 +705,12 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
+            _tools_nav_bar(active_tool="compare"),
             # Header
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Find connections across the Rhodes Jewish heritage archive.", cls="text-slate-400 text-sm"),
+                    P("Find connections across photos using AI-powered face comparison.", cls="text-slate-400 text-sm"),
                     cls="max-w-6xl mx-auto px-6 pt-6 pb-4",
                 ),
             ),
@@ -736,9 +744,9 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Face Comparison Tool", cls="text-xs text-slate-500 mb-1 font-serif"),
                     P(
-                        "Preserving the memory of the Jewish community of Rhodes",
+                        "AI-powered face matching for historical photo archives",
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
@@ -952,7 +960,7 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
             style="button",
             label="Share Results",
             title="Face Comparison Results",
-            text="Check out these face comparison results from the Rhodes archive",
+            text="Check out these face comparison results",
         ),
         A(
             "Try Another Photo",
@@ -1078,7 +1086,7 @@ def _compare_summary_section(
                 style="icon",
                 label="Share",
                 title=f"Could this be {display_name}? {pct}% match",
-                text=f"Check out this {pct}% face match in the Rhodes archive",
+                text=f"Check out this {pct}% face match",
             )
 
         # Admin actions: Merge / Not Same
@@ -3326,10 +3334,10 @@ def get(result_id: str, sess=None):
         og_person_name = ref_name
 
     if og_person_name and matches:
-        og_title = f"Could this be {og_person_name}? {top_confidence}% match in Rhodes Archive"
+        og_title = f"Could this be {og_person_name}? {top_confidence}% face match"
     else:
-        og_title = "Face Comparison — Rhodes Jewish Heritage Archive"
-    og_desc = f"Help identify people in the Rhodes Jewish heritage photo archive. {len(matches)} potential match{'es' if len(matches) != 1 else ''} found."
+        og_title = "Face Comparison Results"
+    og_desc = f"AI-powered face comparison found {len(matches)} potential match{'es' if len(matches) != 1 else ''}."
     og_image = ref_crop_url or query_face_url or ""
     result_og = _main_mod.og_tags(og_title, og_desc, og_image, f"/compare/result/{result_id}")
 
@@ -3802,9 +3810,9 @@ def get(sess=None):
         )
 
     return (
-        Title("Compare Two Photos \u2014 Rhodesli Heritage Archive"),
+        Title("Compare Two Photos \u2014 Face Comparison Tool"),
         *_main_mod.og_tags(
-            "Compare Two Photos \u2014 Rhodesli Heritage Archive",
+            "Compare Two Photos \u2014 Face Comparison Tool",
             "Upload two photos and compare faces side-by-side",
             canonical_url="/compare/pair",
         ),
@@ -3870,9 +3878,9 @@ def get(sess=None):
             ),
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Face Comparison Tool", cls="text-xs text-slate-500 mb-1 font-serif"),
                     P(
-                        "Preserving the memory of the Jewish community of Rhodes",
+                        "AI-powered face matching for historical photo archives",
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",

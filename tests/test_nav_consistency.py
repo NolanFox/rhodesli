@@ -28,8 +28,8 @@ class TestPublicNavLinks:
             assert "/map" in hrefs
             assert "/timeline" in hrefs
             assert "/connect" in hrefs
-            assert "/compare" in hrefs
-            assert "/estimate" in hrefs
+            assert "/tools/compare" in hrefs
+            assert "/tools/estimate" in hrefs
             assert "/help" in hrefs
 
     def test_active_link_highlighted(self):
@@ -78,8 +78,8 @@ class TestPublicNavLinks:
                 "",
                 "/tree",
                 "/connect",
-                "/compare",
-                "/estimate",
+                "/tools/compare",
+                "/tools/estimate",
                 "/help",
             ]
             assert hrefs == expected_order
@@ -149,11 +149,11 @@ class TestNavOnPublicPages:
     @pytest.mark.parametrize(
         "path,expected_links",
         [
-            ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-            ("/people", ["/photos", "/collections", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-            ("/collections", ["/photos", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-            ("/map", ["/photos", "/collections", "/people", "/timeline", "/tree", "/connect", "/compare"]),
-            ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/compare"]),
+            ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/tools/compare"]),
+            ("/people", ["/photos", "/collections", "/map", "/timeline", "/tree", "/connect", "/tools/compare"]),
+            ("/collections", ["/photos", "/people", "/map", "/timeline", "/tree", "/connect", "/tools/compare"]),
+            ("/map", ["/photos", "/collections", "/people", "/timeline", "/tree", "/connect", "/tools/compare"]),
+            ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/tools/compare"]),
         ],
     )
     def test_nav_links_present(self, client, path, expected_links):
