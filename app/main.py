@@ -2689,11 +2689,64 @@ def _safe_get_identity(registry, identity_id: str) -> dict:
         return {}
 
 
-def _compute_sidebar_counts(registry) -> dict:
+def community_url_prefix(slug: str) -> str:
+    """Return URL prefix for a community: '' for rhodes, '/c/{slug}' for others."""
+    if not slug or slug == "rhodes":
+        return ""
+    return f"/c/{slug}"
+
+
+def _get_community_photo_ids(community: dict | None) -> set | None:
+    """Return set of photo IDs for a non-Rhodes community, or None for Rhodes/default.
+
+    Returns None when no filtering should be applied (Rhodes community or no community).
+    """
+    if community is None:
+        return None
+    slug = community.get("slug", "rhodes")
+    if slug == "rhodes":
+        return None
+    community_id = community.get("id")
+    if not community_id:
+        return set()
+    from app.supabase_data import load_photos_for_community
+
+    photo_ids = load_photos_for_community(community_id)
+    if photo_ids is None:
+        return set()
+    return set(photo_ids)
+
+
+def _get_community_identity_ids(community: dict | None) -> set | None:
+    """Return set of identity IDs for a non-Rhodes community, or None for Rhodes/default.
+
+    Returns None when no filtering should be applied (Rhodes community or no community).
+    """
+    if community is None:
+        return None
+    slug = community.get("slug", "rhodes")
+    if slug == "rhodes":
+        return None
+    community_id = community.get("id")
+    if not community_id:
+        return set()
+    from app.supabase_data import load_identities_for_community
+
+    rows = load_identities_for_community(community_id)
+    if rows is None:
+        return set()
+    return {r["identity_id"] if isinstance(r, dict) else r for r in rows}
+
+
+def _compute_sidebar_counts(registry, community=None) -> dict:
     """Compute sidebar navigation counts from a loaded registry.
 
     This is the SINGLE canonical source for sidebar counts.
     All pages with a sidebar MUST call this instead of computing counts inline.
+
+    Args:
+        registry: Loaded identity registry.
+        community: Optional community dict for filtering. None = no filter (Rhodes default).
     """
     _build_caches()
     inbox = registry.list_identities(state=IdentityState.INBOX)
@@ -2703,9 +2756,26 @@ def _compute_sidebar_counts(registry) -> dict:
     rejected = registry.list_identities(state=IdentityState.REJECTED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
+    # Apply community filter if non-Rhodes
+    community_identity_ids = _get_community_identity_ids(community)
+    if community_identity_ids is not None:
+        inbox = [i for i in inbox if i.get("identity_id") in community_identity_ids]
+        proposed = [i for i in proposed if i.get("identity_id") in community_identity_ids]
+        confirmed_list = [i for i in confirmed_list if i.get("identity_id") in community_identity_ids]
+        skipped_list = [i for i in skipped_list if i.get("identity_id") in community_identity_ids]
+        rejected = [i for i in rejected if i.get("identity_id") in community_identity_ids]
+        contested = [i for i in contested if i.get("identity_id") in community_identity_ids]
+
     to_review = inbox + proposed
     dismissed = rejected + contested
-    photo_count = len(_photo_cache) if _photo_cache else 0
+
+    # Photo count — community-filtered if applicable
+    community_photo_ids = _get_community_photo_ids(community)
+    if community_photo_ids is not None:
+        photo_count = len(community_photo_ids)
+    else:
+        photo_count = len(_photo_cache) if _photo_cache else 0
+
     proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
 
     # Count pending user annotations (for admin approvals badge)
@@ -4152,7 +4222,13 @@ def _admin_bar(user=None) -> object:
     )
 
 
-def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
+def sidebar(
+    counts: dict,
+    current_section: str = "to_review",
+    user: "User | None" = None,
+    community_slug: str = "rhodes",
+    community: dict | None = None,
+) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
 
@@ -4164,6 +4240,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         counts: Dict with keys: to_review, confirmed, skipped, rejected
         current_section: Currently active section
         user: Current user (None if anonymous)
+        community_slug: Community slug for URL prefixing (default: 'rhodes')
+        community: Optional community dict for display customization
     """
 
     def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):

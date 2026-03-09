@@ -1728,6 +1728,16 @@ def get(
     rejected = registry.list_identities(state=_main_mod.IdentityState.REJECTED)
     contested = registry.list_identities(state=_main_mod.IdentityState.CONTESTED)
 
+    # Apply community filter for non-Rhodes communities (PRD-035)
+    community_identity_ids = _main_mod._get_community_identity_ids(community)
+    if community_identity_ids is not None:
+        inbox = [i for i in inbox if i.get("identity_id") in community_identity_ids]
+        proposed = [i for i in proposed if i.get("identity_id") in community_identity_ids]
+        confirmed_list = [i for i in confirmed_list if i.get("identity_id") in community_identity_ids]
+        skipped_list = [i for i in skipped_list if i.get("identity_id") in community_identity_ids]
+        rejected = [i for i in rejected if i.get("identity_id") in community_identity_ids]
+        contested = [i for i in contested if i.get("identity_id") in community_identity_ids]
+
     # Combine into 4 workflow sections
     to_review = inbox + proposed  # Items needing attention
     dismissed = rejected + contested  # Items explicitly dismissed
@@ -1739,7 +1749,7 @@ def get(
     dismissed.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
 
     # Canonical sidebar counts (single source of truth)
-    counts = _main_mod._compute_sidebar_counts(registry)
+    counts = _main_mod._compute_sidebar_counts(registry, community=community)
 
     # Validate section parameter
     valid_sections = ("to_review", "confirmed", "skipped", "rejected", "photos")
@@ -2185,7 +2195,7 @@ def get(
             # Sidebar overlay (mobile backdrop)
             sidebar_overlay,
             # Sidebar (fixed)
-            _main_mod.sidebar(counts, section, user=user),
+            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community),
             # Main content (offset for sidebar, bottom padding for mobile tabs)
             Main(
                 # First-time welcome banner (non-blocking, dismissible)

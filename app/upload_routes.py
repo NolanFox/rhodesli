@@ -335,7 +335,9 @@ def get(sess=None):
 
 
 @rt("/upload")
-async def post(files: list[UploadFile], source: str = "", collection: str = "", source_url: str = "", sess=None):
+async def post(
+    files: list[UploadFile], source: str = "", collection: str = "", source_url: str = "", sess=None, request=None
+):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
     Requires login. Non-admin uploads go to moderation queue.
@@ -370,6 +372,14 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
     denied = _main_mod._check_login(sess)
     if denied:
         return denied
+
+    # Community context from middleware (PRD-035)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+    # Capture community_id for background thread (avoids request state access after response)
+    upload_community_id = None
+    if community and community.get("slug") != "rhodes" and community.get("id"):
+        upload_community_id = community["id"]
 
     import uuid
 
@@ -473,6 +483,7 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "processing_enabled": _main_mod.PROCESSING_ENABLED,
         "uploader_email": uploader_email,
+        "community_id": upload_community_id or "",
     }
     metadata_path = job_dir / "_metadata.json"
     with open(metadata_path, "w") as f:
@@ -673,6 +684,19 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
                     print(f"[upload] R2 upload complete: {r2_count} files for job {job_id}")
                 except Exception as e:
                     print(f"[upload] R2 upload error for job {job_id}: {e}")
+
+            # Tag photos to community if uploading to non-Rhodes community (PRD-035)
+            if upload_community_id and result.get("status") in ("success", "partial"):
+                try:
+                    from app.supabase_data import add_photo_to_community
+
+                    for pid in result.get("photo_ids", []):
+                        add_photo_to_community(pid, upload_community_id)
+                    print(
+                        f"[upload] Tagged {len(result.get('photo_ids', []))} photos to community {upload_community_id}"
+                    )
+                except Exception as e:
+                    print(f"[upload] Community tagging error for job {job_id}: {e}")
 
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.
