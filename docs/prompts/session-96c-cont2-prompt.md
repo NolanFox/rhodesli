@@ -31,9 +31,15 @@ Session 96c-cont fixed the "0 identities" Fox Family bug by backfilling data to 
 - `_photo_cache` uses SHA256 IDs, community_photo_ids has inbox_* IDs
 - The alias resolution in `_get_community_photo_ids` was added but may need verification after deploy
 
-### P1: 1 confirmed identity still missing from Rhodes
-- 85/86 confirmed show. Find the missing one and ensure it's tagged to Rhodes.
-- Likely a photo that's in neither photo_communities entry.
+### P1: 1 confirmed identity missing — David Capeloto (LOST DATA from previous session)
+- Identity `e9ee215c` has face `inbox_aca56b9475f5` but:
+  - Face not in photo_index.json face_to_photo
+  - Photo `family_search_david_capeloto_declaration_of_intent_image.jpg` not in photo_index at all
+  - File not on R2 (401), not on local disk
+  - Provenance: job_id=658979c2, ingested 2026-03-07, source=inbox_ingest
+  - The ingest created the identity + face but failed to write the photo_index entry and upload to R2
+- **Action needed**: Re-ingest from original source (FamilySearch). The original image must be re-downloaded.
+- This is NOT caused by Session 96c changes — it's a pre-existing incomplete ingest from Session 93 era.
 
 ### P1: Fox Family People page empty
 - `/c/fox-family/people` shows no people (user reported)
