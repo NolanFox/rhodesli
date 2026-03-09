@@ -53,12 +53,13 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
 
 - [ ] TOOLS-001: Date + Location Estimator Standalone — engine ready, zero blockers, 2-3 sessions
-- [ ] TOOLS-002: Face Compare Real-Time (ONNX) — blocked by InsightFace ONNX export, 2-3 sessions
-- [ ] TOOLS-003: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
+- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, unblock face compare. 3-4 sessions. See `docs/architecture/ML_SERVICE.md`
+- [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
+- [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 
 ### Near-Term — Platform
-- [ ] PRODUCT-002: Face Compare Tier 2 — PRD written, stub deployed, blocked by GPU/ONNX (AD-117)
-- [ ] PRODUCT-003: NL Archive Query — PRD written, parser built, needs LangChain integration
+- [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
+- [ ] PRODUCT-003: NL Archive Query — consolidated into TOOLS-004 (PRD-032)
 - [ ] Schema additions: previous_date_estimate, gedcom_token_count on gemini_api_calls (AD-211)
 - [ ] Multi-GEDCOM support — merge/dedup architecture for community GEDCOM uploads
 
@@ -72,7 +73,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] PRODUCT-004: Historical Photo Date Estimator Standalone — consolidated into TOOLS-001 (PRD-034)
 - [ ] PRODUCT-005: Face Compare Tier 3 — product grade, consolidated into TOOLS-002 (PRD-034)
 - [ ] PRODUCT-006: Interactive Photo Chatbot — consolidated into TOOLS-003 (PRD-034)
-- [ ] ML service extraction (architecture doc written, `docs/architecture/ML_SERVICE.md`)
+- [ ] ML service extraction — consolidated into TOOLS-002 (`docs/architecture/ML_SERVICE.md`)
 - [ ] pgvector migration (evaluation doc written, DEFERRED until 5K+ embeddings)
 - [ ] GEN-001+: Multi-tenant architecture
 

@@ -1,44 +1,52 @@
 # Rhodesli Active Todo
 
-Last updated: 2026-03-07 (Session 91b)
+Last updated: 2026-03-09 (Post-Session 93, planning)
 
-## Immediate — This Session (91b)
-- [x] Supabase migrations executed (communities, life_events, notifications, global_person_links)
-- [x] Life events seeded (5 events)
-- [x] AD-206, AD-207, AD-208, AD-209 written
-- [x] Collection name prompt fixed (AD-209)
-- [x] main.py refactored: 26,100 → 9,346 lines, 16 route files
-- [x] Notification triggers wired into save_registry()
-- [ ] Discoveries extraction + UX overhaul (Track C — in progress)
-- [ ] Test speed optimization merged (Track E — done, verify <30s)
-- [ ] Browser verification with screenshots
-- [ ] Session assessment + docs updates
+## Done (Sessions 92-93)
+- [x] Deploy v0.95.0 → v0.96.0 to Railway + browser verify
+- [x] Set SENTRY_DSN + POSTHOG_API_KEY + RESEND_API_KEY on Railway
+- [x] DATA-007 — Postgres migration complete (identities, photos, photo_faces)
+- [x] Batch GEDCOM re-analyze — 67/72 photos, AD-211
+- [x] Observability verified — Sentry, PostHog, Resend all confirmed
+- [x] Email notifications via Resend
+- [x] CI/CD foundation — .github/workflows/test.yml
+- [x] Multi-pass Gemini + active learning foundations
+- [x] 10 P1/P2 UX bugs fixed
+- [x] Leon's Restaurant fix (AD-210)
+- [x] Full API call logging (prompt_text, full_response, gedcom_context)
+- [x] main.py refactored: 26,100 → 9,346 lines (Session 91b)
 
-## Post-Session 91b
-- [ ] Deploy to Railway + browser verify all features
-- [ ] Set SENTRY_DSN + POSTHOG_API_KEY on Railway
-- [ ] Test DATA_SOURCE=postgres on Railway
-- [ ] OPS-001: Custom SMTP for branded email (code ready, needs RESEND_API_KEY)
-- [ ] Re-analyze Leon's Restaurant photo → verify Asheville (not Tampa)
+## Immediate (Housekeeping)
+- [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
+- [ ] OPS-001: Custom SMTP for branded email (code ready, needs RESEND_API_KEY config)
+- [ ] BACKLOG-FLAKY-001: 8 order-dependent tests marked xfail (route loading order)
+- [ ] ML-100: Merge or close stranded session-82c/gemini-rerun branch (14 commits)
 
-## Near-Term
-- [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
-- [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
-- [ ] Active learning pipeline
-- [ ] Email notifications (PRD-028 P1+ — needs RESEND_API_KEY)
-- [ ] Timeline integration for life events
+## Near-Term — Standalone Tool Suite (PRD-034)
+See `docs/prds/034_standalone_tool_suite.md` for master plan.
+
+- [ ] TOOLS-001: Date + Location Estimator Standalone — engine ready, zero blockers, 2-3 sessions
+- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, 3-4 sessions
+      See `docs/architecture/ML_SERVICE.md` — pipeline runs only 6x in 4 months (all manual)
+- [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002, 1-2 sessions after
+- [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, 3-5 sessions
+
+## Near-Term — Platform
+- [ ] Schema additions: previous_date_estimate, gedcom_token_count on gemini_api_calls (AD-211)
+- [ ] Multi-GEDCOM support — merge/dedup architecture
+- [ ] UX-042: Shareable identity page — no link to source photo (P1)
+- [ ] UX-134: Mobile landing page horizontal overflow (P2)
+- [ ] Second collection onboarding (Fox family photos — needs TOOLS-002 first)
 
 ## Future
-- [ ] PRODUCT-003: NL Archive Query MVP — LangChain (AD-118)
-- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone
-- [ ] OPS-002: CI/CD pipeline
-- [ ] pgvector migration (embeddings stay as .npy for now)
-- [ ] ML service extraction (separate FastAPI service)
+- [ ] pgvector migration (DEFERRED until 5K+ embeddings)
 - [ ] Frontend framework migration (NOT YET TRIGGERED — HD-022)
-- [ ] Second collection onboarding (Fox family photos)
+- [ ] GEN-001+: Multi-tenant architecture
 
 ## Reference
 - Full backlog: `docs/BACKLOG.md`
+- Standalone tools PRD: `docs/prds/034_standalone_tool_suite.md`
+- ML service architecture: `docs/architecture/ML_SERVICE.md`
 - Feature status: `docs/roadmap/FEATURE_STATUS.md`
 - ML roadmap: `docs/roadmap/ML_ROADMAP.md`
 - Lessons: `tasks/lessons.md`

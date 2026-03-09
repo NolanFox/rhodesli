@@ -173,9 +173,10 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 Community-agnostic versions of Rhodesli's ML tools, serving as top-of-funnel and portfolio pieces. Master PRD: `docs/prds/034_standalone_tool_suite.md`.
 
 - [ ] **TOOLS-001: Date + Location Estimator Standalone** — Extract Gemini pipeline (`rhodesli_ml/gemini_config.py`, `rhodesli_ml/gemini_extraction.py`, `app/estimate_routes.py`) into standalone product. Engine ready, zero blockers. Includes evidence cards (AD-142) + Leaflet maps. Revenue model: free (3/month), Pro ($9.99/month), API ($0.10/photo). GEDCOM upload as premium upsell. 2-3 sessions. Source: PRD-033, PRD-034.
-- [ ] **TOOLS-002: Face Compare Real-Time (ONNX)** — Export InsightFace buffalo_l to ONNX for CPU inference on Railway. Wire into `/facecompare` upload flow with isotonic calibration (AD-149). Alternative: ML service extraction (`docs/architecture/ML_SERVICE.md`). Blocked by ONNX export validation. 2-3 sessions. Source: PRD-031, PRD-034, AD-110/117/131.
-- [ ] **TOOLS-003: NL Query + Chatbot** — Wire `parse_query_intent()` prototype to Supabase queries. Build conversational UI with progressive refinement (PRODUCT-006 vision from Session 81). 3-5 sessions. Source: PRD-032, PRD-034.
-- [ ] **TOOLS-004: Unified Product Identity** — Shared domain, design system (DD-001 archival aesthetic), Supabase auth, Stripe billing, PostHog analytics across all standalone tools. Enables cross-tool funnel analysis. Source: PRD-034.
+- [ ] **TOOLS-002: ML Service Extraction + Automated Pipeline** — Extract InsightFace into separate FastAPI service. Eliminates laptop as single point of failure (pipeline has run only 6 times in 4 months). Adds: upload webhook → detect → embed → cluster → notify. Scheduled batch: nightly recalibration + re-clustering. Unblocks TOOLS-003 (face compare). 3-4 sessions. Source: `docs/architecture/ML_SERVICE.md` (reframed Session 94), PRD-034. **Key finding:** 7 pipeline scripts exist but 9/10 steps are manual CLI commands that never run. Only face detection (step 4) is automated on Railway.
+- [ ] **TOOLS-003: Face Compare Real-Time** — With ML service (TOOLS-002) running, wire real-time embedding into `/facecompare` upload flow. Web app sends photo to ML service, gets 512-dim vector, compares against archive. Calibrated scoring via AD-149. Replaces ONNX export approach (simpler, also solves operational dependency). 1-2 sessions after TOOLS-002. Source: PRD-031, PRD-034.
+- [ ] **TOOLS-004: NL Query + Chatbot** — Wire `parse_query_intent()` prototype to Supabase queries. Build conversational UI with progressive refinement (PRODUCT-006 vision from Session 81). 3-5 sessions. Source: PRD-032, PRD-034.
+- [ ] **TOOLS-005: Unified Product Identity** — Shared domain, design system (DD-001 archival aesthetic), Supabase auth, Stripe billing, PostHog analytics across all standalone tools. Enables cross-tool funnel analysis. Source: PRD-034.
 
 **Existing code & artifacts:**
 | Artifact | Location |
@@ -186,7 +187,8 @@ Community-agnostic versions of Rhodesli's ML tools, serving as top-of-funnel and
 | Gemini engine | `rhodesli_ml/gemini_config.py`, `rhodesli_ml/gemini_extraction.py` |
 | Evidence card UI | `app/estimate_routes.py` |
 | NL query parser | `rhodesli_ml/nl_query/` |
-| ML service architecture | `docs/architecture/ML_SERVICE.md` |
+| ML service architecture + pipeline audit | `docs/architecture/ML_SERVICE.md` |
+| Pipeline scripts (7 total, manual) | `scripts/download_staged.py`, `scripts/push_to_production.py`, etc. |
 | Key decisions | AD-110, AD-117, AD-131, AD-132, AD-133, AD-139, AD-142, AD-149, AD-192, AD-201 |
 | Design principles | Lesson 81 (separate tools), Lesson 82 (community-agnostic), Lesson 84 (museum-quality) |
 

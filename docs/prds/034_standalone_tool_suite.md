@@ -150,6 +150,12 @@ to ONNX for CPU.
 **For Date/Location estimation**, ML service extraction is not needed — the
 Gemini API is already external.
 
+**Critical finding (Session 94):** The ML pipeline has only been run end-to-end
+**6 times in 4 months**. The local pipeline scripts are fully implemented but
+almost never executed. Cloud ML eliminates this operational bottleneck. See
+`docs/architecture/ML_SERVICE.md` for the full pipeline audit and reframed
+problem statement.
+
 ### Multi-Collection Support (PRD-030)
 
 The `communities` table and `global_person_links` schema (Session 91) enable:
@@ -210,9 +216,27 @@ most ambitious standalone tool but has the highest differentiation.
 |------|-------------|-----------|-------------|---------|-----------------|
 | Date Estimator | Yes | Yes (evidence cards) | Yes (PRD-033) | None | 2-3 |
 | Location Estimator | Yes | Yes (Leaflet maps) | No — needs PRD | None | 2-3 (shares with date) |
-| Face Compare | Partial | Yes (`/facecompare`) | Yes (PRD-031) | ONNX export | 3-4 |
+| ML Service Extraction | Code exists | N/A | Yes (ML_SERVICE.md) | None (engineering work) | 3-4 |
+| Face Compare | Partial | Yes (`/facecompare`) | Yes (PRD-031) | ML service (Phase 2) | 1-2 (after ML service) |
 | NL Query | Prototype | No | Yes (PRD-032) | Supabase wiring | 3-4 |
 | Photo Chatbot | Concept | No | No | LLM conversation loop | 5+ |
+
+### Pipeline Automation Status
+
+The local ML pipeline has **7 fully-implemented scripts** but has only been
+run **6 times in 4 months** (git history of embeddings.npy). This is the
+strongest argument for cloud ML — the infrastructure exists, it just never
+runs because it requires manual execution on the admin's laptop.
+
+| Pipeline Step | Automated? | Runs Where |
+|--------------|------------|------------|
+| Face detection on upload | Yes | Railway (PROCESSING_ENABLED=true) |
+| Embedding extraction | Yes (with detection) | Railway |
+| Clustering (match to identities) | **No — manual** | Nolan's laptop |
+| Batch Gemini reanalysis | **No — manual** | Nolan's laptop (API calls) |
+| Isotonic recalibration | **No — manual** | Nolan's laptop |
+| Production sync | **No — manual** | Nolan's laptop |
+| R2 crop upload | **No — manual** | Nolan's laptop |
 
 ---
 
@@ -228,17 +252,31 @@ most ambitious standalone tool but has the highest differentiation.
 5. Landing page with before/after examples from Rhodesli (with community consent)
 6. Deploy on separate Railway service or subdomain
 
-### Phase 2: Face Compare Real-Time (2-3 sessions)
-**Why second:** Highest user demand, but needs ONNX unblock first.
+### Phase 2: ML Service Extraction + Automated Pipeline (3-4 sessions)
+**Why second:** Removes laptop as single point of failure, unblocks Face Compare.
+See `docs/architecture/ML_SERVICE.md` for full architecture.
 
-1. Export InsightFace buffalo_l to ONNX
-2. Validate embedding consistency vs PyTorch
-3. Wire ONNX into `/facecompare` upload flow
-4. Calibrated scoring on real-time results
+1. Extract InsightFace into separate FastAPI service
+2. Wire web app to call ML service (with local fallback)
+3. Deploy as Railway internal service
+4. Add automated pipeline: upload webhook → detect → embed → cluster → notify
+5. Add scheduled batch: nightly recalibration + clustering
+
+**This replaces the ONNX export approach.** Running InsightFace natively on a
+dedicated service is simpler and more reliable than ONNX conversion, and it
+also solves the operational dependency problem.
+
+### Phase 3: Face Compare Real-Time (1-2 sessions, depends on Phase 2)
+**Why third:** With ML service running, real-time compare is straightforward.
+
+1. Web app sends uploaded photo to ML service for embedding
+2. ML service returns 512-dim vector
+3. Web app compares against cached archive embeddings
+4. Calibrated scoring via isotonic regression (AD-149)
 5. Shareable result pages with OG cards
 
-### Phase 3: NL Query + Chatbot (3-5 sessions)
-**Why third:** Depends on solid data layer + proven standalone patterns.
+### Phase 4: NL Query + Chatbot (3-5 sessions)
+**Why fourth:** Depends on solid data layer + proven standalone patterns.
 
 1. Wire `parse_query_intent()` to Supabase queries
 2. Build conversational UI
@@ -286,7 +324,7 @@ with calibrated confidence, and estimates the decade — all on a $5/month serve
 | Date/Location engine | `rhodesli_ml/gemini_config.py`, `rhodesli_ml/gemini_extraction.py` | Gemini prompt + parsing |
 | Evidence card UI | `app/estimate_routes.py` | Date + location result rendering |
 | NL query parser | `rhodesli_ml/nl_query/` | Rule-based intent parsing prototype |
-| ML service architecture | `docs/architecture/ML_SERVICE.md` | Service extraction plan |
+| ML service architecture | `docs/architecture/ML_SERVICE.md` | Service extraction plan + pipeline audit + reframed problem statement |
 | Multi-collection schema | `docs/prds/030_multi_collection.md` | Community scoping + global person links |
 | Face Compare Tier 2 PRD | `docs/prds/031_face_compare_tier2.md` | ONNX architecture + API specs |
 | NL Query PRD | `docs/prds/032_nl_archive_query.md` | Intent categories + query pipeline |
