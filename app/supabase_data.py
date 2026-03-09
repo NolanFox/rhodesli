@@ -1182,6 +1182,190 @@ def load_birth_year_estimates_from_supabase() -> dict | None:
         return None
 
 
+# =========================================================================
+# COMMUNITY SYNC (PRD-035)
+# =========================================================================
+
+
+def load_communities() -> list | None:
+    """Load all communities from Supabase. Returns list of dicts or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("communities").select("*").order("created_at").execute()
+        return result.data or []
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase communities load failed: {e}")
+        return None
+
+
+def get_community_by_slug(slug: str) -> dict | None:
+    """Fetch a single community by slug. Returns dict or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("communities").select("*").eq("slug", slug).limit(1).execute()
+        if result.data:
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase community lookup failed for '{slug}': {e}")
+        return None
+
+
+def load_photos_for_community(community_id: str) -> list | None:
+    """Load photo IDs belonging to a community via photo_communities table."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("photo_communities")
+                .select("photo_id")
+                .eq("community_id", community_id)
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        photo_ids = [r["photo_id"] for r in all_rows]
+        logger.info(f"Loaded {len(photo_ids)} photo IDs for community {community_id}")
+        return photo_ids
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase photo_communities load failed: {e}")
+        return None
+
+
+def load_identities_for_community(community_id: str) -> list | None:
+    """Load identity IDs belonging to a community via identity_communities table."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("identity_communities")
+                .select("identity_id, is_primary")
+                .eq("community_id", community_id)
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        logger.info(f"Loaded {len(all_rows)} identity IDs for community {community_id}")
+        return all_rows
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase identity_communities load failed: {e}")
+        return None
+
+
+def create_community(data: dict) -> dict | None:
+    """Create a new community. Returns the created row or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("communities").insert(data).execute()
+        if result.data:
+            logger.info(f"Created community: {data.get('slug')}")
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase community create failed: {e}")
+        return None
+
+
+def update_community(community_id: str, data: dict) -> dict | None:
+    """Update a community by ID. Returns updated row or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("communities").update(data).eq("id", community_id).execute()
+        if result.data:
+            logger.info(f"Updated community: {community_id}")
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase community update failed: {e}")
+        return None
+
+
+def create_upload_batch(data: dict) -> dict | None:
+    """Create an upload batch record. Returns the created row or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("upload_batches").insert(data).execute()
+        if result.data:
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase upload batch create failed: {e}")
+        return None
+
+
+def add_photo_to_community(photo_id: str, community_id: str) -> bool:
+    """Add a photo to a community (photo_communities table). Returns success."""
+    sb = get_supabase_client()
+    if not sb:
+        return False
+
+    try:
+        sb.table("photo_communities").upsert({"photo_id": photo_id, "community_id": community_id}).execute()
+        return True
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase add_photo_to_community failed: {e}")
+        return False
+
+
+def add_identity_to_community(identity_id: str, community_id: str, is_primary: bool = False) -> bool:
+    """Add an identity to a community (identity_communities table). Returns success."""
+    sb = get_supabase_client()
+    if not sb:
+        return False
+
+    try:
+        sb.table("identity_communities").upsert(
+            {
+                "identity_id": identity_id,
+                "community_id": community_id,
+                "is_primary": is_primary,
+            }
+        ).execute()
+        return True
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase add_identity_to_community failed: {e}")
+        return False
+
+
 def load_person_comments_from_supabase(identity_id: str = None) -> list | None:
     """Load person comments from Supabase. Returns list or None."""
     sb = get_supabase_client()
