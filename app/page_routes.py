@@ -2233,7 +2233,7 @@ def get(
             # Sidebar overlay (mobile backdrop)
             sidebar_overlay,
             # Sidebar (fixed)
-            _main_mod.sidebar(counts, section, user=user),
+            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community),
             # Main content (offset for sidebar, bottom padding for mobile tabs)
             Main(
                 # First-time welcome banner (non-blocking, dismissible)

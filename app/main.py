@@ -4255,7 +4255,13 @@ def _admin_bar(user=None) -> object:
     )
 
 
-def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
+def sidebar(
+    counts: dict,
+    current_section: str = "to_review",
+    user: "User | None" = None,
+    community_slug: str = "rhodes",
+    community: dict | None = None,
+) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
 
@@ -4267,7 +4273,16 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         counts: Dict with keys: to_review, confirmed, skipped, rejected
         current_section: Currently active section
         user: Current user (None if anonymous)
+        community_slug: Community slug (default "rhodes")
+        community: Community dict from Supabase (None for default/rhodes)
     """
+    # Determine community context
+    is_rhodes = community_slug == "rhodes" or community_slug is None or community is None
+    prefix = community_url_prefix(community_slug or "rhodes")
+    header_name = community.get("name", "Rhodesli") if community else "Rhodesli"
+    header_subtitle = community.get("landing_subtitle", "Heritage Archive") if community else "Heritage Archive"
+    if not header_subtitle:
+        header_subtitle = "Heritage Archive"
 
     def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):
         """Single navigation item with badge. Adapts to collapsed state."""
@@ -4294,13 +4309,160 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {container_cls}",
         )
 
+    # Workspace switcher (admin-only, between header and search)
+    workspace_switcher = None
+    if user and user.is_admin:
+        workspace_switcher = Div(
+            Div(
+                Span(header_name, cls="sidebar-label text-xs text-slate-400 truncate"),
+                A(
+                    "Switch",
+                    hx_get="/api/communities/switcher",
+                    hx_target="#community-switcher-dropdown",
+                    hx_swap="innerHTML",
+                    cls="sidebar-label text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer ml-auto flex-shrink-0",
+                ),
+                cls="flex items-center gap-2 px-3 py-1.5",
+            ),
+            Div(id="community-switcher-dropdown", cls="relative"),
+            cls="border-b border-slate-700/50",
+            data_testid="workspace-switcher",
+        )
+    elif not is_rhodes and community:
+        # Non-admin: just show community name
+        workspace_switcher = Div(
+            Span(header_name, cls="sidebar-label text-xs text-slate-400 truncate px-3 py-1.5"),
+            cls="border-b border-slate-700/50",
+        )
+
+    # Build review section (Rhodes-only: has ML features)
+    review_section = (
+        Div(
+            P(
+                "Review",
+                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+            ),
+            nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
+            nav_item(
+                f"{prefix}/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"
+            ),
+            nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
+            # Notifications bell with live unread count (PRD-028)
+            A(
+                Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
+                Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
+                Span(
+                    id="notification-badge-sidebar",
+                    cls="sidebar-label ml-auto",
+                ),
+                href="/notifications",
+                title="Notifications",
+                onclick="closeSidebar()",
+                hx_get="/api/notifications/count?target=sidebar",
+                hx_trigger="load, every 30s",
+                hx_target="#notification-badge-sidebar",
+                hx_swap="innerHTML",
+                cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
+            )
+            if user
+            else None,
+            cls="mb-3",
+        )
+        if is_rhodes
+        else None
+    )
+
+    # Build browse section items — advanced items only for Rhodes
+    browse_items = [
+        nav_item(f"{prefix}/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
+    ]
+    if is_rhodes:
+        browse_items.extend(
+            [
+                A(
+                    Span("📂", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Collections", cls="sidebar-label ml-2"),
+                    href=f"{prefix}/collections",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                ),
+                A(
+                    Span("🗺️", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Map", cls="sidebar-label ml-2"),
+                    href=f"{prefix}/map",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                ),
+                A(
+                    Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Timeline", cls="sidebar-label ml-2"),
+                    href=f"{prefix}/timeline",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                ),
+                A(
+                    Span("\U0001f333", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Tree", cls="sidebar-label ml-2"),
+                    href=f"{prefix}/tree",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                ),
+                A(
+                    Span("🔗", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Connect", cls="sidebar-label ml-2"),
+                    href=f"{prefix}/connect",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                ),
+            ]
+        )
+    # Global tools (always shown, no community prefix)
+    browse_items.extend(
+        [
+            A(
+                Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("Compare", cls="sidebar-label ml-2"),
+                href="/tools/compare",
+                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
+            A(
+                Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("Estimate", cls="sidebar-label ml-2"),
+                href="/tools/estimate",
+                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
+            A(
+                Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("About", cls="sidebar-label ml-2"),
+                href="/about",
+                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
+        ]
+    )
+
+    # Admin section (Rhodes-only, admin-only)
+    admin_section = (
+        Div(
+            P("Admin", cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
+            nav_item("/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
+            nav_item(
+                "/admin/approvals", "✅", "Approvals", counts.get("pending_annotations", 0), "approvals", "emerald"
+            ),
+            nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
+            A(
+                Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("GEDCOM", cls="sidebar-label ml-2"),
+                href="/admin/gedcom",
+                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
+            cls="mb-3",
+        )
+        if (user and user.is_admin and is_rhodes)
+        else None
+    )
+
     return Aside(
         # Header with collapse toggle
         Div(
             A(
-                H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight font-display"),
-                P("Heritage Archive", cls="sidebar-label text-xs text-amber-500/80 mt-0.5 tracking-wide uppercase"),
-                href="/",
+                H1(header_name, cls="sidebar-label text-lg font-bold text-white leading-tight font-display"),
+                P(header_subtitle, cls="sidebar-label text-xs text-amber-500/80 mt-0.5 tracking-wide uppercase"),
+                href=f"{prefix}/",
                 cls="flex-1 min-w-0 no-underline hover:opacity-80 transition-opacity",
             ),
             Button(
@@ -4317,6 +4479,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             ),
             cls="flex items-center px-3 py-3 border-b border-slate-700/50",
         ),
+        # Workspace switcher (admin or non-Rhodes communities)
+        workspace_switcher,
         # Search input
         Div(
             Div(
@@ -4365,7 +4529,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     viewBox="0 0 24 24",
                 ),
                 Span("Upload", cls="sidebar-label ml-2"),
-                href="/upload",
+                href=f"{prefix}/upload",
                 title="Upload photos",
                 cls="flex items-center justify-center gap-0 w-full px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors",
             )
@@ -4375,44 +4539,18 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         ),
         # Navigation
         Nav(
-            # Review Section
-            Div(
-                P(
-                    "Review",
-                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
-                ),
-                nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
-                nav_item("/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"),
-                nav_item("/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
-                # Notifications bell with live unread count (PRD-028)
-                A(
-                    Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
-                    Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
-                    Span(
-                        id="notification-badge-sidebar",
-                        cls="sidebar-label ml-auto",
-                    ),
-                    href="/notifications",
-                    title="Notifications",
-                    onclick="closeSidebar()",
-                    hx_get="/api/notifications/count?target=sidebar",
-                    hx_trigger="load, every 30s",
-                    hx_target="#notification-badge-sidebar",
-                    hx_swap="innerHTML",
-                    cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
-                )
-                if user
-                else None,
-                cls="mb-3",
-            ),
+            # Review Section (Rhodes-only)
+            review_section,
             # Library Section
             Div(
                 P(
                     "Library",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
-                nav_item("/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
-                nav_item("/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
+                nav_item(f"{prefix}/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
+                nav_item(f"{prefix}/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray")
+                if is_rhodes
+                else None,
                 cls="mb-3",
             ),
             # Browse Section (photo-centric)
@@ -4421,77 +4559,11 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     "Browse",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
-                nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
-                A(
-                    Span("📂", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Collections", cls="sidebar-label ml-2"),
-                    href="/collections",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("🗺️", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Map", cls="sidebar-label ml-2"),
-                    href="/map",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Timeline", cls="sidebar-label ml-2"),
-                    href="/timeline",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("\U0001f333", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Tree", cls="sidebar-label ml-2"),
-                    href="/tree",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("🔗", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Connect", cls="sidebar-label ml-2"),
-                    href="/connect",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Compare", cls="sidebar-label ml-2"),
-                    href="/tools/compare",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("Estimate", cls="sidebar-label ml-2"),
-                    href="/tools/estimate",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                A(
-                    Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("About", cls="sidebar-label ml-2"),
-                    href="/about",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
+                *browse_items,
                 cls="mb-3",
             ),
-            # Admin Section (admin-only, with pending uploads badge)
-            Div(
-                P("Admin", cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
-                nav_item(
-                    "/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"
-                ),
-                nav_item(
-                    "/admin/approvals", "✅", "Approvals", counts.get("pending_annotations", 0), "approvals", "emerald"
-                ),
-                nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
-                A(
-                    Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
-                    Span("GEDCOM", cls="sidebar-label ml-2"),
-                    href="/admin/gedcom",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
-                ),
-                cls="mb-3",
-            )
-            if (user and user.is_admin)
-            else None,
+            # Admin Section (admin-only, Rhodes-only)
+            admin_section,
             cls="flex-1 px-2 py-2 space-y-0 overflow-y-auto",
         ),
         # Footer with user info and stats

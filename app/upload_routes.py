@@ -165,7 +165,7 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
 
 
 @rt("/upload")
-def get(sess=None):
+def get(sess=None, request=None):
     """
     Render the upload page. Requires login when auth is enabled.
     Non-admin uploads go through the moderation queue (pending_uploads.json).
@@ -174,6 +174,8 @@ def get(sess=None):
     if denied:
         return denied
     user = _main_mod.get_current_user(sess or {})
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
     style = Style("""
         html, body {
             height: 100%;
@@ -307,7 +309,9 @@ def get(sess=None):
             _main_mod.toast_container(),
             mobile_header,
             sidebar_overlay,
-            _main_mod.sidebar(counts, current_section=None, user=user),
+            _main_mod.sidebar(
+                counts, current_section=None, user=user, community_slug=community_slug, community=community
+            ),
             # Sidebar overlay for mobile
             Div(
                 cls="fixed inset-0 bg-black bg-opacity-50 z-30 hidden",
