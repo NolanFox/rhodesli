@@ -81,16 +81,20 @@ class TestGetCommunityPhotoIds:
 
     @patch("app.supabase_data.load_photos_for_community", return_value=None)
     def test_supabase_failure_returns_empty_set(self, mock_load):
-        from app.main import _get_community_photo_ids
+        import app.main
 
-        result = _get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
+        app.main._community_photo_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        result = app.main._get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
         assert result == set()
 
     @patch("app.supabase_data.load_photos_for_community", return_value=[])
     def test_empty_community_returns_empty_set(self, mock_load):
-        from app.main import _get_community_photo_ids
+        import app.main
 
-        result = _get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
+        app.main._community_photo_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        result = app.main._get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
         assert result == set()
 
 
@@ -124,9 +128,11 @@ class TestGetCommunityIdentityIds:
 
     @patch("app.supabase_data.load_identities_for_community", return_value=None)
     def test_supabase_failure_returns_empty_set(self, mock_load):
-        from app.main import _get_community_identity_ids
+        import app.main
 
-        result = _get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
         assert result == set()
 
     def test_no_id_returns_empty_set(self):
