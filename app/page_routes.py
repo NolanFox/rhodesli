@@ -182,6 +182,33 @@ def debug_community_ids(slug: str = "fox-family"):
             if alias:
                 resolved += 1
 
+    # Check resolved photo IDs vs face_to_photo_cache
+    resolved_photo_ids = set(community_photo_ids) if community_photo_ids else set()
+    if _main_mod._photo_id_aliases and community_photo_ids:
+        for cpid in community_photo_ids:
+            alias = _main_mod._photo_id_aliases.get(cpid)
+            if alias:
+                resolved_photo_ids.add(alias)
+
+    # How many faces map to resolved photos?
+    face_matches = 0
+    sample_face_photo = []
+    if _main_mod._face_to_photo_cache:
+        for fid, pid in _main_mod._face_to_photo_cache.items():
+            if pid in resolved_photo_ids:
+                face_matches += 1
+                if len(sample_face_photo) < 3:
+                    sample_face_photo.append({"face": fid, "photo": pid})
+
+    # Sample resolved IDs
+    sample_resolved = list(resolved_photo_ids - set(community_photo_ids or []))[:5]
+
+    # Sample face_to_photo entries
+    sample_f2p = []
+    if _main_mod._face_to_photo_cache:
+        for fid, pid in list(_main_mod._face_to_photo_cache.items())[:5]:
+            sample_f2p.append({"face": fid, "photo": pid})
+
     community_identity_ids = _main_mod._get_community_identity_ids(community)
 
     return {
@@ -193,6 +220,11 @@ def debug_community_ids(slug: str = "fox-family"):
         "face_cache_count": face_cache_count,
         "direct_matches": direct_match,
         "alias_resolved": resolved,
+        "resolved_photo_ids_count": len(resolved_photo_ids),
+        "sample_resolved_aliases": sample_resolved,
+        "face_matches_in_resolved": face_matches,
+        "sample_face_photo_matches": sample_face_photo,
+        "sample_face_to_photo": sample_f2p,
         "identity_count": len(community_identity_ids) if community_identity_ids else 0,
     }
 
