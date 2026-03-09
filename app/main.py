@@ -4341,41 +4341,37 @@ def sidebar(
             cls="border-b border-slate-700/50",
         )
 
-    # Build review section (Rhodes-only: has ML features)
-    review_section = (
-        Div(
-            P(
-                "Review",
-                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+    # Build review section (all communities need ML review features)
+    review_section = Div(
+        P(
+            "Review",
+            cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+        ),
+        nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
+        nav_item(
+            f"{prefix}/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"
+        ),
+        nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
+        # Notifications bell with live unread count (PRD-028)
+        A(
+            Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
+            Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
+            Span(
+                id="notification-badge-sidebar",
+                cls="sidebar-label ml-auto",
             ),
-            nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
-            nav_item(
-                f"{prefix}/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"
-            ),
-            nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
-            # Notifications bell with live unread count (PRD-028)
-            A(
-                Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
-                Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
-                Span(
-                    id="notification-badge-sidebar",
-                    cls="sidebar-label ml-auto",
-                ),
-                href="/notifications",
-                title="Notifications",
-                onclick="closeSidebar()",
-                hx_get="/api/notifications/count?target=sidebar",
-                hx_trigger="load, every 30s",
-                hx_target="#notification-badge-sidebar",
-                hx_swap="innerHTML",
-                cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
-            )
-            if user
-            else None,
-            cls="mb-3",
+            href="/notifications",
+            title="Notifications",
+            onclick="closeSidebar()",
+            hx_get="/api/notifications/count?target=sidebar",
+            hx_trigger="load, every 30s",
+            hx_target="#notification-badge-sidebar",
+            hx_swap="innerHTML",
+            cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
         )
-        if is_rhodes
-        else None
+        if user
+        else None,
+        cls="mb-3",
     )
 
     # Build browse section items — advanced items only for Rhodes

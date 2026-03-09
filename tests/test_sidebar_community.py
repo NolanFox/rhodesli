@@ -99,9 +99,10 @@ class TestSidebarCommunityHeader(unittest.TestCase):
 
 
 class TestSidebarCommunityScoping(unittest.TestCase):
-    """Non-Rhodes communities hide Review and Admin sections."""
+    """Non-Rhodes communities hide Admin section but show Review."""
 
-    def test_fox_family_hides_review_section(self):
+    def test_fox_family_shows_review_section(self):
+        """All communities need Review section for cluster review + notifications."""
         from app.main import sidebar
 
         counts = _default_counts()
@@ -109,10 +110,10 @@ class TestSidebarCommunityScoping(unittest.TestCase):
         user = FakeUser(is_admin=True)
         result = sidebar(counts, community_slug="fox-family", community=community, user=user)
         html = repr(result)
-        # Review section items should NOT be present
-        assert "New Matches" not in html
-        assert "Discoveries" not in html
-        assert "Help Identify" not in html
+        # Review section items MUST be present (Session 96b fix: AD-215 feedback)
+        assert "New Matches" in html
+        assert "Discoveries" in html
+        assert "Help Identify" in html
 
     def test_fox_family_hides_admin_section(self):
         from app.main import sidebar

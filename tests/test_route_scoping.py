@@ -275,7 +275,10 @@ class TestPhotosRouteCommunityScoping:
         import app.browse_routes as br
 
         source = inspect.getsource(br)
-        assert "community_photo_ids is not None and photo_id_val not in community_photo_ids" in source
+        # Session 96b: filter checks both cache ID and its alias (inbox_* ID)
+        assert "community_photo_ids is not None" in source
+        assert "photo_id_val not in community_photo_ids" in source
+        assert "alias_id" in source
 
     def test_browse_routes_extracts_community_context(self):
         """browse_routes extracts community_slug and community from request.state."""
