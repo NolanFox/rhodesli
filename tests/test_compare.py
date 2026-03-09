@@ -7,6 +7,7 @@ from fasthtml.common import Span
 def test_compare_upload_returns_results(client, tmp_path, monkeypatch):
     """Upload a photo via unified pipeline → get processing status back."""
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", True)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
@@ -18,10 +19,16 @@ def test_compare_upload_returns_results(client, tmp_path, monkeypatch):
     )
     assert response.status_code == 200
     # New unified pipeline returns polling component
-    assert any(msg in response.text.lower() for msg in [
-        "processing photo", "compare-processing", "/api/compare/status/",
-        "submitted", "staged",
-    ])
+    assert any(
+        msg in response.text.lower()
+        for msg in [
+            "processing photo",
+            "compare-processing",
+            "/api/compare/status/",
+            "submitted",
+            "staged",
+        ]
+    )
 
 
 def test_compare_pair_cross_matches(client):
@@ -50,14 +57,16 @@ def test_compare_results_have_shareable_url(client):
     from app.main import _save_comparison_result, _generate_result_id
 
     result_id = _generate_result_id()
-    _save_comparison_result({
-        "result_id": result_id,
-        "query_type": "upload",
-        "query_name": "Test Upload",
-        "created_at": "2026-02-28T00:00:00",
-        "matches": [],
-        "responses": [],
-    })
+    _save_comparison_result(
+        {
+            "result_id": result_id,
+            "query_type": "upload",
+            "query_name": "Test Upload",
+            "created_at": "2026-02-28T00:00:00",
+            "matches": [],
+            "responses": [],
+        }
+    )
     response = client.get(f"/compare/result/{result_id}")
     assert response.status_code == 200
     assert f"/compare/result/{result_id}" in response.text
@@ -110,7 +119,6 @@ def test_compare_mobile_layout(client):
     assert "lg:flex-row" in response.text or "flex-col" in response.text
 
 
-
 def test_compare_upload_is_auto_queued_for_admin_review(tmp_path, monkeypatch):
     """Compare uploads automatically create a pending moderation queue entry."""
     import json
@@ -141,8 +149,13 @@ def test_compare_pair_match_includes_cross_match_summary(client, tmp_path, monke
     (upload_dir / "upa_faces.pkl").write_bytes(pickle.dumps(faces_a))
     (upload_dir / "upb_faces.pkl").write_bytes(pickle.dumps(faces_b))
 
-    with patch("core.storage.can_write_r2", return_value=False), patch("core.neighbors.find_similar_faces", return_value=[]):
-        response = client.post("/api/compare/pair/match", params={"upload_a": "upa", "face_a": 0, "upload_b": "upb", "face_b": 0})
+    with (
+        patch("core.storage.can_write_r2", return_value=False),
+        patch("core.neighbors.find_similar_faces", return_value=[]),
+    ):
+        response = client.post(
+            "/api/compare/pair/match", params={"upload_a": "upa", "face_a": 0, "upload_b": "upb", "face_b": 0}
+        )
 
     assert response.status_code == 200
     assert "Top cross-photo matches" in response.text
@@ -203,10 +216,12 @@ def test_compare_upload_stages_file(tmp_path, monkeypatch):
     """Compare upload stages file to data/staging/{job_id}/ (same as Upload page)."""
     import app.main as main_mod
     import app.compare_routes as compare_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(compare_mod, "PROCESSING_ENABLED", False)
     (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
     from starlette.testclient import TestClient
+
     tc = TestClient(main_mod.app)
 
     response = tc.post(
@@ -228,14 +243,18 @@ def test_compare_upload_nonadmin_queued(tmp_path, monkeypatch):
     """Non-admin compare upload queued for review (Lesson 19)."""
     import json
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", True)
     # Make auth enabled + non-admin
     monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: True)
-    monkeypatch.setattr(main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})())
+    monkeypatch.setattr(
+        main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})()
+    )
     (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
     from starlette.testclient import TestClient
+
     tc = TestClient(main_mod.app)
 
     response = tc.post(
@@ -259,10 +278,12 @@ def test_compare_status_starting(tmp_path, monkeypatch, client):
     """Status endpoint returns polling HTML when job is starting."""
     import json
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
 
     from datetime import datetime, timezone
+
     status = {"status": "starting", "started_at": datetime.now(timezone.utc).isoformat(), "total_files": 1}
     (tmp_path / "inbox" / "test1234.status.json").write_text(json.dumps(status))
 
@@ -275,6 +296,7 @@ def test_compare_status_error(tmp_path, monkeypatch, client):
     """Status endpoint shows error when job fails."""
     import json
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
 
@@ -290,6 +312,7 @@ def test_compare_status_no_faces(tmp_path, monkeypatch, client):
     """Status endpoint shows friendly message when no faces detected."""
     import json
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
 
@@ -342,8 +365,14 @@ def test_compare_result_page_shows_photo_link(tmp_path, monkeypatch, client):
         "photo_id": "inbox_abc_0_test",
         "reference_person": {"identity_id": "id123", "name": "Isaac Cohen"},
         "matches": [
-            {"face_id": "f1", "identity_id": "id456", "identity_name": "Face 1",
-             "distance": 1.15, "confidence_pct": 42, "tier": "POSSIBLE MATCH"},
+            {
+                "face_id": "f1",
+                "identity_id": "id456",
+                "identity_name": "Face 1",
+                "distance": 1.15,
+                "confidence_pct": 42,
+                "tier": "POSSIBLE MATCH",
+            },
         ],
         "responses": [],
     }
@@ -370,10 +399,22 @@ def test_compare_result_page_confidence_bars(tmp_path, monkeypatch, client):
         "query_type": "compare_upload",
         "query_name": "Test Upload",
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
-             "distance": 0.7, "confidence_pct": 90, "tier": "STRONG MATCH"},
-            {"face_id": "f2", "identity_id": "id2", "identity_name": "Person B",
-             "distance": 1.3, "confidence_pct": 30, "tier": "WEAK"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Person A",
+                "distance": 0.7,
+                "confidence_pct": 90,
+                "tier": "STRONG MATCH",
+            },
+            {
+                "face_id": "f2",
+                "identity_id": "id2",
+                "identity_name": "Person B",
+                "distance": 1.3,
+                "confidence_pct": 30,
+                "tier": "WEAK",
+            },
         ],
         "responses": [],
     }
@@ -415,19 +456,28 @@ def test_compare_from_photo_returns_scores(client, monkeypatch):
     monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
     monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
     import app.compare_routes as compare_mod
+
     monkeypatch.setattr(compare_mod, "_resolve_crop_url", lambda fid, cf: f"https://example.com/{fid}.jpg")
-    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
-        "filename": "test.jpg",
-        "faces": [{"face_id": "uploaded-face-1", "bbox": [0, 0, 100, 100]}],
-    })
+    monkeypatch.setattr(
+        main_mod,
+        "get_photo_metadata",
+        lambda pid: {
+            "filename": "test.jpg",
+            "faces": [{"face_id": "uploaded-face-1", "bbox": [0, 0, 100, 100]}],
+        },
+    )
 
     # Mock face_data with embeddings
     mock_embedding = np.random.randn(512).astype(np.float32)
     ref_embedding = np.random.randn(512).astype(np.float32)
-    monkeypatch.setattr(main_mod, "get_face_data", lambda: {
-        "uploaded-face-1": {"mu": mock_embedding},
-        "ref-face-1": {"mu": ref_embedding},
-    })
+    monkeypatch.setattr(
+        main_mod,
+        "get_face_data",
+        lambda: {
+            "uploaded-face-1": {"mu": mock_embedding},
+            "ref-face-1": {"mu": ref_embedding},
+        },
+    )
     monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
 
     # Mock find_nearest_neighbors (imported inside route handler from core.neighbors)
@@ -443,6 +493,7 @@ def test_compare_from_photo_returns_scores(client, monkeypatch):
 def test_compare_from_photo_invalid_photo_404(client, monkeypatch):
     """GET /api/compare/from-photo with invalid photo_id returns error."""
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
     monkeypatch.setattr(main_mod, "get_face_data", lambda: {})
     monkeypatch.setattr(main_mod, "load_registry", lambda: type("R", (), {"identities": {}})())
@@ -466,10 +517,14 @@ def test_compare_from_photo_invalid_person_404(client, monkeypatch):
     monkeypatch.setattr(main_mod, "get_face_data", lambda: {})
     monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
     monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
-    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
-        "filename": "test.jpg",
-        "faces": [{"face_id": "f1"}],
-    })
+    monkeypatch.setattr(
+        main_mod,
+        "get_photo_metadata",
+        lambda pid: {
+            "filename": "test.jpg",
+            "faces": [{"face_id": "f1"}],
+        },
+    )
 
     response = client.get("/api/compare/from-photo?photo_id=test-photo&identity_id=nonexistent")
     assert response.status_code == 200
@@ -499,19 +554,30 @@ def test_photo_page_has_compare_link(client, monkeypatch):
 
     # Use a simple mock for public_photo_page to check route handler
     # The link should be embedded in the photo page HTML
-    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
-        "photo_id": "test-photo",
-        "filename": "test.jpg",
-        "width": 800,
-        "height": 600,
-        "faces": [{"face_id": "f1", "bbox": [10, 10, 100, 100]}],
-        "collection": "Test Collection",
-        "source": "Test",
-    })
-    monkeypatch.setattr(main_mod, "get_identity_for_face", lambda reg, fid: {
-        "identity_id": "id1", "name": "Test Person", "state": "INBOX",
-        "anchor_ids": [], "candidate_ids": ["f1"],
-    })
+    monkeypatch.setattr(
+        main_mod,
+        "get_photo_metadata",
+        lambda pid: {
+            "photo_id": "test-photo",
+            "filename": "test.jpg",
+            "width": 800,
+            "height": 600,
+            "faces": [{"face_id": "f1", "bbox": [10, 10, 100, 100]}],
+            "collection": "Test Collection",
+            "source": "Test",
+        },
+    )
+    monkeypatch.setattr(
+        main_mod,
+        "get_identity_for_face",
+        lambda reg, fid: {
+            "identity_id": "id1",
+            "name": "Test Person",
+            "state": "INBOX",
+            "anchor_ids": [],
+            "candidate_ids": ["f1"],
+        },
+    )
     monkeypatch.setattr(main_mod, "resolve_face_image_url", lambda fid, cf: "https://example.com/crop.jpg")
     monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
     monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
@@ -538,7 +604,9 @@ def test_person_page_has_compare_link(client, monkeypatch):
     monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
     monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
     monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
-    monkeypatch.setattr(main_mod, "load_photo_registry", lambda: type("PR", (), {"get_photos_for_faces": lambda s, fids: []})())
+    monkeypatch.setattr(
+        main_mod, "load_photo_registry", lambda: type("PR", (), {"get_photos_for_faces": lambda s, fids: []})()
+    )
     monkeypatch.setattr(main_mod, "get_best_face_id", lambda faces: "f1")
     monkeypatch.setattr(main_mod, "resolve_face_image_url", lambda fid, cf: "https://example.com/crop.jpg")
 
@@ -583,8 +651,14 @@ def test_compare_result_shows_reference_context(tmp_path, monkeypatch, client):
         "photo_id": "test_photo_1",
         "reference_person": {"identity_id": "isaac-id", "name": "Isaac Cohen"},
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Face 1",
-             "distance": 1.05, "confidence_pct": 55, "tier": "SIMILAR"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Face 1",
+                "distance": 1.05,
+                "confidence_pct": 55,
+                "tier": "SIMILAR",
+            },
         ],
         "responses": [],
     }
@@ -592,10 +666,13 @@ def test_compare_result_shows_reference_context(tmp_path, monkeypatch, client):
     main_mod._comparison_results_cache = None
 
     # Mock find_nearest_neighbors to return reference context
-    with patch("core.neighbors.find_nearest_neighbors", return_value=[
-        {"identity_id": "neighbor1", "name": "David Cohen", "distance": 0.9},
-        {"identity_id": "neighbor2", "name": "Sarah Levi", "distance": 1.1},
-    ]):
+    with patch(
+        "core.neighbors.find_nearest_neighbors",
+        return_value=[
+            {"identity_id": "neighbor1", "name": "David Cohen", "distance": 0.9},
+            {"identity_id": "neighbor2", "name": "Sarah Levi", "distance": 1.1},
+        ],
+    ):
         response = client.get("/compare/result/refctx_test01")
     assert response.status_code == 200
     assert "result-reference-context" in response.text
@@ -617,8 +694,14 @@ def test_compare_result_merge_action(tmp_path, monkeypatch, client):
         "query_name": "vs Isaac Cohen",
         "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
         "matches": [
-            {"face_id": "f1", "identity_id": "match-id", "identity_name": "Unknown Person",
-             "distance": 0.9, "confidence_pct": 78, "tier": "POSSIBLE MATCH"},
+            {
+                "face_id": "f1",
+                "identity_id": "match-id",
+                "identity_name": "Unknown Person",
+                "distance": 0.9,
+                "confidence_pct": 78,
+                "tier": "POSSIBLE MATCH",
+            },
         ],
         "responses": [],
     }
@@ -645,8 +728,14 @@ def test_compare_result_not_same_action(tmp_path, monkeypatch, client):
         "query_name": "vs Isaac Cohen",
         "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
         "matches": [
-            {"face_id": "f1", "identity_id": "match-id", "identity_name": "Unknown Person",
-             "distance": 1.2, "confidence_pct": 35, "tier": "WEAK"},
+            {
+                "face_id": "f1",
+                "identity_id": "match-id",
+                "identity_name": "Unknown Person",
+                "distance": 1.2,
+                "confidence_pct": 35,
+                "tier": "WEAK",
+            },
         ],
         "responses": [],
     }
@@ -675,12 +764,26 @@ def test_compare_summary_section_collects_above_40pct(monkeypatch):
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "id1", "target_type": "person", "target_name": "Person A",
-                 "target_crop_url": "https://example.com/a.jpg", "matched_face_id": "fa1",
-                 "confidence_pct": 85, "tier": "STRONG MATCH", "distance": 0.7},
-                {"target_id": "id2", "target_type": "person", "target_name": "Person B",
-                 "target_crop_url": "https://example.com/b.jpg", "matched_face_id": "fb1",
-                 "confidence_pct": 30, "tier": "WEAK", "distance": 1.5},
+                {
+                    "target_id": "id1",
+                    "target_type": "person",
+                    "target_name": "Person A",
+                    "target_crop_url": "https://example.com/a.jpg",
+                    "matched_face_id": "fa1",
+                    "confidence_pct": 85,
+                    "tier": "STRONG MATCH",
+                    "distance": 0.7,
+                },
+                {
+                    "target_id": "id2",
+                    "target_type": "person",
+                    "target_name": "Person B",
+                    "target_crop_url": "https://example.com/b.jpg",
+                    "matched_face_id": "fb1",
+                    "confidence_pct": 30,
+                    "tier": "WEAK",
+                    "distance": 1.5,
+                },
             ],
         },
     ]
@@ -710,9 +813,16 @@ def test_compare_summary_section_returns_none_when_no_matches():
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "id1", "target_type": "person", "target_name": "Weak Person",
-                 "target_crop_url": "", "matched_face_id": "fa",
-                 "confidence_pct": 20, "tier": "WEAK", "distance": 1.8},
+                {
+                    "target_id": "id1",
+                    "target_type": "person",
+                    "target_name": "Weak Person",
+                    "target_crop_url": "",
+                    "matched_face_id": "fa",
+                    "confidence_pct": 20,
+                    "tier": "WEAK",
+                    "distance": 1.8,
+                },
             ],
         },
     ]
@@ -740,12 +850,26 @@ def test_compare_summary_section_confirmed_first(monkeypatch):
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "proposed_id", "target_type": "person", "target_name": "Proposed Person",
-                 "target_crop_url": "https://example.com/p.jpg", "matched_face_id": "fp",
-                 "confidence_pct": 90, "tier": "STRONG MATCH", "distance": 0.5},
-                {"target_id": "confirmed_id", "target_type": "person", "target_name": "Confirmed Person",
-                 "target_crop_url": "https://example.com/c.jpg", "matched_face_id": "fc",
-                 "confidence_pct": 75, "tier": "POSSIBLE MATCH", "distance": 0.9},
+                {
+                    "target_id": "proposed_id",
+                    "target_type": "person",
+                    "target_name": "Proposed Person",
+                    "target_crop_url": "https://example.com/p.jpg",
+                    "matched_face_id": "fp",
+                    "confidence_pct": 90,
+                    "tier": "STRONG MATCH",
+                    "distance": 0.5,
+                },
+                {
+                    "target_id": "confirmed_id",
+                    "target_type": "person",
+                    "target_name": "Confirmed Person",
+                    "target_crop_url": "https://example.com/c.jpg",
+                    "matched_face_id": "fc",
+                    "confidence_pct": 75,
+                    "tier": "POSSIBLE MATCH",
+                    "distance": 0.9,
+                },
             ],
         },
     ]
@@ -769,9 +893,9 @@ def test_compare_summary_section_admin_actions(monkeypatch):
     mock_registry = MagicMock()
     mock_registry.get_identity.return_value = {"state": "CONFIRMED"}
 
-    monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: {
-        "identity_id": "source_iid", "name": "Source Person"
-    })
+    monkeypatch.setattr(
+        "app.main.get_identity_for_face", lambda reg, fid: {"identity_id": "source_iid", "name": "Source Person"}
+    )
     monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
 
     results_by_face = [
@@ -779,9 +903,16 @@ def test_compare_summary_section_admin_actions(monkeypatch):
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "target_iid", "target_type": "person", "target_name": "Target Person",
-                 "target_crop_url": "https://example.com/t.jpg", "matched_face_id": "ft",
-                 "confidence_pct": 80, "tier": "POSSIBLE MATCH", "distance": 0.8},
+                {
+                    "target_id": "target_iid",
+                    "target_type": "person",
+                    "target_name": "Target Person",
+                    "target_crop_url": "https://example.com/t.jpg",
+                    "matched_face_id": "ft",
+                    "confidence_pct": 80,
+                    "tier": "POSSIBLE MATCH",
+                    "distance": 0.8,
+                },
             ],
         },
     ]
@@ -807,9 +938,16 @@ def test_compare_summary_section_testid_present(monkeypatch):
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "id1", "target_type": "person", "target_name": "Person A",
-                 "target_crop_url": "https://example.com/a.jpg", "matched_face_id": "fa1",
-                 "confidence_pct": 60, "tier": "SIMILAR", "distance": 1.1},
+                {
+                    "target_id": "id1",
+                    "target_type": "person",
+                    "target_name": "Person A",
+                    "target_crop_url": "https://example.com/a.jpg",
+                    "matched_face_id": "fa1",
+                    "confidence_pct": 60,
+                    "tier": "SIMILAR",
+                    "distance": 1.1,
+                },
             ],
         },
     ]
@@ -841,9 +979,16 @@ def test_compare_summary_section_no_admin_actions_for_viewers(monkeypatch):
             "face_id": "f1",
             "crop_url": "https://example.com/f1.jpg",
             "targets": [
-                {"target_id": "target_iid", "target_type": "person", "target_name": "Target Person",
-                 "target_crop_url": "https://example.com/t.jpg", "matched_face_id": "ft",
-                 "confidence_pct": 80, "tier": "POSSIBLE MATCH", "distance": 0.8},
+                {
+                    "target_id": "target_iid",
+                    "target_type": "person",
+                    "target_name": "Target Person",
+                    "target_crop_url": "https://example.com/t.jpg",
+                    "matched_face_id": "ft",
+                    "confidence_pct": 80,
+                    "tier": "POSSIBLE MATCH",
+                    "distance": 0.8,
+                },
             ],
         },
     ]
@@ -873,8 +1018,14 @@ def test_result_page_hero_200px_images(tmp_path, monkeypatch, client):
         "query_name": "Test Upload",
         "query_face_id": "source_face",
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
-             "distance": 0.7, "confidence_pct": 85, "tier": "STRONG MATCH"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Person A",
+                "distance": 0.7,
+                "confidence_pct": 85,
+                "tier": "STRONG MATCH",
+            },
         ],
         "responses": [],
     }
@@ -903,8 +1054,14 @@ def test_result_page_positive_framing(tmp_path, monkeypatch, client):
         "query_type": "compare_upload",
         "query_name": "Test Upload",
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
-             "distance": 1.5, "confidence_pct": 25, "tier": "WEAK"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Person A",
+                "distance": 1.5,
+                "confidence_pct": 25,
+                "tier": "WEAK",
+            },
         ],
         "responses": [],
     }
@@ -926,7 +1083,9 @@ def test_result_page_no_raw_distance_for_viewers(tmp_path, monkeypatch, client):
 
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: True)
-    monkeypatch.setattr(main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})())
+    monkeypatch.setattr(
+        main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})()
+    )
     main_mod._comparison_results_cache = None
 
     result_data = {
@@ -934,8 +1093,14 @@ def test_result_page_no_raw_distance_for_viewers(tmp_path, monkeypatch, client):
         "query_type": "compare_upload",
         "query_name": "Test Upload",
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
-             "distance": 0.85, "confidence_pct": 78, "tier": "POSSIBLE MATCH"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Person A",
+                "distance": 0.85,
+                "confidence_pct": 78,
+                "tier": "POSSIBLE MATCH",
+            },
         ],
         "responses": [],
     }
@@ -986,8 +1151,14 @@ def test_result_page_og_title_positive_framing(tmp_path, monkeypatch, client):
         "query_type": "compare_upload",
         "query_name": "Test Upload",
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Isaac Cohen",
-             "distance": 0.6, "confidence_pct": 92, "tier": "STRONG MATCH"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Isaac Cohen",
+                "distance": 0.6,
+                "confidence_pct": 92,
+                "tier": "STRONG MATCH",
+            },
         ],
         "responses": [],
     }
@@ -998,7 +1169,7 @@ def test_result_page_og_title_positive_framing(tmp_path, monkeypatch, client):
     assert response.status_code == 200
     assert "Could this be Isaac Cohen" in response.text
     # OG title should include the person name and confidence
-    assert "92% match in Rhodes Archive" in response.text
+    assert "92% face match" in response.text
 
 
 def test_result_page_og_fallback_for_unknown(tmp_path, monkeypatch, client):
@@ -1014,8 +1185,14 @@ def test_result_page_og_fallback_for_unknown(tmp_path, monkeypatch, client):
         "query_type": "compare_upload",
         "query_name": "Test Upload",
         "matches": [
-            {"face_id": "f1", "identity_id": "", "identity_name": "Unknown",
-             "distance": 1.2, "confidence_pct": 35, "tier": "WEAK"},
+            {
+                "face_id": "f1",
+                "identity_id": "",
+                "identity_name": "Unknown",
+                "distance": 1.2,
+                "confidence_pct": 35,
+                "tier": "WEAK",
+            },
         ],
         "responses": [],
     }
@@ -1025,7 +1202,7 @@ def test_result_page_og_fallback_for_unknown(tmp_path, monkeypatch, client):
     response = client.get("/compare/result/og_fallback_t1")
     assert response.status_code == 200
     # Should use generic fallback title
-    assert "Rhodes Jewish Heritage Archive" in response.text
+    assert "Face Comparison Results" in response.text
 
 
 def test_result_page_og_uses_ref_person_name(tmp_path, monkeypatch, client):
@@ -1042,8 +1219,14 @@ def test_result_page_og_uses_ref_person_name(tmp_path, monkeypatch, client):
         "query_name": "vs Isaac Cohen",
         "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
         "matches": [
-            {"face_id": "f1", "identity_id": "id1", "identity_name": "Unknown",
-             "distance": 1.1, "confidence_pct": 45, "tier": "SIMILAR"},
+            {
+                "face_id": "f1",
+                "identity_id": "id1",
+                "identity_name": "Unknown",
+                "distance": 1.1,
+                "confidence_pct": 45,
+                "tier": "SIMILAR",
+            },
         ],
         "responses": [],
     }

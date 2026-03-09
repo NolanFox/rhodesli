@@ -3886,8 +3886,8 @@ def _public_nav_links(active: str = "", user=None) -> list:
         # Tools
         A("Tree", href="/tree", cls=_active if active == "tree" else _inactive),
         A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
-        A("Compare", href="/compare", cls=_active if active == "compare" else _inactive),
-        A("Estimate", href="/estimate", cls=_active if active == "estimate" else _inactive),
+        A("Compare", href="/tools/compare", cls=_active if active == "compare" else _inactive),
+        A("Estimate", href="/tools/estimate", cls=_active if active == "estimate" else _inactive),
     ]
 
     # Help Identify CTA — links to dedicated /help page
@@ -4297,13 +4297,13 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 A(
                     Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Compare", cls="sidebar-label ml-2"),
-                    href="/compare",
+                    href="/tools/compare",
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
                     Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Estimate", cls="sidebar-label ml-2"),
-                    href="/estimate",
+                    href="/tools/estimate",
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
@@ -9318,6 +9318,7 @@ _photo_locations_cache = page_routes._photo_locations_cache
 # --- Route module imports (triggers route registration via @rt decorators) ---
 from app import compare_routes  # noqa: E402, F401
 from app import estimate_routes  # noqa: E402, F401
+from app import tools_routes  # noqa: E402, F401
 from app import auth_routes  # noqa: E402, F401
 from app import sync_routes  # noqa: E402, F401
 from app import match_facecompare_routes  # noqa: E402, F401

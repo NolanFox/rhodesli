@@ -1,7 +1,7 @@
 """
 Estimate routes extracted from app/main.py.
 
-All /estimate/* and /api/estimate/* routes plus estimate-exclusive helpers.
+All /tools/estimate/* and /api/estimate/* routes plus estimate-exclusive helpers.
 """
 
 import logging
@@ -22,7 +22,14 @@ import app.main as _main_mod
 logger = logging.getLogger(__name__)
 
 
-@rt("/estimate")
+def _tools_nav_bar(active_tool=None):
+    """Lazy import of tools_nav_bar to avoid circular imports."""
+    from app.tools_routes import tools_nav_bar
+
+    return tools_nav_bar(active_tool=active_tool)
+
+
+@rt("/tools/estimate")
 def get(photo: str = "", sess=None):
     """
     Year Estimation Tool — estimate when a photo was taken.
@@ -198,11 +205,11 @@ def get(photo: str = "", sess=None):
             # CTAs
             Div(
                 _main_mod.share_button(
-                    url=f"/estimate?photo={photo}",
+                    url=f"/tools/estimate?photo={photo}",
                     style="button",
                     label="Share Estimate",
                     title=f"This photo was taken c. {estimate_result['year']}",
-                    text="Year estimation from the Rhodesli Heritage Archive",
+                    text="AI-powered year estimation from historical photo analysis",
                 ),
                 A(
                     "View Photo Page",
@@ -211,7 +218,7 @@ def get(photo: str = "", sess=None):
                 ),
                 A(
                     "Try Another",
-                    href="/estimate",
+                    href="/tools/estimate",
                     cls="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors border border-slate-700",
                 ),
                 cls="flex flex-wrap justify-center gap-3 mt-6",
@@ -233,7 +240,7 @@ def get(photo: str = "", sess=None):
             ),
             A(
                 "Try another photo",
-                href="/estimate",
+                href="/tools/estimate",
                 cls="text-indigo-400 hover:text-indigo-300 text-sm text-center block mt-4",
             ),
             cls="bg-slate-800/30 rounded-xl p-6 border border-slate-700/30 mt-8 text-center",
@@ -241,9 +248,9 @@ def get(photo: str = "", sess=None):
 
     # Tab links: Compare Faces | Estimate Year
     og = _main_mod.og_tags(
-        title="When Was This Photo Taken? — Rhodesli",
+        title="When Was This Photo Taken? — Date Estimator",
         description="Our AI estimates the year a photo was taken using facial age analysis and historical clues.",
-        canonical_url=f"{_main_mod.SITE_URL}/estimate",
+        canonical_url=f"{_main_mod.SITE_URL}/tools/estimate",
     )
 
     page_style = Style("""
@@ -261,7 +268,7 @@ def get(photo: str = "", sess=None):
     """)
 
     return (
-        Title("When Was This Photo Taken? — Rhodesli"),
+        Title("When Was This Photo Taken? — Date Estimator"),
         *og,
         page_style,
         Main(
@@ -273,6 +280,7 @@ def get(photo: str = "", sess=None):
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
+            _tools_nav_bar(active_tool="estimate"),
             Section(
                 Div(
                     H1(
@@ -987,7 +995,7 @@ async def post(photo: UploadFile = None, sess=None):
         ),
         Button(
             "Share Estimate",
-            onclick="if(navigator.share){navigator.share({title:'Photo Date Estimate',text:'Check out this date estimate from the Rhodesli archive!',url:window.location.href}).catch(()=>{})}else{navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='Link copied!';setTimeout(()=>{this.textContent='Share Estimate'},2000)})}",
+            onclick="if(navigator.share){navigator.share({title:'Photo Date Estimate',text:'Check out this AI-powered date estimate!',url:window.location.href}).catch(()=>{})}else{navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='Link copied!';setTimeout(()=>{this.textContent='Share Estimate'},2000)})}",
             cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer",
             data_testid="estimate-share",
         ),
