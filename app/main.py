@@ -555,6 +555,23 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 
     photo_ids = load_photos_for_community(community_id)
     result = set(photo_ids) if photo_ids else set()
+
+    # Resolve aliases: community photos use inbox_* IDs in Supabase,
+    # but _photo_cache uses SHA256(filename)[:16] IDs. Include both formats
+    # so all callers (photos section, identity derivation) match correctly.
+    _build_caches()
+    if _photo_id_aliases:
+        aliases_to_add = set()
+        for pid in result:
+            alias = _photo_id_aliases.get(pid)
+            if alias:
+                aliases_to_add.add(alias)
+        # Also reverse: SHA256 IDs that alias FROM community IDs
+        for alias_from, alias_to in _photo_id_aliases.items():
+            if alias_from in result:
+                aliases_to_add.add(alias_to)
+        result.update(aliases_to_add)
+
     _community_photo_ids_cache[community_id] = result
     _community_ids_cache_ts = now
     return result
@@ -3538,6 +3555,16 @@ def _build_caches():
         for photo_id, photo_data in _photo_cache.items():
             for face in photo_data["faces"]:
                 _face_to_photo_cache[face["face_id"]] = photo_id
+
+        # Also include face_to_photo from photo_index.json for faces not in embeddings.
+        # Some faces exist in photo_index but not in embeddings.npy (e.g., inbox faces
+        # from community uploads). Without this, community scoping misses them.
+        try:
+            for fid, pid in photo_registry._face_to_photo.items():
+                if fid not in _face_to_photo_cache:
+                    _face_to_photo_cache[fid] = pid
+        except Exception:
+            pass
 
         # Build alias map: photo_index.json IDs → SHA256 cache IDs
         # Community/inbox photos have IDs like "inbox_community-batch-..."
