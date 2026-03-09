@@ -9586,6 +9586,7 @@ _get_priority_reason = admin_routes._get_priority_reason
 
 from app import notification_routes  # noqa: E402, F401
 from app import upload_routes  # noqa: E402, F401
+from app import cluster_review_routes  # noqa: E402, F401
 
 # Re-run route priority after all route modules are imported
 _reorder_routes_atomic()

@@ -702,6 +702,52 @@ async def post(
                 except Exception as e:
                     print(f"[upload] Community tagging error for job {job_id}: {e}")
 
+            # PRD-037 Phase 1: Auto-cluster new faces after ingest (AD-215)
+            if result.get("status") in ("success", "partial") and result.get("face_ids"):
+                try:
+                    from scripts.cluster_new_faces import (
+                        apply_suggestions,
+                        find_matches,
+                        load_face_data,
+                        load_identities,
+                    )
+                    from core.config import MATCH_THRESHOLD_HIGH
+
+                    identities_data = load_identities(data_path)
+                    face_data_dict = load_face_data(data_path)
+                    suggestions = find_matches(identities_data, face_data_dict, MATCH_THRESHOLD_HIGH)
+
+                    if suggestions:
+                        apply_suggestions(suggestions, data_path / "identities.json", dry_run=False)
+                        # Write proposals for the review page
+                        import json as _json_cluster
+                        from datetime import datetime as _dt_cluster, timezone as _tz_cluster
+
+                        proposals_path = data_path / "proposals.json"
+                        proposals_data = {
+                            "generated_at": _dt_cluster.now(_tz_cluster.utc).isoformat(),
+                            "threshold": MATCH_THRESHOLD_HIGH,
+                            "proposals": suggestions,
+                        }
+                        with open(proposals_path, "w") as _pf:
+                            _json_cluster.dump(proposals_data, _pf, indent=2)
+
+                    cluster_result = f"{len(suggestions)} matches found"
+                    print(f"[upload] Auto-cluster complete for job {job_id}: {cluster_result}")
+
+                    # Update status file with cluster info
+                    status_path = inbox_dir / f"{job_id}.status.json"
+                    if status_path.exists():
+                        with open(status_path) as _rf:
+                            status_data = _json_upload.load(_rf)
+                        status_data["cluster_complete"] = True
+                        status_data["cluster_result"] = str(cluster_result)
+                        with open(status_path, "w") as _wf:
+                            _json_upload.dump(status_data, _wf, indent=2)
+                except Exception as e:
+                    print(f"[upload] Auto-cluster error for job {job_id}: {e}")
+                    # Auto-cluster failure should NOT block the upload
+
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.
             _main_mod._invalidate_all_caches()
