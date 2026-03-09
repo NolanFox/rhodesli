@@ -205,6 +205,73 @@ build the multi-collection infrastructure from the start, even if the Fox MVP is
 
 ---
 
+## Part 7: Nolan's Answers to Architecture Questions (Round 2)
+
+### Architecture Approach
+- **Confirmed:** Approach A (community-first, `/c/{slug}`) with path to Approach B (subdomains)
+- Intent was never to rebuild — build upon existing work, don't break data models
+- Nolan will be the main user for first couple weeks, hopes to expand rapidly after
+
+### Q1: Personal Library vs. Community Archive
+**Answer: Community/family archive, NOT personal library.**
+- MVP should feel like "The Fox Family Archive that Nolan admins"
+- Differentiate from personal Google Photos where all family branches mix together
+- Mixed branches → bad clustering, type I and type II face match errors
+- Want to share with family members who could:
+  - Upload more photos
+  - Enjoy browsing
+  - Help identify people
+  - Provide context via chatbot
+- Each community/family/town gets its own subset of photos, oriented around that group
+- Still want ability to link across family branches
+- Easy controls for cross-linking
+- Shareable pages (like Rhodes sharing pages) specific to each community
+
+### Q2: Domain/Branding
+**Answer: Uncertain, defers to Claude's recommendation.**
+- "Rhodesli" could function as a codename for the whole project
+- The platform would have a Rhodes component plus a larger focus:
+  - Making all the world's old photos searchable
+  - Discovering identities and untold stories
+  - Finding photos you didn't know were out there
+- Concern: Is "Rhodesli" confusing? Most people don't know what it refers to.
+  Could be a "fun sounding name" but maybe not ideal for product market fit.
+- Potentially taking on **paid users in coming months** (if market fit found)
+- If no market fit, still wants this software for personal use
+- Expects branding might change over time depending on where traction is found
+- **Key insight: potential commercialization path exists**
+
+### Q3: Photo Ingestion Scale
+**Answer: Start with a couple hundred photos at least.**
+- Has several large collections ready
+- Not super partial to implementation strategy, defers to best practice
+- **Current 50-photo upload cap is problematic** for starting new collections
+- Wants batching system or workaround for bulk upload
+
+### Additional Feedback: Context Capture at Upload
+
+**Critical insight:** Beyond GEDCOM, there's no good UX to capture context during
+bulk upload. Currently:
+- GEDCOM provides structured context
+- Upload form has "source" field but that's it
+- No way to bulk-select source if pictures aren't all from the same source
+
+**Nolan's concern:** The downside of bulk upload is losing the opportunity to capture
+context that would help Gemini API calls. Need to think about:
+- How to capture more context during or after upload
+- Context that enriches date/location estimation
+- Context about known/unknown people in photos
+- Metadata that aids the ML pipeline
+
+### Q4: Pinecone for NL/LLM Chatbot
+**Question from Nolan:** For the NL LLM chatbot (TOOLS-004), do we need to add
+Pinecone to the architecture?
+- Context: thinking about vector search across photo descriptions, context,
+  GEDCOM data for the chatbot to query
+- Currently no vector database (pgvector deferred until 5K+ embeddings)
+
+---
+
 ## Breadcrumbs
 
 - Platform vision feeds into: PRD-030 (multi-collection), MULTI_TENANT.md
@@ -213,3 +280,8 @@ build the multi-collection infrastructure from the start, even if the Fox MVP is
 - Cross-community search feeds into: PRD-034 (standalone tools), TOOLS-003
 - Albert Fox WWI photo: verify in session context / Albert Fox story
 - Data structure scaling: DATA_MODEL.md, Supabase schema
+- Upload cap issue: relates to BACKLOG upload UX items
+- Context capture at upload: new requirement, not in any existing PRD
+- Pinecone question: relates to TOOLS-004, pgvector evaluation
+- Commercialization: new consideration, affects branding/domain decisions
+- Batching system: new requirement for onboarding new collections
