@@ -586,23 +586,26 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
     _build_caches()
     registry = load_registry()
 
+    # Resolve community photo IDs to SHA256 cache IDs (the format used by _face_to_photo_cache).
+    # community_photo_ids from Supabase use inbox_* format, but _face_to_photo_cache uses SHA256.
+    # _photo_id_aliases maps inbox_id → SHA256_cache_id.
+    resolved_photo_ids = set(community_photo_ids)  # Start with original IDs
+    if _photo_id_aliases:
+        for cpid in community_photo_ids:
+            alias = _photo_id_aliases.get(cpid)
+            if alias:
+                resolved_photo_ids.add(alias)
+        # Also add reverse: SHA256 IDs that alias TO community IDs
+        for alias_from, alias_to in _photo_id_aliases.items():
+            if alias_from in community_photo_ids:
+                resolved_photo_ids.add(alias_to)
+
     # Collect all face IDs from community photos
     community_face_ids = set()
     if _face_to_photo_cache:
         for face_id, photo_id in _face_to_photo_cache.items():
-            # Check both direct photo ID and aliases
-            if photo_id in community_photo_ids:
+            if photo_id in resolved_photo_ids:
                 community_face_ids.add(face_id)
-            elif _photo_id_aliases:
-                # Check if the photo has an alias in the community set
-                alias = _photo_id_aliases.get(photo_id)
-                if alias and alias in community_photo_ids:
-                    community_face_ids.add(face_id)
-                # Also check reverse: community photo ID might alias to cache ID
-                for cpid in community_photo_ids:
-                    if _photo_id_aliases.get(cpid) == photo_id:
-                        community_face_ids.add(face_id)
-                        break
 
     # Find identities that own these faces
     result = set()
