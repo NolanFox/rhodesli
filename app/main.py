@@ -6701,14 +6701,16 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
 
 def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
     """Render the Rejected/Dismissed section."""
-    cards = [
-        identity_card(identity, crop_files, lane_color="rose", show_actions=False, is_admin=is_admin)
-        for identity in dismissed
-    ]
-    cards = [c for c in cards if c]
+    grid_items = []
+    for identity in dismissed:
+        card = identity_card(identity, crop_files, lane_color="rose", show_actions=False, is_admin=is_admin)
+        if card:
+            grid_items.append(card)
+            _iid = identity["identity_id"]
+            grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
-    if cards:
-        content = Div(*cards)
+    if grid_items:
+        content = Div(*grid_items, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
     else:
         content = Div("No dismissed items. Rejected matches will appear here.", cls="text-center py-12 text-slate-400")
 
