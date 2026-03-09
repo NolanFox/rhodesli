@@ -358,3 +358,23 @@ with calibrated confidence, and estimates the decade — all on a $5/month serve
 | Revenue (if monetized) | $500/month |
 | Portfolio page views | 1,000/month |
 | Archive referrals (standalone → Rhodesli) | 100/month |
+
+---
+
+## Post-Session 95 Feedback (Nolan, 2026-03-09)
+
+### TOOLS-005: Estimate v2 — GEDCOM Upload + Text Context + Geography Retry
+Allow users to upload a GEDCOM file or provide additional text context to enrich
+the Gemini date estimation prompt. Add a "Refine with more info" button on the
+results page that accepts geography hints for retry. Builds on existing enrichment
+pipeline (`rhodesli_ml/enrichment/`). See `docs/BACKLOG.md` TOOLS-005.
+
+### TOOLS-006: Self-Service Archive Creation
+Enable non-admin users to create their own community archive and upload photos
+via a "Create Your Archive" public onboarding flow. Current state: Fox Family
+archive is empty and upload is admin-only. See `docs/BACKLOG.md` TOOLS-006.
+
+### ROUTE-001: Deprecate /facecompare
+`/facecompare` is still a fully separate route file (~1700 lines) that duplicates
+`/tools/compare`. Redirect `/facecompare` → `/tools/compare`, then remove
+`app/match_facecompare_routes.py`. See `docs/BACKLOG.md` ROUTE-001.

@@ -14,6 +14,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 95: Fox MVP + Standalone Tool Suite (2026-03-09) — v0.97.0
+- Multi-community platform: CommunityMiddleware, `/c/{slug}/` routing, Fox Family Archive live at `/c/fox-family`
+- Standalone tools hub at `/tools` with Date Estimator (`/tools/estimate`) and Face Compare (`/tools/compare`)
+- 3 new Supabase tables: photo_communities, identity_communities, upload_batches
+- 295 photos + 894 identities migrated to Rhodes community
+- Upload cap 50→200, TIFF auto-conversion to JPG
+- Community admin CRUD at `/admin/communities`
+- URL redirects: `/estimate` → `/tools/estimate`, `/compare` → `/tools/compare`
+- Session 94 branches merged (doc-sync, ci-verify, branch-cleanup, ux-fixes)
+- 82 new tests (21 community sync + 42 community infra + 19 tools). 2491 tests pass.
+- Browser verified 8/8 routes in production
+
 ## Session 93: Close All Deferrals (2026-03-08) — v0.96.0
 - DATA-007: Core tables created (identities, photos, photo_faces), 894+295+981 rows backfilled, DATA_SOURCE=postgres flipped on Railway
 - Supplementary migration: date_labels (271), photo_locations (268), birth_year_estimates (32)

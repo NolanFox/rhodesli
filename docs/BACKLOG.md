@@ -1,14 +1,14 @@
 # Rhodesli: Project Backlog
 
-**Version**: 42.0 — March 9, 2026
-**Status**: ~4283 tests passing, v0.96.0, 299 photos, 894 identities, 69 confirmed
+**Version**: 43.0 — March 9, 2026
+**Status**: ~2491 tests passing, v0.97.0, 299 photos, 894 identities, 69 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with Euclidean distance metrics, FastHTML for the web layer, Supabase/Postgres for auth and structured data, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 93 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, community bug fixes, estimate page overhaul, Postgres migration, observability (Sentry/PostHog/Resend), GEDCOM integration, auto-clustering, and ~4283 tests across 299 photos, 894 identities (69 confirmed). Community sharing live on Jews of Rhodes Facebook group (~2,000 members).
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with Euclidean distance metrics, FastHTML for the web layer, Supabase/Postgres for auth and structured data, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 95 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, community bug fixes, estimate page overhaul, Postgres migration, observability (Sentry/PostHog/Resend), GEDCOM integration, auto-clustering, and ~4283 tests across 299 photos, 894 identities (69 confirmed). Community sharing live on Jews of Rhodes Facebook group (~2,000 members).
 
 ---
 
@@ -69,6 +69,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **Pre-existing**: `test_nav_consistency` `/map` state pollution (passes in isolation)
 
 Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRACKER.md) — 100 issues total
+
+### Session 95 Post-Ship (Nolan Feedback, 2026-03-09)
+
+- **ROUTE-001: Deprecate /facecompare → redirect to /tools/compare** — `/facecompare` is still live as a fully separate route file (`app/match_facecompare_routes.py`, ~1700 lines). Now that `/tools/compare` exists as the canonical standalone compare tool, `/facecompare` is duplicative and confusing. Step 1: add redirects (`/facecompare` → `/tools/compare`, `/facecompare/result/{id}` → preserve for shared links). Step 2: remove `match_facecompare_routes.py` once no external links depend on it. **Priority: P1** — active user confusion. Source: Nolan feedback post-Session 95.
+
+- **TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry** — Allow users to upload a GEDCOM file or provide additional text context to enrich the Gemini date estimation prompt. Add a "Refine with more info" button on results page that accepts geography hints for retry. Builds on existing enrichment pipeline (`rhodesli_ml/enrichment/`). **Priority: P2** — v2 iteration on `/tools/estimate`. Source: Nolan feedback post-Session 95. See also: PRD-034 (`docs/prds/034_standalone_tool_suite.md`).
+
+- **TOOLS-006: Self-service archive creation (community upload onboarding)** — Enable non-admin users to create their own community archive and upload photos. Current state: Fox Family archive exists at `/c/fox-family` but is empty and upload is admin-only. Needed: (1) "Create Your Archive" public flow (community creation + first upload in one journey), (2) per-community upload permissions (community admin vs site admin), (3) onboarding UX for first photos. This is essentially PRD-035 Phase 2 multi-tenant upload. **Priority: P2** — key to Fox Family kickoff and future growth. Source: Nolan feedback post-Session 95. See also: PRD-035 (`docs/prds/035_fox_family_mvp.md`).
 
 ---
 
