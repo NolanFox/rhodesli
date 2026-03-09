@@ -18,6 +18,16 @@
 - Person detail pages return 200 for valid IDs, 404 for invalid
 - No console errors in HTMX responses
 
+## Deploy monitoring
+- After `git push` or `railway up`, check deploy status within 5 minutes
+- Use: `mcp__railway-mcp-server__list-deployments` (JSON mode, limit 2)
+- If deploy is QUEUED or INITIALIZING for >5 min, check Railway status:
+  - Use: `WebFetch https://status.railway.com` or ask user to check
+  - Railway status page: https://status.railway.com
+- If Railway has an active incident: note in session log, write continuation
+  prompt, do NOT wait indefinitely — /clear and continue when resolved
+- Hobby plan deploys are first affected during outages (Session 96c-cont2)
+
 ## Failure protocol
 - If smoke test fails: fix before completing session
 - If fix is not possible: document in session log with BLOCKER tag
