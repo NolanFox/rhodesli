@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.2] — 2026-03-09 (Session 96c: Community Identity Pipeline + Data Integrity)
+
+### Added
+- **Photo-derived community identity sets (AD-216)** — `_get_community_relevant_identity_ids()` computes which identities belong to a community by tracing faces in community photos. Fixes Fox Family "0 identities" bug.
+- **Admin sections for all communities** — Removed `is_rhodes` gate. All communities now show Uploads, GEDCOM, Approvals in sidebar.
+- **ML feature counts restored** — Removed hardcoding that set proposals/discoveries/annotations to 0 for non-Rhodes communities.
+- **Community-aware discoveries** — `_compute_discoveries()` accepts community filter parameter.
+- **Upload Review link** — Added to admin sidebar for cluster review page access.
+- **Data integrity validator** — `scripts/validate_data_integrity.py` catches orphaned identities/faces. `TestOrphanedIdentities` prevents regressions.
+- 81 new community tests.
+
+### Fixed
+- **David Capeloto photo restored** — Identity e9ee215c re-ingested, photo + crop uploaded to R2 and synced to Supabase. Root cause: partial sync from production (Lesson 78).
+- **Fox Family admin view** — Admins now see admin section + to_review, not landing page redirect.
+- **Dismissed section grid layout** — Face cards in Dismissed now use same grid-cols layout as People section.
+- **Supabase backfill** — 2,533 identities + 931 photos + 2,633 photo_faces synced to Postgres.
+
+### Known Issues
+- **COMMUNITY-007**: Fox Family sidebar counts (Photos, Discoveries, New Matches) show global counts, not community-scoped. Content areas are correctly scoped.
+- **COMMUNITY-008**: Bottom nav links missing `/c/fox-family/` prefix.
+
 ## [v0.97.1] — 2026-03-09 (Session 96: Community Data Scoping Hotfix)
 
 ### Fixed

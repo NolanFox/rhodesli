@@ -146,6 +146,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Recently Completed
 
+- [x] 2026-03-09: **v0.97.2 — Session 96c**: Community Identity Pipeline + Data Integrity. Photo-derived identity sets (AD-216). Admin sections ungated for all communities. ML feature counts restored. Community-aware discoveries. David Capeloto photo restored (Lesson 78). Fox Family admin view fixed. Dismissed section grid layout. Supabase backfill (2,533 identities). Data integrity validator + orphan detection tests. 81 new tests. Browser verified 10/10. Known issues: COMMUNITY-007/008 sidebar counts.
+
 - [x] 2026-03-09: **v0.97.1 — Session 96**: Community Data Scoping Hotfix. Photos section, upload sidebar counts, and admin bar now community-scoped. Merge conflict resolved. Fox Family pages no longer show Rhodes data. Bulk upload workflow documented (636 Charlie Fox photos via local pipeline). BACKLOG: UPLOAD-001 bulk import, about page community content.
 
 - [x] 2026-03-09: **v0.97.0 — Session 95**: Fox MVP + Standalone Tool Suite. Multi-community platform (CommunityMiddleware, `/c/{slug}/` routing, Fox Family Archive at `/c/fox-family`). Standalone tools hub at `/tools` with Date Estimator and Face Compare. 3 new Supabase tables (photo_communities, identity_communities, upload_batches). 295 photos + 894 identities migrated to Rhodes community. Upload cap 50→200, TIFF auto-conversion. Community admin CRUD. URL redirects for /estimate and /compare. Session 94 branches merged. 82 new tests. 2491 tests pass. Browser verified 8/8 routes.

@@ -14,6 +14,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ## Active Bugs
 
+### P1 — Community Scoping Gaps (Session 96c-cont4)
+- **COMMUNITY-007**: Fox Family sidebar counts not community-scoped — Photos shows 1271 (global), Discoveries shows 907 (global), New Matches shows 1602 (global). Content areas correctly scoped. Fix: `_compute_sidebar_counts()` needs community filter for these three counts. Source: Session 96c-cont4 browser verification.
+- **COMMUNITY-008**: Fox Family bottom nav bar uses `/?section=...` instead of `/c/fox-family/?section=...` — clicking bottom nav from Fox Family context navigates to Rhodes. Fix: bottom nav must respect community prefix. Source: Session 96c-cont4 browser verification.
+
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
 - ~~**UX-070-072**: Name These Faces broken on /photo/ pages~~ FIXED (Session 49D)
