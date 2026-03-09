@@ -5,6 +5,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def clear_community_cache():
+    """Clear community cache before each test to avoid cross-test pollution."""
+    from app.supabase_data import _invalidate_community_cache
+
+    _invalidate_community_cache()
+    yield
+    _invalidate_community_cache()
+
+
 @pytest.fixture
 def mock_supabase():
     """Mock Supabase client for community sync tests."""
@@ -66,11 +76,20 @@ class TestGetCommunityBySlug:
         result = get_community_by_slug("nonexistent")
         assert result is None
 
-    def test_returns_none_when_supabase_unavailable(self):
+    def test_returns_fallback_for_rhodes_when_supabase_unavailable(self):
         from app.supabase_data import get_community_by_slug
 
         with patch("app.supabase_data.get_supabase_client", return_value=None):
-            assert get_community_by_slug("rhodes") is None
+            result = get_community_by_slug("rhodes")
+            assert result is not None
+            assert result["slug"] == "rhodes"
+            assert result["is_default"] is True
+
+    def test_returns_none_for_non_rhodes_when_supabase_unavailable(self):
+        from app.supabase_data import get_community_by_slug
+
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
+            assert get_community_by_slug("nonexistent") is None
 
 
 class TestLoadPhotosForCommunity:

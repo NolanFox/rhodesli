@@ -301,6 +301,108 @@ def _get_featured_photos(limit: int = 8) -> list:
     return results
 
 
+def _community_landing_page(community: dict, slug: str):
+    """Render a community-specific landing page for non-Rhodes communities.
+
+    Shows community name, subtitle, and stats. For new communities with no content,
+    shows an inviting empty state.
+    """
+    title = community.get("landing_title") or community.get("name", slug.replace("-", " ").title())
+    subtitle = community.get("landing_subtitle", "A heritage photo archive")
+
+    # Try to get community-specific stats
+    photo_count = 0
+    identity_count = 0
+    community_id = community.get("id")
+    if community_id:
+        from app.supabase_data import load_photos_for_community, load_identities_for_community
+
+        photos = load_photos_for_community(community_id)
+        identities = load_identities_for_community(community_id)
+        if photos:
+            photo_count = len(photos)
+        if identities:
+            identity_count = len(identities)
+
+    has_content = photo_count > 0
+
+    # Build stats row
+    stats_row = (
+        Div(
+            Div(
+                Span(str(photo_count), cls="text-3xl font-bold text-amber-300"),
+                Span(" photos", cls="text-slate-400 ml-1"),
+                cls="text-center",
+            ),
+            Div(
+                Span(str(identity_count), cls="text-3xl font-bold text-amber-300"),
+                Span(" identities", cls="text-slate-400 ml-1"),
+                cls="text-center",
+            ),
+            cls="flex gap-12 justify-center mb-8",
+        )
+        if has_content
+        else None
+    )
+
+    # Empty state for communities with no photos yet
+    empty_state = (
+        Div(
+            Div(
+                NotStr(
+                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-amber-400/40 mx-auto mb-4" '
+                    'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">'
+                    '<path stroke-linecap="round" stroke-linejoin="round" '
+                    'd="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409'
+                    "a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 "
+                    '00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'
+                ),
+                H3("This archive is just getting started", cls="text-xl font-serif text-amber-200 mb-2"),
+                P(
+                    "Photos will appear here as they are uploaded and processed. "
+                    "Check back soon or contact an administrator to contribute.",
+                    cls="text-slate-400 max-w-md mx-auto",
+                ),
+                cls="text-center py-12",
+            ),
+            cls="bg-slate-800/50 rounded-xl border border-slate-700/50 p-8",
+        )
+        if not has_content
+        else None
+    )
+
+    content_section = (
+        Div(
+            A(
+                "Browse Photos",
+                href=f"/c/{slug}/photos" if slug != "rhodes" else "/photos",
+                cls="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+            ),
+            cls="text-center mt-6",
+        )
+        if has_content
+        else None
+    )
+
+    return (
+        Title(title),
+        Div(
+            # Hero section
+            Div(
+                H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
+                P(subtitle, cls="text-lg text-amber-200/70 max-w-2xl mx-auto mb-8"),
+                stats_row,
+                empty_state,
+                content_section,
+                cls="text-center py-16 px-6",
+            ),
+            cls="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900",
+            data_testid="community-landing",
+            data_community=slug,
+        ),
+    )
+
+
 def landing_page(stats, featured_photos):
     """Render the public landing page for the Rhodesli heritage archive.
 
@@ -1590,7 +1692,15 @@ def get(
     # If no section specified:
     # - Logged-in users: go to inbox if items exist, otherwise Needs Help
     # - Anonymous users see the public landing page
+    # Community-aware landing page (PRD-035)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+
     if section is None:
+        # Non-Rhodes community: always show community landing page
+        if community_slug != "rhodes" and community is not None:
+            return _community_landing_page(community, community_slug)
+
         if user is not None:
             # Smart redirect: skip empty inbox, go to Needs Help
             registry_check = _main_mod.load_registry()

@@ -1186,6 +1186,30 @@ def load_birth_year_estimates_from_supabase() -> dict | None:
 # COMMUNITY SYNC (PRD-035)
 # =========================================================================
 
+# In-memory cache for community lookups (avoids hitting Supabase on every request)
+_community_cache: dict = {}  # slug -> community dict
+_community_cache_ts: float = 0.0
+_COMMUNITY_CACHE_TTL: float = 300.0  # 5 minutes
+
+
+def _invalidate_community_cache():
+    """Clear community cache (after create/update)."""
+    global _community_cache, _community_cache_ts
+    _community_cache = {}
+    _community_cache_ts = 0.0
+
+
+def _default_rhodes_community() -> dict:
+    """Return a hardcoded Rhodes community dict for when Supabase is unavailable."""
+    return {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "slug": "rhodes",
+        "name": "Jewish Community of Rhodes",
+        "landing_title": "Jewish Community of Rhodes",
+        "landing_subtitle": "Heritage photo archive for the Sephardic Jewish community of Rhodes",
+        "is_default": True,
+    }
+
 
 def load_communities() -> list | None:
     """Load all communities from Supabase. Returns list of dicts or None."""
@@ -1202,18 +1226,33 @@ def load_communities() -> list | None:
 
 
 def get_community_by_slug(slug: str) -> dict | None:
-    """Fetch a single community by slug. Returns dict or None."""
+    """Fetch a community by slug, with caching. Returns dict or None."""
+    import time
+
+    global _community_cache, _community_cache_ts
+
+    now = time.time()
+    if now - _community_cache_ts < _COMMUNITY_CACHE_TTL and slug in _community_cache:
+        return _community_cache[slug]
+
     sb = get_supabase_client()
     if not sb:
+        if slug == "rhodes":
+            return _default_rhodes_community()
         return None
 
     try:
         result = sb.table("communities").select("*").eq("slug", slug).limit(1).execute()
         if result.data:
-            return result.data[0]
+            community = result.data[0]
+            _community_cache[slug] = community
+            _community_cache_ts = now
+            return community
         return None
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase community lookup failed for '{slug}': {e}")
+        if slug == "rhodes":
+            return _default_rhodes_community()
         return None
 
 
@@ -1292,6 +1331,7 @@ def create_community(data: dict) -> dict | None:
         result = sb.table("communities").insert(data).execute()
         if result.data:
             logger.info(f"Created community: {data.get('slug')}")
+            _invalidate_community_cache()
             return result.data[0]
         return None
     except _SUPABASE_ERRORS as e:
@@ -1309,6 +1349,7 @@ def update_community(community_id: str, data: dict) -> dict | None:
         result = sb.table("communities").update(data).eq("id", community_id).execute()
         if result.data:
             logger.info(f"Updated community: {community_id}")
+            _invalidate_community_cache()
             return result.data[0]
         return None
     except _SUPABASE_ERRORS as e:
