@@ -68,6 +68,16 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] Schema additions: previous_date_estimate, gedcom_token_count on gemini_api_calls (AD-211)
 - [ ] Multi-GEDCOM support — merge/dedup architecture for community GEDCOM uploads
 
+### Near-Term — Workspace & Onboarding (PRD-036)
+Self-service workspace for users. See `docs/prds/036_workspace_onboarding.md`.
+
+- [ ] WORKSPACE-001: Personal archive auto-creation on signup — 1 session
+- [ ] WORKSPACE-002: Sharing mode UX (Help Identify for members) — 1-2 sessions, depends on WORKSPACE-001
+- [ ] WORKSPACE-003: Add photos to community flow — 1-2 sessions, depends on WORKSPACE-001
+- [ ] WORKSPACE-004: Anonymous contributions with session tracking — 1 session
+- [ ] WORKSPACE-005: Community discovery page (`/communities`) — 1 session
+- [ ] WORKSPACE-006: Per-community permissions enforcement — 2 sessions
+
 ### Future Evaluation: Frontend Framework Migration
 - **Trigger:** If 3+ JS embeds require shared state, or mobile UX audit scores below acceptable after Session 74
 - **Options:** React SPA with FastAPI backend, or Next.js with Supabase direct

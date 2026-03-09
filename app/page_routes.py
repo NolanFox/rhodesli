@@ -345,6 +345,26 @@ def _community_landing_page(community: dict, slug: str):
         else None
     )
 
+    # Description section for all communities
+    description = community.get("description", "")
+    description_section = (
+        Div(
+            P(
+                description,
+                cls="text-slate-300 max-w-2xl mx-auto text-center mb-8",
+            ),
+        )
+        if description
+        else Div(
+            P(
+                "A community photo archive for preserving and identifying heritage photographs. "
+                "Upload photos, identify faces, and connect with your community's history.",
+                cls="text-slate-400 max-w-2xl mx-auto text-center mb-8",
+                data_testid="community-description",
+            ),
+        )
+    )
+
     # Empty state for communities with no photos yet
     empty_state = (
         Div(
@@ -359,11 +379,38 @@ def _community_landing_page(community: dict, slug: str):
                 ),
                 H3("This archive is just getting started", cls="text-xl font-serif text-amber-200 mb-2"),
                 P(
-                    "Photos will appear here as they are uploaded and processed. "
-                    "Check back soon or contact an administrator to contribute.",
-                    cls="text-slate-400 max-w-md mx-auto",
+                    "Photos will appear here as they are uploaded and processed.",
+                    cls="text-slate-400 max-w-md mx-auto mb-6",
+                ),
+                # Upload CTA for admins (visible to all, auth checked on click)
+                A(
+                    "Upload Photos",
+                    href=f"/c/{slug}/upload" if slug != "rhodes" else "/upload",
+                    cls="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg "
+                    "font-medium transition-colors mr-3",
+                    data_testid="upload-cta",
                 ),
                 cls="text-center py-12",
+            ),
+            # Tools section — always available regardless of archive content
+            Div(
+                P("While this archive grows, try our ML-powered tools:", cls="text-slate-400 mb-4"),
+                Div(
+                    A(
+                        "Date & Location Estimator",
+                        href="/tools/estimate",
+                        cls="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-amber-200 "
+                        "rounded-lg text-sm transition-colors",
+                    ),
+                    A(
+                        "Face Compare",
+                        href="/tools/compare",
+                        cls="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-amber-200 "
+                        "rounded-lg text-sm transition-colors",
+                    ),
+                    cls="flex gap-3 justify-center",
+                ),
+                cls="text-center pt-6 border-t border-slate-700/50",
             ),
             cls="bg-slate-800/50 rounded-xl border border-slate-700/50 p-8",
         )
@@ -391,6 +438,7 @@ def _community_landing_page(community: dict, slug: str):
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
                 P(subtitle, cls="text-lg text-amber-200/70 max-w-2xl mx-auto mb-8"),
+                description_section,
                 stats_row,
                 empty_state,
                 content_section,
