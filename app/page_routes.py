@@ -400,6 +400,11 @@ def landing_page(stats, featured_photos):
         /* ============ LANDING PAGE STYLES ============ */
         html, body { height: 100%; margin: 0; }
         body { background-color: #1a1511; overflow-x: hidden; }
+        /* UX-134: Prevent horizontal overflow on mobile */
+        .landing-container { overflow-x: hidden; max-width: 100vw; }
+        .landing-container * { box-sizing: border-box; }
+        .landing-container img { max-width: 100%; }
+        .landing-container .hero-mosaic img { max-width: none; }
 
         /* Warm sepia/archival color palette */
         .landing-bg { background: linear-gradient(180deg, #1a1511 0%, #1e1a15 40%, #1a1511 100%); }
@@ -1185,7 +1190,7 @@ def landing_page(stats, featured_photos):
                 ),
                 cls="border-t border-amber-900/20",
             ),
-            cls="min-h-screen landing-bg",
+            cls="min-h-screen landing-bg landing-container",
         ),
     )
 
@@ -3780,32 +3785,73 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
         cls="mb-8 text-center",
     )
 
-    # Source photos
+    # Source photos — build face-to-photo cards with thumbnails (UX-042)
     _main_mod._build_caches()
     photo_cards = []
-    for pid in photo_ids[:4]:
-        pm = (_main_mod._photo_cache or {}).get(pid, {})
+    _seen_photo_ids = set()
+    for fid_entry in all_face_ids:
+        fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id", "")
+        face_photo_id = _main_mod.get_photo_id_for_face(fid)
+        if not face_photo_id or face_photo_id in _seen_photo_ids:
+            continue
+        _seen_photo_ids.add(face_photo_id)
+        pm = (_main_mod._photo_cache or {}).get(face_photo_id, {})
         if not pm:
-            pm = photo_reg._photos.get(pid, {})
+            pm = photo_reg._photos.get(face_photo_id, {})
         photo_path = pm.get("path", "")
-        if photo_path:
-            photo_url = _main_mod.storage.get_photo_url(photo_path)
-            collection = pm.get("collection", "")
-            photo_cards.append(
-                A(
+        if not photo_path:
+            continue
+        photo_url = _main_mod.storage.get_photo_url(photo_path)
+        crop_url = _main_mod.resolve_face_image_url(fid, crop_files) if crop_files else None
+        collection = pm.get("collection", "")
+        photo_cards.append(
+            A(
+                Div(
                     Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
-                    P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
-                    P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
-                    href=f"/photo/{pid}",
-                    cls="block hover:opacity-80 transition-opacity",
-                )
+                    Img(
+                        src=crop_url,
+                        alt="Face crop",
+                        cls="absolute bottom-2 left-2 w-12 h-12 rounded-lg object-cover border-2 border-amber-500/50 shadow-md",
+                    )
+                    if crop_url
+                    else None,
+                    cls="relative",
+                ),
+                P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
+                href=f"/photo/{face_photo_id}",
+                cls="block hover:opacity-80 transition-opacity",
+                data_testid="source-photo-card",
             )
+        )
+
+    # Fallback: if face-to-photo mapping didn't produce cards, use photo_ids
+    if not photo_cards:
+        for pid in photo_ids[:4]:
+            pm = (_main_mod._photo_cache or {}).get(pid, {})
+            if not pm:
+                pm = photo_reg._photos.get(pid, {})
+            photo_path = pm.get("path", "")
+            if photo_path:
+                photo_url = _main_mod.storage.get_photo_url(photo_path)
+                collection = pm.get("collection", "")
+                photo_cards.append(
+                    A(
+                        Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
+                        P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                        P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
+                        href=f"/photo/{pid}",
+                        cls="block hover:opacity-80 transition-opacity",
+                        data_testid="source-photo-card",
+                    )
+                )
 
     photos_section = (
         Div(
             H3("Appears in these photos", cls="text-sm font-semibold text-slate-400 mb-3"),
             Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-4 gap-3"),
             cls="mb-10",
+            data_testid="source-photos-section",
         )
         if photo_cards
         else None
