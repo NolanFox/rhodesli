@@ -3381,6 +3381,8 @@ def get_photo_metadata(photo_id: str) -> dict:
 def get_photo_id_for_face(face_id: str) -> str:
     """Get the photo_id containing a face."""
     _build_caches()
+    if _face_to_photo_cache is None:
+        return None
     return _face_to_photo_cache.get(face_id)
 
 
