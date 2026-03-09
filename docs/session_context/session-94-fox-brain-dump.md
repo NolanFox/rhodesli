@@ -303,6 +303,19 @@ Key requirements:
 **Nolan's framing:** "Essentially we'd want to see all the photos of a person in
 the same identity even if they were in rhodesli, fox family, etc."
 
+### Q2b: Community Boundary UX — Critical Constraint
+**Nolan's feedback:** If you're coming to the platform for the Rhodes Jewish community,
+you should NOT accidentally wander into Fox family photos unless you fully understand
+what that is and intend to check it out. Otherwise, very confusing UX.
+
+**Implication:** Community boundaries must be CLEAR and INTENTIONAL to cross.
+- Browse pages are strictly community-scoped
+- Identity pages show all photos BUT with clear community provenance
+- Clicking a cross-community photo should have a clear "You're viewing a photo
+  from the Fox Family Archive" indicator — not a silent context switch
+- The landing page / entry point must be community-specific
+- Navigation should reinforce which community you're in at all times
+
 ### Q3: 50-Photo Upload Cap
 - **Both UX and processing concerns**
 - Came up when uploading 2nd batch of 100+ photos
