@@ -1,14 +1,14 @@
 # Rhodesli: Project Backlog
 
-**Version**: 41.0 — March 4, 2026
-**Status**: ~4059 tests passing, v0.90.0, 274 photos, 665 identities, 60 confirmed
+**Version**: 42.0 — March 9, 2026
+**Status**: ~4283 tests passing, v0.96.0, 299 photos, 894 identities, 69 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 50 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, community bug fixes, estimate page overhaul, and 2401 tests. Community sharing live on Jews of Rhodes Facebook group with 3 active identifiers.
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with Euclidean distance metrics, FastHTML for the web layer, Supabase/Postgres for auth and structured data, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 93 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, community bug fixes, estimate page overhaul, Postgres migration, observability (Sentry/PostHog/Resend), GEDCOM integration, auto-clustering, and ~4283 tests across 299 photos, 894 identities (69 confirmed). Community sharing live on Jews of Rhodes Facebook group (~2,000 members).
 
 ---
 
