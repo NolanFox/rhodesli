@@ -355,6 +355,34 @@ what that is and intend to check it out. Otherwise, very confusing UX.
   - OAuth consent screen needed
   - Could be a significant accelerator for onboarding if feasible
 
+## Part 10: Prioritization & Session 95 Planning
+
+### Roadmap Priority (Nolan-confirmed)
+1. PRD-035 Phase 1: Fox MVP (2-3 sessions)
+2. PRD-035 Phase 2: Global Identity (2 sessions)
+3. TOOLS-001: Date Estimator Standalone (2-3 sessions, parallel OK)
+4. PRD-035 Phase 3: Multi-GEDCOM (2 sessions)
+5. TOOLS-002: ML Service Extraction (3-4 sessions)
+6. PRD-035 Phase 4: Scale + Polish (1-2 sessions)
+7. TOOLS-003: Face Compare Real-Time (1-2 sessions, depends TOOLS-002)
+8. TOOLS-004: NL Query + Chatbot (3-5 sessions)
+
+### Standalone Tools UX Direction
+- TOOLS-001 should include **both** date estimator AND face compare standalone
+- Face compare standalone is a UX/branding exercise (compare already works)
+- All standalone tools should have:
+  - Consistent URL paths (logically grouped)
+  - Shared navigation links at the top (like Rhodes sharing area)
+  - Community-agnostic language
+- Think of it as a "tool suite" with a unified look
+
+### Session 95: Autonomous Overnight Execution
+- Nolan wants to kick off Session 95 overnight
+- Must be fully autonomous (no interactive input needed)
+- Must use worktrees/subagents for parallelization
+- Must fully adhere to harness (session log, assessment, decisions, etc.)
+- Quality over quantity — if parallelizing risks lower quality, do sequentially
+
 ---
 
 ## Breadcrumbs
