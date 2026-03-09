@@ -5,9 +5,9 @@
 
 ## Phase Checklist
 - [x] Act 1: Orient + Fix Ray Franco Gender
-- [ ] Act 2: Build Photo-Derived Community Identity Set
-- [ ] Act 3: Fix Sidebar Counts + Enable Admin Section
-- [ ] Act 4: Make Discoveries Community-Aware
+- [x] Act 2: Build Photo-Derived Community Identity Set
+- [x] Act 3: Fix Sidebar Counts + Enable Admin Section
+- [x] Act 4: Make Discoveries Community-Aware
 - [ ] Act 5: Verify Cross-Community Search + Manual Merge Path
 - [ ] Act 6: Fix Fox Family Landing Page + Browser Verify
 - [ ] Act 7: Assessment + Session Wrap

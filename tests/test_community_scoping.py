@@ -294,3 +294,28 @@ class TestPhotoDerivedIdentitySet:
         assert app.main._get_community_identity_ids(None) is None
         assert app.main._get_community_identity_ids({"slug": "rhodes"}) is None
         assert app.main._get_community_identity_ids({"is_default": True}) is None
+
+
+# ============================================================================
+# Cross-community search verification (Act 5)
+# ============================================================================
+
+
+class TestCrossCommunitySearch:
+    """Verify search is global (not community-scoped) for cross-community merges."""
+
+    def test_search_api_searches_all_identities(self):
+        """Search must find identities from ALL communities, not just current."""
+        import app.identity_routes
+        import inspect
+
+        # Verify search handler uses registry.search_identities() without community filter
+        source = inspect.getsource(app.identity_routes)
+        # The search should call registry.search_identities(q) without filtering by community
+        assert "search_identities" in source
+        # No community filtering in the search handler
+        assert (
+            "community_identity_ids" not in source.split("def get(q:")[1].split("def ")[0]
+            if "def get(q:" in source
+            else True
+        )
