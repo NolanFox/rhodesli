@@ -15,4 +15,11 @@ quote-style = "double"
 [tool.ruff.lint]
 # Only enable safe, non-disruptive rules
 select = ["F", "E9", "W1"]  # Pyflakes errors + syntax errors + indentation
-ignore = ["E501"]  # Line length handled by formatter
+ignore = [
+    "E501",  # Line length handled by formatter
+    "F403",  # Star imports — FastHTML standard pattern (from fasthtml.common import *)
+    "F405",  # Undefined names from star imports — false positives from FastHTML
+    "F401",  # Unused imports — overwhelmingly false positives from star imports
+    "F811",  # Redefined while unused — false positives from star imports
+    "F841",  # Unused variables — low priority, fix incrementally
+]
