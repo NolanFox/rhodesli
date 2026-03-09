@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.1] — 2026-03-09 (Session 96: Community Data Scoping Hotfix)
+
+### Fixed
+- **Photos section not community-scoped** — `render_photos_section()` now filters by community photo IDs. Fox Family no longer shows all 297 Rhodes photos.
+- **Sidebar counts on upload page** — `_compute_sidebar_counts()` now receives community context. Fox Family upload page shows 0 photos/0 people instead of Rhodes counts.
+- **Admin bar not community-aware** — `_admin_bar()` now accepts community params, scopes identity counts to community, and prefixes links with community URL.
+- **Merge conflict in sidebar** — Resolved unmerged git conflict markers in sidebar docstring from Session 95b worktree merge.
+
 ## [v0.97.0] — 2026-03-09 (Session 95: Fox MVP + Standalone Tool Suite)
 
 ### Added

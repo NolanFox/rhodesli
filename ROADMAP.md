@@ -59,7 +59,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
-- [-] 2026-03-09: COMMUNITY-001: Community data scoping — sidebar/upload/browse scoped to active community (Session 95b)
+- [-] 2026-03-09: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix). Remaining: about page, tools photo picker. See BACKLOG.
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
 
 ### Near-Term — Infrastructure
@@ -125,6 +125,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-09: **v0.97.1 — Session 96**: Community Data Scoping Hotfix. Photos section, upload sidebar counts, and admin bar now community-scoped. Merge conflict resolved. Fox Family pages no longer show Rhodes data. Bulk upload workflow documented (636 Charlie Fox photos via local pipeline). BACKLOG: UPLOAD-001 bulk import, about page community content.
 
 - [x] 2026-03-09: **v0.97.0 — Session 95**: Fox MVP + Standalone Tool Suite. Multi-community platform (CommunityMiddleware, `/c/{slug}/` routing, Fox Family Archive at `/c/fox-family`). Standalone tools hub at `/tools` with Date Estimator and Face Compare. 3 new Supabase tables (photo_communities, identity_communities, upload_batches). 295 photos + 894 identities migrated to Rhodes community. Upload cap 50→200, TIFF auto-conversion. Community admin CRUD. URL redirects for /estimate and /compare. Session 94 branches merged. 82 new tests. 2491 tests pass. Browser verified 8/8 routes.
 
