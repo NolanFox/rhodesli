@@ -5,6 +5,12 @@
 **Status:** Draft — Prioritized
 **References:** AD-110 (Serving Path Contract), PRD-034 (Standalone Tool Suite), ROADMAP.md Phase F
 
+**Sub-documents:**
+- [API Specification](ml_service/API.md)
+- [Deployment Options](ml_service/DEPLOYMENT.md)
+- [Automated Pipeline](ml_service/PIPELINE.md)
+- [Migration Plan](ml_service/MIGRATION.md)
+
 ---
 
 ## Problem Statement (Reframed — Session 94)
@@ -46,17 +52,13 @@ Git history of `embeddings.npy` changes (the canonical evidence of pipeline runs
 | Feb 14, 2026 | `4dc9758` | 116 community photos — largest batch (manual) |
 
 **6 total manual pipeline runs across 4 months of production operation.**
-That's roughly once every 2-3 weeks, despite 7 fully-implemented pipeline
-scripts sitting ready to run.
 
 ### What This Means
 
-1. **Clustering doesn't happen** — faces get detected on upload but are never
-   matched to existing identities until Nolan manually runs clustering locally
-2. **New community members wait** — uploads sit as "INBOX" state indefinitely
-3. **Vacation = downtime** — if Nolan is unavailable, no photos get fully processed
-4. **Production-local divergence** — Lesson 78 documents this as the #1 recurring
-   deployment failure. Every manual sync risks data loss.
+1. **Clustering doesn't happen** — faces get detected but never matched
+2. **New community members wait** — uploads sit as "INBOX" indefinitely
+3. **Vacation = downtime** — if Nolan is unavailable, no photos get processed
+4. **Production-local divergence** — Lesson 78, #1 recurring deployment failure
 
 ### Why It Hasn't Been a Crisis (Yet)
 
@@ -157,230 +159,12 @@ Nolan's laptop is no longer in the architecture diagram.
 
 ---
 
-## ML Service API
+## Detailed Sections
 
-### Endpoints
-
-| Method | Path | Description | Input | Output |
-|--------|------|-------------|-------|--------|
-| `GET` | `/health` | Health check + model status | — | `{"status": "ok", "models_loaded": true}` |
-| `POST` | `/api/v1/detect` | Detect faces in image | Image file | Face bounding boxes + scores |
-| `POST` | `/api/v1/embed` | Extract face embeddings | Image file | 512-dim embedding vectors |
-| `POST` | `/api/v1/detect-and-embed` | Combined detection + embedding | Image file | Faces with bboxes + embeddings |
-| `POST` | `/api/v1/compare` | Compare two face sets | Two image files | Similarity matrix |
-| `POST` | `/api/v1/align` | Face alignment coordinates | Image file + face index | Alignment landmarks |
-| `POST` | `/api/v1/cluster` | Run clustering on new faces | — | Cluster assignments |
-| `GET` | `/api/v1/pipeline/status` | Pipeline run status | — | Last run, next scheduled, queue depth |
-
-### Request/Response Format
-
-```python
-# POST /api/v1/detect-and-embed
-# Request: multipart/form-data with image file
-
-# Response:
-{
-  "faces": [
-    {
-      "bbox": [x1, y1, x2, y2],
-      "det_score": 0.95,
-      "quality": 0.82,
-      "embedding": [0.123, -0.456, ...],  # 512-dim
-      "landmarks": [[x, y], ...]  # 5-point
-    }
-  ],
-  "image_size": [width, height],
-  "processing_time_ms": 1234
-}
-```
-
-### Authentication
-
-Service-to-service auth via shared secret:
-```
-Authorization: Bearer {ML_SERVICE_TOKEN}
-```
-
-No user-level auth — the web service handles all user authentication.
-
----
-
-## Deployment Options
-
-### Option A: Railway Internal Service (Recommended Start)
-
-Two Railway services in the same project. Internal networking (no public URL).
-
-| Pro | Con |
-|-----|-----|
-| Simple deployment | Railway hobby plan limits |
-| Internal networking | Shared resource pool |
-| Same deploy workflow | Two services to manage |
-
-**Cost:** ~$10-20/month additional (Railway Pro plan)
-
-### Option B: Separate Cloud (GPU)
-
-ML service on a GPU provider (RunPod, Lambda, Modal).
-
-| Pro | Con |
-|-----|-----|
-| GPU available | Network latency |
-| Independent scaling | More complex deployment |
-| Cost-efficient for batches | Cold start issues |
-
-**Cost:** ~$0.20-0.50/hour GPU, or ~$30-50/month reserved
-
-### Option C: Serverless (Modal/Banana)
-
-ML inference as serverless functions.
-
-| Pro | Con |
-|-----|-----|
-| Scale to zero | Cold start (10-30s) |
-| Pay per use | Complex deployment |
-| No server management | Vendor lock-in |
-
-**Cost:** ~$0.01-0.05 per inference call
-
-### Recommendation
-
-**Start with Option A** (Railway internal service). It is the simplest to
-deploy and manage, uses the same workflow, and avoids network latency issues.
-Migrate to Option B if GPU is needed for real-time inference or standalone
-tool traffic exceeds Railway CPU capacity.
-
----
-
-## Automated Pipeline (NEW — Session 94)
-
-The ML service should run the full pipeline automatically, not just serve
-inference requests. This eliminates the laptop dependency entirely.
-
-### Trigger: Upload Webhook
-
-```
-User uploads photo → Web app saves to R2 staging
-                   → Web app POSTs to ML service /api/v1/pipeline/trigger
-                   → ML service:
-                       1. Downloads photo from R2
-                       2. Runs face detection + embedding
-                       3. Writes embeddings to Supabase (not .npy file)
-                       4. Runs clustering against existing embeddings
-                       5. Creates proposals (Tier 1 auto-add, Tier 2 suggestions)
-                       6. Uploads crops to R2
-                       7. Notifies web app via callback
-```
-
-### Trigger: Scheduled Batch
-
-```
-Cron (nightly or weekly) → ML service:
-    1. Recalibrate isotonic model (if new confirmed pairs exist)
-    2. Re-cluster INBOX faces against updated embeddings
-    3. Run Gemini batch reanalysis on flagged photos
-    4. Generate pipeline health report
-```
-
-### Data Flow Change
-
-**Before:** Embeddings in `data/embeddings.npy` (file on Railway volume, synced via git)
-**After:** Embeddings in Supabase `face_embeddings` table (already partially migrated
-per DATA-007). The ML service reads/writes Supabase directly.
-
-This eliminates the entire `sync_from_production.py` → local processing →
-`push_to_production.py` cycle that has caused Lesson 78 (production-local
-divergence, the #1 recurring deployment failure).
-
----
-
-## Migration Plan
-
-### Phase 1: Extract (1 session)
-- Create `ml_service/` directory with FastAPI app
-- Extract face detection from `core/ingest_inbox.py`
-- Extract embedding from `core/processing.py`
-- Health check endpoint
-- Docker separate image
-
-### Phase 2: Wire (1 session)
-- Web app calls ML service instead of local InsightFace
-- Fallback to local if ML service unavailable
-- Feature flag: `ML_SERVICE_URL` env var
-
-### Phase 3: Deploy (1 session)
-- Railway internal service setup
-- Service-to-service auth
-- Monitoring and logging
-
-### Phase 4: Automate (1 session)
-- Upload webhook trigger
-- Clustering automation
-- Scheduled batch pipeline (nightly/weekly)
-- Pipeline health dashboard
-
-### Phase 5: Optimize
-- Remove ML dependencies from web Docker image
-- Benchmark latency and throughput
-- ONNX optimization if needed
-
----
-
-## Web App Changes
-
-### Before (current)
-```python
-# app/upload_routes.py
-from core.processing import process_directory
-result = process_directory(photo_path)  # Local InsightFace
-```
-
-### After (with ML service)
-```python
-# app/upload_routes.py
-from core.ml_client import MLServiceClient
-client = MLServiceClient(os.environ.get("ML_SERVICE_URL"))
-result = await client.detect_and_embed(photo_path)
-```
-
-### Fallback
-```python
-# core/ml_client.py
-class MLServiceClient:
-    async def detect_and_embed(self, image_path):
-        if self.service_url:
-            return await self._call_service(image_path)
-        else:
-            # Fallback to local (development)
-            from core.processing import process_directory
-            return process_directory(image_path)
-```
-
----
-
-## Size Impact
-
-| Component | Current (combined) | After (web only) | After (ML only) |
-|-----------|-------------------|-------------------|------------------|
-| Docker image | ~2.5 GB | ~500 MB | ~2.0 GB |
-| RAM usage | ~600 MB | ~150 MB | ~500 MB |
-| Startup time | ~15s | ~3s | ~12s |
-| Deploy time | ~4 min | ~1 min | ~3 min |
-
----
-
-## Risks
-
-1. **Network latency** — Inter-service calls add ~10-50ms. Acceptable for
-   upload processing, may be noticeable for real-time compare.
-2. **Service availability** — ML service downtime blocks uploads. Mitigate
-   with health checks and fallback to local.
-3. **Data transfer** — Images sent over network. Use internal networking
-   (Railway) to avoid egress costs and latency.
-4. **Complexity** — Two services to deploy, monitor, and debug. Mitigate
-   with structured logging (structlog already in place).
-5. **Embeddings migration** — Moving from .npy file to Supabase table is a
-   data migration. Mitigate by running both in parallel during transition.
+- **[API Specification](ml_service/API.md)** — Endpoints, request/response formats, auth
+- **[Deployment Options](ml_service/DEPLOYMENT.md)** — Railway vs GPU vs serverless, size impact
+- **[Automated Pipeline](ml_service/PIPELINE.md)** — Upload webhook, scheduled batch, data flow, web app integration
+- **[Migration Plan](ml_service/MIGRATION.md)** — 5-phase plan, risks
 
 ---
 

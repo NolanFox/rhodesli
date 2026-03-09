@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-105 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+106 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -99,6 +99,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 92 | Subtree computation must include ALL photo people, even disconnected ones |
 | 93 | Verify API response data matches what the JS consumer expects |
 | 95 | Stale JS closure state after fetch failures — fresh page navigation required |
+| 106 | **Over-limit docs must be SPLIT into sub-files, not trimmed — never lose context** |
 
 ## Data Safety & Registries — `tasks/lessons/data-lessons.md`
 

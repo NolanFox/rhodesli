@@ -168,6 +168,12 @@ If any of these files change significantly, review the checklist:
 - `core/ingest_inbox.py` (upload flow)
 - `templates/*.html` (UI changes)
 
+### Doc Size Limit (Lesson 106)
+No single doc file should exceed 300 lines. When a doc grows past this limit:
+- **Split into sub-files** in a named subdirectory (e.g., `docs/architecture/ml_service/`)
+- **Never trim content** — restructure into hub doc + detail files
+- See `.claude/rules/doc-size-enforcement.md` for the full protocol
+
 ### Release Documentation
 Any session that changes user-visible behavior MUST end by:
 1. Updating `docs/RELEASE_NOTES.md`
