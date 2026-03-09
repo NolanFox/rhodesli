@@ -714,7 +714,7 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
             rows.append(
                 {
                     "identity_id": ident.get("identity_id", ""),
-                    "name": ident.get("name", ""),
+                    "name": ident.get("name") or f"Unidentified Person {ident.get('identity_id', '')[:8]}",
                     "display_name": ident.get("display_name"),
                     "state": ident.get("state", "INBOX"),
                     "anchor_ids": ident.get("anchor_ids", []),

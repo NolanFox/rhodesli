@@ -3481,17 +3481,13 @@
       ],
       "birth_year": 1935,
       "created_at": "2026-02-01T21:29:26.548826+00:00",
-      "updated_at": "2026-03-09T18:57:29.161317+00:00",
-      "version_id": 9,
+      "updated_at": "2026-02-21T04:08:39.116730+00:00",
+      "version_id": 5,
       "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
       "negative_ids": [],
       "candidate_ids": [
         "Image 978_compress:face0",
-        "Image 983_compress:face2",
-        "inbox_a0934b7b2f66",
-        "inbox_025d45a171d1",
-        "inbox_42e0e2d7ba66",
-        "inbox_154c11a3d81a"
+        "Image 983_compress:face2"
       ],
       "merge_history": [
         {
@@ -5104,42 +5100,12 @@
       },
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.550454+00:00",
-      "updated_at": "2026-03-09T18:57:29.161317+00:00",
-      "version_id": 33,
+      "updated_at": "2026-02-02T22:38:52.683111+00:00",
+      "version_id": 3,
       "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
       "negative_ids": [],
       "candidate_ids": [
-        "Image 978_compress:face1",
-        "inbox_522343c418be",
-        "inbox_2b594266a5d0",
-        "inbox_83ff7a1ce30f",
-        "inbox_3eec3d5ae198",
-        "inbox_3b125ba29a46",
-        "inbox_fc6395726e9b",
-        "inbox_4e0a451198c7",
-        "inbox_6479fddf02c0",
-        "inbox_f054777a758f",
-        "inbox_56a178d9b2c9",
-        "inbox_a15d9f2dfee7",
-        "inbox_72eb5ff4bc99",
-        "inbox_b03f5c53a9f0",
-        "inbox_1cefd75962bb",
-        "inbox_47e86cbaf8b9",
-        "inbox_ba04f34d4aeb",
-        "inbox_d2dc275d7261",
-        "inbox_7231173eb61e",
-        "inbox_17805332b1b1",
-        "inbox_84856c7ebee2",
-        "inbox_1e0d62338030",
-        "inbox_c308feb10b62",
-        "inbox_8d96223be118",
-        "inbox_df048cc5c3bb",
-        "inbox_2fd645be8628",
-        "inbox_67749956670d",
-        "inbox_dd20be574373",
-        "inbox_5154b2c7b1ce",
-        "inbox_00b7e6887b72",
-        "inbox_c32e5c51d148"
+        "Image 978_compress:face1"
       ]
     },
     "44fb6ab3-c98b-447a-8a5b-8d652418b337": {
@@ -9184,13 +9150,12 @@
       "metadata": {},
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.549590+00:00",
-      "updated_at": "2026-03-09T18:57:29.161317+00:00",
-      "version_id": 3,
+      "updated_at": "2026-02-21T07:11:30.756738+00:00",
+      "version_id": 2,
       "identity_id": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
       "negative_ids": [],
       "candidate_ids": [
-        "Image 968_compress:face6",
-        "inbox_46f784dc0db5"
+        "Image 968_compress:face6"
       ]
     },
     "3316e2c7-8d34-451c-a626-3a4d2dac27fa": {

@@ -58,55 +58,64 @@ class TestGetCommunityPhotoIds:
 
         assert _get_community_photo_ids(None) is None
 
-    def test_default_community_returns_none(self):
+    def test_default_community_falls_back_to_none_without_supabase(self):
+        """When Supabase is unavailable, Rhodes/default falls back to None (no filtering)."""
         from app.main import _get_community_photo_ids
 
+        # Without Supabase, all communities fall back to None
         assert _get_community_photo_ids({"is_default": True, "slug": "rhodes"}) is None
 
-    def test_rhodes_slug_returns_none(self):
+    def test_rhodes_slug_falls_back_to_none_without_supabase(self):
         from app.main import _get_community_photo_ids
 
         assert _get_community_photo_ids({"slug": "rhodes"}) is None
 
-    def test_community_without_id_returns_empty_set(self):
+    def test_community_without_id_returns_none(self):
+        """Community dict without an ID can't be scoped — falls back to None."""
         from app.main import _get_community_photo_ids
 
         result = _get_community_photo_ids({"slug": "fox-family"})
-        assert result == set()
+        assert result is None
 
+    @patch("app.supabase_data.get_supabase_client")
     @patch("app.supabase_data.load_photos_for_community")
-    def test_returns_photo_id_set(self, mock_load):
+    def test_returns_photo_id_set(self, mock_load, mock_client):
         import app.main
 
         # Clear cache
         app.main._community_photo_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
 
+        mock_client.return_value = True  # Supabase available
         mock_load.return_value = ["photo1", "photo2", "photo3"]
         community = {"slug": "fox-family", "id": "test-uuid-123"}
         result = app.main._get_community_photo_ids(community)
         assert result == {"photo1", "photo2", "photo3"}
         mock_load.assert_called_once_with("test-uuid-123")
 
+    @patch("app.supabase_data.get_supabase_client")
     @patch("app.supabase_data.load_photos_for_community")
-    def test_empty_community_returns_empty_set(self, mock_load):
+    def test_empty_community_returns_empty_set(self, mock_load, mock_client):
         import app.main
 
         app.main._community_photo_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
 
+        mock_client.return_value = True
         mock_load.return_value = []
         community = {"slug": "fox-family", "id": "test-uuid-456"}
         result = app.main._get_community_photo_ids(community)
         assert result == set()
 
+    @patch("app.supabase_data.get_supabase_client")
     @patch("app.supabase_data.load_photos_for_community")
-    def test_supabase_failure_returns_empty_set(self, mock_load):
+    def test_supabase_failure_returns_empty_set(self, mock_load, mock_client):
         import app.main
 
         app.main._community_photo_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
 
+        mock_client.return_value = True
         mock_load.return_value = None
         community = {"slug": "fox-family", "id": "test-uuid-789"}
         result = app.main._get_community_photo_ids(community)
@@ -126,9 +135,11 @@ class TestGetCommunityIdentityIds:
 
         assert _get_community_identity_ids(None) is None
 
-    def test_default_community_returns_none(self):
+    def test_default_community_falls_back_to_none_without_supabase(self):
+        """When Supabase is unavailable, default community falls back to None (no filtering)."""
         from app.main import _get_community_identity_ids
 
+        # Without Supabase, photo-derived set can't be computed, falls back to None
         assert _get_community_identity_ids({"is_default": True}) is None
 
     def test_returns_identity_id_set_from_photos(self):

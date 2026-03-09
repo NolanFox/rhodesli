@@ -158,6 +158,10 @@ class IdentityRegistry:
         # Default to PROPOSED if no state specified
         initial_state = state if state else IdentityState.PROPOSED
 
+        # Default name: generate from identity_id if not provided
+        if not name:
+            name = f"Unidentified Person {identity_id[:8]}"
+
         identity = {
             "identity_id": identity_id,
             "name": name,
@@ -1495,7 +1499,6 @@ class IdentityRegistry:
             path: Target file path
             backup_dir: Optional directory for backups (default: path.parent/backups)
         """
-
 
         data = {
             "schema_version": SCHEMA_VERSION,

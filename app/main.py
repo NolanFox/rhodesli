@@ -530,23 +530,28 @@ _COMMUNITY_IDS_CACHE_TTL: float = 60.0
 
 
 def _get_community_photo_ids(community: dict | None) -> set[str] | None:
-    """Return set of photo IDs for a community, or None for Rhodes/default (meaning all photos).
+    """Return set of photo IDs for a community, or None if no community context.
 
-    Results cached for 60s. Returns None when community is None or is the default Rhodes community.
+    Results cached for 60s. Returns None only when community is None (no community context).
+    ALL communities including Rhodes get photo-derived scoping to prevent cross-community leakage.
     """
-    if community is None or community.get("is_default") or community.get("slug") == "rhodes":
+    if community is None:
         return None
 
     global _community_photo_ids_cache, _community_ids_cache_ts
     community_id = community.get("id")
     if not community_id:
-        return set()
+        return None  # Can't scope without a community ID — fall back to no filtering
 
     now = time.time()
     if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_photo_ids_cache:
         return _community_photo_ids_cache[community_id]
 
-    from app.supabase_data import load_photos_for_community
+    from app.supabase_data import load_photos_for_community, get_supabase_client
+
+    # If Supabase is unavailable (local dev, tests), skip scoping to avoid empty results
+    if not get_supabase_client():
+        return None
 
     photo_ids = load_photos_for_community(community_id)
     result = set(photo_ids) if photo_ids else set()
@@ -556,21 +561,22 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 
 
 def _get_community_identity_ids(community: dict | None) -> set[str] | None:
-    """Return set of identity IDs for a community, or None for Rhodes/default (meaning all identities).
+    """Return set of identity IDs for a community, or None if no community context.
 
     Uses photo-derived identity set (AD-216): finds all identities that have faces
     in photos belonging to this community. This is the source of truth — if a person
     has faces in a community's photos, they belong to that community.
 
-    Results cached for 60s. Returns None when community is None or is the default Rhodes community.
+    Results cached for 60s. Returns None only when community is None (no community context).
+    ALL communities including Rhodes get photo-derived scoping to prevent cross-community leakage.
     """
-    if community is None or community.get("is_default") or community.get("slug") == "rhodes":
+    if community is None:
         return None
 
     global _community_identity_ids_cache, _community_ids_cache_ts
     community_id = community.get("id")
     if not community_id:
-        return set()
+        return None  # Can't scope without a community ID — fall back to no filtering
 
     now = time.time()
     if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_identity_ids_cache:

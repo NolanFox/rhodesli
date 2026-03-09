@@ -769,6 +769,19 @@ async def post(
                 except Exception as e:
                     print(f"[upload] Identity community tagging error: {e}")
 
+            # Sync identities and photos to Supabase so DATA_SOURCE=postgres sees them.
+            # process_directory() writes to JSON only. Without this sync, new identities
+            # are invisible when the app reads from Postgres. (Session 96c fix)
+            if result.get("status") in ("success", "partial"):
+                try:
+                    registry = _main_mod.load_registry()
+                    _main_mod.save_registry(registry)
+                    photo_reg = _main_mod.load_photo_registry()
+                    _main_mod.save_photo_registry(photo_reg)
+                    print(f"[upload] Synced registry + photos to Supabase for job {job_id}")
+                except Exception as e:
+                    print(f"[upload] Supabase sync error for job {job_id}: {e}")
+
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.
             _main_mod._invalidate_all_caches()
