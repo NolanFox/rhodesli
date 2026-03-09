@@ -4198,21 +4198,27 @@ def _public_page_nav(
     return nav
 
 
-def _admin_bar(user=None) -> object:
+def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None = None) -> object:
     """Admin mode indicator bar — only visible for admin users.
 
     Shows pending count, quick links to admin sections.
     Returns empty string for non-admin users.
+    Community-aware: scopes counts and links to active community.
     """
     if not user or not getattr(user, "is_admin", False):
         return NotStr("")
 
-    # Count pending items
+    prefix = community_url_prefix(community_slug or "rhodes")
+
+    # Count pending items (scoped to community)
     pending_count = 0
     proposal_count = 0
     try:
         registry = load_registry()
+        community_identity_ids = _get_community_identity_ids(community)
         for ident in registry.list_identities():
+            if community_identity_ids is not None and ident.get("identity_id") not in community_identity_ids:
+                continue
             state = ident.get("state", "")
             if state == "INBOX":
                 pending_count += 1
@@ -4230,19 +4236,19 @@ def _admin_bar(user=None) -> object:
             Div(
                 A(
                     f"Pending ({pending_count})",
-                    href="/admin/section/to_review",
+                    href=f"{prefix}/?section=to_review",
                     cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
                 ),
                 Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A(
                     f"Proposals ({proposal_count})",
-                    href="/admin/section/proposals",
+                    href=f"{prefix}/?section=to_review",
                     cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
                 ),
                 Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A(
                     "Upload",
-                    href="/admin/upload",
+                    href=f"{prefix}/upload",
                     cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
                 ),
                 cls="flex items-center overflow-x-auto scrollbar-hide w-full sm:w-auto",
@@ -4263,23 +4269,18 @@ def sidebar(
     community: dict | None = None,
 ) -> Aside:
     """
-        Collapsible sidebar navigation for the Command Center.
+    Collapsible sidebar navigation for the Command Center.
 
-        Supports expanded (full labels + counts) and collapsed (icons only) states.
-        Default: collapsed on mobile (< 768px), expanded on desktop.
-        Collapse state persisted in localStorage.
+    Supports expanded (full labels + counts) and collapsed (icons only) states.
+    Default: collapsed on mobile (< 768px), expanded on desktop.
+    Collapse state persisted in localStorage.
 
-        Args:
-            counts: Dict with keys: to_review, confirmed, skipped, rejected
-            current_section: Currently active section
-            user: Current user (None if anonymous)
-    <<<<<<< HEAD
-            community_slug: Community slug (default "rhodes")
-            community: Community dict from Supabase (None for default/rhodes)
-    =======
-            community_slug: Community slug for URL prefixing (default: 'rhodes')
-            community: Optional community dict for display customization
-    >>>>>>> worktree-agent-a9f57fc2
+    Args:
+        counts: Dict with keys: to_review, confirmed, skipped, rejected
+        current_section: Currently active section
+        user: Current user (None if anonymous)
+        community_slug: Community slug for URL prefixing (default: 'rhodes')
+        community: Optional community dict for display customization
     """
     # Determine community context
     is_rhodes = community_slug == "rhodes" or community_slug is None or community is None
@@ -6653,6 +6654,7 @@ def render_photos_section(
     sort_by: str = "newest",
     filter_collection: str = "",
     media_filter: str = "all",
+    community: dict | None = None,
 ) -> Div:
     """
     Render the Photos section - a grid view of all photos.
@@ -6667,6 +6669,7 @@ def render_photos_section(
         sort_by: Sort order (newest, oldest, most_faces, collection)
         filter_collection: Filter by collection/classification (empty = all)
         media_filter: "all" (default), "front_only" (no back images), "has_back" (only with backs)
+        community: Optional community dict for filtering photos by community
     """
     _build_caches()
     if not _photo_cache:
@@ -6676,11 +6679,17 @@ def render_photos_section(
             cls="space-y-6",
         )
 
+    # Community photo filter (PRD-035)
+    community_photo_ids = _get_community_photo_ids(community)
+
     # Get all photos with metadata
     photos = []
     sources_set = set()
     collections_set = set()
     for photo_id, photo_data in _photo_cache.items():
+        # Apply community filter
+        if community_photo_ids is not None and photo_id not in community_photo_ids:
+            continue
         source = photo_data.get("source", "")
         collection = photo_data.get("collection", "")
         if source:

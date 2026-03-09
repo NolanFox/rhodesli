@@ -1838,7 +1838,14 @@ def get(
         )
     elif section == "photos":
         main_content = _main_mod.render_photos_section(
-            counts, registry, crop_files, filter_source, sort_by, filter_collection, media_filter
+            counts,
+            registry,
+            crop_files,
+            filter_source,
+            sort_by,
+            filter_collection,
+            media_filter,
+            community=community,
         )
     else:  # rejected
         main_content = _main_mod.render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin)

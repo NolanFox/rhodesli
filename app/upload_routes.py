@@ -204,7 +204,7 @@ def get(sess=None, request=None):
 
     # Canonical sidebar counts
     registry = _main_mod.load_registry()
-    counts = _main_mod._compute_sidebar_counts(registry)
+    counts = _main_mod._compute_sidebar_counts(registry, community=community)
 
     # Load existing sources and collections for autocomplete
     existing_sources = []
