@@ -748,6 +748,27 @@ async def post(
                     print(f"[upload] Auto-cluster error for job {job_id}: {e}")
                     # Auto-cluster failure should NOT block the upload
 
+            # AD-216: Tag identities to community after clustering
+            # Photo-derived identity set handles this automatically via cache,
+            # but explicit tagging in identity_communities improves query performance.
+            if upload_community_id and result.get("status") in ("success", "partial"):
+                try:
+                    from app.supabase_data import add_identity_to_community
+
+                    # Find identities with faces in the newly uploaded photos
+                    registry = _main_mod.load_registry()
+                    tagged_count = 0
+                    for fid in result.get("face_ids", []):
+                        identity = _main_mod.get_identity_for_face(registry, fid)
+                        if identity:
+                            iid = identity.get("identity_id")
+                            if iid:
+                                add_identity_to_community(iid, upload_community_id)
+                                tagged_count += 1
+                    print(f"[upload] Tagged {tagged_count} identities to community {upload_community_id}")
+                except Exception as e:
+                    print(f"[upload] Identity community tagging error: {e}")
+
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.
             _main_mod._invalidate_all_caches()

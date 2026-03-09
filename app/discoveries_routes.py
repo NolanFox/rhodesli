@@ -100,7 +100,7 @@ def get(sess=None, request=None):
     """)
 
     registry = _main_mod.load_registry()
-    counts = _main_mod._compute_sidebar_counts(registry)
+    counts = _main_mod._compute_sidebar_counts(registry, community=community)
     discovery_count = counts.get("discoveries", 0)
 
     # Discovery log tier counts

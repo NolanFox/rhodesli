@@ -558,6 +558,10 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 def _get_community_identity_ids(community: dict | None) -> set[str] | None:
     """Return set of identity IDs for a community, or None for Rhodes/default (meaning all identities).
 
+    Uses photo-derived identity set (AD-216): finds all identities that have faces
+    in photos belonging to this community. This is the source of truth — if a person
+    has faces in a community's photos, they belong to that community.
+
     Results cached for 60s. Returns None when community is None or is the default Rhodes community.
     """
     if community is None or community.get("is_default") or community.get("slug") == "rhodes":
@@ -572,10 +576,43 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
     if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_identity_ids_cache:
         return _community_identity_ids_cache[community_id]
 
-    from app.supabase_data import load_identities_for_community
+    # Photo-derived identity set: get all identities with faces in community photos
+    community_photo_ids = _get_community_photo_ids(community)
+    if community_photo_ids is None or not community_photo_ids:
+        _community_identity_ids_cache[community_id] = set()
+        _community_ids_cache_ts = now
+        return set()
 
-    identity_rows = load_identities_for_community(community_id)
-    result = set(r["identity_id"] for r in identity_rows) if identity_rows else set()
+    _build_caches()
+    registry = load_registry()
+
+    # Collect all face IDs from community photos
+    community_face_ids = set()
+    if _face_to_photo_cache:
+        for face_id, photo_id in _face_to_photo_cache.items():
+            # Check both direct photo ID and aliases
+            if photo_id in community_photo_ids:
+                community_face_ids.add(face_id)
+            elif _photo_id_aliases:
+                # Check if the photo has an alias in the community set
+                alias = _photo_id_aliases.get(photo_id)
+                if alias and alias in community_photo_ids:
+                    community_face_ids.add(face_id)
+                # Also check reverse: community photo ID might alias to cache ID
+                for cpid in community_photo_ids:
+                    if _photo_id_aliases.get(cpid) == photo_id:
+                        community_face_ids.add(face_id)
+                        break
+
+    # Find identities that own these faces
+    result = set()
+    for face_id in community_face_ids:
+        identity = get_identity_for_face(registry, face_id)
+        if identity:
+            iid = identity.get("identity_id")
+            if iid:
+                result.add(iid)
+
     _community_identity_ids_cache[community_id] = result
     _community_ids_cache_ts = now
     return result
@@ -2802,27 +2839,21 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
     else:
         photo_count = len(_photo_cache) if _photo_cache else 0
 
-    # ML features (proposals, discoveries, annotations) only shown for Rhodes/default
-    if community_identity_ids is not None:
-        # Non-default community: ML features not applicable
-        proposal_count = 0
-        pending_annotations = 0
-        discovery_count = 0
-    else:
-        proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
+    # ML features: compute for all communities (AD-216 removes Rhodes-only restriction)
+    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
 
-        # Count pending user annotations (for admin approvals badge)
-        pending_annotations = 0
-        try:
-            annotations_data = _load_annotations()
-            for ann in annotations_data.get("annotations", []):
-                if ann.get("status") in ("pending", "pending_unverified"):
-                    pending_annotations += 1
-        except Exception:
-            pass
+    # Count pending user annotations (for admin approvals badge)
+    pending_annotations = 0
+    try:
+        annotations_data = _load_annotations()
+        for ann in annotations_data.get("annotations", []):
+            if ann.get("status") in ("pending", "pending_unverified"):
+                pending_annotations += 1
+    except Exception:
+        pass
 
-        # Count discoveries (high-confidence matches to confirmed identities)
-        discovery_count = _count_discoveries(registry)
+    # Count discoveries (high-confidence matches to confirmed identities)
+    discovery_count = _count_discoveries(registry, community_identity_ids=community_identity_ids)
 
     return {
         "to_review": len(to_review),
@@ -4437,7 +4468,7 @@ def sidebar(
         ]
     )
 
-    # Admin section (Rhodes-only, admin-only)
+    # Admin section (all communities, admin-only)
     admin_section = (
         Div(
             P("Admin", cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
@@ -4447,6 +4478,12 @@ def sidebar(
             ),
             nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
             A(
+                Span("🔬", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("Upload Review", cls="sidebar-label ml-2"),
+                href="/admin/upload-review",
+                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
+            A(
                 Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("GEDCOM", cls="sidebar-label ml-2"),
                 href="/admin/gedcom",
@@ -4454,7 +4491,7 @@ def sidebar(
             ),
             cls="mb-3",
         )
-        if (user and user.is_admin and is_rhodes)
+        if (user and user.is_admin)
         else None
     )
 
@@ -6155,7 +6192,7 @@ _discovery_cache_key = None
 DISCOVERY_DISTANCE_THRESHOLD = 1.30  # Raised from 1.05 to match Tier 2 ceiling (Session 79, Nolan approved)
 
 
-def _compute_discoveries(registry=None) -> list:
+def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
     """Find INBOX/PROPOSED identities with high-confidence matches to CONFIRMED identities.
 
     A "discovery" is an unreviewed face that has a nearest CONFIRMED neighbor
@@ -6258,15 +6295,27 @@ def _compute_discoveries(registry=None) -> list:
     discoveries.sort(key=lambda d: d["distance"])
     _discovery_cache = discoveries
     _discovery_cache_key = cache_key
+
+    # Filter by community if scoped (AD-216: show discoveries where source OR target is in community)
+    if community_identity_ids is not None:
+        discoveries = [
+            d
+            for d in discoveries
+            if d["source_id"] in community_identity_ids or d["target_id"] in community_identity_ids
+        ]
+
     return discoveries
 
 
-def _count_discoveries(registry=None) -> int:
+def _count_discoveries(registry=None, community_identity_ids=None) -> int:
     """Count high-confidence matches to CONFIRMED identities.
 
     Lightweight wrapper around _compute_discoveries for sidebar badge.
+    When community_identity_ids is provided, only counts discoveries where
+    the source or target identity is in the community set.
     """
-    return len(_compute_discoveries(registry))
+    discoveries = _compute_discoveries(registry, community_identity_ids=community_identity_ids)
+    return len(discoveries)
 
 
 def _invalidate_discovery_cache():

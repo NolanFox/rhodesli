@@ -131,20 +131,36 @@ class TestGetCommunityIdentityIds:
 
         assert _get_community_identity_ids({"is_default": True}) is None
 
-    @patch("app.supabase_data.load_identities_for_community")
-    def test_returns_identity_id_set(self, mock_load):
+    def test_returns_identity_id_set_from_photos(self):
+        """Photo-derived identity set: finds identities with faces in community photos (AD-216)."""
         import app.main
 
         app.main._community_identity_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
 
-        mock_load.return_value = [
-            {"identity_id": "id1", "is_primary": True},
-            {"identity_id": "id2", "is_primary": False},
-        ]
-        community = {"slug": "fox-family", "id": "test-uuid-abc"}
-        result = app.main._get_community_identity_ids(community)
-        assert result == {"id1", "id2"}
+        # Mock: community has photos p1 and p2
+        with patch.object(app.main, "_get_community_photo_ids", return_value={"p1", "p2"}):
+            # Mock: face_to_photo_cache maps faces to photos
+            app.main._face_to_photo_cache = {"f1": "p1", "f2": "p2", "f3": "p3"}
+            app.main._photo_id_aliases = {}
+            app.main._photo_cache = {"p1": {}, "p2": {}, "p3": {}}
+
+            # Mock: registry maps faces to identities
+            mock_registry = MagicMock()
+            identity1 = {"identity_id": "id1", "name": "A", "anchor_ids": ["f1"], "candidate_ids": []}
+            identity2 = {"identity_id": "id2", "name": "B", "anchor_ids": [], "candidate_ids": ["f2"]}
+            mock_registry.list_identities.return_value = [identity1, identity2]
+
+            with patch.object(app.main, "load_registry", return_value=mock_registry):
+                with patch.object(app.main, "_build_caches"):
+                    with patch.object(
+                        app.main,
+                        "get_identity_for_face",
+                        side_effect=lambda reg, fid: {"f1": identity1, "f2": identity2}.get(fid),
+                    ):
+                        community = {"slug": "fox-family", "id": "test-uuid-abc"}
+                        result = app.main._get_community_identity_ids(community)
+                        assert result == {"id1", "id2"}
 
 
 # ============================================================================
@@ -191,11 +207,13 @@ class TestComputeSidebarCountsCommunity:
         assert counts["skipped"] == 1
         assert counts["photos"] == 3
 
+    @patch("app.main._count_discoveries", return_value=2)
+    @patch("app.main._load_annotations", return_value={"annotations": [{"status": "pending"}]})
     @patch("app.main._get_community_identity_ids", return_value={"a1", "a4"})
     @patch("app.main._get_community_photo_ids", return_value={"p1"})
     @patch("app.main._count_pending_uploads", return_value=0)
     @patch("app.main._build_caches")
-    def test_community_filters_counts(self, mock_build, mock_pending, mock_photo_ids, mock_id_ids):
+    def test_community_filters_counts(self, mock_build, mock_pending, mock_photo_ids, mock_id_ids, mock_ann, mock_disc):
         import app.main
 
         app.main._photo_cache = {"p1": {}, "p2": {}, "p3": {}}
@@ -207,10 +225,10 @@ class TestComputeSidebarCountsCommunity:
         assert counts["confirmed"] == 1  # a4 only
         assert counts["skipped"] == 0  # a6 not in set
         assert counts["photos"] == 1  # filtered photo set
-        # ML features disabled for non-default
-        assert counts["proposals"] == 0
-        assert counts["discoveries"] == 0
-        assert counts["pending_annotations"] == 0
+        # ML features now computed for all communities (AD-216)
+        assert counts["proposals"] == 0  # registry mock returns []
+        assert counts["discoveries"] == 2
+        assert counts["pending_annotations"] == 1
 
     @patch("app.main._count_discoveries", return_value=5)
     @patch("app.main._load_annotations", return_value={"annotations": []})
@@ -225,3 +243,54 @@ class TestComputeSidebarCountsCommunity:
         counts = app.main._compute_sidebar_counts(registry)
         assert counts["photos"] == 1
         assert counts["discoveries"] == 5
+
+
+# ============================================================================
+# Photo-derived identity set tests (AD-216)
+# ============================================================================
+
+
+class TestPhotoDerivedIdentitySet:
+    """Tests for photo-derived community identity set computation."""
+
+    def test_includes_identities_from_candidate_ids(self):
+        """Identities with candidate_ids (not just anchor_ids) should be included."""
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        app.main._face_to_photo_cache = {"f1": "p1"}
+        app.main._photo_id_aliases = {}
+        app.main._photo_cache = {"p1": {}}
+
+        identity_with_candidate = {"identity_id": "id1", "anchor_ids": [], "candidate_ids": ["f1"]}
+
+        with patch.object(app.main, "_get_community_photo_ids", return_value={"p1"}):
+            with patch.object(app.main, "load_registry", return_value=MagicMock()):
+                with patch.object(app.main, "_build_caches"):
+                    with patch.object(
+                        app.main,
+                        "get_identity_for_face",
+                        side_effect=lambda reg, fid: identity_with_candidate if fid == "f1" else None,
+                    ):
+                        result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
+                        assert "id1" in result
+
+    def test_returns_empty_for_community_with_no_photos(self):
+        """Community with 0 photos should return empty set."""
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+
+        with patch.object(app.main, "_get_community_photo_ids", return_value=set()):
+            result = app.main._get_community_identity_ids({"slug": "empty-community", "id": "empty-id"})
+            assert result == set()
+
+    def test_returns_none_for_rhodes(self):
+        """Rhodes/default community should return None (no filter)."""
+        import app.main
+
+        assert app.main._get_community_identity_ids(None) is None
+        assert app.main._get_community_identity_ids({"slug": "rhodes"}) is None
+        assert app.main._get_community_identity_ids({"is_default": True}) is None

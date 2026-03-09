@@ -115,25 +115,39 @@ class TestGetCommunityIdentityIds:
         result = _get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
         assert result is None
 
-    @patch(
-        "app.supabase_data.load_identities_for_community",
-        return_value=[{"identity_id": "id1"}, {"identity_id": "id2"}],
-    )
-    def test_non_rhodes_returns_set_of_ids(self, mock_load):
-        from app.main import _get_community_identity_ids
-
-        result = _get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
-        assert result == {"id1", "id2"}
-        mock_load.assert_called_once_with("fox-id")
-
-    @patch("app.supabase_data.load_identities_for_community", return_value=None)
-    def test_supabase_failure_returns_empty_set(self, mock_load):
+    def test_non_rhodes_returns_photo_derived_set(self):
+        """Photo-derived identity set returns identities with faces in community photos (AD-216)."""
         import app.main
 
         app.main._community_identity_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
-        result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
-        assert result == set()
+        app.main._face_to_photo_cache = {"f1": "p1", "f2": "p2"}
+        app.main._photo_id_aliases = {}
+        app.main._photo_cache = {"p1": {}, "p2": {}}
+
+        identity1 = {"identity_id": "id1", "anchor_ids": ["f1"], "candidate_ids": []}
+        identity2 = {"identity_id": "id2", "anchor_ids": ["f2"], "candidate_ids": []}
+        mock_registry = MagicMock()
+
+        with patch.object(app.main, "_get_community_photo_ids", return_value={"p1", "p2"}):
+            with patch.object(app.main, "load_registry", return_value=mock_registry):
+                with patch.object(app.main, "_build_caches"):
+                    with patch.object(
+                        app.main,
+                        "get_identity_for_face",
+                        side_effect=lambda reg, fid: {"f1": identity1, "f2": identity2}.get(fid),
+                    ):
+                        result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
+                        assert result == {"id1", "id2"}
+
+    def test_no_community_photos_returns_empty_set(self):
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        with patch.object(app.main, "_get_community_photo_ids", return_value=set()):
+            result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
+            assert result == set()
 
     def test_no_id_returns_empty_set(self):
         from app.main import _get_community_identity_ids

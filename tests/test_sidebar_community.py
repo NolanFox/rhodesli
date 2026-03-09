@@ -115,7 +115,8 @@ class TestSidebarCommunityScoping(unittest.TestCase):
         assert "Discoveries" in html
         assert "Help Identify" in html
 
-    def test_fox_family_hides_admin_section(self):
+    def test_fox_family_shows_admin_section_for_admin(self):
+        """AD-216: Admin section now shows for ALL communities, not just Rhodes."""
         from app.main import sidebar
 
         counts = _default_counts()
@@ -123,10 +124,11 @@ class TestSidebarCommunityScoping(unittest.TestCase):
         user = FakeUser(is_admin=True)
         result = sidebar(counts, community_slug="fox-family", community=community, user=user)
         html = repr(result)
-        # Admin section items should NOT be present
-        assert "Proposals" not in html
-        assert "GEDCOM" not in html
-        assert "Approvals" not in html
+        # Admin section items should be present for admin users
+        assert "Proposals" in html
+        assert "GEDCOM" in html
+        assert "Approvals" in html
+        assert "Upload Review" in html
 
     def test_fox_family_shows_photos_with_prefix(self):
         from app.main import sidebar

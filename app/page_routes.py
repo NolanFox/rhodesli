@@ -310,19 +310,15 @@ def _community_landing_page(community: dict, slug: str):
     title = community.get("landing_title") or community.get("name", slug.replace("-", " ").title())
     subtitle = community.get("landing_subtitle", "A heritage photo archive")
 
-    # Try to get community-specific stats
+    # Get community-specific stats using photo-derived identity set (AD-216)
     photo_count = 0
     identity_count = 0
-    community_id = community.get("id")
-    if community_id:
-        from app.supabase_data import load_photos_for_community, load_identities_for_community
-
-        photos = load_photos_for_community(community_id)
-        identities = load_identities_for_community(community_id)
-        if photos:
-            photo_count = len(photos)
-        if identities:
-            identity_count = len(identities)
+    community_photo_ids = _main_mod._get_community_photo_ids(community)
+    community_identity_ids = _main_mod._get_community_identity_ids(community)
+    if community_photo_ids is not None:
+        photo_count = len(community_photo_ids)
+    if community_identity_ids is not None:
+        identity_count = len(community_identity_ids)
 
     has_content = photo_count > 0
 
