@@ -4263,18 +4263,23 @@ def sidebar(
     community: dict | None = None,
 ) -> Aside:
     """
-    Collapsible sidebar navigation for the Command Center.
+        Collapsible sidebar navigation for the Command Center.
 
-    Supports expanded (full labels + counts) and collapsed (icons only) states.
-    Default: collapsed on mobile (< 768px), expanded on desktop.
-    Collapse state persisted in localStorage.
+        Supports expanded (full labels + counts) and collapsed (icons only) states.
+        Default: collapsed on mobile (< 768px), expanded on desktop.
+        Collapse state persisted in localStorage.
 
-    Args:
-        counts: Dict with keys: to_review, confirmed, skipped, rejected
-        current_section: Currently active section
-        user: Current user (None if anonymous)
-        community_slug: Community slug (default "rhodes")
-        community: Community dict from Supabase (None for default/rhodes)
+        Args:
+            counts: Dict with keys: to_review, confirmed, skipped, rejected
+            current_section: Currently active section
+            user: Current user (None if anonymous)
+    <<<<<<< HEAD
+            community_slug: Community slug (default "rhodes")
+            community: Community dict from Supabase (None for default/rhodes)
+    =======
+            community_slug: Community slug for URL prefixing (default: 'rhodes')
+            community: Optional community dict for display customization
+    >>>>>>> worktree-agent-a9f57fc2
     """
     # Determine community context
     is_rhodes = community_slug == "rhodes" or community_slug is None or community is None

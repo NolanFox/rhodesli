@@ -217,14 +217,21 @@ def get(
     tag: str = "",
     media_filter: str = "all",
     sess=None,
+    request=None,
 ):
     """
     Public photos browsing page — grid of all archive photos.
 
     No authentication required. Each photo links to /photo/{id}.
     Supports decade filtering, keyword search, and tag filtering via query params.
+    Community-aware: filters photos by community context from middleware.
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+
+    # Community context from middleware (PRD-035)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+    community_photo_ids = _main_mod._get_community_photo_ids(community)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -244,6 +251,9 @@ def get(
     photos = []
     collections_set = set()
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
+        # Apply community filter (PRD-035)
+        if community_photo_ids is not None and photo_id_val not in community_photo_ids:
+            continue
         collection = photo_data.get("collection", "")
         if collection:
             collections_set.add(collection)
@@ -520,13 +530,33 @@ def get(
                     # Photo grid — masonry layout via CSS columns
                     Div(*photo_cards, id="photo-grid", cls="masonry-grid")
                     if photo_cards
-                    else Div(
-                        P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
-                        A(
-                            "Clear filters",
-                            href="/photos",
-                            cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2",
-                        ),
+                    # Empty state for non-Rhodes community
+                    else (
+                        Div(
+                            Div(
+                                H3("No photos yet", cls="text-xl font-serif text-amber-200 mb-2"),
+                                P(
+                                    "Upload your first photos to start building this archive.",
+                                    cls="text-slate-400 mb-4",
+                                ),
+                                A(
+                                    "Upload Photos",
+                                    href=f"{_main_mod.community_url_prefix(community_slug)}/upload",
+                                    cls="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+                                ),
+                                cls="text-center py-16",
+                            ),
+                            cls="bg-slate-800/50 rounded-xl border border-slate-700/50 p-8 mt-8",
+                        )
+                        if community_slug != "rhodes"
+                        else Div(
+                            P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
+                            A(
+                                "Clear filters",
+                                href="/photos",
+                                cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2",
+                            ),
+                        )
                     ),
                     cls="max-w-6xl mx-auto px-6 pb-10",
                 ),
