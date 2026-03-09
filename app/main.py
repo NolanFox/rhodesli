@@ -454,6 +454,61 @@ app, rt = fast_app(
 )
 
 
+# --- COMMUNITY ROUTING MIDDLEWARE ---
+# Extracts community from /c/{slug}/... URL prefix, rewrites path for downstream routes.
+# Default community is "rhodes" when no /c/ prefix is present.
+from starlette.middleware.base import BaseHTTPMiddleware
+
+_community_slug_pattern = re.compile(r"^/c/([a-z0-9_-]+)(/.*)$")
+
+# Paths that should NOT be intercepted by community middleware
+_COMMUNITY_SKIP_PREFIXES = ("/static/", "/api/", "/_")
+
+
+class CommunityMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+
+        # Skip static/API routes entirely
+        for prefix in _COMMUNITY_SKIP_PREFIXES:
+            if path.startswith(prefix):
+                request.state.community_slug = "rhodes"
+                request.state.community = None  # lazy-loaded if needed
+                return await call_next(request)
+
+        # Check for /c/{slug}/ prefix
+        match = _community_slug_pattern.match(path)
+        if match:
+            slug = match.group(1)
+            remaining_path = match.group(2)
+            request.state.community_slug = slug
+            # Rewrite the path to remove the /c/{slug} prefix
+            request.scope["path"] = remaining_path
+        else:
+            request.state.community_slug = "rhodes"  # default
+
+        # Fetch community data (cached)
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(request.state.community_slug)
+        request.state.community = community
+
+        # If slug was explicit but community not found, return 404
+        if match and community is None:
+            from starlette.responses import HTMLResponse
+
+            return HTMLResponse(
+                content=f"<h1>Community not found: {request.state.community_slug}</h1>",
+                status_code=404,
+            )
+
+        response = await call_next(request)
+        return response
+
+
+app.add_middleware(CommunityMiddleware)
+
+
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
 @app.on_event("startup")
 async def startup_event():

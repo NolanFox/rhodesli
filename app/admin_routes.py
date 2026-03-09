@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fasthtml.common import *
-from starlette.responses import FileResponse, Response
+from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
 from app.auth import get_current_user
 from core import storage
@@ -3264,4 +3264,278 @@ def get(sess=None):
         ),
         Div(*items, cls="space-y-2"),
         cls="max-w-3xl mx-auto p-6",
+    )
+
+
+# =============================================================================
+# COMMUNITY ADMIN CRUD (PRD-035)
+# =============================================================================
+
+
+@rt("/admin/communities")
+def get(sess=None):
+    """List all communities for admin management."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    from app.supabase_data import load_communities
+
+    communities = load_communities() or []
+
+    rows = []
+    for c in communities:
+        rows.append(
+            Tr(
+                Td(c.get("name", ""), cls="px-4 py-3 text-white"),
+                Td(
+                    A(
+                        f"/c/{c.get('slug', '')}",
+                        href=f"/c/{c.get('slug', '')}/",
+                        cls="text-indigo-400 hover:text-indigo-300",
+                    ),
+                    cls="px-4 py-3",
+                ),
+                Td(
+                    Span("Default", cls="text-xs bg-emerald-600/30 text-emerald-300 px-2 py-0.5 rounded")
+                    if c.get("is_default")
+                    else "",
+                    cls="px-4 py-3",
+                ),
+                Td(
+                    A(
+                        "Edit",
+                        href=f"/admin/communities/{c.get('slug', '')}/edit",
+                        cls="text-indigo-400 hover:text-indigo-300 text-sm",
+                    ),
+                    cls="px-4 py-3",
+                ),
+                cls="border-b border-slate-700/50",
+                data_testid="community-row",
+            )
+        )
+
+    if not rows:
+        rows = [
+            Tr(
+                Td(
+                    "No communities found. Create one to get started.",
+                    colspan="4",
+                    cls="px-4 py-8 text-slate-400 text-center",
+                ),
+            )
+        ]
+
+    return Title("Communities — Admin"), Div(
+        _admin_nav_bar(active="communities"),
+        Div(
+            Div(
+                H1("Communities", cls="text-2xl font-bold text-white"),
+                A(
+                    "+ New Community",
+                    href="/admin/communities/new",
+                    cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors",
+                ),
+                cls="flex items-center justify-between mb-6",
+            ),
+            Table(
+                Thead(
+                    Tr(
+                        Th("Name", cls="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase"),
+                        Th("URL", cls="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase"),
+                        Th("Status", cls="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase"),
+                        Th("Actions", cls="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase"),
+                    ),
+                ),
+                Tbody(*rows),
+                cls="w-full",
+                data_testid="communities-table",
+            ),
+            cls="max-w-4xl mx-auto p-6",
+        ),
+        cls="min-h-screen bg-slate-900",
+    )
+
+
+@rt("/admin/communities/new")
+def get(sess=None):
+    """Form to create a new community."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    return Title("New Community — Admin"), Div(
+        _admin_nav_bar(active="communities"),
+        Div(
+            H1("Create Community", cls="text-2xl font-bold text-white mb-6"),
+            _community_form(action="/admin/communities", submit_label="Create Community"),
+            cls="max-w-2xl mx-auto p-6",
+        ),
+        cls="min-h-screen bg-slate-900",
+    )
+
+
+@rt("/admin/communities")
+def post(
+    name: str = "",
+    slug: str = "",
+    landing_title: str = "",
+    landing_subtitle: str = "",
+    sess=None,
+):
+    """Create a new community."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    if not name or not slug:
+        return Div(P("Name and slug are required.", cls="text-red-400"), cls="p-4")
+
+    # Validate slug format
+    import re as _re_community
+
+    if not _re_community.match(r"^[a-z0-9][a-z0-9_-]*$", slug):
+        return Div(P("Slug must be lowercase alphanumeric with hyphens/underscores.", cls="text-red-400"), cls="p-4")
+
+    from app.supabase_data import create_community
+
+    data = {"name": name, "slug": slug}
+    if landing_title:
+        data["landing_title"] = landing_title
+    if landing_subtitle:
+        data["landing_subtitle"] = landing_subtitle
+
+    result = create_community(data)
+    if result:
+        return RedirectResponse(url="/admin/communities", status_code=303)
+    else:
+        return Div(P("Failed to create community. Check Supabase connection.", cls="text-red-400"), cls="p-4")
+
+
+@rt("/admin/communities/{slug}/edit")
+def get(slug: str, sess=None):
+    """Edit form for a community."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    from app.supabase_data import get_community_by_slug
+
+    community = get_community_by_slug(slug)
+    if not community:
+        return HTMLResponse("<h1>Community not found</h1>", status_code=404)
+
+    return Title(f"Edit {community.get('name', slug)} — Admin"), Div(
+        _admin_nav_bar(active="communities"),
+        Div(
+            H1(f"Edit: {community.get('name', slug)}", cls="text-2xl font-bold text-white mb-6"),
+            _community_form(
+                action=f"/admin/communities/{slug}",
+                submit_label="Save Changes",
+                community=community,
+            ),
+            cls="max-w-2xl mx-auto p-6",
+        ),
+        cls="min-h-screen bg-slate-900",
+    )
+
+
+@rt("/admin/communities/{slug}")
+def post(
+    slug: str,
+    name: str = "",
+    landing_title: str = "",
+    landing_subtitle: str = "",
+    sess=None,
+):
+    """Update a community."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    from app.supabase_data import get_community_by_slug, update_community
+
+    community = get_community_by_slug(slug)
+    if not community:
+        return HTMLResponse("<h1>Community not found</h1>", status_code=404)
+
+    data = {}
+    if name:
+        data["name"] = name
+    if landing_title:
+        data["landing_title"] = landing_title
+    if landing_subtitle:
+        data["landing_subtitle"] = landing_subtitle
+
+    if data:
+        update_community(community["id"], data)
+
+    return RedirectResponse(url="/admin/communities", status_code=303)
+
+
+def _community_form(action: str, submit_label: str = "Save", community: dict = None) -> Form:
+    """Render a community create/edit form."""
+    c = community or {}
+    return Form(
+        Div(
+            Label("Name *", cls="block text-sm font-medium text-slate-300 mb-1"),
+            Input(
+                type="text",
+                name="name",
+                value=c.get("name", ""),
+                placeholder="e.g., Fox Family Archive",
+                required=True,
+                cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400",
+            ),
+            cls="mb-4",
+        ),
+        Div(
+            Label("Slug *", cls="block text-sm font-medium text-slate-300 mb-1"),
+            Input(
+                type="text",
+                name="slug",
+                value=c.get("slug", ""),
+                placeholder="e.g., fox-family",
+                required=not bool(community),  # Required for create, readonly for edit
+                readonly=bool(community),
+                cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400"
+                + (" opacity-50" if community else ""),
+            ),
+            P("URL-safe identifier (lowercase, hyphens, no spaces)", cls="text-xs text-slate-500 mt-1"),
+            cls="mb-4",
+        ),
+        Div(
+            Label("Landing Title", cls="block text-sm font-medium text-slate-300 mb-1"),
+            Input(
+                type="text",
+                name="landing_title",
+                value=c.get("landing_title", ""),
+                placeholder="e.g., Fox Family Heritage Archive",
+                cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400",
+            ),
+            cls="mb-4",
+        ),
+        Div(
+            Label("Landing Subtitle", cls="block text-sm font-medium text-slate-300 mb-1"),
+            Input(
+                type="text",
+                name="landing_subtitle",
+                value=c.get("landing_subtitle", ""),
+                placeholder="e.g., Preserving four generations of family photos",
+                cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400",
+            ),
+            cls="mb-4",
+        ),
+        Div(
+            Button(
+                submit_label,
+                type="submit",
+                cls="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+            ),
+            A("Cancel", href="/admin/communities", cls="ml-4 text-slate-400 hover:text-slate-300"),
+            cls="mt-6",
+        ),
+        action=action,
+        method="post",
+        data_testid="community-form",
     )

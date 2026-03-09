@@ -4,7 +4,9 @@ Upload routes extracted from app/main.py.
 All /upload/* routes plus upload-exclusive helpers (upload_area).
 """
 
+import io
 import json
+import logging
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +20,42 @@ from app.main import rt
 # All other main.py functions accessed via module reference
 # so that test patches on app.main.X work correctly
 import app.main as _main_mod
+
+logger = logging.getLogger(__name__)
+
+
+# --- TIFF Detection and Conversion (PRD-035) ---
+
+
+def is_tiff(filename: str, file_bytes: bytes) -> bool:
+    """Detect TIFF files by extension or magic bytes."""
+    ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+    if ext in ("tif", "tiff"):
+        return True
+    # Magic bytes check: little-endian (II) or big-endian (MM)
+    if len(file_bytes) >= 4:
+        header = file_bytes[:4]
+        if header in (b"II\x2a\x00", b"MM\x00\x2a"):
+            return True
+    return False
+
+
+def convert_tiff_to_jpg(file_bytes: bytes, quality: int = 95) -> bytes:
+    """Convert TIFF image bytes to JPEG. Preserves EXIF if available."""
+    from PIL import Image
+
+    img = Image.open(io.BytesIO(file_bytes))
+    output = io.BytesIO()
+    # Convert to RGB if necessary (TIFF can be CMYK, RGBA, etc.)
+    if img.mode not in ("RGB",):
+        img = img.convert("RGB")
+    exif = img.info.get("exif", b"")
+    if exif:
+        img.save(output, "JPEG", quality=quality, exif=exif)
+    else:
+        img.save(output, "JPEG", quality=quality)
+    output.seek(0)
+    return output.read()
 
 
 def upload_area(existing_sources: list[str] = None, existing_collections: list[str] = None) -> Div:
@@ -344,7 +382,7 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
     # --- Upload safety checks ---
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB per file
     MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500 MB per batch
-    MAX_FILES_PER_UPLOAD = 50
+    MAX_FILES_PER_UPLOAD = 200
     ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".zip"}
 
     if len(valid_files) > MAX_FILES_PER_UPLOAD:
@@ -408,6 +446,18 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
 
             shutil.rmtree(job_dir, ignore_errors=True)
             return Div(P("Total batch size exceeds 500 MB limit.", cls="text-red-400 text-sm"), cls="p-2")
+
+        # TIFF auto-conversion to JPEG (PRD-035)
+        if is_tiff(safe_filename, content):
+            try:
+                content = convert_tiff_to_jpg(content)
+                # Update filename to .jpg
+                safe_filename = safe_filename.rsplit(".", 1)[0] + ".jpg"
+                upload_path = job_dir / safe_filename
+                logger.info(f"Converted TIFF to JPEG: {f.filename} -> {safe_filename}")
+            except Exception as e:
+                logger.warning(f"TIFF conversion failed for {safe_filename}: {e}")
+                # Fall through and save as-is
 
         with open(upload_path, "wb") as out:
             out.write(content)
