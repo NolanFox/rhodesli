@@ -192,6 +192,16 @@ Community-agnostic versions of Rhodesli's ML tools, serving as top-of-funnel and
 | Key decisions | AD-110, AD-117, AD-131, AD-132, AD-133, AD-139, AD-142, AD-149, AD-192, AD-201 |
 | Design principles | Lesson 81 (separate tools), Lesson 82 (community-agnostic), Lesson 84 (museum-quality) |
 
+### Workspace & Onboarding (PRD-036) — Session 95b
+Self-service workspace and contribution UX. Vision PRD: `docs/prds/036_workspace_onboarding.md`.
+
+- [ ] **WORKSPACE-001: Personal archive auto-creation** — Auto-create `"{first_name}'s Archive"` community on signup. Add `owner_id`, `is_personal`, `privacy` columns to communities table. 1 session. Source: PRD-036.
+- [ ] **WORKSPACE-002: Sharing mode UX** — Lighter interaction mode for community members (browse + Help Identify + share). Distinct from admin mode. 1-2 sessions. Depends: WORKSPACE-001. Source: PRD-036.
+- [ ] **WORKSPACE-003: Add photos to community** — Share personal photos into community archives with Gatekeeper approval. New `community_photo_shares` table. 1-2 sessions. Depends: WORKSPACE-001. Source: PRD-036.
+- [ ] **WORKSPACE-004: Anonymous contributions** — Session-tracked suggestions from anonymous visitors. Email capture optional. Link to account on signup. 1 session. Source: PRD-036.
+- [ ] **WORKSPACE-005: Community discovery page** — `/communities` public directory with search. Join button for membership. 1 session. Source: PRD-036.
+- [ ] **WORKSPACE-006: Per-community permissions** — Viewer/member/admin roles per community. `community_members` table with role enforcement in middleware. 2 sessions. Source: PRD-036.
+
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
 
