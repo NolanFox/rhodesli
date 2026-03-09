@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.0] — 2026-03-09 (Session 95: Fox MVP + Standalone Tool Suite)
+
+### Added
+- **Multi-community platform** — Community routing middleware (`/c/{slug}/...` URL prefix), community-scoped browse/landing pages. Fox Family Archive live at `/c/fox-family`.
+- **Standalone Tool Suite** — Tools hub at `/tools`, Date Estimator at `/tools/estimate`, Face Compare at `/tools/compare`. Shared navigation bar. Community-agnostic language.
+- **Community infrastructure** — `photo_communities`, `identity_communities`, `upload_batches` Supabase tables. Fox Family community seeded. 295 photos + 894 identities tagged with Rhodes community.
+- **Upload improvements** — Cap raised from 50 to 200 files. TIFF auto-detection + JPG conversion (Pillow, 95% quality, EXIF preserved).
+- **Community admin CRUD** — Create/edit communities at `/admin/communities`.
+- **URL redirects** — `/estimate` → `/tools/estimate`, `/compare` → `/tools/compare`. All existing URLs continue to work.
+- **Community caching** — 5-minute TTL cache for community lookups, Rhodes fallback when Supabase unavailable.
+- 82 new tests (21 community sync + 42 community infra + 19 tools standalone). 2491 total pass.
+
+### Fixed
+- **Middleware regex** — `/c/{slug}` without trailing path now correctly serves community landing page.
+- **Nav link consistency** — All `/compare` and `/estimate` hrefs updated to `/tools/*` paths across 9 files.
+
 ## [v0.96.1] — 2026-03-08 (Session 93-hotfix: Photo Locations Regression)
 
 ### Fixed

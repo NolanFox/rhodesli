@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.96.0 · ~4283 tests · 299 photos · 894 identities · 69 confirmed
+Current: v0.97.0 · ~2491 tests · 299 photos · 894 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -97,7 +97,17 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
 - Prompt: docs/prompts/session-93-prompt.md
 
+### Session 95: Fox MVP + Standalone Tool Suite — COMPLETE
+- Multi-community platform: `/c/{slug}/` routing, Fox Family Archive live
+- Standalone tools: `/tools` hub, `/tools/estimate`, `/tools/compare`
+- Community infrastructure: 3 new Supabase tables, migration, admin CRUD
+- Upload improvements: 200 cap, TIFF conversion
+- 82 new tests, 2491 total pass, browser verified
+- Prompt: docs/prompts/session-95-prompt.md
+
 ## Recently Completed
+
+- [x] 2026-03-09: **v0.97.0 — Session 95**: Fox MVP + Standalone Tool Suite. Multi-community platform (CommunityMiddleware, `/c/{slug}/` routing, Fox Family Archive at `/c/fox-family`). Standalone tools hub at `/tools` with Date Estimator and Face Compare. 3 new Supabase tables (photo_communities, identity_communities, upload_batches). 295 photos + 894 identities migrated to Rhodes community. Upload cap 50→200, TIFF auto-conversion. Community admin CRUD. URL redirects for /estimate and /compare. Session 94 branches merged. 82 new tests. 2491 tests pass. Browser verified 8/8 routes.
 
 - [x] 2026-03-08: **v0.96.0 — Session 93**: Close All Deferrals. DATA-007 complete (identities/photos/photo_faces tables, 894+295+981 rows backfilled, DATA_SOURCE=postgres on Railway). Supplementary migration (date_labels 271, photo_locations 268, birth_year_estimates 32). Observability verified (Sentry 5 issues, PostHog events, Resend email). Batch GEDCOM reanalysis (67/72 photos, Gemini 3.1 Pro, ~$2.66, 91% high confidence, avg 4.5yr ranges). GEDCOM Reanalysis Report (10-section analysis). AD-211. 4283 tests pass.
 - [x] 2026-03-08: **v0.95.0 — Session 92**: Ship Everything — Close All Gaps. 6 parallel worktree tracks. Observability (Sentry + PostHog, 4 events). Bell icon sidebar fix. Email notifications (Resend). 10 P1/P2 UX fixes (source photo link, auto-scroll, 404 styling, birth year race, CTA standardization, tooltip, dropdown, double admin bar). Leon's GEDCOM fix (AD-210, business name → owner lookup). Full API logging (prompt_text, full_response, gedcom_context). Multi-pass + active learning foundations. NL query parser. Compare v2 stub. CI/CD (.github/workflows/test.yml). 3 PRDs + 3 architecture docs. Timeline life events. 4172 tests pass.

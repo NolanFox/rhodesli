@@ -20,9 +20,10 @@ Prompt: docs/prompts/session-95-prompt.md
 | `/` | PASS | Main admin interface |
 | `/estimate` redirect | PASS | 302 → /tools/estimate |
 | `/compare` redirect | PASS | 302 → /tools/compare |
-- [ ] Act 5: Session Review + Assessment
+- [x] Act 5: Session Review + Assessment — written with evidence
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] Browser verification screenshots saved
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed (8/8 routes verified)
+- [x] Browser verification screenshots taken
+- [x] Assessment written: docs/assessments/session-95-assessment.md
