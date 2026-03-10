@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-116 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+117 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -68,6 +68,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 78 | **Production-local data divergence is the #1 recurring deployment failure** |
 | 85 | **Deploy data safety gate — 5th occurrence, triple protection (AD-134)** |
 | 94 | **Wait for deploy completion before Chrome verification — 502 corrupts JS state** |
+| 117 | **Railway region deprecation silently breaks GitHub deploys — use CLI deploy workaround** |
 | 71 | has_insightface check must probe actual deferred imports |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`

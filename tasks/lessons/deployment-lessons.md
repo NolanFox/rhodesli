@@ -113,6 +113,16 @@ See also: `docs/DEPLOYMENT_GUIDE.md`, `docs/ops/OPS_DECISIONS.md`
 - **Rule**: After `git push`, ALWAYS check Railway deploy status (`mcp__railway-mcp-server__list-deployments` or Railway CLI) and wait for SUCCESS before any Chrome verification. A 502 during deploy transition corrupts in-page JS state in ways that persist across soft reloads.
 - **Prevention**: (1) After push, poll deploy status until SUCCESS. (2) After deploy completes, open a NEW tab or do a hard navigation (not reload) to avoid stale JS closures. (3) If you hit a 502, assume ALL in-page JS state is corrupted — close the tab and start fresh. Session 81B.
 
+### Lesson 117: Railway region deprecation silently breaks GitHub-triggered deploys — use CLI deploy as workaround
+- **Mistake**: Railway deprecated `us-west1` region. A banner appeared: "The deployment configuration was automatically modified to ignore deprecated regions." After this, ALL GitHub-triggered deploys (via `git push`) started using `RAILPACK` builder instead of `DOCKERFILE`, ignoring `railway.toml` entirely. Deploys stuck in QUEUED/INITIALIZING indefinitely. The site stayed on the last successful deploy but no new code could ship. Three consecutive GitHub pushes all failed the same way.
+- **Rule**: When Railway deprecates a region or modifies deployment config, GitHub-triggered deploys may silently lose their `railway.toml` settings. Symptoms: (1) deploy stuck in QUEUED, (2) deploy metadata shows `builder: "RAILPACK"` instead of `"DOCKERFILE"`, (3) no `configFile` field in deploy metadata, (4) no `healthcheckPath`. If GitHub deploys are stuck, use `railway deploy` CLI as immediate workaround — it reads `railway.toml` locally and works correctly.
+- **Prevention**:
+  1. **Immediate**: Run `railway deploy` from project root (reads railway.toml, bypasses GitHub integration bug)
+  2. **Permanent**: In Railway dashboard → Settings → Build, explicitly set Builder to "Dockerfile" and Dockerfile Path to "Dockerfile". This overrides the service-level default that GitHub deploys fall back to.
+  3. **Region**: Update region from deprecated to replacement (e.g., us-west1 → us-west2) in Settings
+  4. **Diagnosis**: Check deploy metadata via `mcp__railway-mcp-server__list-deployments` with `json: true` — compare `builder` field between working and broken deploys
+- **See also**: OD-010 in docs/ops/OPS_DECISIONS.md
+
 ### Lesson 71: has_insightface check must probe actual deferred imports, not just function references
 - **Mistake**: `/api/compare/upload` checked `from core.ingest_inbox import extract_faces` and set `has_insightface = True`. But `core.ingest_inbox` has only stdlib top-level imports — cv2 and insightface are deferred inside `extract_faces()`. So the import always succeeds, even when cv2/insightface aren't installed. The graceful degradation path (save without face detection) was never reached on production.
 - **Rule**: When checking whether optional ML dependencies are available, import the actual packages (cv2, insightface), not just the function that defers them. A function reference import tells you nothing about whether the function's internal imports will succeed.

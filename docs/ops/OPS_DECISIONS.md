@@ -84,6 +84,27 @@ This document records deployment, infrastructure, and operational decisions for 
 - **Breadcrumbs**: Session 54F (didn't use railway logs despite rule),
   HARNESS_DECISIONS.md HD-012, CLAUDE.md deployment section
 
+## OD-010: Railway Region Deprecation Deploy Fix
+- **Date**: 2026-03-10
+- **Session**: 96e-cont5
+- **Context**: Railway deprecated `us-west1` region. After the deprecation, all GitHub-triggered
+  deploys silently switched from DOCKERFILE builder to RAILPACK, ignoring `railway.toml`. Deploys
+  stuck in QUEUED indefinitely. The banner said "automatically modified to ignore deprecated regions"
+  but the actual effect was much broader — the entire build config was lost.
+- **Root cause**: Railway's GitHub integration stopped reading `railway.toml` during the region
+  migration. The service-level settings (which default to RAILPACK/auto-detect) took over. The CLI
+  (`railway deploy`) still reads `railway.toml` locally and sends the correct config.
+- **Evidence**: Deploy metadata comparison:
+  - GitHub deploy: `builder: "RAILPACK"`, no `configFile`, no `dockerfilePath`, no `healthcheckPath`
+  - CLI deploy: `builder: "DOCKERFILE"`, `configFile: "railway.toml"`, `dockerfilePath: "Dockerfile"`, `healthcheckPath: "/health"`
+- **Fix applied**:
+  1. Immediate: `railway deploy` from CLI to get site running
+  2. Region updated: us-west1 → us-west2 in Railway Settings
+  3. Builder setting: Set explicitly to DOCKERFILE in Railway Settings → Build (pending confirmation)
+- **Workaround for future occurrences**: If GitHub deploys are stuck, run `railway deploy` from
+  the project root. This always works because it reads `railway.toml` locally.
+- **Breadcrumbs**: Lesson 117 in tasks/lessons/deployment-lessons.md
+
 ## OD-008: Dev vs Production Environment Separation
 - **Date**: 2026-03-09
 - **Session**: 95b
