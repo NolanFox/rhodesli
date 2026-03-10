@@ -547,7 +547,7 @@ def _notifications_list(notifications: list[dict], offset: int = 0, page_size: i
 
 
 @rt("/notifications")
-def get(sess, offset: int = 0, partial: int = 0):
+def get(sess, offset: int = 0, partial: int = 0, request=None):
     """GET /notifications — Full notifications page or partial list for pagination."""
     denied = _check_login(sess)
     if denied:
@@ -573,7 +573,8 @@ def get(sess, offset: int = 0, partial: int = 0):
         return Div(*items, load_more)
 
     unread_count = _get_unread_count(user.id)
-    nav_links = _main_mod._public_nav_links(active="notifications", user=user)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_links = _main_mod._public_nav_links(active="notifications", user=user, community_slug=community_slug)
     nav = _main_mod._public_page_nav(nav_links, active="notifications", user=user)
 
     mark_all_btn = None

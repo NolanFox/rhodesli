@@ -4164,23 +4164,24 @@ def mobile_header() -> Div:
     )
 
 
-def _public_nav_links(active: str = "", user=None) -> list:
+def _public_nav_links(active: str = "", user=None, community_slug: str | None = None) -> list:
     """Build standard navigation links for public pages."""
     _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
     _active = "text-white text-sm font-medium border-b-2 border-amber-500 pb-1"
+    p = community_url_prefix(community_slug)
 
     links = [
         # Core Archive
-        A("Photos", href="/photos", cls=_active if active == "photos" else _inactive),
-        A("Collections", href="/collections", cls=_active if active == "collections" else _inactive),
-        A("People", href="/people", cls=_active if active == "people" else _inactive),
-        A("Timeline", href="/timeline", cls=_active if active == "timeline" else _inactive),
-        A("Map", href="/map", cls=_active if active == "map" else _inactive),
+        A("Photos", href=f"{p}/photos", cls=_active if active == "photos" else _inactive),
+        A("Collections", href=f"{p}/collections", cls=_active if active == "collections" else _inactive),
+        A("People", href=f"{p}/people", cls=_active if active == "people" else _inactive),
+        A("Timeline", href=f"{p}/timeline", cls=_active if active == "timeline" else _inactive),
+        A("Map", href=f"{p}/map", cls=_active if active == "map" else _inactive),
         # Visual separator for Tools
         Span("|", cls="text-slate-700 hidden lg:inline"),
         # Tools
-        A("Tree", href="/tree", cls=_active if active == "tree" else _inactive),
-        A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
+        A("Tree", href=f"{p}/tree", cls=_active if active == "tree" else _inactive),
+        A("Connect", href=f"{p}/connect", cls=_active if active == "connect" else _inactive),
         A("Compare", href="/tools/compare", cls=_active if active == "compare" else _inactive),
         A("Estimate", href="/tools/estimate", cls=_active if active == "estimate" else _inactive),
     ]
@@ -4189,7 +4190,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
     links.append(
         A(
             "Help Identify",
-            href="/help",
+            href=f"{p}/help",
             cls=(
                 "text-amber-400 font-medium text-sm border-b-2 border-amber-500 pb-1 ml-2"
                 if active == "help"
@@ -4229,7 +4230,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
                     hx_target="#notification-badge",
                     hx_swap="outerHTML",
                 ),
-                href="/notifications",
+                href=f"{p}/notifications",
                 cls="text-slate-300 hover:text-white transition-colors ml-2",
                 title="Notifications",
             )

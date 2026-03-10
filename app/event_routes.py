@@ -511,10 +511,12 @@ def get(
     year_to: str = None,
     identity_id: str = None,
     sess=None,
+    request=None,
 ):
     """Browse all events (admin view initially)."""
     user = get_current_user(sess or {}) if is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     events = list_events(
         event_type=event_type,
@@ -592,7 +594,7 @@ def get(
             ),
         )
 
-    nav_links = _main_mod._public_nav_links(active="events", user=user)
+    nav_links = _main_mod._public_nav_links(active="events", user=user, community_slug=community_slug)
 
     return (
         Title("Life Events — Rhodesli Heritage Archive"),
@@ -622,10 +624,11 @@ def get(
 
 
 @rt("/events/{event_id}")
-def get(event_id: str, sess=None):
+def get(event_id: str, sess=None, request=None):
     """Event detail page."""
     user = get_current_user(sess or {}) if is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     event = get_event(event_id)
     if not event:
@@ -757,7 +760,7 @@ def get(event_id: str, sess=None):
 
     icon = EVENT_TYPE_ICONS.get(event.get("event_type", "other"), "📌")
     date_str = _event_date_display(event)
-    nav_links = _main_mod._public_nav_links(active="events", user=user)
+    nav_links = _main_mod._public_nav_links(active="events", user=user, community_slug=community_slug)
 
     return (
         Title(f"{event.get('title', 'Event')} — Rhodesli Heritage Archive"),

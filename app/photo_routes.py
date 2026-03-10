@@ -434,7 +434,7 @@ def get(photo_id: str):
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, sess=None):
+def get(photo_id: str, face: str = None, sess=None, request=None):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -446,7 +446,10 @@ def get(photo_id: str, face: str = None, sess=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
-    return _main_mod.public_photo_page(photo_id, selected_face_id=face, user=user, is_admin=user_is_admin)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    return _main_mod.public_photo_page(
+        photo_id, selected_face_id=face, user=user, is_admin=user_is_admin, community_slug=community_slug
+    )
 
 
 @rt("/photo/{photo_id}/partial")

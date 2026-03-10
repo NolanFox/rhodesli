@@ -131,6 +131,7 @@ def public_person_page(
     sort_by: str = "date_asc",
     user=None,
     is_admin: bool = False,
+    community_slug: str = "rhodes",
 ) -> tuple:
     """
     Build the public shareable person page.
@@ -628,7 +629,7 @@ def public_person_page(
     )
 
     # --- Navigation ---
-    nav_links = _main_mod._public_nav_links(active="people", user=user)
+    nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
@@ -1324,7 +1325,7 @@ def public_person_page(
 
 
 @rt("/person/{person_id}")
-def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None):
+def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None, request=None):
     """
     Public shareable person page showing all photos of a specific person.
 
@@ -1336,7 +1337,10 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
     """
     user = get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
-    return public_person_page(person_id, view=view, sort_by=sort_by, user=user, is_admin=user_is_admin)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    return public_person_page(
+        person_id, view=view, sort_by=sort_by, user=user, is_admin=user_is_admin, community_slug=community_slug
+    )
 
 
 # --- Person Gallery HTMX Partial (Phase 5: fast toggle) ---

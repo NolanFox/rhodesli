@@ -3762,7 +3762,7 @@ def _save_identification_responses(data: dict):
 
 
 @rt("/help")
-def get(sess=None):
+def get(sess=None, request=None):
     """
     Public 'Help Needed' page — top 50 unidentified faces sorted by quality.
 
@@ -3770,6 +3770,7 @@ def get(sess=None):
     Drives the growth loop: visitor -> recognize face -> share -> more visitors.
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -3855,7 +3856,7 @@ def get(sess=None):
             )
         )
 
-    nav_links = _main_mod._public_nav_links(active="help", user=user)
+    nav_links = _main_mod._public_nav_links(active="help", user=user, community_slug=community_slug)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
     empty_state = Div(
@@ -3921,7 +3922,7 @@ def get(sess=None):
 
 
 @rt("/identify/{person_id}")
-def get(person_id: str, submitted: str = "", name: str = "", sess=None):
+def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=None):
     """
     Shareable 'Can you identify this person?' page.
 
@@ -3934,6 +3935,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
     - name: the name they submitted
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     identity = _main_mod._safe_get_identity(registry, person_id)
@@ -4287,7 +4289,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
         cls="mt-10 pt-6 border-t border-slate-700/30",
     )
 
-    nav_links = _main_mod._public_nav_links(user=user)
+    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
     return (
@@ -4859,7 +4861,7 @@ def _match_lightbox_script():
 
 
 @rt("/identify/{person_a}/match/{person_b}")
-def get(person_a: str, person_b: str, sess=None):
+def get(person_a: str, person_b: str, sess=None, request=None):
     """
     Shareable match confirmation page — 'Are these the same person?'
 
@@ -4868,6 +4870,7 @@ def get(person_a: str, person_b: str, sess=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     ident_a = _main_mod._safe_get_identity(registry, person_a)
@@ -5130,7 +5133,7 @@ def get(person_a: str, person_b: str, sess=None):
         Meta(name="twitter:card", content="summary_large_image"),
     )
 
-    nav_links = _main_mod._public_nav_links(user=user)
+    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
     # Admin summary of community responses
@@ -5530,6 +5533,7 @@ def get(
     search_q: str = "",
     tag: str = "",
     sess=None,
+    request=None,
 ):
     """
     Public photos browsing page — grid of all archive photos.
@@ -5538,6 +5542,7 @@ def get(
     Supports decade filtering, keyword search, and tag filtering via query params.
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -5703,7 +5708,7 @@ def get(
             )
         )
 
-    nav_links = _main_mod._public_nav_links(active="photos", user=user)
+    nav_links = _main_mod._public_nav_links(active="photos", user=user, community_slug=community_slug)
 
     # Active filter summary
     active_filters = []
@@ -5924,7 +5929,7 @@ def photos_more(
 
 
 @rt("/people")
-def get(sort_by: str = "name", sess=None):
+def get(sort_by: str = "name", sess=None, request=None):
     """
     Public people browsing page — grid of identified people.
 
@@ -5932,6 +5937,7 @@ def get(sort_by: str = "name", sess=None):
     No admin actions visible.
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
@@ -6000,7 +6006,7 @@ def get(sort_by: str = "name", sess=None):
         Option("Newest", value="newest", selected=(sort_by == "newest")),
     ]
 
-    nav_links = _main_mod._public_nav_links(active="people", user=user)
+    nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -6098,10 +6104,11 @@ def get(sort_by: str = "name", sess=None):
 
 
 @rt("/people/{identity_id}/similar")
-def get(identity_id: str, sess=None):
+def get(identity_id: str, sess=None, request=None):
     """Find Similar — full-page hero + grid layout (AD-186)."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     try:
@@ -6185,7 +6192,7 @@ def get(identity_id: str, sess=None):
         )
         result_cards.append(card)
 
-    nav_links = _main_mod._public_nav_links(active="people", user=user)
+    nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     # Share button for similar page hero
     similar_share_btn = (
@@ -6459,9 +6466,10 @@ def get(identity_id: str, sess=None):
 
 
 @rt("/collections")
-def get(sess=None):
+def get(sess=None, request=None):
     """Collection directory — list all collections with preview thumbnails."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     collections = _main_mod._get_collections_data()
 
@@ -6507,7 +6515,7 @@ def get(sess=None):
             )
         )
 
-    nav_links = _main_mod._public_nav_links(active="collections", user=user)
+    nav_links = _main_mod._public_nav_links(active="collections", user=user, community_slug=community_slug)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -6553,9 +6561,10 @@ def get(sess=None):
 
 
 @rt("/collection/{slug}")
-def get(slug: str, sess=None):
+def get(slug: str, sess=None, request=None):
     """Collection detail page — shareable view of all photos in a collection."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     collections = _main_mod._get_collections_data()
     col_name = _main_mod._collection_from_slug(slug, collections)
@@ -6665,7 +6674,7 @@ def get(slug: str, sess=None):
             cls="mt-8",
         )
 
-    nav_links = _main_mod._public_nav_links(active="collections", user=user)
+    nav_links = _main_mod._public_nav_links(active="collections", user=user, community_slug=community_slug)
 
     share_url = f"/collection/{slug}"
 
@@ -6816,7 +6825,7 @@ def _load_photo_locations() -> dict:
 
 
 @rt("/map")
-def get(collection: str = "", person: str = "", people: str = "", decade: str = "", sess=None):
+def get(collection: str = "", person: str = "", people: str = "", decade: str = "", sess=None, request=None):
     """Interactive map view of photo locations across the Rhodes Jewish diaspora.
 
     Query params:
@@ -6824,6 +6833,7 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
         people: Comma-separated person IDs (from photo page navigation)
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     # If people param provided (from photo page), use the first as the person filter
     if people and not person:
@@ -6953,7 +6963,7 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
         Option(p["name"], value=p["id"], selected=(p["id"] == person)) for p in all_people
     ]
 
-    nav_links = _main_mod._public_nav_links(active="map", user=user)
+    nav_links = _main_mod._public_nav_links(active="map", user=user, community_slug=community_slug)
 
     # Share URL with current filters
     share_params = []
@@ -7151,6 +7161,7 @@ def get(
     context: str = "on",
     collection: str = "",
     sess=None,
+    request=None,
 ):
     """
     Public timeline page — chronological story of the archive.
@@ -7168,6 +7179,7 @@ def get(
         collection: collection name to filter by
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -7687,7 +7699,7 @@ def get(
         decade_sections.append(Div(marker, *cards))
 
     # Navigation links (matches /photos and /people pattern)
-    nav_links = _main_mod._public_nav_links(active="timeline", user=user)
+    nav_links = _main_mod._public_nav_links(active="timeline", user=user, community_slug=community_slug)
 
     page_style = Style("""
         html, body { margin: 0; }
@@ -8781,7 +8793,7 @@ def _connection_path_html(path_steps, registry):
 
 
 @rt("/tree")
-def get(person: str = "", show_theory: str = "true", photo_id: str = "", people: str = "", sess=None):
+def get(person: str = "", show_theory: str = "true", photo_id: str = "", people: str = "", sess=None, request=None):
     """Family Tree — lazy-loading tree with search, zoom, expand/collapse (AD-185).
 
     Query params:
@@ -8790,6 +8802,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
         people: Comma-separated person IDs (from photo page navigation)
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     # If people param provided (from photo page), pick the first as the focused person
     # but pass all of them to the JS for smart subtree computation
@@ -8810,7 +8823,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
 
     title_text = f"{person_name}'s Family Tree" if person_name else "Family Tree"
     share_url = f"/tree?person={person}" if person else "/tree"
-    nav_links = _main_mod._public_nav_links(active="tree", user=user)
+    nav_links = _main_mod._public_nav_links(active="tree", user=user, community_slug=community_slug)
 
     page_style = Style("""
         html, body { margin: 0; } body { background-color: #080d1a; }
@@ -9470,9 +9483,10 @@ def get(q: str = ""):
 
 
 @rt("/connect")
-def get(person_a: str = "", person_b: str = "", sess=None):
+def get(person_a: str = "", person_b: str = "", sess=None, request=None):
     """Six Degrees Connection Finder — find how two people are connected."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
 
@@ -9597,7 +9611,7 @@ def get(person_a: str = "", person_b: str = "", sess=None):
     d3_json = json.dumps(d3_data)
 
     # Navigation
-    nav_links = _main_mod._public_nav_links(active="connect", user=user)
+    nav_links = _main_mod._public_nav_links(active="connect", user=user, community_slug=community_slug)
 
     share_url = f"/connect?person_a={person_a}&person_b={person_b}" if person_a and person_b else "/connect"
 
@@ -9832,6 +9846,7 @@ def public_photo_page(
     selected_face_id: str = None,
     user=None,
     is_admin: bool = False,
+    community_slug: str = "rhodes",
 ) -> tuple:
     """
     Build the public shareable photo page.
@@ -10209,7 +10224,7 @@ def public_photo_page(
         )
 
     # Navigation — use _public_page_nav for mobile hamburger support (UX-103)
-    nav_links = _main_mod._public_nav_links(active="photos", user=user)
+    nav_links = _main_mod._public_nav_links(active="photos", user=user, community_slug=community_slug)
 
     # Build compact metadata overlay for the photo hero (UX-103)
     # Shows date estimate, face count, and collection on the photo itself
@@ -10998,7 +11013,7 @@ def public_photo_page(
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, sess=None):
+def get(photo_id: str, face: str = None, sess=None, request=None):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -11010,7 +11025,10 @@ def get(photo_id: str, face: str = None, sess=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
-    return _main_mod.public_photo_page(photo_id, selected_face_id=face, user=user, is_admin=user_is_admin)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    return _main_mod.public_photo_page(
+        photo_id, selected_face_id=face, user=user, is_admin=user_is_admin, community_slug=community_slug
+    )
 
 
 @rt("/photo/{photo_id}/partial")

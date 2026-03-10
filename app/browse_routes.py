@@ -433,7 +433,7 @@ def get(
             )
         )
 
-    nav_links = _main_mod._public_nav_links(active="photos", user=user)
+    nav_links = _main_mod._public_nav_links(active="photos", user=user, community_slug=community_slug)
 
     # Active filter summary
     active_filters = []
@@ -698,7 +698,7 @@ def photos_more(
 
 
 @rt("/people")
-def get(sort_by: str = "name", sess=None):
+def get(sort_by: str = "name", sess=None, request=None):
     """
     Public people browsing page — grid of identified people.
 
@@ -706,6 +706,7 @@ def get(sort_by: str = "name", sess=None):
     No admin actions visible.
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
@@ -774,7 +775,7 @@ def get(sort_by: str = "name", sess=None):
         Option("Newest", value="newest", selected=(sort_by == "newest")),
     ]
 
-    nav_links = _main_mod._public_nav_links(active="people", user=user)
+    nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -872,10 +873,11 @@ def get(sort_by: str = "name", sess=None):
 
 
 @rt("/people/{identity_id}/similar")
-def get(identity_id: str, sess=None):
+def get(identity_id: str, sess=None, request=None):
     """Find Similar — full-page hero + grid layout (AD-186)."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     registry = _main_mod.load_registry()
     try:
@@ -959,7 +961,7 @@ def get(identity_id: str, sess=None):
         )
         result_cards.append(card)
 
-    nav_links = _main_mod._public_nav_links(active="people", user=user)
+    nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     # Share button for similar page hero
     similar_share_btn = (
@@ -1266,9 +1268,10 @@ def post(identity_id: str, neighbor_id: str, sess=None):
 
 
 @rt("/collections")
-def get(sess=None):
+def get(sess=None, request=None):
     """Collection directory — list all collections with preview thumbnails."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     collections = _get_collections_data()
 
@@ -1314,7 +1317,7 @@ def get(sess=None):
             )
         )
 
-    nav_links = _main_mod._public_nav_links(active="collections", user=user)
+    nav_links = _main_mod._public_nav_links(active="collections", user=user, community_slug=community_slug)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -1360,9 +1363,10 @@ def get(sess=None):
 
 
 @rt("/collection/{slug}")
-def get(slug: str, sess=None):
+def get(slug: str, sess=None, request=None):
     """Collection detail page — shareable view of all photos in a collection."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
 
     collections = _get_collections_data()
     col_name = _collection_from_slug(slug, collections)
@@ -1473,7 +1477,7 @@ def get(slug: str, sess=None):
             cls="mt-8",
         )
 
-    nav_links = _main_mod._public_nav_links(active="collections", user=user)
+    nav_links = _main_mod._public_nav_links(active="collections", user=user, community_slug=community_slug)
 
     share_url = f"/collection/{slug}"
 
