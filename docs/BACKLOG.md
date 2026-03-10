@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 43.0 — March 9, 2026
-**Status**: ~2491 tests passing, v0.97.0, 299 photos, 894 identities, 69 confirmed
+**Version**: 44.0 — March 10, 2026
+**Status**: ~3970 tests passing, v0.97.8, 938 photos, 3319 identities, 69 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -29,6 +29,15 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### P1 — Default Community Routing Risk (COMMUNITY-017)
 - **COMMUNITY-017**: Root URL `/` defaults to Rhodes community. External users (not Rhodes/Fox family members) who visit the site and upload photos would accidentally add them to the Rhodes archive. As we scale to more communities and share tools more widely (e.g., `/tools/estimate`), this becomes a real risk. **Needs**: (1) Community selector on first visit or signup, (2) Neutral landing page at `/` that doesn't default to any community, (3) Upload requires explicit community selection if user belongs to multiple or none. **Scope**: Architectural — ties into WORKSPACE-001 (personal archive auto-creation) and WORKSPACE-005 (community discovery page). Must be solved before wider sharing. Source: Session 96e-cont5 user feedback.
+
+### P2 — Missing Embeddings (EMBED-001)
+- **EMBED-001**: 124 identity faces have no embedding in `embeddings.npy`. These are faces from photos where the InsightFace pipeline was never run or failed silently. Affects: ML matching, clustering, neighbor computation. Fix: Re-run `core/ingest_inbox.py` on the 5-6 source photos with InsightFace installed locally. Requires laptop with ML dependencies. Source: Session 96e-cont10 data integrity audit.
+
+### P2 — Batch-Wide Orphan Detection (INGEST-001)
+- **INGEST-001**: `process_directory()` does per-file orphan checks but not a batch-wide sweep. Cross-file grouping by `create_inbox_identities()` can leave faces unlinked that per-file checks don't catch. Fix: Add post-batch orphan sweep in `process_directory()` after all files processed. Source: Session 96e-cont10 root cause analysis, Lesson 121.
+
+### P2 — Test Ordering Flakiness (TEST-001)
+- **TEST-001**: 31 tests fail in full suite but pass individually. Root cause: shared mutable state (caches, registries) leaking between tests. Key offender: `test_my_contributions_page_accessible`. Fix: Add cache reset fixtures or use `pytest-randomly` to detect ordering issues. Source: Session 96e-cont10, also noted in PERF-001.
 
 ### P1 — Upload Pipeline Bugs (UPLOAD-002)
 - **UPLOAD-002**: Two bugs found in upload pipeline (Session 96e-cont5): (1) Rhodes community excluded from `photo_communities` tagging — uploaded photos invisible in community-scoped Photos view despite "success" message. FIXED. (2) Supabase sync after ingest loads from Postgres (old data) instead of JSON (new data) when DATA_SOURCE=postgres — new photos never reach Supabase. FIXED. Both bugs mean uploads appeared successful but photos were invisible. Root cause: pipeline written for DATA_SOURCE=json, not updated for Postgres migration.

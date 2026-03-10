@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.8] — 2026-03-10 (Session 96e-cont10: Data Integrity Audit + Fixes)
+
+### Fixed
+- **1 duplicate face assignment** — `inbox_8bf042b28a74` assigned to 2 identities. Root cause: `merge_identities()` didn't check target's `candidate_ids` when adding anchors.
+- **3 CONFIRMED identities with placeholder names** — Persons 2973, 494, 724 confirmed without renaming. Reverted to SKIPPED/INBOX via new force-state API.
+- **121+ merge chains** — Successive merges (A→B→C) not flattened. All chains flattened by audit script.
+- **157+ orphan faces** — Batch ingest per-file orphan check missed cross-file grouping gaps. Created INBOX identities.
+- **637 photos missing upload_date** — CLI ingest had no `--upload-date` arg. Backfilled Fox Family (2026-03-09) + 1 other.
+- **2 ghost faces on Netanel Menashe** — Faces referenced by identity but not in `photo_index.json`. Removed.
+
+### Added
+- **Data integrity audit script** — `scripts/data_integrity_audit.py` with `--fix` for safe auto-repairs. Checks: orphan faces, ghost identities, state consistency, Supabase divergence, duplicate assignments, merge chains, upload_date completeness, community membership, embedding coverage.
+- **Admin force-state API** — `POST /api/admin/force-state/{id}/{state}` for data integrity fixes when normal state transitions are blocked.
+- **CLI ingest `--upload-date`/`--uploaded-by`** — Auto-defaults to current UTC time.
+- **Merge cross-list dedup** — `merge_identities()` now checks both `anchor_ids` and `candidate_ids` before adding faces.
+- **Lessons 118-121** — upload_date always required, merge dedup, audit after every ingest, batch-wide orphan detection.
+
+### Verification
+- Person 2973: SKIPPED (was wrongly CONFIRMED)
+- Fox Family: 635 photos, 1016 matches, 17 proposals
+- Health: 1885 identities, 938 photos, ML ready
+- Data audit: 0 critical issues, 0 orphans, 0 duplicates, 0 chains
+
 ## [v0.97.7] — 2026-03-10 (Session 96e-cont7: PRD-038 Longitudinal Face Modeling)
 
 ### Added

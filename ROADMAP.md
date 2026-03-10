@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.6 · ~3914 tests · 299 photos · 894 identities · 69 confirmed
+Current: v0.97.8 · ~3970 tests · 938 photos · 3319 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -48,6 +48,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] 2026-03-08: Batch GEDCOM re-analyze — 67/72 photos, AD-211, report (Session 93)
 - [x] 2026-03-08: Observability verified — Sentry, PostHog, Resend all confirmed (Session 93)
 - [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
+- [x] 2026-03-10: DATA-008: Comprehensive data integrity audit + fixes (Session 96e-cont10)
 
 ### Near-Term — Standalone Tool Suite (PRD-034)
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
@@ -155,6 +156,10 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-10: **v0.97.8 — Session 96e-cont10**: Data Integrity Audit + Fixes. Comprehensive audit found and fixed: 1 duplicate face (critical), 3 CONFIRMED placeholders, 121+ merge chains, 157+ orphan faces, 637 missing upload_dates, 2 ghost faces. Prevention: CLI --upload-date/--uploaded-by args, auto-default upload_date, merge cross-list dedup, admin force-state API. Lessons 118-121. Data integrity audit script with --fix. Browser verified: Person 2973 SKIPPED, Fox Family 635 photos. Deploy SUCCESS.
+
+- [x] 2026-03-10: **v0.97.7 — Session 96e-cont7**: PRD-038 Longitudinal Face Modeling. 960-line PRD across 5 files. Recalibration architecture analysis. Upload date sort fix (backfill in resync).
 
 - [x] 2026-03-10: **v0.97.6 — Session 96e-cont4**: Upload UX + Deploy Verify. Two-step upload flow (select → preview → upload). Upload 500 crash fix (PostHog). Supabase 1149 orphans deleted. Community scoping: proposals sidebar, proposals API, discoveries Help Identify, duplicate face filter, name consistency. 6 new tests. Browser verified 5/6. Deploy SUCCESS. Known: proposals API doesn't include proposals.json entries.
 

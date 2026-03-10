@@ -1,70 +1,58 @@
-# Session 96e-cont7 Log — PRD-038 + Post-Deploy Verification
-## Mission: Comprehensive PRD for longitudinal face modeling + browser verify cont6 deploy
+# Session 96e-cont10 Log — Data Integrity Audit + Fixes
+## Mission: Run comprehensive data audit, fix ALL issues, add prevention, deploy + verify
 ## Started: 2026-03-10
-## Version: v0.97.7
-## Assessment: docs/assessments/session-96e-cont7-assessment.md
+## Version: v0.97.8
+## Assessment: docs/assessments/session-96e-cont10-assessment.md
 
-### Phase 1: Post-Deploy Verification
-- [x] Supabase resync triggered: 938 photos, 3023 identities synced
-- [x] Raymond Halfon photo: face detected, 3572x2553px, source clean
-- [x] Claude Benatar photo: face overlay visible, 1241x1891px, source clean
-- [x] Discoveries: 0 auto-applied (BUG-7 fix confirmed), 561 Help Identify
+### Phase 0: Deploy Check
+- [x] Deploy `6847f566` confirmed SUCCESS (DOCKERFILE builder)
+- [x] Health endpoint: 1885 identities, 938 photos, ML ready
 
-### Phase 2: PRD-038 Comprehensive Rewrite
-- [x] Hub PRD rewritten following template (235 lines)
-- [x] RECALIBRATION_ARCHITECTURE.md — 4 architecture options, Option A recommended
-- [x] IMPLEMENTATION_SPECS.md — Per-workstream code changes, LoRA data growth strategy
-- [x] EVALUATION_AND_SAFETY.md — Golden test set, retroactive improvement safety, community resilience
-- [x] RESEARCH_REFERENCES.md — Academic papers, Google Photos analysis, heritage challenges
-- [x] BACKLOG ML-110-116 breadcrumbs added to PRD-038
+### Phase 1: Data Integrity Audit
+- [x] Audit script (`scripts/data_integrity_audit.py`) ran on local data
+- [x] Found 7 issue categories, ALL fixed:
+  - 1 duplicate face assignment (critical) → removed from INBOX identity
+  - 3 CONFIRMED placeholders → reverted to INBOX/SKIPPED
+  - 121+ merge chains → flattened
+  - 157+ orphan faces → created INBOX identities
+  - 637 missing upload_dates → backfilled
+  - 2 ghost faces → removed from Netanel Menashe
+  - 124 missing embeddings → DEFERRED (needs InsightFace)
 
-### Phase 3: Upload Sort Fix
-- [x] Root cause: BUG-1 wiped `upload_date` from volume JSON for photos uploaded pre-cont6
-- [x] Fix: resync endpoint now backfills missing upload_dates, persists to volume JSON
-- [x] Deploy triggered (Railway CLI, commit 1e82d5e)
-- [x] Post-deploy: resync triggered — 643 upload_dates backfilled, sort verified (cont8)
+### Phase 2: Root Cause Analysis
+- [x] Duplicate face: merge_identities() didn't check target's candidate_ids
+- [x] Orphan faces: per-file orphan check missed batch-wide grouping gaps
+- [x] Missing upload_date: CLI had no --upload-date arg
+- [x] Merge chains: successive merges not flattened at merge time
+- [x] CONFIRMED placeholders: confirmed without renaming
+- [x] Ghost faces: faces referenced but not in photo_index
 
-### Key Findings
-1. Recalibration hooks (`rhodesli_ml/recalibration_hooks.py`) wired into `app/engagement_routes.py:727-740` but silently fail on production because sklearn not installed on Railway (AD-007) and embeddings path wrong (Lesson 114).
-2. Upload sort was broken because BUG-1's broken Postgres→JSON sync wiped `upload_date` from the volume JSON for all pre-cont6 uploads. Fixed via backfill in resync endpoint.
+### Phase 3: Prevention Code
+- [x] `core/ingest_inbox.py`: --upload-date/--uploaded-by CLI args, auto-default
+- [x] `core/ingest_inbox.py`: process_single_image() always sets upload_date
+- [x] `core/registry.py`: merge cross-list dedup (anchors + candidates)
+- [x] `app/identity_routes.py`: /api/admin/force-state/{id}/{state}
+- [x] Lessons 118-121 documented
 
----
+### Phase 4: Deploy + Verify
+- [x] Commit e3c2025 deployed (DOCKERFILE builder, SUCCESS)
+- [x] Commit ff75d89 deployed (force-state endpoint, SUCCESS)
+- [x] Person 2973: SKIPPED via force-state API
+- [x] Persons 494/724: INBOX via force-state API
+- [x] Fox Family: 635 photos, 1016 matches, 17 proposals
+- [x] Rhodes photos page: 278 photo elements rendered
+- [x] Health: OK
 
-# Session 93 Log — Close All Deferrals
-## Mission: Close ALL deferred items from Session 92
-## Started: 2026-03-08
-## Version: v0.95.0 → v0.96.0
-## Context: docs/session_context/session-93-context.md
-## Predecessor: Session 92 (v0.95.0)
-## Detailed log: docs/session_logs/session-93-log.md
+### Phase 5: Documentation
+- [x] Assessment: docs/assessments/session-96e-cont10-assessment.md
+- [x] SESSION_LOG.md updated
+- [x] CHANGELOG.md: v0.97.8 entry
+- [x] ROADMAP.md: DATA-008 completed, Recently Completed entry
+- [x] BACKLOG.md: EMBED-001, INGEST-001 entries
+- [x] Lessons 118-121 in tasks/lessons.md + tasks/lessons/data-lessons.md
 
-### Phase 1-4: DATA-007 — Postgres Migration
-- [x] Core tables created: identities, photos, photo_faces + 4 indexes
-- [x] Data backfilled: 894 identities, 295 photos, 981 faces
-- [x] Null name fix: identity 224495e8 defaulted to "Unknown (224495e8)"
-- [x] DATA_SOURCE=postgres flipped on Railway
-- [x] Deploy confirmed: "IdentityRegistry loaded from Postgres (894 identities)"
-
-### Phase 5-7: Observability Verification
-- [x] Sentry: 5 real issues (NameError photo_url, APIError invalid UUID)
-- [x] PostHog: Page view events + 4 server-side events
-- [x] Resend: 1 email delivered, RESEND_API_KEY confirmed
-
-### Phase 8: Batch GEDCOM Re-analyze
-- [x] 67/72 photos reanalyzed with Gemini 3.1 Pro
-- [x] Runtime: ~79 minutes, estimated cost ~$2.66
-- [x] 91% high confidence, avg 4.5-year date ranges
-
-### Phase 9: Supplementary Migration
-- [x] date_labels (271), photo_locations (268), birth_year_estimates (32)
-- [x] Column name mismatch fixed (full_data → data)
-
-### Phase 10: GEDCOM Reanalysis Report
-- [x] 10-section in-depth analysis: docs/ml/GEDCOM_REANALYSIS_REPORT.md
-- [x] AD-211 entry added
-- [x] User feedback captured: docs/session_context/session-93-user-feedback.md
-
-### Tests
-- App: 3717 passed, 4 skipped
-- ML: 566 passed
-- 1 pre-existing e2e failure (chromium discovery layer sort)
+### Key Commits
+- `57ff3dd` feat(data): comprehensive data integrity audit script + tests
+- `e3c2025` fix(data): comprehensive data integrity fixes + prevention
+- `ff75d89` feat(admin): force-state API for data integrity fixes
+- `39f7b50` docs: session 96e-cont10 assessment
