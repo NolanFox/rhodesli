@@ -27,6 +27,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Community Link Scoping
 - **COMMUNITY-015**: Internal photo/person links don't include community prefix — clicking a photo from Fox Family browse navigates to `/photo/{id}` (Rhodes context) instead of `/c/fox-family/photo/{id}`. Requires updating hundreds of `href=f"/photo/{id}"` references across all route files. Source: Session 96d browser verification.
 
+### P1 — Default Community Routing Risk (COMMUNITY-017)
+- **COMMUNITY-017**: Root URL `/` defaults to Rhodes community. External users (not Rhodes/Fox family members) who visit the site and upload photos would accidentally add them to the Rhodes archive. As we scale to more communities and share tools more widely (e.g., `/tools/estimate`), this becomes a real risk. **Needs**: (1) Community selector on first visit or signup, (2) Neutral landing page at `/` that doesn't default to any community, (3) Upload requires explicit community selection if user belongs to multiple or none. **Scope**: Architectural — ties into WORKSPACE-001 (personal archive auto-creation) and WORKSPACE-005 (community discovery page). Must be solved before wider sharing. Source: Session 96e-cont5 user feedback.
+
+### P1 — Upload Pipeline Bugs (UPLOAD-002)
+- **UPLOAD-002**: Two bugs found in upload pipeline (Session 96e-cont5): (1) Rhodes community excluded from `photo_communities` tagging — uploaded photos invisible in community-scoped Photos view despite "success" message. FIXED. (2) Supabase sync after ingest loads from Postgres (old data) instead of JSON (new data) when DATA_SOURCE=postgres — new photos never reach Supabase. FIXED. Both bugs mean uploads appeared successful but photos were invisible. Root cause: pipeline written for DATA_SOURCE=json, not updated for Postgres migration.
+
 ### P1 — Proposals API Incomplete
 - **COMMUNITY-016**: `/api/proposed-matches` only reads `registry.list_proposed_matches()`, not `proposals.json`. Sidebar counts include both sources (via `_compute_sidebar_counts`), so Fox Family shows "17 Proposals" in sidebar but "No pending proposals" in content. Fix: API endpoint must also read proposals.json, same as sidebar does. Source: Session 96e-cont4 browser verification.
 

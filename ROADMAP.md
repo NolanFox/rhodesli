@@ -63,6 +63,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
 - [x] 2026-03-10: COMMUNITY-003: Cross-community identity tagging — photo-derived identity sets + auto-tag identity_communities (AD-213, AD-216, Session 96c + 96d)
 - [ ] COMMUNITY-004: "Shared person" indicator on identity cards — show when a person appears in multiple archives
+- [ ] COMMUNITY-017: Default community routing — root URL defaults to Rhodes, risks accidental uploads from external users. Needs neutral landing + community selector. Blocks wider sharing. See `docs/BACKLOG.md`
 - [x] 2026-03-10: COMMUNITY-005: Community-scoped sidebar counts — remove ML feature zeroing, enable Admin section for all communities (Session 96c + 96d proposals count)
 - [x] 2026-03-10: COMMUNITY-006: Community-aware discoveries — filter by photo-derived identity set (Session 96c + 96d cross-community badges)
 
