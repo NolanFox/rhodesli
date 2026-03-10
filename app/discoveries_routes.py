@@ -478,7 +478,7 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     if tier_1_items:
         tier_1_cards = []
         for d in tier_1_items:
-            card = _build_discovery_card(d, registry, crop_files, tier=1)
+            card = _build_discovery_card(d, registry, crop_files, tier=1, current_community=community)
             if card:
                 tier_1_cards.append(card)
         if tier_1_cards:
@@ -512,7 +512,7 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     if tier_2_items:
         tier_2_cards = []
         for d in tier_2_items:
-            card = _build_discovery_card(d, registry, crop_files, tier=2)
+            card = _build_discovery_card(d, registry, crop_files, tier=2, current_community=community)
             if card:
                 tier_2_cards.append(card)
         if tier_2_cards:
@@ -648,7 +648,7 @@ def get(sess=None, request=None):
 # =============================================================================
 
 
-def _build_discovery_card(d, registry, crop_files, tier=2):
+def _build_discovery_card(d, registry, crop_files, tier=2, current_community=None):
     """Build a single discovery card for the Discoveries page.
 
     Args:
@@ -656,6 +656,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
         registry: identity registry
         crop_files: set of crop filenames
         tier: 1 (auto-added) or 2 (suggestion)
+        current_community: current community dict for cross-community badges (COMMUNITY-014)
     """
 
     source_id = d["source_id"]
@@ -913,6 +914,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                         "Auto-added" if tier == 1 else "Unreviewed",
                         cls=f"text-xs {'text-emerald-400' if tier == 1 else 'text-slate-400'}",
                     ),
+                    _main_mod._cross_community_badge(source_id, current_community),
                     cls="mt-1.5 text-center",
                 ),
                 cls="flex flex-col items-center",
@@ -954,6 +956,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                         data_testid="discovery-target-name-link",
                     ),
                     Span("Confirmed", cls="text-xs text-green-400"),
+                    _main_mod._cross_community_badge(target_id, current_community),
                     cls="mt-1.5 text-center",
                 ),
                 cls="flex flex-col items-center",

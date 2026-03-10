@@ -115,6 +115,11 @@ def _mock_photo_registry():
     return patch("app.cluster_review_routes._main_mod.load_photo_registry", return_value=mock_pr)
 
 
+def _mock_no_community_filter():
+    """Disable community filtering so proposals aren't scoped by Supabase data."""
+    return patch("app.cluster_review_routes._main_mod._get_community_identity_ids", return_value=None)
+
+
 class TestUploadReviewPage:
     """Test the /admin/upload-review page."""
 
@@ -126,6 +131,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         assert resp.status_code == 200
 
@@ -137,6 +143,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "Cluster Review" in html
@@ -150,6 +157,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "Roland Fox" in html
@@ -163,6 +171,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "Confirm" in html
@@ -178,6 +187,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "Very High" in html  # distance 0.75
@@ -191,6 +201,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "GEDCOM Triage" in html
@@ -224,6 +235,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         # In Roland Fox's group, distance 1.02 should appear before 0.75

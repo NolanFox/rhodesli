@@ -522,6 +522,46 @@ def community_url_prefix(slug: str | None) -> str:
     return f"/c/{slug}"
 
 
+def _cross_community_badge(identity_id: str, current_community: dict | None) -> "FT | None":
+    """Return a badge if identity belongs to a DIFFERENT community than current.
+
+    COMMUNITY-014: Shows "From [Community Name]" when viewing cross-community content.
+    Returns None if same community or no community context.
+    """
+    if current_community is None:
+        return None
+
+    current_slug = current_community.get("slug", "rhodes")
+    current_id = current_community.get("id")
+    if not current_id:
+        return None
+
+    # Check cached identity sets for all communities
+    from app.supabase_data import load_communities
+
+    communities = load_communities()
+    if not communities:
+        return None
+
+    for comm in communities:
+        comm_slug = comm.get("slug", "")
+        comm_id = comm.get("id")
+        if not comm_id or comm_slug == current_slug:
+            continue  # skip current community
+
+        # Check if identity belongs to this other community
+        other_ids = _get_community_identity_ids(comm)
+        if other_ids and identity_id in other_ids:
+            comm_name = comm.get("name", comm_slug.replace("-", " ").title())
+            return Span(
+                f"From {comm_name}",
+                cls="text-xs px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/30",
+                title=f"This person appears in the {comm_name} archive",
+            )
+
+    return None
+
+
 # Cached community photo/identity ID sets (60s TTL)
 _community_photo_ids_cache: dict = {}  # community_id -> set[str]
 _community_identity_ids_cache: dict = {}  # community_id -> set[str]
@@ -4810,14 +4850,21 @@ def _proposal_banner(identity_id: str):
 
 
 def _proposal_badge_inline(identity_id: str):
-    """Compact inline badge showing ML match count for browse view cards."""
+    """Inline badge showing ML match target name + confidence on browse cards.
+
+    COMMUNITY-012: Shows "Matches [Name] (XX%)" directly, not just count.
+    """
     proposals = _get_proposals_for_identity(identity_id)
     if not proposals:
         return None
     best = min(proposals, key=lambda p: p.get("distance", 999))
     confidence = best.get("confidence", "")
-    count = len(proposals)
-    label = f"{count} match{'es' if count > 1 else ''}"
+    target_name = best.get("target_identity_name", "?")
+    # Compute confidence percentage
+    from core.confidence import compute_face_confidence
+
+    conf = compute_face_confidence(best.get("distance", 999))
+    pct = conf.get("confidence_pct", 0)
 
     color_cls = {
         "VERY HIGH": "bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
@@ -4825,10 +4872,14 @@ def _proposal_badge_inline(identity_id: str):
         "MODERATE": "bg-amber-600/30 text-amber-300 border-amber-500/30",
     }.get(confidence, "bg-slate-600/30 text-slate-300 border-slate-500/30")
 
+    # Show full target name + percentage for actionable info
+    short_name = target_name if len(target_name) <= 20 else target_name[:18] + "..."
+    label = f"Matches {short_name} ({pct}%)" if pct else f"Matches {short_name}"
+
     return Span(
-        f"{label}",
+        label,
         cls=f"text-xs px-2 py-0.5 rounded border {color_cls}",
-        title=f"ML: Likely {best.get('target_identity_name', '?')} ({confidence})",
+        title=f"ML match: {target_name} — {confidence} confidence, distance {best.get('distance', 0):.3f}",
     )
 
 
@@ -7936,6 +7987,7 @@ def neighbor_card(
     triage_filter: str = "",
     focus_section: str = "",
     target_name: str = "",
+    current_community: dict | None = None,
 ) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -8087,7 +8139,8 @@ def neighbor_card(
                         f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label,
                         cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
                     ),
-                    cls="flex items-center",
+                    _cross_community_badge(neighbor_id, current_community),
+                    cls="flex items-center flex-wrap gap-1",
                 ),
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(
@@ -8273,6 +8326,7 @@ def neighbors_sidebar(
     focus_section: str = "",
     target_name: str = "",
     container_id: str = "",
+    current_community: dict | None = None,
 ) -> Div:
     # container_id allows targeting the browse expansion panel or the focus sidebar
     _target_id = container_id or f"neighbors-{identity_id}"
@@ -8323,6 +8377,7 @@ def neighbors_sidebar(
             from_focus=from_focus,
             focus_section=focus_section,
             target_name=target_name,
+            current_community=current_community,
         )
         for n in neighbors
     ]

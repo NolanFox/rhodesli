@@ -275,6 +275,7 @@ def get(
     focus_section: str = "",
     container_id: str = "",
     sess=None,
+    request=None,
 ):
     """
     Get nearest neighbor identities for potential merge.
@@ -351,6 +352,7 @@ def get(
     rejected_count = sum(1 for neg in identity.get("negative_ids", []) if neg.startswith("identity:"))
 
     target_name = ensure_utf8_display(identity.get("name", "")) or ""
+    current_community = getattr(request.state, "community", None) if request else None
     return _main_mod.neighbors_sidebar(
         identity_id,
         neighbors,
@@ -363,6 +365,7 @@ def get(
         focus_section=focus_section,
         target_name=target_name,
         container_id=container_id,
+        current_community=current_community,
     )
 
 

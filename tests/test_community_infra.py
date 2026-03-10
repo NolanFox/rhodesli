@@ -342,8 +342,8 @@ class TestCommunityLandingPage:
             "landing_title": "Fox Family Archive",
         }
 
-        with patch("app.supabase_data.load_photos_for_community", return_value=["p1", "p2", "p3"]):
-            with patch("app.supabase_data.load_identities_for_community", return_value=["i1", "i2"]):
+        with patch("app.main._get_community_photo_ids", return_value={"p1", "p2", "p3"}):
+            with patch("app.main._get_community_identity_ids", return_value={"i1", "i2"}):
                 result = _community_landing_page(community, "fox-family")
 
         html = repr(result[1])
