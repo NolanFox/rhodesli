@@ -434,6 +434,11 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     if min_confidence > 0:
         all_items = [d for d in all_items if d.get("confidence_pct", 0) >= min_confidence]
 
+    # Pagination: limit to 50 items per page to prevent server timeout (738+ cards = too slow)
+    PAGE_SIZE = 50
+    total_count = len(all_items)
+    all_items = all_items[:PAGE_SIZE]
+
     sections = []
 
     # Build Help Identify section early (shown even when no ML matches)
@@ -533,6 +538,20 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     # --- Section 3: Help Identify (cold cases) ---
     if help_section is not None:
         sections.append(help_section)
+
+    # Show truncation notice if results were limited
+    if total_count > PAGE_SIZE:
+        sections.append(
+            Div(
+                P(
+                    f"Showing top {PAGE_SIZE} of {total_count} discoveries. "
+                    "Use the confidence or photo filters above to narrow results.",
+                    cls="text-sm text-slate-400 text-center",
+                ),
+                cls="py-4 border-t border-slate-700/50",
+                data_testid="discoveries-truncation-notice",
+            )
+        )
 
     return (
         Div(*sections, cls="space-y-4")
@@ -676,14 +695,14 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 for fid in photo_face_ids:
                     if fid == first_face_id or not fid:
                         continue
-                    for iid, ident in registry._identities.items():
-                        all_face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
-                        face_id_strs = [fi if isinstance(fi, str) else fi.get("face_id", "") for fi in all_face_ids]
-                        if fid in face_id_strs and iid != source_id:
+                    # Use fast identity lookup instead of O(n) scan
+                    ident = _main_mod.get_identity_for_face(registry, fid)
+                    if ident:
+                        iid = ident.get("identity_id", "")
+                        if iid and iid != source_id:
                             co_name = ident.get("name", "Unknown")
                             co_state = ident.get("state", "")
                             co_faces.append((iid, co_name, co_state))
-                            break
                 context_parts = []
                 if collection:
                     context_parts.append(Span(collection, cls="text-xs text-slate-400"))

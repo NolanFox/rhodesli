@@ -488,6 +488,7 @@ class TestApiDiscoveriesRoute:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -524,6 +525,7 @@ class TestApiDiscoveriesRoute:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -559,6 +561,7 @@ class TestApiDiscoveriesRoute:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -597,6 +600,7 @@ class TestApiDiscoveriesRoute:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -765,6 +769,7 @@ class TestDiscoveriesFilterControls:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
@@ -809,6 +814,7 @@ class TestDiscoveriesFilterControls:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
@@ -868,6 +874,7 @@ class TestDiscoveriesFilterControls:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
@@ -951,6 +958,7 @@ class TestDiscoveriesCardEnhancements:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -1029,6 +1037,7 @@ class TestDiscoveriesCardEnhancements:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -1158,6 +1167,7 @@ class TestDiscoveriesExtraction:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value="/crop/test.jpg"),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -1209,6 +1219,7 @@ class TestDiscoveriesExtraction:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
@@ -1244,6 +1255,7 @@ class TestDiscoveriesExtraction:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -1294,6 +1306,7 @@ class TestDiscoveriesShareButtons:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value="/crop/test.jpg"),
             patch("app.main._safe_get_identity", return_value=source_identity),
@@ -1377,6 +1390,7 @@ class TestDiscoveriesThreeSections:
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
