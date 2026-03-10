@@ -195,7 +195,11 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
                 credentials: 'same-origin'
             }).then(function(r) { return r.text(); })
             .then(function(html) {
-                if (status) status.innerHTML = html;
+                if (status) {
+                    status.innerHTML = html;
+                    // CRITICAL: Tell HTMX to process new content (enables polling attributes)
+                    if (window.htmx) htmx.process(status);
+                }
                 selectedFiles = [];
                 renderFileList();
                 btn.disabled = false;
