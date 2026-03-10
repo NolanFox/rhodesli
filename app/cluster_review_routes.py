@@ -24,7 +24,9 @@ from core.registry import IdentityRegistry
 
 def _load_proposals():
     """Load proposals.json to find auto-clustered matches."""
-    proposals_path = Path(os.getenv("DATA_DIR", "data")) / "proposals.json"
+    _storage = os.getenv("STORAGE_DIR")
+    _data_dir = os.path.join(_storage, "data") if _storage else os.getenv("DATA_DIR", "data")
+    proposals_path = Path(_data_dir) / "proposals.json"
     if not proposals_path.exists():
         return []
     with open(proposals_path) as f:
@@ -348,7 +350,7 @@ def get(sess=None, request=None):
     # Count faces per identity (confirmed + candidates)
     face_counts = []
     for iid, idata in community_filtered_identities.items():
-        if idata.get("state") in ("CONFIRMED", "PROPOSED"):
+        if idata.get("state") in ("CONFIRMED", "PROPOSED", "INBOX") and not idata.get("merged_into"):
             anchors = idata.get("anchor_ids", [])
             candidates = idata.get("candidate_ids", [])
             total = len(anchors) + len(candidates)

@@ -2979,7 +2979,9 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
         proposal_count = len(registry_proposals)
     # Also count proposals.json entries (clustering pipeline output) — COMMUNITY-010
     try:
-        proposals_path = Path(os.getenv("DATA_DIR", "data")) / "proposals.json"
+        _storage = os.getenv("STORAGE_DIR")
+        _data_dir = os.path.join(_storage, "data") if _storage else os.getenv("DATA_DIR", "data")
+        proposals_path = Path(_data_dir) / "proposals.json"
         if proposals_path.exists():
             import json as _json
 
