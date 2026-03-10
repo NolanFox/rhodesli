@@ -311,6 +311,8 @@ def sync_from_supabase_on_startup(data_path):
     changes_made = False
 
     # --- Sync identity overrides ---
+    # Only apply overrides where Supabase updated_at is NEWER than JSON.
+    # This prevents restart from reverting manual volume fixes (Person 2973 bug).
     try:
         result = sb.table("identity_overrides").select("identity_id, data").execute()
         overrides = {row["identity_id"]: row["data"] for row in result.data}
@@ -323,7 +325,24 @@ def sync_from_supabase_on_startup(data_path):
 
                 identities = ids_data.get("identities", {})
                 applied = 0
+                skipped = 0
+                state_changes = []
                 for identity_id, override_data in overrides.items():
+                    existing = identities.get(identity_id)
+                    if existing:
+                        # Compare updated_at: only apply if Supabase is newer
+                        sb_updated = override_data.get("updated_at", "")
+                        json_updated = existing.get("updated_at", "")
+                        if json_updated and sb_updated and json_updated >= sb_updated:
+                            skipped += 1
+                            continue
+                        # Log state changes for provenance
+                        old_state = existing.get("state", "INBOX")
+                        new_state = override_data.get("state", "INBOX")
+                        if old_state != new_state:
+                            state_changes.append(
+                                f"{identity_id}: {old_state} -> {new_state} (name={override_data.get('name', '?')})"
+                            )
                     identities[identity_id] = override_data
                     applied += 1
 
@@ -336,7 +355,10 @@ def sync_from_supabase_on_startup(data_path):
                     json.dump(ids_data, f, indent=2)
                 tmp_path.replace(ids_path)
 
-                logger.info(f"Startup sync: applied {applied} identity overrides from Supabase")
+                if state_changes:
+                    for sc in state_changes:
+                        logger.warning(f"Startup sync STATE CHANGE: {sc}")
+                logger.info(f"Startup sync: applied {applied}, skipped {skipped} identity overrides from Supabase")
                 changes_made = True
     except Exception as e:
         logger.error(f"Startup sync failed for identities: {e}")

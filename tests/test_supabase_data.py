@@ -16,6 +16,7 @@ import pytest
 # Fixtures
 # =========================================================================
 
+
 @pytest.fixture
 def mock_supabase():
     """Mock Supabase client that records calls."""
@@ -99,6 +100,7 @@ def sample_identities():
 def reset_supabase_client():
     """Reset the module-level client cache before each test."""
     from app.supabase_data import reset_client
+
     reset_client()
     yield
     reset_client()
@@ -108,88 +110,94 @@ def reset_supabase_client():
 # _is_user_modified_identity tests
 # =========================================================================
 
+
 class TestIsUserModified:
     def test_confirmed_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
+
         assert _is_user_modified_identity({"state": "CONFIRMED"}) is True
 
     def test_contested_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
+
         assert _is_user_modified_identity({"state": "CONTESTED"}) is True
 
     def test_skipped_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
+
         assert _is_user_modified_identity({"state": "SKIPPED"}) is True
 
     def test_merged_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
+
         assert _is_user_modified_identity({"state": "INBOX", "merged_into": "abc"}) is True
 
     def test_negative_ids_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
-        assert _is_user_modified_identity({
-            "state": "PROPOSED", "negative_ids": ["face_x"]
-        }) is True
+
+        assert _is_user_modified_identity({"state": "PROPOSED", "negative_ids": ["face_x"]}) is True
 
     def test_birth_year_metadata_is_user_modified(self):
         from app.supabase_data import _is_user_modified_identity
-        assert _is_user_modified_identity({
-            "state": "INBOX", "metadata": {"birth_year": 1920}
-        }) is True
+
+        assert _is_user_modified_identity({"state": "INBOX", "metadata": {"birth_year": 1920}}) is True
 
     def test_inbox_no_modifications(self):
         from app.supabase_data import _is_user_modified_identity
-        assert _is_user_modified_identity({
-            "state": "INBOX", "metadata": {}
-        }) is False
+
+        assert _is_user_modified_identity({"state": "INBOX", "metadata": {}}) is False
 
     def test_proposed_no_modifications(self):
         from app.supabase_data import _is_user_modified_identity
-        assert _is_user_modified_identity({
-            "state": "PROPOSED", "negative_ids": [], "metadata": {}
-        }) is False
+
+        assert _is_user_modified_identity({"state": "PROPOSED", "negative_ids": [], "metadata": {}}) is False
 
 
 # =========================================================================
 # sync_identity_overrides tests
 # =========================================================================
 
+
 class TestSyncIdentityOverrides:
     def test_syncs_only_user_modified(self, mock_supabase, sample_identities):
         from app.supabase_data import sync_identity_overrides
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_identity_overrides(sample_identities)
 
         # Should have called upsert (at least once)
-        mock_supabase.table.assert_called_with('identity_overrides')
+        mock_supabase.table.assert_called_with("identity_overrides")
         call_args = mock_supabase.table.return_value.upsert.call_args
         rows = call_args[0][0]
-        synced_ids = {r['identity_id'] for r in rows}
+        synced_ids = {r["identity_id"] for r in rows}
 
         # confirmed_1 (CONFIRMED), skipped_1 (SKIPPED), merged_1 (merged_into)
         # should all be synced. inbox_1 and proposed_1 should NOT.
-        assert 'confirmed_1' in synced_ids
-        assert 'skipped_1' in synced_ids
-        assert 'merged_1' in synced_ids
-        assert 'inbox_1' not in synced_ids
-        assert 'proposed_1' not in synced_ids
+        assert "confirmed_1" in synced_ids
+        assert "skipped_1" in synced_ids
+        assert "merged_1" in synced_ids
+        assert "inbox_1" not in synced_ids
+        assert "proposed_1" not in synced_ids
 
     def test_no_supabase_does_nothing(self, sample_identities):
         from app.supabase_data import sync_identity_overrides
-        with patch('app.supabase_data.get_supabase_client', return_value=None):
+
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
             # Should not raise
             sync_identity_overrides(sample_identities)
 
     def test_supabase_error_logs_warning(self, mock_supabase, sample_identities):
         from app.supabase_data import sync_identity_overrides
+
         mock_supabase.table.return_value.upsert.return_value.execute.side_effect = Exception("network error")
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             # Should not raise — degraded mode
             sync_identity_overrides(sample_identities)
 
     def test_empty_identities_does_nothing(self, mock_supabase):
         from app.supabase_data import sync_identity_overrides
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_identity_overrides({})
         mock_supabase.table.return_value.upsert.assert_not_called()
 
@@ -198,9 +206,11 @@ class TestSyncIdentityOverrides:
 # sync_annotations tests
 # =========================================================================
 
+
 class TestSyncAnnotations:
     def test_syncs_all_annotations(self, mock_supabase):
         from app.supabase_data import sync_annotations
+
         annotations = {
             "ann_1": {
                 "type": "name_suggestion",
@@ -217,27 +227,28 @@ class TestSyncAnnotations:
                 "submitted_at": "2026-02-21T00:00:00+00:00",
             },
         }
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_annotations(annotations)
 
-        mock_supabase.table.assert_called_with('annotations')
+        mock_supabase.table.assert_called_with("annotations")
         call_args = mock_supabase.table.return_value.upsert.call_args
         rows = call_args[0][0]
         assert len(rows) == 2
 
         # Check identity vs photo target mapping
-        ann_1_row = next(r for r in rows if r['annotation_id'] == 'ann_1')
-        assert ann_1_row['identity_id'] == 'id_1'
-        assert ann_1_row['photo_id'] is None
+        ann_1_row = next(r for r in rows if r["annotation_id"] == "ann_1")
+        assert ann_1_row["identity_id"] == "id_1"
+        assert ann_1_row["photo_id"] is None
 
-        ann_2_row = next(r for r in rows if r['annotation_id'] == 'ann_2')
-        assert ann_2_row['identity_id'] is None
-        assert ann_2_row['photo_id'] == 'photo_1'
+        ann_2_row = next(r for r in rows if r["annotation_id"] == "ann_2")
+        assert ann_2_row["identity_id"] is None
+        assert ann_2_row["photo_id"] == "photo_1"
 
 
 # =========================================================================
 # Startup sync tests
 # =========================================================================
+
 
 class TestStartupSync:
     def test_applies_identity_overrides(self, mock_supabase, tmp_path):
@@ -279,16 +290,17 @@ class TestStartupSync:
         # Configure mock: identity_overrides returns override, others empty
         def table_select_side_effect(table_name):
             mock_table = MagicMock()
-            if table_name == 'identity_overrides':
+            if table_name == "identity_overrides":
                 mock_table.select.return_value.execute.return_value = mock_result
             else:
                 empty_result = MagicMock()
                 empty_result.data = []
                 mock_table.select.return_value.execute.return_value = empty_result
             return mock_table
+
         mock_supabase.table.side_effect = table_select_side_effect
 
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             result = sync_from_supabase_on_startup(tmp_path)
 
         assert result is True
@@ -330,9 +342,10 @@ class TestStartupSync:
             empty_result.data = []
             mock_table.select.return_value.execute.return_value = empty_result
             return mock_table
+
         mock_supabase.table.side_effect = table_select_side_effect
 
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_from_supabase_on_startup(tmp_path)
 
         # ML proposal should still be there
@@ -340,6 +353,122 @@ class TestStartupSync:
             updated = json.load(f)
         assert "ml_proposal" in updated["identities"]
         assert updated["identities"]["ml_proposal"]["state"] == "INBOX"
+
+    def test_skips_override_when_json_is_newer(self, mock_supabase, tmp_path):
+        """Startup sync skips overrides when JSON has a newer updated_at timestamp.
+        This prevents restart from reverting manual volume fixes (Person 2973 bug).
+        """
+        from app.supabase_data import sync_from_supabase_on_startup
+
+        # JSON has a SKIPPED identity with a RECENT timestamp (user manually fixed it)
+        ids_data = {
+            "schema_version": 1,
+            "identities": {
+                "person_2973": {
+                    "identity_id": "person_2973",
+                    "name": "Unidentified Person 2973",
+                    "state": "SKIPPED",
+                    "anchor_ids": ["face_x"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "metadata": {},
+                    "updated_at": "2026-03-10T20:00:00+00:00",  # Newer
+                },
+            },
+            "history": [],
+        }
+        ids_path = tmp_path / "identities.json"
+        ids_path.write_text(json.dumps(ids_data))
+
+        # Supabase has an OLDER override with CONFIRMED state
+        override_data = {
+            "identity_id": "person_2973",
+            "name": "Person 2973",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face_x"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "metadata": {},
+            "updated_at": "2026-03-10T18:00:00+00:00",  # Older
+        }
+        mock_result = MagicMock()
+        mock_result.data = [{"identity_id": "person_2973", "data": override_data}]
+
+        def table_select_side_effect(table_name):
+            mock_table = MagicMock()
+            if table_name == "identity_overrides":
+                mock_table.select.return_value.execute.return_value = mock_result
+            else:
+                empty_result = MagicMock()
+                empty_result.data = []
+                mock_table.select.return_value.execute.return_value = empty_result
+            return mock_table
+
+        mock_supabase.table.side_effect = table_select_side_effect
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
+            sync_from_supabase_on_startup(tmp_path)
+
+        # JSON should NOT have been overwritten — SKIPPED state preserved
+        with open(ids_path) as f:
+            updated = json.load(f)
+        assert updated["identities"]["person_2973"]["state"] == "SKIPPED"
+
+    def test_applies_override_when_supabase_is_newer(self, mock_supabase, tmp_path):
+        """Startup sync applies overrides when Supabase has a newer timestamp."""
+        from app.supabase_data import sync_from_supabase_on_startup
+
+        ids_data = {
+            "schema_version": 1,
+            "identities": {
+                "id_1": {
+                    "identity_id": "id_1",
+                    "name": "Unidentified",
+                    "state": "PROPOSED",
+                    "anchor_ids": [],
+                    "candidate_ids": ["face_1"],
+                    "negative_ids": [],
+                    "metadata": {},
+                    "updated_at": "2026-03-10T16:00:00+00:00",  # Older
+                },
+            },
+            "history": [],
+        }
+        ids_path = tmp_path / "identities.json"
+        ids_path.write_text(json.dumps(ids_data))
+
+        override_data = {
+            "identity_id": "id_1",
+            "name": "Moise Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face_1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "metadata": {"birth_year": 1920},
+            "updated_at": "2026-03-10T20:00:00+00:00",  # Newer
+        }
+        mock_result = MagicMock()
+        mock_result.data = [{"identity_id": "id_1", "data": override_data}]
+
+        def table_select_side_effect(table_name):
+            mock_table = MagicMock()
+            if table_name == "identity_overrides":
+                mock_table.select.return_value.execute.return_value = mock_result
+            else:
+                empty_result = MagicMock()
+                empty_result.data = []
+                mock_table.select.return_value.execute.return_value = empty_result
+            return mock_table
+
+        mock_supabase.table.side_effect = table_select_side_effect
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
+            sync_from_supabase_on_startup(tmp_path)
+
+        with open(ids_path) as f:
+            updated = json.load(f)
+        assert updated["identities"]["id_1"]["state"] == "CONFIRMED"
+        assert updated["identities"]["id_1"]["name"] == "Moise Capeluto"
 
     def test_supabase_unavailable_uses_existing_json(self, tmp_path):
         """When Supabase is down, app uses existing JSON cache."""
@@ -353,7 +482,7 @@ class TestStartupSync:
         ids_path = tmp_path / "identities.json"
         ids_path.write_text(json.dumps(ids_data))
 
-        with patch('app.supabase_data.get_supabase_client', return_value=None):
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
             result = sync_from_supabase_on_startup(tmp_path)
 
         assert result is False
@@ -387,7 +516,7 @@ class TestStartupSync:
 
         def table_select_side_effect(table_name):
             mock_table = MagicMock()
-            if table_name == 'annotations':
+            if table_name == "annotations":
                 result = MagicMock()
                 result.data = [{"annotation_id": "ann_1", "data": ann_data}]
                 mock_table.select.return_value.execute.return_value = result
@@ -396,9 +525,10 @@ class TestStartupSync:
                 empty.data = []
                 mock_table.select.return_value.execute.return_value = empty
             return mock_table
+
         mock_supabase.table.side_effect = table_select_side_effect
 
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_from_supabase_on_startup(tmp_path)
 
         with open(ann_path) as f:
@@ -410,6 +540,7 @@ class TestStartupSync:
 # =========================================================================
 # Deploy safety regression test — THE DATA-001 scenario
 # =========================================================================
+
 
 class TestDeploySafetyRegression:
     def test_deploy_cannot_lose_user_confirmations(self, mock_supabase, tmp_path):
@@ -453,7 +584,7 @@ class TestDeploySafetyRegression:
 
         def table_select_side_effect(table_name):
             mock_table = MagicMock()
-            if table_name == 'identity_overrides':
+            if table_name == "identity_overrides":
                 result = MagicMock()
                 result.data = [{"identity_id": "49b_identity", "data": confirmed_data}]
                 mock_table.select.return_value.execute.return_value = result
@@ -462,10 +593,11 @@ class TestDeploySafetyRegression:
                 empty.data = []
                 mock_table.select.return_value.execute.return_value = empty
             return mock_table
+
         mock_supabase.table.side_effect = table_select_side_effect
 
         # Step 3: Run startup sync (simulates what happens after deploy)
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_from_supabase_on_startup(tmp_path)
 
         # Step 4: Verify — JSON now has the confirmed version from Supabase
@@ -482,10 +614,12 @@ class TestDeploySafetyRegression:
 # save_registry integration test (with mocked Supabase)
 # =========================================================================
 
+
 class TestSaveRegistryDualWrite:
     def test_save_registry_calls_supabase_sync(self, mock_supabase, tmp_path):
         """save_registry() should sync to Supabase after JSON save."""
         import sys
+
         # Need to import save_registry from app.main
         # But app.main has heavy imports, so we'll test the sync function directly
         from app.supabase_data import sync_identity_overrides
@@ -502,28 +636,30 @@ class TestSaveRegistryDualWrite:
             }
         }
 
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_identity_overrides(identities)
 
         # Verify upsert was called with the confirmed identity
-        mock_supabase.table.assert_called_with('identity_overrides')
+        mock_supabase.table.assert_called_with("identity_overrides")
         call_args = mock_supabase.table.return_value.upsert.call_args[0][0]
         assert len(call_args) == 1
-        assert call_args[0]['identity_id'] == 'test_id'
-        assert call_args[0]['state'] == 'CONFIRMED'
+        assert call_args[0]["identity_id"] == "test_id"
+        assert call_args[0]["state"] == "CONFIRMED"
 
 
 # =========================================================================
 # get_supabase_client tests
 # =========================================================================
 
+
 class TestGetSupabaseClient:
     def test_returns_none_when_not_configured(self):
         from app.supabase_data import get_supabase_client, reset_client
+
         reset_client()
         with patch.dict(os.environ, {}, clear=True):
             # Remove all SUPABASE vars
-            env = {k: v for k, v in os.environ.items() if 'SUPABASE' not in k}
+            env = {k: v for k, v in os.environ.items() if "SUPABASE" not in k}
             with patch.dict(os.environ, env, clear=True):
                 result = get_supabase_client()
                 assert result is None
@@ -531,8 +667,9 @@ class TestGetSupabaseClient:
     def test_caches_none_result(self):
         """Once determined unavailable, don't retry on every call."""
         from app.supabase_data import get_supabase_client, reset_client, _supabase_available
+
         reset_client()
-        with patch.dict(os.environ, {'SUPABASE_URL': '', 'SUPABASE_SERVICE_ROLE_KEY': ''}, clear=False):
+        with patch.dict(os.environ, {"SUPABASE_URL": "", "SUPABASE_SERVICE_ROLE_KEY": ""}, clear=False):
             result1 = get_supabase_client()
             result2 = get_supabase_client()
             assert result1 is None
@@ -543,6 +680,7 @@ class TestGetSupabaseClient:
 # Migration idempotency test
 # =========================================================================
 
+
 class TestMigrationIdempotency:
     def test_upsert_is_idempotent(self, mock_supabase):
         """Running sync twice with same data doesn't duplicate rows."""
@@ -552,7 +690,7 @@ class TestMigrationIdempotency:
             "id_1": {"identity_id": "id_1", "state": "CONFIRMED", "name": "Test", "metadata": {}},
         }
 
-        with patch('app.supabase_data.get_supabase_client', return_value=mock_supabase):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase):
             sync_identity_overrides(identities)
             sync_identity_overrides(identities)
 
@@ -565,30 +703,36 @@ class TestMigrationIdempotency:
 # Deploy safety gate integration (existing tests still pass)
 # =========================================================================
 
+
 class TestInitRailwayVolumeSyncList:
     def test_annotations_not_in_sync_list(self):
         """annotations.json must NOT be in OPTIONAL_SYNC_FILES (production-origin)."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
         assert "annotations.json" not in OPTIONAL_SYNC_FILES
 
     def test_relationships_not_in_sync_list(self):
         """relationships.json now in Supabase, must NOT be in sync list."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
         assert "relationships.json" not in OPTIONAL_SYNC_FILES
 
     def test_gedcom_matches_not_in_sync_list(self):
         """gedcom_matches.json now in Supabase, must NOT be in sync list."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
         assert "gedcom_matches.json" not in OPTIONAL_SYNC_FILES
 
     def test_ancestry_links_not_in_sync_list(self):
         """ancestry_links.json now in Supabase, must NOT be in sync list."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
         assert "ancestry_links.json" not in OPTIONAL_SYNC_FILES
 
     def test_ml_data_still_in_sync_list(self):
         """ML-generated files must still be in sync list."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
         assert "proposals.json" in OPTIONAL_SYNC_FILES
         assert "date_labels.json" in OPTIONAL_SYNC_FILES
         assert "birth_year_estimates.json" in OPTIONAL_SYNC_FILES

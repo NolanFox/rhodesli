@@ -691,6 +691,29 @@ def process_single_image(
 
     identity_registry.save(identity_path)
 
+    # POST-INGEST VALIDATION: Verify every face has an identity.
+    # If not, this is an orphan face bug — log ERROR and create missing identities.
+    if faces:
+        all_face_ids = {f["face_id"] for f in faces}
+        identity_face_ids = set()
+        for idata in identity_registry._identities.values():
+            identity_face_ids.update(idata.get("anchor_ids", []))
+            identity_face_ids.update(idata.get("candidate_ids", []))
+        orphan_faces = all_face_ids - identity_face_ids
+        if orphan_faces:
+            logger.error(
+                f"POST-INGEST ORPHAN FACES DETECTED: {len(orphan_faces)} faces "
+                f"in photo {filepath.name} have no identity. Face IDs: {orphan_faces}. "
+                f"Creating emergency INBOX identities."
+            )
+            for orphan_fid in orphan_faces:
+                identity_registry.create_identity(
+                    anchor_ids=[orphan_fid],
+                    user_source="orphan_repair",
+                )
+            identity_registry.save(identity_path)
+            identity_ids.extend([f"orphan_repair_{fid}" for fid in orphan_faces])
+
     # Generate crops
     for face in faces:
         generate_crop(face, crops_dir)
