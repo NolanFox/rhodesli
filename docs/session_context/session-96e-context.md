@@ -1,6 +1,6 @@
-# Session 97 Context — Fix Fox Family Clustering + Usability
+# Session 96e Context — Fix Fox Family Clustering + Usability
 
-**Predecessor:** Session 96d
+**Predecessor:** [Session 96d context](session-96d-context.md)
 **Date:** 2026-03-10
 **Status:** IN PROGRESS — needs continuation
 

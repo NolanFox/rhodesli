@@ -1,6 +1,6 @@
-# Session 97 Continuation — Fix Fox Family Performance + Clustering Pipeline
+# Session 96e — Fix Fox Family Performance + Clustering Pipeline
 
-**Context:** `docs/session_context/session-97-context.md` (READ THIS FIRST — contains all research, findings, user feedback)
+**Context:** `docs/session_context/session-96e-context.md` (READ THIS FIRST — contains all research, findings, user feedback)
 **Priority:** P0 — Fox Family unusable, user blocked
 **Previous commit:** `7b45d2c` — face grouping ran, discoveries cap, nav fix deployed
 
@@ -88,7 +88,7 @@ Navigate in Chrome browser and verify:
 3. Write assessment
 4. Update lessons.md with Lesson 111: "Postgres registry needs TTL cache — every request reloading 2533 identities caused complete feature failure"
 
-## User Feedback to Track (from session-97-context.md)
+## User Feedback to Track (from session-96e-context.md)
 - F1: Clustering pipeline must run grouping + auto-cluster on upload
 - F2: Discovery cap loses matches — make proposal-only instead
 - F3: Cross-community navigation links to wrong community
