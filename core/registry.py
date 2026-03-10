@@ -524,18 +524,29 @@ class IdentityRegistry:
         candidates_added = []
         negatives_added = []
 
+        # Collect all existing face IDs in target to prevent duplicates (Lesson 118)
+        target_all_faces = set(target["anchor_ids"]) | set(target["candidate_ids"])
+
         # Move anchors from source to target
         for anchor in source["anchor_ids"]:
-            if anchor not in target["anchor_ids"]:
+            if anchor not in target_all_faces:
+                target["anchor_ids"].append(anchor)
+                anchors_added.append(anchor)
+                target_all_faces.add(anchor)
+                faces_merged += 1
+            elif anchor in target["candidate_ids"]:
+                # Promote from candidate to anchor (anchor takes precedence)
+                target["candidate_ids"].remove(anchor)
                 target["anchor_ids"].append(anchor)
                 anchors_added.append(anchor)
                 faces_merged += 1
 
         # Move candidates from source to target
         for candidate in source["candidate_ids"]:
-            if candidate not in target["candidate_ids"]:
+            if candidate not in target_all_faces:
                 target["candidate_ids"].append(candidate)
                 candidates_added.append(candidate)
+                target_all_faces.add(candidate)
                 faces_merged += 1
 
         # Preserve negative evidence

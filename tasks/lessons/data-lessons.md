@@ -46,6 +46,26 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: When a count badge and a content API show the same data, they MUST read from identical data sources. Otherwise users see a number they can never access.
 - **Prevention**: Extract a shared `_get_all_proposals(community_identity_ids)` function that both sidebar counts and API endpoints call. Never duplicate data source logic in two places.
 
+### Lesson 118: Ingest pipeline must ALWAYS set upload_date
+- **Mistake**: CLI ingest (`--directory`/`--file`) had no `--upload-date` argument. Web upload's `_background_ingest()` didn't pass `upload_date` either. Result: 637 photos (636 Fox Family + 1 other) had no `upload_date`, breaking sort-by-upload-date.
+- **Rule**: Every photo MUST have `upload_date` set at ingest time. The field is required for sorting, analytics, and data provenance.
+- **Prevention**: (1) CLI now has `--upload-date`/`--uploaded-by` args, defaults to current UTC time. (2) `process_single_image()` auto-generates `upload_date` if not provided. (3) Data integrity audit catches missing `upload_date`.
+
+### Lesson 119: Merge must deduplicate faces across anchor AND candidate lists
+- **Mistake**: `merge_identities()` checked `if anchor not in target["anchor_ids"]` but not `target["candidate_ids"]`. A face could exist in target's candidates and source's anchors, creating a duplicate face assignment.
+- **Rule**: Before adding any face to an identity during merge, check ALL face lists (anchors + candidates + negatives). Face IDs must be globally unique within an identity.
+- **Prevention**: Added `target_all_faces` set combining all face lists. Promotes candidate→anchor when source has it as anchor.
+
+### Lesson 120: Data integrity audit must run after every ingest and before every deploy
+- **Mistake**: 103 orphan faces, 11 merge chains, 1 duplicate face, 3 CONFIRMED placeholders, 637 missing upload_dates accumulated silently over multiple sessions.
+- **Rule**: Run `scripts/data_integrity_audit.py` after every ingest and before every deploy. 0 critical issues required.
+- **Prevention**: Audit script exists with `--fix` for safe auto-repairs. Add to CI/CD pipeline and pre-deploy hook.
+
+### Lesson 121: Batch orphan detection must be batch-wide, not per-file
+- **Mistake**: `process_single_image()` validates orphans per-file (line 694-716), but `create_inbox_identities()` groups faces across files. Cross-file grouping failures leave faces without identities, not caught by per-file check.
+- **Rule**: After processing an entire batch/directory, run a batch-wide orphan face check covering ALL processed faces against ALL created identities.
+- **Prevention**: `process_directory()` should do a final batch-wide orphan sweep after all files are processed.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

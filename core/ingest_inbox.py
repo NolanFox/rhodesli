@@ -644,15 +644,15 @@ def process_single_image(
     effective_collection = collection or source or "Uncategorized"
     photo_registry.set_collection(photo_id, effective_collection)
 
-    # Store upload provenance if provided
-    if uploaded_by or upload_date:
-        provenance = {}
-        if uploaded_by:
-            provenance["uploaded_by"] = uploaded_by
-        if upload_date:
-            provenance["upload_date"] = upload_date
-        provenance["job_id"] = job_id
-        photo_registry.set_metadata(photo_id, provenance)
+    # Store upload provenance — always set upload_date (Lesson 118: missing upload_date)
+    if not upload_date:
+        from datetime import datetime, timezone
+
+        upload_date = datetime.now(timezone.utc).isoformat()
+    provenance = {"upload_date": upload_date, "job_id": job_id}
+    if uploaded_by:
+        provenance["uploaded_by"] = uploaded_by
+    photo_registry.set_metadata(photo_id, provenance)
 
     photo_registry.save(photo_index_path)
 
@@ -1364,6 +1364,18 @@ def main():
         default=None,
         help="Crops output directory (default: app/static/crops/)",
     )
+    parser.add_argument(
+        "--upload-date",
+        type=str,
+        default="",
+        help="ISO 8601 upload date (default: current UTC time)",
+    )
+    parser.add_argument(
+        "--uploaded-by",
+        type=str,
+        default="",
+        help="Email of the uploader",
+    )
     args = parser.parse_args()
 
     # Resolve data_dir: CLI arg > DATA_DIR env var > default
@@ -1373,6 +1385,13 @@ def main():
         if env_data_dir:
             data_dir = Path(env_data_dir)
 
+    # Default upload_date to current UTC time if not provided
+    upload_date = args.upload_date
+    if not upload_date:
+        from datetime import datetime, timezone
+
+        upload_date = datetime.now(timezone.utc).isoformat()
+
     if args.directory:
         result = process_directory(
             args.directory,
@@ -1381,6 +1400,8 @@ def main():
             collection=args.collection,
             data_dir=data_dir,
             crops_dir=args.crops_dir,
+            uploaded_by=args.uploaded_by,
+            upload_date=upload_date,
         )
     else:
         result = process_uploaded_file(
@@ -1390,6 +1411,8 @@ def main():
             collection=args.collection,
             data_dir=data_dir,
             crops_dir=args.crops_dir,
+            uploaded_by=args.uploaded_by,
+            upload_date=upload_date,
         )
 
     if result["status"] == "error":
