@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.5] — 2026-03-10 (Session 96e-cont2: Fix Broken Clusters)
+
+### Fixed
+- **Complete-linkage grouping** — Single-linkage union-find caused transitive snowball clusters (252-face garbage). Complete-linkage requires ALL inter-group distances below threshold before merge. Largest cluster now 44 faces (was 252).
+- **Sort control community prefix** — Sort links (A-Z, Faces, Newest) now include `/c/{slug}/` prefix.
+- **Name truncation** — "Unidentified Person NNNN" now shows "Person NNNN" on cards to prevent cutoff.
+- **Upload Review proposal filter** — Only Medium+ confidence proposals shown (distance < 1.05).
+
+### Added
+- **Grouped Identities section** — Upload Review now shows multi-face INBOX clusters sorted by face count.
+
+### Changed
+- **Re-ran grouping** — 294 groups, 582 merges (was 813). 2009 → 1427 INBOX. 14 co-occurrence blocks.
+- **Proposals regenerated at 1.05** — 17 proposals (was 2115 at 1.3). Quality over quantity.
+
+### Verification
+- Deploy: commit 800d4ac
+- Grouping tests: 15/15 pass
+- Cluster review tests: 18/18 pass
+
 ## [v0.97.4] — 2026-03-10 (Session 96e: Fox Family Stabilization Complete)
 
 ### Fixed

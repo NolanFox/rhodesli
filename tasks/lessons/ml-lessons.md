@@ -30,6 +30,11 @@ See also: `docs/ml/ALGORITHMIC_DECISIONS.md`, `.claude/rules/ml-pipeline.md`
 - **Rule**: When displaying ML results to non-technical users, prefer comparative metrics over absolute ones.
 - **Prevention**: The confidence_gap pattern can be reused for any ranked list.
 
+### Lesson 115: Single-linkage union-find creates transitive snowball clusters
+- **Mistake**: `group_inbox_identities()` used union-find with single-linkage: if A↔B < 0.95 AND B↔C < 0.95, A and C merged even when A↔C = 1.4. Created 252-face garbage clusters mixing many different people.
+- **Rule**: Face grouping MUST use complete-linkage: only merge two groups if ALL inter-group pairwise distances are below threshold. This prevents transitive chain merging.
+- **Prevention**: Replaced union-find with complete-linkage agglomerative clustering in all 3 grouping functions (`group_faces`, `group_inbox_identities`, `group_all_unresolved`). Verify largest cluster size after any grouping run — should never exceed ~50 at threshold 0.95.
+
 ### Lesson 61: SKIPPED faces must participate in clustering, not just proposals
 - **Mistake**: `group_inbox_identities()` only included INBOX faces (line 139). The 196 SKIPPED faces were excluded from peer-to-peer grouping forever. But `cluster_new_faces.py` already included them for proposal generation against confirmed identities.
 - **Rule**: Status boundaries (INBOX vs SKIPPED) should not be clustering boundaries. "Skip" means "I can't identify this right now," not "exclude from ML forever." Every major photo system (Apple, Google, Immich) continuously re-evaluates all unresolved faces.

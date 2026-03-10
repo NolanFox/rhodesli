@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-113 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+115 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -124,6 +124,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 33 | Not every decision needs a formal AD entry |
 | 41 | Confidence gap > absolute distance for human decision-making |
 | 61 | SKIPPED faces must participate in clustering, not just proposals |
+| 115 | **Single-linkage union-find creates transitive snowball clusters — use complete-linkage** |
 
 ## Harness & Process — `tasks/lessons/harness-lessons.md`
 
