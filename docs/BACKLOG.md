@@ -27,6 +27,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Community Link Scoping
 - **COMMUNITY-015**: Internal photo/person links don't include community prefix — clicking a photo from Fox Family browse navigates to `/photo/{id}` (Rhodes context) instead of `/c/fox-family/photo/{id}`. Requires updating hundreds of `href=f"/photo/{id}"` references across all route files. Source: Session 96d browser verification.
 
+### P1 — Proposals API Incomplete
+- **COMMUNITY-016**: `/api/proposed-matches` only reads `registry.list_proposed_matches()`, not `proposals.json`. Sidebar counts include both sources (via `_compute_sidebar_counts`), so Fox Family shows "17 Proposals" in sidebar but "No pending proposals" in content. Fix: API endpoint must also read proposals.json, same as sidebar does. Source: Session 96e-cont4 browser verification.
+
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
 - ~~**UX-070-072**: Name These Faces broken on /photo/ pages~~ FIXED (Session 49D)

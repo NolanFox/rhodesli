@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-115 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+116 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -113,6 +113,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 55 | Crop filename formats differ between legacy and inbox |
 | 104 | **Batch script outputs must write to the SAME data structure the app reads** |
 | 105 | **Supabase sync functions must match actual table schema — mock tests don't catch column mismatches** |
+| 116 | **Sidebar counts and API endpoints must read from the SAME data sources** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

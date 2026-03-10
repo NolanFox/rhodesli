@@ -41,6 +41,11 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: When writing Supabase sync functions, verify column names against the actual table schema. Mock-only tests for database sync are insufficient — they can't catch column name mismatches.
 - **Prevention**: (1) Add a comment in each sync function listing the expected table columns. (2) Consider an integration test that does a real upsert to a test table. (3) When creating a new Supabase table, immediately write the sync function AND test it with a real connection before moving on.
 
+### Lesson 116: Sidebar counts and API endpoints must read from the SAME data sources
+- **Mistake**: `_compute_sidebar_counts()` reads proposals from BOTH `registry.list_proposed_matches()` AND `proposals.json`. But `/api/proposed-matches` only reads from `registry.list_proposed_matches()`. Result: Fox Family sidebar shows "17 Proposals" but the proposals page content shows "No pending proposals."
+- **Rule**: When a count badge and a content API show the same data, they MUST read from identical data sources. Otherwise users see a number they can never access.
+- **Prevention**: Extract a shared `_get_all_proposals(community_identity_ids)` function that both sidebar counts and API endpoints call. Never duplicate data source logic in two places.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.
