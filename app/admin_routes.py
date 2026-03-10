@@ -365,9 +365,9 @@ def get(request, sess=None):
         body { background-color: #0f172a; }
     """)
 
-    # Canonical _main_mod.sidebar counts
+    # Canonical _main_mod.sidebar counts (community-scoped)
     registry = _main_mod.load_registry()
-    counts = _main_mod._compute_sidebar_counts(registry)
+    counts = _main_mod._compute_sidebar_counts(registry, community=community)
 
     # Load pending uploads (both contributor "pending" and admin "staged")
     pending = _main_mod._load_pending_uploads()
@@ -701,9 +701,9 @@ def get(request, sess=None):
         body { background-color: #0f172a; }
     """)
 
-    # Canonical _main_mod.sidebar counts
+    # Canonical _main_mod.sidebar counts (community-scoped)
     registry = _main_mod.load_registry()
-    counts = _main_mod._compute_sidebar_counts(registry)
+    counts = _main_mod._compute_sidebar_counts(registry, community=community)
 
     # Sidebar styles (reuse)
     page_style = Style("""
@@ -802,7 +802,9 @@ def get(request, sess=None):
                     # Load proposals list via HTMX on page load
                     Div(
                         id="proposed-matches-list",
-                        hx_get="/api/proposed-matches",
+                        hx_get=f"/api/proposed-matches?community_slug={community.get('slug', '')}"
+                        if community
+                        else "/api/proposed-matches",
                         hx_trigger="load",
                         hx_swap="innerHTML",
                     ),

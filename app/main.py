@@ -8029,6 +8029,9 @@ def neighbor_card(
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
+    # For "Unidentified Person NNNN", show "Person NNNN" to prevent truncation
+    if name.startswith("Unidentified Person "):
+        name = "Person " + name[len("Unidentified Person ") :]
     # Get values directly (no more negative scaling)
     distance = neighbor["distance"]
     percentile = neighbor.get("percentile", 1.0)

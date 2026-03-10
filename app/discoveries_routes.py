@@ -448,7 +448,7 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     sections = []
 
     # Build Help Identify section early (shown even when no ML matches)
-    help_section = _build_help_identify_section(registry, crop_files)
+    help_section = _build_help_identify_section(registry, crop_files, community_identity_ids=community_identity_ids)
 
     if not all_items:
         filter_msg = (
@@ -970,7 +970,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
     )
 
 
-def _build_help_identify_section(registry, crop_files, max_faces=6):
+def _build_help_identify_section(registry, crop_files, max_faces=6, community_identity_ids=None):
     """Build the 'Help Identify' section showing top cold-case faces.
 
     These are unidentified faces (INBOX/PROPOSED/SKIPPED) that need community
@@ -979,6 +979,9 @@ def _build_help_identify_section(registry, crop_files, max_faces=6):
     unid_faces = []
     for ident in registry.list_identities():
         if ident.get("merged_into"):
+            continue
+        # Community filter: skip identities not in current community
+        if community_identity_ids is not None and ident["identity_id"] not in community_identity_ids:
             continue
         state = ident.get("state", "")
         if state not in ("INBOX", "PROPOSED", "SKIPPED"):

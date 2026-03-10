@@ -347,6 +347,10 @@ def get(
             else:
                 n["merge_blocked_reason_display"] = "Appear together in a photo"
 
+    # Filter out duplicate face detections: same face detected twice in same photo
+    # These show as Dist ~0.00 with co-occurrence (seen together in same photo)
+    neighbors = [n for n in neighbors if not (n.get("distance", 1.0) < 0.1 and n.get("co_occurrence", 0) > 0)]
+
     # Count rejected identities for contextual recovery indicator
     identity = registry.get_identity(identity_id)
     rejected_count = sum(1 for neg in identity.get("negative_ids", []) if neg.startswith("identity:"))

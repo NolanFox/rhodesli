@@ -53,14 +53,28 @@ def post(identity_id: str, target_id: str, note: str = "", sess=None):
 
 
 @rt("/api/proposed-matches")
-def get():
-    """List all pending proposed matches."""
+def get(community_slug: str = ""):
+    """List all pending proposed matches, optionally filtered by community."""
     try:
         registry = _main_mod.load_registry()
     except Exception:
         return P("Unable to load proposals.", cls="text-red-400")
 
     proposals = registry.list_proposed_matches()
+
+    # Community filtering: only show proposals involving identities in this community
+    if community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(community_slug)
+        community_identity_ids = _main_mod._get_community_identity_ids(community)
+        if community_identity_ids is not None:
+            proposals = [
+                p
+                for p in proposals
+                if p.get("source_id") in community_identity_ids or p.get("target_id") in community_identity_ids
+            ]
+
     if not proposals:
         return Div(P("No pending proposals.", cls="text-slate-400 italic text-sm"), cls="text-center py-8")
 
@@ -751,7 +765,6 @@ def post(
 
     user = _main_mod.get_current_user(sess) if sess is not None else None
 
-
     ann_id = str(uuid.uuid4())
 
     # Determine status and submitter based on auth state
@@ -846,7 +859,6 @@ def _submit_pending_annotation(sess, user) -> bool:
     if not pending:
         return False
 
-
     ann_id = str(uuid.uuid4())
 
     annotations = _main_mod._load_annotations()
@@ -880,7 +892,6 @@ def post(
             status_code=400,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
-
 
     ann_id = str(uuid.uuid4())
 
