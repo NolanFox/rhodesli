@@ -1417,3 +1417,79 @@ class TestDiscoveriesThreeSections:
         assert "Help Identify" in html
         assert "bg-amber-500/5" in html
         assert 'href="/help"' in html
+
+
+# ---------------------------------------------------------------------------
+# Test: Community scoping (COMMUNITY-007 fix)
+# ---------------------------------------------------------------------------
+
+
+class TestDiscoveriesCommunityScoping:
+    """Tests for community-scoped discoveries page and HTMX endpoints."""
+
+    @pytest.fixture(scope="class")
+    def client(self):
+        from app.main import app
+
+        with TestClient(app) as c:
+            yield c
+
+    def test_discoveries_page_uses_community_prefix_in_htmx_urls(self, client):
+        """Fox Family discoveries page uses /c/fox-family/ prefix in HTMX URLs."""
+        mock_community = {"id": "fox-uuid", "name": "Fox Family Archive", "slug": "fox-family"}
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=5),
+            patch("app.main._compute_discoveries", return_value=[]),
+            patch("app.main._get_community_identity_ids", return_value=set()),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch("app.supabase_data.get_community_by_slug", return_value=mock_community),
+        ):
+            response = client.get("/c/fox-family/discoveries")
+
+        assert response.status_code == 200
+        html = response.text
+        # HTMX URLs must include community prefix
+        assert "/c/fox-family/api/discoveries" in html
+        assert "/c/fox-family/api/discoveries/photo-options" in html
+
+    def test_api_discoveries_scoped_by_community(self, client):
+        """/c/fox-family/api/discoveries passes community_identity_ids to _compute_discoveries."""
+        mock_community = {"id": "fox-uuid", "name": "Fox Family Archive", "slug": "fox-family"}
+        fox_ids = {"fox-id-1", "fox-id-2"}
+
+        captured_args = {}
+
+        def mock_compute(registry=None, community_identity_ids=None):
+            captured_args["community_identity_ids"] = community_identity_ids
+            return []
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", side_effect=mock_compute),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._get_community_identity_ids", return_value=fox_ids),
+            patch("app.supabase_data.get_community_by_slug", return_value=mock_community),
+        ):
+            response = client.get("/c/fox-family/api/discoveries")
+
+        assert response.status_code == 200
+        assert captured_args.get("community_identity_ids") == fox_ids
+
+    def test_rhodes_discoveries_no_community_prefix(self, client):
+        """Rhodes discoveries uses bare /api/discoveries URLs (no prefix)."""
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=0),
+            patch("app.main._compute_discoveries", return_value=[]),
+        ):
+            response = client.get("/discoveries")
+
+        assert response.status_code == 200
+        html = response.text
+        # Rhodes should use bare URLs (no /c/rhodes/ prefix)
+        assert 'hx-get="/api/discoveries"' in html

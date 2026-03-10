@@ -2860,8 +2860,12 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
     dismissed = rejected + contested
 
     # Photo count: filtered by community when scoped
+    # Use intersection with _photo_cache to avoid counting aliases twice (COMMUNITY-007)
     if community_photo_ids is not None:
-        photo_count = len(community_photo_ids)
+        if _photo_cache:
+            photo_count = len(community_photo_ids & set(_photo_cache.keys()))
+        else:
+            photo_count = len(community_photo_ids)
     else:
         photo_count = len(_photo_cache) if _photo_cache else 0
 
@@ -4427,7 +4431,7 @@ def sidebar(
                 id="notification-badge-sidebar",
                 cls="sidebar-label ml-auto",
             ),
-            href="/notifications",
+            href=f"{prefix}/notifications",
             title="Notifications",
             onclick="closeSidebar()",
             hx_get="/api/notifications/count?target=sidebar",
@@ -4508,21 +4512,28 @@ def sidebar(
     admin_section = (
         Div(
             P("Admin", cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
-            nav_item("/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
             nav_item(
-                "/admin/approvals", "✅", "Approvals", counts.get("pending_annotations", 0), "approvals", "emerald"
+                f"{prefix}/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"
             ),
-            nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
+            nav_item(
+                f"{prefix}/admin/approvals",
+                "✅",
+                "Approvals",
+                counts.get("pending_annotations", 0),
+                "approvals",
+                "emerald",
+            ),
+            nav_item(f"{prefix}/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
             A(
                 Span("🔬", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("Upload Review", cls="sidebar-label ml-2"),
-                href="/admin/upload-review",
+                href=f"{prefix}/admin/upload-review",
                 cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             A(
                 Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("GEDCOM", cls="sidebar-label ml-2"),
-                href="/admin/gedcom",
+                href=f"{prefix}/admin/gedcom",
                 cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             cls="mb-3",

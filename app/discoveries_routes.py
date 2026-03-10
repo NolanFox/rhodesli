@@ -103,8 +103,27 @@ def get(sess=None, request=None):
     counts = _main_mod._compute_sidebar_counts(registry, community=community)
     discovery_count = counts.get("discoveries", 0)
 
-    # Discovery log tier counts
+    # Community URL prefix for HTMX endpoints (must go through middleware for scoping)
+    prefix = _main_mod.community_url_prefix(community_slug)
+
+    # Community identity IDs for scoping
+    community_identity_ids = _main_mod._get_community_identity_ids(community)
+
+    # Discovery log tier counts — filter by community
     tier_1_entries, tier_2_entries = _main_mod._get_pending_discovery_entries()
+    if community_identity_ids is not None:
+        tier_1_entries = [
+            e
+            for e in tier_1_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
+        tier_2_entries = [
+            e
+            for e in tier_2_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
     tier_1_count = len(tier_1_entries)
     tier_2_count = len(tier_2_entries)
 
@@ -229,7 +248,7 @@ def get(sess=None, request=None):
                             Button(
                                 "All",
                                 cls="text-xs px-3 py-1.5 rounded-full bg-slate-600 text-white font-medium min-h-[32px]",
-                                hx_get="/api/discoveries",
+                                hx_get=f"{prefix}/api/discoveries",
                                 hx_target="#discoveries-list",
                                 hx_swap="innerHTML",
                                 hx_include="#discovery-photo-filter",
@@ -239,7 +258,7 @@ def get(sess=None, request=None):
                             Button(
                                 "Strong (70%+)",
                                 cls="text-xs px-3 py-1.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium min-h-[32px]",
-                                hx_get="/api/discoveries?min_confidence=70",
+                                hx_get=f"{prefix}/api/discoveries?min_confidence=70",
                                 hx_target="#discoveries-list",
                                 hx_swap="innerHTML",
                                 hx_include="#discovery-photo-filter",
@@ -249,7 +268,7 @@ def get(sess=None, request=None):
                             Button(
                                 "Possible (50%+)",
                                 cls="text-xs px-3 py-1.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium min-h-[32px]",
-                                hx_get="/api/discoveries?min_confidence=50",
+                                hx_get=f"{prefix}/api/discoveries?min_confidence=50",
                                 hx_target="#discoveries-list",
                                 hx_swap="innerHTML",
                                 hx_include="#discovery-photo-filter",
@@ -265,14 +284,14 @@ def get(sess=None, request=None):
                                 id="discovery-photo-filter",
                                 name="photo_id",
                                 cls="text-xs border border-slate-600 bg-slate-700 text-slate-300 rounded px-2 py-1.5 min-h-[32px]",
-                                hx_get="/api/discoveries",
+                                hx_get=f"{prefix}/api/discoveries",
                                 hx_target="#discoveries-list",
                                 hx_swap="innerHTML",
                                 hx_trigger="change",
                             ),
                             Div(
                                 id="discovery-photo-loader",
-                                hx_get="/api/discoveries/photo-options",
+                                hx_get=f"{prefix}/api/discoveries/photo-options",
                                 hx_trigger="load",
                                 hx_target="#discovery-photo-filter",
                                 hx_swap="innerHTML",
@@ -284,7 +303,7 @@ def get(sess=None, request=None):
                     ),
                     Div(
                         id="discoveries-list",
-                        hx_get="/api/discoveries",
+                        hx_get=f"{prefix}/api/discoveries",
                         hx_trigger="load",
                         hx_swap="innerHTML",
                     ),
@@ -299,7 +318,7 @@ def get(sess=None, request=None):
 
 
 @rt("/api/discoveries")
-def get(sess=None, photo_id: str = "", min_confidence: int = 0):
+def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     """HTMX endpoint: render discovery cards for the discoveries page.
 
     Merges two sources:
@@ -307,6 +326,7 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
     2. Discovery log (data/discovery_log.json) — Tier 2 suggestions from auto-clustering
 
     Shows cards with tier labels and appropriate actions (AD-179).
+    Community-scoped via request.state.community (set by CommunityMiddleware).
 
     Filter params:
       photo_id: filter to discoveries whose source face is in this photo
@@ -318,12 +338,30 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
 
     from core.confidence import compute_confidence_pct
 
+    # Extract community context for scoping
+    community = getattr(request.state, "community", None) if request else None
+    community_identity_ids = _main_mod._get_community_identity_ids(community)
+
     registry = _main_mod.load_registry()
-    discoveries = _main_mod._compute_discoveries(registry)
+    discoveries = _main_mod._compute_discoveries(registry, community_identity_ids=community_identity_ids)
     crop_files = _main_mod.get_crop_files()
 
     # Merge discovery_log Tier 2 entries that aren't in dynamic discoveries
     tier_1_entries, tier_2_entries = _main_mod._get_pending_discovery_entries()
+    # Filter discovery log entries by community
+    if community_identity_ids is not None:
+        tier_1_entries = [
+            e
+            for e in tier_1_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
+        tier_2_entries = [
+            e
+            for e in tier_2_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
     dynamic_source_ids = {d["source_id"] for d in discoveries}
 
     for entry in tier_2_entries:
@@ -513,18 +551,36 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
 
 
 @rt("/api/discoveries/photo-options")
-def get(sess=None):
+def get(sess=None, request=None):
     """HTMX endpoint: populate the photo filter dropdown for discoveries.
 
     Returns Option elements listing all unique photos that have discovery matches.
+    Community-scoped via request.state.community.
     """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
+    # Extract community context for scoping
+    community = getattr(request.state, "community", None) if request else None
+    community_identity_ids = _main_mod._get_community_identity_ids(community)
+
     registry = _main_mod.load_registry()
-    discoveries = _main_mod._compute_discoveries(registry)
+    discoveries = _main_mod._compute_discoveries(registry, community_identity_ids=community_identity_ids)
     tier_1_entries, tier_2_entries = _main_mod._get_pending_discovery_entries()
+    if community_identity_ids is not None:
+        tier_1_entries = [
+            e
+            for e in tier_1_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
+        tier_2_entries = [
+            e
+            for e in tier_2_entries
+            if e.get("source_identity_id") in community_identity_ids
+            or e.get("target_identity_id") in community_identity_ids
+        ]
 
     # Collect all source identity IDs
     source_ids = {d["source_id"] for d in discoveries}
