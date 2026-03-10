@@ -67,9 +67,16 @@ All 4 continuations of session 96c complete:
 - [MEDIUM] Proposals count shows 0 despite 35 valid proposals in proposals.json
 - [MEDIUM] Admin page headers show "Rhodesli" instead of "Fox Family Archive"
 
-## Next Session Should Verify
-1. Verify cross-community discoveries show Betty Capeluto + Ray Franco after deploy
-2. Wire proposals.json into Fox Family sidebar (COMMUNITY-010)
-3. Community-scope cluster review page (COMMUNITY-011)
-4. Fix COMMUNITY-007/008 sidebar counts
-5. Make To Review section show proposal matches inline (not flat 1602 list)
+## Overall Session 96c-cont4 Verdict: PARTIAL FAIL
+Discoveries fixed (community-scoped, cross-community matching, pagination). But Fox Family remains unusable — clustering data exists but isn't surfaced, sidebar counts wrong, admin headers wrong, no proposal info on cards. User blocked.
+
+### Lessons Learned (108-110)
+- 108: Performance filters must preserve cross-community matching
+- 109: CommunityMiddleware /api/ skip creates dual-path problem
+- 110: Existing data not surfaced is worse than missing data
+
+## Session 96d — Fix Everything
+Prompt: `docs/prompts/session-96d-prompt.md`
+Context: `docs/session_context/session-96d-context.md`
+BACKLOG: COMMUNITY-007 through COMMUNITY-013
+ALL 7 bugs must be fixed, browser-verified, no deferrals.

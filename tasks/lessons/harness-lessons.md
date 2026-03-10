@@ -95,3 +95,18 @@
 - **Mistake:** Session 96 — extensive research was done on the upload pipeline (cross-community matching mechanics, clustering behavior for Betty/Roland, GEDCOM-first workflow rationale, automated vs manual pipeline steps). Prompt was written but research only existed in conversation context. User had to ask 3 times for proper documentation. Context file, AD entries, and ROADMAP items were created retroactively.
 - **Rule:** The prompt is the LAST artifact, not the first. The correct order is: Research → Decisions (AD entries) → Context file → ROADMAP/BACKLOG items → THEN write the prompt. Never write a prompt that references decisions or research that isn't already persisted in a file.
 - **Prevention:** `.claude/rules/session-prep-checklist.md` — mandatory checklist before creating any prompt file. Context file must include all research findings, cross-feature implications, known gaps, and pipeline analysis. AD entries must exist for any algorithmic or architectural decisions.
+
+## Lesson 108: Performance Filters Must Preserve Cross-Community Matching
+- **Mistake:** Session 96c-cont4 — early community filter in `_compute_discoveries()` also filtered `confirmed_list`, which broke Fox Family → Rhodes cross-community matching. Betty Capeluto and Ray Franco disappeared from Fox Family discoveries because they were Rhodes-only confirmed identities.
+- **Rule:** When adding community scope filters for performance, only filter the SOURCE entities (unreviewed faces) by community. Keep TARGET entities (confirmed identities) global — cross-community matching is a core feature.
+- **Prevention:** Any community filter on confirmed/target lists must be reviewed against the cross-community matching requirement. Test both same-community AND cross-community discovery scenarios.
+
+## Lesson 109: CommunityMiddleware /api/ Skip Creates Dual-Path Problem
+- **Mistake:** Session 96c-cont4 — bare `/api/` paths bypass CommunityMiddleware (line 465), so `request.state.community=None`. This caused discoveries timeout (no community filter → ALL identities computed) and required a Rhodes fallback hack.
+- **Rule:** Routes called via HTMX must receive community context. Two strategies: (1) HTMX URLs include `/c/{slug}/` prefix (middleware processes them), or (2) Routes fall back to default community when `request.state.community` is None. Prefer (1) — the JS rewriter handles this client-side.
+- **Prevention:** When adding new HTMX endpoints, verify the URL includes community prefix. Test from both Rhodes (bare URLs) and non-Rhodes (prefixed URLs) communities.
+
+## Lesson 110: Existing Data Not Surfaced Is Worse Than Missing Data
+- **Mistake:** Session 96c-cont4 — auto-clustering ran correctly, producing 35 proposals (30 Roland Fox, 4 Betty Capeluto Fox, 1 Ray Franco). But the UI showed "0 Proposals" and user concluded "clustering is completely missing." Hours of debugging ensued for what was purely a UI surfacing gap.
+- **Rule:** When a data pipeline produces results, the SAME session must verify they appear in the UI. A pipeline that produces results nobody can see is functionally broken. "Data exists in file X" is not shipped — "user sees data in the app" is shipped.
+- **Prevention:** Feature Reality Contract (FRC) check: "Data exists? → App loads it? → Route exposes it? → UI renders it?" All 4 must pass for the SPECIFIC community/context the user will view.

@@ -14,9 +14,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ## Active Bugs
 
-### P1 — Community Scoping Gaps (Session 96c-cont4)
-- **COMMUNITY-007**: Fox Family sidebar counts not community-scoped — Photos shows 1271 (global), Discoveries shows 907 (global), New Matches shows 1602 (global). Content areas correctly scoped. Fix: `_compute_sidebar_counts()` needs community filter for these three counts. Source: Session 96c-cont4 browser verification.
-- **COMMUNITY-008**: Fox Family bottom nav bar uses `/?section=...` instead of `/c/fox-family/?section=...` — clicking bottom nav from Fox Family context navigates to Rhodes. Fix: bottom nav must respect community prefix. Source: Session 96c-cont4 browser verification.
+### P0 — Fox Family Unusable (Session 96c-cont4 + 96d)
+- **COMMUNITY-007**: Fox Family sidebar counts not community-scoped — Photos showed 1271 (global), Discoveries showed 907 (global). Discoveries fixed to 182 (96c-cont4 continuation). Remaining: New Matches count, People count. Fix: `_compute_sidebar_counts()` needs community filter.
+- **COMMUNITY-008**: Fox Family bottom nav bar uses `/?section=...` instead of `/c/fox-family/?section=...` — clicking bottom nav from Fox Family context navigates to Rhodes. Fix: bottom nav must respect community prefix.
+- **COMMUNITY-009**: Upload Review + GEDCOM triage pages not discoverable — `/admin/upload-review` and `/admin/gedcom-triage` exist but aren't in sidebar nav for Fox Family. User couldn't find post-upload review pages. Fix: add to sidebar under Admin section.
+- **COMMUNITY-010**: Proposals not surfaced in Fox Family sidebar — 35 valid proposals exist in `proposals.json` (30 Roland Fox, 4 Betty Capeluto Fox, 1 Ray Franco) but sidebar shows "0 Proposals". Fix: sidebar count must include proposals.json data, community-scoped.
+- **COMMUNITY-011**: Cluster review page not community-scoped — `/admin/upload-review` loads global proposals.json without community filter. Fix: add community filtering to `_load_proposals()`.
+- **COMMUNITY-012**: To Review section shows flat 1602 faces — no proposal grouping visible. Faces with proposals should show match suggestions inline (e.g., "This face matches Betty Capeluto Fox at 73% confidence"). Fix: render proposal match info on identity cards in To Review.
+- **COMMUNITY-013**: Admin page headers show "Rhodesli" instead of community name — `/admin/pending`, `/admin/approvals` etc. don't read community context for branding. Fix: pass community name to admin page templates.
 
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
