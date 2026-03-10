@@ -117,10 +117,11 @@ See also: `docs/DEPLOYMENT_GUIDE.md`, `docs/ops/OPS_DECISIONS.md`
 - **Mistake**: Railway deprecated `us-west1` region. A banner appeared: "The deployment configuration was automatically modified to ignore deprecated regions." After this, ALL GitHub-triggered deploys (via `git push`) started using `RAILPACK` builder instead of `DOCKERFILE`, ignoring `railway.toml` entirely. Deploys stuck in QUEUED/INITIALIZING indefinitely. The site stayed on the last successful deploy but no new code could ship. Three consecutive GitHub pushes all failed the same way.
 - **Rule**: When Railway deprecates a region or modifies deployment config, GitHub-triggered deploys may silently lose their `railway.toml` settings. Symptoms: (1) deploy stuck in QUEUED, (2) deploy metadata shows `builder: "RAILPACK"` instead of `"DOCKERFILE"`, (3) no `configFile` field in deploy metadata, (4) no `healthcheckPath`. If GitHub deploys are stuck, use `railway deploy` CLI as immediate workaround — it reads `railway.toml` locally and works correctly.
 - **Prevention**:
-  1. **Immediate**: Run `railway deploy` from project root (reads railway.toml, bypasses GitHub integration bug)
-  2. **Permanent**: In Railway dashboard → Settings → Build, explicitly set Builder to "Dockerfile" and Dockerfile Path to "Dockerfile". This overrides the service-level default that GitHub deploys fall back to.
-  3. **Region**: Update region from deprecated to replacement (e.g., us-west1 → us-west2) in Settings
-  4. **Diagnosis**: Check deploy metadata via `mcp__railway-mcp-server__list-deployments` with `json: true` — compare `builder` field between working and broken deploys
+  1. **Deploy method**: Use `railway deploy` from project root instead of relying on GitHub auto-deploy. The CLI reads `railway.toml` locally and always works correctly.
+  2. **Dashboard settings do NOT persist**: Setting Builder to Dockerfile in Settings → Build reverts to Railpack on every deploy. Config-as-code path also ineffective. This is a Railway platform bug (2026-03-10).
+  3. **Region**: Keep region updated (us-west2 as of 2026-03-10) to avoid deprecation issues.
+  4. **Diagnosis**: Check deploy metadata via `mcp__railway-mcp-server__list-deployments` with `json: true` — if `builder` is `"RAILPACK"` instead of `"DOCKERFILE"`, the deploy will fail. Cancel it and use CLI.
+  5. **Stuck QUEUED deploys**: Remove via three-dot menu in Railway dashboard. They will never build.
 - **See also**: OD-010 in docs/ops/OPS_DECISIONS.md
 
 ### Lesson 71: has_insightface check must probe actual deferred imports, not just function references

@@ -100,9 +100,19 @@ This document records deployment, infrastructure, and operational decisions for 
 - **Fix applied**:
   1. Immediate: `railway deploy` from CLI to get site running
   2. Region updated: us-west1 → us-west2 in Railway Settings
-  3. Builder setting: Set explicitly to DOCKERFILE in Railway Settings → Build (pending confirmation)
-- **Workaround for future occurrences**: If GitHub deploys are stuck, run `railway deploy` from
-  the project root. This always works because it reads `railway.toml` locally.
+  3. Dashboard builder setting did not persist during the incident — setting Dockerfile in
+     Settings → Build reverted to Railpack on every deploy. This may be caused by Railway's
+     "Deployment slowness" incident (status.railway.com, 2026-03-10 11:19 AM) rather than a
+     permanent bug. Retry after incident resolves.
+- **Current deploy method**: `railway deploy` from project root works reliably during incidents.
+  GitHub auto-deploy via `git push` may break during Railway infrastructure incidents (deploys
+  stuck in QUEUED, builder reverting to Railpack). Retry GitHub deploys after incident resolves.
+  The CLI reads `railway.toml` locally and sends correct config every time.
+- **Diagnosis checklist** (if deploys break again):
+  1. `mcp__railway-mcp-server__list-deployments` with `json: true`
+  2. Check `builder` field — should be `"DOCKERFILE"`, if `"RAILPACK"` → broken
+  3. Check for `configFile: "railway.toml"` — present = good, absent = GitHub integration broken
+  4. Workaround: `railway deploy` from project root
 - **Breadcrumbs**: Lesson 117 in tasks/lessons/deployment-lessons.md
 
 ## OD-008: Dev vs Production Environment Separation

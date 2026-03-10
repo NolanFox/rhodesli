@@ -18,9 +18,14 @@
 - Person detail pages return 200 for valid IDs, 404 for invalid
 - No console errors in HTMX responses
 
-## Deploy monitoring
-- After `git push` or `railway up`, check deploy status within 5 minutes
+## Deploy method
+- **Primary**: `railway deploy` from project root (reads railway.toml, always works)
+- **Fallback**: `git push` triggers GitHub auto-deploy, but may fail during Railway incidents
+  (builder reverts to Railpack, deploys stuck in QUEUED — see OD-010)
+- Check status.railway.com if GitHub deploys are stuck
+- After `railway deploy`, check deploy status within 5 minutes
 - Use: `mcp__railway-mcp-server__list-deployments` (JSON mode, limit 2)
+- Verify `builder` field is `"DOCKERFILE"` — if `"RAILPACK"`, deploy is broken
 - If deploy is QUEUED or INITIALIZING for >5 min, check Railway status:
   - Use: `WebFetch https://status.railway.com` or ask user to check
   - Railway status page: https://status.railway.com
