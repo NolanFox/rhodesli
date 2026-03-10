@@ -6256,16 +6256,22 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
     if registry is None:
         registry = load_registry()
 
-    # Cache key: count of inbox + proposed + confirmed
+    # Cache key: count of inbox + proposed + confirmed + community scope
     inbox = registry.list_identities(state=IdentityState.INBOX)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
-    cache_key = (len(inbox), len(proposed), len(confirmed_list))
+    community_key = frozenset(community_identity_ids) if community_identity_ids is not None else None
+    cache_key = (len(inbox), len(proposed), len(confirmed_list), community_key)
 
     if _discovery_cache is not None and _discovery_cache_key == cache_key:
         return _discovery_cache
 
     unreviewed = inbox + proposed
+
+    # Filter to community scope BEFORE expensive computation (performance critical)
+    if community_identity_ids is not None:
+        unreviewed = [u for u in unreviewed if u["identity_id"] in community_identity_ids]
+        confirmed_list = [c for c in confirmed_list if c["identity_id"] in community_identity_ids]
     if not unreviewed or not confirmed_list:
         _discovery_cache = []
         _discovery_cache_key = cache_key
@@ -6343,14 +6349,7 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
     _discovery_cache = discoveries
     _discovery_cache_key = cache_key
 
-    # Filter by community if scoped (AD-216: show discoveries where source OR target is in community)
-    if community_identity_ids is not None:
-        discoveries = [
-            d
-            for d in discoveries
-            if d["source_id"] in community_identity_ids or d["target_id"] in community_identity_ids
-        ]
-
+    # Community filtering already applied to unreviewed+confirmed lists before computation
     return discoveries
 
 
