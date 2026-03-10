@@ -6387,7 +6387,9 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
         needs_computation.append(identity)
 
     # For the rest, use batch neighbor computation filtered to confirmed targets
-    if needs_computation:
+    # Cap at 200 to prevent server timeout on large archives (Fox Family has 1600+)
+    MAX_BATCH_DISCOVERY = 200
+    if needs_computation and len(needs_computation) <= MAX_BATCH_DISCOVERY:
         try:
             from core.neighbors import batch_best_neighbor_distances
 
@@ -6415,6 +6417,11 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
                     )
         except (ImportError, Exception) as e:
             logging.warning(f"[discoveries] Batch neighbor computation failed: {e}")
+    elif needs_computation:
+        logging.info(
+            f"[discoveries] Skipping batch computation for {len(needs_computation)} identities "
+            f"(>{MAX_BATCH_DISCOVERY} cap). Run clustering pipeline to generate proposals."
+        )
 
     # Batch-compute co-occurrence for all discoveries (cheaper than per-card)
     try:
@@ -8116,15 +8123,19 @@ def neighbor_card(
     # Determine the correct section for this neighbor based on its state
     neighbor_section = _section_for_state(neighbor.get("state", "INBOX"))
 
+    # Community-aware navigation prefix (COMMUNITY-015)
+    _community_slug = current_community.get("slug") if current_community else None
+    _nav_prefix = community_url_prefix(_community_slug)
+
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
-    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
 
     return Div(
         Div(
             checkbox,
             A(
                 thumbnail_img,
-                href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
                 cls="flex-shrink-0 cursor-pointer hover:opacity-80",
                 **{"_": nav_script},
             ),
@@ -8132,7 +8143,7 @@ def neighbor_card(
                 Div(
                     A(
                         name,
-                        href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                        href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
                         cls="font-medium text-slate-200 hover:text-blue-400 hover:underline cursor-pointer text-sm leading-tight",
                         **{"_": nav_script},
                     ),
