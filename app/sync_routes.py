@@ -511,3 +511,40 @@ def _prune_bak_files(directory: Path, max_keep: int = 3):
                 logging.info(f"Pruned old backup: {old_file.name}")
             except OSError:
                 pass
+
+
+@rt("/api/sync/resync-supabase")
+async def post(request, sess):
+    """Re-sync JSON data to Supabase. Admin-only.
+
+    Reads identities.json and photo_index.json from the volume,
+    then upserts ALL records to Supabase. Fixes missing dimensions,
+    uploaded_by, and other fields that failed to sync due to BUG-1.
+    Session 96e-cont6.
+    """
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    try:
+        from core.registry import IdentityRegistry
+        from core.photo_registry import PhotoRegistry
+        from app.supabase_data import shadow_write_photos_batch, shadow_write_identities_batch
+
+        data_path = _main_mod.data_path
+        json_registry = IdentityRegistry.load(data_path / "identities.json")
+        json_photo_reg = PhotoRegistry.load(data_path / "photo_index.json")
+
+        photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
+        shadow_write_photos_batch(photo_items)
+
+        id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
+        shadow_write_identities_batch(id_items)
+
+        return {
+            "status": "ok",
+            "photos_synced": len(photo_items),
+            "identities_synced": len(id_items),
+        }
+    except Exception as e:
+        return Response(f"Sync error: {e}", status_code=500)
