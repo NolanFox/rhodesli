@@ -1814,6 +1814,7 @@ def get(
         )
 
     # Render the appropriate section
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     if section == "to_review":
         main_content = _main_mod.render_to_review_section(
             to_review,
@@ -1824,10 +1825,11 @@ def get(
             is_admin=user_is_admin,
             sort_by=sort_by,
             triage_filter=filter,
+            nav_prefix=nav_prefix,
         )
     elif section == "confirmed":
         main_content = _main_mod.render_confirmed_section(
-            confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by
+            confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by, nav_prefix=nav_prefix
         )
     elif section == "skipped":
         skipped_view = view if view in ("focus", "browse") else "focus"

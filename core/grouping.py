@@ -66,34 +66,50 @@ def group_faces(faces: list[dict]) -> list[list[dict]]:
     # distances[i][j] = distance between face i and face j
     distances = cdist(embeddings, embeddings, metric="euclidean")
 
-    # Union-Find data structure for transitive grouping
-    parent = list(range(n))
-
-    def find(x: int) -> int:
-        """Find root with path compression."""
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(x: int, y: int) -> None:
-        """Union two sets."""
-        px, py = find(x), find(y)
-        if px != py:
-            parent[px] = py
-
-    # Group faces below threshold
+    # Complete-linkage clustering: only merge groups if ALL inter-group
+    # distances are below threshold. Prevents transitive snowball clusters.
+    close_pairs = []
     for i in range(n):
         for j in range(i + 1, n):
             if distances[i][j] < GROUPING_THRESHOLD:
-                union(i, j)
+                close_pairs.append((i, j, distances[i][j]))
 
-    # Collect groups by root
+    close_pairs.sort(key=lambda x: x[2])
+
+    groups = {i: {i} for i in range(n)}
+    item_group = {i: i for i in range(n)}
+
+    for i, j, dist in close_pairs:
+        gi, gj = item_group[i], item_group[j]
+        if gi == gj:
+            continue
+
+        members_i = groups[gi]
+        members_j = groups[gj]
+
+        # Complete linkage: ALL inter-group pairs must be below threshold
+        can_merge = True
+        for mi in members_i:
+            for mj in members_j:
+                if distances[mi][mj] >= GROUPING_THRESHOLD:
+                    can_merge = False
+                    break
+            if not can_merge:
+                break
+
+        if can_merge:
+            if len(members_j) > len(members_i):
+                gi, gj = gj, gi
+                members_i, members_j = members_j, members_i
+            for m in members_j:
+                item_group[m] = gi
+            members_i.update(members_j)
+            del groups[gj]
+
+    # Collect groups
     groups_by_root: dict[int, list[dict]] = {}
-    for i in range(n):
-        root = find(i)
-        if root not in groups_by_root:
-            groups_by_root[root] = []
-        groups_by_root[root].append(faces[i])
+    for gid, members in groups.items():
+        groups_by_root[gid] = [faces[i] for i in members]
 
     return list(groups_by_root.values())
 
@@ -156,12 +172,14 @@ def group_inbox_identities(
         if not embeddings:
             continue
 
-        inbox_items.append({
-            "identity_id": iid,
-            "name": identity.get("name", ""),
-            "face_ids": valid_fids,
-            "embeddings": np.vstack(embeddings),
-        })
+        inbox_items.append(
+            {
+                "identity_id": iid,
+                "name": identity.get("name", ""),
+                "face_ids": valid_fids,
+                "embeddings": np.vstack(embeddings),
+            }
+        )
 
     n = len(inbox_items)
     identities_before = n
@@ -177,20 +195,14 @@ def group_inbox_identities(
             "skipped_co_occurrence": 0,
         }
 
-    # 2. Pairwise min-distances between identities (best linkage, AD-001)
-    parent = list(range(n))
+    # 2. Pairwise min-distances between identities (complete linkage)
+    # Complete linkage: only merge two groups if ALL inter-group pairwise
+    # distances are below threshold. Prevents transitive snowball clusters
+    # where A↔B and B↔C are close but A↔C is far.
     pair_distances = {}  # (i, j) -> min_distance for reporting
 
-    def find(x: int) -> int:
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(x: int, y: int) -> None:
-        px, py = find(x), find(y)
-        if px != py:
-            parent[px] = py
-
+    # Pre-compute all pairwise min distances
+    close_pairs = []  # (i, j, min_dist) where min_dist < threshold
     for i in range(n):
         for j in range(i + 1, n):
             dists = cdist(
@@ -199,17 +211,50 @@ def group_inbox_identities(
                 metric="euclidean",
             )
             min_dist = float(np.min(dists))
+            pair_distances[(i, j)] = min_dist
             if min_dist < threshold:
-                pair_distances[(i, j)] = min_dist
-                union(i, j)
+                close_pairs.append((i, j, min_dist))
 
-    # 3. Collect groups
-    groups_by_root = defaultdict(list)
-    for i in range(n):
-        root = find(i)
-        groups_by_root[root].append(i)
+    # Sort by distance (closest first) for greedy agglomeration
+    close_pairs.sort(key=lambda x: x[2])
 
-    multi_groups = [indices for indices in groups_by_root.values() if len(indices) > 1]
+    # Complete-linkage agglomerative clustering
+    # Each item starts in its own group
+    groups = {i: {i} for i in range(n)}  # group_id -> set of member indices
+    item_group = {i: i for i in range(n)}  # item -> group_id
+
+    for i, j, dist in close_pairs:
+        gi, gj = item_group[i], item_group[j]
+        if gi == gj:
+            continue  # Already in same group
+
+        members_i = groups[gi]
+        members_j = groups[gj]
+
+        # Complete linkage check: ALL inter-group pairs must be below threshold
+        can_merge = True
+        for mi in members_i:
+            for mj in members_j:
+                key = (min(mi, mj), max(mi, mj))
+                d = pair_distances.get(key)
+                if d is None or d >= threshold:
+                    can_merge = False
+                    break
+            if not can_merge:
+                break
+
+        if can_merge:
+            # Merge smaller group into larger
+            if len(members_j) > len(members_i):
+                gi, gj = gj, gi
+                members_i, members_j = members_j, members_i
+            # Move all members of gj into gi
+            for m in members_j:
+                item_group[m] = gi
+            members_i.update(members_j)
+            del groups[gj]
+
+    multi_groups = [list(members) for members in groups.values() if len(members) > 1]
 
     if not multi_groups:
         return {
@@ -235,9 +280,7 @@ def group_inbox_identities(
 
     for group_indices in multi_groups:
         # Sort by face count descending (most faces = primary)
-        group_indices.sort(
-            key=lambda i: len(inbox_items[i]["face_ids"]), reverse=True
-        )
+        group_indices.sort(key=lambda i: len(inbox_items[i]["face_ids"]), reverse=True)
 
         primary_idx = group_indices[0]
         primary = inbox_items[primary_idx]
@@ -246,8 +289,7 @@ def group_inbox_identities(
         intra_dists = []
         for a in range(len(group_indices)):
             for b in range(a + 1, len(group_indices)):
-                key = (min(group_indices[a], group_indices[b]),
-                       max(group_indices[a], group_indices[b]))
+                key = (min(group_indices[a], group_indices[b]), max(group_indices[a], group_indices[b]))
                 if key in pair_distances:
                     intra_dists.append(pair_distances[key])
 
@@ -368,14 +410,16 @@ def group_all_unresolved(
             elif original_state == "SKIPPED":
                 skipped_count += 1
 
-            items.append({
-                "identity_id": iid,
-                "name": identity.get("name", ""),
-                "face_ids": valid_fids,
-                "embeddings": np.vstack(embeddings),
-                "original_state": original_state,
-                "negative_ids": negative_ids,
-            })
+            items.append(
+                {
+                    "identity_id": iid,
+                    "name": identity.get("name", ""),
+                    "face_ids": valid_fids,
+                    "embeddings": np.vstack(embeddings),
+                    "original_state": original_state,
+                    "negative_ids": negative_ids,
+                }
+            )
 
     n = len(items)
     identities_before = n
@@ -397,19 +441,10 @@ def group_all_unresolved(
         return empty_result
 
     # 2. Pairwise min-distances with co-occurrence block checking
-    parent = list(range(n))
+    # Complete linkage: only merge groups if ALL inter-group distances < threshold
     pair_distances = {}
 
-    def find(x: int) -> int:
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(x: int, y: int) -> None:
-        px, py = find(x), find(y)
-        if px != py:
-            parent[px] = py
-
+    close_pairs = []
     for i in range(n):
         for j in range(i + 1, n):
             # Check co-occurrence blocks (negative_ids with identity: prefix)
@@ -426,17 +461,47 @@ def group_all_unresolved(
                 metric="euclidean",
             )
             min_dist = float(np.min(dists))
+            pair_distances[(i, j)] = min_dist
             if min_dist < threshold:
-                pair_distances[(i, j)] = min_dist
-                union(i, j)
+                close_pairs.append((i, j, min_dist))
 
-    # 3. Collect groups
-    groups_by_root = defaultdict(list)
-    for i in range(n):
-        root = find(i)
-        groups_by_root[root].append(i)
+    # Sort by distance (closest first) for greedy agglomeration
+    close_pairs.sort(key=lambda x: x[2])
 
-    multi_groups = [indices for indices in groups_by_root.values() if len(indices) > 1]
+    # Complete-linkage agglomerative clustering
+    groups = {i: {i} for i in range(n)}
+    item_group = {i: i for i in range(n)}
+
+    for i, j, dist in close_pairs:
+        gi, gj = item_group[i], item_group[j]
+        if gi == gj:
+            continue
+
+        members_i = groups[gi]
+        members_j = groups[gj]
+
+        # Complete linkage: ALL inter-group pairs must be below threshold
+        can_merge = True
+        for mi in members_i:
+            for mj in members_j:
+                key = (min(mi, mj), max(mi, mj))
+                d = pair_distances.get(key)
+                if d is None or d >= threshold:
+                    can_merge = False
+                    break
+            if not can_merge:
+                break
+
+        if can_merge:
+            if len(members_j) > len(members_i):
+                gi, gj = gj, gi
+                members_i, members_j = members_j, members_i
+            for m in members_j:
+                item_group[m] = gi
+            members_i.update(members_j)
+            del groups[gj]
+
+    multi_groups = [list(members) for members in groups.values() if len(members) > 1]
 
     if not multi_groups:
         return empty_result
@@ -459,9 +524,7 @@ def group_all_unresolved(
 
     for group_indices in multi_groups:
         # Sort by face count descending (most faces = primary)
-        group_indices.sort(
-            key=lambda i: len(items[i]["face_ids"]), reverse=True
-        )
+        group_indices.sort(key=lambda i: len(items[i]["face_ids"]), reverse=True)
 
         primary_idx = group_indices[0]
         primary = items[primary_idx]
@@ -482,18 +545,19 @@ def group_all_unresolved(
                 else:
                     reason = "group_discovery"
 
-                results["promotions"].append({
-                    "identity_id": item["identity_id"],
-                    "name": item["name"],
-                    "reason": reason,
-                })
+                results["promotions"].append(
+                    {
+                        "identity_id": item["identity_id"],
+                        "name": item["name"],
+                        "reason": reason,
+                    }
+                )
 
         # Compute average intra-group distance
         intra_dists = []
         for a in range(len(group_indices)):
             for b in range(a + 1, len(group_indices)):
-                key = (min(group_indices[a], group_indices[b]),
-                       max(group_indices[a], group_indices[b]))
+                key = (min(group_indices[a], group_indices[b]), max(group_indices[a], group_indices[b]))
                 if key in pair_distances:
                     intra_dists.append(pair_distances[key])
 
@@ -530,7 +594,9 @@ def group_all_unresolved(
                             identity["promotion_context"] = f"Matches with {others_str} from recently uploaded photos"
                         else:
                             identity["promotion_reason"] = "group_discovery"
-                            identity["promotion_context"] = f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
+                            identity["promotion_context"] = (
+                                f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
+                            )
 
             # Now merge members into primary
             for other_idx in member_indices:
@@ -565,7 +631,9 @@ def group_all_unresolved(
                     primary_identity["promotion_context"] = f"Matches with {others_str} from recently uploaded photos"
                 else:
                     primary_identity["promotion_reason"] = "group_discovery"
-                    primary_identity["promotion_context"] = f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
+                    primary_identity["promotion_context"] = (
+                        f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
+                    )
 
     results["identities_after"] = identities_before - results["total_merged"]
     return results

@@ -146,8 +146,8 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
-        assert "Cluster Review" in html
-        assert "3 faces matched to 2 identities" in html
+        assert "Proposal Matches" in html or "Grouped Identities" in html
+        # Proposals filtered to distance < 1.05 (Medium+ confidence)
 
     def test_page_shows_identity_groups(self):
         client = _get_test_client()
@@ -224,7 +224,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_crop_url())
             resp = client.get("/admin/upload-review")
         html = resp.text
-        assert "No pending cluster matches to review" in html
+        assert "No high-confidence proposal matches to review" in html
 
     def test_weakest_matches_shown_first(self):
         """AD-215: Weakest confidence (most likely false positive) at top."""

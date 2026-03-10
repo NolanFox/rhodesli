@@ -5279,6 +5279,7 @@ def render_to_review_section(
     is_admin: bool = True,
     sort_by: str = "newest",
     triage_filter: str = "",
+    nav_prefix: str = "",
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
@@ -5517,7 +5518,7 @@ def render_to_review_section(
         return Div(
             Div(
                 header,
-                _sort_control("to_review", sort_by, view_mode=view_mode),
+                _sort_control("to_review", sort_by, view_mode=view_mode, nav_prefix=nav_prefix),
                 cls="flex items-center justify-between flex-wrap gap-2 mb-6",
             ),
             search_filter,
@@ -5528,7 +5529,7 @@ def render_to_review_section(
     return Div(header, triage_bar, content, cls="space-y-6")
 
 
-def _sort_control(section: str, current_sort: str, view_mode: str = None) -> Div:
+def _sort_control(section: str, current_sort: str, view_mode: str = None, nav_prefix: str = "") -> Div:
     """Render sort control buttons for a section."""
     options = [
         ("name", "A-Z"),
@@ -5544,12 +5545,12 @@ def _sort_control(section: str, current_sort: str, view_mode: str = None) -> Div
             cls += "bg-slate-600 text-white"
         else:
             cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-        buttons.append(A(label, href=f"/?section={section}&sort_by={value}{view_param}", cls=cls))
+        buttons.append(A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}", cls=cls))
     return Div(Span("Sort:", cls="text-xs text-slate-500 mr-1"), *buttons, cls="flex items-center gap-1")
 
 
 def render_confirmed_section(
-    confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name"
+    confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name", nav_prefix: str = ""
 ) -> Div:
     """Render the Confirmed section with optional sorting."""
     # Apply sorting
@@ -5581,7 +5582,7 @@ def render_confirmed_section(
     return Div(
         Div(
             section_header("People", f"{counts['confirmed']} identified \u2014 click anyone to see all their photos"),
-            _sort_control("confirmed", sort_by, view_mode="browse"),
+            _sort_control("confirmed", sort_by, view_mode="browse", nav_prefix=nav_prefix),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6",
         ),
         content,
@@ -8938,11 +8939,15 @@ def identity_card(
     )
 
     # Name + state row
+    # For "Unidentified Person NNNN", show "Person NNNN" to prevent truncation
+    display_name = name
+    if name.startswith("Unidentified Person "):
+        display_name = "Person " + name[len("Unidentified Person ") :]
     name_section = Div(
         A(
-            name,
+            display_name,
             href=person_href,
-            cls="text-base font-semibold text-slate-100 hover:text-amber-300 transition-colors block truncate",
+            cls="text-sm font-semibold text-slate-100 hover:text-amber-300 transition-colors block truncate",
             title=name,
         ),
         Div(

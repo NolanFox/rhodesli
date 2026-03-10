@@ -296,10 +296,106 @@ def get(sess=None, request=None):
                 or p.get("target_identity_id") in community_identity_ids
             ]
 
+    # Filter to Medium+ confidence only (distance < 1.05) — Low confidence matches are garbage
+    proposals = [p for p in proposals if p.get("distance", 999) < 1.05]
+
     # Compute nav prefix for community-scoped links (COMMUNITY-016)
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_prefix = _main_mod.community_url_prefix(community_slug)
 
+    # --- Section 1: Grouped Identities (multi-face clusters from grouping) ---
+    registry = _main_mod.load_registry()
+    identities = registry._identities if hasattr(registry, "_identities") else {}
+
+    # Get community-filtered identities
+    if community and community_identity_ids is not None:
+        filtered_ids = {iid: idata for iid, idata in identities.items() if iid in community_identity_ids}
+    else:
+        filtered_ids = identities
+
+    # Find multi-face INBOX identities (clusters from grouping)
+    clusters = []
+    for iid, idata in filtered_ids.items():
+        if idata.get("merged_into"):
+            continue
+        if idata.get("state") != "INBOX":
+            continue
+        all_faces = idata.get("anchor_ids", []) + idata.get("candidate_ids", [])
+        if len(all_faces) >= 2:
+            clusters.append((iid, idata.get("name", "Unknown"), len(all_faces)))
+
+    clusters.sort(key=lambda x: -x[2])  # Most faces first
+
+    if clusters:
+        cluster_cards = []
+        for iid, cname, face_count in clusters[:50]:
+            # Get crop URL for thumbnail
+            idata = filtered_ids[iid]
+            anchor_crop_url = None
+            anchors = idata.get("anchor_ids", [])
+            if anchors:
+                first = anchors[0]
+                if isinstance(first, dict):
+                    first = first.get("face_id", str(first))
+                anchor_crop_url = _get_crop_url_for_face(first)
+
+            display_name = cname
+            if cname.startswith("Unidentified Person "):
+                display_name = "Person " + cname[len("Unidentified Person ") :]
+
+            cluster_cards.append(
+                A(
+                    Div(
+                        Img(
+                            src=anchor_crop_url,
+                            alt=display_name,
+                            cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
+                            loading="lazy",
+                        )
+                        if anchor_crop_url
+                        else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
+                        Div(
+                            H4(display_name, cls="text-sm font-semibold text-white truncate", title=cname),
+                            P(
+                                f"{face_count} face{'s' if face_count != 1 else ''}",
+                                cls="text-xs text-slate-400",
+                            ),
+                            cls="ml-3 flex-1 min-w-0",
+                        ),
+                        Span(
+                            str(face_count),
+                            cls="w-8 h-8 flex items-center justify-center bg-purple-600/80 text-white"
+                            " text-xs font-bold rounded-full flex-shrink-0",
+                        ),
+                        cls="flex items-center p-3 bg-slate-800/60 border border-slate-700 rounded-lg"
+                        " hover:border-purple-500/50 transition-colors",
+                    ),
+                    href=f"{nav_prefix}/person/{iid}",
+                )
+            )
+
+        grouped_section = Div(
+            H2("Grouped Identities", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P(
+                f"{len(clusters)} cluster{'s' if len(clusters) != 1 else ''} with {sum(c[2] for c in clusters)} total faces. "
+                "These faces were grouped by the ML pipeline as likely the same person. "
+                "Click to review and name them.",
+                cls="text-sm text-slate-400 mb-6",
+            ),
+            Div(
+                *cluster_cards,
+                cls="grid gap-3 sm:grid-cols-2 lg:grid-cols-3",
+            ),
+            cls="mb-12",
+        )
+    else:
+        grouped_section = Div(
+            H2("Grouped Identities", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P("No multi-face clusters found.", cls="text-slate-400"),
+            cls="mb-12",
+        )
+
+    # --- Section 2: Proposal Matches (to confirmed identities) ---
     # Group proposals by target identity
     groups = {}
     for p in proposals:
@@ -311,17 +407,15 @@ def get(sess=None, request=None):
             }
         groups[tid]["proposals"].append(p)
 
-    # Sort groups by number of matches (most first for review priority)
     sorted_groups = sorted(groups.items(), key=lambda x: -len(x[1]["proposals"]))
 
-    # Build cluster review section
     if sorted_groups:
         cluster_section = Div(
-            H2("Cluster Review", cls="text-xl font-serif font-semibold text-white mb-2"),
+            H2("Proposal Matches", cls="text-xl font-serif font-semibold text-white mb-2"),
             P(
                 f"{len(proposals)} face{'s' if len(proposals) != 1 else ''} matched to "
-                f"{len(groups)} {'identities' if len(groups) != 1 else 'identity'}. "
-                "Weakest matches shown first within each group.",
+                f"{len(groups)} confirmed {'identities' if len(groups) != 1 else 'identity'} "
+                "(Medium+ confidence only).",
                 cls="text-sm text-slate-400 mb-6",
             ),
             *[_identity_match_group(tid, g["name"], g["proposals"], nav_prefix=nav_prefix) for tid, g in sorted_groups],
@@ -329,23 +423,16 @@ def get(sess=None, request=None):
         )
     else:
         cluster_section = Div(
-            H2("Cluster Review", cls="text-xl font-serif font-semibold text-white mb-2"),
-            P("No pending cluster matches to review.", cls="text-slate-400"),
+            H2("Proposal Matches", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P("No high-confidence proposal matches to review.", cls="text-slate-400"),
             cls="mb-12",
         )
 
     # Build GEDCOM triage section
-    # Get top identities by total face count (anchor + candidate)
-    registry = _main_mod.load_registry()
-    identities = registry._identities if hasattr(registry, "_identities") else {}
+    # Registry already loaded above for grouped section
 
-    # COMMUNITY-016: Filter to community identities when in community context
-    if community and community_identity_ids is not None:
-        community_filtered_identities = {
-            iid: idata for iid, idata in identities.items() if iid in community_identity_ids
-        }
-    else:
-        community_filtered_identities = identities
+    # Reuse community-filtered identities from grouped section above
+    community_filtered_identities = filtered_ids
 
     # Count faces per identity (confirmed + candidates)
     face_counts = []
@@ -390,6 +477,7 @@ def get(sess=None, request=None):
                 P("Review auto-clustered matches and link GEDCOM records.", cls="text-slate-400 mt-1"),
                 cls="mb-8",
             ),
+            grouped_section,
             cluster_section,
             gedcom_section,
             cls="max-w-5xl mx-auto px-4 py-8",
