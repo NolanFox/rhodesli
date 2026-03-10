@@ -173,7 +173,10 @@ def posthog_capture(event: str, distinct_id: str = "server", properties: dict | 
     """Capture a server-side PostHog event. No-op when PostHog is not configured."""
     if _posthog_server is None:
         return
-    _posthog_server.capture(distinct_id, event, properties or {})
+    try:
+        _posthog_server.capture(distinct_id, event, properties or {})
+    except Exception as e:
+        logging.warning(f"PostHog capture failed: {e}")
 
 
 app, rt = fast_app(
