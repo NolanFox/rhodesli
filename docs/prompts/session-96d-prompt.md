@@ -69,7 +69,22 @@ Commit after this act. /clear.
 
 Commit after this act. /clear.
 
-## Act 6: Browser Verification (ALL 10 checks)
+## Act 6: Cross-Community Content Indicator (COMMUNITY-014)
+**Goal:** When viewing Fox Family, any photo/face from another community is clearly marked.
+
+This is critical UX feedback from Nolan. When a Fox Family person matches a Rhodes photo:
+1. Photo Context modal must show "From Rhodes" badge (community name + icon)
+2. Photo Context modal must link to the full photo page (`/photo/{photo_id}`)
+3. ALL detected faces in the photo must be labeled with identity name + clickable (link to person page)
+4. Cross-community links should say "View in Rhodes" or navigate to `/c/rhodes/photo/...`
+5. Apply the same badge to discovery cards and identity cards when showing cross-community faces
+6. Check: Which photos belong to which community? Use `_get_community_photo_ids()` — if photo NOT in current community's set, it's cross-community
+
+**Files:** Photo Context modal (search for "Photo Context" in main.py/page_routes.py), identity card renderer, discovery card builder.
+
+Commit after this act. /clear.
+
+## Act 7: Browser Verification (ALL 12 checks)
 **Goal:** Every fix verified in production browser. Screenshots optional but evidence required.
 
 Navigate to each URL in Claude Chrome and verify:
@@ -82,22 +97,24 @@ Navigate to each URL in Claude Chrome and verify:
 5. To Review cards show proposal match info
 6. Admin pages show "Fox Family Archive" header
 7. Discoveries shows Betty Capeluto and Ray Franco matches
+8. Cross-community photos show "From Rhodes" badge
+9. Photo Context modal links to full photo page with all faces labeled
 
 ### Rhodes (`/`)
-8. Sidebar counts unchanged/correct
-9. Discoveries still work
-10. No regressions
+10. Sidebar counts unchanged/correct
+11. Discoveries still work
+12. No regressions
 
-## Act 7: Session Wrap
+## Act 8: Session Wrap
 1. Update `docs/session_logs/session-96d-log.md` with all acts
 2. Write `docs/assessments/session-96d-assessment.md` with PASS/FAIL per check
-3. Add Lessons 108-110 to `tasks/lessons/harness-lessons.md`
-4. Update BACKLOG: mark COMMUNITY-007 through COMMUNITY-013 as DONE
+3. Lessons 108-110 already added (session 96c-cont4)
+4. Update BACKLOG: mark COMMUNITY-007 through COMMUNITY-014 as DONE
 5. Update ROADMAP: add session 96d to Recently Completed
 6. Update CHANGELOG with v0.97.3
 
 ## Verification Gate
-- ALL 10 browser checks PASS
+- ALL 12 browser checks PASS
 - ALL tests pass (excluding pre-existing 4 failures)
 - Git clean, all changes committed and pushed
 - Assessment file exists with evidence

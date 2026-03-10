@@ -59,6 +59,13 @@ After 4 continuation sessions (96c through 96c-cont4), the Fox Family community 
 **Fix:** Admin route handlers need to read `request.state.community` and pass name to templates.
 **File:** Admin route files (`admin/*` routes in main.py or separate files)
 
+### 8. COMMUNITY-014: Cross-community photos/faces have no community indicator
+**Current:** When viewing Fox Family, a person matched to a Rhodes photo shows the Rhodes photo in Photo Context modal with NO indication it's from another community. Other faces not labeled or clickable. Can't navigate to the full photo page.
+**User feedback:** "it should be obvious from the UX every time I see the photo or the face that it is from another community"
+**Evidence:** Screenshot — Roland Fox wedding photo (Image 978_compress.jpg) in Fox Family Photo Context modal, no community badge, bride face not labeled, no photo link.
+**Fix:** (a) "From [Community Name]" badge on cross-community content in all surfaces, (b) Photo Context modal links to photo page, (c) All faces in photo labeled + clickable, (d) Cross-community navigation says "View in Rhodes"
+**Files:** Photo Context modal rendering, identity card, discovery card
+
 ## Clustering Data (EXISTS — just not surfaced)
 
 ### proposals.json (35 entries, generated 2026-03-09T14:57:29)
@@ -118,8 +125,10 @@ For each check, navigate in Claude Chrome and verify visually:
 5. [ ] To Review cards show proposal match info (e.g., "Matches Roland Fox")
 6. [ ] Admin pages show "Fox Family Archive" header
 7. [ ] Discoveries page shows Betty Capeluto and Ray Franco matches
+8. [ ] Cross-community photos show "From Rhodes" badge
+9. [ ] Photo Context modal links to full photo page with all faces labeled
 
 ### Rhodes (`/`)
-8. [ ] Sidebar counts unchanged/correct
-9. [ ] Discoveries still work (91 count)
-10. [ ] No regressions on main functionality
+10. [ ] Sidebar counts unchanged/correct
+11. [ ] Discoveries still work
+12. [ ] No regressions on main functionality
