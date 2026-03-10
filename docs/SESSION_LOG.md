@@ -22,7 +22,7 @@
 - [x] Root cause: BUG-1 wiped `upload_date` from volume JSON for photos uploaded pre-cont6
 - [x] Fix: resync endpoint now backfills missing upload_dates, persists to volume JSON
 - [x] Deploy triggered (Railway CLI, commit 1e82d5e)
-- [ ] Post-deploy: trigger resync, verify sort (deferred to next session)
+- [x] Post-deploy: resync triggered — 643 upload_dates backfilled, sort verified (cont8)
 
 ### Key Findings
 1. Recalibration hooks (`rhodesli_ml/recalibration_hooks.py`) wired into `app/engagement_routes.py:727-740` but silently fail on production because sklearn not installed on Railway (AD-007) and embeddings path wrong (Lesson 114).

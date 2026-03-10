@@ -17,10 +17,17 @@
 - 1e82d5e: fix(sync): backfill upload_date on photos missing it during resync
 - 2a42d87: docs: update assessment, changelog, session log for cont7 completion
 
+### Phase 5: Post-Deploy Sort Verification (cont8)
+- [x] Railway CLI deploy confirmed SUCCESS with DOCKERFILE builder (deploy 8e86b551)
+- [x] Resync triggered: 938 photos, 3023 identities, 643 upload_dates backfilled
+- [x] "Upload Date (Newest)" sort verified — recent community photos at top of grid
+- [x] Screenshot evidence: ss_3712ugncj
+
 ## Key Findings
 1. Recalibration hooks silently fail on production (sklearn not on Railway, embeddings path wrong)
 2. Upload sort broken because BUG-1 wiped upload_date from volume JSON for pre-cont6 uploads
 3. Deploy via CLI uses DOCKERFILE builder correctly; git push auto-deploy uses RAILPACK
+4. resync-supabase endpoint fails with JSONDecodeError if Content-Type: application/json sent with empty body
 
 ## Files Created/Modified
 - docs/prds/038_longitudinal_face_modeling.md (rewritten)
