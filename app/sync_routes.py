@@ -529,7 +529,7 @@ async def post(request, sess):
 
     try:
         from datetime import datetime, timezone
-        from core.registry import IdentityRegistry
+        from core.registry import IdentityRegistry, IdentityState
         from core.photo_registry import PhotoRegistry
         from app.supabase_data import shadow_write_photos_batch, shadow_write_identities_batch
 
@@ -553,6 +553,30 @@ async def post(request, sess):
             json_photo_reg.save(data_path / "photo_index.json")
             logging.info(f"Backfilled upload_date on {backfill_count} photos")
 
+        # Repair orphan faces: faces in photo_index that have no identity.
+        # This happens when the upload pipeline writes faces to photo_index
+        # but fails to create the INBOX identity (e.g., partial pipeline failure).
+        # Without an identity, Create Identity silently returns 404 (cont8 bug).
+        all_registered_faces = set()
+        for iid, idata in json_registry._identities.items():
+            all_registered_faces.update(idata.get("anchor_ids", []))
+            all_registered_faces.update(idata.get("candidate_ids", []))
+
+        orphan_count = 0
+        for photo_id, photo_data in json_photo_reg._photos.items():
+            for face_id in photo_data.get("face_ids", []):
+                if face_id not in all_registered_faces:
+                    json_registry.create_identity(
+                        anchor_ids=[face_id],
+                        user_source="resync_orphan_repair",
+                        state=IdentityState.INBOX,
+                    )
+                    orphan_count += 1
+
+        if orphan_count > 0:
+            json_registry.save(data_path / "identities.json")
+            logging.info(f"Created {orphan_count} INBOX identities for orphan faces")
+
         photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
         shadow_write_photos_batch(photo_items)
 
@@ -569,6 +593,7 @@ async def post(request, sess):
             "photos_synced": len(photo_items),
             "identities_synced": len(id_items),
             "upload_date_backfilled": backfill_count,
+            "orphan_faces_repaired": orphan_count,
         }
     except Exception as e:
         return Response(f"Sync error: {e}", status_code=500)
