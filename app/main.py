@@ -6268,10 +6268,11 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
 
     unreviewed = inbox + proposed
 
-    # Filter to community scope BEFORE expensive computation (performance critical)
+    # Filter UNREVIEWED to community scope BEFORE expensive computation (performance critical)
+    # Keep confirmed_list GLOBAL — cross-community matching is essential
+    # (e.g., Fox Family INBOX faces should match Rhodes CONFIRMED identities like Betty Capeluto)
     if community_identity_ids is not None:
         unreviewed = [u for u in unreviewed if u["identity_id"] in community_identity_ids]
-        confirmed_list = [c for c in confirmed_list if c["identity_id"] in community_identity_ids]
     if not unreviewed or not confirmed_list:
         _discovery_cache = []
         _discovery_cache_key = cache_key
