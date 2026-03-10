@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.6] — 2026-03-10 (Session 96e-cont4: Upload UX + Deploy Verify)
+
+### Fixed
+- **Upload 500 crash** — PostHog capture() signature mismatch on Railway crashing all uploads. Wrapped in try/except (Nolan fix, a550687).
+- **Supabase data divergence** — 1149 orphan identities from single-linkage deleted (Nolan fix, a550687).
+- **Proposals sidebar community-scoped** — `_compute_sidebar_counts()` now filters by community.
+- **Proposals API community-filtered** — `/api/proposed-matches?community_slug=X` filtering.
+- **Discoveries Help Identify community-filtered** — Only shows faces from current community.
+- **Duplicate face filter** — Neighbors with dist < 0.1 AND co-occurrence filtered in Similar Identities.
+- **Name consistency** — "Person NNNN" in neighbor cards.
+- **Test: rejects_too_many_files** — Updated from 51 to 201 files (limit is 200, not 50).
+
+### Added
+- **Two-step upload UX** — Replace auto-upload-on-select with explicit flow: select files → scrollable preview list (names, sizes, remove buttons) → click "Upload Files" → progress spinner. Supports drag-and-drop and "Add more files".
+- **6 new tests** — TestUploadAreaTwoStep covering file input, submit button, preview area, drop zone, add-more button, no-auto-submit.
+
+### Verification
+- Deploy: commit 20c0d3c, Railway SUCCESS
+- Browser verified: Fox Family clusters (44 max), Discoveries, Similar Identities, Upload page
+- 3908 tests pass (30 pre-existing failures unrelated)
+
 ## [v0.97.5] — 2026-03-10 (Session 96e-cont2: Fix Broken Clusters)
 
 ### Fixed

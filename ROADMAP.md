@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.0 · ~2491 tests · 299 photos · 894 identities · 69 confirmed
+Current: v0.97.6 · ~3914 tests · 299 photos · 894 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -145,6 +145,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-10: **v0.97.6 — Session 96e-cont4**: Upload UX + Deploy Verify. Two-step upload flow (select → preview → upload). Upload 500 crash fix (PostHog). Supabase 1149 orphans deleted. Community scoping: proposals sidebar, proposals API, discoveries Help Identify, duplicate face filter, name consistency. 6 new tests. Browser verified 5/6. Deploy SUCCESS. Known: proposals API doesn't include proposals.json entries.
 
 - [x] 2026-03-10: **v0.97.4 — Session 96e**: Fox Family Stabilization Complete. Face grouping (813 merges, 2009→1196 INBOX). 2115 proposals regenerated (1122 Fox-filtered). Proposals.json path fix (STORAGE_DIR on Railway, Lesson 114). GEDCOM triage includes INBOX identities. Registry TTL cache (30s). Discoveries proposal-only (no timeout). Cross-community badge fix. 1622 new INBOX identities created. Browser verified: New Matches 1497, Discoveries 568, Proposals 1122, Cluster Review 67 identities. 3908 tests pass.
 
