@@ -2541,6 +2541,41 @@ def get(
                 if (focusBtn) { e.preventDefault(); focusBtn.click(); return; }
             });
         """),
+            # Community-aware link rewriting: ensures internal navigation stays within community context
+            Script(f"""
+            (function() {{
+                var communityPrefix = '{_main_mod.community_url_prefix(community_slug)}';
+                if (!communityPrefix) return;  // Rhodes/default — no rewriting needed
+
+                function rewriteLinks(root) {{
+                    root.querySelectorAll('a[href^="/?section="], a[href^="/admin/"], a[href^="/person/"], a[href^="/photo/"], a[href^="/help"]').forEach(function(a) {{
+                        var h = a.getAttribute('href');
+                        if (h && !h.startsWith(communityPrefix) && !h.startsWith('/tools/') && !h.startsWith('/static/')) {{
+                            a.setAttribute('href', communityPrefix + h);
+                        }}
+                    }});
+                    // Also rewrite hx-get and hx-post URLs that bypass community middleware
+                    root.querySelectorAll('[hx-get^="/api/"], [hx-post^="/api/"]').forEach(function(el) {{
+                        ['hx-get', 'hx-post'].forEach(function(attr) {{
+                            var v = el.getAttribute(attr);
+                            if (v && v.startsWith('/api/') && !v.startsWith(communityPrefix)) {{
+                                el.setAttribute(attr, communityPrefix + v);
+                            }}
+                        }});
+                    }});
+                }}
+
+                // Rewrite on initial load
+                rewriteLinks(document.body);
+
+                // Rewrite after HTMX swaps (new content may have bare URLs)
+                document.body.addEventListener('htmx:afterSwap', function(e) {{
+                    if (e.detail && e.detail.target) rewriteLinks(e.detail.target);
+                }});
+            }})();
+            """)
+            if community_slug and community_slug != "rhodes"
+            else None,
             cls="h-full",
         ),
     )
