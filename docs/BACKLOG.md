@@ -151,6 +151,16 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [x] **ML-094: Write AD-136/137/138** — DONE (Session 61). AD-139-142 also added. See ALGORITHMIC_DECISIONS.md.
 - [ ] **ML-095: CORAL retroactive run** — Run local model on all 271 photos, compare to Gemini labels. Free independent validation.
 
+### ML — Longitudinal Face Modeling (P2) — Session 96e-cont6 research
+- [ ] **ML-110: Quality-weighted best-linkage** — Weight min-distance by detection_score + embedding_norm. Modify `compute_min_distance()`. Expected: +2-5% recall. Effort: LOW (1 session). See AD-001, AD-118.
+- [ ] **ML-111: Metadata feature expansion to calibrator** — Add date_proximity_score, name_similarity to `_featurize_pair()`. Expected: AUC 0.957→0.965+. Effort: LOW (1 session). See AD-126/149.
+- [ ] **ML-112: Wire active learning to UI** — Surface `find_uncertain_pairs()` as "Help Review These" in sidebar. Accumulates hard negatives for calibration. Effort: LOW (1 session). See AD-092.
+- [ ] **ML-113: Age-aware distance modulation** — Penalize impossible age gaps using birth_year + photo date. `penalty = exp(-gap/50)`. Effort: MEDIUM (1-2 sessions). See ADR-002, AD-159.
+- [ ] **ML-114: LoRA re-evaluation with Fox Family data** — Session 68 audit found 221 pairs (MARGINAL). Fox Family likely adds 100+ pairs, pushing past threshold. Effort: MEDIUM (2 sessions). See AD-115, AD-145.
+- [ ] **ML-115: Recalibrate thresholds with growing confirmed pairs** — Re-run isotonic regression on current confirmed set (was 69 confirmed, growing). Effort: LOW (<1 session). See AD-149/152.
+- [ ] **ML-116: Longitudinal anchor stratification** — Use best-quality faces from EACH DECADE for matching, not just best overall. Effort: MEDIUM (1-2 sessions).
+- **Context**: Nolan noted that Roland Fox has many photos across life stages (Fox Family collection). Current multi-anchor best-linkage helps (more anchors = better min-distance) but we're leaving improvement on the table. Google Photos does temporal clustering, active learning, metadata fusion. See research in session-96e-cont6 assessment.
+
 ### UX Improvements (from Production Review)
 - [ ] **UX-120: Help Identify mode for non-admin users (P1)** — Primary community use case requires admin intervention. Let logged-in users suggest names for unidentified faces → admin approval queue. See `docs/session_logs/session_60b_ux_review.md`.
 - [ ] **UX-121: Contribution instructions page (P2)** — /contribute page explaining: how to identify faces, submit photos, report errors. Community members arrive from Facebook links.
