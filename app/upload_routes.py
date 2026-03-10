@@ -555,7 +555,7 @@ async def post(
     community = getattr(request.state, "community", None) if request else None
     # Capture community_id for background thread (avoids request state access after response)
     upload_community_id = None
-    if community and community.get("slug") != "rhodes" and community.get("id"):
+    if community and community.get("id"):
         upload_community_id = community["id"]
 
     import uuid
@@ -862,7 +862,7 @@ async def post(
                 except Exception as e:
                     print(f"[upload] R2 upload error for job {job_id}: {e}")
 
-            # Tag photos to community if uploading to non-Rhodes community (PRD-035)
+            # Tag photos to community (PRD-035)
             if upload_community_id and result.get("status") in ("success", "partial"):
                 try:
                     from app.supabase_data import add_photo_to_community
