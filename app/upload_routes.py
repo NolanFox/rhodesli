@@ -966,15 +966,31 @@ async def post(
                     print(f"[upload] Identity community tagging error: {e}")
 
             # Sync identities and photos to Supabase so DATA_SOURCE=postgres sees them.
-            # process_directory() writes to JSON only. Without this sync, new identities
-            # are invisible when the app reads from Postgres. (Session 96c fix)
+            # process_directory() writes to JSON only. We MUST load from JSON (not Postgres)
+            # because the new data only exists in JSON at this point. Loading from Postgres
+            # would read the old data (missing new photos/identities) and write it back,
+            # silently losing the new uploads. (Session 96e-cont5 fix)
             if result.get("status") in ("success", "partial"):
                 try:
-                    registry = _main_mod.load_registry()
-                    _main_mod.save_registry(registry)
-                    photo_reg = _main_mod.load_photo_registry()
-                    _main_mod.save_photo_registry(photo_reg)
-                    print(f"[upload] Synced registry + photos to Supabase for job {job_id}")
+                    from core.registry import IdentityRegistry
+                    from core.photo_registry import PhotoRegistry
+                    from app.supabase_data import shadow_write_photos_batch, shadow_write_identities_batch
+
+                    # Load from JSON files (where process_directory wrote the new data)
+                    json_registry = IdentityRegistry.load(data_path / "identities.json")
+                    json_photo_reg = PhotoRegistry.load(data_path / "photo_index.json")
+
+                    # Write ALL photos to Supabase (upsert is idempotent)
+                    photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
+                    shadow_write_photos_batch(photo_items)
+
+                    # Write ALL identities to Supabase (upsert is idempotent)
+                    id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
+                    shadow_write_identities_batch(id_items)
+
+                    print(
+                        f"[upload] Synced {len(photo_items)} photos + {len(id_items)} identities to Supabase for job {job_id}"
+                    )
                 except Exception as e:
                     print(f"[upload] Supabase sync error for job {job_id}: {e}")
 
