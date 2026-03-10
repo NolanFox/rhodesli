@@ -281,6 +281,18 @@ def get(sess=None, request=None):
 
     proposals = _load_proposals()
 
+    # COMMUNITY-011: Filter proposals by community identity set
+    community = getattr(request.state, "community", None) if request else None
+    if community:
+        community_identity_ids = _main_mod._get_community_identity_ids(community)
+        if community_identity_ids is not None:
+            proposals = [
+                p
+                for p in proposals
+                if p.get("source_identity_id") in community_identity_ids
+                or p.get("target_identity_id") in community_identity_ids
+            ]
+
     # Group proposals by target identity
     groups = {}
     for p in proposals:

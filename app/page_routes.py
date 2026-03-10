@@ -10735,6 +10735,14 @@ def public_photo_page(
                     else None,
                     # Photo metadata (with inline admin editing)
                     Div(
+                        # Filename always visible for admin (user feedback: "can't find filename")
+                        P(
+                            Span("File: ", cls="text-slate-500"),
+                            Span(Path(filename).name, cls="text-slate-300 font-mono text-xs"),
+                            cls="text-xs mb-1",
+                        )
+                        if is_admin
+                        else None,
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(uploader_line, cls="mt-1") if uploader_line else None,
                         P(

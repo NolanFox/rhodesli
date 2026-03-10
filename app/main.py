@@ -8029,7 +8029,7 @@ def neighbor_card(
     )
 
     # Thumbnail logic — prefer best quality, fall back to any available crop
-    thumbnail_img = Div(cls="w-20 h-20 bg-slate-600 rounded")
+    thumbnail_img = Div(cls="w-16 h-16 sm:w-20 sm:h-20 bg-slate-600 rounded")
     anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
     crop_url = None
     best_fid = get_best_face_id(anchor_face_ids) if anchor_face_ids else None
@@ -8044,7 +8044,7 @@ def neighbor_card(
         thumbnail_img = Img(
             src=crop_url,
             alt=name,
-            cls="w-20 h-20 object-cover rounded border border-slate-600 hover:scale-105 transition-transform",
+            cls="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded border border-slate-600 hover:scale-105 transition-transform",
             loading="lazy",
         )
 
@@ -8080,7 +8080,7 @@ def neighbor_card(
                     A(
                         name,
                         href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
-                        cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer",
+                        cls="font-medium text-slate-200 hover:text-blue-400 hover:underline cursor-pointer text-sm leading-tight",
                         **{"_": nav_script},
                     ),
                     Span(
