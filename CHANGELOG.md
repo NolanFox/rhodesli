@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Retroactive improvement safety rules** — Never break confirmed clusters, additions are proposals with notifications, community-scoped.
 
 ### Fixed
+- **Upload date sort broken** — Photos uploaded before cont6 BUG-1 fix had `upload_date` wiped from volume JSON. Resync endpoint now backfills missing upload_dates and persists to volume.
 - **BACKLOG breadcrumbs** — ML-110 through ML-116 now all reference PRD-038 with workstream mapping.
 
 ### Verification

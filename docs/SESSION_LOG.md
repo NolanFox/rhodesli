@@ -18,8 +18,15 @@
 - [x] RESEARCH_REFERENCES.md — Academic papers, Google Photos analysis, heritage challenges
 - [x] BACKLOG ML-110-116 breadcrumbs added to PRD-038
 
-### Key Finding
-Recalibration hooks (`rhodesli_ml/recalibration_hooks.py`) wired into `app/engagement_routes.py:727-740` but silently fail on production because sklearn not installed on Railway (AD-007) and embeddings path wrong (Lesson 114). Data collection (calibration_pairs) may be working but recalibration itself cannot run.
+### Phase 3: Upload Sort Fix
+- [x] Root cause: BUG-1 wiped `upload_date` from volume JSON for photos uploaded pre-cont6
+- [x] Fix: resync endpoint now backfills missing upload_dates, persists to volume JSON
+- [x] Deploy triggered (Railway CLI, commit 1e82d5e)
+- [ ] Post-deploy: trigger resync, verify sort (deferred to next session)
+
+### Key Findings
+1. Recalibration hooks (`rhodesli_ml/recalibration_hooks.py`) wired into `app/engagement_routes.py:727-740` but silently fail on production because sklearn not installed on Railway (AD-007) and embeddings path wrong (Lesson 114).
+2. Upload sort was broken because BUG-1's broken Postgres→JSON sync wiped `upload_date` from the volume JSON for all pre-cont6 uploads. Fixed via backfill in resync endpoint.
 
 ---
 
