@@ -3117,6 +3117,60 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 # =============================================================================
+# ROUTES — ADMIN FORCE STATE CHANGE
+# =============================================================================
+
+
+@rt("/api/admin/force-state/{identity_id}/{new_state}")
+def post(identity_id: str, new_state: str, sess=None):
+    """Force an identity to a specific state. Admin only.
+
+    Used for data integrity fixes when normal state transitions are blocked
+    (e.g., reverting a wrongly CONFIRMED identity back to INBOX/SKIPPED).
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    valid_states = {"INBOX", "PROPOSED", "CONFIRMED", "SKIPPED", "REJECTED"}
+    if new_state not in valid_states:
+        return Response(
+            to_xml(_main_mod.toast(f"Invalid state: {new_state}", "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    registry = _main_mod.load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(_main_mod.toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    old_state = identity.get("state", "UNKNOWN")
+    from datetime import datetime, timezone
+
+    registry._identities[identity_id]["state"] = new_state
+    registry._identities[identity_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+    registry._identities[identity_id]["version_id"] = identity.get("version_id", 0) + 1
+    _main_mod.save_registry(registry)
+
+    _main_mod.get_event_recorder().record(
+        "FORCE_STATE_CHANGE",
+        {"identity_id": identity_id, "old_state": old_state, "new_state": new_state},
+    )
+
+    import logging
+
+    logging.getLogger(__name__).warning(f"ADMIN FORCE STATE: {identity_id} {old_state} -> {new_state}")
+
+    return _main_mod.toast(f"State changed: {old_state} → {new_state}", "success")
+
+
+# =============================================================================
 # ROUTES — SKIPPED FOCUS MODE ACTIONS
 # =============================================================================
 
