@@ -1,3 +1,28 @@
+# Session 96e-cont7 Log — PRD-038 + Post-Deploy Verification
+## Mission: Comprehensive PRD for longitudinal face modeling + browser verify cont6 deploy
+## Started: 2026-03-10
+## Version: v0.97.7
+## Assessment: docs/assessments/session-96e-cont7-assessment.md
+
+### Phase 1: Post-Deploy Verification
+- [x] Supabase resync triggered: 938 photos, 3023 identities synced
+- [x] Raymond Halfon photo: face detected, 3572x2553px, source clean
+- [x] Claude Benatar photo: face overlay visible, 1241x1891px, source clean
+- [x] Discoveries: 0 auto-applied (BUG-7 fix confirmed), 561 Help Identify
+
+### Phase 2: PRD-038 Comprehensive Rewrite
+- [x] Hub PRD rewritten following template (235 lines)
+- [x] RECALIBRATION_ARCHITECTURE.md — 4 architecture options, Option A recommended
+- [x] IMPLEMENTATION_SPECS.md — Per-workstream code changes, LoRA data growth strategy
+- [x] EVALUATION_AND_SAFETY.md — Golden test set, retroactive improvement safety, community resilience
+- [x] RESEARCH_REFERENCES.md — Academic papers, Google Photos analysis, heritage challenges
+- [x] BACKLOG ML-110-116 breadcrumbs added to PRD-038
+
+### Key Finding
+Recalibration hooks (`rhodesli_ml/recalibration_hooks.py`) wired into `app/engagement_routes.py:727-740` but silently fail on production because sklearn not installed on Railway (AD-007) and embeddings path wrong (Lesson 114). Data collection (calibration_pairs) may be working but recalibration itself cannot run.
+
+---
+
 # Session 93 Log — Close All Deferrals
 ## Mission: Close ALL deferred items from Session 92
 ## Started: 2026-03-08

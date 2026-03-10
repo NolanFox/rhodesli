@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.7] — 2026-03-10 (Session 96e-cont7: PRD-038 Longitudinal Face Modeling)
+
+### Added
+- **PRD-038: Longitudinal Face Modeling** — Comprehensive 960-line PRD across 5 files covering 5 ML improvement workstreams + recalibration architecture + evaluation framework + retroactive improvement safety. Hub at `docs/prds/038_longitudinal_face_modeling.md`, detail in `docs/prds/038_longitudinal/`.
+- **Recalibration architecture analysis** — Found existing hooks silently fail on production. Documented 4 architecture options, recommended local-only (Option A).
+- **Evaluation framework spec** — Golden test set design, hold-out methodology, A/B comparison script spec, metrics tracking.
+- **LoRA data growth strategy** — Data milestones (350→500→1000→2000 pairs), continuous improvement workflow, rollback mechanism.
+- **Retroactive improvement safety rules** — Never break confirmed clusters, additions are proposals with notifications, community-scoped.
+
+### Fixed
+- **BACKLOG breadcrumbs** — ML-110 through ML-116 now all reference PRD-038 with workstream mapping.
+
+### Verification
+- Supabase resync: 938 photos, 3023 identities
+- Browser verified: Raymond Halfon (face, dimensions, source clean), Claude Benatar (face overlay, dimensions, source clean), Discoveries page (BUG-7 fix confirmed)
+
 ## [v0.97.6] — 2026-03-10 (Session 96e-cont4: Upload UX + Deploy Verify)
 
 ### Fixed
