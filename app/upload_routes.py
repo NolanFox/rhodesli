@@ -891,11 +891,15 @@ async def post(
                     suggestions = find_matches(identities_data, face_data_dict, MATCH_THRESHOLD_HIGH)
 
                     if suggestions:
-                        apply_suggestions(suggestions, data_path / "identities.json", dry_run=False)
-                        # Write proposals for the review page
+                        updated_data = apply_suggestions(identities_data, suggestions)
+                        # Write updated identities back to JSON
                         import json as _json_cluster
                         from datetime import datetime as _dt_cluster, timezone as _tz_cluster
 
+                        with open(data_path / "identities.json", "w") as _idf:
+                            _json_cluster.dump(updated_data, _idf, indent=2)
+
+                        # Write proposals for the review page
                         proposals_path = data_path / "proposals.json"
                         proposals_data = {
                             "generated_at": _dt_cluster.now(_tz_cluster.utc).isoformat(),

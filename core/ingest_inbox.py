@@ -710,6 +710,7 @@ def process_single_image(
         "faces_extracted": len(faces),
         "identity_ids": identity_ids,
         "face_ids": [f["face_id"] for f in faces],
+        "photo_id": photo_id,
     }
 
 
@@ -1121,6 +1122,7 @@ def process_directory(
     total_faces = 0
     all_identity_ids = []
     all_face_ids = []
+    all_photo_ids = []
     files_succeeded = 0
     files_failed = 0
     errors = []
@@ -1162,6 +1164,8 @@ def process_directory(
             total_faces += result["faces_extracted"]
             all_identity_ids.extend(result["identity_ids"])
             all_face_ids.extend(result.get("face_ids", []))
+            if result.get("photo_id"):
+                all_photo_ids.append(result["photo_id"])
             files_succeeded += 1
             if result.get("skipped_duplicate"):
                 logger.info("  Skipped (duplicate)")
@@ -1229,6 +1233,8 @@ def process_directory(
                             total_faces += result["faces_extracted"]
                             all_identity_ids.extend(result["identity_ids"])
                             all_face_ids.extend(result.get("face_ids", []))
+                            if result.get("photo_id"):
+                                all_photo_ids.append(result["photo_id"])
                             files_succeeded += 1
                             if result.get("skipped_duplicate"):
                                 logger.info("  Skipped (duplicate)")
@@ -1283,6 +1289,7 @@ def process_directory(
         "faces_extracted": total_faces,
         "identities_created": all_identity_ids,
         "face_ids": all_face_ids,
+        "photo_ids": all_photo_ids,
         "total_files": total_images,
         "files_succeeded": files_succeeded,
         "files_failed": files_failed,
