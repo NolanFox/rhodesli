@@ -154,3 +154,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 111 | **Postgres registry needs TTL cache — reloading 2533 identities per request causes complete feature failure** |
 | 112 | **Community-scoped pages must filter ALL sections — GEDCOM triage showed Rhodes people on Fox Family page** |
 | 113 | **Cross-community badge must check BOTH communities — identity in both should show no badge, not wrong badge** |
+| 114 | **os.getenv("DATA_DIR") ≠ core.config.DATA_DIR on Railway — STORAGE_DIR derivation only in config.py** |

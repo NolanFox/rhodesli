@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.4] — 2026-03-10 (Session 96e: Fox Family Stabilization Complete)
+
+### Fixed
+- **Proposals.json path on Railway** — `os.getenv("DATA_DIR", "data")` resolved to `/app/data/` instead of `/app/storage/data/`. Now checks `STORAGE_DIR` first (Lesson 114).
+- **GEDCOM triage includes INBOX** — Was only showing CONFIRMED/PROPOSED identities, missing all Fox INBOX identities.
+
+### Added
+- **Face grouping: 813 merges** — `group_inbox_identities()` with correct face_data dict format. 2009 INBOX → 1196.
+- **2115 proposals regenerated** — Threshold 1.3, Fox Family has 1122 community-filtered matches.
+- **1622 new INBOX identities** — Created for all unassigned Fox Family faces.
+- **Registry TTL cache** — 30s cache on `load_registry()`, invalidates on save/cache-clear.
+- **Discoveries refactored** — Proposal-only computation, no more O(n*m) timeout.
+- **Cross-community badge fix** — Check current community first; identity in both = no badge.
+
+### Verification
+- Fox Family sidebar: New Matches 1497, Discoveries 568, Photos 635, Proposals 1122
+- Upload Review: 1122 faces matched to 67 identities (Roland Fox, Betty Capeluto Fox, etc.)
+- Deploy SUCCESS: commit 74666c9
+
 ## [v0.97.3] — 2026-03-10 (Session 96d: Fix Fox Family to Usable State)
 
 ### Fixed

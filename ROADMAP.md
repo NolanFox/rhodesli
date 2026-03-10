@@ -146,6 +146,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Recently Completed
 
+- [x] 2026-03-10: **v0.97.4 — Session 96e**: Fox Family Stabilization Complete. Face grouping (813 merges, 2009→1196 INBOX). 2115 proposals regenerated (1122 Fox-filtered). Proposals.json path fix (STORAGE_DIR on Railway, Lesson 114). GEDCOM triage includes INBOX identities. Registry TTL cache (30s). Discoveries proposal-only (no timeout). Cross-community badge fix. 1622 new INBOX identities created. Browser verified: New Matches 1497, Discoveries 568, Proposals 1122, Cluster Review 67 identities. 3908 tests pass.
+
 - [x] 2026-03-10: **v0.97.3 — Session 96d**: Fix Fox Family to Usable State. All 7 COMMUNITY bugs fixed (007-014). Nav links use community prefix. Proposals surfaced in sidebar (35 proposals). Cluster review community-scoped. Cross-community "From [Community Name]" badges. Proposal match info ("Matches [Name] (XX%)"). Face crop responsive sizing. Photo filename display. Name truncation fix. 6 pre-existing test failures fixed. Browser verified. Known: COMMUNITY-015 internal links.
 
 - [x] 2026-03-09: **v0.97.2 — Session 96c**: Community Identity Pipeline + Data Integrity. Photo-derived identity sets (AD-216). Admin sections ungated for all communities. ML feature counts restored. Community-aware discoveries. David Capeloto photo restored (Lesson 78). Fox Family admin view fixed. Dismissed section grid layout. Supabase backfill (2,533 identities). Data integrity validator + orphan detection tests. 81 new tests. Browser verified 10/10. Known issues: COMMUNITY-007/008 sidebar counts.
