@@ -339,7 +339,13 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     from core.confidence import compute_confidence_pct
 
     # Extract community context for scoping
+    # Bare /api/discoveries (no /c/ prefix) goes through middleware skip,
+    # so community is None. Fall back to Rhodes for performance.
     community = getattr(request.state, "community", None) if request else None
+    if community is None:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug("rhodes")
     community_identity_ids = _main_mod._get_community_identity_ids(community)
 
     registry = _main_mod.load_registry()
@@ -580,8 +586,12 @@ def get(sess=None, request=None):
     if denied:
         return denied
 
-    # Extract community context for scoping
+    # Extract community context for scoping (same Rhodes fallback as main endpoint)
     community = getattr(request.state, "community", None) if request else None
+    if community is None:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug("rhodes")
     community_identity_ids = _main_mod._get_community_identity_ids(community)
 
     registry = _main_mod.load_registry()

@@ -1363,6 +1363,7 @@ class TestDiscoveriesThreeSections:
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_registry", return_value=registry),
+            patch("app.main._get_community_identity_ids", return_value=None),
         ):
             response = client.get("/api/discoveries")
 
