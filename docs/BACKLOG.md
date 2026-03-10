@@ -14,15 +14,18 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ## Active Bugs
 
-### P0 — Fox Family Unusable (Session 96c-cont4 + 96d)
-- **COMMUNITY-007**: Fox Family sidebar counts not community-scoped — Photos showed 1271 (global), Discoveries showed 907 (global). Discoveries fixed to 182 (96c-cont4 continuation). Remaining: New Matches count, People count. Fix: `_compute_sidebar_counts()` needs community filter.
-- **COMMUNITY-008**: Fox Family bottom nav bar uses `/?section=...` instead of `/c/fox-family/?section=...` — clicking bottom nav from Fox Family context navigates to Rhodes. Fix: bottom nav must respect community prefix.
-- **COMMUNITY-009**: Upload Review + GEDCOM triage pages not discoverable — `/admin/upload-review` and `/admin/gedcom-triage` exist but aren't in sidebar nav for Fox Family. User couldn't find post-upload review pages. Fix: add to sidebar under Admin section.
-- **COMMUNITY-010**: Proposals not surfaced in Fox Family sidebar — 35 valid proposals exist in `proposals.json` (30 Roland Fox, 4 Betty Capeluto Fox, 1 Ray Franco) but sidebar shows "0 Proposals". Fix: sidebar count must include proposals.json data, community-scoped.
-- **COMMUNITY-011**: Cluster review page not community-scoped — `/admin/upload-review` loads global proposals.json without community filter. Fix: add community filtering to `_load_proposals()`.
-- **COMMUNITY-012**: To Review section shows flat 1602 faces — no proposal grouping visible. Faces with proposals should show match suggestions inline (e.g., "This face matches Betty Capeluto Fox at 73% confidence"). Fix: render proposal match info on identity cards in To Review.
-- **COMMUNITY-013**: Admin page headers show "Rhodesli" instead of community name — `/admin/pending`, `/admin/approvals` etc. don't read community context for branding. Fix: pass community name to admin page templates.
-- **COMMUNITY-014**: Cross-community photos/faces have no community indicator — when viewing a Fox Family person matched to a Rhodes photo, the Photo Context modal shows no badge indicating the photo is from another community. No way to click through to the photo page or see other people in the photo. User feedback: "it should be obvious from the UX every time I see the photo or the face that it is from another community." Fix: (a) Add "From [Community Name]" badge on cross-community photos/faces in all surfaces (Photo Context modal, discovery cards, identity cards). (b) Photo Context modal must link to the photo page. (c) All faces in the photo must be labeled and clickable. Source: User screenshot of Roland Fox wedding photo in Fox Family context.
+### P0 — Fox Family Unusable (Session 96c-cont4 + 96d) — ALL FIXED in Session 96d
+- ~~**COMMUNITY-007**: Fox Family sidebar counts not community-scoped~~ FIXED (Session 96d) — proposals.json read + community filter
+- ~~**COMMUNITY-008**: Fox Family bottom nav bar uses bare URLs~~ FIXED (Session 96d) — community_url_prefix on all nav links
+- ~~**COMMUNITY-009**: Upload Review + GEDCOM triage pages not discoverable~~ FIXED (Session 96d) — already in sidebar, verified
+- ~~**COMMUNITY-010**: Proposals not surfaced in Fox Family sidebar~~ FIXED (Session 96d) — sidebar reads proposals.json
+- ~~**COMMUNITY-011**: Cluster review page not community-scoped~~ FIXED (Session 96d) — proposals filtered by community identity set
+- ~~**COMMUNITY-012**: To Review section shows flat faces without proposal info~~ FIXED (Session 96d) — badge shows "Matches [Name] (XX%)"
+- ~~**COMMUNITY-013**: Admin page headers show "Rhodesli" instead of community name~~ FIXED (Session 96d) — admin headers use community name
+- ~~**COMMUNITY-014**: Cross-community photos/faces have no community indicator~~ FIXED (Session 96d) — "From [Community Name]" badges on neighbor_card + discovery cards
+
+### P1 — Community Link Scoping
+- **COMMUNITY-015**: Internal photo/person links don't include community prefix — clicking a photo from Fox Family browse navigates to `/photo/{id}` (Rhodes context) instead of `/c/fox-family/photo/{id}`. Requires updating hundreds of `href=f"/photo/{id}"` references across all route files. Source: Session 96d browser verification.
 
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)

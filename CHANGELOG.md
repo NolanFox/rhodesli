@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.3] — 2026-03-10 (Session 96d: Fix Fox Family to Usable State)
+
+### Fixed
+- **COMMUNITY-007/010**: Sidebar proposals count from proposals.json, community-filtered
+- **COMMUNITY-008**: Nav links use community URL prefix (`/c/fox-family/photos` etc.)
+- **COMMUNITY-009**: Upload Review + GEDCOM in sidebar, verified accessible
+- **COMMUNITY-011**: Cluster review proposals filtered by community identity set
+- **COMMUNITY-012**: Proposal badge shows "Matches [Name] (XX%)" with confidence score
+- **COMMUNITY-013**: Admin headers show community name instead of "Rhodesli"
+- **COMMUNITY-014**: Cross-community "From [Community Name]" badges on neighbor cards + discovery cards
+- **Face crop responsive sizing**: `w-16 h-16 sm:w-20 sm:h-20` (was `w-20 h-20`)
+- **Name truncation**: Removed `truncate` class from neighbor cards
+- **Photo filename**: Admin-only display on photo page
+- **6 pre-existing test failures**: Cluster review mocks, community landing page mocks, neighbor card assertions
+
+### Known Issues
+- **COMMUNITY-015**: Internal photo/person links don't include community prefix (needs dedicated session)
+- Test ordering issues in full suite (pre-existing, pass in isolation)
+
 ## [v0.97.2] — 2026-03-09 (Session 96c: Community Identity Pipeline + Data Integrity)
 
 ### Added

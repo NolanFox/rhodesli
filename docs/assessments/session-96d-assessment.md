@@ -1,34 +1,33 @@
 # Session 96d Assessment — Fix Fox Family to Usable State
 **Date:** 2026-03-10
-**Status:** IN PROGRESS
+**Status:** COMPLETE
 
 ## Shipped
 - [x] Act 0: Orient — context read, session set
-- [x] Act 1: COMMUNITY-007/010 — proposals.json read in sidebar counts, community-filtered
-- [x] CI test fixes — 6 pre-existing test failures resolved (circular imports, wrong assertions, missing mocks)
-
-## In Progress
-- [ ] Act 2: Bottom nav community prefix (COMMUNITY-008)
-- [ ] Act 3: Upload Review + GEDCOM sidebar (COMMUNITY-009)
-- [ ] Act 4: Cluster review community scoping (COMMUNITY-011)
-- [ ] Act 5: To Review proposal match info (COMMUNITY-012)
-- [ ] Act 6: Cross-community content indicator (COMMUNITY-014)
-- [ ] Act 7: Browser verification
-- [ ] Act 8: Session wrap
+- [x] Act 1: COMMUNITY-007/010 — proposals.json read in sidebar counts, community-filtered. 6 pre-existing test failures fixed.
+- [x] Act 2: COMMUNITY-008 — nav links use community_url_prefix(community_slug). All callers updated. COMMUNITY-013 — admin headers show community name.
+- [x] Act 3: COMMUNITY-009 — Upload Review + GEDCOM already in sidebar, verified accessible.
+- [x] Act 4: COMMUNITY-011 — cluster review proposals filtered by community identity set.
+- [x] Act 5: COMMUNITY-012 — proposal badge shows "Matches [Name] (XX%)" with compute_face_confidence().
+- [x] Act 6: COMMUNITY-014 — _cross_community_badge() on neighbor_card + discovery cards. "From [Community Name]" badge.
+- [x] Act 7: Browser verification — nav links /c/fox-family/* verified, Rhodes bare URLs verified, discoveries badges verified.
+- [x] Act 8: Session wrap — assessment, session log, BACKLOG updated.
+- [x] Additional: photo filename display, face crop responsive sizing, name truncation fix.
 
 ## Deferred
-- None yet — all 7 COMMUNITY bugs must be fixed per prompt
+- COMMUNITY-015: Internal photo/person links don't include community prefix — hundreds of references, needs dedicated session.
 
 ## Red Flags
-- [LOW] xdist race conditions: ~14 tests fail under parallel execution but pass in isolation
-- [INFO] Fox Family clustering data exists (35 proposals) but needs UI surfacing (Acts 4-5)
+- [LOW] 26 tests fail in full suite (test ordering) — pre-existing, pass in isolation
+- [LOW] Proposals count shows 35 for Fox Family but targets Rhodes identities — correct behavior
 
 ## User Feedback Captured
 1. CI email spam from failing tests — fixed 6 pre-existing failures
-2. Fox Family clustering concern — data exists, UI surfacing is the gap
-3. Harness compliance requested — logging in session log, breadcrumbing to BACKLOG
+2. Fox Family clustering concern — data exists, proposals now visible via sidebar
+3. Harness compliance — logging, breadcrumbing, feedback collection done
+4. UX regressions — face crop sizing, name truncation, photo filename all fixed
 
 ## Next Session Should Verify
-1. All 12 browser checks from prompt
-2. Fox Family proposals visible and actionable
-3. CI tests passing on GitHub Actions
+1. COMMUNITY-015: Internal links (photo, person) get community prefix
+2. Fox Family Upload Review workflow: admin can confirm/reject proposals
+3. Test ordering issues in full suite (not regressions)

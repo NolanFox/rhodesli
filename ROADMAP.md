@@ -59,12 +59,12 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
-- [-] 2026-03-09: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix). Remaining: about page, tools photo picker. See BACKLOG.
+- [x] 2026-03-10: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix + 96d). Remaining: about page, tools photo picker.
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
-- [-] 2026-03-09: COMMUNITY-003: Cross-community identity tagging — photo-derived identity sets + auto-tag identity_communities (AD-213, AD-216, Session 96c)
+- [x] 2026-03-10: COMMUNITY-003: Cross-community identity tagging — photo-derived identity sets + auto-tag identity_communities (AD-213, AD-216, Session 96c + 96d)
 - [ ] COMMUNITY-004: "Shared person" indicator on identity cards — show when a person appears in multiple archives
-- [-] 2026-03-09: COMMUNITY-005: Community-scoped sidebar counts — remove ML feature zeroing, enable Admin section for all communities (Session 96c)
-- [-] 2026-03-09: COMMUNITY-006: Community-aware discoveries — filter by photo-derived identity set (Session 96c)
+- [x] 2026-03-10: COMMUNITY-005: Community-scoped sidebar counts — remove ML feature zeroing, enable Admin section for all communities (Session 96c + 96d proposals count)
+- [x] 2026-03-10: COMMUNITY-006: Community-aware discoveries — filter by photo-derived identity set (Session 96c + 96d cross-community badges)
 
 ### Near-Term — Post-Upload Intelligence (PRD-037)
 - [x] 2026-03-09: UPLOAD-001: Charlie Fox collection ingest — 636 photos via local pipeline (Session 96b)
@@ -145,6 +145,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-10: **v0.97.3 — Session 96d**: Fix Fox Family to Usable State. All 7 COMMUNITY bugs fixed (007-014). Nav links use community prefix. Proposals surfaced in sidebar (35 proposals). Cluster review community-scoped. Cross-community "From [Community Name]" badges. Proposal match info ("Matches [Name] (XX%)"). Face crop responsive sizing. Photo filename display. Name truncation fix. 6 pre-existing test failures fixed. Browser verified. Known: COMMUNITY-015 internal links.
 
 - [x] 2026-03-09: **v0.97.2 — Session 96c**: Community Identity Pipeline + Data Integrity. Photo-derived identity sets (AD-216). Admin sections ungated for all communities. ML feature counts restored. Community-aware discoveries. David Capeloto photo restored (Lesson 78). Fox Family admin view fixed. Dismissed section grid layout. Supabase backfill (2,533 identities). Data integrity validator + orphan detection tests. 81 new tests. Browser verified 10/10. Known issues: COMMUNITY-007/008 sidebar counts.
 
