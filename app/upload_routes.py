@@ -748,6 +748,29 @@ async def post(
                     print(f"[upload] Auto-cluster error for job {job_id}: {e}")
                     # Auto-cluster failure should NOT block the upload
 
+            # AD-216: Group similar unknown faces into clusters after auto-cluster
+            if result.get("status") in ("success", "partial") and result.get("face_ids"):
+                try:
+                    from core.grouping import group_inbox_identities
+
+                    registry = _main_mod.load_registry()
+                    photo_reg = _main_mod.load_photo_registry()
+                    # Load face data the same way auto-cluster does
+                    from scripts.cluster_new_faces import load_face_data as _load_fd
+
+                    face_data_for_grouping = _load_fd(data_path)
+                    grouping_result = group_inbox_identities(registry, face_data_for_grouping, photo_reg, dry_run=False)
+                    if grouping_result.get("total_merged", 0) > 0:
+                        _main_mod.save_registry(registry)
+                        print(
+                            f"[upload] Grouping: {grouping_result['total_merged']} merges "
+                            f"in {len(grouping_result.get('groups', []))} clusters for job {job_id}"
+                        )
+                    else:
+                        print(f"[upload] Grouping: no merges needed for job {job_id}")
+                except Exception as e:
+                    print(f"[upload] Face grouping failed (non-fatal): {e}")
+
             # AD-216: Tag identities to community after clustering
             # Photo-derived identity set handles this automatically via cache,
             # but explicit tagging in identity_communities improves query performance.

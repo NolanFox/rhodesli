@@ -127,7 +127,7 @@ def _face_match_card(proposal, identity_name, identity_id):
     )
 
 
-def _identity_match_group(identity_id, identity_name, proposals):
+def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
     """Render a group of matches for one target identity."""
     # Sort by distance descending (weakest = most likely false positive first)
     proposals_sorted = sorted(proposals, key=lambda p: -p["distance"])
@@ -162,7 +162,7 @@ def _identity_match_group(identity_id, identity_name, proposals):
                 H3(
                     A(
                         identity_name,
-                        href=f"/person/{identity_id}",
+                        href=f"{nav_prefix}/person/{identity_id}",
                         cls="text-white hover:text-blue-400 transition-colors",
                     ),
                     cls="text-base font-semibold",
@@ -202,7 +202,7 @@ def _identity_match_group(identity_id, identity_name, proposals):
     )
 
 
-def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom):
+def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_prefix=""):
     """Render a card for GEDCOM triage — identity with face count and link button."""
     registry = _main_mod.load_registry()
     identity = registry.get(identity_id) if hasattr(registry, "get") else registry._identities.get(identity_id)
@@ -238,7 +238,7 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom):
                 H4(
                     A(
                         identity_name,
-                        href=f"/person/{identity_id}",
+                        href=f"{nav_prefix}/person/{identity_id}",
                         cls="text-white hover:text-blue-400 transition-colors",
                     ),
                     cls="text-sm font-semibold",
@@ -283,6 +283,7 @@ def get(sess=None, request=None):
 
     # COMMUNITY-011: Filter proposals by community identity set
     community = getattr(request.state, "community", None) if request else None
+    community_identity_ids = None
     if community:
         community_identity_ids = _main_mod._get_community_identity_ids(community)
         if community_identity_ids is not None:
@@ -292,6 +293,10 @@ def get(sess=None, request=None):
                 if p.get("source_identity_id") in community_identity_ids
                 or p.get("target_identity_id") in community_identity_ids
             ]
+
+    # Compute nav prefix for community-scoped links (COMMUNITY-016)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     # Group proposals by target identity
     groups = {}
@@ -317,7 +322,7 @@ def get(sess=None, request=None):
                 "Weakest matches shown first within each group.",
                 cls="text-sm text-slate-400 mb-6",
             ),
-            *[_identity_match_group(tid, g["name"], g["proposals"]) for tid, g in sorted_groups],
+            *[_identity_match_group(tid, g["name"], g["proposals"], nav_prefix=nav_prefix) for tid, g in sorted_groups],
             cls="mb-12",
         )
     else:
@@ -332,9 +337,17 @@ def get(sess=None, request=None):
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
+    # COMMUNITY-016: Filter to community identities when in community context
+    if community and community_identity_ids is not None:
+        community_filtered_identities = {
+            iid: idata for iid, idata in identities.items() if iid in community_identity_ids
+        }
+    else:
+        community_filtered_identities = identities
+
     # Count faces per identity (confirmed + candidates)
     face_counts = []
-    for iid, idata in identities.items():
+    for iid, idata in community_filtered_identities.items():
         if idata.get("state") in ("CONFIRMED", "PROPOSED"):
             anchors = idata.get("anchor_ids", [])
             candidates = idata.get("candidate_ids", [])
@@ -343,7 +356,8 @@ def get(sess=None, request=None):
                 has_gedcom = bool(idata.get("gedcom_xref"))
                 face_counts.append((iid, idata.get("name", "Unknown"), total, has_gedcom))
 
-    face_counts.sort(key=lambda x: -x[2])  # Most faces first
+    # Sort: unlinked first, then by face count descending
+    face_counts.sort(key=lambda x: (x[3], -x[2]))  # has_gedcom=False first, then most faces
     top_identities = face_counts[:30]  # Show top 30
 
     gedcom_section = Div(
@@ -354,7 +368,10 @@ def get(sess=None, request=None):
             cls="text-sm text-slate-400 mb-6",
         ),
         Div(
-            *[_gedcom_triage_card(iid, name, count, has_gedcom) for iid, name, count, has_gedcom in top_identities],
+            *[
+                _gedcom_triage_card(iid, name, count, has_gedcom, nav_prefix=nav_prefix)
+                for iid, name, count, has_gedcom in top_identities
+            ],
             cls="grid gap-3 sm:grid-cols-2 lg:grid-cols-3",
         )
         if top_identities

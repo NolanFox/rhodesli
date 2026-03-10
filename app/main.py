@@ -543,6 +543,11 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
     if not communities:
         return None
 
+    # First check if identity belongs to current community — if so, no badge needed
+    current_ids = _get_community_identity_ids(current_community)
+    if current_ids and identity_id in current_ids:
+        return None  # Identity is in current community, no cross-community badge
+
     for comm in communities:
         comm_slug = comm.get("slug", "")
         comm_id = comm.get("id")
@@ -558,6 +563,39 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
                 cls="text-xs px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/30",
                 title=f"This person appears in the {comm_name} archive",
             )
+
+    return None
+
+
+def _identity_home_community_slug(identity_id: str, current_community: dict | None) -> str | None:
+    """Return the slug of the community an identity belongs to, if different from current.
+
+    Returns None if the identity belongs to the current community or no cross-community
+    membership is found. Used for building correct navigation links to cross-community identities.
+    """
+    if current_community is None:
+        return None
+
+    current_slug = current_community.get("slug", "rhodes")
+    current_id = current_community.get("id")
+    if not current_id:
+        return None
+
+    from app.supabase_data import load_communities
+
+    communities = load_communities()
+    if not communities:
+        return None
+
+    for comm in communities:
+        comm_slug = comm.get("slug", "")
+        comm_id = comm.get("id")
+        if not comm_id or comm_slug == current_slug:
+            continue
+
+        other_ids = _get_community_identity_ids(comm)
+        if other_ids and identity_id in other_ids:
+            return comm_slug
 
     return None
 
@@ -975,6 +1013,11 @@ async def custom_404_handler(request, exc):
 # Registry path - single source of truth
 REGISTRY_PATH = data_path / "identities.json"
 
+# Registry TTL cache — avoids reloading 2500+ identities from Supabase on every request
+_registry_cache = None
+_registry_cache_ts: float = 0.0
+_REGISTRY_CACHE_TTL: float = 30.0
+
 
 def load_registry():
     """Load the identity registry (backend authority).
@@ -982,13 +1025,24 @@ def load_registry():
     When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
     When DATA_SOURCE=json (default), loads from JSON file.
 
+    Uses a 30-second TTL cache to avoid repeated Supabase queries.
+
     Returns an empty registry if the source is missing or corrupted,
     so the server never crashes on bad data.
     """
+    global _registry_cache, _registry_cache_ts
+    import time as _time
+
+    now = _time.time()
+    if _registry_cache is not None and (now - _registry_cache_ts) < _REGISTRY_CACHE_TTL:
+        return _registry_cache
+
     if DATA_SOURCE == "postgres":
         try:
             registry = IdentityRegistry.load_from_postgres()
             if registry is not None:
+                _registry_cache = registry
+                _registry_cache_ts = now
                 return registry
             logging.warning("Postgres load returned None, falling back to JSON")
         except Exception as e:
@@ -996,7 +1050,10 @@ def load_registry():
 
     if REGISTRY_PATH.exists():
         try:
-            return IdentityRegistry.load(REGISTRY_PATH)
+            registry = IdentityRegistry.load(REGISTRY_PATH)
+            _registry_cache = registry
+            _registry_cache_ts = now
+            return registry
         except (ValueError, OSError) as e:
             logging.error(f"Failed to load identity registry from {REGISTRY_PATH}: {e}")
             return IdentityRegistry()
@@ -1017,6 +1074,9 @@ def save_registry(registry, confirmed_identity_info=None):
             - user_id: str (Supabase auth user ID of the admin)
             - user_email: str (email for Resend notification delivery)
     """
+    global _registry_cache
+    _registry_cache = None  # Invalidate cache on save
+
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase
         try:
@@ -3424,11 +3484,13 @@ def _invalidate_all_caches():
     """Reset all in-memory caches so data is reloaded from disk."""
     global _photo_cache, _face_to_photo_cache, _photo_id_aliases
     global _date_labels_cache, _photo_locations_cache
+    global _registry_cache
     _photo_cache = None
     _face_to_photo_cache = None
     _photo_id_aliases = None
     _date_labels_cache = None
     _photo_locations_cache = None
+    _registry_cache = None
 
 
 def _upload_new_files_to_r2(data_dir: Path, job_id: str):
@@ -6361,67 +6423,31 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
 
     discoveries = []
 
-    # Use proposals first (cheap), then fall back to batch computation
+    # Proposal-only discovery: O(p) where p = number of proposals
+    # No batch_best_neighbor_distances fallback — identities without proposals
+    # simply don't appear in discoveries. Run clustering pipeline to generate proposals.
     ids_with_proposals = _get_identities_with_proposals()
-    needs_computation = []
+    unreviewed_ids = {u["identity_id"] for u in unreviewed}
 
     for identity in unreviewed:
         iid = identity["identity_id"]
-        if iid in ids_with_proposals:
-            best = _get_best_proposal_for_identity(iid)
-            if best:
-                target_id = best.get("target_identity_id", best.get("target_id", ""))
-                if target_id in confirmed_ids and best.get("distance", 999) < DISCOVERY_DISTANCE_THRESHOLD:
-                    dist = best["distance"]
-                    discoveries.append(
-                        {
-                            "source_id": iid,
-                            "source_name": ensure_utf8_display(identity.get("name", "")),
-                            "target_id": target_id,
-                            "target_name": ensure_utf8_display(best.get("target_name", best.get("name", ""))),
-                            "distance": dist,
-                            "confidence": _confidence_tier(dist),
-                        }
-                    )
-                continue  # Already checked via proposal
-        needs_computation.append(identity)
-
-    # For the rest, use batch neighbor computation filtered to confirmed targets
-    # Cap at 200 to prevent server timeout on large archives (Fox Family has 1600+)
-    MAX_BATCH_DISCOVERY = 200
-    if needs_computation and len(needs_computation) <= MAX_BATCH_DISCOVERY:
-        try:
-            from core.neighbors import batch_best_neighbor_distances
-
-            face_data = get_face_data()
-
-            # Compute neighbors for unreviewed identities
-            need_ids = [i["identity_id"] for i in needs_computation]
-            batch_results = batch_best_neighbor_distances(need_ids, registry, face_data)
-
-            for identity in needs_computation:
-                iid = identity["identity_id"]
-                if iid not in batch_results:
-                    continue
-                dist, neighbor_id, neighbor_name = batch_results[iid]
-                if neighbor_id and neighbor_id in confirmed_ids and dist < DISCOVERY_DISTANCE_THRESHOLD:
-                    discoveries.append(
-                        {
-                            "source_id": iid,
-                            "source_name": ensure_utf8_display(identity.get("name", "")),
-                            "target_id": neighbor_id,
-                            "target_name": ensure_utf8_display(neighbor_name or ""),
-                            "distance": dist,
-                            "confidence": _confidence_tier(dist),
-                        }
-                    )
-        except (ImportError, Exception) as e:
-            logging.warning(f"[discoveries] Batch neighbor computation failed: {e}")
-    elif needs_computation:
-        logging.info(
-            f"[discoveries] Skipping batch computation for {len(needs_computation)} identities "
-            f"(>{MAX_BATCH_DISCOVERY} cap). Run clustering pipeline to generate proposals."
-        )
+        if iid not in ids_with_proposals:
+            continue
+        best = _get_best_proposal_for_identity(iid)
+        if best:
+            target_id = best.get("target_identity_id", best.get("target_id", ""))
+            if target_id in confirmed_ids and best.get("distance", 999) < DISCOVERY_DISTANCE_THRESHOLD:
+                dist = best["distance"]
+                discoveries.append(
+                    {
+                        "source_id": iid,
+                        "source_name": ensure_utf8_display(identity.get("name", "")),
+                        "target_id": target_id,
+                        "target_name": ensure_utf8_display(best.get("target_name", best.get("name", ""))),
+                        "distance": dist,
+                        "confidence": _confidence_tier(dist),
+                    }
+                )
 
     # Batch-compute co-occurrence for all discoveries (cheaper than per-card)
     try:
@@ -8124,8 +8150,13 @@ def neighbor_card(
     neighbor_section = _section_for_state(neighbor.get("state", "INBOX"))
 
     # Community-aware navigation prefix (COMMUNITY-015)
-    _community_slug = current_community.get("slug") if current_community else None
-    _nav_prefix = community_url_prefix(_community_slug)
+    # If neighbor belongs to a different community, link to THAT community's pages
+    _cross_slug = _identity_home_community_slug(neighbor_id, current_community)
+    if _cross_slug:
+        _nav_prefix = community_url_prefix(_cross_slug)
+    else:
+        _community_slug = current_community.get("slug") if current_community else None
+        _nav_prefix = community_url_prefix(_community_slug)
 
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
     nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"

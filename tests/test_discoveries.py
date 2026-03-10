@@ -95,8 +95,8 @@ class TestCountDiscoveries:
         count = _count_discoveries(registry)
         assert count == 0
 
-    def test_counts_high_confidence_match_via_batch(self):
-        """Counts a discovery when batch neighbor finds a close confirmed match."""
+    def test_counts_high_confidence_match_via_proposal(self):
+        """Counts a discovery when a proposal matches a confirmed identity."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
 
         _invalidate_discovery_cache()
@@ -107,20 +107,23 @@ class TestCountDiscoveries:
         ]
         registry = _make_registry_mock(identities)
 
-        # batch_best_neighbor_distances returns conf1 as closest with distance 0.7
-        batch_result = {"inbox1": (0.7, "conf1", "Known Person")}
+        proposal = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 0.7,
+            "confidence": "HIGH",
+        }
 
         with (
-            patch("app.main._get_identities_with_proposals", return_value=set()),
-            patch("app.main.get_face_data", return_value={}),
-            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
         ):
             count = _count_discoveries(registry)
 
         assert count == 1
 
     def test_ignores_low_confidence_match(self):
-        """Does not count matches with distance >= 1.05."""
+        """Does not count matches with distance >= threshold."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
 
         _invalidate_discovery_cache()
@@ -132,12 +135,16 @@ class TestCountDiscoveries:
         registry = _make_registry_mock(identities)
 
         # Distance 1.5 is too far — not a discovery
-        batch_result = {"inbox1": (1.5, "conf1", "Known Person")}
+        proposal = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 1.5,
+            "confidence": "LOW",
+        }
 
         with (
-            patch("app.main._get_identities_with_proposals", return_value=set()),
-            patch("app.main.get_face_data", return_value={}),
-            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
         ):
             count = _count_discoveries(registry)
 
@@ -155,17 +162,41 @@ class TestCountDiscoveries:
         ]
         registry = _make_registry_mock(identities)
 
-        # Distance 1.01 was previously excluded (threshold was 1.0), now included
-        batch_result = {"inbox1": (1.01, "conf1", "Known Person")}
+        # Distance 1.01 is within threshold (1.30)
+        proposal = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 1.01,
+            "confidence": "MEDIUM",
+        }
 
         with (
-            patch("app.main._get_identities_with_proposals", return_value=set()),
-            patch("app.main.get_face_data", return_value={}),
-            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
         ):
             count = _count_discoveries(registry)
 
         assert count == 1
+
+    def test_no_discovery_without_proposal(self):
+        """Identity without a proposal does not appear in discoveries."""
+        from app.main import _count_discoveries, _invalidate_discovery_cache
+
+        _invalidate_discovery_cache()
+
+        identities = [
+            _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"]),
+            _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["face_conf1"]),
+        ]
+        registry = _make_registry_mock(identities)
+
+        # No proposals exist for inbox1
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+        ):
+            count = _count_discoveries(registry)
+
+        assert count == 0
 
 
 class TestComputeDiscoveries:
@@ -200,12 +231,16 @@ class TestComputeDiscoveries:
         ]
         registry = _make_registry_mock(identities)
 
-        batch_result = {"inbox1": (0.5, "conf1", "Known Person")}
+        proposal = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 0.5,
+            "confidence": "VERY HIGH",
+        }
 
         with (
-            patch("app.main._get_identities_with_proposals", return_value=set()),
-            patch("app.main.get_face_data", return_value={}),
-            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
         ):
             result = _compute_discoveries(registry)
 
@@ -235,16 +270,30 @@ class TestComputeDiscoveries:
         ]
         registry = _make_registry_mock(identities)
 
-        # inbox2 is closer than inbox1
-        batch_result = {
-            "inbox1": (0.9, "conf1", "Known Person"),
-            "inbox2": (0.6, "conf1", "Known Person"),
+        # inbox2 is closer than inbox1 — both have proposals
+        proposal1 = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 0.9,
+            "confidence": "MEDIUM",
+        }
+        proposal2 = {
+            "target_identity_id": "conf1",
+            "target_name": "Known Person",
+            "distance": 0.6,
+            "confidence": "HIGH",
         }
 
+        def mock_best_proposal(iid):
+            if iid == "inbox1":
+                return proposal1
+            if iid == "inbox2":
+                return proposal2
+            return None
+
         with (
-            patch("app.main._get_identities_with_proposals", return_value=set()),
-            patch("app.main.get_face_data", return_value={}),
-            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1", "inbox2"}),
+            patch("app.main._get_best_proposal_for_identity", side_effect=mock_best_proposal),
         ):
             result = _compute_discoveries(registry)
 
