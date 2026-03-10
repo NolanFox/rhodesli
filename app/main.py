@@ -1188,9 +1188,8 @@ def _build_upload_provenance_line(photo: dict):
     if upload_date_label:
         return Span(f"Added to archive: {upload_date_label}", cls="text-xs text-slate-500")
 
-    if photo.get("source"):
-        return Span(f"Source: {photo['source']}", cls="text-xs text-slate-500")
-
+    # Source is already shown in the Collection/Source/URL section of photo context modal.
+    # Don't duplicate it here (BUG-5, Session 96e-cont6).
     return None
 
 

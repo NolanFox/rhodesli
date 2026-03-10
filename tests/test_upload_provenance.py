@@ -44,8 +44,8 @@ class TestUploadProvenanceDisplay:
         assert "user@example.com" in resp.text
         assert "Uploaded by" in resp.text
 
-    def test_photo_page_falls_back_to_source(self, client):
-        """Photo page shows 'Source: X' when no uploaded_by field."""
+    def test_photo_page_shows_source_in_metadata_section(self, client):
+        """Photo page shows source in collection/source section, not in provenance line (BUG-5 fix)."""
         mock_photo_cache = {
             "test_nosource": {
                 "filename": "test.jpg",
@@ -73,7 +73,15 @@ class TestUploadProvenanceDisplay:
             resp = client.get("/photo/test_nosource")
 
         assert resp.status_code == 200
-        assert "Source: Betty Capeluto Album" in resp.text
+        # Source appears in the collection/source section
+        assert "Betty Capeluto Album" in resp.text
+        # The provenance line should NOT show "Source: Betty Capeluto Album" as a separate line
+        # (BUG-5 fix removed duplicate source from _build_upload_provenance_line)
+        from app.main import _build_upload_provenance_line
+        from fasthtml.common import to_xml
+
+        result = _build_upload_provenance_line({"source": "Betty Capeluto Album"})
+        assert result is None, "Provenance line should not show source fallback"
 
     def test_photo_page_shows_added_to_archive_when_upload_date_backfilled(self, client):
         """Backfilled upload dates should render even when no uploader email exists."""
@@ -197,6 +205,56 @@ class TestRecentlyReviewedCards:
         assert resp.status_code == 200
         assert "View photo" in resp.text
         assert "/photo/inbox_job_abc_0_family_photo" in resp.text
+
+
+class TestApplySuggestionsReturnValue:
+    """BUG-1 fix: apply_suggestions returns (data, count), not just data."""
+
+    def test_apply_suggestions_returns_tuple(self):
+        """apply_suggestions must return (updated_data, applied_count) tuple."""
+        from scripts.cluster_new_faces import apply_suggestions
+
+        identities_data = {
+            "schema_version": 1,
+            "identities": {
+                "source-id": {
+                    "identity_id": "source-id",
+                    "name": "Unknown",
+                    "state": "INBOX",
+                    "anchor_ids": ["face1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+                "target-id": {
+                    "identity_id": "target-id",
+                    "name": "Known Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face2"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+            },
+        }
+        suggestions = [
+            {
+                "face_id": "face1",
+                "source_identity_id": "source-id",
+                "target_identity_id": "target-id",
+                "distance": 0.7,
+            }
+        ]
+
+        result = apply_suggestions(identities_data, suggestions)
+        # Must be a tuple of (dict, int)
+        assert isinstance(result, tuple), f"apply_suggestions should return tuple, got {type(result)}"
+        updated_data, applied_count = result
+        assert isinstance(updated_data, dict)
+        assert isinstance(applied_count, int)
+        assert applied_count == 1
+        assert updated_data["schema_version"] == 1
+        assert "face1" in updated_data["identities"]["target-id"]["candidate_ids"]
 
 
 class TestIngestProvenancePropagation:

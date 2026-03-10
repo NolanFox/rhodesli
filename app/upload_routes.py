@@ -818,6 +818,8 @@ async def post(
                 source=source,
                 collection=collection,
                 prefer_hybrid=True,  # Use already-loaded hybrid models (AD-161)
+                uploaded_by=uploader_email,
+                upload_date=datetime.now(timezone.utc).isoformat(),
             )
 
             # AD-165: Upload to R2 INSIDE the thread, BEFORE staging cleanup.
@@ -879,7 +881,6 @@ async def post(
             if result.get("status") in ("success", "partial") and result.get("face_ids"):
                 try:
                     from scripts.cluster_new_faces import (
-                        apply_suggestions,
                         find_matches,
                         load_face_data,
                         load_identities,
@@ -891,15 +892,13 @@ async def post(
                     suggestions = find_matches(identities_data, face_data_dict, MATCH_THRESHOLD_HIGH)
 
                     if suggestions:
-                        updated_data = apply_suggestions(identities_data, suggestions)
-                        # Write updated identities back to JSON
                         import json as _json_cluster
                         from datetime import datetime as _dt_cluster, timezone as _tz_cluster
 
-                        with open(data_path / "identities.json", "w") as _idf:
-                            _json_cluster.dump(updated_data, _idf, indent=2)
-
-                        # Write proposals for the review page
+                        # BUG-7 fix: Do NOT auto-apply suggestions. Write proposals only.
+                        # Applying suggestions merges source identities, making them invisible
+                        # to discoveries (which looks for INBOX/PROPOSED source identities).
+                        # Gatekeeper pattern: proposals are for admin review, not auto-merge.
                         proposals_path = data_path / "proposals.json"
                         proposals_data = {
                             "generated_at": _dt_cluster.now(_tz_cluster.utc).isoformat(),
@@ -956,7 +955,10 @@ async def post(
                     from app.supabase_data import add_identity_to_community
 
                     # Find identities with faces in the newly uploaded photos
-                    registry = _main_mod.load_registry()
+                    # Must load from JSON (not Postgres) because new identities only exist in JSON
+                    from core.registry import IdentityRegistry as _IR_tag
+
+                    registry = _IR_tag.load(data_path / "identities.json")
                     tagged_count = 0
                     for fid in result.get("face_ids", []):
                         identity = _main_mod.get_identity_for_face(registry, fid)
