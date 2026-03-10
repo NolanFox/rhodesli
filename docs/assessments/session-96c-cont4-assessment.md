@@ -47,8 +47,29 @@ All 4 continuations of session 96c complete:
 - [LOW] Sidebar counts for Fox Family are global, not community-scoped — logged as COMMUNITY-007/008 in BACKLOG
 - [LOW] Fox Family bottom nav links missing community prefix — logged as COMMUNITY-008
 
+## Continuation — Discoveries Fix Assessment
+
+### Shipped (this continuation)
+- [x] Discoveries community scoping — HTMX URLs include /c/ prefix
+- [x] Discoveries pagination — PAGE_SIZE=50 with truncation notice
+- [x] Performance fix — early community filter before batch computation
+- [x] Rhodes fallback — bare /api/ calls get Rhodes community context
+- [x] Cross-community matching — confirmed_list kept global (Betty/Ray Franco)
+
+### Critical Finding: Clustering Data Exists But Not Surfaced
+- proposals.json has 35 valid proposals (30 Roland Fox, 4 Betty, 1 Ray Franco)
+- discovery_log.json has 16 Fox-related entries
+- The data is there but the Fox Family UI doesn't show it
+- Root cause: sidebar counts + cluster review page not community-scoped
+
+### Red Flags
+- [HIGH] Fox Family shows 1602 flat INBOX faces with no proposal grouping — user says "totally unusable"
+- [MEDIUM] Proposals count shows 0 despite 35 valid proposals in proposals.json
+- [MEDIUM] Admin page headers show "Rhodesli" instead of "Fox Family Archive"
+
 ## Next Session Should Verify
-1. Fix COMMUNITY-007 (sidebar counts community scoping)
-2. Fix COMMUNITY-008 (bottom nav community prefix)
-3. Continue COMMUNITY-003 (cross-community identity tagging)
-4. Continue PRD037-004 (wire cluster review into community sidebar)
+1. Verify cross-community discoveries show Betty Capeluto + Ray Franco after deploy
+2. Wire proposals.json into Fox Family sidebar (COMMUNITY-010)
+3. Community-scope cluster review page (COMMUNITY-011)
+4. Fix COMMUNITY-007/008 sidebar counts
+5. Make To Review section show proposal matches inline (not flat 1602 list)
