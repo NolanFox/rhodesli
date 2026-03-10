@@ -72,7 +72,156 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
     if existing_collections is None:
         existing_collections = []
 
+    # JS for two-step upload: select files → preview list → click Upload
+    upload_script = Script("""
+    (function() {
+        var selectedFiles = [];
+
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'upload-file-input') {
+                selectedFiles = Array.from(e.target.files);
+                renderFileList();
+            }
+        });
+
+        // Drag-and-drop support
+        document.addEventListener('dragover', function(e) {
+            var dropZone = document.getElementById('upload-drop-zone');
+            if (dropZone && dropZone.contains(e.target)) {
+                e.preventDefault();
+                dropZone.classList.add('border-indigo-400', 'bg-slate-700/50');
+            }
+        });
+        document.addEventListener('dragleave', function(e) {
+            var dropZone = document.getElementById('upload-drop-zone');
+            if (dropZone && !dropZone.contains(e.relatedTarget)) {
+                dropZone.classList.remove('border-indigo-400', 'bg-slate-700/50');
+            }
+        });
+        document.addEventListener('drop', function(e) {
+            var dropZone = document.getElementById('upload-drop-zone');
+            if (dropZone && dropZone.contains(e.target)) {
+                e.preventDefault();
+                dropZone.classList.remove('border-indigo-400', 'bg-slate-700/50');
+                var dt = e.dataTransfer;
+                if (dt && dt.files.length) {
+                    selectedFiles = selectedFiles.concat(Array.from(dt.files));
+                    renderFileList();
+                }
+            }
+        });
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function renderFileList() {
+            var preview = document.getElementById('upload-file-preview');
+            var uploadBtn = document.getElementById('upload-submit-btn');
+            var addMoreBtn = document.getElementById('upload-add-more-btn');
+            var dropPrompt = document.getElementById('upload-drop-prompt');
+            if (!preview) return;
+
+            if (selectedFiles.length === 0) {
+                preview.innerHTML = '';
+                preview.classList.add('hidden');
+                if (uploadBtn) uploadBtn.classList.add('hidden');
+                if (addMoreBtn) addMoreBtn.classList.add('hidden');
+                if (dropPrompt) dropPrompt.classList.remove('hidden');
+                return;
+            }
+
+            if (dropPrompt) dropPrompt.classList.add('hidden');
+            if (addMoreBtn) addMoreBtn.classList.remove('hidden');
+
+            var totalSize = selectedFiles.reduce(function(s, f) { return s + f.size; }, 0);
+            var html = '<div class="flex items-center justify-between mb-2">' +
+                '<span class="text-sm font-medium text-slate-200">' + selectedFiles.length +
+                ' file' + (selectedFiles.length !== 1 ? 's' : '') + ' selected</span>' +
+                '<span class="text-xs text-slate-400">' + formatSize(totalSize) + ' total</span></div>';
+            html += '<div class="max-h-48 overflow-y-auto space-y-1">';
+            for (var i = 0; i < selectedFiles.length; i++) {
+                var f = selectedFiles[i];
+                html += '<div class="flex items-center justify-between py-1.5 px-2 bg-slate-700/50 rounded text-sm">' +
+                    '<span class="text-slate-300 truncate mr-2" style="max-width:70%">' + f.name + '</span>' +
+                    '<div class="flex items-center gap-2 shrink-0">' +
+                    '<span class="text-xs text-slate-500">' + formatSize(f.size) + '</span>' +
+                    '<button type="button" data-action="remove-upload-file" data-index="' + i + '" ' +
+                    'class="text-slate-500 hover:text-red-400 text-xs px-1">&times;</button>' +
+                    '</div></div>';
+            }
+            html += '</div>';
+            preview.innerHTML = html;
+            preview.classList.remove('hidden');
+            if (uploadBtn) uploadBtn.classList.remove('hidden');
+        }
+
+        // Remove individual file
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action="remove-upload-file"]');
+            if (btn) {
+                var idx = parseInt(btn.getAttribute('data-index'));
+                selectedFiles.splice(idx, 1);
+                renderFileList();
+            }
+        });
+
+        // Upload button click — build FormData and submit via HTMX-compatible fetch
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action="upload-submit"]');
+            if (!btn || selectedFiles.length === 0) return;
+
+            var fd = new FormData();
+            for (var i = 0; i < selectedFiles.length; i++) {
+                fd.append('files', selectedFiles[i]);
+            }
+            var src = document.getElementById('upload-source');
+            var col = document.getElementById('upload-collection');
+            var url = document.getElementById('upload-source-url');
+            if (src) fd.append('source', src.value);
+            if (col) fd.append('collection', col.value);
+            if (url) fd.append('source_url', url.value);
+
+            var status = document.getElementById('upload-status');
+            if (status) status.innerHTML = '<div class="flex items-center gap-2 py-3"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm text-slate-300">Uploading ' + selectedFiles.length + ' file' + (selectedFiles.length !== 1 ? 's' : '') + '...</span></div>';
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin'
+            }).then(function(r) { return r.text(); })
+            .then(function(html) {
+                if (status) status.innerHTML = html;
+                selectedFiles = [];
+                renderFileList();
+                btn.disabled = false;
+                btn.textContent = 'Upload Files';
+                // Reset file input
+                var inp = document.getElementById('upload-file-input');
+                if (inp) inp.value = '';
+            }).catch(function(err) {
+                if (status) status.innerHTML = '<div class="p-2 text-red-400 text-sm">Upload failed: ' + err.message + '</div>';
+                btn.disabled = false;
+                btn.textContent = 'Upload Files';
+            });
+        });
+
+        // "Add more" click re-opens file picker
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('[data-action="upload-add-more"]')) {
+                var inp = document.getElementById('upload-file-input');
+                if (inp) inp.click();
+            }
+        });
+    })();
+    """)
+
     return Div(
+        upload_script,
         # Metadata fields — optional, can be filled before or after upload
         Div(
             P("Categorize your photos (optional — you can do this later)", cls="text-sm text-slate-400 mb-3"),
@@ -131,28 +280,48 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
             ),
             cls="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700",
         ),
-        # File upload area
-        Form(
+        # File selection area (two-step: select → preview → upload)
+        Div(
+            # Drop zone prompt (hidden after files selected)
             Div(
                 Span("\u2191", cls="text-4xl text-slate-500"),
-                P("Drop photos here or click to upload", cls="text-slate-300 mt-2 font-medium"),
+                P("Drop photos here or click to select", cls="text-slate-300 mt-2 font-medium"),
                 P("Multiple files allowed \u2022 JPG, PNG, or ZIP", cls="text-xs text-slate-500 mt-1"),
+                id="upload-drop-prompt",
                 cls="text-center py-8",
             ),
+            # Hidden file input
             Input(
                 type="file",
                 name="files",
+                id="upload-file-input",
                 accept="image/*,.zip",
                 multiple=True,
                 cls="absolute inset-0 opacity-0 cursor-pointer",
-                hx_post="/upload",
-                hx_encoding="multipart/form-data",
-                hx_target="#upload-status",
-                hx_swap="innerHTML",
-                hx_include="#upload-source,#upload-collection,#upload-source-url",
             ),
+            # File preview list (populated by JS)
+            Div(id="upload-file-preview", cls="hidden px-2 py-3"),
+            id="upload-drop-zone",
             cls="relative",
-            enctype="multipart/form-data",
+        ),
+        # Action buttons (below the drop zone)
+        Div(
+            Button(
+                "+ Add more files",
+                type="button",
+                data_action="upload-add-more",
+                cls="px-3 py-1.5 text-xs text-slate-400 border border-slate-600 rounded hover:text-slate-200 hover:border-slate-500 hidden",
+                id="upload-add-more-btn",
+            ),
+            Button(
+                "Upload Files",
+                type="button",
+                data_action="upload-submit",
+                id="upload-submit-btn",
+                cls="hidden px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg "
+                "hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
+            ),
+            cls="flex items-center justify-between mt-3",
         ),
         Div(id="upload-status", cls="mt-2"),
         cls="border-2 border-dashed border-slate-600 rounded-lg p-4 hover:border-slate-500 hover:bg-slate-800/50 transition-colors mb-4",

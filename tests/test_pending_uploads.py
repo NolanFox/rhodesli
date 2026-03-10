@@ -25,6 +25,7 @@ class TestPendingUploadsHelpers:
         """_load_pending_uploads returns empty dict when file doesn't exist."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _load_pending_uploads
+
             result = _load_pending_uploads()
             assert result == {"uploads": {}}
 
@@ -32,6 +33,7 @@ class TestPendingUploadsHelpers:
         """_save_pending_uploads creates the pending_uploads.json file."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads, _load_pending_uploads
+
             data = {"uploads": {"abc123": {"job_id": "abc123", "status": "pending"}}}
             _save_pending_uploads(data)
             # Verify file exists
@@ -44,12 +46,14 @@ class TestPendingUploadsHelpers:
         """_count_pending_uploads returns 0 when no pending uploads exist."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _count_pending_uploads
+
             assert _count_pending_uploads() == 0
 
     def test_count_pending_uploads_counts_pending_and_staged(self, tmp_path):
         """_count_pending_uploads counts uploads with status='pending' or 'staged'."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads, _count_pending_uploads
+
             data = {
                 "uploads": {
                     "a": {"status": "pending"},
@@ -66,6 +70,7 @@ class TestPendingUploadsHelpers:
         """_count_pending_uploads excludes uploads with status='processed'."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads, _count_pending_uploads
+
             data = {
                 "uploads": {
                     "a": {"status": "pending"},
@@ -81,6 +86,7 @@ class TestPendingUploadsHelpers:
         """_save_pending_uploads uses atomic write (no .tmp file left behind)."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
+
             _save_pending_uploads({"uploads": {}})
             # .tmp file should not exist after save
             assert not (tmp_path / "pending_uploads.tmp").exists()
@@ -92,8 +98,7 @@ class TestNonAdminUploadCreatesPending:
 
     def test_non_admin_upload_creates_pending_record(self, client, auth_enabled, regular_user, tmp_path):
         """POST /upload by non-admin creates a pending upload record."""
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main._notify_admin_upload", return_value=None):
+        with patch("app.main.data_path", tmp_path), patch("app.main._notify_admin_upload", return_value=None):
             # Create staging dir
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
 
@@ -126,8 +131,7 @@ class TestNonAdminUploadCreatesPending:
 
     def test_admin_upload_creates_staged_record(self, client, auth_enabled, admin_user, tmp_path):
         """POST /upload by admin on production creates a 'staged' pending record."""
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.PROCESSING_ENABLED", False):
+        with patch("app.main.data_path", tmp_path), patch("app.main.PROCESSING_ENABLED", False):
             # Create staging dir
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
 
@@ -164,19 +168,22 @@ class TestAdminPendingPage:
         """GET /admin/pending shows pending uploads."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "contributor@example.com",
-                        "source": "Family Album",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-06T00:00:00+00:00",
-                        "status": "pending",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "contributor@example.com",
+                            "source": "Family Album",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-06T00:00:00+00:00",
+                            "status": "pending",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.get("/admin/pending")
             assert response.status_code == 200
@@ -189,20 +196,23 @@ class TestAdminPendingPage:
         """GET /admin/pending shows staged admin uploads with 'Staged' badge."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job2": {
-                        "job_id": "job2",
-                        "uploader_email": "admin@rhodesli.test",
-                        "source": "personal photos",
-                        "collection": "Nace Capeluto Tampa Collection",
-                        "files": ["photo1.jpg", "photo2.jpg"],
-                        "file_count": 2,
-                        "submitted_at": "2026-02-10T00:00:00+00:00",
-                        "status": "staged",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job2": {
+                            "job_id": "job2",
+                            "uploader_email": "admin@rhodesli.test",
+                            "source": "personal photos",
+                            "collection": "Nace Capeluto Tampa Collection",
+                            "files": ["photo1.jpg", "photo2.jpg"],
+                            "file_count": 2,
+                            "submitted_at": "2026-02-10T00:00:00+00:00",
+                            "status": "staged",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.get("/admin/pending")
             assert response.status_code == 200
@@ -226,22 +236,24 @@ class TestApprovePendingUpload:
 
     def test_approve_updates_status(self, client, auth_enabled, admin_user, tmp_path):
         """POST /admin/pending/{id}/approve updates status to approved."""
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.PROCESSING_ENABLED", False):
+        with patch("app.main.data_path", tmp_path), patch("app.main.PROCESSING_ENABLED", False):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "contributor@example.com",
-                        "source": "Family Album",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-06T00:00:00+00:00",
-                        "status": "pending",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "contributor@example.com",
+                            "source": "Family Album",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-06T00:00:00+00:00",
+                            "status": "pending",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.post("/admin/pending/job1/approve")
             assert response.status_code == 200
@@ -274,19 +286,22 @@ class TestRejectPendingUpload:
             (staging_dir / "photo1.jpg").write_bytes(b"fake")
 
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "contributor@example.com",
-                        "source": "Family Album",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-06T00:00:00+00:00",
-                        "status": "pending",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "contributor@example.com",
+                            "source": "Family Album",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-06T00:00:00+00:00",
+                            "status": "pending",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.post("/admin/pending/job1/reject")
             assert response.status_code == 200
@@ -311,14 +326,17 @@ class TestRejectPendingUpload:
         """Cannot reject an already-approved upload."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "status": "approved",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "status": "approved",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.post("/admin/pending/job1/reject")
             assert response.status_code == 200
@@ -332,19 +350,22 @@ class TestMarkProcessedAdminUI:
         """POST /admin/pending/{id}/mark-processed updates staged to processed."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "admin@example.com",
-                        "source": "Family Album",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-06T00:00:00+00:00",
-                        "status": "staged",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "admin@example.com",
+                            "source": "Family Album",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-06T00:00:00+00:00",
+                            "status": "staged",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.post("/admin/pending/job1/mark-processed")
             assert response.status_code == 200
@@ -365,14 +386,17 @@ class TestMarkProcessedAdminUI:
         """Cannot mark-processed a pending (non-staged) upload."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "status": "pending",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "status": "pending",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.post("/admin/pending/job1/mark-processed")
             assert response.status_code == 200
@@ -382,19 +406,22 @@ class TestMarkProcessedAdminUI:
         """Admin pending page shows Mark Processed button for staged uploads."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "admin@example.com",
-                        "source": "Family Album",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-06T00:00:00+00:00",
-                        "status": "staged",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "admin@example.com",
+                            "source": "Family Album",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-06T00:00:00+00:00",
+                            "status": "staged",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.get("/admin/pending")
             assert response.status_code == 200
@@ -406,16 +433,18 @@ class TestMarkProcessedEndpoint:
 
     def test_mark_all_staged_as_processed(self, client, tmp_path):
         """Mark all staged jobs as processed."""
-        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
-             patch("app.main.data_path", tmp_path):
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {"job_id": "job1", "status": "staged"},
-                    "job2": {"job_id": "job2", "status": "staged"},
-                    "job3": {"job_id": "job3", "status": "pending"},
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {"job_id": "job1", "status": "staged"},
+                        "job2": {"job_id": "job2", "status": "staged"},
+                        "job3": {"job_id": "job3", "status": "pending"},
+                    }
                 }
-            })
+            )
 
             response = client.post(
                 "/api/sync/staged/mark-processed",
@@ -435,15 +464,17 @@ class TestMarkProcessedEndpoint:
 
     def test_mark_specific_jobs_as_processed(self, client, tmp_path):
         """Mark specific job IDs as processed."""
-        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
-             patch("app.main.data_path", tmp_path):
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {"job_id": "job1", "status": "staged"},
-                    "job2": {"job_id": "job2", "status": "staged"},
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {"job_id": "job1", "status": "staged"},
+                        "job2": {"job_id": "job2", "status": "staged"},
+                    }
                 }
-            })
+            )
 
             response = client.post(
                 "/api/sync/staged/mark-processed",
@@ -473,19 +504,22 @@ class TestMarkProcessedEndpoint:
         """Processed jobs should not appear on the admin pending page."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads
-            _save_pending_uploads({
-                "uploads": {
-                    "job1": {
-                        "job_id": "job1",
-                        "uploader_email": "admin@test.com",
-                        "status": "processed",
-                        "source": "Processed Job",
-                        "files": ["photo1.jpg"],
-                        "file_count": 1,
-                        "submitted_at": "2026-02-10T00:00:00+00:00",
+
+            _save_pending_uploads(
+                {
+                    "uploads": {
+                        "job1": {
+                            "job_id": "job1",
+                            "uploader_email": "admin@test.com",
+                            "status": "processed",
+                            "source": "Processed Job",
+                            "files": ["photo1.jpg"],
+                            "file_count": 1,
+                            "submitted_at": "2026-02-10T00:00:00+00:00",
+                        }
                     }
                 }
-            })
+            )
 
             response = client.get("/admin/pending")
             assert response.status_code == 200
@@ -524,19 +558,17 @@ class TestUploadSafetyChecks:
             assert "too large" in response.text.lower()
 
     def test_rejects_too_many_files(self, client, auth_enabled, admin_user, tmp_path):
-        """Upload rejects batches with more than 50 files."""
+        """Upload rejects batches with more than 200 files."""
         with patch("app.main.data_path", tmp_path):
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
-            files = [("files", (f"photo_{i}.jpg", io.BytesIO(b"x"), "image/jpeg"))
-                     for i in range(51)]
+            files = [("files", (f"photo_{i}.jpg", io.BytesIO(b"x"), "image/jpeg")) for i in range(201)]
             response = client.post("/upload", files=files, data={"source": "Test"})
             assert response.status_code == 200
             assert "too many" in response.text.lower()
 
     def test_accepts_valid_image_upload(self, client, auth_enabled, admin_user, tmp_path):
         """Upload accepts valid image files within limits."""
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.PROCESSING_ENABLED", False):
+        with patch("app.main.data_path", tmp_path), patch("app.main.PROCESSING_ENABLED", False):
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
             response = client.post(
                 "/upload",
@@ -549,8 +581,7 @@ class TestUploadSafetyChecks:
 
     def test_accepts_zip_upload(self, client, auth_enabled, admin_user, tmp_path):
         """Upload accepts .zip files."""
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.PROCESSING_ENABLED", False):
+        with patch("app.main.data_path", tmp_path), patch("app.main.PROCESSING_ENABLED", False):
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
             response = client.post(
                 "/upload",
@@ -565,8 +596,9 @@ class TestUploadSafetyChecks:
         with patch("app.main.data_path", tmp_path):
             (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
             # 11 files x 49 MB each = 539 MB > 500 MB limit
-            files = [("files", (f"photo_{i}.jpg", io.BytesIO(b"x" * (49 * 1024 * 1024)), "image/jpeg"))
-                     for i in range(11)]
+            files = [
+                ("files", (f"photo_{i}.jpg", io.BytesIO(b"x" * (49 * 1024 * 1024)), "image/jpeg")) for i in range(11)
+            ]
             response = client.post("/upload", files=files, data={"source": "Test"})
             assert response.status_code == 200
             assert "500 mb" in response.text.lower() or "too large" in response.text.lower()
@@ -579,6 +611,7 @@ class TestPendingUploadsPhotoPreview:
     def admin_client(self):
         from app.main import app
         from starlette.testclient import TestClient
+
         with patch("app.main.is_auth_enabled", return_value=False):
             return TestClient(app)
 
@@ -592,12 +625,20 @@ class TestPendingUploadsPhotoPreview:
         """Pending upload card shows image thumbnails using admin preview endpoint."""
         job_id = "test-job-001"
 
-        pending_data = {"uploads": {job_id: {
-            "job_id": job_id, "status": "pending",
-            "uploader_email": "test@example.com", "source": "Test",
-            "files": ["photo1.jpg", "photo2.jpg"], "file_count": 2,
-            "submitted_at": "2026-02-12T00:00:00Z", "collection": "",
-        }}}
+        pending_data = {
+            "uploads": {
+                job_id: {
+                    "job_id": job_id,
+                    "status": "pending",
+                    "uploader_email": "test@example.com",
+                    "source": "Test",
+                    "files": ["photo1.jpg", "photo2.jpg"],
+                    "file_count": 2,
+                    "submitted_at": "2026-02-12T00:00:00Z",
+                    "collection": "",
+                }
+            }
+        }
 
         with patch("app.main._load_pending_uploads", return_value=pending_data):
             response = admin_client.get("/admin/pending")
@@ -652,3 +693,52 @@ class TestPendingUploadsPhotoPreview:
             assert "onerror" in response.text
             # Fallback div shows filename when image fails
             assert "photo1" in response.text
+
+
+class TestUploadAreaTwoStep:
+    """Tests for the two-step upload UI (select → preview → upload)."""
+
+    def test_upload_page_has_file_input(self, client, auth_enabled, admin_user):
+        """Upload page has file input for selecting photos."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        assert 'id="upload-file-input"' in response.text
+
+    def test_upload_page_has_submit_button(self, client, auth_enabled, admin_user):
+        """Upload page has explicit Upload Files button (hidden by default)."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        assert 'data-action="upload-submit"' in response.text
+        assert "Upload Files" in response.text
+
+    def test_upload_page_has_preview_area(self, client, auth_enabled, admin_user):
+        """Upload page has file preview area (hidden by default)."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        assert 'id="upload-file-preview"' in response.text
+
+    def test_upload_page_has_drop_zone(self, client, auth_enabled, admin_user):
+        """Upload page has drop zone for drag-and-drop."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        assert 'id="upload-drop-zone"' in response.text
+        assert "Drop photos here" in response.text
+
+    def test_upload_page_has_add_more_button(self, client, auth_enabled, admin_user):
+        """Upload page has Add more files button."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        assert 'data-action="upload-add-more"' in response.text
+
+    def test_upload_no_auto_submit(self, client, auth_enabled, admin_user):
+        """Upload page file input does NOT have hx_post (no auto-submit on change)."""
+        response = client.get("/upload")
+        assert response.status_code == 200
+        # The file input should NOT have hx-post — uploads go through JS fetch
+        # Look for the file input specifically
+        import re
+
+        file_input_match = re.search(r'<input[^>]*id="upload-file-input"[^>]*>', response.text)
+        assert file_input_match, "File input not found"
+        file_input_html = file_input_match.group(0)
+        assert "hx-post" not in file_input_html, "File input should not auto-submit via HTMX"
