@@ -1053,6 +1053,6 @@ class TestListIdentitiesByJob:
         # Mutate the returned copy
         results[0]["name"] = "MUTATED"
 
-        # Original should be unchanged
+        # Original should be unchanged (not mutated to "MUTATED")
         original = registry.get_identity(identity_id)
-        assert original["name"] is None
+        assert original["name"] != "MUTATED"

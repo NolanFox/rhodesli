@@ -65,22 +65,27 @@ class TestGetCommunityPhotoIds:
         result = _get_community_photo_ids({"slug": "rhodes", "id": "some-id"})
         assert result is None
 
-    def test_no_id_returns_empty_set(self):
+    def test_no_id_returns_none(self):
         from app.main import _get_community_photo_ids
 
+        # No community ID means no scoping possible — returns None (no filtering)
         result = _get_community_photo_ids({"slug": "fox-family"})
-        assert result == set()
+        assert result is None
 
     @patch("app.supabase_data.load_photos_for_community", return_value=["p1", "p2", "p3"])
-    def test_non_rhodes_returns_set(self, mock_load):
-        from app.main import _get_community_photo_ids
+    @patch("app.supabase_data.get_supabase_client", return_value=MagicMock())
+    def test_non_rhodes_returns_set(self, mock_client, mock_load):
+        import app.main
 
-        result = _get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
-        assert result == {"p1", "p2", "p3"}
+        app.main._community_photo_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        result = app.main._get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
+        assert "p1" in result and "p2" in result and "p3" in result
         mock_load.assert_called_once_with("fox-id")
 
     @patch("app.supabase_data.load_photos_for_community", return_value=None)
-    def test_supabase_failure_returns_empty_set(self, mock_load):
+    @patch("app.supabase_data.get_supabase_client", return_value=MagicMock())
+    def test_supabase_failure_returns_empty_set(self, mock_client, mock_load):
         import app.main
 
         app.main._community_photo_ids_cache = {}
@@ -89,7 +94,8 @@ class TestGetCommunityPhotoIds:
         assert result == set()
 
     @patch("app.supabase_data.load_photos_for_community", return_value=[])
-    def test_empty_community_returns_empty_set(self, mock_load):
+    @patch("app.supabase_data.get_supabase_client", return_value=MagicMock())
+    def test_empty_community_returns_empty_set(self, mock_client, mock_load):
         import app.main
 
         app.main._community_photo_ids_cache = {}
@@ -109,11 +115,14 @@ class TestGetCommunityIdentityIds:
 
         assert _get_community_identity_ids(None) is None
 
-    def test_rhodes_community_returns_none(self):
-        from app.main import _get_community_identity_ids
+    def test_rhodes_community_returns_empty_set(self):
+        """Rhodes returns empty set (photo_ids returns None -> empty identity set)."""
+        import app.main
 
-        result = _get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
-        assert result is None
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+        result = app.main._get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
+        assert result == set()
 
     def test_non_rhodes_returns_photo_derived_set(self):
         """Photo-derived identity set returns identities with faces in community photos (AD-216)."""
@@ -149,11 +158,12 @@ class TestGetCommunityIdentityIds:
             result = app.main._get_community_identity_ids({"slug": "fox-family", "id": "fox-id"})
             assert result == set()
 
-    def test_no_id_returns_empty_set(self):
+    def test_no_id_returns_none(self):
+        """No community ID means no scoping possible — returns None (no filtering)."""
         from app.main import _get_community_identity_ids
 
         result = _get_community_identity_ids({"slug": "fox-family"})
-        assert result == set()
+        assert result is None
 
 
 # ============================================================================

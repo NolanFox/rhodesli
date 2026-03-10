@@ -315,6 +315,7 @@ class TestCommunityLandingPage:
         assert "fox-family" in html
 
     def test_community_landing_page_empty_state(self):
+        import app.main  # noqa: F401 — ensure full import chain resolves
         from app.page_routes import _community_landing_page
 
         community = {
@@ -331,6 +332,7 @@ class TestCommunityLandingPage:
         assert "just getting started" in html
 
     def test_community_landing_page_with_content(self):
+        import app.main  # noqa: F401 — ensure full import chain resolves
         from app.page_routes import _community_landing_page
 
         community = {

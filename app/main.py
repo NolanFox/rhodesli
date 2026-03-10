@@ -2870,7 +2870,33 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
         photo_count = len(_photo_cache) if _photo_cache else 0
 
     # ML features: compute for all communities (AD-216 removes Rhodes-only restriction)
-    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
+    # Proposals count: merge registry proposed_matches + proposals.json (clustering output)
+    proposal_count = 0
+    if hasattr(registry, "list_proposed_matches"):
+        registry_proposals = registry.list_proposed_matches()
+        if community_identity_ids is not None:
+            registry_proposals = [p for p in registry_proposals if p.get("source_id") in community_identity_ids]
+        proposal_count = len(registry_proposals)
+    # Also count proposals.json entries (clustering pipeline output) — COMMUNITY-010
+    try:
+        proposals_path = Path(os.getenv("DATA_DIR", "data")) / "proposals.json"
+        if proposals_path.exists():
+            import json as _json
+
+            with open(proposals_path) as _f:
+                proposals_data = _json.load(_f)
+            file_proposals = proposals_data.get("proposals", [])
+            if community_identity_ids is not None:
+                file_proposals = [
+                    p
+                    for p in file_proposals
+                    if p.get("source_identity_id") in community_identity_ids
+                    or p.get("target_identity_id") in community_identity_ids
+                ]
+            # Avoid double-counting: only add file proposals not already in registry
+            proposal_count = max(proposal_count, len(file_proposals))
+    except Exception:
+        pass
 
     # Count pending user annotations (for admin approvals badge)
     pending_annotations = 0
