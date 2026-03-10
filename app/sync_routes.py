@@ -559,8 +559,10 @@ async def post(request, sess):
         id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
         shadow_write_identities_batch(id_items)
 
-        # Invalidate photo registry cache so the app sees updated data
-        _main_mod._photo_registry_cache = None
+        # Invalidate ALL caches — _photo_cache reads upload_date from JSON,
+        # so we must clear it to force rebuild with backfilled dates.
+        # Just clearing _photo_registry_cache is NOT enough (bug found cont8).
+        _main_mod._invalidate_all_caches()
 
         return {
             "status": "ok",
