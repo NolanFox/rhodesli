@@ -19,11 +19,14 @@ All notable changes to this project will be documented in this file.
 - **Merge cross-list dedup** — `merge_identities()` now checks both `anchor_ids` and `candidate_ids` before adding faces.
 - **Lessons 118-121** — upload_date always required, merge dedup, audit after every ingest, batch-wide orphan detection.
 
+### Fixed (Embeddings)
+- **124 missing embeddings** — Downloaded 23 photos from R2, ran InsightFace locally, generated 130 new embeddings. Mapped 122/124 face IDs. Root cause: early ingest batches or failed pipeline runs left faces in photo_index/identities without embeddings.
+
 ### Verification
 - Person 2973: SKIPPED (was wrongly CONFIRMED)
 - Fox Family: 635 photos, 1016 matches, 17 proposals
 - Health: 1885 identities, 938 photos, ML ready
-- Data audit: 0 critical issues, 0 orphans, 0 duplicates, 0 chains
+- Data audit: 0 critical, 0 orphans, 0 duplicates, 0 chains, 2 missing embeddings
 
 ## [v0.97.7] — 2026-03-10 (Session 96e-cont7: PRD-038 Longitudinal Face Modeling)
 

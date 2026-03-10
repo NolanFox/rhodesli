@@ -18,7 +18,7 @@
 | Orphan faces | 157+ | Warning | Batch ingest per-file check missed batch-wide gaps | Created INBOX identities | Always set upload_date |
 | Missing upload_date | 637 | Info | CLI had no --upload-date arg | Backfilled with session dates | CLI defaults to UTC now |
 | Ghost faces | 2 | Warning | Faces in identity but not in photo_index | Removed from Netanel Menashe | Audit catches these |
-| Missing embeddings | 124 | Warning | ML pipeline not run on some photos | DEFERRED — needs InsightFace | BACKLOG |
+| Missing embeddings | 124→2 | Warning | ML pipeline not run on some photos | Downloaded 23 photos from R2, ran InsightFace, generated 130 embeddings | 2 remain (detection threshold variance) |
 
 ### Phase 2: Prevention Code — PASS
 - `core/ingest_inbox.py`: Added `--upload-date`/`--uploaded-by` CLI args, auto-defaults to UTC
@@ -35,12 +35,8 @@
 - Commit `ff75d89` (force-state endpoint) deploying
 
 ## Deferred
-- **124 missing embeddings**: Needs local ML pipeline re-run with InsightFace. Can't run on Railway.
-  - BACKLOG: EMBED-001 (add to backlog)
-- **Person 2973 CONFIRMED→SKIPPED on production**: Volume safety gate prevents overwrite.
-  Will fix via force-state API after deploy. Known issue, not blocking.
-- **Batch-wide orphan check in process_directory()**: Prevention documented but sweep not implemented yet.
-  - BACKLOG: INGEST-001
+- **2 remaining missing embeddings**: Detection threshold variance between runs — photo has fewer faces detected now than originally recorded. Negligible impact.
+- **Batch-wide orphan check in process_directory()**: Prevention documented but sweep not implemented yet. BACKLOG: INGEST-001
 
 ## Red Flags
 - **[LOW]** 31 test failures in full suite — ALL are test-ordering issues (pass individually). Pre-existing.
