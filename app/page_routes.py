@@ -2167,6 +2167,8 @@ def get(
     """)
 
     # Mobile bottom tab navigation (lg:hidden)
+    # COMMUNITY-008: Use community prefix so links stay within the community context
+    _nav_prefix = _main_mod.community_url_prefix(community_slug)
     mobile_tabs = Nav(
         A(
             Svg(
@@ -2179,7 +2181,7 @@ def get(
                 stroke_linecap="round",
             ),
             Span("Photos", cls="text-[10px]"),
-            href="/?section=photos",
+            href=f"{_nav_prefix}/?section=photos",
             cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
             f"{'text-indigo-400' if section == 'photos' else 'text-slate-400 hover:text-slate-200'}",
         ),
@@ -2195,7 +2197,7 @@ def get(
                 stroke_linejoin="round",
             ),
             Span("People", cls="text-[10px]"),
-            href="/?section=confirmed&view=browse",
+            href=f"{_nav_prefix}/?section=confirmed&view=browse",
             cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
             f"{'text-emerald-400' if section == 'confirmed' else 'text-slate-400 hover:text-slate-200'}",
         ),
@@ -2213,7 +2215,7 @@ def get(
                 stroke_linejoin="round",
             ),
             Span("Matches", cls="text-[10px]"),
-            href="/?section=to_review&view=focus",
+            href=f"{_nav_prefix}/?section=to_review&view=focus",
             cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
             f"{'text-amber-400' if section == 'to_review' else 'text-slate-400 hover:text-slate-200'}",
         ),
@@ -2229,7 +2231,7 @@ def get(
                 stroke_linejoin="round",
             ),
             Span("Search", cls="text-[10px]"),
-            href="/?section=confirmed&view=browse",
+            href=f"{_nav_prefix}/?section=confirmed&view=browse",
             cls="flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-200",
             onclick="toggleSidebar(); setTimeout(function() { var s = document.querySelector('#sidebar input[type=search]'); if (s) s.focus(); }, 300); return false;",
         ),

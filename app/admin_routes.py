@@ -348,7 +348,7 @@ def post(identity_id: str, reason: str = "", sess=None):
 
 
 @rt("/admin/pending")
-def get(sess=None):
+def get(request, sess=None):
     """
     Admin page to review pending uploads from non-admin users.
     Requires admin when auth is enabled.
@@ -357,6 +357,8 @@ def get(sess=None):
     if denied:
         return denied
     user = get_current_user(sess or {})
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     style = Style("""
         html, body { height: 100%; margin: 0; }
@@ -645,7 +647,7 @@ def get(sess=None):
     """)
 
     return (
-        Title("Pending Uploads - Rhodesli"),
+        Title(f"Pending Uploads - {community_name}"),
         style,
         page_style,
         Div(
@@ -682,7 +684,7 @@ def get(sess=None):
 
 
 @rt("/admin/proposals")
-def get(sess=None):
+def get(request, sess=None):
     """
     Admin page to review proposed identity matches.
     Requires admin when auth is enabled.
@@ -691,6 +693,8 @@ def get(sess=None):
     if denied:
         return denied
     user = get_current_user(sess or {})
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     style = Style("""
         html, body { height: 100%; margin: 0; }
@@ -777,7 +781,7 @@ def get(sess=None):
     """)
 
     return (
-        Title("Proposals - Rhodesli"),
+        Title(f"Proposals - {community_name}"),
         style,
         page_style,
         Div(
@@ -1105,11 +1109,14 @@ def get(sess=None):
 
 
 @rt("/admin/ml-dashboard")
-def get(sess=None):
+def get(request, sess=None):
     """ML evaluation dashboard. Shows golden set stats, thresholds, identity counts."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     registry = _main_mod.load_registry()
 
@@ -1247,7 +1254,7 @@ def get(sess=None):
             cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6",
         )
 
-    return Title("ML Dashboard — Rhodesli"), Div(
+    return Title(f"ML Dashboard — {community_name}"), Div(
         _admin_nav_bar("ml-dashboard"),
         Div(H1("ML Evaluation Dashboard", cls="text-2xl font-bold text-white"), cls="mb-6"),
         stat_cards,
@@ -1397,11 +1404,14 @@ def _admin_nav_bar(active: str = "") -> Div:
 
 
 @rt("/admin/approvals")
-def get(sess=None):
+def get(request, sess=None):
     """Admin page for reviewing pending annotations."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     annotations = _main_mod._load_annotations()
     pending = [a for a in annotations["annotations"].values() if a.get("status") in ("pending", "pending_unverified")]
@@ -1617,7 +1627,7 @@ def get(sess=None):
     if not rows:
         rows = [Div(P("No pending annotations to review.", cls="text-slate-400"), cls="text-center py-12")]
 
-    return Title("Annotation Approvals — Rhodesli"), Div(
+    return Title(f"Annotation Approvals — {community_name}"), Div(
         _admin_nav_bar("approvals"),
         Div(H1("Pending Approvals", cls="text-2xl font-bold text-white"), cls="mb-6"),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
@@ -1967,11 +1977,14 @@ def _log_audit(action: str, annotation_id: str, admin: str, details: str = ""):
 
 
 @rt("/admin/review/birth-years")
-def get(sess=None):
+def get(request, sess=None):
     """Admin bulk review page for ML birth year estimates."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     pending = _main_mod._get_pending_ml_birth_year_suggestions()
     crop_files = _main_mod.get_crop_files()
@@ -2113,7 +2126,7 @@ def get(sess=None):
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
     return (
-        Title("ML Birth Year Review - Rhodesli Admin"),
+        Title(f"ML Birth Year Review - {community_name} Admin"),
         page_style,
         Main(
             _admin_nav_bar("birth-year-review"),
@@ -2193,11 +2206,14 @@ def post(sess=None):
 
 
 @rt("/admin/audit")
-def get(sess=None):
+def get(request, sess=None):
     """Admin audit log — shows all annotation review actions."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     audit_path = _main_mod.data_path / "audit_log.json"
     entries = []
@@ -2233,7 +2249,7 @@ def get(sess=None):
     if not rows:
         rows = [P("No audit entries yet.", cls="text-slate-400 text-center py-12")]
 
-    return Title("Audit Log — Rhodesli"), Div(
+    return Title(f"Audit Log — {community_name}"), Div(
         _admin_nav_bar("audit"),
         Div(H1("Audit Log", cls="text-2xl font-bold text-white"), cls="mb-6"),
         P(f"{len(entries)} audit entries", cls="text-sm text-slate-400 mb-4"),
@@ -2246,11 +2262,14 @@ def get(sess=None):
 
 
 @rt("/admin/gedcom")
-def get(sess=None):
+def get(request, sess=None):
     """GEDCOM admin page — version management, upload, match review (AD-164)."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     matches_data = _main_mod._load_gedcom_matches()
     matches = matches_data.get("matches", [])
@@ -2639,7 +2658,7 @@ def get(sess=None):
             data_testid="test-data-warning",
         )
 
-    return Title("GEDCOM Import — Rhodesli"), Div(
+    return Title(f"GEDCOM Import — {community_name}"), Div(
         _admin_nav_bar("gedcom"),
         Div(
             H1("GEDCOM Management", cls="text-2xl font-bold text-white"),
@@ -3147,11 +3166,14 @@ def _get_priority_reason(label: dict) -> str:
 
 
 @rt("/admin/review-queue")
-def get(sess=None):
+def get(request, sess=None):
     """Admin review queue — photos sorted by correction priority score."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community = getattr(request.state, "community", None) if request else None
+    community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
 
     labels = _main_mod._load_date_labels()
     _main_mod._build_caches()
@@ -3256,7 +3278,7 @@ def get(sess=None):
     if not items:
         items = [P("All photos have been reviewed!", cls="text-slate-400 text-center py-12")]
 
-    return Title("Review Queue \u2014 Rhodesli"), Div(
+    return Title(f"Review Queue \u2014 {community_name}"), Div(
         Div(
             H1("Date Review Queue", cls="text-2xl font-bold text-white"),
             P(f"{len(scored)} photos need review", cls="text-sm text-slate-400"),
