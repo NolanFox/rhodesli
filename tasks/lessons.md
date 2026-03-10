@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-110 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+113 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -151,3 +151,6 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 108 | **Performance filters must preserve cross-community matching — never filter confirmed_list by community** |
 | 109 | **CommunityMiddleware /api/ skip creates dual-path problem — HTMX URLs must include /c/ prefix** |
 | 110 | **Existing data not surfaced is worse than missing data — pipeline output must be UI-verified same session** |
+| 111 | **Postgres registry needs TTL cache — reloading 2533 identities per request causes complete feature failure** |
+| 112 | **Community-scoped pages must filter ALL sections — GEDCOM triage showed Rhodes people on Fox Family page** |
+| 113 | **Cross-community badge must check BOTH communities — identity in both should show no badge, not wrong badge** |
