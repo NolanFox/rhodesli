@@ -74,6 +74,15 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [-] 2026-03-09: PRD037-004: Wire cluster review into community sidebar (Session 96c)
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
+### Near-Term — Longitudinal Face Modeling (PRD-038)
+- [ ] ML-110: Quality-weighted best-linkage matching (1 session)
+- [ ] ML-111: Metadata feature expansion to calibrator (1 session)
+- [ ] ML-112: Wire active learning to UI (1 session)
+- [ ] ML-113: Age-aware distance modulation (1-2 sessions)
+- [ ] ML-114: LoRA re-evaluation with Fox Family data (2-3 sessions)
+- [ ] ML-115: Recalibrate thresholds with growing confirmed pairs (<1 session)
+- [ ] ML-116: Longitudinal anchor stratification by decade (1-2 sessions)
+
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
