@@ -273,6 +273,15 @@ class SimilarityCalibrator:
             "threshold_at_95_precision": self._model.threshold_at_95_precision,
         }
 
+    def load_latest_model(self) -> CalibrationModel | None:
+        """Load and return the latest saved calibration model if available."""
+        self._load_model()
+        return self._model
+
+    def save_model(self) -> Path | None:
+        """Persist the current fitted model and return the written path."""
+        return self._save_model()
+
     # --- Private methods ---
 
     def _find_threshold(self, iso, X, y, target_precision=0.9) -> float:
@@ -301,14 +310,15 @@ class SimilarityCalibrator:
             if local.exists():
                 with open(local) as f:
                     data = json.load(f)
-                return data.get("pairs", [])
+                pairs = data.get("pairs", [])
+                return [pair for pair in pairs if pair.get("active", True) is not False]
             return []
 
         all_pairs = []
         offset = 0
         while True:
             resp = self._sb.table('calibration_pairs').select('*').range(offset, offset + 999).execute()
-            all_pairs.extend(resp.data)
+            all_pairs.extend(pair for pair in resp.data if pair.get("active", True) is not False)
             if len(resp.data) < 1000:
                 break
             offset += 1000
@@ -329,10 +339,10 @@ class SimilarityCalibrator:
         nonmatch_resp = self._sb.table('calibration_pairs').select('id', count='exact').eq('is_match', False).execute()
         return (match_resp.count or 0, nonmatch_resp.count or 0)
 
-    def _save_model(self):
-        """Save model to local JSON file."""
+    def _save_model(self) -> Path | None:
+        """Save model to local JSON file and return the written path."""
         if self._model is None:
-            return
+            return None
         self._model_dir.mkdir(parents=True, exist_ok=True)
         model_path = self._model_dir / f"calibration_v{self._model.version}.json"
         with open(model_path, "w") as f:
@@ -354,6 +364,7 @@ class SimilarityCalibrator:
         import shutil
         shutil.copy2(model_path, latest)
         logger.info(f"Model saved: {model_path}")
+        return model_path
 
     def _load_model(self):
         """Load latest model from local storage."""

@@ -288,6 +288,7 @@ async def call_gemini_alignment(
     import time as _time
 
     from rhodesli_ml.gemini_config import GEMINI_MODEL
+    from rhodesli_ml.prompt_manifest import build_prompt_lineage_fields, build_prompt_manifest
 
     if model is None:
         model = GEMINI_MODEL
@@ -297,6 +298,28 @@ async def call_gemini_alignment(
     if not api_key:
         logger.error("No GEMINI_API_KEY available")
         return None, 0, 0
+
+    prompt_variant = "gedcom_enriched" if enrichment_level != "none" else "visual_only"
+    prompt_manifest = build_prompt_manifest(
+        prompt_family="face_alignment",
+        prompt_version="v1_coordinate_bridge",
+        prompt_variant=prompt_variant,
+        prompt_contract_version="1",
+        channel="batch" if batch_id else "interactive",
+        context_flags={
+            "uses_gedcom": enrichment_level != "none",
+            "uses_face_coords": True,
+            "uses_geo": False,
+            "uses_time": False,
+        },
+        template_source="app.face_alignment.build_alignment_prompt",
+    )
+    prompt_lineage = build_prompt_lineage_fields(
+        prompt_manifest,
+        prompt_text=prompt,
+        request_surface="app.face_alignment.call_gemini_alignment",
+        request_mode="batch" if batch_id else "interactive",
+    )
 
     start_ms = int(_time.time() * 1000)
     try:
@@ -337,6 +360,8 @@ async def call_gemini_alignment(
                 "error",
                 error_message="Empty response",
                 batch_id=batch_id,
+                prompt_text=prompt,
+                prompt_lineage={**prompt_lineage, "contract_valid": False},
             )
             return None, 0, 0
 
@@ -362,6 +387,9 @@ async def call_gemini_alignment(
                 "call_type": call_type,
                 "gedcom_token_count": gedcom_token_count,
                 "enrichment_level": enrichment_level,
+                "prompt_version": "v1_coordinate_bridge",
+                "prompt_variant": prompt_variant,
+                "prompt_manifest_id": prompt_manifest["prompt_manifest_id"],
                 "temperature": 0.1,
                 "response_mime_type": "application/json",
             }
@@ -388,6 +416,13 @@ async def call_gemini_alignment(
             batch_id=batch_id,
             gemini_config=gemini_config,
             response_summary=response_summary,
+            prompt_text=prompt,
+            full_response=parsed,
+            prompt_lineage={
+                **prompt_lineage,
+                **build_prompt_lineage_fields(prompt_manifest, full_response=parsed),
+                "contract_valid": True,
+            },
         )
 
         return parsed, input_tokens, output_tokens
@@ -417,6 +452,8 @@ async def call_gemini_alignment(
             error_message=error_msg,
             rate_limit_type=rate_limit_type,
             batch_id=batch_id,
+            prompt_text=prompt,
+            prompt_lineage={**prompt_lineage, "contract_valid": False},
         )
         logger.error(f"Gemini face alignment call failed: {e}")
         return None, 0, 0
@@ -436,6 +473,9 @@ def _log_call(
     batch_id=None,
     gemini_config=None,
     response_summary=None,
+    prompt_text=None,
+    full_response=None,
+    prompt_lineage=None,
 ):
     """Best-effort log of Gemini API call to Supabase."""
     import time as _time
@@ -462,6 +502,9 @@ def _log_call(
             batch_id=batch_id,
             gemini_config=gemini_config,
             response_summary=response_summary,
+            prompt_text=prompt_text,
+            full_response=full_response,
+            **(prompt_lineage or {}),
         )
     except Exception as e:
         logger.debug(f"Gemini call logging failed (non-blocking): {e}")

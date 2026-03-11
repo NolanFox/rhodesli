@@ -129,7 +129,17 @@ class TestCallGeminiDateEstimate:
         config = call_kwargs.kwargs["gemini_config"]
         assert config["enrichment_level"] == "none"
         assert config["prompt_version"] == "v3_enriched"
+        assert config["prompt_variant"] == "quick_visual_only"
         assert config["trigger"] == "interactive_upload"
+        assert call_kwargs.kwargs["prompt_family"] == "date_estimation"
+        assert call_kwargs.kwargs["prompt_version"] == "v3"
+        assert call_kwargs.kwargs["prompt_variant"] == "quick_visual_only"
+        assert call_kwargs.kwargs["prompt_contract_version"] == "contract2"
+        assert call_kwargs.kwargs["request_mode"] == "interactive"
+        assert call_kwargs.kwargs["contract_valid"] is True
+        assert call_kwargs.kwargs["prompt_manifest_id"].startswith(
+            "date_estimation:v3:quick_visual_only:contract2"
+        )
 
     @patch("app.supabase_data.log_gemini_call", return_value=True)
     def test_api_call_logged_on_error(self, mock_log):
@@ -222,6 +232,8 @@ class TestCallGeminiDateEstimate:
         config = mock_log.call_args.kwargs["gemini_config"]
         assert config["enrichment_level"] == "gedcom"
         assert config["gedcom_variant"] == "first_order"
+        assert config["prompt_variant"] == "quick_gedcom"
+        assert mock_log.call_args.kwargs["prompt_variant"] == "quick_gedcom"
 
     @patch("app.supabase_data.log_gemini_call", return_value=True)
     def test_invalid_decade_returns_none(self, mock_log):
@@ -274,6 +286,7 @@ class TestCallGeminiDateEstimate:
         config = mock_log.call_args.kwargs["gemini_config"]
         assert config["trigger"] == "admin_rerun"
         assert mock_log.call_args.kwargs["call_type"] == "re_analysis"
+        assert mock_log.call_args.kwargs["request_mode"] == "admin_tool"
 
 
 class TestOldPromptRemoved:

@@ -1,214 +1,206 @@
-# PRD-038: Evaluation Framework & Retroactive Improvement Safety
+# PRD-038: Evaluation, Safety, And Rollout
 
 **Parent**: [docs/prds/038_longitudinal_face_modeling.md](../038_longitudinal_face_modeling.md)
+**Reviewed**: 2026-03-11
 
 ---
 
-## Evaluation Framework
+## Current Baseline Snapshot
 
-### The Problem
-We need to quantify whether each improvement (WS-1 through WS-5) actually delivers value. Without rigorous evaluation, we can't distinguish real improvement from noise, and we risk deploying changes that look good on average but hurt specific cases.
+- `data/golden_set.json` is stale at **125 mappings / 23 identities**.
+- The repo currently contains **84 confirmed identities** and **28** with 2+ faces.
+- Existing eval commands currently fail on mixed embedding schemas (`mu` plus legacy `embeddings`).
+- A schema-aware local spot check on the current golden set gives:
+  - Euclidean AUC about **0.978**
+  - MLS AUC about **0.953**
+  - Euclidean distance threshold at precision >= 0.90 about **1.196**
 
-### Golden Test Set Design
-
-**Hold-out methodology**:
-1. Select 20% of confirmed identities as held-out test set (stratified by community, decade, face count)
-2. These identities are NEVER used for calibration training or LoRA fine-tuning
-3. For each held-out identity, measure: "Given face X, does the system rank the correct identity in top-1, top-3, top-5?"
-4. Report: Rank-1 accuracy, AUC, precision@recall curves
-
-**Cross-validation for small datasets**:
-- With only 69 confirmed identities, 20% hold-out = 14 identities (small)
-- Alternative: 5-fold cross-validation, report mean ± std for all metrics
-- Each fold trains on 4/5 identities, evaluates on 1/5
-- Ensures every identity participates in evaluation
-
-**Photo hold-out for retroactive testing**:
-- For identities with 3+ anchors, hold out 1 anchor as "unseen test photo"
-- Simulate: "If this photo arrived new, would the system find the right identity?"
-- This tests the complete pipeline (quality weighting → age penalty → calibration → ranking)
-- Run this test BEFORE and AFTER each improvement to measure delta
-
-### Evaluation Script Design
-```bash
-# Full evaluation suite
-python scripts/evaluate_ml.py --mode full
-
-# Quick check (just AUC + rank-1 on golden set)
-python scripts/evaluate_ml.py --mode quick
-
-# A/B comparison (before vs after a change)
-python scripts/evaluate_ml.py --mode compare \
-  --baseline rhodesli_ml/artifacts/calibration_v1.pt \
-  --candidate rhodesli_ml/artifacts/calibration_v2.pt
-
-# Held-out photo simulation
-python scripts/evaluate_ml.py --mode holdout-sim \
-  --holdout-fraction 0.2 --seed 42
-```
-
-### Metrics to Track Per Improvement
-
-| Metric | What it measures | Good direction |
-|--------|-----------------|----------------|
-| **AUC** | Overall ranking quality | Higher |
-| **Rank-1 accuracy** | "Is the right person first?" | Higher |
-| **Precision@90recall** | How many suggestions are correct at high recall | Higher |
-| **Cross-era recall** | Do we find same person across 30+ year gaps? | Higher |
-| **Family false positive rate** | Do we confuse father for son? | Lower |
-| **New-photo hit rate** | "Would this new photo find its person?" | Higher |
-| **Calibration ECE** | How well-calibrated are probability scores? | Lower |
-
-### Evaluation Cadence
-- **Before every deploy**: `evaluate_ml.py --mode quick` (30 seconds)
-- **After WS completion**: `evaluate_ml.py --mode full` (5 minutes)
-- **After LoRA training**: `evaluate_ml.py --mode full --mode holdout-sim` (10 minutes)
-- **Monthly**: Full evaluation + report to `docs/ml/EVALUATION_REPORTS/`
+**Implication**: Phase 0 must repair evaluation before any matcher change is trusted.
 
 ---
 
-## Retroactive Cluster Improvement
+## Eval Assets To Build
 
-### The Challenge
-As ML improves, it may discover that:
-1. Two separate identities should be merged (found connection)
-2. An existing cluster has a misassigned face (found error)
-3. A face in INBOX matches a confirmed identity (new discovery)
+## 1. Golden Set V2
 
-Each of these requires different handling to avoid breaking the user experience.
+- Rebuild from all current confirmed identities.
+- Version it so future baselines are comparable.
+- Store both:
+  - face-to-identity mappings
+  - metadata slices needed for analysis
 
-### Safety Rules
+## 2. Longitudinal Slice Set
 
-**Rule 1: NEVER break confirmed clusters**
-- If the model suggests splitting a CONFIRMED identity, it's a PROPOSAL, not an action
-- Confirmed clusters are human-verified ground truth (AD-006: provenance="human" > provenance="model")
-- Even if the model is 99.9% confident, the admin reviews first
+- Build from same-identity pairs with date coverage.
+- Required buckets:
+  - 0-9 years
+  - 10-19 years
+  - 20-29 years
+  - 30+ years
 
-**Rule 2: Additions are proposals, not actions**
-- When the model discovers a new face that matches a confirmed identity:
-  - DO NOT auto-add to the identity
-  - DO create a Discovery notification: "Our algorithm found a new photo that may be [Name]. Can you confirm?"
-  - This appears in Discoveries page AND as a notification
-  - Admin confirms → face added to identity (human provenance)
-  - Admin rejects → face goes to `negative_ids` (improves future matching)
+## 3. Kinship Confusion Set
 
-**Rule 3: Retroactive re-clustering is additive only**
-- After an ML improvement (new calibration, LoRA, etc.), re-run clustering
-- NEW proposals may be generated (faces that now match above threshold)
-- EXISTING proposals are NOT revoked (they were above the old threshold)
-- CONFIRMED matches are NEVER touched
-- Result: monotonically increasing discovery count, never decreasing
+- Different-person pairs with GEDCOM or surname-family proximity.
+- This is the slice most likely to regress if the system chases recall too aggressively.
 
-**Rule 4: Community-scoped retroactive improvement**
-- Re-clustering must respect community boundaries
-- A Fox Family face can be proposed to match a Rhodes identity (cross-community)
-- But the proposal must indicate "From Fox Family" badge
-- Admin of EACH community must approve cross-community matches
-- Retroactive improvement within a single community is straightforward
-- Cross-community proposals use the existing cross-community badge system (Session 96c-d)
+## 4. Quality Slice Set
 
-### Notification Flow for Retroactive Discoveries
+- Bucket by `det_score`, `quality`, and uncertainty.
+- Required because the proposed scorer explicitly uses quality-aware logic.
 
-```
-ML improvement deployed
-  → Re-cluster all unresolved faces
-  → For each new match above threshold:
-    IF target identity is CONFIRMED:
-      → Create Discovery notification
-      → "Our algorithm discovered that [face] may be [Name] (87% confidence)"
-      → Admin sees in Discoveries page + bell icon
-      → Confirm: face added as anchor (human provenance)
-      → Reject: face added to negative_ids
-    IF target identity is PROPOSED:
-      → Add as candidate_id (same as current behavior)
-    IF target identity is INBOX:
-      → Propose merge (same as current behavior)
-```
+## 5. Shadow Replay Set
 
-### What This Looks Like in the UI
-1. Admin opens app after ML improvement deploy
-2. Bell icon shows "3 new discoveries"
-3. Notifications page: "Algorithm update found 3 potential new matches"
-4. Each discovery card shows:
-   - The newly matched face (large)
-   - The existing identity it matches (with existing anchors)
-   - Confidence score and which improvement found it
-   - "Confirm" / "Not Same Person" buttons
-5. Admin reviews, confirms 2, rejects 1
-6. Confirmed faces now appear on the identity page
-7. Rejected face improves future matching (hard negative)
+- Snapshot unresolved faces and current proposal outputs.
+- Use this to compare scorer versions before rollout.
+
+## 6. Dominant-Identity Bias Set
+
+- Build a slice that isolates overrepresented identities and families.
+- Track whether the reranker gains are concentrated only on the biggest families.
+- Starting point:
+  - dominant slice = top 3 identities by face volume
+  - tail slice = target identities with fewer than 5 confirmed faces
 
 ---
 
-## Community Resilience
+## Mandatory Metrics
 
-### Invariants That Must Hold
-1. **No data loss**: Retroactive improvement never removes a face from a cluster
-2. **No cross-contamination**: Community A's data doesn't pollute Community B's view
-3. **Transparent provenance**: Every change shows WHERE it came from and WHO approved it
-4. **Reversible**: Any retroactive addition can be undone (detach face)
-5. **Notification-driven**: Admin is ALWAYS informed before data changes
+### Core Retrieval Metrics
 
-### Cross-Community Safety
-- Community-scoped clustering: When re-clustering Fox Family, only Fox Family photos participate in primary matching
-- Cross-community proposals: If a Fox Family face matches a Rhodes identity, it appears as a cross-community Discovery with explicit badge
-- Community admin authority: Each community's admin approves their own matches
-- No cascade effects: Confirming a cross-community match doesn't trigger further cross-community proposals
+- Rank-1
+- Rank-3
+- MRR
+- ROC-AUC
+- PR-AUC
 
-### Testing for Community Resilience
-```
-TEST: Retroactive improvement does not break existing communities
-  - Confirm 5 Fox Family identities
-  - Run retroactive re-clustering
-  - Assert: All 5 confirmed identities still have same anchor_ids
-  - Assert: No Fox Family faces appear in Rhodes clusters without proposal
-  - Assert: Cross-community proposals have "From Fox Family" badge
+### Slice Metrics
 
-TEST: Community-scoped re-clustering isolation
-  - Add improvement to clustering (e.g., quality weighting)
-  - Re-cluster Fox Family only
-  - Assert: Rhodes clustering unchanged
-  - Assert: Fox Family may have new proposals
-  - Assert: No data from other communities leaked in
+- Recall on year-gap >= 20
+- Recall on year-gap >= 30
+- Same-family false positive rate
+- `dominant_lift_ratio`
+- `tail_recall_delta`
+- Cross-community leakage count
+- Quality-bucket Rank-1
 
-TEST: Notification flow for retroactive discoveries
-  - Deploy ML improvement
-  - Re-cluster → 3 new matches found for confirmed identities
-  - Assert: 3 Discovery notifications created
-  - Assert: Admin sees bell icon with count
-  - Assert: No faces auto-added to identities
-  - Confirm 2, reject 1
-  - Assert: 2 faces added as anchors, 1 in negative_ids
+### Product Metrics
+
+- Precision of Tier 1 auto-adds on review sample
+- Precision of discovery suggestions on review sample
+- Label yield from active-learning queue
+- Share of queue coming from underrepresented identities
+
+---
+
+## Gate Criteria By Phase
+
+## Phase 0 Gate
+
+- Eval CLI runs on current schema without manual patching.
+- Golden Set V2 generated successfully.
+- Baseline JSON report saved and reproducible.
+- Dominant and tail slices are emitted with the baseline.
+
+## Phase 1 Gate: Recalibration Hygiene
+
+- Reverted labels are excluded from recalibration export.
+- Pre-flight logical consistency checks run before recalibration.
+- Recalibration aborts on unresolved transitive conflicts in unconsumed labels.
+
+## Phase 2 Gate: Frozen-Embedding Reranker
+
+- Rank-1 and Rank-3 do not regress by more than 1 point.
+- Recall on year-gap >= 20 improves by at least 5 points.
+- Same-family false positive rate is flat or improved.
+- `dominant_lift_ratio` must stay below a provisional ceiling of `3.0`.
+- `tail_recall_delta` must be `>= 0.0`.
+- No new community leakage in shadow replay.
+- Top 50 changed proposals reviewed manually before enablement.
+
+## Phase 3 Gate: Active Learning
+
+- Queue excludes already labeled pairs.
+- Queue diversity rule holds:
+  - no more than 2 pairs from the same identity in a batch of 10
+- At least 30% of surfaced pairs come from underrepresented identities or hard slices.
+- Recent labels can be audited and reverted before recalibration consumes them.
+- Recalibration is blocked if newly added active-learning labels introduce unresolved transitive conflicts.
+
+## Phase 4 Gate: Adapter / LoRA
+
+- Pass identity-held-out evaluation.
+- Pass family-held-out evaluation.
+- Pass community-held-out evaluation if cross-community data is in scope.
+- Improve at least one hard slice without harming kinship safety or high-quality buckets.
+
+---
+
+## Rollout Plan
+
+1. Build the new scorer behind a flag.
+2. Run shadow mode on unresolved faces.
+3. Diff current vs candidate proposals.
+4. Review the highest-impact proposal changes manually.
+5. Enable in batch upload path first.
+6. Only after stability, switch proposal-generation paths that still use `cluster_new_faces.py`.
+7. Keep local and future cloud workers on the same artifact contract so rollout semantics do not change when execution moves off the laptop.
+
+---
+
+## Safety Invariants
+
+1. Confirmed identities remain human ground truth.
+2. New scorer outputs are proposals, not automatic facts.
+3. Cross-community proposals stay visibly labeled.
+4. Rollback is artifact-based and immediate.
+5. All eval artifacts are versioned so regressions are explainable.
+6. Cloud migration may change where jobs run, not how they are evaluated or approved.
+
+---
+
+## Tests That Must Exist
+
+```text
+TEST: eval loader accepts mixed embedding schemas
+  - Build a fixture with `mu` rows and `embeddings` rows
+  - Assert: single eval CLI run succeeds
+
+TEST: golden set v2 includes all current confirmed identities
+  - Build from fixture registry with merged + confirmed + inbox identities
+  - Assert: only confirmed, non-merged faces included
+
+TEST: scorer shadow diff is community-safe
+  - Run baseline scorer and candidate scorer on mixed-community fixture
+  - Assert: all new cross-community proposals carry review metadata
+
+TEST: longitudinal slice report is generated
+  - Fixture with year gaps 5, 15, 25, 35
+  - Assert: metrics emitted for all required buckets
+
+TEST: kinship safety gate blocks regressions
+  - Candidate scorer improves global Rank-1 but worsens same-family FP rate
+  - Assert: rollout gate fails
+
+TEST: dominant-identity bias gate blocks misleading wins
+  - Candidate scorer improves only on the top 2 most-overrepresented identities
+  - Assert: rollout gate fails
+
+TEST: active-learning labels remain reversible
+  - Queue label is written, then reverted before recalibration
+  - Assert: recalibration export excludes the reverted label
+
+TEST: recalibration aborts on logical conflict
+  - Inject A=B, B=C, A!=C into unconsumed labels
+  - Assert: pre-flight check aborts before model export
 ```
 
 ---
 
-## Continuous Improvement Flywheel
+## Retroactive Improvement Policy
 
-The complete system creates a virtuous cycle:
+- Retroactive re-scoring is allowed.
+- Retroactive auto-merge is not.
+- Existing confirmed anchors are never removed by the model.
+- New discoveries are additive proposals with explicit review state.
 
-```
-More communities added (data growth)
-  → More photos of same people across decades
-  → Admin confirms identities (via active learning UI)
-  → Calibration pairs accumulate in Supabase
-  → Recalibration improves threshold accuracy
-  → Better clustering → better proposals → easier admin review
-  → More confirmations → more LoRA training data
-  → LoRA improves embeddings → better matching across age gaps
-  → Retroactive re-clustering finds NEW matches in old data
-  → Discoveries notifications surface them to admin
-  → Admin confirms → more data → cycle continues
-```
-
-Each step in the cycle feeds the next. The system gets smarter with every admin interaction, every new photo, and every new community added.
-
----
-
-## Breadcrumbs
-- Gatekeeper pattern: AD-006 (provenance hierarchy)
-- Notification system: PRD-028 (bell icon, /notifications)
-- Community scoping: AD-213, AD-216 (photo-derived identity sets)
-- Cross-community badges: Session 96c-d implementation
-- Retroactive clustering: AD-179 (two-tier auto-clustering)
-- Discovery notifications: DD-003 (notification design)
+That preserves the gatekeeper model while still letting the archive improve as labels accumulate.

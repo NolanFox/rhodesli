@@ -1,141 +1,148 @@
-# PRD-038: Research References & Industry Analysis
+# PRD-038: Research Review & External References
 
 **Parent**: [docs/prds/038_longitudinal_face_modeling.md](../038_longitudinal_face_modeling.md)
+**Reviewed**: 2026-03-11
 
 ---
 
-## Academic Research on Age-Invariant Face Recognition
+## Local Repo Findings That Change The Plan
 
-### Key Benchmarks
-- **MORPH Album 2**: 55,000 face images of 13,000 subjects with age metadata. Standard benchmark for cross-age verification. Our archive is smaller but spans MORE years (100+ vs typical 20-30).
-- **CACD (Cross-Age Celebrity Dataset)**: 160,000+ images of 2,000 celebrities. Good for training but celebrity photos are higher quality than heritage archive photos.
-- **FG-NET**: 1,002 images of 82 subjects aged 0-69. Small but has extreme age ranges relevant to our use case (child → elderly).
-- **AgeDB**: 16,488 images of 568 subjects. Annotated with exact ages. Useful for evaluating age-gap penalties.
-
-### Relevant Techniques
-
-**1. Age-Invariant Representation Learning**
-- **Decorrelated Adversarial Learning (DAL)**: Train encoder to produce age-decorrelated embeddings. An adversary tries to predict age from the embedding; the encoder learns to fool it. Result: embeddings that capture identity but not age.
-- **Applicability to Rhodesli**: Could be applied as a LoRA fine-tuning objective. Instead of just contrastive loss, add an adversarial age-prediction head. Requires age labels (we have 271 photo dates + 67 birth years).
-- **Difficulty**: HARD — requires adversarial training infrastructure.
-
-**2. Disentangled Representation**
-- **Approach**: Separate embedding into identity-component and age-component. Only use identity-component for matching.
-- **Methods**: Variational autoencoders (VAE) with age conditioning, or orthogonal projection to remove age subspace.
-- **Applicability**: We could estimate the "age subspace" from our confirmed pairs that span multiple decades (e.g., young-Leon vs old-Leon). Project it out before distance computation.
-- **Difficulty**: MEDIUM — orthogonal projection is straightforward if we have enough cross-age pairs.
-
-**3. Multi-Prototype Learning**
-- **Approach**: Instead of one prototype per identity, maintain multiple (e.g., one per age group). New face matches against closest prototype.
-- **This is exactly our multi-anchor approach (AD-001)** — validates our architecture.
-- **Enhancement**: Our WS-2 (longitudinal anchor stratification by decade) is the age-aware version of this. Literature confirms this is sound.
-
-**4. Contrastive Learning with Age-Aware Sampling**
-- **Approach**: During training, deliberately sample hard positives (same person, large age gap) and hard negatives (different person, similar age).
-- **Applicability**: Directly applicable to our LoRA training (WS-4). Use confirmed cross-age pairs as hard positives.
-- **Difficulty**: EASY — just a sampling strategy change.
-
-### Key Papers (for implementer reference)
-1. "OrthoFace: Orthogonal Age Disentanglement for Cross-Age Face Recognition" — orthogonal projection approach
-2. "AIM: Age-Invariant Model for Cross-Age Face Recognition" — prototype + discriminative learning
-3. "DAL: Decorrelated Adversarial Learning for Age-Invariant Face Recognition" — adversarial training
-4. "When Age-Invariant Face Recognition Meets Face Age Synthesis" — unified framework
-5. "Cross-Age Face Recognition: A Survey" — comprehensive overview of approaches
+- The repo now has **84 confirmed identities**, **28 multi-face confirmed identities**, and about **1,453 same-identity pairs** from current confirmed faces.
+- The blocker for adapter work is no longer raw pair count. It is **representation skew**: current positive-pair Gini is about **0.788**.
+- The repo has **271 / 271** photo date labels with year estimates and **331** same-identity pairs with photo-year coverage. **54** of those have year gaps >= 20.
+- The current eval scripts are stale against the live embedding schema.
+- A schema-aware local check on the current golden set shows **Euclidean AUC about 0.978** and **MLS about 0.953**, so the new plan must beat a strong frozen-embedding baseline.
 
 ---
 
-## How Google Photos Handles Face Clustering
+## Academic And Product References
 
-### Known Architecture (from patents, blog posts, engineering talks)
-1. **Hierarchical clustering**: Fast initial clustering using approximate nearest neighbors (ANN), then refinement with exemplar comparison.
-2. **Multi-prototype per identity**: Google stores multiple "exemplar" embeddings per person — not centroids. Matches against closest exemplar. **Same as our multi-anchor approach.**
-3. **Temporal signals**: Photos taken close in time at the same location are more likely the same person. Used as a soft prior.
-4. **User feedback loop**: "Is this the same person?" prompts. Each answer becomes a training signal. **This is our WS-3 (active learning).**
-5. **Continuous model updates**: Google periodically retrains their face model on accumulated user feedback. At our scale, this is WS-4 (LoRA) + recalibration.
-6. **Face quality scoring**: Low-quality detections (blurry, occluded, extreme angle) are weighted less in matching. **This is our WS-1.**
-
-### What Google Does That We Can't (yet)
-- **Billion-scale ANN**: They use ScaNN/FAISS for sub-linear search. We don't need this at <10K faces.
-- **Cross-user learning**: They train on data from billions of users. We have one archive.
-- **GAN-based age progression**: Synthesize aged/de-aged faces for training data. Interesting but high effort.
-
-### What We Have That Google Doesn't
-- **GEDCOM genealogy data**: Family relationships as a matching signal. Google has no genealogy.
-- **Date estimates from Gemini**: AI-estimated photo dates for 271 photos. Google has EXIF dates but not for heritage photos.
-- **Community knowledge**: Admin is a domain expert who knows the people. Google relies on crowd wisdom.
-- **100+ year span**: Most Google Photos users have 10-20 years of photos. We have 100+ years across generations.
+| Source | Key takeaway | Plan impact |
+|---|---|---|
+| CACon, arXiv 2024: https://arxiv.org/abs/2408.00797 | Cross-age FR still needs explicit age handling; identity-conditioned age adaptation is an active research direction. | Treat age-gap performance as a first-class slice, not a side metric. |
+| CALFW benchmark: https://www.whdeng.cn/CALFW/index.html | Age gaps measurably hurt verification relative to standard LFW-style benchmarks. | Keep a dedicated age-gap challenge set for Rhodesli. |
+| QMagFace, arXiv 2024: https://arxiv.org/abs/2408.07850 | Face-quality estimation can be learned from the embedding magnitude and improves quality-aware recognition. | Use quality-aware prototype weighting; do not treat all anchors equally. |
+| PETALface, arXiv 2023: https://arxiv.org/abs/2312.11195 | Quality-adaptive LoRA can adapt low-quality faces while preserving high-quality performance. | If we fine-tune, prefer PEFT with quality conditioning over blunt LoRA on all samples. |
+| Photo Sleuth paper page: https://photo-sleuth.com/ | Historical-photo identification benefits from human-in-the-loop evidence review, not silent automation. | Integrate active learning into review UX with provenance and explanations. |
+| Google Photos face grouping / live albums: https://support.google.com/photos/answer/6128843?co=GENIE.Platform%3DAndroid&hl=en | Consumer expectation is that face groups power ongoing discovery and automatically updated people collections. | Additive retroactive discovery is a product win if review UX stays tight. |
+| Reddit user thread on Google Photos grouping pain: https://www.reddit.com/r/googlephotos/comments/10nmhee/face_detectiongrouping_quality_on_google_photos/ | Users complain most about wrong merges, relatives being grouped together, and poor repair tools. | Optimize for kin false positives and one-click reject / detach, not just top-line accuracy. |
+| Immich community request on birth-date-aware face sorting: https://github.com/immich-app/immich/issues/10583 | Power users explicitly want temporal metadata to constrain face clustering and browsing. | Birth-year and photo-year signals are product-relevant, not academic garnish. |
 
 ---
 
-## LoRA Best Practices for Small Datasets
+## Prompt, Agent, And Context Engineering References
 
-### Key Findings
-1. **Minimum viable dataset**: Literature suggests 200-500 positive pairs for LoRA on a pre-trained face model. We have 221 (MARGINAL) and growing.
-2. **Regularization is critical**: At small scale, LoRA can overfit in 5-10 epochs. Use:
-   - Low rank (r=4 or r=8, not r=64)
-   - High dropout (0.1-0.3)
-   - Early stopping on validation AUC
-   - Weight decay (1e-4 to 1e-3)
-3. **Layer selection**: For ResNet backbones, fine-tune only the last 2-3 blocks. Earlier layers capture low-level features that generalize well.
-4. **Data augmentation for heritage photos**:
-   - Gaussian noise (simulates film grain)
-   - Contrast/brightness jitter (simulates fading)
-   - Random crop with slight rotation (simulates scanning artifacts)
-   - Sepia/grayscale conversion (most heritage photos are B&W)
-   - NOT: aggressive color jitter, large rotations, or cutout (destroy face structure)
-5. **Inverse-frequency sampling**: Essential for class balance. Without it, the model overfits to the most-photographed people (Capeluto family).
-6. **PFE-aware loss**: Since we use PFE embeddings with uncertainty (sigma_sq), the contrastive loss should weight by inverse uncertainty: pairs where the model is confident should contribute more to the loss.
-
-### Training Recipe (recommended)
-```python
-# Hyperparameters for Rhodesli LoRA
-lora_config = {
-    'rank': 8,                    # Low rank for small dataset
-    'alpha': 16,                  # alpha/rank = 2 (standard)
-    'dropout': 0.15,              # Moderate dropout
-    'target_modules': ['conv2', 'conv3'],  # Last 2 ResNet blocks
-    'learning_rate': 1e-4,        # Conservative
-    'weight_decay': 5e-4,
-    'epochs': 20,                 # With early stopping patience=5
-    'batch_size': 32,             # Small batches for small dataset
-    'pair_sampling': 'inverse_frequency',
-    'augmentation': 'heritage_photo_aug',
-    'loss': 'pfe_contrastive',    # sigma_sq weighted
-    'validation_split': 0.2,      # Stratified by identity
-}
-```
+| Source | Key takeaway | Plan impact |
+|---|---|---|
+| OpenAI GPT-5 prompting guide: https://cookbook.openai.com/examples/gpt-5/gpt-5_prompting_guide | Best results come from issue-style prompts, explicit success criteria, and persistent repo instructions such as `AGENTS.md`. | Session 97 prompt is written as a scoped implementation brief with concrete gates, not a loose brainstorming note. |
+| Anthropic, Building Effective Agents: https://www.anthropic.com/engineering/building-effective-agents | Start with simple, composable patterns; use evaluator-optimizer loops and parallel workers only when boundaries are clear. | Session 97 uses phase gates plus optional worktree parallelism only for disjoint files. |
+| Anthropic prompt engineering overview: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview | Give the model the right context, structure the task, and keep instructions explicit rather than implied. | The context file is phase-scoped so later implementation reads only the files needed for the current act. |
 
 ---
 
-## Active Learning for Face Clustering
+## Operational Scaling References
 
-### Uncertainty Sampling Strategy
-- **Most effective queries**: Pairs near the decision boundary (distance ~0.4-0.6 in our calibrated space)
-- **Information gain ranking**: Prefer pairs from under-represented identities (balances the training set)
-- **Batch diversity**: Don't show 10 pairs from the same identity — diversify across identities
-- **Expected label efficiency**: Each human label worth ~5-10 unlabeled pairs for calibration model improvement
-
-### Implementation Pattern (from literature)
-1. Run clustering → identify uncertain pairs
-2. Present to human (batch of 10-20)
-3. Human labels → insert into `calibration_pairs`
-4. Recalibrate → re-cluster → identify new uncertain pairs
-5. Repeat until convergence (uncertainty plateau)
+| Source | Key takeaway | Plan impact |
+|---|---|---|
+| SageMaker async inference: https://docs.aws.amazon.com/sagemaker/latest/dg/async-inference.html | Queue-first async inference is built for long-running jobs, large payloads, and scale-to-zero operation. | If Rhodesli outgrows local runs, the first cloud move should be queued offline scoring and retraining, not synchronous web inference. |
+| SageMaker autoscaling for async endpoints: https://docs.aws.amazon.com/sagemaker/latest/dg/async-inference-autoscale.html | Async endpoints can scale to zero and back up on demand. | Future cloud extraction should keep idle cost near zero between ingest or retraining bursts. |
+| Modal job queues: https://modal.com/docs/guide/job-queue | Web app to job queue to poll/result is a clean pattern for long-running Python tasks. | The offline scorer interface should be artifact-based and job-oriented so it can move off the laptop without changing the app contract. |
+| Ray Serve dynamic batching: https://docs.ray.io/en/latest/serve/advanced-guides/dyn-req-batch.html | Batching improves throughput once online serving becomes worthwhile. | Real-time batching is a later concern for compare/live tools, not a reason to change the PRD-038 offline-first plan now. |
 
 ---
 
-## Heritage-Specific Challenges
+## Review-Validated Additions
 
-### Unique to Our Domain
-1. **Extreme age spans**: Same person photographed as infant (1890) and elderly (1980). Standard face models trained on 0-30 year age gaps.
-2. **Photo degradation**: Fading, staining, damage, low resolution. Affects embedding quality.
-3. **Formal poses**: Pre-1960s photos typically formal/stiff. Different expression distribution than modern training data.
-4. **Family resemblance**: Sephardic Jewish families from Rhodes have strong family resemblance across generations. Father-son pairs may look more similar than the same person at different ages.
-5. **Limited ground truth**: Only 69 confirmed identities. Need to grow this via active learning + admin confirmation sprints.
+| Source | Key takeaway | Plan impact |
+|---|---|---|
+| Sentence Transformers, Retrieve & Re-Rank: https://www.sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html | A two-stage stack of fast retrieval followed by reranking is a standard pattern when a richer second-stage scorer is needed. | Reinforces the retriever + longitudinal reranker structure in PRD-038. |
+| Sentence Transformers Cross-Encoder training overview: https://www.sbert.net/docs/cross_encoder/training_overview.html | Reranking should be evaluated against the first-stage retriever rather than in isolation. | Reinforces the requirement to compare reranker lift on top of frozen-embedding retrieval, not only standalone classifier metrics. |
+| Wang et al., 2024 survey on deep active learning in medical image analysis: https://pubmed.ncbi.nlm.nih.gov/38776841/ | Uncertainty sampling remains useful, but batch construction and review quality controls matter in low-label, expert-in-the-loop settings. | Reinforces diversity rules and label-audit requirements for the active-learning queue. |
+| Follmer et al., 2024, uncertainty-aware submodular selection: https://proceedings.mlr.press/v250/follmer24a.html | Batch active learning works better when uncertainty is balanced with diversity / representativeness. | Supports the queue policy of mixing uncertainty with underrepresented identities and hard slices instead of pure uncertainty sampling. |
 
-### Mitigation Strategies
-- WS-1 (quality weighting) addresses #2
-- WS-2 (age-aware) addresses #1
-- WS-4 (LoRA) addresses #3 if trained on heritage photos
-- WS-3 (active learning) addresses #5
-- GEDCOM data helps distinguish family members (#4) — WS-5
+---
+
+## What The Research Supports
+
+### 1. Quality-aware matching is low-risk and high-value
+
+- The external literature and current repo baseline both support anchor quality as a real signal.
+- The repo already stores useful proxies: `det_score`, `quality`, and `sigma_sq`.
+- This supports a near-term move from "closest anchor wins" to "closest trustworthy prototype wins."
+
+### 2. Cross-age performance needs explicit slice tracking
+
+- Benchmarks like CALFW show age-gap degradation is real.
+- The Rhodesli archive now has enough dated same-identity pairs to track this locally.
+- That supports a frozen-embedding longitudinal reranker before any base-model adaptation.
+
+### 3. Heritage archives need assisted review, not opaque automation
+
+- Photo Sleuth is the clearest analogous product in this space.
+- Community and Reddit signals point in the same direction:
+  - false merges are expensive
+  - users want clear provenance
+  - repair tooling matters as much as raw matching quality
+
+### 4. Adapter training is viable, but only if we guard against skew
+
+- PETALface makes PEFT more credible than it was when the original PRD was written.
+- The current Rhodesli data snapshot now supports experiments.
+- The remaining risk is not "too few pairs"; it is "too many pairs from too few people."
+
+### 5. The implementation prompt itself needs engineering discipline
+
+- OpenAI and Anthropic guidance converges on the same pattern:
+  - small scoped tasks
+  - explicit outputs
+  - evaluation loops
+  - minimal but sufficient context
+- That is why the Session 97 package includes a dedicated prompt and context file instead of relying on chat history.
+
+### 6. Cloud migration should begin with queued offline work, not online inference
+
+- The scaling literature and current Rhodesli constraints both point to the same migration order:
+  - keep web requests light
+  - move offline scoring / retraining into queued workers first
+  - add batching only when live inference volume justifies it
+- This matches AD-110 and the existing ML service architecture draft.
+
+### 7. Reranking and active learning need more than raw uncertainty
+
+- Gemini's review was directionally correct that uncertainty alone is not enough.
+- The review itself did not provide exact links, so the validated sources above were added here.
+- The key implications are:
+  - evaluate reranker lift against the first-stage retriever
+  - guard active learning with diversity and audit / revert paths
+
+---
+
+## Research-Driven Recommendations
+
+1. Do not make "best face per decade" the main abstraction. Use a small quality-aware prototype bank per identity.
+2. Do not push metadata into the legacy isotonic module. Use a multifeature reranker with optional post-hoc calibration.
+3. Do not greenlight adapter work off global AUC alone. Require wins on:
+   - year-gap >= 20 recall
+   - same-family false positive rate
+   - community-safe proposal diffs
+4. Do not hide active learning in a disconnected widget. Put it where review already happens.
+5. Do not let research or user feedback live only in chat state. Every new source or requirement should land in a harness artifact before it shapes implementation.
+6. Do not couple the future cloud migration to PRD-038 launch. Keep the scorer interface job-oriented now so queued cloud execution is an extraction, not a rewrite.
+7. Do not treat uncertainty sampling alone as sufficient for active learning. Combine uncertainty with diversity, underrepresented-identity targeting, and reversible label audit.
+
+---
+
+## Sources For Future Prompt Prep
+
+These sources should be copied into the later implementation context file because they directly shaped the architecture choice:
+
+1. CACon
+2. CALFW
+3. QMagFace
+4. PETALface
+5. Photo Sleuth
+6. Google Photos grouping / live albums
+7. Community complaints about grouping repair
+8. OpenAI GPT-5 prompting guide
+9. Anthropic agent / prompt engineering guides
+10. Async queue / batch serving references for future cloud extraction

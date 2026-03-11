@@ -377,6 +377,22 @@ class TestLoadFaceData:
         face_data = load_face_data(tmp_path)
         assert "inbox_abc123" in face_data
 
+    def test_load_legacy_embeddings_key(self, tmp_path):
+        """Legacy `embeddings` rows are normalized into `mu`/`sigma_sq` face data."""
+        embeddings = np.array([
+            {
+                "filename": "photo2.jpg",
+                "embeddings": np.ones(512, dtype=np.float32),
+                "det_score": 0.75,
+            },
+        ], dtype=object)
+
+        np.save(tmp_path / "embeddings.npy", embeddings)
+        face_data = load_face_data(tmp_path)
+        assert "photo2:face0" in face_data
+        assert face_data["photo2:face0"]["mu"].shape == (512,)
+        assert face_data["photo2:face0"]["sigma_sq"].shape == (512,)
+
     def test_missing_file_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             load_face_data(tmp_path)
@@ -455,6 +471,27 @@ class TestLoadConfirmedIdentities:
                         {"face_id": "f2", "provenance": "human"},
                     ],
                     "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            },
+        }
+        with open(tmp_path / "identities.json", "w") as f:
+            json.dump(identities, f)
+
+        confirmed = load_confirmed_identities(tmp_path)
+        assert len(confirmed) == 1
+        assert confirmed[0]["anchor_ids"] == ["f1", "f2"]
+
+    def test_candidate_ids_count_toward_confirmed_faces(self, tmp_path):
+        identities = {
+            "schema_version": 1,
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Alice",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": ["f2"],
                     "negative_ids": [],
                 },
             },

@@ -1,9 +1,6 @@
-"""Tests for recalibration hooks wiring into app endpoints (AD-150).
+"""Tests for recalibration hook dispatch into app endpoints (AD-150)."""
 
-Verifies that merge/reject/confirm endpoints fire recalibration hooks.
-"""
-
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,7 +13,7 @@ class TestFireRecalibrationHook:
         from app.main import _fire_recalibration_hook
 
         mock_sb = MagicMock()
-        mock_merge = MagicMock()
+        mock_merge = AsyncMock()
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
              patch("rhodesli_ml.recalibration_hooks.on_face_merge", mock_merge):
@@ -29,7 +26,7 @@ class TestFireRecalibrationHook:
         from app.main import _fire_recalibration_hook
 
         mock_sb = MagicMock()
-        mock_reject = MagicMock()
+        mock_reject = AsyncMock()
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
              patch("rhodesli_ml.recalibration_hooks.on_match_reject", mock_reject):
@@ -42,7 +39,7 @@ class TestFireRecalibrationHook:
         from app.main import _fire_recalibration_hook
 
         mock_sb = MagicMock()
-        mock_confirm = MagicMock()
+        mock_confirm = AsyncMock()
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
              patch("rhodesli_ml.recalibration_hooks.on_identity_confirm", mock_confirm):

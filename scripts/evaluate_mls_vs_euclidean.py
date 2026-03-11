@@ -33,12 +33,8 @@ import numpy as np
 # Add project root to path for core imports
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
-
-
-def generate_face_id(filename: str, face_index: int) -> str:
-    """Generate a stable face ID from filename and index."""
-    stem = Path(filename).stem
-    return f"{stem}:face{face_index}"
+from core.embeddings_io import generate_face_id, load_face_data as shared_load_face_data
+from core.identity_scoring import extract_face_ids as shared_extract_face_ids
 
 
 def load_face_data(data_path: Path) -> dict:
@@ -46,48 +42,15 @@ def load_face_data(data_path: Path) -> dict:
 
     Mirrors the logic in app/main.py load_face_embeddings().
     """
-    embeddings_path = data_path / "embeddings.npy"
-    if not embeddings_path.exists():
-        raise FileNotFoundError(f"Embeddings not found: {embeddings_path}")
-
-    embeddings = np.load(embeddings_path, allow_pickle=True)
-
-    face_data = {}
-    filename_face_counts = {}
-
-    for entry in embeddings:
-        filename = entry["filename"]
-
-        if filename not in filename_face_counts:
-            filename_face_counts[filename] = 0
-        face_index = filename_face_counts[filename]
-        filename_face_counts[filename] += 1
-
-        # Use stored face_id if present (inbox format), otherwise generate
-        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
-
-        if "mu" in entry:
-            mu = entry["mu"]
-            sigma_sq = entry["sigma_sq"]
-        else:
-            mu = np.asarray(entry["embedding"], dtype=np.float32)
-            det_score = entry.get("det_score", 0.5)
-            sigma_sq_val = 1.0 - (det_score * 0.9)
-            sigma_sq = np.full(512, sigma_sq_val, dtype=np.float32)
-
-        face_data[face_id] = {
-            "mu": np.asarray(mu, dtype=np.float32),
-            "sigma_sq": np.asarray(sigma_sq, dtype=np.float32),
-        }
-
-    return face_data
+    return shared_load_face_data(data_path / "embeddings.npy")
 
 
 def load_confirmed_identities(data_path: Path) -> list[dict]:
-    """Load confirmed identities with 2+ anchor faces.
+    """Load confirmed identities with 2+ confirmed faces.
 
     Returns list of dicts with keys: identity_id, name, anchor_ids.
-    Only includes identities with state=CONFIRMED and 2+ anchors.
+    Only includes identities with state=CONFIRMED, non-merged, and 2+ faces
+    across both anchors and confirmed candidates.
     """
     identities_path = data_path / "identities.json"
     if not identities_path.exists():
@@ -103,13 +66,7 @@ def load_confirmed_identities(data_path: Path) -> list[dict]:
         if ident.get("merged_into"):
             continue
 
-        # Extract anchor face IDs (handle both string and dict formats)
-        anchors = []
-        for entry in ident.get("anchor_ids", []):
-            if isinstance(entry, str):
-                anchors.append(entry)
-            elif isinstance(entry, dict) and "face_id" in entry:
-                anchors.append(entry["face_id"])
+        anchors = shared_extract_face_ids(ident)
 
         if len(anchors) >= 2:
             confirmed.append({

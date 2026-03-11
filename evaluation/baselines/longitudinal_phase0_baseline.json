@@ -1,0 +1,63 @@
+{
+  "threshold": 1.196,
+  "golden_set_stats": {
+    "total_mappings": 257,
+    "unique_identities": 84,
+    "unique_photos": 46
+  },
+  "pair_metadata": {
+    "valid_face_count": 257,
+    "missing_face_count": 0,
+    "dominant_identities": [
+      {
+        "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+        "face_count": 31
+      },
+      {
+        "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+        "face_count": 25
+      },
+      {
+        "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+        "face_count": 18
+      }
+    ],
+    "tail_identity_count": 73,
+    "positive_pair_gini": 0.7885
+  },
+  "threshold_metrics": {
+    "threshold": 1.196,
+    "tp": 1228,
+    "fp": 131,
+    "tn": 31312,
+    "fn": 225,
+    "precision": 0.9036,
+    "recall": 0.8451,
+    "f1": 0.8734,
+    "accuracy": 0.9892
+  },
+  "slice_metrics": {
+    "overall_positive_pairs": {
+      "pair_count": 1453,
+      "recall": 0.8451
+    },
+    "dominant_positive_pairs": {
+      "pair_count": 918,
+      "recall": 0.8747
+    },
+    "tail_positive_pairs": {
+      "pair_count": 28,
+      "recall": 0.7143
+    }
+  },
+  "mls_vs_euclidean": {
+    "same_pairs": 1453,
+    "cross_pairs": 200,
+    "euclidean_auc": 0.9851,
+    "mls_auc": 0.9245,
+    "euclidean_precision_at_recall_0_95": 0.9885,
+    "mls_precision_at_recall_0_95": 0.9524,
+    "euclidean_optimal_f1": 0.9754,
+    "mls_optimal_f1": 0.9584
+  }
+}

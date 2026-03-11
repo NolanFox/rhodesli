@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.10 · ~4664 tests · 938 photos · 3412 identities · 84 confirmed
+Current: v0.97.11 · ~4668 tests · 938 photos · 3412 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -76,13 +76,13 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
-- [ ] ML-110: Quality-weighted best-linkage matching (1 session)
-- [ ] ML-111: Metadata feature expansion to calibrator (1 session)
-- [ ] ML-112: Wire active learning to UI (1 session)
-- [ ] ML-113: Age-aware distance modulation (1-2 sessions)
-- [ ] ML-114: LoRA re-evaluation with Fox Family data (2-3 sessions)
-- [ ] ML-115: Recalibrate thresholds with growing confirmed pairs (<1 session)
-- [ ] ML-116: Longitudinal anchor stratification by decade (1-2 sessions)
+- [-] 2026-03-11: Session 97 implementation package prepared — SDD, research pack, eval/safety plan, and Codex-specific prompt/context are wired into the harness
+- [ ] Phase 0: Eval repair + scorer-path unification (first gate before any matcher change)
+- [ ] Phase 1: Local recalibration hygiene + label taxonomy
+- [ ] Phase 2: Prototype-bank longitudinal reranker in shadow mode
+- [ ] Phase 3: Active learning inside review UX
+- [ ] Phase 4: Adapter / LoRA experiment track only after slice-gated wins
+- [ ] Scale path: keep PRD-038 local-first, but move offline scoring / retraining to queued cloud workers once local runtime, volume, or admin-concurrency thresholds are breached
 
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
@@ -156,6 +156,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, and clarified public/workstation navigation (`Public Page`, `Back to Workstation`). Verified `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
 
 - [x] 2026-03-11: **v0.97.10 — Session 96e-cont12**: Production reconciliation + root-cause closeout. Closed the remaining local structural drift (`157` orphans, `122` merge chains, `1` duplicate face, `2` ghost refs), finished embedding repair (`10` missing -> `0`), reconciled production with the audited `3412`-identity / `938`-photo snapshot, and pruned `112` stale Supabase identity rows only after exporting them to a checked-in JSON backup artifact. Also restored the app gate by making `/timeline` person filters timeline-backed. Verified `pytest tests/ -x -q` (`4098 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Deploy SUCCESS.
 

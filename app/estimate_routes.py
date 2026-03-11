@@ -491,6 +491,7 @@ def _call_gemini_date_estimate(
     from google.genai import types
     from rhodesli_ml.gemini_config import GEMINI_MODEL, get_model_pricing
     from rhodesli_ml.gemini_extraction import build_extraction_prompt
+    from rhodesli_ml.prompt_manifest import build_prompt_lineage_fields, build_prompt_manifest
     import json as _json
 
     # Build enriched prompt (quick preset: date + location + text_signage)
@@ -501,6 +502,21 @@ def _call_gemini_date_estimate(
     )
     enrichment_level = "gedcom" if gedcom_context else "none"
     gedcom_variant = "first_order" if gedcom_context else "none"
+    prompt_variant = "quick_gedcom" if gedcom_context else "quick_visual_only"
+    prompt_manifest = build_prompt_manifest(
+        prompt_family="date_estimation",
+        prompt_version="v3",
+        prompt_variant=prompt_variant,
+        prompt_contract_version="2",
+        channel="interactive" if trigger == "interactive_upload" else "admin_rerun",
+        context_flags={
+            "uses_gedcom": bool(gedcom_context),
+            "uses_geo": True,
+            "uses_time": True,
+            "uses_face_coords": False,
+        },
+        template_source="rhodesli_ml.gemini_extraction.build_extraction_prompt",
+    )
 
     client = genai.Client(
         api_key=api_key,
@@ -628,6 +644,8 @@ def _call_gemini_date_estimate(
                     gemini_config={
                         "enrichment_level": enrichment_level,
                         "prompt_version": "v3_enriched",
+                        "prompt_variant": prompt_variant,
+                        "prompt_manifest_id": prompt_manifest["prompt_manifest_id"],
                         "gedcom_variant": gedcom_variant,
                         "temperature": 0.1,
                         "trigger": trigger,
@@ -639,6 +657,14 @@ def _call_gemini_date_estimate(
                     prompt_text=prompt_text,
                     full_response=parsed if parsed else None,
                     gedcom_context=gedcom_context,
+                    **build_prompt_lineage_fields(
+                        prompt_manifest,
+                        prompt_text=prompt_text,
+                        full_response=parsed if parsed else None,
+                        request_surface="app.estimate_routes._call_gemini_date_estimate",
+                        request_mode="interactive" if trigger == "interactive_upload" else "admin_tool",
+                        contract_valid=status == "success" and parsed is not None,
+                    ),
                 )
             except Exception as log_err:
                 logger.warning(f"[estimate] Failed to log Gemini call: {log_err}")

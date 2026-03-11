@@ -3178,55 +3178,12 @@ def load_face_embeddings() -> dict[str, dict]:
     # - Keep .npy on disk as performance-optimized cache
     # - R2 backup of embeddings.npy (PRD-027 Phase A)
     """
+    from core.embeddings_io import load_face_data
+
     embeddings_path = data_path / "embeddings.npy"
     if not embeddings_path.exists():
         return {}
-
-    embeddings = np.load(embeddings_path, allow_pickle=True)
-
-    face_data = {}
-    filename_face_counts = {}
-
-    for entry in embeddings:
-        filename = entry["filename"]
-
-        # Track face index per filename (same logic as generate_face_id)
-        if filename not in filename_face_counts:
-            filename_face_counts[filename] = 0
-        face_index = filename_face_counts[filename]
-        filename_face_counts[filename] += 1
-
-        # Use stored face_id if present (inbox format), otherwise generate legacy format
-        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
-
-        # Extract mu and sigma_sq
-        if "mu" in entry:
-            mu = entry["mu"]
-            sigma_sq = entry["sigma_sq"]
-        else:
-            # Legacy format: use stored embedding directly, compute default sigma_sq
-            embedding_vec = entry.get("embedding")
-            if embedding_vec is None:
-                embedding_vec = entry.get("embeddings")
-            if embedding_vec is None:
-                logging.warning(
-                    "Skipping embedding row for %s with unsupported keys: %s",
-                    filename,
-                    sorted(entry.keys()),
-                )
-                continue
-            mu = np.asarray(embedding_vec, dtype=np.float32)
-            # Default sigma_sq based on det_score if available
-            det_score = entry.get("det_score", 0.5)
-            sigma_sq_val = 1.0 - (det_score * 0.9)  # 0.1 to 1.0
-            sigma_sq = np.full(512, sigma_sq_val, dtype=np.float32)
-
-        face_data[face_id] = {
-            "mu": np.asarray(mu, dtype=np.float32),
-            "sigma_sq": np.asarray(sigma_sq, dtype=np.float32),
-        }
-
-    return face_data
+    return load_face_data(embeddings_path)
 
 
 def get_face_data() -> dict[str, dict]:

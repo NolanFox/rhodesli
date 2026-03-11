@@ -81,6 +81,16 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: Any production data repair that goes beyond pure append/update semantics must create a machine-readable before/after trail and capture recovery artifacts before cleanup happens.
 - **Prevention**: (1) For every production reconciliation, write before/after audit JSON plus any prune backup JSON into `docs/assessments/`. (2) Capture live backup filenames or snapshot identifiers in the assessment. (3) Do not prune anything from production unless the recovery artifact already exists and is linked from the session assessment.
 
+### Lesson 125: Exact archive timestamp ties need a deterministic archival tie-break
+- **Mistake**: Several imported photos shared the exact same `upload_date`, so upload-newest sorting fell through to cache IDs and filenames. The UI looked wrong even though the stored timestamps were identical.
+- **Rule**: When archive timestamps tie exactly, sort by a stable archival sequence, not by incidental cache identifiers.
+- **Prevention**: Carry `photo_index.json` insertion order into the photo cache and use it as the secondary tie-break for upload-date sorts. Also surface full timestamps in the provenance line so tied-order behavior is explainable.
+
+### Lesson 126: Admin empty states must preserve first-run ML entry points
+- **Mistake**: The AI Analysis panel disappeared entirely when a photo had no existing `date_labels` entry. That removed the only obvious first-run Gemini action from newly uploaded photos.
+- **Rule**: An empty admin state must still preserve the primary action needed to populate that state.
+- **Prevention**: Render an explicit empty-state AI Analysis panel for unlabeled admin photo views, including the first-run action and copy explaining what will be generated.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

@@ -714,6 +714,7 @@ def _fire_recalibration_hook(action: str, id_a: str, id_b: str = None, anchor_fa
 
     Best-effort: never blocks the primary action. Uses asyncio.run()
     because route handlers are sync but hooks are async.
+    Production behavior is write-only: pair lineage is recorded, but fitting stays local.
     """
     import asyncio
 
@@ -731,13 +732,34 @@ def _fire_recalibration_hook(action: str, id_a: str, id_b: str = None, anchor_fa
         )
 
         if action == "merge" and id_b:
-            asyncio.run(on_face_merge(id_a, id_b, supabase_client=sb))
+            asyncio.run(
+                on_face_merge(
+                    id_a,
+                    id_b,
+                    supabase_client=sb,
+                    source_surface="app.engagement_routes._fire_recalibration_hook",
+                )
+            )
         elif action == "reject" and id_b:
-            asyncio.run(on_match_reject(id_a, id_b, supabase_client=sb))
+            asyncio.run(
+                on_match_reject(
+                    id_a,
+                    id_b,
+                    supabase_client=sb,
+                    source_surface="app.engagement_routes._fire_recalibration_hook",
+                )
+            )
         elif action == "confirm" and anchor_face_ids:
-            asyncio.run(on_identity_confirm(id_a, anchor_face_ids, supabase_client=sb))
+            asyncio.run(
+                on_identity_confirm(
+                    id_a,
+                    anchor_face_ids,
+                    supabase_client=sb,
+                    source_surface="app.engagement_routes._fire_recalibration_hook",
+                )
+            )
     except Exception as e:
-        logging.debug(f"Recalibration hook ({action}) non-critical failure: {e}")
+        logger.warning(f"Recalibration hook ({action}) non-critical failure: {e}")
 
 
 @rt("/api/annotations/submit")

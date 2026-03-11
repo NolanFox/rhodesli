@@ -543,6 +543,40 @@ class TestGeminiConfigLogging:
         assert kwargs["response_summary"] is not None
         assert "faces_described" in kwargs["response_summary"]
 
+    def test_log_call_passes_prompt_lineage(self):
+        """_log_call forwards prompt lineage fields to log_gemini_call."""
+        mock_log = MagicMock()
+        with patch("app.supabase_data.log_gemini_call", mock_log):
+            from app.face_alignment import _log_call
+
+            _log_call(
+                photo_id="test123",
+                model="gemini-3.1-pro-preview",
+                call_type="alignment",
+                prompt_tokens=1000,
+                completion_tokens=300,
+                cost_usd=0.02,
+                start_ms=1000000,
+                status="success",
+                prompt_text="prompt body",
+                prompt_lineage={
+                    "prompt_manifest_id": "face_alignment:v1_coordinate_bridge:visual_only:contract1",
+                    "prompt_family": "face_alignment",
+                    "prompt_version": "v1_coordinate_bridge",
+                    "prompt_variant": "visual_only",
+                    "prompt_contract_version": "contract1",
+                    "request_surface": "app.face_alignment.call_gemini_alignment",
+                    "request_mode": "interactive",
+                    "contract_valid": True,
+                },
+            )
+
+        kwargs = mock_log.call_args[1]
+        assert kwargs["prompt_text"] == "prompt body"
+        assert kwargs["prompt_manifest_id"] == "face_alignment:v1_coordinate_bridge:visual_only:contract1"
+        assert kwargs["prompt_variant"] == "visual_only"
+        assert kwargs["contract_valid"] is True
+
     def test_call_gemini_alignment_accepts_enrichment_params(self):
         """call_gemini_alignment accepts gedcom_token_count and enrichment_level."""
         import inspect

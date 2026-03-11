@@ -24,8 +24,11 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-import numpy as np
-from scipy.spatial.distance import cdist
+from core.identity_scoring import (
+    build_identity_embedding_index,
+    extract_face_ids as shared_extract_face_ids,
+    score_best_identity_match,
+)
 
 # Thresholds (AD-179)
 TIER_1_THRESHOLD = 0.85  # Auto-add: well below p25=0.88 of same-person pairs
@@ -57,23 +60,9 @@ def auto_cluster_face(face_id, face_mu, confirmed_clusters, face_data):
     if face_mu is None or len(confirmed_clusters) == 0:
         return ("no_match", None, None)
 
-    query = np.asarray(face_mu, dtype=np.float32).reshape(1, -1)
-
-    best_distance = float("inf")
-    best_identity_id = None
-
-    for identity_id, cluster_info in confirmed_clusters.items():
-        embs = cluster_info["embeddings"]
-        if embs is None or embs.size == 0:
-            continue
-
-        # Best-linkage: min distance to any face in the cluster (AD-001)
-        dists = cdist(query, embs, metric="euclidean")
-        min_dist = float(np.min(dists))
-
-        if min_dist < best_distance:
-            best_distance = min_dist
-            best_identity_id = identity_id
+    score = score_best_identity_match(face_mu, confirmed_clusters)
+    best_identity_id = score["best_match"]
+    best_distance = score["best_distance"]
 
     if best_identity_id is None:
         return ("no_match", None, None)
@@ -119,14 +108,7 @@ def _extract_face_ids(identity):
 
     Handles both string and dict anchor formats.
     """
-    face_ids = []
-    for anchor in identity.get("anchor_ids", []):
-        if isinstance(anchor, str):
-            face_ids.append(anchor)
-        elif isinstance(anchor, dict):
-            face_ids.append(anchor["face_id"])
-    face_ids.extend(identity.get("candidate_ids", []))
-    return face_ids
+    return shared_extract_face_ids(identity)
 
 
 def dedup_inbox(identities_data, dry_run=True):
@@ -276,36 +258,7 @@ def build_confirmed_clusters(identities_data, face_data):
             "face_ids": list[str],
         }}
     """
-    identities = identities_data.get("identities", {})
-    clusters = {}
-
-    for identity_id, identity in identities.items():
-        if identity.get("state") != "CONFIRMED":
-            continue
-        if identity.get("merged_into"):
-            continue
-
-        face_ids = _extract_face_ids(identity)
-        if not face_ids:
-            continue
-
-        embeddings = []
-        valid_fids = []
-        for fid in face_ids:
-            if fid in face_data and "mu" in face_data[fid]:
-                embeddings.append(face_data[fid]["mu"])
-                valid_fids.append(fid)
-
-        if not embeddings:
-            continue
-
-        clusters[identity_id] = {
-            "name": identity.get("name", f"Unknown ({identity_id[:8]})"),
-            "embeddings": np.vstack(embeddings),
-            "face_ids": valid_fids,
-        }
-
-    return clusters
+    return build_identity_embedding_index(identities_data, face_data, states=("CONFIRMED",))
 
 
 def run_backfill(identities_data, face_data, log_path="data/discovery_log.json",
