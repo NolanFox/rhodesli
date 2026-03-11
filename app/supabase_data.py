@@ -678,8 +678,11 @@ def shadow_write_identity(identity_data: dict) -> None:
             "anchor_ids": identity_data.get("anchor_ids", []),
             "candidate_ids": identity_data.get("candidate_ids", []),
             "negative_ids": identity_data.get("negative_ids", []),
+            "metadata": identity_data.get("metadata", {}),
             "version_id": identity_data.get("version_id", 1),
             "merged_into": identity_data.get("merged_into"),
+            "created_at": identity_data.get("created_at"),
+            "updated_at": identity_data.get("updated_at"),
         }
         client.table("identities").upsert(row).execute()
     except Exception as e:
@@ -742,8 +745,11 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
                     "anchor_ids": ident.get("anchor_ids", []),
                     "candidate_ids": ident.get("candidate_ids", []),
                     "negative_ids": ident.get("negative_ids", []),
+                    "metadata": ident.get("metadata", {}),
                     "version_id": ident.get("version_id", 1),
                     "merged_into": ident.get("merged_into"),
+                    "created_at": ident.get("created_at"),
+                    "updated_at": ident.get("updated_at"),
                 }
             )
         try:
@@ -979,7 +985,13 @@ def sync_discovery_log_entry(face_id: str, target_identity_id: str, decision: st
 # =========================================================================
 
 
-def sync_audit_log_entry(action: str, target_id: str, actor: str = "admin", entry_data: dict = None) -> None:
+def sync_audit_log_entry(
+    action: str,
+    target_id: str,
+    actor: str = "admin",
+    entry_data: dict = None,
+    target_type: str = "annotation",
+) -> None:
     """Insert an audit log entry to Supabase. Fire-and-forget."""
     try:
         client = get_supabase_client()
@@ -988,7 +1000,7 @@ def sync_audit_log_entry(action: str, target_id: str, actor: str = "admin", entr
         row = {
             "action": action,
             "target_id": target_id,
-            "target_type": "annotation",
+            "target_type": target_type,
             "actor": actor,
             "data": entry_data or {},
         }
@@ -1009,6 +1021,89 @@ def load_audit_log_from_supabase(limit: int = 100) -> list | None:
         return result.data or []
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase audit log load failed: {e}")
+        return None
+
+
+def sync_identity_history_event(event: dict) -> None:
+    """Insert an identity registry event into Supabase audit_log."""
+    if not isinstance(event, dict):
+        return
+
+    identity_id = event.get("identity_id")
+    if not identity_id:
+        return
+
+    sync_audit_log_entry(
+        action=event.get("action", "unknown"),
+        target_id=identity_id,
+        actor=event.get("user_source", "system"),
+        entry_data=event,
+        target_type="identity_event",
+    )
+
+
+def load_identity_history_from_supabase() -> list[dict] | None:
+    """Load append-only identity registry events from Supabase audit_log."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("audit_log")
+                .select("*")
+                .eq("target_type", "identity_event")
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            batch = result.data or []
+            if not batch:
+                break
+            all_rows.extend(batch)
+            if len(batch) < page_size:
+                break
+            offset += page_size
+
+        events = []
+        seen_event_ids = set()
+        for row in all_rows:
+            event = row.get("data") or {}
+            if not isinstance(event, dict):
+                continue
+            event_id = event.get("event_id")
+            if not event_id or event_id in seen_event_ids:
+                continue
+            seen_event_ids.add(event_id)
+            events.append(event)
+
+        events.sort(key=lambda e: e.get("timestamp", ""))
+        return events
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase identity history load failed: {e}")
+        return None
+
+
+def load_identity_overrides_from_supabase() -> dict[str, dict] | None:
+    """Load full identity override payloads keyed by identity_id."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("identity_overrides").select("identity_id, data").execute()
+        overrides = {}
+        for row in result.data or []:
+            identity_id = row.get("identity_id")
+            data = row.get("data")
+            if identity_id and isinstance(data, dict):
+                overrides[identity_id] = data
+        return overrides
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase identity override load failed: {e}")
         return None
 
 
@@ -1260,7 +1355,12 @@ def get_community_by_slug(slug: str) -> dict | None:
     sb = get_supabase_client()
     if not sb:
         if slug == "rhodes":
-            return _default_rhodes_community()
+            community = _default_rhodes_community()
+            _community_cache[slug] = community
+            _community_cache_ts = now
+            return community
+        _community_cache[slug] = None
+        _community_cache_ts = now
         return None
 
     try:
@@ -1270,11 +1370,18 @@ def get_community_by_slug(slug: str) -> dict | None:
             _community_cache[slug] = community
             _community_cache_ts = now
             return community
+        _community_cache[slug] = None
+        _community_cache_ts = now
         return None
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase community lookup failed for '{slug}': {e}")
         if slug == "rhodes":
-            return _default_rhodes_community()
+            community = _default_rhodes_community()
+            _community_cache[slug] = community
+            _community_cache_ts = now
+            return community
+        _community_cache[slug] = None
+        _community_cache_ts = now
         return None
 
 

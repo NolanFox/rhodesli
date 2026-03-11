@@ -110,7 +110,7 @@ class TestGetCommunityPhotoIds:
 
     @patch("app.supabase_data.get_supabase_client")
     @patch("app.supabase_data.load_photos_for_community")
-    def test_supabase_failure_returns_empty_set(self, mock_load, mock_client):
+    def test_supabase_failure_returns_none(self, mock_load, mock_client):
         import app.main
 
         app.main._community_photo_ids_cache = {}
@@ -120,7 +120,23 @@ class TestGetCommunityPhotoIds:
         mock_load.return_value = None
         community = {"slug": "fox-family", "id": "test-uuid-789"}
         result = app.main._get_community_photo_ids(community)
-        assert result == set()
+        assert result is None
+
+    @patch("app.supabase_data.get_supabase_client")
+    @patch("app.supabase_data.load_photos_for_community")
+    def test_supabase_failure_is_cached(self, mock_load, mock_client):
+        import app.main
+
+        app.main._community_photo_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+
+        mock_client.return_value = True
+        mock_load.return_value = None
+        community = {"slug": "fox-family", "id": "test-uuid-cache"}
+
+        assert app.main._get_community_photo_ids(community) is None
+        assert app.main._get_community_photo_ids(community) is None
+        mock_load.assert_called_once_with("test-uuid-cache")
 
 
 # ============================================================================
@@ -173,6 +189,16 @@ class TestGetCommunityIdentityIds:
                         community = {"slug": "fox-family", "id": "test-uuid-abc"}
                         result = app.main._get_community_identity_ids(community)
                         assert result == {"id1", "id2"}
+
+    def test_photo_scope_failure_returns_none(self):
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+
+        with patch.object(app.main, "_get_community_photo_ids", return_value=None):
+            community = {"slug": "fox-family", "id": "test-uuid-def"}
+            assert app.main._get_community_identity_ids(community) is None
 
 
 # ============================================================================

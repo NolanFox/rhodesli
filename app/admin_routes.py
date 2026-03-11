@@ -1674,8 +1674,11 @@ def post(ann_id: str, sess=None):
         registry = _main_mod.load_registry()
         identity = registry._identities.get(ann["target_id"])
         if identity:
-            identity["name"] = ann["value"]
-            identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+            registry.rename_identity(
+                ann["target_id"],
+                ann["value"],
+                user_source="approved_name_suggestion",
+            )
             _main_mod.save_registry(registry)
     elif ann["type"] == "merge_suggestion":
         # Execute the merge
@@ -1731,7 +1734,7 @@ def post(ann_id: str, sess=None):
 
     _log_audit("approved", ann_id, user.email if user else "admin", merge_label or ann["value"])
 
-    status_label = "APPROVED" if ann["type"] != "merge_suggestion" else "MERGED"
+    status_label = "Approved" if ann["type"] != "merge_suggestion" else "Merged"
     return Div(
         Div(
             Span(status_label, cls="text-sm font-bold text-emerald-400"),
@@ -3232,7 +3235,7 @@ def get(request, sess=None):
             Div(
                 A(
                     Img(
-                        src=photo_url(filename) if filename else "",
+                        src=_main_mod.photo_url(filename) if filename else "",
                         cls="w-20 h-20 object-cover rounded",
                         loading="lazy",
                     ),

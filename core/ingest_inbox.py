@@ -214,6 +214,111 @@ def create_inbox_identities(
     return identity_ids
 
 
+def _face_id_from_entry(face_entry) -> str | None:
+    """Normalize legacy/string and structured face entries to face IDs."""
+    if isinstance(face_entry, str):
+        return face_entry
+    if isinstance(face_entry, dict):
+        return face_entry.get("face_id")
+    return None
+
+
+def _collect_registry_face_ids(registry) -> set[str]:
+    """Collect all face IDs assigned anywhere in the identity registry."""
+    assigned_face_ids = set()
+    for identity in registry._identities.values():
+        for anchor in identity.get("anchor_ids", []):
+            face_id = _face_id_from_entry(anchor)
+            if face_id:
+                assigned_face_ids.add(face_id)
+        for candidate in identity.get("candidate_ids", []):
+            face_id = _face_id_from_entry(candidate)
+            if face_id:
+                assigned_face_ids.add(face_id)
+    return assigned_face_ids
+
+
+def _create_orphan_repair_identities(
+    identity_registry,
+    orphan_face_ids: set[str],
+    job_id: str,
+    repair_source: str,
+) -> list[str]:
+    """Create INBOX identities for orphan faces and return created IDs."""
+    from core.registry import IdentityState
+
+    created_ids = []
+    repaired_at = datetime.now(timezone.utc).isoformat()
+    for orphan_face_id in sorted(orphan_face_ids):
+        created_ids.append(
+            identity_registry.create_identity(
+                anchor_ids=[orphan_face_id],
+                user_source=repair_source,
+                state=IdentityState.INBOX,
+                provenance={
+                    "source": repair_source,
+                    "job_id": job_id,
+                    "repaired_face_id": orphan_face_id,
+                    "ingested_at": repaired_at,
+                },
+            )
+        )
+    return created_ids
+
+
+def repair_batch_orphan_faces(
+    identity_path: Path,
+    photo_index_path: Path,
+    photo_ids: list[str],
+    job_id: str,
+) -> list[str]:
+    """Repair any orphan faces left behind across a completed ingest batch."""
+    if not photo_ids:
+        return []
+
+    from core.photo_registry import PhotoRegistry
+    from core.registry import IdentityRegistry
+
+    try:
+        identity_registry = IdentityRegistry.load(identity_path)
+    except FileNotFoundError:
+        identity_registry = IdentityRegistry()
+
+    try:
+        photo_registry = PhotoRegistry.load(photo_index_path)
+    except FileNotFoundError:
+        return []
+
+    batch_face_ids = set()
+    for photo_id in photo_ids:
+        batch_face_ids.update(photo_registry.get_faces_in_photo(photo_id))
+
+    if not batch_face_ids:
+        return []
+
+    orphan_face_ids = batch_face_ids - _collect_registry_face_ids(identity_registry)
+    if not orphan_face_ids:
+        return []
+
+    logger.error(
+        "POST-BATCH ORPHAN FACES DETECTED: %s faces across %s photos for job %s. "
+        "Face IDs: %s. Creating emergency INBOX identities.",
+        len(orphan_face_ids),
+        len(photo_ids),
+        job_id,
+        sorted(orphan_face_ids),
+    )
+
+    repaired_identity_ids = _create_orphan_repair_identities(
+        identity_registry=identity_registry,
+        orphan_face_ids=orphan_face_ids,
+        job_id=job_id,
+        repair_source="orphan_repair_batch",
+    )
+    identity_registry.save(identity_path)
+    return repaired_identity_ids
+
+
 _face_analyzer = None
 _hybrid_detector = None
 _hybrid_recognizer = None
@@ -695,24 +800,21 @@ def process_single_image(
     # If not, this is an orphan face bug — log ERROR and create missing identities.
     if faces:
         all_face_ids = {f["face_id"] for f in faces}
-        identity_face_ids = set()
-        for idata in identity_registry._identities.values():
-            identity_face_ids.update(idata.get("anchor_ids", []))
-            identity_face_ids.update(idata.get("candidate_ids", []))
-        orphan_faces = all_face_ids - identity_face_ids
+        orphan_faces = all_face_ids - _collect_registry_face_ids(identity_registry)
         if orphan_faces:
             logger.error(
                 f"POST-INGEST ORPHAN FACES DETECTED: {len(orphan_faces)} faces "
                 f"in photo {filepath.name} have no identity. Face IDs: {orphan_faces}. "
                 f"Creating emergency INBOX identities."
             )
-            for orphan_fid in orphan_faces:
-                identity_registry.create_identity(
-                    anchor_ids=[orphan_fid],
-                    user_source="orphan_repair",
-                )
+            repaired_identity_ids = _create_orphan_repair_identities(
+                identity_registry=identity_registry,
+                orphan_face_ids=orphan_faces,
+                job_id=job_id,
+                repair_source="orphan_repair",
+            )
             identity_registry.save(identity_path)
-            identity_ids.extend([f"orphan_repair_{fid}" for fid in orphan_faces])
+            identity_ids.extend(repaired_identity_ids)
 
     # Generate crops
     for face in faces:
@@ -1293,6 +1395,15 @@ def process_directory(
         final_status = "error"
     else:
         final_status = "partial"
+
+    repaired_identity_ids = repair_batch_orphan_faces(
+        identity_path=identity_path,
+        photo_index_path=photo_index_path,
+        photo_ids=all_photo_ids,
+        job_id=job_id,
+    )
+    if repaired_identity_ids:
+        all_identity_ids.extend(repaired_identity_ids)
 
     write_status_file(
         inbox_dir,

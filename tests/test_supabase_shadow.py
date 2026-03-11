@@ -59,6 +59,9 @@ def sample_identity():
         "negative_ids": [],
         "version_id": 5,
         "merged_into": None,
+        "metadata": {"birth_year": 1905},
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "updated_at": "2026-03-10T00:00:00+00:00",
     }
 
 
@@ -129,6 +132,9 @@ class TestShadowWriteIdentity:
         assert row["display_name"] == "Big Leon"
         assert row["state"] == "CONFIRMED"
         assert row["version_id"] == 5
+        assert row["metadata"] == {"birth_year": 1905}
+        assert row["created_at"] == "2026-01-01T00:00:00+00:00"
+        assert row["updated_at"] == "2026-03-10T00:00:00+00:00"
 
     def test_no_client_returns_silently(self, sample_identity):
         with patch("app.supabase_data.get_supabase_client", return_value=None):

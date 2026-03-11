@@ -161,6 +161,32 @@ def test_compare_pair_match_includes_cross_match_summary(client, tmp_path, monke
     assert "Top cross-photo matches" in response.text
 
 
+def test_compare_pair_match_keeps_cross_match_summary_when_archive_lookup_fails(client, tmp_path, monkeypatch):
+    """Cross-photo summary should still render if archive lookup raises."""
+    import pickle
+    import app.main as main_mod
+
+    monkeypatch.chdir(tmp_path)
+    upload_dir = tmp_path / "uploads" / "compare"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    faces_a = [{"mu": [0.0, 0.0]}, {"mu": [0.1, 0.1]}]
+    faces_b = [{"mu": [0.0, 0.0]}, {"mu": [0.2, 0.2]}]
+    (upload_dir / "upa_faces.pkl").write_bytes(pickle.dumps(faces_a))
+    (upload_dir / "upb_faces.pkl").write_bytes(pickle.dumps(faces_b))
+
+    with (
+        patch("core.storage.can_write_r2", return_value=False),
+        patch.object(main_mod, "get_face_data", side_effect=RuntimeError("archive unavailable")),
+    ):
+        response = client.post(
+            "/api/compare/pair/match", params={"upload_a": "upa", "face_a": 0, "upload_b": "upb", "face_b": 0}
+        )
+
+    assert response.status_code == 200
+    assert "Top cross-photo matches" in response.text
+
+
 def test_upload_id_has_no_hyphens(tmp_path, monkeypatch):
     """Upload IDs must be hex-only (no hyphens from str(uuid4))."""
     import app.main as main_mod

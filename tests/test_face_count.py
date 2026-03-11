@@ -125,6 +125,23 @@ class TestFeaturedPhotosFaceCount:
                 f"face_count ({photo['face_count']}) != len(face_boxes) ({len(photo['face_boxes'])})"
             )
 
+    def test_featured_photos_skips_entries_missing_filename(self):
+        """Incomplete cached photos should be ignored rather than crashing pages."""
+        photo_cache = {
+            "missing_filename": {
+                "faces": [
+                    {"face_id": "face_valid_0", "bbox": [10, 20, 60, 80]},
+                    {"face_id": "face_valid_1", "bbox": [80, 20, 130, 80]},
+                ],
+                "source": "Test Collection",
+            }
+        }
+        dim_cache = self._make_dim_cache()
+
+        results = self._call_get_featured_photos(photo_cache, dim_cache)
+
+        assert results == []
+
 
 # ---------------------------------------------------------------------------
 # Landing page label tests

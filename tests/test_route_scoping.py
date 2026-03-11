@@ -85,13 +85,13 @@ class TestGetCommunityPhotoIds:
 
     @patch("app.supabase_data.load_photos_for_community", return_value=None)
     @patch("app.supabase_data.get_supabase_client", return_value=MagicMock())
-    def test_supabase_failure_returns_empty_set(self, mock_client, mock_load):
+    def test_supabase_failure_returns_none(self, mock_client, mock_load):
         import app.main
 
         app.main._community_photo_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
         result = app.main._get_community_photo_ids({"slug": "fox-family", "id": "fox-id"})
-        assert result == set()
+        assert result is None
 
     @patch("app.supabase_data.load_photos_for_community", return_value=[])
     @patch("app.supabase_data.get_supabase_client", return_value=MagicMock())
@@ -115,14 +115,14 @@ class TestGetCommunityIdentityIds:
 
         assert _get_community_identity_ids(None) is None
 
-    def test_rhodes_community_returns_empty_set(self):
-        """Rhodes returns empty set (photo_ids returns None -> empty identity set)."""
+    def test_photo_scope_failure_returns_none(self):
         import app.main
 
         app.main._community_identity_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
-        result = app.main._get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
-        assert result == set()
+        with patch.object(app.main, "_get_community_photo_ids", return_value=None):
+            result = app.main._get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
+            assert result is None
 
     def test_non_rhodes_returns_photo_derived_set(self):
         """Photo-derived identity set returns identities with faces in community photos (AD-216)."""

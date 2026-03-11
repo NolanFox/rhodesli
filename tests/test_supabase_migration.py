@@ -12,11 +12,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.supabase_data import (
+    load_identity_history_from_supabase,
+    load_identity_overrides_from_supabase,
     load_audit_log_from_supabase,
     load_date_labels_from_supabase,
     load_person_comments_from_supabase,
     load_photo_locations_from_supabase,
     sync_audit_log_entry,
+    sync_identity_history_event,
     sync_birth_year_estimate,
     sync_comparison_result,
     sync_corrections_log_entry,
@@ -52,6 +55,8 @@ def mock_sb_client():
     client.table.return_value.select.return_value.range.return_value.execute.return_value = result_mock
     client.table.return_value.select.return_value.order.return_value.desc.return_value.limit.return_value.execute.return_value = result_mock
     client.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value = result_mock
+    client.table.return_value.select.return_value.eq.return_value.range.return_value.execute.return_value = result_mock
+    client.table.return_value.select.return_value.execute.return_value = result_mock
     return client
 
 
@@ -199,6 +204,13 @@ class TestSyncAuditLogEntry:
         assert row["action"] == "approved"
         assert row["target_id"] == "ann123"
         assert row["actor"] == "admin@test.com"
+        assert row["target_type"] == "annotation"
+
+    def test_supports_custom_target_type(self, mock_sb_client):
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client):
+            sync_audit_log_entry("state_change", "id123", target_type="identity_event")
+        row = mock_sb_client.table.return_value.insert.call_args[0][0]
+        assert row["target_type"] == "identity_event"
 
     def test_no_client_safe(self):
         with patch("app.supabase_data.get_supabase_client", return_value=None):
@@ -217,6 +229,84 @@ class TestLoadAuditLog:
     def test_returns_none_when_no_client(self):
         with patch("app.supabase_data.get_supabase_client", return_value=None):
             assert load_audit_log_from_supabase() is None
+
+
+class TestIdentityHistoryAuditLog:
+    def test_sync_identity_history_event(self, mock_sb_client):
+        event = {
+            "event_id": "evt-1",
+            "timestamp": "2026-03-10T10:00:00+00:00",
+            "identity_id": "id123",
+            "action": "state_change",
+            "face_ids": [],
+            "user_source": "web",
+            "confidence_weight": 1.0,
+            "previous_version_id": 1,
+            "metadata": {"new_state": "CONTESTED"},
+        }
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client):
+            sync_identity_history_event(event)
+
+        row = mock_sb_client.table.return_value.insert.call_args[0][0]
+        assert row["target_id"] == "id123"
+        assert row["target_type"] == "identity_event"
+        assert row["data"] == event
+
+    def test_load_identity_history_from_supabase(self, mock_sb_client):
+        page1 = MagicMock()
+        page1.data = [
+            {
+                "data": {
+                    "event_id": "evt-2",
+                    "timestamp": "2026-03-10T11:00:00+00:00",
+                    "identity_id": "id123",
+                    "action": "state_change",
+                    "face_ids": [],
+                    "user_source": "web",
+                    "confidence_weight": 1.0,
+                    "previous_version_id": 2,
+                    "metadata": {"new_state": "SKIPPED"},
+                }
+            },
+            {
+                "data": {
+                    "event_id": "evt-1",
+                    "timestamp": "2026-03-10T10:00:00+00:00",
+                    "identity_id": "id123",
+                    "action": "state_change",
+                    "face_ids": [],
+                    "user_source": "web",
+                    "confidence_weight": 1.0,
+                    "previous_version_id": 1,
+                    "metadata": {"new_state": "CONTESTED"},
+                }
+            },
+        ]
+        page2 = MagicMock()
+        page2.data = []
+        mock_sb_client.table.return_value.select.return_value.eq.return_value.range.return_value.execute.side_effect = [
+            page1,
+            page2,
+        ]
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client):
+            events = load_identity_history_from_supabase()
+
+        assert [e["event_id"] for e in events] == ["evt-1", "evt-2"]
+
+    def test_load_identity_overrides_from_supabase(self, mock_sb_client):
+        result = MagicMock()
+        result.data = [
+            {"identity_id": "id1", "data": {"identity_id": "id1", "merge_history": [{"merge_event_id": "m1"}]}},
+            {"identity_id": "id2", "data": {"identity_id": "id2", "provenance": {"job_id": "job-2"}}},
+        ]
+        mock_sb_client.table.return_value.select.return_value.execute.return_value = result
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client):
+            overrides = load_identity_overrides_from_supabase()
+
+        assert overrides["id1"]["merge_history"] == [{"merge_event_id": "m1"}]
+        assert overrides["id2"]["provenance"] == {"job_id": "job-2"}
 
 
 # ---------------------------------------------------------------------------

@@ -102,6 +102,9 @@ class ActionType(Enum):
     """Event action types."""
 
     CREATE = "create"
+    CANDIDATE_ADD = "candidate_add"
+    CANDIDATE_REMOVE = "candidate_remove"
+    NEGATIVE_ADD = "negative_add"
     PROMOTE = "promote"
     REJECT = "reject"
     UNREJECT = "unreject"
@@ -230,6 +233,33 @@ class IdentityRegistry:
         """
         identity = self.get_identity(identity_id)
         return list(identity.get("candidate_ids", []))
+
+    @staticmethod
+    def _face_id_from_entry(face_entry) -> str | None:
+        """Normalize legacy/string and structured face entries to a face_id."""
+        if isinstance(face_entry, str):
+            return face_entry
+        if isinstance(face_entry, dict):
+            return face_entry.get("face_id")
+        return None
+
+    @classmethod
+    def _face_id_set(cls, entries: list) -> set[str]:
+        """Collect comparable face IDs from mixed anchor/candidate entry formats."""
+        face_ids = set()
+        for entry in entries:
+            face_id = cls._face_id_from_entry(entry)
+            if face_id:
+                face_ids.add(face_id)
+        return face_ids
+
+    @staticmethod
+    def _remove_candidate_by_face_id(identity: dict, face_id: str) -> None:
+        """Remove a candidate entry matching face_id, regardless of entry format."""
+        for candidate in list(identity.get("candidate_ids", [])):
+            if IdentityRegistry._face_id_from_entry(candidate) == face_id:
+                identity["candidate_ids"].remove(candidate)
+                return
 
     def _remove_anchor_by_face_id(self, identity: dict, face_id: str) -> None:
         """Remove anchor entry by face_id (handles both string and dict formats)."""
@@ -525,28 +555,43 @@ class IdentityRegistry:
         negatives_added = []
 
         # Collect all existing face IDs in target to prevent duplicates (Lesson 118)
-        target_all_faces = set(target["anchor_ids"]) | set(target["candidate_ids"])
+        target_anchor_face_ids = self._face_id_set(target.get("anchor_ids", []))
+        target_candidate_face_ids = self._face_id_set(target.get("candidate_ids", []))
+        target_all_faces = target_anchor_face_ids | target_candidate_face_ids
 
         # Move anchors from source to target
         for anchor in source["anchor_ids"]:
-            if anchor not in target_all_faces:
+            anchor_face_id = self._face_id_from_entry(anchor)
+            if not anchor_face_id:
+                continue
+
+            if anchor_face_id not in target_all_faces:
                 target["anchor_ids"].append(anchor)
                 anchors_added.append(anchor)
-                target_all_faces.add(anchor)
+                target_all_faces.add(anchor_face_id)
+                target_anchor_face_ids.add(anchor_face_id)
                 faces_merged += 1
-            elif anchor in target["candidate_ids"]:
+            elif anchor_face_id in target_candidate_face_ids:
                 # Promote from candidate to anchor (anchor takes precedence)
-                target["candidate_ids"].remove(anchor)
-                target["anchor_ids"].append(anchor)
-                anchors_added.append(anchor)
-                faces_merged += 1
+                self._remove_candidate_by_face_id(target, anchor_face_id)
+                target_candidate_face_ids.discard(anchor_face_id)
+                if anchor_face_id not in target_anchor_face_ids:
+                    target["anchor_ids"].append(anchor)
+                    anchors_added.append(anchor)
+                    target_anchor_face_ids.add(anchor_face_id)
+                    faces_merged += 1
 
         # Move candidates from source to target
         for candidate in source["candidate_ids"]:
-            if candidate not in target_all_faces:
+            candidate_face_id = self._face_id_from_entry(candidate)
+            if not candidate_face_id:
+                continue
+
+            if candidate_face_id not in target_all_faces:
                 target["candidate_ids"].append(candidate)
                 candidates_added.append(candidate)
-                target_all_faces.add(candidate)
+                target_all_faces.add(candidate_face_id)
+                target_candidate_face_ids.add(candidate_face_id)
                 faces_merged += 1
 
         # Preserve negative evidence
@@ -962,6 +1007,50 @@ class IdentityRegistry:
             },
         )
 
+    def force_state(self, identity_id: str, new_state: str, user_source: str, reason: str | None = None) -> str:
+        """Force an identity into a specific valid state while preserving history."""
+        get_event_recorder().record(
+            "FORCE_STATE_CHANGE",
+            {
+                "identity_id": identity_id,
+                "new_state": new_state,
+                "user_source": user_source,
+                "reason": reason or "",
+            },
+        )
+
+        valid_states = {state.value for state in IdentityState}
+        if new_state not in valid_states:
+            raise ValueError(f"Invalid state: {new_state}")
+
+        identity = self._identities[identity_id]
+        previous_state = identity["state"]
+        if previous_state == new_state:
+            return previous_state
+
+        previous_version = identity["version_id"]
+        identity["state"] = new_state
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        metadata = {
+            "new_state": new_state,
+            "previous_state": previous_state,
+            "forced": True,
+        }
+        if reason:
+            metadata["reason"] = reason
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.STATE_CHANGE.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata=metadata,
+        )
+        return previous_state
+
     def rename_identity(
         self,
         identity_id: str,
@@ -1253,6 +1342,93 @@ class IdentityRegistry:
             previous_version_id=previous_version,
         )
 
+    def add_candidate_face(
+        self,
+        identity_id: str,
+        face_id: str,
+        user_source: str,
+        metadata: dict | None = None,
+    ) -> bool:
+        """Append a candidate face with audit history if it is not already present."""
+        identity = self._identities[identity_id]
+        if face_id in self._face_id_set(identity.get("anchor_ids", [])):
+            return False
+        if face_id in self._face_id_set(identity.get("candidate_ids", [])):
+            return False
+
+        previous_version = identity["version_id"]
+        identity.setdefault("candidate_ids", []).append(face_id)
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.CANDIDATE_ADD.value,
+            face_ids=[face_id],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata=metadata or {},
+        )
+        return True
+
+    def remove_candidate_face(
+        self,
+        identity_id: str,
+        face_id: str,
+        user_source: str,
+        metadata: dict | None = None,
+    ) -> bool:
+        """Remove a candidate face with audit history if present."""
+        identity = self._identities[identity_id]
+        if face_id not in self._face_id_set(identity.get("candidate_ids", [])):
+            return False
+
+        previous_version = identity["version_id"]
+        self._remove_candidate_by_face_id(identity, face_id)
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.CANDIDATE_REMOVE.value,
+            face_ids=[face_id],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata=metadata or {},
+        )
+        return True
+
+    def add_negative_reference(
+        self,
+        identity_id: str,
+        negative_ref: str,
+        user_source: str,
+        metadata: dict | None = None,
+    ) -> bool:
+        """Append a negative reference with audit history if it is not already present."""
+        identity = self._identities[identity_id]
+        if negative_ref in identity.get("negative_ids", []):
+            return False
+
+        previous_version = identity["version_id"]
+        identity.setdefault("negative_ids", []).append(negative_ref)
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        event_metadata = {"negative_ref": negative_ref}
+        if metadata:
+            event_metadata.update(metadata)
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.NEGATIVE_ADD.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata=event_metadata,
+        )
+        return True
+
     def reject_identity_pair(
         self,
         source_id: str,
@@ -1457,6 +1633,20 @@ class IdentityRegistry:
             if face_id not in identity["candidate_ids"]:
                 identity["candidate_ids"].append(face_id)
 
+        elif target_event["action"] == ActionType.CANDIDATE_ADD.value:
+            face_id = target_event["face_ids"][0]
+            self._remove_candidate_by_face_id(identity, face_id)
+
+        elif target_event["action"] == ActionType.CANDIDATE_REMOVE.value:
+            face_id = target_event["face_ids"][0]
+            if face_id not in self._face_id_set(identity.get("candidate_ids", [])):
+                identity.setdefault("candidate_ids", []).append(face_id)
+
+        elif target_event["action"] == ActionType.NEGATIVE_ADD.value:
+            negative_ref = (target_event.get("metadata") or {}).get("negative_ref")
+            if negative_ref in identity.get("negative_ids", []):
+                identity["negative_ids"].remove(negative_ref)
+
         elif target_event["action"] == ActionType.REJECT.value:
             face_id = target_event["face_ids"][0]
             if face_id in identity["negative_ids"]:
@@ -1591,7 +1781,11 @@ class IdentityRegistry:
             IdentityRegistry instance, or None if Supabase is unavailable.
         """
         try:
-            from app.supabase_data import get_supabase_client
+            from app.supabase_data import (
+                get_supabase_client,
+                load_identity_history_from_supabase,
+                load_identity_overrides_from_supabase,
+            )
         except ImportError:
             logger.warning("supabase_data not available for Postgres load")
             return None
@@ -1637,8 +1831,14 @@ class IdentityRegistry:
                     identity["metadata"] = metadata
                 registry._identities[identity_id] = identity
 
-            # History is not stored in Postgres yet — start empty
-            registry._history = []
+            overrides = load_identity_overrides_from_supabase() or {}
+            for identity_id, override in overrides.items():
+                merged = dict(registry._identities.get(identity_id, {}))
+                merged.update(override)
+                merged["identity_id"] = identity_id
+                registry._identities[identity_id] = merged
+
+            registry._history = load_identity_history_from_supabase() or []
 
             logger.info(f"IdentityRegistry loaded from Postgres ({len(registry._identities)} identities)")
             return registry
@@ -1699,6 +1899,13 @@ class IdentityRegistry:
             "metadata": metadata or {},
         }
         self._history.append(event)
+        try:
+            from app.supabase_data import sync_identity_history_event
+
+            sync_identity_history_event(event)
+        except Exception:
+            # Supabase audit sync is best-effort and must not block canonical writes.
+            pass
 
     def get_all_face_ids(self, identity_id: str) -> list[str]:
         """

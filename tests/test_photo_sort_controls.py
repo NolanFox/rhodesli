@@ -134,14 +134,13 @@ class TestPhotosRouteDropdown:
         assert "Filename (A-Z)" in resp.text
         assert 'value="filename_az"' in resp.text
 
-    def test_photos_route_default_is_upload_newest(self, client, mock_photo_cache_with_dates):
-        """Default sort should be upload_newest — verify it's selected."""
+    def test_photos_route_default_is_newest(self, client, mock_photo_cache_with_dates):
+        """Public /photos should default to estimated-date newest for discovery browsing."""
         patches = _route_patches(mock_photo_cache_with_dates)
         with patch.multiple("app.main", **patches):
             resp = client.get("/photos")
         assert resp.status_code == 200
-        # The first option should be selected by default
-        assert 'value="upload_newest" selected' in resp.text.lower().replace('"', '"')
+        assert 'value="newest" selected' in resp.text.lower().replace('"', '"')
 
 
 class TestBuildCachesMetadataFallback:

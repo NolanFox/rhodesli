@@ -611,10 +611,12 @@ _COMMUNITY_IDS_CACHE_TTL: float = 60.0
 
 
 def _get_community_photo_ids(community: dict | None) -> set[str] | None:
-    """Return set of photo IDs for a community, or None if no community context.
+    """Return photo IDs for a community, or None when scoping cannot be computed.
 
-    Results cached for 60s. Returns None only when community is None (no community context).
-    ALL communities including Rhodes get photo-derived scoping to prevent cross-community leakage.
+    Results cached for 60s. Returning None means "fall back to no filtering"
+    because there is no reliable community-photo scope available.
+    ALL communities including Rhodes get photo-derived scoping to prevent
+    cross-community leakage when the community mapping is available.
     """
     if community is None:
         return None
@@ -632,10 +634,17 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 
     # If Supabase is unavailable (local dev, tests), skip scoping to avoid empty results
     if not get_supabase_client():
+        _community_photo_ids_cache[community_id] = None
+        _community_ids_cache_ts = now
         return None
 
     photo_ids = load_photos_for_community(community_id)
-    result = set(photo_ids) if photo_ids else set()
+    if photo_ids is None:
+        _community_photo_ids_cache[community_id] = None
+        _community_ids_cache_ts = now
+        return None
+
+    result = set(photo_ids)
 
     # Resolve aliases: community photos use inbox_* IDs in Supabase,
     # but _photo_cache uses SHA256(filename)[:16] IDs. Include both formats
@@ -659,14 +668,16 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 
 
 def _get_community_identity_ids(community: dict | None) -> set[str] | None:
-    """Return set of identity IDs for a community, or None if no community context.
+    """Return identity IDs for a community, or None when scoping cannot be computed.
 
     Uses photo-derived identity set (AD-216): finds all identities that have faces
     in photos belonging to this community. This is the source of truth — if a person
     has faces in a community's photos, they belong to that community.
 
-    Results cached for 60s. Returns None only when community is None (no community context).
-    ALL communities including Rhodes get photo-derived scoping to prevent cross-community leakage.
+    Results cached for 60s. Returning None means "fall back to no filtering"
+    because a reliable photo-derived scope is unavailable. ALL communities
+    including Rhodes get photo-derived scoping to prevent cross-community
+    leakage when the mapping is available.
     """
     if community is None:
         return None
@@ -682,7 +693,10 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
 
     # Photo-derived identity set: get all identities with faces in community photos
     community_photo_ids = _get_community_photo_ids(community)
-    if community_photo_ids is None or not community_photo_ids:
+    if community_photo_ids is None:
+        return None
+
+    if not community_photo_ids:
         _community_identity_ids_cache[community_id] = set()
         _community_ids_cache_ts = now
         return set()
@@ -1019,6 +1033,7 @@ REGISTRY_PATH = data_path / "identities.json"
 # Registry TTL cache — avoids reloading 2500+ identities from Supabase on every request
 _registry_cache = None
 _registry_cache_ts: float = 0.0
+_registry_cache_key: tuple[str, str] | None = None
 _REGISTRY_CACHE_TTL: float = 30.0
 
 
@@ -1033,11 +1048,16 @@ def load_registry():
     Returns an empty registry if the source is missing or corrupted,
     so the server never crashes on bad data.
     """
-    global _registry_cache, _registry_cache_ts
+    global _registry_cache, _registry_cache_ts, _registry_cache_key
     import time as _time
 
     now = _time.time()
-    if _registry_cache is not None and (now - _registry_cache_ts) < _REGISTRY_CACHE_TTL:
+    cache_key = (DATA_SOURCE, str(REGISTRY_PATH))
+    if (
+        _registry_cache is not None
+        and _registry_cache_key == cache_key
+        and (now - _registry_cache_ts) < _REGISTRY_CACHE_TTL
+    ):
         return _registry_cache
 
     if DATA_SOURCE == "postgres":
@@ -1046,6 +1066,7 @@ def load_registry():
             if registry is not None:
                 _registry_cache = registry
                 _registry_cache_ts = now
+                _registry_cache_key = cache_key
                 return registry
             logging.warning("Postgres load returned None, falling back to JSON")
         except Exception as e:
@@ -1056,6 +1077,7 @@ def load_registry():
             registry = IdentityRegistry.load(REGISTRY_PATH)
             _registry_cache = registry
             _registry_cache_ts = now
+            _registry_cache_key = cache_key
             return registry
         except (ValueError, OSError) as e:
             logging.error(f"Failed to load identity registry from {REGISTRY_PATH}: {e}")
@@ -1077,8 +1099,9 @@ def save_registry(registry, confirmed_identity_info=None):
             - user_id: str (Supabase auth user ID of the admin)
             - user_email: str (email for Resend notification delivery)
     """
-    global _registry_cache
+    global _registry_cache, _registry_cache_key
     _registry_cache = None  # Invalidate cache on save
+    _registry_cache_key = None
 
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase
@@ -1791,9 +1814,17 @@ def _count_pending_birth_year_reviews() -> int:
 def _get_decade_counts() -> dict:
     """Compute photo counts per decade from the search index."""
     docs = _load_search_index()
+    labels = _load_date_labels()
     counts = {}
     for doc in docs:
-        decade = doc.get("estimated_decade")
+        decade = None
+        for photo_id in (doc.get("cache_photo_id"), doc.get("photo_id")):
+            if photo_id:
+                decade = labels.get(photo_id, {}).get("estimated_decade")
+                if decade:
+                    break
+        if not decade:
+            decade = doc.get("estimated_decade")
         if decade:
             counts[decade] = counts.get(decade, 0) + 1
     return dict(sorted(counts.items()))
@@ -1920,12 +1951,22 @@ def _photo_collection_datalist():
 def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
     """Search photos using in-memory index. Returns matching documents with match reason."""
     docs = _load_search_index()
+    labels = _load_date_labels()
     results = []
     query_lower = query.lower().strip() if query else ""
 
     for doc in docs:
+        effective_decade = None
+        for photo_id in (doc.get("cache_photo_id"), doc.get("photo_id")):
+            if photo_id:
+                effective_decade = labels.get(photo_id, {}).get("estimated_decade")
+                if effective_decade:
+                    break
+        if not effective_decade:
+            effective_decade = doc.get("estimated_decade")
+
         # Apply decade filter
-        if decade and doc.get("estimated_decade") != decade:
+        if decade and effective_decade != decade:
             continue
 
         # Apply tag filter
@@ -1947,7 +1988,7 @@ def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list
         elif not decade and not tag:
             pass  # No filters, include all
 
-        results.append({**doc, "match_reason": match_reason})
+        results.append({**doc, "estimated_decade": effective_decade, "match_reason": match_reason})
 
     return results
 
@@ -4901,7 +4942,7 @@ def _proposal_banner(identity_id: str):
     }.get(confidence, "bg-slate-700/30 border-slate-500/50 text-slate-300")
 
     all_proposals = _get_proposals_for_identity(identity_id)
-    count_text = f" (+{len(all_proposals) - 1} more)" if len(all_proposals) > 1 else ""
+    count_text = f" (+{len(all_proposals) - 1} additional)" if len(all_proposals) > 1 else ""
 
     # User-friendly confidence labels (UX fix: avoid mixing system vocabulary with prose)
     confidence_label = _CONFIDENCE_LABEL.get(confidence, "Possible match")
@@ -6791,8 +6832,9 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
                 H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                 Div(
                     *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
-                    Div(
+                    A(
                         f"+{len(sorted_skipped) - 6} more",
+                        href="/?section=skipped&view=browse",
                         cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square",
                     )
                     if len(sorted_skipped) > 6
@@ -6960,6 +7002,12 @@ def render_photos_section(
     # Apply sorting
     photos = _sort_photos(photos, sort_by)
 
+    # Workstation photos section renders inline inside the dashboard shell.
+    # Cap the initial card set so the response stays browser-safe on large archives.
+    photo_display_limit = 150
+    total_matching_photos = len(photos)
+    display_photos = photos[:photo_display_limit]
+
     # Build per-collection stats
     collection_stats = {}
     for p in photos:
@@ -7071,14 +7119,21 @@ def render_photos_section(
             data_action="toggle-photo-select",
         ),
         # Result count
-        Span(f"{len(photos)} photo{'s' if len(photos) != 1 else ''}", cls="text-sm text-slate-500 ml-auto"),
+        Span(
+            (
+                f"{len(display_photos)} of {total_matching_photos} photos"
+                if total_matching_photos > photo_display_limit
+                else f"{total_matching_photos} photo{'s' if total_matching_photos != 1 else ''}"
+            ),
+            cls="text-sm text-slate-500 ml-auto",
+        ),
         cls="filter-bar flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4",
     )
 
     # Photo grid — build with navigation context
-    total_photos = len(photos)
+    total_photos = len(display_photos)
     photo_cards = []
-    for pi, photo in enumerate(photos):
+    for pi, photo in enumerate(display_photos):
         # Face avatars for identified people
         face_avatars = []
         for i, face in enumerate(photo["identified_faces"][:3]):
@@ -7182,7 +7237,7 @@ def render_photos_section(
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "
             "hover:border-slate-500 transition-colors cursor-pointer group",
-            hx_get=_photo_nav_url(photo["photo_id"], pi, photos, total_photos),
+            hx_get=_photo_nav_url(photo["photo_id"], pi, display_photos, total_photos),
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             # Show modal and set navigation index
@@ -7193,7 +7248,7 @@ def render_photos_section(
     # Build ordered photo ID list for client-side navigation
     import json as _json
 
-    photo_id_list = [p["photo_id"] for p in photos]
+    photo_id_list = [p["photo_id"] for p in display_photos]
     photo_nav_script = Script(f"""
         window._photoNavIds = {_json.dumps(photo_id_list)};
         window._photoNavIdx = -1;
@@ -7405,6 +7460,15 @@ def render_photos_section(
     return Div(
         section_header("Photos", subtitle),
         filter_bar,
+        Div(
+            f"Showing first {photo_display_limit} of {total_matching_photos} photos in workstation mode. "
+            "Use /photos for the full archive browser."
+            if total_matching_photos > photo_display_limit
+            else "",
+            cls="text-xs text-slate-500",
+        )
+        if total_matching_photos > photo_display_limit
+        else None,
         collection_cards,
         grid
         if photo_cards
@@ -7495,8 +7559,9 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
                         identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter)
                         for i in high_confidence[1:6]
                     ],
-                    Div(
+                    A(
                         f"+{len(high_confidence) - 6} more",
+                        href=f"/?section=to_review&view=browse{f'&filter={triage_filter}' if triage_filter else ''}",
                         cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square",
                     )
                     if len(high_confidence) > 6

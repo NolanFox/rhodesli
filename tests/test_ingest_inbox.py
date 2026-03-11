@@ -488,3 +488,66 @@ class TestWriteStatusFile:
 
             assert status["job_id"] == "test_job"
             assert status["status"] == "processing"
+
+
+class TestBatchOrphanRepair:
+    """Batch-wide orphan repair should close cross-file ingest gaps."""
+
+    def test_process_directory_repairs_batch_orphans(self):
+        from core.ingest_inbox import process_directory
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            upload_dir = tmpdir / "uploads"
+            upload_dir.mkdir()
+            (upload_dir / "a.jpg").write_bytes(b"a")
+            (upload_dir / "b.jpg").write_bytes(b"b")
+
+            data_dir = tmpdir / "data"
+            crops_dir = tmpdir / "crops"
+            data_dir.mkdir()
+            crops_dir.mkdir()
+
+            photo_index_path = data_dir / "photo_index.json"
+            identity_path = data_dir / "identities.json"
+            PhotoRegistry().save(photo_index_path)
+            IdentityRegistry().save(identity_path)
+
+            call_index = {"value": 0}
+
+            def fake_process_single_image(filepath, **kwargs):
+                idx = call_index["value"]
+                call_index["value"] += 1
+                photo_id = f"photo_{idx}"
+                face_id = f"face_{idx}"
+
+                registry = PhotoRegistry.load(photo_index_path)
+                registry.register_face(photo_id, f"raw_photos/{filepath.name}", face_id, source="test", collection="test")
+                registry.save(photo_index_path)
+
+                return {
+                    "faces_extracted": 1,
+                    "identity_ids": [],
+                    "face_ids": [face_id],
+                    "photo_id": photo_id,
+                }
+
+            with patch("core.ingest_inbox.process_single_image", side_effect=fake_process_single_image):
+                result = process_directory(
+                    upload_dir,
+                    "job-123",
+                    data_dir=data_dir,
+                    crops_dir=crops_dir,
+                    source="test",
+                    collection="test",
+                )
+
+            assert result["status"] == "success"
+            assert len(result["identities_created"]) == 2
+
+            repaired_registry = IdentityRegistry.load(identity_path)
+            repaired_identities = repaired_registry.list_identities(include_merged=True)
+            assert len(repaired_identities) == 2
+            assert {identity["state"] for identity in repaired_identities} == {"INBOX"}

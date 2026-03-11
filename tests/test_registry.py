@@ -138,6 +138,45 @@ class TestIdentityState:
         assert len(history) == 2
         assert history[1]["action"] == "state_change"
 
+    def test_force_state_records_forced_history(self):
+        """Forced state changes must still use append-only history."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="manual",
+            state=IdentityState.CONFIRMED,
+        )
+
+        previous_state = registry.force_state(identity_id, IdentityState.SKIPPED.value, user_source="admin_force_state")
+
+        identity = registry.get_identity(identity_id)
+        history = registry.get_history(identity_id)
+
+        assert previous_state == IdentityState.CONFIRMED.value
+        assert identity["state"] == IdentityState.SKIPPED.value
+        assert history[-1]["action"] == "state_change"
+        assert history[-1]["metadata"]["forced"] is True
+        assert history[-1]["metadata"]["previous_state"] == IdentityState.CONFIRMED.value
+        assert history[-1]["metadata"]["new_state"] == IdentityState.SKIPPED.value
+
+    def test_state_change_syncs_identity_audit_event(self):
+        """State changes should also emit a durable identity-event audit record."""
+        from unittest.mock import patch
+
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        with patch("app.supabase_data.sync_identity_history_event") as mock_sync:
+            identity_id = registry.create_identity(anchor_ids=["face_001"], user_source="manual")
+            registry.confirm_identity(identity_id, user_source="manual")
+
+        assert mock_sync.call_count >= 2
+        latest_event = mock_sync.call_args[0][0]
+        assert latest_event["identity_id"] == identity_id
+        assert latest_event["action"] == "state_change"
+
 
 class TestAnchorManagement:
     """Tests for managing anchor faces."""

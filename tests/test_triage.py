@@ -573,7 +573,7 @@ class TestGetNextFocusCardFilter:
         mock_crops.return_value = set()
         mock_ids.return_value = set()
 
-        items = [make_identity(f"id{i}") for i in range(5)]
+        items = [make_identity(f"id{i}") for i in range(8)]
         mock_reg = MagicMock()
         mock_reg.list_identities.side_effect = lambda state: {
             "INBOX": items,
@@ -585,6 +585,7 @@ class TestGetNextFocusCardFilter:
         from app.main import to_xml
         html = to_xml(result)
         assert "filter=unmatched" in html
+        assert "+2 more" in html
 
     @patch("app.main._get_identities_with_proposals")
     @patch("app.main._get_best_proposal_for_identity")

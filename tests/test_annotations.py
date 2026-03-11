@@ -7,6 +7,7 @@ Covers: submission, approval, rejection, contributor permissions.
 import pytest
 import json
 import os
+from datetime import datetime, timezone
 from starlette.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from pathlib import Path
@@ -144,10 +145,70 @@ class TestAnnotationApproval:
         with patch("app.main.data_path", tmp_path):
             response = client.post(f"/admin/approvals/{ann_id}/approve")
             assert response.status_code == 200
-            assert "APPROVED" in response.text
+            assert "Approved" in response.text
 
         saved = json.loads(ann_path.read_text())
         assert saved["annotations"][ann_id]["status"] == "approved"
+
+    def test_name_suggestion_approval_records_identity_rename_history(self, client, tmp_path):
+        """Approving a name suggestion uses the audited registry rename path."""
+        from core.registry import IdentityRegistry
+        from app.main import _invalidate_annotations_cache
+
+        ann_id = "test-ann-rename"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "identity-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "certain",
+                    "reason": "Family confirmation",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            },
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        registry = IdentityRegistry()
+        now = datetime.now(timezone.utc).isoformat()
+        registry._identities["identity-1"] = {
+            "identity_id": "identity-1",
+            "name": "Unidentified Person 1",
+            "state": "INBOX",
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": now,
+            "updated_at": now,
+            "provenance": {"source": "test"},
+            "metadata": {},
+        }
+
+        _invalidate_annotations_cache()
+
+        with (
+            patch("app.main.data_path", tmp_path),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry"),
+        ):
+            response = client.post(f"/admin/approvals/{ann_id}/approve")
+
+        assert response.status_code == 200
+        assert registry._identities["identity-1"]["name"] == "Leon Capeluto"
+        assert registry._history[-1]["action"] == "rename"
+        assert registry._history[-1]["identity_id"] == "identity-1"
+        assert registry._history[-1]["metadata"]["previous_name"] == "Unidentified Person 1"
+        assert registry._history[-1]["metadata"]["new_name"] == "Leon Capeluto"
 
     def test_annotation_rejection_no_data_change(self, client, tmp_path):
         """Rejecting an annotation doesn't modify identity data."""
@@ -677,6 +738,7 @@ class TestApprovalCardThumbnails:
 
         with patch("app.main.data_path", tmp_path):
             response = client.post(f"/admin/approvals/{ann_id}/approve")
+            assert "Approved" in response.text
             assert "Undo" in response.text
             assert f"/admin/approvals/{ann_id}/undo" in response.text
 

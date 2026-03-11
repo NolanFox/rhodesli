@@ -5,6 +5,7 @@ The system surfaces these for one-click admin resolution.
 """
 
 import pytest
+from copy import deepcopy
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
@@ -48,6 +49,15 @@ def _make_registry_mock(identities):
     registry.get_identity = get_identity
     registry.list_proposed_matches = MagicMock(return_value=[])
     registry._identities = {i["identity_id"]: i for i in identities}
+    return registry
+
+
+def _make_real_registry(identities):
+    """Build a real registry for route tests that assert history writes."""
+    from core.registry import IdentityRegistry
+
+    registry = IdentityRegistry()
+    registry._identities = {i["identity_id"]: deepcopy(i) for i in identities}
     return registry
 
 
@@ -683,13 +693,15 @@ class TestApiDiscoveryReject:
             _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face1"]),
             _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["faceC"]),
         ]
-        registry = _make_registry_mock(identities)
+        registry = _make_real_registry(identities)
 
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main.load_registry", return_value=registry),
             patch("app.main.save_registry") as mock_save,
             patch("app.main._invalidate_discovery_cache"),
+            patch("app.main._update_discovery_log_entry"),
+            patch("app.supabase_data.sync_discovery_log_entry"),
         ):
             response = client.post("/api/discovery/reject?source_id=inbox1&target_id=conf1")
 
@@ -697,6 +709,8 @@ class TestApiDiscoveryReject:
         assert "Match dismissed" in response.text
         # Verify negative_ids was updated
         assert "identity:conf1" in registry._identities["inbox1"]["negative_ids"]
+        assert registry._history[-1]["action"] == "negative_add"
+        assert registry._history[-1]["metadata"]["negative_ref"] == "identity:conf1"
         mock_save.assert_called_once()
 
     def test_reject_requires_admin(self, client):
@@ -707,6 +721,70 @@ class TestApiDiscoveryReject:
             response = client.post("/api/discovery/reject?source_id=inbox1&target_id=conf1")
 
         assert response.status_code == 401
+
+
+class TestApiDiscoveryConfirmUndo:
+    """Tests for audited discovery confirm/undo mutations."""
+
+    @pytest.fixture(scope="class")
+    def client(self):
+        from app.main import app
+
+        with TestClient(app) as c:
+            yield c
+
+    def test_confirm_adds_candidate_with_history(self, client):
+        """Confirming a discovery appends the face and records history."""
+        identities = [
+            _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face1"]),
+            _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["faceC"]),
+        ]
+        registry = _make_real_registry(identities)
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry") as mock_save,
+            patch("app.main._invalidate_discovery_cache"),
+            patch("app.main._check_merged_identity", return_value=(False, None)),
+            patch("app.main._update_discovery_log_entry"),
+            patch("app.supabase_data.sync_discovery_log_entry"),
+        ):
+            response = client.post("/api/discovery/confirm?face_id=new-face&target_id=conf1&source_id=inbox1")
+
+        assert response.status_code == 200
+        assert "Confirmed" in response.text
+        assert "new-face" in registry._identities["conf1"]["candidate_ids"]
+        assert registry._history[-1]["action"] == "candidate_add"
+        assert registry._history[-1]["face_ids"] == ["new-face"]
+        assert registry._history[-1]["metadata"]["source_identity_id"] == "inbox1"
+        mock_save.assert_called_once()
+
+    def test_undo_removes_candidate_with_history(self, client):
+        """Undoing a discovery removes the face and records history."""
+        identities = [
+            _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face1"]),
+            _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["faceC"], candidate_ids=["new-face"]),
+        ]
+        registry = _make_real_registry(identities)
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry") as mock_save,
+            patch("app.main._invalidate_discovery_cache"),
+            patch("app.main._update_discovery_log_entry"),
+            patch("app.supabase_data.sync_discovery_log_entry"),
+        ):
+            response = client.post("/api/discovery/undo?face_id=new-face&target_id=conf1&source_id=inbox1")
+
+        assert response.status_code == 200
+        assert "Auto-add undone" in response.text
+        assert "new-face" not in registry._identities["conf1"]["candidate_ids"]
+        assert registry._history[-1]["action"] == "candidate_remove"
+        assert registry._history[-1]["face_ids"] == ["new-face"]
+        assert registry._history[-1]["metadata"]["source_identity_id"] == "inbox1"
+        mock_save.assert_called_once()
 
 
 # ---------------------------------------------------------------------------

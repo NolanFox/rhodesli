@@ -1116,9 +1116,12 @@ def post(source_id: str, target_id: str, sess=None):
         negatives = identity.get("negative_ids", [])
         neg_entry = f"identity:{target_id}"
         if neg_entry not in negatives:
-            negatives.append(neg_entry)
-            # Mutate registry directly (lesson 36: get_identity returns shallow copy)
-            registry._identities[source_id]["negative_ids"] = negatives
+            registry.add_negative_reference(
+                source_id,
+                neg_entry,
+                user_source="discovery_reject",
+                metadata={"rejected_identity_id": target_id, "context": "discovery"},
+            )
             _main_mod.save_registry(registry)
 
         # Log rejection to discovery_log for ML signal (AD-179)
@@ -1172,12 +1175,13 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
             return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
         target = registry.get_identity(target_id)
         if target:
-            candidates = registry._identities[target_id].get("candidate_ids", [])
-            if face_id not in candidates:
-                candidates.append(face_id)
-                registry._identities[target_id]["candidate_ids"] = candidates
-                registry._identities[target_id]["version_id"] = target.get("version_id", 1) + 1
-                registry._identities[target_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+            added = registry.add_candidate_face(
+                target_id,
+                face_id,
+                user_source="discovery_confirm",
+                metadata={"source_identity_id": source_id, "context": "discovery"},
+            )
+            if added:
                 _main_mod.save_registry(registry)
 
         # Log confirmation to discovery_log
@@ -1222,11 +1226,13 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
         registry = _main_mod.load_registry()
         target = registry.get_identity(target_id)
         if target:
-            candidates = registry._identities[target_id].get("candidate_ids", [])
-            if face_id in candidates:
-                candidates.remove(face_id)
-                registry._identities[target_id]["version_id"] = target.get("version_id", 1) + 1
-                registry._identities[target_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+            removed = registry.remove_candidate_face(
+                target_id,
+                face_id,
+                user_source="discovery_undo",
+                metadata={"source_identity_id": source_id, "context": "discovery"},
+            )
+            if removed:
                 _main_mod.save_registry(registry)
 
         # Log undo to discovery_log — critical ML signal (false positive)

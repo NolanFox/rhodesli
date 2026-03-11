@@ -4141,7 +4141,14 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
         for pair in cross_pairs[:5]
     ]
 
-    archive_sections = []
+    archive_sections = [
+        Div(
+            H4("Top cross-photo matches", cls="text-sm font-medium text-slate-300 mb-2"),
+            Div(*cross_rows, cls="rounded-lg border border-slate-700/60 bg-slate-900/30 p-3"),
+            data_testid="pair-cross-matches",
+            cls="mt-8",
+        )
+    ]
     try:
         from core.neighbors import find_similar_faces
 
@@ -4166,16 +4173,6 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                         )
                     )
             return hits
-
-        archive_sections.append(
-            Div(
-                H4("Top cross-photo matches", cls="text-sm font-medium text-slate-300 mb-2"),
-                Div(*cross_rows, cls="rounded-lg border border-slate-700/60 bg-slate-900/30 p-3"),
-                data_testid="pair-cross-matches",
-                cls="mt-8",
-            )
-        )
-
         archive_a = find_similar_faces(mu_a.tolist(), face_data, registry=registry, limit=5)
         archive_b = find_similar_faces(mu_b.tolist(), face_data, registry=registry, limit=5)
 
@@ -4222,7 +4219,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 )
             )
     except Exception:
-        archive_sections = []
+        pass
 
     return Div(
         Div(

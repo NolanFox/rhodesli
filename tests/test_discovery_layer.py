@@ -261,6 +261,22 @@ class TestGetDecadeCounts:
         assert counts == {1930: 1}
         main_module._search_index_cache = None
 
+    def test_prefers_date_labels_when_search_index_is_stale(self, sample_search_index):
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        main_module._date_labels_cache = {
+            "abc123": {"photo_id": "abc123", "estimated_decade": 1910},
+            "def456": {"photo_id": "def456", "estimated_decade": 1920},
+            "ghi789": {"photo_id": "ghi789", "estimated_decade": 1940},
+            "jkl012": {"photo_id": "jkl012", "estimated_decade": 1930},
+        }
+        counts = main_module._get_decade_counts()
+        assert counts[1910] == 1
+        assert counts[1930] == 1
+        main_module._search_index_cache = None
+        main_module._date_labels_cache = None
+
 
 # ---------------------------------------------------------------------------
 # _get_tag_counts tests
@@ -411,6 +427,24 @@ class TestSearchPhotos:
         results = main_module._search_photos(query="xylophone")
         assert len(results) == 0
         main_module._search_index_cache = None
+
+    def test_decade_filter_prefers_date_labels_when_search_index_is_stale(self, sample_search_index):
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        main_module._date_labels_cache = {
+            "abc123": {"photo_id": "abc123", "estimated_decade": 1910},
+            "def456": {"photo_id": "def456", "estimated_decade": 1920},
+            "ghi789": {"photo_id": "ghi789", "estimated_decade": 1940},
+            "jkl012": {"photo_id": "jkl012", "estimated_decade": 1930},
+        }
+
+        results = main_module._search_photos(decade=1910)
+        assert {r["photo_id"] for r in results} == {"abc123"}
+        assert results[0]["estimated_decade"] == 1910
+
+        main_module._search_index_cache = None
+        main_module._date_labels_cache = None
 
 
 # ---------------------------------------------------------------------------

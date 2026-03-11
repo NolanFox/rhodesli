@@ -531,3 +531,20 @@ class TestPhotosGridNavScript:
 
         assert "window._photoNavIds" in html
         assert "photoNavTo" in html
+
+    @patch("app.main._build_caches")
+    @patch(
+        "app.main._photo_cache",
+        {f"p{i}": {"filename": f"{i}.jpg", "source": "Test", "faces": []} for i in range(205)},
+    )
+    @patch("app.main.get_identity_for_face", return_value=None)
+    @patch("app.main.photo_url", side_effect=lambda f: f"/photos/{f}")
+    def test_photos_section_caps_initial_workstation_render(self, mock_url, mock_id, mock_cache):
+        """Large archives should not inline every photo card into the workstation shell."""
+        from app.main import render_photos_section, to_xml
+
+        registry = MagicMock()
+        html = to_xml(render_photos_section({"photos": 205}, registry, set()))
+
+        assert html.count('hx-get="/photo/') == 150
+        assert "Showing first 150 of 205 photos in workstation mode" in html

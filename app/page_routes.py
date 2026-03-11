@@ -236,7 +236,9 @@ def _get_featured_photos(limit: int = 8) -> list:
         faces = photo_data.get("faces", [])
         num_faces = len(faces)
         confirmed_count = sum(1 for f in faces if f.get("face_id") in confirmed_face_ids)
-        filename = photo_data["filename"]
+        filename = photo_data.get("filename")
+        if not filename:
+            continue
         dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
         w, h = dims if dims else (0, 0)
         is_landscape = w > h if w and h else False
@@ -266,7 +268,9 @@ def _get_featured_photos(limit: int = 8) -> list:
         if pid not in _main_mod._photo_cache:
             continue
         pdata = _main_mod._photo_cache[pid]
-        filename = pdata["filename"]
+        filename = pdata.get("filename")
+        if not filename:
+            continue
         dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
         w, h = dims if dims else (0, 0)
         faces = pdata.get("faces", [])

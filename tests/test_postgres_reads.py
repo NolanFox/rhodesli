@@ -162,7 +162,11 @@ class TestIdentityRegistryPostgresLoad:
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         assert registry is not None
@@ -174,7 +178,11 @@ class TestIdentityRegistryPostgresLoad:
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         identity = registry._identities["aaaa-bbbb-cccc-dddd"]
@@ -192,26 +200,100 @@ class TestIdentityRegistryPostgresLoad:
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         merged = registry._identities["2222-3333-4444-5555"]
         assert merged["merged_into"] == "aaaa-bbbb-cccc-dddd"
 
     @patch("core.registry.logger")
-    def test_history_starts_empty(self, mock_logger):
-        """History is not in Postgres yet — should be empty list."""
+    def test_history_starts_empty_when_no_identity_events(self, mock_logger):
+        """History should stay empty when Supabase has no identity-event audit rows."""
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         assert registry._history == []
 
     @patch("core.registry.logger")
+    def test_load_merges_full_identity_override_payload(self, mock_logger):
+        rows = _make_mock_supabase_identity_rows()
+        mock_client = self._mock_client_with_rows(rows)
+        overrides = {
+            "aaaa-bbbb-cccc-dddd": {
+                "identity_id": "aaaa-bbbb-cccc-dddd",
+                "name": "Nace Capeluto",
+                "display_name": "Don Nace",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face1", "face2"],
+                "candidate_ids": ["face3"],
+                "negative_ids": [],
+                "version_id": 4,
+                "metadata": {"birth_year": 1910},
+                "merge_history": [{"merge_event_id": "m1"}],
+                "provenance": {"job_id": "job-123"},
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "updated_at": "2026-03-02T00:00:00+00:00",
+            }
+        }
+
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=overrides),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
+            registry = IdentityRegistry.load_from_postgres()
+
+        identity = registry._identities["aaaa-bbbb-cccc-dddd"]
+        assert identity["display_name"] == "Don Nace"
+        assert identity["merge_history"] == [{"merge_event_id": "m1"}]
+        assert identity["provenance"] == {"job_id": "job-123"}
+        assert identity["version_id"] == 4
+
+    @patch("core.registry.logger")
+    def test_load_restores_identity_history_from_audit_log(self, mock_logger):
+        rows = _make_mock_supabase_identity_rows()
+        mock_client = self._mock_client_with_rows(rows)
+        history = [
+            {
+                "event_id": "evt-1",
+                "timestamp": "2026-03-10T10:00:00+00:00",
+                "identity_id": "aaaa-bbbb-cccc-dddd",
+                "action": "state_change",
+                "face_ids": [],
+                "user_source": "web",
+                "confidence_weight": 1.0,
+                "previous_version_id": 3,
+                "metadata": {"new_state": "SKIPPED", "previous_state": "CONFIRMED"},
+            }
+        ]
+
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=history),
+        ):
+            registry = IdentityRegistry.load_from_postgres()
+
+        assert registry._history == history
+
+    @patch("core.registry.logger")
     def test_returns_none_when_supabase_unavailable(self, mock_logger):
-        with patch("app.supabase_data.get_supabase_client", return_value=None):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=None),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
         assert registry is None
 
@@ -222,7 +304,11 @@ class TestIdentityRegistryPostgresLoad:
             "connection timeout"
         )
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         assert registry is None
@@ -236,7 +322,11 @@ class TestIdentityRegistryPostgresLoad:
         mock_result_empty.data = []
         mock_client.table.return_value.select.return_value.range.return_value.execute.return_value = mock_result_empty
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         assert registry is not None
@@ -248,7 +338,11 @@ class TestIdentityRegistryPostgresLoad:
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         identity = registry.get_identity("aaaa-bbbb-cccc-dddd")
@@ -261,7 +355,11 @@ class TestIdentityRegistryPostgresLoad:
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=None),
+            patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
+        ):
             registry = IdentityRegistry.load_from_postgres()
 
         # Default: exclude merged

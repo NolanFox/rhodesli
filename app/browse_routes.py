@@ -211,7 +211,7 @@ def _get_collections_data():
 @rt("/photos")
 def get(
     filter_collection: str = "",
-    sort_by: str = "upload_newest",
+    sort_by: str = "newest",
     decade: int = None,
     search_q: str = "",
     tag: str = "",

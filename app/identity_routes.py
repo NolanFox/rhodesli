@@ -3151,17 +3151,16 @@ def post(identity_id: str, new_state: str, sess=None):
         )
 
     old_state = identity.get("state", "UNKNOWN")
-    from datetime import datetime, timezone
+    if old_state == new_state:
+        return _main_mod.toast(f"State already {new_state}", "info")
 
-    registry._identities[identity_id]["state"] = new_state
-    registry._identities[identity_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
-    registry._identities[identity_id]["version_id"] = identity.get("version_id", 0) + 1
-    _main_mod.save_registry(registry)
-
-    _main_mod.get_event_recorder().record(
-        "FORCE_STATE_CHANGE",
-        {"identity_id": identity_id, "old_state": old_state, "new_state": new_state},
+    registry.force_state(
+        identity_id,
+        new_state,
+        user_source="admin_force_state",
+        reason="data_integrity_fix",
     )
+    _main_mod.save_registry(registry)
 
     import logging
 

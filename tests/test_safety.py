@@ -347,6 +347,46 @@ class TestMergeIdentities:
         assert len(target.get("merge_history", [])) == 1
         assert target["merge_history"][0]["source_id"] == id_b
 
+    def test_merge_handles_structured_anchor_dedup(self):
+        """Merge should accept structured anchors without hashing raw dicts."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_struct")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_other")
+        photo_registry.register_face("photo_3", "/path/3.jpg", "face_candidate")
+
+        identity_registry = IdentityRegistry()
+        target_id = identity_registry.create_identity(
+            anchor_ids=["face_struct"],
+            candidate_ids=["face_candidate"],
+            user_source="test",
+        )
+        source_id = identity_registry.create_identity(
+            anchor_ids=["face_other"],
+            user_source="test",
+        )
+
+        # Structured anchors are supported elsewhere in the codebase.
+        identity_registry._identities[target_id]["anchor_ids"] = [{"face_id": "face_struct", "weight": 1.0}]
+
+        result = identity_registry.merge_identities(
+            source_id=source_id,
+            target_id=target_id,
+            user_source="test",
+            photo_registry=photo_registry,
+            auto_correct_direction=False,
+        )
+
+        assert result["success"] is True
+
+        target = identity_registry.get_identity(target_id)
+        anchor_face_ids = identity_registry.get_anchor_face_ids(target_id)
+        assert "face_struct" in anchor_face_ids
+        assert "face_other" in anchor_face_ids
+        assert target["candidate_ids"] == ["face_candidate"]
+
     def test_merge_marks_source_as_merged(self):
         """Source identity should have merged_into field set after merge."""
         from core.photo_registry import PhotoRegistry
