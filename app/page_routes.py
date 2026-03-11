@@ -3690,6 +3690,8 @@ def photo_view_content(
             P("(Face overlays require cached dimensions)", cls="text-slate-600 text-xs italic")
             if not has_dimensions and photo["faces"]
             else None,
+            # Upload provenance (uploaded by / added to archive date)
+            _main_mod._build_upload_provenance_line(photo),
             # Collection / Source / Source URL display
             Div(
                 P(
@@ -3723,8 +3725,6 @@ def photo_view_content(
             )
             if photo.get("collection") or photo.get("source") or photo.get("source_url")
             else None,
-            # Upload provenance (uploaded by / added to archive date)
-            _main_mod._build_upload_provenance_line(photo),
             # Stored photo metadata (BE-012)
             _main_mod._photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
@@ -4436,8 +4436,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     # Gap 2: Admin quick-nav on identify page
                     Div(
                         A(
-                            "View in Admin",
-                            href=f"/?section=to_review&current={person_id}&view=focus",
+                            "View in Admin Queue",
+                            href=f"{_main_mod.community_url_prefix(community_slug)}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{person_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                             data_testid="identify-admin-link",
                         ),
@@ -5593,6 +5593,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
     """
     cards = []
     for photo in photos:
+        provenance = _main_mod._get_upload_provenance_display(photo)
         badge_cls = (
             "bg-emerald-600/80"
             if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0
@@ -5661,8 +5662,19 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                     cls=img_container_cls,
                     style=aspect_style if aspect_style else None,
                 ),
-                Div(P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"), cls="p-2")
-                if photo["collection"]
+                Div(
+                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
+                    if photo["collection"]
+                    else None,
+                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight")
+                    if provenance
+                    else None,
+                    P(provenance["subline"], cls="text-[10px] text-slate-500 leading-tight")
+                    if provenance and provenance.get("subline")
+                    else None,
+                    cls="p-2 space-y-0.5",
+                )
+                if photo["collection"] or provenance
                 else None,
                 match_label,
                 href=f"/photo/{photo['photo_id']}",
@@ -5737,6 +5749,7 @@ def get(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -6034,6 +6047,7 @@ def photos_more(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -10921,8 +10935,8 @@ def public_photo_page(
                         )
                         if is_admin
                         else None,
-                        P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(uploader_line, cls="mt-1") if uploader_line else None,
+                        P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(
                             f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
                             f"{identified_count} identified",

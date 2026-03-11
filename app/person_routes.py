@@ -630,6 +630,7 @@ def public_person_page(
 
     # --- Navigation ---
     nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
+    workstation_prefix = _main_mod.community_url_prefix(community_slug)
 
     # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
@@ -1079,7 +1080,7 @@ def public_person_page(
                             ),
                             A(
                                 "Edit in Admin",
-                                href=f"/?section={_section_for_state(state)}&current={person_id}&view=focus",
+                                href=f"{workstation_prefix}/?section={_section_for_state(state)}&view=browse#identity-{person_id}",
                                 cls="text-xs text-indigo-400 hover:text-white",
                                 data_testid="edit-in-admin-link",
                             ),

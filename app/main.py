@@ -1202,21 +1202,38 @@ def _format_display_date(date_str: str, include_time: bool = False) -> str | Non
         return None
 
 
-def _build_upload_provenance_line(photo: dict):
-    """Build the archive-entry/source line shown on photo pages."""
+def _get_upload_provenance_display(photo: dict) -> dict | None:
+    """Return shared upload/archive provenance strings for photo UIs."""
     upload_date_label = _format_display_date(photo.get("upload_date", ""), include_time=True)
+    uploaded_by = (photo.get("uploaded_by") or "").strip()
 
-    if photo.get("uploaded_by"):
-        text = f"Uploaded by {photo['uploaded_by']}"
+    if uploaded_by:
+        headline = f"Uploaded {upload_date_label}" if upload_date_label else f"Uploaded by {uploaded_by}"
+        subline = f"by {uploaded_by}" if upload_date_label else None
+        full_text = f"Uploaded by {uploaded_by}"
         if upload_date_label:
-            text += f" on {upload_date_label}"
-        return Span(text, cls="text-xs text-slate-500")
+            full_text += f" on {upload_date_label}"
+        return {
+            "headline": headline,
+            "subline": subline,
+            "full_text": full_text,
+        }
 
     if upload_date_label:
-        return Span(
-            f"Archive entry recorded on {upload_date_label} · uploader not recorded for this import",
-            cls="text-xs text-slate-500",
-        )
+        return {
+            "headline": f"Archive entry {upload_date_label}",
+            "subline": "Uploader not recorded for this import",
+            "full_text": f"Archive entry recorded on {upload_date_label} · uploader not recorded for this import",
+        }
+
+    return None
+
+
+def _build_upload_provenance_line(photo: dict):
+    """Build the archive-entry/source line shown on photo pages."""
+    provenance = _get_upload_provenance_display(photo)
+    if provenance:
+        return Span(provenance["full_text"], cls="text-xs text-slate-500")
 
     # Source is already shown in the Collection/Source/URL section of photo context modal.
     # Don't duplicate it here (BUG-5, Session 96e-cont6).
@@ -7199,6 +7216,7 @@ def render_photos_section(
                 "identified_count": len(identified_faces),
                 "confirmed_count": confirmed_count,
                 "identified_faces": identified_faces[:4],  # Max 4 for display
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -7358,6 +7376,7 @@ def render_photos_section(
     total_photos = len(display_photos)
     photo_cards = []
     for pi, photo in enumerate(display_photos):
+        provenance = _get_upload_provenance_display(photo)
         # Face avatars for identified people
         face_avatars = []
         for i, face in enumerate(photo["identified_faces"][:3]):
@@ -7457,6 +7476,21 @@ def render_photos_section(
                     ),
                     cls="flex items-center justify-between mt-0.5",
                 ),
+                Div(
+                    P(
+                        provenance["headline"],
+                        cls="text-[11px] text-slate-400 leading-tight",
+                    ),
+                    P(
+                        provenance["subline"],
+                        cls="text-[10px] text-slate-500 leading-tight",
+                    )
+                    if provenance.get("subline")
+                    else None,
+                    cls="mt-1 space-y-0.5",
+                )
+                if provenance
+                else None,
                 cls="p-3",
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "

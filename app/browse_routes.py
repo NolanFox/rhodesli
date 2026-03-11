@@ -43,6 +43,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
     """
     cards = []
     for photo in photos:
+        provenance = _main_mod._get_upload_provenance_display(photo)
         badge_cls = (
             "bg-emerald-600/80"
             if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0
@@ -127,8 +128,19 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                     cls=img_container_cls,
                     style=aspect_style if aspect_style else None,
                 ),
-                Div(P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"), cls="p-2")
-                if photo["collection"]
+                Div(
+                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
+                    if photo["collection"]
+                    else None,
+                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight")
+                    if provenance
+                    else None,
+                    P(provenance["subline"], cls="text-[10px] text-slate-500 leading-tight")
+                    if provenance and provenance.get("subline")
+                    else None,
+                    cls="p-2 space-y-0.5",
+                )
+                if photo["collection"] or provenance
                 else None,
                 match_label,
                 href=f"/photo/{photo['photo_id']}",
@@ -293,9 +305,11 @@ def get(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
+                "photo_index_order": photo_data.get("photo_index_order"),
                 "back_image": photo_data.get("back_image", ""),
                 "media_role": photo_data.get("media_role", "front"),
             }
@@ -640,9 +654,11 @@ def photos_more(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
+                "photo_index_order": photo_data.get("photo_index_order"),
                 "back_image": photo_data.get("back_image", ""),
                 "media_role": photo_data.get("media_role", "front"),
             }
