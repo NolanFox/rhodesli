@@ -64,10 +64,49 @@ Those reports are preserved in:
 - `docs/session_context/session-96f-context.md`
 - `docs/prompts/session-96f-prompt.md`
 
+## Attribution Follow-Up
+
+Follow-up review of the separately observed local rename delta established:
+- `44ee07e0-bc1c-4839-9ee3-149e9ef349db` -> `Emily israel`
+  - registry rename event timestamp: `2026-03-11T15:41:16.546074+00:00`
+  - matching annotation: `73b08007-f9b2-4a93-9e56-38ff17c1cdcf`
+  - suggestion submitter: `anonymous`
+  - approving actor recoverable only as `admin`
+- `531c8221-a115-4bdd-ac96-bd930a27135b` -> `Jenny israel`
+  - registry rename event timestamp: `2026-03-11T15:41:18.540827+00:00`
+  - matching annotation: `6d77e1ab-ccf6-413e-a335-b7a22e7768b3`
+  - suggestion submitter: `lil_lover_52388@yahoo.com`
+  - approving actor recoverable only as `admin`
+
+Important caveat:
+- The registry event proves the rename happened via `approved_name_suggestion`,
+  but it does not store an actor email/user ID.
+- Matching annotation rows still read `pending_unverified` with
+  `reviewed_by/reviewed_at = null` even though audit logs show approval events.
+  That is now a documented gap, not a hidden assumption.
+
+Hardening shipped in the 96f follow-up:
+- `log_user_action()` now dual-writes structured events to Supabase `audit_log`
+  instead of only appending to local `logs/user_actions.log`
+- photo metadata edits now emit structured audit events with actor information:
+  collection, source, source URL
+- rename flows now emit structured audit events with actor information:
+  face-tag naming, direct rename, admin metadata rename, admin identify rename,
+  skipped-name-and-confirm
+
+Machine-readable evidence:
+- `docs/assessments/session-96f-attribution-findings.json`
+
+Remaining follow-up tracked in backlog:
+- `AUDIT-001`: canonical actor attribution + person/photo history timelines
+- `AUDIT-002`: reconcile annotation approval state vs audit evidence
+
 ## Lessons Created
 
 - **Lesson 125**: exact archive timestamp ties need a deterministic archival tie-break
 - **Lesson 126**: admin empty states must preserve first-run ML entry points
+- **Lesson 127**: file-only audit trails are not enough for archival mutation history
+- **Lesson 128**: `user_source` is not actor identity; actor attribution must be stored at mutation time
 
 ## Related Artifacts
 
@@ -83,6 +122,8 @@ Those reports are preserved in:
   - `ROADMAP.md`
 - Observed-but-excluded local data delta:
   - `docs/assessments/session-96f-observed-local-data-delta.md`
+- Attribution evidence:
+  - `docs/assessments/session-96f-attribution-findings.json`
 - Lessons:
   - `tasks/lessons/data-lessons.md`
   - `tasks/lessons.md`

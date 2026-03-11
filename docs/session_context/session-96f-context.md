@@ -19,6 +19,12 @@ day-to-day use across Rhodes and Fox.
   - photo detail discoverability
   - inbox visibility after upload
   - admin/public mode switching
+- User asked who specifically made a later local rename and wants person/photo
+  pages to expose a per-entity history timeline with actor attribution.
+- User explicitly wants all audit-relevant mutation data durably logged in
+  Supabase; file-only logs are not acceptable after the cont12 reconciliation.
+- If an exact historical actor cannot be recovered, the attribution boundary must
+  be documented clearly and breadcrumbed for future agents.
 
 ## Concrete Screenshots / Examples
 - Photo modal missing uploader clarity:
@@ -52,3 +58,7 @@ day-to-day use across Rhodes and Fox.
   - session log
   - assessment
   - backlog/lessons if new patterns are found
+- Attribution follow-up outputs:
+  - exact answer for the observed `Jenny israel` / `Emily israel` local rename events
+  - machine-readable artifact capturing the supporting evidence
+  - backlog entry for canonical actor attribution + entity timeline UI

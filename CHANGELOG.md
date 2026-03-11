@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.12] — 2026-03-11 (Session 96f-cont1: Provenance Visibility + Browse-Safe Admin Return)
+
+### Fixed
+- **Hidden provenance on photo cards** — workstation photo cards now surface uploader/archive-entry provenance directly instead of forcing admins to open each photo to understand ordering and attribution.
+- **Public `/photos` metadata drift** — public photo cards now receive the same `uploaded_by` and `photo_index_order` metadata as workstation cards, so provenance and upload-date tie-break behavior stay aligned across both list builders.
+- **Exact-timestamp tie inconsistency on public browse** — upload-date newest/oldest ordering now uses archival `photo_index.json` insertion order across both workstation and public photo lists when timestamps tie exactly.
+- **Photo-detail provenance hierarchy** — public photo pages now place the provenance line higher in the metadata stack and reuse the same wording logic as workstation views.
+- **Implicit admin return paths** — public identify/person pages now provide community-aware browse-mode admin return links instead of dropping admins back into implicit focus-style flows.
+
+### Verification
+- Targeted provenance/order regression slices: `43 passed`
+- Targeted navigation/render regression slices: `133 passed`
+- App tests: `4110 passed, 7 skipped`
+- ML tests: `566 passed`
+- Live `/health`: `200`, `1932` active identities, `939` photos, ML ready
+- Live HTML verification:
+  - public `/photos?sort_by=upload_newest` shows provenance summaries on cards
+  - workstation `/?section=photos&sort_by=upload_newest` shows the same provenance summaries and the corrected tied-photo order
+
 ## [v0.97.11] — 2026-03-11 (Session 96f: Live UX Closeout After Data Reconciliation)
 
 ### Fixed
@@ -10,9 +29,16 @@ All notable changes to this project will be documented in this file.
 - **Archive provenance ambiguity** — photo pages now show full archive timestamps, and older imports without uploader attribution explicitly say that uploader attribution was not recorded for that historical import.
 - **Same-timestamp upload ordering drift** — when imports share the exact same `upload_date`, upload-newest/upload-oldest now break ties by archival `photo_index.json` insertion order instead of cache-ID or filename order.
 - **Public/admin navigation clarity** — workstation photo links now say `Public Page`, and admin-capable public photo pages expose `Back to Workstation`.
+- **File-only audit split** — `log_user_action()` now dual-writes to Supabase `audit_log`, so user-action provenance is no longer trapped in `logs/user_actions.log`.
+- **Missing structured photo edit audit** — photo collection/source/source URL edits now emit structured audit events with actor information.
+- **Missing structured rename audit** — rename flows now emit structured audit events with actor information, reducing future ambiguity when answering “who changed this person?”
+
+### Added
+- **Machine-readable attribution artifact** — `docs/assessments/session-96f-attribution-findings.json` captures the exact evidence chain for the observed `Jenny israel` / `Emily israel` local rename events, including the current attribution boundary.
 
 ### Verification
 - Targeted UX regression slices: `50 passed`
+- Targeted audit regression slices: `8 passed`
 - App tests: `4102 passed, 7 skipped`
 - ML tests: `566 passed`
 - Live deploy: Railway `705b0eff-f8aa-4aee-b347-081c17c82df2` SUCCESS

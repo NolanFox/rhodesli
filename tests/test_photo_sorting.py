@@ -185,3 +185,32 @@ class TestPhotosRouteSort:
         assert resp.status_code == 200
         assert "Upload Date (Newest)" in resp.text
         assert 'value="upload_newest"' in resp.text
+
+    def test_photos_route_upload_newest_uses_photo_index_order_tiebreak(self, client):
+        """Public /photos upload sorting should keep archival insertion order on exact timestamp ties."""
+        photo_cache = {
+            "aaa111": {
+                "filename": "older-visible.jpg",
+                "collection": "Album 1",
+                "faces": [],
+                "upload_date": "2026-03-10T17:53:28.672276+00:00",
+                "photo_index_order": 10,
+            },
+            "zzz999": {
+                "filename": "newer-visible.jpg",
+                "collection": "Album 1",
+                "faces": [],
+                "upload_date": "2026-03-10T17:53:28.672276+00:00",
+                "photo_index_order": 1,
+            },
+        }
+        patches = _sort_patches(photo_cache)
+        with patch.multiple(
+            "app.main", **{k.split(".")[-1]: v for k, v in patches.items() if k.startswith("app.main.")}
+        ):
+            resp = client.get("/photos?sort_by=upload_newest")
+        assert resp.status_code == 200
+        ids = _extract_photo_ids_from_response(resp.text)
+        assert ids.index("aaa111") < ids.index("zzz999"), (
+            f"Expected archival insertion order aaa111>zzz999 on exact tie, got: {ids}"
+        )

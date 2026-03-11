@@ -1,0 +1,94 @@
+{
+  "generated_on": "2026-03-11",
+  "session": "96f",
+  "scope": "Local attribution review for the separately observed identities.json rename delta excluded from the code-only 96f commits.",
+  "findings": [
+    {
+      "identity_id": "44ee07e0-bc1c-4839-9ee3-149e9ef349db",
+      "current_name": "Emily israel",
+      "registry_event": {
+        "event_id": "c0e8cf41-d58b-40e0-bb8e-55ab7af9dbcc",
+        "timestamp": "2026-03-11T15:41:16.546074+00:00",
+        "action": "rename",
+        "user_source": "approved_name_suggestion",
+        "metadata": {
+          "previous_name": "Unidentified Person 738",
+          "new_name": "Emily israel"
+        }
+      },
+      "annotation": {
+        "annotation_id": "73b08007-f9b2-4a93-9e56-38ff17c1cdcf",
+        "type": "name_suggestion",
+        "submitted_by": "anonymous",
+        "submitted_at": "2026-03-07T11:06:32.713639+00:00",
+        "status": "pending_unverified",
+        "reviewed_by": null,
+        "reviewed_at": null
+      },
+      "user_action_log_match": {
+        "timestamp": "2026-03-11T15:41:16.545036+00:00",
+        "action": "APPROVE_ANNOTATION",
+        "annotation_id": "73b08007-f9b2-4a93-9e56-38ff17c1cdcf",
+        "submitted_by": "anonymous",
+        "admin": "admin"
+      },
+      "audit_log_match": {
+        "timestamp": "2026-03-11T15:41:16.676945+00:00",
+        "action": "approved",
+        "annotation_id": "73b08007-f9b2-4a93-9e56-38ff17c1cdcf",
+        "admin": "admin"
+      },
+      "attribution_conclusion": "The rename was driven by an approved name suggestion submitted anonymously. The approving actor is only recorded as 'admin'; a durable admin email/user_id was not stored on the canonical registry event."
+    },
+    {
+      "identity_id": "531c8221-a115-4bdd-ac96-bd930a27135b",
+      "current_name": "Jenny israel",
+      "registry_event": {
+        "event_id": "4710c2c7-acf3-4825-82c5-5fa8da45fc8a",
+        "timestamp": "2026-03-11T15:41:18.540827+00:00",
+        "action": "rename",
+        "user_source": "approved_name_suggestion",
+        "metadata": {
+          "previous_name": "Unidentified Person 737",
+          "new_name": "Jenny israel"
+        }
+      },
+      "annotation": {
+        "annotation_id": "6d77e1ab-ccf6-413e-a335-b7a22e7768b3",
+        "type": "name_suggestion",
+        "submitted_by": "lil_lover_52388@yahoo.com",
+        "submitted_at": "2026-03-07T11:04:48.139686+00:00",
+        "status": "pending_unverified",
+        "reviewed_by": null,
+        "reviewed_at": null
+      },
+      "user_action_log_match": {
+        "timestamp": "2026-03-11T15:41:18.540620+00:00",
+        "action": "APPROVE_ANNOTATION",
+        "annotation_id": "6d77e1ab-ccf6-413e-a335-b7a22e7768b3",
+        "submitted_by": "lil_lover_52388@yahoo.com",
+        "admin": "admin"
+      },
+      "audit_log_match": {
+        "timestamp": "2026-03-11T15:41:18.814653+00:00",
+        "action": "approved",
+        "annotation_id": "6d77e1ab-ccf6-413e-a335-b7a22e7768b3",
+        "admin": "admin"
+      },
+      "attribution_conclusion": "The rename was driven by an approved name suggestion submitted by lil_lover_52388@yahoo.com. The approving actor is only recorded as 'admin'; a durable admin email/user_id was not stored on the canonical registry event."
+    }
+  ],
+  "system_gap": {
+    "summary": "Historical rename attribution requires cross-referencing registry history, annotations, user_actions.log, and audit_log.json because no single canonical record stores the actor identity end-to-end.",
+    "specific_gaps": [
+      "Identity registry events store user_source but not actor email/user_id.",
+      "Matching annotation records remain pending_unverified with null reviewed_by/reviewed_at despite approval evidence in audit logs.",
+      "user_actions.log was local-only before Session 96f follow-up hardening."
+    ],
+    "follow_up": [
+      "Session 96f follow-up now dual-writes log_user_action() to Supabase audit_log.",
+      "Session 96f follow-up now logs photo metadata edits and rename routes with actor information.",
+      "Remaining work is tracked under AUDIT-001 and AUDIT-002."
+    ]
+  }
+}

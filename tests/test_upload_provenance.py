@@ -10,6 +10,22 @@ from unittest.mock import MagicMock, patch
 class TestUploadProvenanceDisplay:
     """Verify photo page shows uploader info when available."""
 
+    def test_helper_returns_detail_and_summary_strings(self):
+        """Shared provenance helper returns full/detail strings for cards and photo pages."""
+        from app.main import _get_upload_provenance_display
+
+        display = _get_upload_provenance_display(
+            {
+                "uploaded_by": "user@example.com",
+                "upload_date": "2026-03-05T12:00:00+00:00",
+            }
+        )
+
+        assert display is not None
+        assert display["headline"] == "Uploaded Mar 5, 2026 at 12:00 PM UTC"
+        assert display["subline"] == "by user@example.com"
+        assert display["full_text"] == "Uploaded by user@example.com on Mar 5, 2026 at 12:00 PM UTC"
+
     def test_photo_page_shows_uploaded_by(self, client):
         """Photo page shows 'Uploaded by email on date' when fields exist."""
         mock_photo_cache = {
@@ -116,6 +132,59 @@ class TestUploadProvenanceDisplay:
         assert resp.status_code == 200
         assert "Archive entry recorded on Feb 10, 2026 at 12:00 AM UTC" in resp.text
         assert "uploader not recorded for this import" in resp.text
+
+    def test_workstation_photos_cards_surface_provenance_summary(self, client):
+        """Workstation photo cards show upload/archive provenance without opening the photo."""
+        mock_photo_cache = {
+            "test_upload": {
+                "filename": "test.jpg",
+                "source": "Community Upload",
+                "collection": "Community",
+                "faces": [],
+                "uploaded_by": "user@example.com",
+                "upload_date": "2026-03-05T12:00:00+00:00",
+            }
+        }
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = []
+
+        with (
+            patch("app.main._build_caches"),
+            patch("app.main._photo_cache", mock_photo_cache),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.get_identity_for_face", return_value=None),
+        ):
+            resp = client.get("/?section=photos&sort_by=upload_newest")
+
+        assert resp.status_code == 200
+        assert "Uploaded Mar 5, 2026 at 12:00 PM UTC" in resp.text
+        assert "by user@example.com" in resp.text
+
+    def test_public_photos_cards_surface_archive_provenance_summary(self, client):
+        """Public /photos cards show archive-entry timing even without uploader attribution."""
+        mock_photo_cache = {
+            "test_backfilled": {
+                "filename": "test.jpg",
+                "collection": "Betty Collection",
+                "faces": [],
+                "upload_date": "2026-02-10T00:00:00+00:00",
+                "photo_index_order": 5,
+            }
+        }
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = []
+
+        with (
+            patch("app.main._build_caches"),
+            patch("app.main._photo_cache", mock_photo_cache),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.get_identity_for_face", return_value=None),
+        ):
+            resp = client.get("/photos?sort_by=upload_newest")
+
+        assert resp.status_code == 200
+        assert "Archive entry Feb 10, 2026 at 12:00 AM UTC" in resp.text
+        assert "Uploader not recorded for this import" in resp.text
 
 
 class TestRecentlyReviewedCards:

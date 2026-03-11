@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 46.0 — March 11, 2026
-**Status**: ~4664 tests passing, v0.97.10, 938 photos, 3412 identities, 84 confirmed
+**Version**: 47.0 — March 11, 2026
+**Status**: ~4676 tests passing, v0.97.12, 939 photos, 3412 identities, 84 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -41,6 +41,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### P1 — Cross-Store Drift Monitoring (DATA-010)
 - **DATA-010**: We still lack automatic detection when volume JSON, Postgres shadow tables, and derived artifacts drift apart. Fix: nightly snapshot compare of counts + hashes across identities, photos, face counts, and embedding coverage, with an artifact written for review and alerting on divergence. Source: Session 96e-cont12 root-cause analysis.
+
+### P1 — Canonical Actor Attribution & Entity Timelines (AUDIT-001)
+- **AUDIT-001**: Identity registry history still stores `user_source` (e.g. `approved_name_suggestion`) rather than a durable actor email/user_id, and person/photo pages still lack an entity-level history timeline. Session 96f follow-up fixed the file-only logging gap by dual-writing `log_user_action()` to Supabase and started logging photo metadata edits + rename routes with actor data, but canonical per-entity attribution is still incomplete. Needs: (1) actor fields on canonical registry/photo mutation records, (2) Supabase-backed read path for audit history, (3) admin timeline UI on `/person` and `/photo`, (4) optional public contributor page. Source: Nolan feedback + Session 96f attribution review.
+
+### P1 — Annotation Approval State Drift (AUDIT-002)
+- **AUDIT-002**: During the Session 96f attribution review, the matching `name_suggestion` annotations for the observed `Jenny israel` / `Emily israel` renames still showed `status=pending_unverified` with null `reviewed_by/reviewed_at`, even though registry history, `audit_log.json`, and `user_actions.log` all showed approval events. Fix: investigate annotation replay/sync/reapproval semantics, reconcile existing rows, and add an integrity check that flags approval-state mismatches. Source: `docs/assessments/session-96f-attribution-findings.json`.
 
 ### P2 — Test Ordering Flakiness (TEST-001)
 - ~~**TEST-001**: 31 tests fail in full suite but pass individually.~~ FIXED (Session 96e-cont12 closeout) — cache/env leakage fixtures were tightened, calibration early stopping was stabilized, and the final `/timeline` empty-filter failure was closed. Full suite now passes: `4098` app + `566` ML.

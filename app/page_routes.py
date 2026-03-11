@@ -2732,12 +2732,22 @@ def post(photo_id: str, sess, collection: str = ""):
     photo_path = photo_reg.get_photo_path(photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_collection(photo_id, collection.strip())
+    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    previous_collection = (_main_mod.get_photo_metadata(photo_id) or {}).get("collection", "")
+    updated_collection = collection.strip()
+    photo_reg.set_collection(photo_id, updated_collection)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
+    _main_mod.log_user_action(
+        "UPDATE_PHOTO_COLLECTION",
+        photo_id=photo_id,
+        previous_collection=previous_collection or "",
+        new_collection=updated_collection or "",
+        admin=user.email if user else "admin",
+    )
     return Div(
-        Span(f"Collection updated to: {collection.strip() or '(none)'}", cls="text-sm text-emerald-400"),
+        Span(f"Collection updated to: {updated_collection or '(none)'}", cls="text-sm text-emerald-400"),
         id=f"collection-status-{photo_id}",
     )
 
@@ -2756,12 +2766,22 @@ def post(photo_id: str, sess, source: str = ""):
     photo_path = photo_reg.get_photo_path(photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_source(photo_id, source.strip())
+    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    previous_source = (_main_mod.get_photo_metadata(photo_id) or {}).get("source", "")
+    updated_source = source.strip()
+    photo_reg.set_source(photo_id, updated_source)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
+    _main_mod.log_user_action(
+        "UPDATE_PHOTO_SOURCE",
+        photo_id=photo_id,
+        previous_source=previous_source or "",
+        new_source=updated_source or "",
+        admin=user.email if user else "admin",
+    )
     return Div(
-        Span(f"Source updated to: {source.strip() or '(none)'}", cls="text-sm text-emerald-400"),
+        Span(f"Source updated to: {updated_source or '(none)'}", cls="text-sm text-emerald-400"),
         id=f"source-status-{photo_id}",
     )
 
@@ -2780,16 +2800,26 @@ def post(photo_id: str, sess, source_url: str = ""):
     photo_path = photo_reg.get_photo_path(photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_source_url(photo_id, source_url.strip())
+    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    previous_source_url = (_main_mod.get_photo_metadata(photo_id) or {}).get("source_url", "")
+    updated_source_url = source_url.strip()
+    photo_reg.set_source_url(photo_id, updated_source_url)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
-    if source_url.strip():
+    _main_mod.log_user_action(
+        "UPDATE_PHOTO_SOURCE_URL",
+        photo_id=photo_id,
+        previous_source_url=previous_source_url or "",
+        new_source_url=updated_source_url or "",
+        admin=user.email if user else "admin",
+    )
+    if updated_source_url:
         return Div(
             Span("Source URL: ", cls="text-slate-500 text-sm"),
             A(
-                source_url.strip(),
-                href=source_url.strip(),
+                updated_source_url,
+                href=updated_source_url,
                 target="_blank",
                 rel="noopener",
                 cls="text-indigo-400 hover:text-indigo-300 underline text-sm",
@@ -3660,6 +3690,8 @@ def photo_view_content(
             P("(Face overlays require cached dimensions)", cls="text-slate-600 text-xs italic")
             if not has_dimensions and photo["faces"]
             else None,
+            # Upload provenance (uploaded by / added to archive date)
+            _main_mod._build_upload_provenance_line(photo),
             # Collection / Source / Source URL display
             Div(
                 P(
@@ -3693,8 +3725,6 @@ def photo_view_content(
             )
             if photo.get("collection") or photo.get("source") or photo.get("source_url")
             else None,
-            # Upload provenance (uploaded by / added to archive date)
-            _main_mod._build_upload_provenance_line(photo),
             # Stored photo metadata (BE-012)
             _main_mod._photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
@@ -4406,8 +4436,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     # Gap 2: Admin quick-nav on identify page
                     Div(
                         A(
-                            "View in Admin",
-                            href=f"/?section=to_review&current={person_id}&view=focus",
+                            "View in Admin Queue",
+                            href=f"{_main_mod.community_url_prefix(community_slug)}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{person_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                             data_testid="identify-admin-link",
                         ),
@@ -4451,7 +4481,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
     if is_admin:
         try:
             registry = _main_mod.load_registry()
-            registry.rename_identity(person_id, name.strip(), user_source="admin_web")
+            previous_name = registry.rename_identity(person_id, name.strip(), user_source="admin_web")
             # Also confirm the person so they move out of New Matches
             identity = registry.get_identity(person_id)
             _notify = None
@@ -4467,6 +4497,14 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
                 except ValueError:
                     pass  # Already confirmed or invalid state transition
             _main_mod.save_registry(registry, confirmed_identity_info=_notify)
+            _main_mod.log_user_action(
+                "RENAME_IDENTITY",
+                identity_id=person_id,
+                previous_name=previous_name or "",
+                new_name=name.strip(),
+                admin=user.email if user else "admin",
+                source="admin_web_identify",
+            )
             logging.info(f"[identify] Admin direct-named and confirmed {person_id} as '{name.strip()}'")
             return Div(
                 Div(
@@ -5555,6 +5593,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
     """
     cards = []
     for photo in photos:
+        provenance = _main_mod._get_upload_provenance_display(photo)
         badge_cls = (
             "bg-emerald-600/80"
             if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0
@@ -5623,8 +5662,19 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                     cls=img_container_cls,
                     style=aspect_style if aspect_style else None,
                 ),
-                Div(P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"), cls="p-2")
-                if photo["collection"]
+                Div(
+                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
+                    if photo["collection"]
+                    else None,
+                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight")
+                    if provenance
+                    else None,
+                    P(provenance["subline"], cls="text-[10px] text-slate-500 leading-tight")
+                    if provenance and provenance.get("subline")
+                    else None,
+                    cls="p-2 space-y-0.5",
+                )
+                if photo["collection"] or provenance
                 else None,
                 match_label,
                 href=f"/photo/{photo['photo_id']}",
@@ -5699,6 +5749,7 @@ def get(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -5996,6 +6047,7 @@ def photos_more(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -10883,8 +10935,8 @@ def public_photo_page(
                         )
                         if is_admin
                         else None,
-                        P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(uploader_line, cls="mt-1") if uploader_line else None,
+                        P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(
                             f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
                             f"{identified_count} identified",

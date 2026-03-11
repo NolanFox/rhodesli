@@ -1202,21 +1202,38 @@ def _format_display_date(date_str: str, include_time: bool = False) -> str | Non
         return None
 
 
-def _build_upload_provenance_line(photo: dict):
-    """Build the archive-entry/source line shown on photo pages."""
+def _get_upload_provenance_display(photo: dict) -> dict | None:
+    """Return shared upload/archive provenance strings for photo UIs."""
     upload_date_label = _format_display_date(photo.get("upload_date", ""), include_time=True)
+    uploaded_by = (photo.get("uploaded_by") or "").strip()
 
-    if photo.get("uploaded_by"):
-        text = f"Uploaded by {photo['uploaded_by']}"
+    if uploaded_by:
+        headline = f"Uploaded {upload_date_label}" if upload_date_label else f"Uploaded by {uploaded_by}"
+        subline = f"by {uploaded_by}" if upload_date_label else None
+        full_text = f"Uploaded by {uploaded_by}"
         if upload_date_label:
-            text += f" on {upload_date_label}"
-        return Span(text, cls="text-xs text-slate-500")
+            full_text += f" on {upload_date_label}"
+        return {
+            "headline": headline,
+            "subline": subline,
+            "full_text": full_text,
+        }
 
     if upload_date_label:
-        return Span(
-            f"Archive entry recorded on {upload_date_label} · uploader not recorded for this import",
-            cls="text-xs text-slate-500",
-        )
+        return {
+            "headline": f"Archive entry {upload_date_label}",
+            "subline": "Uploader not recorded for this import",
+            "full_text": f"Archive entry recorded on {upload_date_label} · uploader not recorded for this import",
+        }
+
+    return None
+
+
+def _build_upload_provenance_line(photo: dict):
+    """Build the archive-entry/source line shown on photo pages."""
+    provenance = _get_upload_provenance_display(photo)
+    if provenance:
+        return Span(provenance["full_text"], cls="text-xs text-slate-500")
 
     # Source is already shown in the Collection/Source/URL section of photo context modal.
     # Don't duplicate it here (BUG-5, Session 96e-cont6).
@@ -1322,6 +1339,46 @@ def log_user_action(action: str, **kwargs) -> None:
 
     with open(log_file, "a") as f:
         f.write(line)
+
+    try:
+        from app.supabase_data import sync_audit_log_entry
+
+        target_id = (
+            kwargs.get("annotation_id")
+            or kwargs.get("identity_id")
+            or kwargs.get("target_identity_id")
+            or kwargs.get("target_id")
+            or kwargs.get("photo_id")
+            or kwargs.get("job_id")
+            or action.lower()
+        )
+        if kwargs.get("annotation_id"):
+            target_type = "annotation_action"
+        elif kwargs.get("identity_id") or kwargs.get("target_identity_id"):
+            target_type = "identity_action"
+        elif kwargs.get("photo_id"):
+            target_type = "photo_action"
+        elif kwargs.get("job_id"):
+            target_type = "upload_action"
+        else:
+            target_type = "user_action"
+        actor = (
+            kwargs.get("admin")
+            or kwargs.get("user")
+            or kwargs.get("actor")
+            or kwargs.get("uploaded_by")
+            or "system"
+        )
+        sync_audit_log_entry(
+            action=action,
+            target_id=str(target_id),
+            actor=str(actor),
+            entry_data={"timestamp": timestamp, **kwargs},
+            target_type=target_type,
+        )
+    except Exception:
+        # Structured Supabase audit is best-effort and must never block local writes.
+        pass
 
 
 # =============================================================================
@@ -7116,6 +7173,7 @@ def render_photos_section(
                 "identified_count": len(identified_faces),
                 "confirmed_count": confirmed_count,
                 "identified_faces": identified_faces[:4],  # Max 4 for display
+                "uploaded_by": photo_data.get("uploaded_by", ""),
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
@@ -7275,6 +7333,7 @@ def render_photos_section(
     total_photos = len(display_photos)
     photo_cards = []
     for pi, photo in enumerate(display_photos):
+        provenance = _get_upload_provenance_display(photo)
         # Face avatars for identified people
         face_avatars = []
         for i, face in enumerate(photo["identified_faces"][:3]):
@@ -7374,6 +7433,21 @@ def render_photos_section(
                     ),
                     cls="flex items-center justify-between mt-0.5",
                 ),
+                Div(
+                    P(
+                        provenance["headline"],
+                        cls="text-[11px] text-slate-400 leading-tight",
+                    ),
+                    P(
+                        provenance["subline"],
+                        cls="text-[10px] text-slate-500 leading-tight",
+                    )
+                    if provenance.get("subline")
+                    else None,
+                    cls="mt-1 space-y-0.5",
+                )
+                if provenance
+                else None,
                 cls="p-3",
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "

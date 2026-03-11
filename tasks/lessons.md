@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-126 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+128 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -124,6 +124,9 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 124 | **Production data repairs need machine-readable unwind artifacts before cleanup** |
 | 125 | **Exact archive timestamp ties need a deterministic archival tie-break** |
 | 126 | **Admin empty states must preserve first-run ML entry points** |
+| 127 | **File-only audit trails are not enough for archival mutation history** |
+| 128 | **`user_source` is provenance class, not actor identity** |
+| 129 | **Mirrored list builders must share the same metadata contract** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

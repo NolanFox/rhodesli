@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.11 · ~4668 tests · 938 photos · 3412 identities · 84 confirmed
+Current: v0.97.12 · ~4676 tests · 939 photos · 3412 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -87,6 +87,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
+- [ ] AUDIT-001: Canonical actor attribution + person/photo history timelines — registry history still records `user_source` rather than actor identity, and entity-level timeline UI is still missing. Build canonical actor fields on mutations, Supabase-backed read paths, and admin timelines on `/person` + `/photo`. See `docs/BACKLOG.md`.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -157,7 +158,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Recently Completed
 
-- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, and clarified public/workstation navigation (`Public Page`, `Back to Workstation`). Verified `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
+- [x] 2026-03-11: **v0.97.12 — Session 96f-cont1**: Follow-up provenance visibility + browse-safe admin return cleanup. Workstation and public photo cards now surface uploader/archive-entry provenance directly, public `/photos` now carries the same tie-break metadata as workstation photo lists, photo detail provenance moved higher in the metadata stack, and admin return links from public identify/person pages now land in community-aware browse-mode queues. Verified with targeted slices (`43 passed`, `133 passed`), full gates (`4110 passed, 7 skipped`; `566 passed`), and live `/health` (`200`, `1932` active identities, `939` photos).
+- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, clarified public/workstation navigation (`Public Page`, `Back to Workstation`), and hardened attribution by dual-writing `log_user_action()` to Supabase plus logging photo metadata edits and rename flows with actor data. Verified targeted audit slices (`8 passed`) in addition to the earlier `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
 
 - [x] 2026-03-11: **v0.97.10 — Session 96e-cont12**: Production reconciliation + root-cause closeout. Closed the remaining local structural drift (`157` orphans, `122` merge chains, `1` duplicate face, `2` ghost refs), finished embedding repair (`10` missing -> `0`), reconciled production with the audited `3412`-identity / `938`-photo snapshot, and pruned `112` stale Supabase identity rows only after exporting them to a checked-in JSON backup artifact. Also restored the app gate by making `/timeline` person filters timeline-backed. Verified `pytest tests/ -x -q` (`4098 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Deploy SUCCESS.
 

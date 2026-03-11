@@ -1,49 +1,52 @@
-# Session 96f Log — Live UX Closeout After Data Reconciliation
-## Mission: close the last live UX and metadata regressions surfaced during real admin testing so the app is ready for routine use
+# Session 96f-cont1 Log — Provenance Visibility + Browse-Safe Admin Return
+## Mission: close the last live-tested photo provenance, ordering, and public/admin navigation gaps after Session 96f
 ## Started: 2026-03-11
-## Version: v0.97.11
-## Assessment: docs/assessments/session-96f-assessment.md
+## Version: v0.97.12
+## Assessment: docs/assessments/session-96f-cont1-assessment.md
 
-### Phase 1: Live Issue Capture
-- [x] `docs/session_context/session-96f-context.md` created with user screenshots, links, and reported regressions
-- [x] `docs/prompts/session-96f-prompt.md` created so the work is resumable after interruption/compaction
-- [x] Confirmed five concrete live issues:
-  - upload success returned to focus mode instead of browse mode
-  - new unlabeled photos had no visible AI Analysis entry point
-  - archive provenance showed date-only and hid missing-uploader context
-  - tied March 10 imports sorted by arbitrary cache-ID order
-  - public/share-ready vs workstation navigation had become too implicit
+### Phase 1: Continuation Capture
+- [x] `docs/session_context/session-96f-cont1-context.md` created with the new live-tested continuation scope
+- [x] `docs/prompts/session-96f-cont1-prompt.md` created so the continuation remains resumable after interruption
+- [x] Preserved the user's concrete follow-up reports:
+  - provenance still too hidden on photo cards and photo pages
+  - upload ordering still felt suspect without visible full timestamps
+  - public/share-ready vs admin/workstation handoff still too implicit
+  - per-entity timeline / actor attribution requirement must remain breadcrumbed
 
 ### Phase 2: Product Fixes
-- [x] `app/upload_routes.py`: `"Refresh to see inbox"` now routes to `/?section=to_review&view=browse`
-- [x] `app/main.py`: photo provenance now shows full timestamp and explicit historical-import wording when uploader attribution is absent
-- [x] `app/main.py`: admin users now see an AI Analysis empty state with a first-run action on unlabeled photos
-- [x] `app/main.py` + `app/page_routes.py`: upload sorting now uses `photo_index.json` insertion order to break exact timestamp ties
-- [x] `app/main.py` + `app/page_routes.py`: workstation/public links renamed to `Public Page`; public photo pages now expose `Back to Workstation` for admin-capable sessions
+- [x] `app/main.py`: added a shared provenance helper and surfaced provenance summaries directly on workstation photo cards
+- [x] `app/browse_routes.py` + `app/page_routes.py`: public `/photos` now threads `uploaded_by` and `photo_index_order` through its photo payloads and cards
+- [x] `app/main.py` + `app/browse_routes.py` + `app/page_routes.py`: upload-date sorting now stays deterministic across both workstation and public photo lists
+- [x] `app/page_routes.py`: photo-detail provenance moved higher in the metadata stack and reuses the shared wording
+- [x] `app/page_routes.py` + `app/person_routes.py`: admin return links from public identify/person pages now point to community-aware browse-mode queue URLs
+- [x] Timeline/actor-attribution requirement preserved in backlog rather than dropped during the UX cleanup
 
 ### Phase 3: Verification
 - [x] Targeted regression slices:
-  - `pytest tests/test_upload_cache_invalidation.py::TestUploadStatusMessages::test_success_status_shows_face_count tests/test_discovery_layer.py::TestPhotoContextModalAIAnalysis::test_modal_shows_ai_empty_state_for_admin_when_no_labels tests/test_discovery_layer.py::TestPhotoContextModalAIAnalysis::test_modal_omits_ai_analysis_when_no_labels -q` -> `3 passed`
-  - `pytest tests/test_photo_sort_controls.py tests/test_upload_provenance.py tests/test_internal_photo_links.py -q` -> `47 passed`
+  - `pytest tests/test_upload_provenance.py tests/test_photo_sorting.py tests/test_session83a_gaps.py -q` -> `43 passed`
+  - `pytest tests/test_internal_photo_links.py tests/test_photo_sort_controls.py tests/test_upload_cache_invalidation.py tests/test_discovery_layer.py -q` -> `133 passed`
 - [x] Full required gate:
-  - `pytest tests/ -x -q` -> `4102 passed, 7 skipped`
+  - `pytest tests/ -x -q` -> `4110 passed, 7 skipped`
   - `pytest rhodesli_ml/tests/ -x -q` -> `566 passed`
-- [x] Live deploy `705b0eff-f8aa-4aee-b347-081c17c82df2` confirmed `SUCCESS`
 - [x] Live `/health` -> `200`, `1932` active identities, `939` photos, ML ready
 - [x] Live HTML verified:
+  - `/photos?sort_by=upload_newest` shows new provenance summaries on public photo cards
+  - `/?section=photos&sort_by=upload_newest` shows the same provenance summaries plus the corrected tied-photo order
   - `/photo/f1ae3676f59943b2` shows uploader timestamp with time
   - `/photo/7b7b3499b2006f61` shows explicit archive-import wording with timestamp
-  - `/?section=photos&sort_by=upload_newest` shows `Public Page` labels and the corrected tied-photo order
 
 ### Phase 4: Documentation + Lessons
-- [x] `docs/assessments/session-96f-assessment.md`
-- [x] `docs/assessments/session-96f-observed-local-data-delta.md` records the separate uncommitted `data/identities.json` rename delta observed during wrap-up and intentionally excluded from 96f commits
-- [x] `CHANGELOG.md` updated with `v0.97.11`
-- [x] `ROADMAP.md` updated with `v0.97.11` closeout entry
-- [x] Lessons `125`-`126` added in `tasks/lessons/data-lessons.md` and indexed in `tasks/lessons.md`
-- [x] No repo data files staged into Session 96f
+- [x] `docs/assessments/session-96f-cont1-assessment.md`
+- [x] `CHANGELOG.md` updated with `v0.97.12`
+- [x] `ROADMAP.md` updated with `v0.97.12` closeout entry
+- [x] `docs/BACKLOG.md` status line refreshed to the verified current build
+- [x] Lesson `129` added in `tasks/lessons/data-lessons.md` and indexed in `tasks/lessons.md`
+- [x] No repo data files staged into Session 96f-cont1; the separate local `data/identities.json` delta remained untouched
+
+### Predecessor
+- Session 96f (`v0.97.11`) closed the larger live UX + audit hardening pass
+- Session 96f-cont1 finished the smaller but still user-visible provenance/order/navigation follow-up discovered during continued live use
 
 ### Key Commits
-- `8009c87` `[codex] docs(session): add 96f prompt and context`
-- `92f12a9` `[codex] fix(upload): restore browse inbox and first-run ai entry`
-- `161d6bf` `[codex] fix(photos): stabilize upload ordering and clarify navigation`
+- `622bf81` `[codex] docs(session): add 96f-cont1 prompt and context`
+- `c14fcc8` `[codex] fix(ux): surface provenance and browse-safe admin links`
