@@ -251,6 +251,85 @@ class TestTimelineRoute:
         assert "People" in resp.text
 
 
+class TestTimelineHelpers:
+    """Tests for timeline helper functions."""
+
+    def test_timeline_eligible_photo_ids_respect_filters(self):
+        from app import page_routes
+
+        search_docs = [
+            {"cache_photo_id": "photo-1", "best_year_estimate": 1935},
+            {"cache_photo_id": "photo-2", "estimated_decade": 1940},
+            {"cache_photo_id": "photo-3", "best_year_estimate": 1955},
+            {"cache_photo_id": "photo-4"},
+        ]
+        photo_cache = {
+            "photo-1": {"collection": "Alpha"},
+            "photo-2": {"collection": "Beta"},
+            "photo-3": {"collection": "Alpha"},
+        }
+
+        result = page_routes._timeline_eligible_photo_ids(
+            search_docs,
+            photo_cache,
+            start=1930,
+            end=1949,
+            collection="Alpha",
+        )
+
+        assert result == {"photo-1"}
+
+    def test_person_filter_items_exclude_people_without_timeline_photos(self):
+        from app import page_routes
+
+        class _PhotoRegistry:
+            def __init__(self, face_to_photos):
+                self.face_to_photos = face_to_photos
+
+            def get_photos_for_faces(self, face_ids):
+                photos = []
+                for face_id in face_ids:
+                    photos.extend(self.face_to_photos.get(face_id, []))
+                return photos
+
+        confirmed = [
+            {
+                "identity_id": "barouh-id",
+                "name": "Barouh Capelouto",
+                "anchor_ids": ["barouh-face"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "anita-id",
+                "name": "Anita Capeluto Franco",
+                "anchor_ids": [{"face_id": "anita-face"}],
+                "candidate_ids": [],
+            },
+        ]
+        photo_reg = _PhotoRegistry(
+            {
+                "barouh-face": ["undated-photo", "other-undated-photo"],
+                "anita-face": ["timeline-photo", "other-undated-photo"],
+            }
+        )
+
+        result = page_routes._build_timeline_person_filter_items(
+            confirmed,
+            photo_reg,
+            {"timeline-photo"},
+            {"anita-id"},
+        )
+
+        assert result == [
+            {
+                "id": "anita-id",
+                "name": "Anita Capeluto Franco",
+                "count": 1,
+                "selected": True,
+            }
+        ]
+
+
 # ---- Navigation Links ----
 
 

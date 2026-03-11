@@ -68,6 +68,64 @@ def _ping_supabase() -> str:
         return f"error:{e}"
 
 
+def _timeline_eligible_photo_ids(
+    search_docs: list[dict],
+    photo_cache: dict,
+    *,
+    start: int | None = None,
+    end: int | None = None,
+    collection: str = "",
+) -> set[str]:
+    """Return photo IDs that can actually appear on the timeline for the current filters."""
+
+    eligible_photo_ids = set()
+    for doc in search_docs:
+        photo_id = doc.get("cache_photo_id", doc.get("photo_id", ""))
+        year = doc.get("best_year_estimate") or doc.get("estimated_decade")
+        if not photo_id or not year:
+            continue
+        if start and year < start:
+            continue
+        if end and year > end:
+            continue
+        photo_collection = (photo_cache or {}).get(photo_id, {}).get("collection", "")
+        if collection and photo_collection != collection:
+            continue
+        eligible_photo_ids.add(photo_id)
+    return eligible_photo_ids
+
+
+def _build_timeline_person_filter_items(
+    confirmed_identities: list[dict],
+    photo_reg,
+    eligible_photo_ids: set[str],
+    selected_person_ids: set[str],
+) -> list[dict]:
+    """Build timeline person filter options from people with at least one visible timeline photo."""
+
+    items = []
+    for ident in confirmed_identities:
+        iid = ident["identity_id"]
+        face_ids = [
+            f if isinstance(f, str) else f.get("face_id", "")
+            for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        ]
+        timeline_photo_ids = {
+            pid for pid in photo_reg.get_photos_for_faces(face_ids) if pid in eligible_photo_ids
+        }
+        if not timeline_photo_ids:
+            continue
+        items.append(
+            {
+                "id": iid,
+                "name": ensure_utf8_display(ident.get("name", "")),
+                "count": len(timeline_photo_ids),
+                "selected": iid in selected_person_ids,
+            }
+        )
+    return items
+
+
 @rt("/health")
 def health():
     """Health check endpoint for Railway deployment."""
@@ -7242,6 +7300,13 @@ def get(
     search_docs = _main_mod._load_search_index()
     date_labels = _main_mod._load_date_labels()
     context_events = _main_mod._load_context_events() if context != "off" else []
+    timeline_eligible_photo_ids = _timeline_eligible_photo_ids(
+        search_docs,
+        _main_mod._photo_cache or {},
+        start=start,
+        end=end,
+        collection=collection,
+    )
 
     # Build person lookup for filter
     confirmed = [
@@ -7447,25 +7512,13 @@ def get(
         )
 
     # Build person filter options (checkboxes for multi-select)
-    person_filter_items = []
     selected_person_ids = set(person_ids)
-    for ident in confirmed:
-        iid = ident["identity_id"]
-        face_ids = [
-            f if isinstance(f, str) else f.get("face_id", "")
-            for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
-        ]
-        photo_count = len(photo_reg.get_photos_for_faces(face_ids))
-        if photo_count >= 2:
-            name = ensure_utf8_display(ident.get("name", ""))
-            person_filter_items.append(
-                {
-                    "id": iid,
-                    "name": name,
-                    "count": photo_count,
-                    "selected": iid in selected_person_ids,
-                }
-            )
+    person_filter_items = _build_timeline_person_filter_items(
+        confirmed,
+        photo_reg,
+        timeline_eligible_photo_ids,
+        selected_person_ids,
+    )
 
     # Also build backwards-compatible <select> options for single-person
     person_options = [Option("All people", value="")]
