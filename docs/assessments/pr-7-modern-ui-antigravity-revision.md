@@ -26,7 +26,7 @@ To ensure zero regressions, any design update must preserve the following repo-v
 | Route | Preserved Behavior | Repo-Verified DOM Invariants |
 | :--- | :--- | :--- |
 | **`/` (Landing)** | Anonymous access only; redirects logged-in users. | `.hero-mosaic`. (There is no `[data-testid="community-landing"]` for the default Rhodes view). |
-| **`/?section=...`** | Workstation root / Dashboard | The HTMX sidebar structure (`hx-get="/?section=..."`) and section count badges. |
+| **`/?section=...`** | Workstation root / Dashboard | The sidebar anchor navigation (`href="/?section=to_review"`, etc.), the visible section count badges, and the overall command-center structure. |
 | **`/identify/{id}`** | Public share-ready ID flows | The hidden `name="person_id"` input, `name="name"`, `name="relationship"`, `hx-post="/api/identify/{id}/respond"`, and `og:title`/`og:image` meta tags. |
 | **`/photo/{id}`** | Public / Admin photo detail view | `[data-testid="photo-metadata-overlay"]`. Admin edits `[data-testid="photo-inline-edit"]`. |
 | **`/person/{id}`** | Public / Admin person profile | `[data-testid="life-details"]`, `[data-testid="person-action-bar"]`. |
