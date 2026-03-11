@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.11] — 2026-03-11 (Session 96f: Live UX Closeout After Data Reconciliation)
+
+### Fixed
+- **Upload success browse-mode regression** — `"Refresh to see inbox"` now returns admins to `/?section=to_review&view=browse` instead of dropping them back into focus mode.
+- **Hidden first-run Gemini path on new photos** — unlabeled admin photo views now render an explicit AI Analysis empty state with a first-run action instead of hiding the entire panel.
+- **Archive provenance ambiguity** — photo pages now show full archive timestamps, and older imports without uploader attribution explicitly say that uploader attribution was not recorded for that historical import.
+- **Same-timestamp upload ordering drift** — when imports share the exact same `upload_date`, upload-newest/upload-oldest now break ties by archival `photo_index.json` insertion order instead of cache-ID or filename order.
+- **Public/admin navigation clarity** — workstation photo links now say `Public Page`, and admin-capable public photo pages expose `Back to Workstation`.
+
+### Verification
+- Targeted UX regression slices: `50 passed`
+- App tests: `4102 passed, 7 skipped`
+- ML tests: `566 passed`
+- Live deploy: Railway `705b0eff-f8aa-4aee-b347-081c17c82df2` SUCCESS
+- Live `/health`: `200`, `1932` active identities, `939` photos, ML ready
+
 ## [v0.97.10] — 2026-03-11 (Session 96e-cont12: Production Reconciliation + Root Cause Closeout)
 
 ### Fixed

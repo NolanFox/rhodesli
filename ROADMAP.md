@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.10 · ~4664 tests · 938 photos · 3412 identities · 84 confirmed
+Current: v0.97.11 · ~4668 tests · 938 photos · 3412 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -156,6 +156,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, and clarified public/workstation navigation (`Public Page`, `Back to Workstation`). Verified `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
 
 - [x] 2026-03-11: **v0.97.10 — Session 96e-cont12**: Production reconciliation + root-cause closeout. Closed the remaining local structural drift (`157` orphans, `122` merge chains, `1` duplicate face, `2` ghost refs), finished embedding repair (`10` missing -> `0`), reconciled production with the audited `3412`-identity / `938`-photo snapshot, and pruned `112` stale Supabase identity rows only after exporting them to a checked-in JSON backup artifact. Also restored the app gate by making `/timeline` person filters timeline-backed. Verified `pytest tests/ -x -q` (`4098 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Deploy SUCCESS.
 

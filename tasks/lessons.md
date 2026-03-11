@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-124 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+126 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -122,6 +122,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 122 | **Canonical registry records must define face existence — derivative artifacts can degrade UI but not erase faces** |
 | 123 | **Additive-only shadow sync is not reconciliation — stale rows must be detected and pruned safely** |
 | 124 | **Production data repairs need machine-readable unwind artifacts before cleanup** |
+| 125 | **Exact archive timestamp ties need a deterministic archival tie-break** |
+| 126 | **Admin empty states must preserve first-run ML entry points** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
