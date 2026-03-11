@@ -27,13 +27,16 @@ Read these files carefully:
 Session 98 wrap-up is still finishing.
 
 Do not start implementation on a stale base.
+PR #7 (`modern-ui-research`) remains research/scoping only.
+Do not add Session 99 implementation commits to that branch.
 
 Preferred base:
 - latest `main` after Session 98 wrap-up is merged
 - plus the PR #7 docs already present
 
 Fallback:
-- `modern-ui-research` updated with latest `main` after Session 98 wrap-up
+- `modern-ui-research` updated with latest `main` after Session 98 wrap-up,
+  then a fresh Session 99 implementation branch created from that updated branch
 
 If you cannot verify a stable base that includes both:
 - Session 98 wrap-up
@@ -60,6 +63,7 @@ Then:
 ## Branch And Artifact Setup
 1. Create a fresh implementation branch from the stable base.
    Recommended name: `session-99/modern-ui-phase-1`
+   Never implement directly on `modern-ui-research`.
 2. Set the current session to `99` if your workflow uses that convention.
 3. Create `docs/session_logs/session-99-log.md` at the start with:
    - phase checklist
@@ -83,6 +87,7 @@ Then:
 - Do not produce three unrelated route-level redesigns with no final sync pass.
 - Do not spread "premium" styling into out-of-scope routes by changing helper defaults.
 - Do not ship mostly-cosmetic changes if they raise regression risk.
+- Do not treat PR #7 as the implementation PR. Open a separate Session 99 implementation PR.
 
 ## Execution Plan
 
@@ -110,6 +115,10 @@ Rules:
 - Shared helpers used by out-of-scope routes must get scoped variants or route-local composition.
 - Do not globally restyle helper defaults.
 - Keep the scaffolding small and intentional.
+- Prefer explicit namespaces or wrapper classes such as `ui99-landing-*`,
+  `ui99-identify-*`, and `ui99-workstation-*` to reduce leakage risk.
+- If a new shared primitive is needed, prefer a Session 99-only wrapper/helper
+  over mutating a global default.
 
 Commit after this act.
 
@@ -228,6 +237,11 @@ Before opening or updating the PR, all of this must be done:
 - smoke check `/identify/unknown-1` or `test-unidentified-1`
 - capture screenshots for those three surfaces
 
+Minimum smoke-check assertions:
+- `/` still renders `.hero-mosaic`
+- `/identify/{id}` still renders `name="person_id"` and the identify response post target
+- `/?section=to_review` still renders the workstation shell with sidebar navigation
+
 Write:
 - `docs/assessments/session-99-assessment.md`
 
@@ -258,6 +272,7 @@ Open or update the Session 99 implementation PR with:
 - screenshot set
 - explicit link back to PR #7 as the research/scoping source
 - explicit attribution boundaries
+- explicit note that PR #7 remained research-only and implementation occurred in Session 99
 
 ## Parallelization Guidance
 You may parallelize Tracks A, B, and C only after Act 1 is complete.

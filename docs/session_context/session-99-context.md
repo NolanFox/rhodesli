@@ -37,16 +37,21 @@ trustworthy, and distinctly human without looking generic or "AI slop."
 Session 98 wrap-up is still finishing as this context is written.
 Do not start Session 99 implementation on a stale base.
 
+PR #7 (`modern-ui-research`) is research/scoping only.
+Do not put Session 99 implementation commits on the PR #7 branch.
+
 Preferred base:
 - latest `main` after Session 98 wrap-up is merged
 - plus the PR #7 research/scoping docs, ideally already merged
 
 Acceptable fallback:
-- `modern-ui-research` updated with the latest `main` once Session 98 wrap-up lands
+- `modern-ui-research` updated with the latest `main` once Session 98 wrap-up lands,
+  followed by a fresh Session 99 implementation branch cut from that updated branch
 
 Unacceptable:
 - implementing on a base that is missing either the Session 98 wrap-up or the
   finalized PR #7 scoping artifacts
+- adding implementation work directly onto `modern-ui-research`
 
 ## Architecture And Design Non-Negotiables
 - `HD-022` stands: FastHTML + HTMX + surgical JS only.
@@ -75,6 +80,29 @@ existing direction:
 
 The goal is refinement, elevation, and harmonization, not a visual reboot that
 forgets these prior decisions.
+
+## Preferred Implementation Strategy
+Use scoped, namespaced additions rather than broad helper rewrites.
+
+Preferred patterns:
+- new scoped variant parameters on existing helpers
+- new in-scope wrapper helpers used only by Session 99 surfaces
+- route-root wrapper classes that namespace CSS to the touched surfaces
+- explicit CSS namespaces such as `ui99-landing-*`, `ui99-identify-*`,
+  `ui99-workstation-*`, or equivalent
+
+Avoid:
+- changing default shared helper behavior for the whole site
+- broad typography or nav changes that silently affect out-of-scope routes
+- one-off inline class piles with no shared primitive strategy
+
+This matters most for:
+- `app/main.py::face_card`
+- `app/main.py::section_header`
+- `app/main.py::sidebar`
+- `app/main.py::_admin_dashboard_banner`
+- `app/main.py::_public_nav_links`
+- any public-nav composition introduced for landing + identify
 
 ## In-Scope Surfaces And Repo Facts
 
@@ -173,6 +201,7 @@ These helpers are the key consistency and leakage boundary:
 Safe pattern:
 - add scoped variant parameters
 - or add route-local composition/CSS that does not leak
+- or add new Session 99-only wrapper helpers/classes that leave existing defaults intact
 
 Unsafe pattern:
 - changing shared helper defaults in a way that silently restyles out-of-scope routes
@@ -194,6 +223,11 @@ Required final verification:
   - `/identify/unknown-1` or `test-unidentified-1`
 - screenshot checkpoints for the same three surfaces
 
+Smoke checks should confirm, at minimum:
+- landing still renders `.hero-mosaic`
+- identify still renders `name="person_id"` and posts to `/api/identify/{id}/respond`
+- workstation still renders the command-center shell with sidebar navigation
+
 Strong preference:
 - run targeted route-specific tests after each track before merging into the final
   harmonization pass
@@ -201,7 +235,8 @@ Strong preference:
   boundary down
 
 ## Required Session Outputs
-- implementation branch and PR for Session 99
+- separate implementation branch and PR for Session 99
+- PR #7 remains research/scoping only
 - `docs/session_logs/session-99-log.md`
 - `docs/assessments/session-99-assessment.md`
 - `docs/session_logs/INDEX.md` updated from Planned to Complete when the session closes
