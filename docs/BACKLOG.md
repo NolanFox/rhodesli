@@ -172,15 +172,18 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [x] **ML-094: Write AD-136/137/138** — DONE (Session 61). AD-139-142 also added. See ALGORITHMIC_DECISIONS.md.
 - [ ] **ML-095: CORAL retroactive run** — Run local model on all 271 photos, compare to Gemini labels. Free independent validation.
 
-### ML — Longitudinal Face Modeling (P1) — PRD-038 | Session 97 package ready
-- [ ] **Phase 0: Eval repair + scorer-path unification** — Start here. Repair mixed-schema eval scripts, rebuild the golden set, and make `core/auto_cluster.py` plus `scripts/cluster_new_faces.py` share one scorer core. See AD-217, `docs/prds/SDD-038_longitudinal_face_modeling.md`.
-- [ ] **ML-110: Quality-aware prototype scoring** — Replace bare best-linkage with a small quality-aware prototype bank per identity. See AD-217, `docs/prds/SDD-038_longitudinal_face_modeling.md`.
-- [ ] **ML-111: Multifeature reranker** — Feed temporal, quality, kinship-risk, and community features into a post-retrieval reranker instead of only expanding the legacy isotonic path. See AD-217.
-- [ ] **ML-112: Active learning in review UX** — Integrate uncertain-pair labeling into existing review surfaces with diversity quotas and audit trail. See AD-215, AD-217.
-- [ ] **ML-113: Longitudinal feature builder** — Add year-gap, age-compatibility, prototype-spread, and identity-span features for shadow reranking. See ADR-002, AD-217.
-- [ ] **ML-114: Adapter / LoRA experiment** — Keep as a gated experiment after Phase 2. Require slice wins, balanced sampling, and family holdouts. See AD-145, AD-217.
-- [ ] **ML-115: Local recalibration hygiene** — Production hooks remain write-only; local recalibration must be explicit, tested, and status-visible. See AD-149, AD-152, AD-217.
-- [ ] **ML-116: Historical decade stratification superseded** — The old "best face per decade" idea is replaced by the prototype-bank approach. Keep this item only as historical context; do not implement it as written.
+### ML — Longitudinal Face Modeling (P1) — PRD-038 | Session 97 foundation shipped
+- [x] **Phase 0: Eval repair + scorer-path unification** — Mixed-schema eval scripts repaired, the golden set rebuilt, and `core/auto_cluster.py` plus `scripts/cluster_new_faces.py` now share one scorer core. See AD-217, `docs/prds/SDD-038_longitudinal_face_modeling.md`.
+- [x] **ML-110: Quality-aware prototype scoring** — Bare best-linkage has been replaced by a prototype-bank scorer and offline prototype report. See AD-217, AD-220.
+- [x] **ML-111: Multifeature reranker** — Temporal, quality, kinship-risk, and community features now flow into the shadow reranker. Rollout gate remains closed pending stronger slice wins. See AD-217, AD-220.
+- [x] **ML-112: Active learning in review UX** — Uncertain-pair labeling now lives in the review surface with diversity caps, reversible labels, and audit trail coverage. See AD-221.
+- [x] **ML-113: Longitudinal feature builder** — Year-gap, age compatibility, prototype spread, and identity-span style features are in the shadow reranker path. See AD-217, AD-220.
+- [x] **ML-114: Adapter / LoRA experiment** — Gated adapter experiment harness shipped; rollout remains blocked until slice evidence improves. See AD-222.
+- [x] **ML-115: Local recalibration hygiene** — Production hooks are write-only; local recalibration is explicit, tested, and status-visible. See AD-219.
+- [x] **ML-116: Historical decade stratification superseded** — The old "best face per decade" idea is retired in favor of the prototype-bank approach.
+- [ ] **ML-117: Rollout gate tuning with fresh Fox-family labels** — Re-run Phase 2 and Phase 4 after more confirmed life-stage examples land in the app.
+- [ ] **ML-118: Prompt/state lineage migration rollout** — Apply `prompt_manifests`, `calibration_pairs`, and related lineage schema changes in Supabase and expand coverage across remaining Gemini callers.
+- [ ] **ML-119: State-event coverage matrix** — Build the cross-app mutation/logging matrix so every significant app state transition is replayable and attributable.
 - [ ] **ML-SCALE-001: Queued cloud extraction trigger plan** — Move offline scoring / retraining to queued cloud workers when local runtime, new-face volume, identity/embedding scale, or admin-concurrency thresholds justify it. See AD-217, `docs/architecture/ML_SERVICE.md`.
 - **Context**: Nolan noted that Roland Fox has many photos across life stages (Fox Family collection). Current multi-anchor best-linkage helps (more anchors = better min-distance) but we're leaving improvement on the table. Google Photos does temporal clustering, active learning, metadata fusion. See research in session-96e-cont6 assessment.
 

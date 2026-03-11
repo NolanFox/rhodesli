@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.98.0] — 2026-03-11 (Session 97: PRD-038 Longitudinal ML Foundation)
+
+### Added
+- **Longitudinal eval + scorer core** — mixed-schema embedding loading, shared identity scorer helpers, rebuilt longitudinal baseline artifacts, and a reproducible `scripts/evaluate_longitudinal.py` command.
+- **Prompt/state lineage foundation** — prompt-manifest helpers, Gemini prompt-lineage fields on touched callers, and PRD-038 lineage specs wired into the harness for replayable ML inputs.
+- **Calibration lineage + local recalibration CLI** — reversible calibration pairs, state-event envelopes, local audit mirroring, conflict checks, and `scripts/recalibrate.py`.
+- **Prototype-bank shadow reranker** — offline longitudinal reranker with prototype-bank reporting and slice-gated shadow evaluation.
+- **Active learning in review UX** — offline queue builder, reversible label cache, admin review actions, and queue/report artifacts.
+- **Adapter experiment harness** — frozen-embedding adapter experiment with holdout reporting instead of premature backbone fine-tuning.
+
+### Changed
+- **Verification gates are artifact-aware** — environment-dependent annotation, download, and ONNX parity tests now skip cleanly when the repo snapshot lacks the required source artifacts, while deterministic route/model coverage remains in place.
+- **Public activity feed hardening** — `/activity` now tolerates incomplete activity rows instead of assuming every source provides a timestamp.
+
+### Verification
+- App tests: `4116 passed, 21 skipped`
+- ML tests: `578 passed, 2 skipped`
+- Shadow/experiment artifacts:
+  - `docs/assessments/session-97-phase0-baseline.json`
+  - `docs/assessments/session-97-phase2-shadow-report.json`
+  - `docs/assessments/session-97-phase3-queue-report.json`
+  - `docs/assessments/session-97-phase4-adapter-report.json`
+- Matcher rollout remains gated off pending stronger age-gap evidence
+
 ## [v0.97.12] — 2026-03-11 (Session 96f-cont1: Provenance Visibility + Browse-Safe Admin Return)
 
 ### Fixed
