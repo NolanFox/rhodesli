@@ -17,6 +17,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.push_to_production import (
+    DATA_FILES,
     _extract_face_ids,
     _is_production_modified,
     merge_identities,
@@ -41,6 +42,11 @@ def test_extract_face_ids_dict_anchors():
 
 def test_extract_face_ids_empty():
     assert _extract_face_ids({}) == set()
+
+
+def test_push_to_production_stages_embeddings_file():
+    """The staged-upload production push must include embeddings.npy."""
+    assert "data/embeddings.npy" in DATA_FILES
 
 
 # --- _is_production_modified ---

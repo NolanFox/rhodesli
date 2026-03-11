@@ -55,6 +55,8 @@ DATA_DIR = PROJECT_ROOT / "data"
 DATA_FILES = [
     "data/identities.json",
     "data/photo_index.json",
+    # Critical for photo overlays and face cache parity on production.
+    "data/embeddings.npy",
     # NOTE: annotations.json is NOT pushed — it is production-origin data
     # written by users. Pushing local copy would overwrite user submissions.
     "data/file_hashes.json",
@@ -384,7 +386,7 @@ def main():
     print("=== Push to Production (merge-aware) ===\n")
 
     # Step 1: Verify essential data files exist
-    missing = [f for f in DATA_FILES[:2] if not (PROJECT_ROOT / f).exists()]
+    missing = [f for f in DATA_FILES[:3] if not (PROJECT_ROOT / f).exists()]
     if missing:
         print(f"ERROR: Missing essential files: {missing}")
         sys.exit(1)

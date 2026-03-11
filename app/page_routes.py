@@ -3535,9 +3535,9 @@ def photo_view_content(
         seq_banner,
         name_faces_banner,
         Div(
-            f"{missing_face_artifacts} archived face {missing_face_label} "
-            f"{missing_face_verb} current overlay coordinates. The registry link is preserved for auditability.",
-            cls="mb-2 px-3 py-2 text-xs text-amber-200 bg-amber-950/40 border border-amber-700/40 rounded-lg",
+            f"Archived note: {missing_face_artifacts} face {missing_face_label} "
+            f"{missing_face_verb} current overlay coordinates. The photo is intact; only the live overlay is unavailable.",
+            cls="mb-2 px-3 py-2 text-xs text-slate-300 bg-slate-900/60 border border-slate-700/60 rounded-lg",
         )
         if missing_face_artifacts
         else None,
