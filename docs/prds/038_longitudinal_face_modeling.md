@@ -9,10 +9,17 @@
 **Predecessor research**: AD-001 (multi-anchor), AD-034 (centroid rejected), AD-115/145 (LoRA), AD-092 (active learning), AD-126/149 (calibration), ADR-002 (temporal priors), Session 68 LoRA audit
 
 ## Detailed Specs (sub-files)
+- **[System Design / Implementation Plan](SDD-038_longitudinal_face_modeling.md)** — Current-state audit, implementation phases, eval-first rollout, and explicit divergences from the initial PRD draft
 - **[Recalibration Architecture](038_longitudinal/RECALIBRATION_ARCHITECTURE.md)** — When/where/how calibration re-runs, event triggers, architecture options
 - **[Implementation Specs](038_longitudinal/IMPLEMENTATION_SPECS.md)** — Per-workstream code changes, function signatures, test specs, LoRA data growth strategy
 - **[Evaluation & Safety](038_longitudinal/EVALUATION_AND_SAFETY.md)** — Hold-out evaluation, retroactive improvement safety, community resilience, notification flow
 - **[Research References](038_longitudinal/RESEARCH_REFERENCES.md)** — Academic papers, Google Photos analysis, LoRA best practices, heritage-specific challenges
+- **[Session 97 Context](../session_context/session-97-context.md)** — Phase-scoped execution context, captured user constraints, and scale triggers
+- **[Session 97 Prompt](../prompts/session-97-prompt.md)** — Codex-optimized implementation and test prompt for the future build pass
+- **[Session 97 Prep Assessment](../assessments/session-97-prep-assessment.md)** — Planning-package audit and handoff status
+
+**Implementation note (2026-03-11 review)**: This PRD remains the product brief. The companion SDD supersedes workstream ordering and file-level implementation details where the original draft conflicts with the live codebase, especially around scorer unification, evaluation repair, and the primary `core/auto_cluster.py` path.
+**Scaling note (2026-03-11 review)**: PRD-038 still launches as a local offline pipeline, but the revised SDD now defines the cloud-extraction path and the thresholds that should trigger it so the architecture does not hard-code "Nolan's laptop" as a permanent dependency.
 
 ---
 

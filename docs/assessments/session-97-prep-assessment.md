@@ -1,0 +1,60 @@
+# Session 97 Prep Assessment — PRD-038 Implementation Package
+
+**Date:** 2026-03-11
+**Author:** Codex
+**Status:** Ready for external review
+
+## What This Prep Pass Produced
+
+- Revised PRD-038 implementation plan:
+  - `docs/prds/SDD-038_longitudinal_face_modeling.md`
+- Research package with local findings, external ML/product references, prompt
+  engineering references, and cloud-scaling references:
+  - `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
+- Eval and safety package:
+  - `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
+- Session 97 implementation handoff:
+  - `docs/session_context/session-97-context.md`
+  - `docs/prompts/session-97-prompt.md`
+  - `docs/session_logs/session-97-log-stub.md`
+
+## Decisions Captured
+
+- AD-217: eval-first prototype-bank longitudinal matcher with cloud-ready
+  offline job boundaries
+- HD-025: phase-scoped context and artifact-first research for Session 97
+
+## User Constraints Now Preserved In Artifacts
+
+- keep work isolated from Session 96 debugging
+- preserve research, decisions, and feedback in harness artifacts
+- prioritize evals and non-destructive behavior
+- plan for later cloud extraction without forcing it now
+- expect Gemini review before implementation, then a later Claude review
+- future implementation should stay autonomous but fully documented
+
+## Remaining Pre-Implementation Inputs
+
+1. Gemini review of this package
+2. Any final Session 96 stabilization fallout that changes repo reality
+3. Any new Fox-family data the user adds before the build pass
+
+These do not block review of the package itself. They are expected inputs to the
+actual Session 97 implementation pass.
+
+## Risks Still Open
+
+- The live golden-set asset is stale until Phase 0 rebuilds it.
+- Pair skew may still block useful adapter gains even after Phase 2.
+- The repo still contains overlapping matcher paths that Phase 0 must unify
+  cleanly before later acts touch thresholds or features.
+
+## Assessment
+
+The package is now reviewable and harness-wired. It is materially stronger than
+the initial PRD draft because it:
+- starts with measurement repair instead of model churn
+- records where it diverges from Claude's original work
+- preserves the research trail and user constraints in files
+- gives a future Codex session an explicit, testable execution path
+- defines cloud-migration triggers without forcing premature infrastructure work

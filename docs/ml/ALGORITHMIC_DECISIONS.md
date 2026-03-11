@@ -2435,3 +2435,30 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Type 2 error (missed match manual merge)**: When admin manually merges Albert Fox (Rhodes) with an unidentified Fox Family face, the merged identity gains Fox Family faces → automatically appears in Fox Family's Review section going forward.
 - **Performance**: Cache the photo-derived set with same TTL as community photo IDs (60s). For 636 photos × ~2.6 faces/photo, the computation is ~1652 face lookups — fast.
 - **Context file**: `docs/session_context/session-96c-context.md`
+
+### AD-217: Longitudinal Matching — Eval-First Prototype Bank With Cloud-Ready Offline Jobs
+- **Date**: 2026-03-11 | **Session**: 97-prep
+- **Context**: PRD-038 planning review found that the live matcher path is split across `core/auto_cluster.py` and `scripts/cluster_new_faces.py`, the eval scripts are stale against the current embedding schema, the local confirmed dataset is stronger than the original PRD assumed, and the main blocker for adapter work is pair skew rather than pair count. The user also required that the architecture be designed for later cloud extraction without forcing that migration now.
+- **Decision**:
+  1. Start with **evaluation repair and scorer-path unification** before any model change.
+  2. Keep **training, recalibration, and shadow evaluation local-only** for now, but structure the new scorer as an **artifact-based offline job** so it can later run on queued cloud workers without changing behavior.
+  3. Replace the draft "best face per decade" idea with a **small quality-aware prototype bank** per identity plus a **multifeature longitudinal reranker** on frozen embeddings.
+  4. Keep **LoRA / PEFT** as an experiment track gated by hard-slice wins, not as the first implementation milestone.
+  5. Preserve **additive-only, review-first** behavior: confirmed identities remain human ground truth and new model outputs stay proposals.
+- **Why**:
+  - The repo cannot currently prove improvement on the live schema, so eval repair is the first correctness step.
+  - `core/auto_cluster.py` is the production path; improving only legacy scripts would create inconsistent matching behavior.
+  - A prototype-bank + reranker design uses the new longitudinal signal without overfitting to a brittle decade abstraction.
+  - Artifact-based offline jobs preserve AD-110 while making later cloud extraction an operational move instead of a model rewrite.
+- **Rejected alternatives**:
+  - **Best face per decade as the primary representation** — too brittle when dates are sparse or wrong.
+  - **Push all new metadata into the legacy isotonic calibrator** — scalar isotonic is not the right home for mixed longitudinal features.
+  - **Immediate ML service extraction for PRD-038** — unnecessary before local eval, scorer semantics, and label taxonomy stabilize.
+  - **Stay laptop-specific indefinitely** — unacceptable once throughput or admin concurrency grows.
+- **Cloud migration triggers**: Move the offline scorer / retraining jobs off the laptop when any of these become true:
+  - end-to-end batch scoring or shadow replay routinely exceeds ~45 minutes
+  - new-face volume is consistently above ~100 faces per day
+  - scale reaches ~10k identities or ~100k embeddings
+  - retraining / backfill cadence becomes operationally unreliable on a single local machine
+  - multiple admins need the same ML queue without Nolan's laptop being available
+- **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`

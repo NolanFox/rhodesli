@@ -556,3 +556,30 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Content/business skills** — Investor materials, article writing, market research not relevant.
 
 **Breadcrumbs:** `.claude/settings.json`, `.claude/hooks/post-edit-format.sh`, `.claude/hooks/post-commit-gate.sh`, `scripts/test-gate.sh`, `.claude/skills/verify.md`, `.claude/skills/session-run.md`, `pyproject.toml`
+
+## HD-025: Session 97 Packaging — Phase-Scoped Context And Artifact-First Research
+
+**Date:** 2026-03-11
+**Status:** ACCEPTED
+**Decision:** Package PRD-038 implementation as a dedicated Session 97 prompt/context bundle that requires phase-scoped context loading, explicit worktree isolation, mandatory artifact updates after new research, and fixed session outputs.
+
+**Context:** The user requested a long-running Codex implementation pass for PRD-038, with Gemini review in the loop, zero destructive data behavior, full harness breadcrumbs, and no loss of planning context through compaction. The planning review also found that a large part of the value is in preserving research, user constraints, and evaluation baselines as durable artifacts instead of leaving them in chat state.
+
+**External guidance used:**
+1. **OpenAI GPT-5 prompting guide** — write issue-style prompts, keep repo instructions persistent, and specify success criteria clearly.
+2. **Anthropic Building Effective Agents** — prefer simple composable patterns, evaluator-optimizer loops, and parallel workers only when boundaries are clean.
+3. **Anthropic prompt engineering overview** — give only the relevant context for the current task, not the entire session history.
+
+**What this changes:**
+1. **Phase-scoped context** — `docs/session_context/session-97-context.md` is structured so implementation reads only the relevant files for the current act.
+2. **Artifact-first research** — new research, user feedback, and architecture decisions must be written to harness artifacts before they are reused downstream.
+3. **Worktree-first execution** — the Session 97 prompt requires isolated branches/worktrees and recommends parallel tracks only for disjoint files.
+4. **Mandatory session outputs** — session log, assessment, decision-log updates, eval artifacts, and research breadcrumbs are part of the prompt, not optional cleanup.
+5. **Codex-specific adaptation** — the prompt avoids Claude-only commands such as `/clear` and instead uses explicit context boundaries plus commit checkpoints to keep active context small.
+
+**Rejected alternatives:**
+- **Loose prompt plus chat history** — too fragile for a multi-phase ML change with review handoffs.
+- **Single giant context dump** — increases confusion and contradicts current agent-guidance research.
+- **Parallelize everything** — harms correctness when files overlap heavily.
+
+**Breadcrumbs:** `docs/prompts/session-97-prompt.md`, `docs/session_context/session-97-context.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/session_logs/session-97-log-stub.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`

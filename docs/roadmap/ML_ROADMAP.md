@@ -67,6 +67,14 @@ ML-specific development plan for Rhodesli. For overall priorities, see [ROADMAP.
 - [ ] ML-031: Ensemble approach (multi-model voting)
 - [ ] ML-032: Fine-tuning on domain-specific heritage photos
 
+### Longitudinal Face Modeling (PRD-038, Priority: HIGH)
+- [ ] Phase 0: Eval repair + scorer-path unification
+- [ ] Phase 1: Local recalibration hygiene + label taxonomy
+- [ ] Phase 2: Prototype-bank longitudinal reranker in shadow mode
+- [ ] Phase 3: Active learning in review UX
+- [ ] Phase 4: Adapter / LoRA experiment only after slice-gated wins
+- [ ] Scale path: extract offline scoring / retraining to queued cloud workers when local runtime, volume, or admin-concurrency thresholds are exceeded (see AD-217 and `docs/architecture/ML_SERVICE.md`)
+
 ---
 
 ## Key ML Findings
@@ -103,3 +111,4 @@ All ML decisions documented in `docs/ml/ALGORITHMIC_DECISIONS.md`:
 - AD-090: Gemini face alignment research (PROPOSED)
 - AD-091: Calibrated confidence labels
 - AD-092-096: Year estimation tool
+- AD-215-217: Review UX, community-safe matching, and longitudinal face modeling

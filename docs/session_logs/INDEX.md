@@ -94,14 +94,15 @@ the original session scope was completed, blocked, or required follow-up work.
 | 81 | Yes (B,C,D) | Browser verification | 81B=fix real issues, 81C=data consistency, 81D=final verification |
 
 | 93 | 2026-03-08 | [log](session-93-log.md) | [assessment](../assessments/session-93-assessment.md) | [prompt](../prompts/session-93-prompt.md) | [ctx](../session_context/session-93-context.md) | Complete |
+| 97 | 2026-03-11 | [prep](session-97-prep-log.md), [stub](session-97-log-stub.md) | [prep](../assessments/session-97-prep-assessment.md) | [prompt](../prompts/session-97-prompt.md) | [ctx](../session_context/session-97-context.md) | Planned (PRD-038 implementation package) |
 
 ## Session Analytics
-- **Total sessions tracked:** 56 (47B through 81D)
+- **Total sessions tracked:** 57 (47B through 97)
 - **Complete** (has log): 28
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
 - **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
-- **Planned:** 0
+- **Planned:** 1
 - **Sessions with b-paths:** 12 (49, 51, 54, 55, 59, 60, 61, 64, 65, 66, 80, 81)
 - **Total b-path branches:** 29
 - **Gap period:** Sessions 53-55B had weakest archival coverage
