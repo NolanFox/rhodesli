@@ -101,6 +101,11 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: Capture actor identity at mutation time on the canonical event, not as an inference assembled later from neighboring systems.
 - **Prevention**: Add explicit actor fields to canonical registry/photo mutation records and expose them through entity history timelines. Use `user_source` only for workflow/provenance class.
 
+### Lesson 129: Mirrored list builders must share the same metadata contract
+- **Mistake**: The workstation and public photo lists assembled their card payloads independently. The upload-order tie-break fix had landed in one path, but the public `/photos` path still omitted `photo_index_order` and `uploaded_by`, so sorting and provenance drifted back apart.
+- **Rule**: When two surfaces render the same archival objects, they must carry the same canonical metadata fields unless the omission is deliberate and tested.
+- **Prevention**: Centralize or explicitly mirror the photo-card metadata contract (`upload_date`, `uploaded_by`, `photo_index_order`, provenance text inputs) across all list builders, and add regression tests that compare workstation and public rendering behavior.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

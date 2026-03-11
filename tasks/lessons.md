@@ -126,6 +126,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 126 | **Admin empty states must preserve first-run ML entry points** |
 | 127 | **File-only audit trails are not enough for archival mutation history** |
 | 128 | **`user_source` is provenance class, not actor identity** |
+| 129 | **Mirrored list builders must share the same metadata contract** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

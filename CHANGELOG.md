@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.12] — 2026-03-11 (Session 96f-cont1: Provenance Visibility + Browse-Safe Admin Return)
+
+### Fixed
+- **Hidden provenance on photo cards** — workstation photo cards now surface uploader/archive-entry provenance directly instead of forcing admins to open each photo to understand ordering and attribution.
+- **Public `/photos` metadata drift** — public photo cards now receive the same `uploaded_by` and `photo_index_order` metadata as workstation cards, so provenance and upload-date tie-break behavior stay aligned across both list builders.
+- **Exact-timestamp tie inconsistency on public browse** — upload-date newest/oldest ordering now uses archival `photo_index.json` insertion order across both workstation and public photo lists when timestamps tie exactly.
+- **Photo-detail provenance hierarchy** — public photo pages now place the provenance line higher in the metadata stack and reuse the same wording logic as workstation views.
+- **Implicit admin return paths** — public identify/person pages now provide community-aware browse-mode admin return links instead of dropping admins back into implicit focus-style flows.
+
+### Verification
+- Targeted provenance/order regression slices: `43 passed`
+- Targeted navigation/render regression slices: `133 passed`
+- App tests: `4110 passed, 7 skipped`
+- ML tests: `566 passed`
+- Live `/health`: `200`, `1932` active identities, `939` photos, ML ready
+- Live HTML verification:
+  - public `/photos?sort_by=upload_newest` shows provenance summaries on cards
+  - workstation `/?section=photos&sort_by=upload_newest` shows the same provenance summaries and the corrected tied-photo order
+
 ## [v0.97.11] — 2026-03-11 (Session 96f: Live UX Closeout After Data Reconciliation)
 
 ### Fixed
