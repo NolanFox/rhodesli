@@ -1,0 +1,195 @@
+{
+  "repaired": [
+    {
+      "face_id": "inbox_12981500c242",
+      "path": "raw_photos/familysearch_raymond_halfon_naturalization.jpg",
+      "image_size": [
+        3572,
+        2553
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        1383.5235595703125,
+        1840.9705810546875,
+        1542.0162353515625,
+        2084.70166015625
+      ],
+      "selected_det_score": 0.8082007169723511,
+      "all_bboxes": [
+        [
+          1383.5235595703125,
+          1840.9705810546875,
+          1542.0162353515625,
+          2084.70166015625
+        ]
+      ]
+    },
+    {
+      "face_id": "inbox_39a0672080c4",
+      "path": "raw_photos/fb_rhodes_holocaust_isaac_menashe_collection_reina_benun_menashe_506241266_4469390276620890_7500653157025485090_n.jpg",
+      "image_size": [
+        1536,
+        2048
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        363.1853942871094,
+        329.23858642578125,
+        1144.5814208984375,
+        1337.6689453125
+      ],
+      "selected_det_score": 0.8175976276397705,
+      "all_bboxes": [
+        [
+          363.1853942871094,
+          329.23858642578125,
+          1144.5814208984375,
+          1337.6689453125
+        ]
+      ]
+    },
+    {
+      "face_id": "inbox_527751e0fa99",
+      "path": "raw_photos/congo_photos_claude_benatar_85d721c6-bae8-42d3-bf17-2c8844b73320.jpeg",
+      "image_size": [
+        207,
+        299
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        72.86973571777344,
+        48.121620178222656,
+        120.8221664428711,
+        111.250244140625
+      ],
+      "selected_det_score": 0.8426368832588196,
+      "all_bboxes": [
+        [
+          72.86973571777344,
+          48.121620178222656,
+          120.8221664428711,
+          111.250244140625
+        ]
+      ]
+    },
+    {
+      "face_id": "inbox_5ffc1adbcff4",
+      "path": "raw_photos/congo_photos_claude_benatar_joseph_peppo_capelluto_son_of_salomon_d3fa0a54-5830-4c1e-9cbd-11cbfb796947.jpeg",
+      "image_size": [
+        874,
+        1366
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        218.03558349609375,
+        182.31382751464844,
+        550.9765625,
+        647.9791259765625
+      ],
+      "selected_det_score": 0.7889641523361206,
+      "all_bboxes": [
+        [
+          218.03558349609375,
+          182.31382751464844,
+          550.9765625,
+          647.9791259765625
+        ]
+      ]
+    },
+    {
+      "face_id": "inbox_7b1c0f809276",
+      "path": "raw_photos/congo_photos_claude_benatar_060b181e-e1f5-4ddf-97d7-f9fed822c4a5.jpeg",
+      "image_size": [
+        538,
+        726
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        180.5602569580078,
+        101.43270874023438,
+        341.0766296386719,
+        319.8523254394531
+      ],
+      "selected_det_score": 0.6649765372276306,
+      "all_bboxes": [
+        [
+          180.5602569580078,
+          101.43270874023438,
+          341.0766296386719,
+          319.8523254394531
+        ]
+      ]
+    },
+    {
+      "face_id": "inbox_80058bc11db8",
+      "path": "raw_photos/fb_rhodes_holocaust_isaac_menashe_collection_jaco_menashe_506445919_4469390156620902_7234956295398941798_n.jpg",
+      "image_size": [
+        300,
+        398
+      ],
+      "detection_count": 1,
+      "selected_index": 0,
+      "selected_bbox": [
+        104.24109649658203,
+        52.47446823120117,
+        200.49581909179688,
+        183.1681671142578
+      ],
+      "selected_det_score": 0.7344341278076172,
+      "all_bboxes": [
+        [
+          104.24109649658203,
+          52.47446823120117,
+          200.49581909179688,
+          183.1681671142578
+        ]
+      ]
+    }
+  ],
+  "skipped": [],
+  "failed": [],
+  "appended_count": 8,
+  "archival_matches": [
+    {
+      "face_id": "inbox_a56c556100a9",
+      "path": "raw_photos/heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
+      "image_size": [
+        1079,
+        1625
+      ],
+      "selected_index": 8,
+      "selected_bbox": [
+        620.5161743164062,
+        795.0569458007812,
+        703.7472534179688,
+        898.2965698242188
+      ],
+      "selected_det_score": 0.7789506912231445,
+      "crop_match_correlation": 0.9998775114124625,
+      "repair_type": "archival_crop_matched_to_current_detection"
+    },
+    {
+      "face_id": "inbox_e64c25fc88a7",
+      "path": "raw_photos/newspaper_Bernstein_Berns_Capouano_Wedding.jpg",
+      "image_size": [
+        1698,
+        3083
+      ],
+      "selected_index": 0,
+      "selected_bbox": [
+        301.72564697265625,
+        136.953369140625,
+        424.84881591796875,
+        308.0403747558594
+      ],
+      "selected_det_score": 0.7483912706375122,
+      "crop_match_correlation": 0.9998876519400253,
+      "repair_type": "archival_crop_matched_to_current_detection"
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "duplicate_face": "inbox_8bf042b28a74",
+  "ghost_refs": [
+    "inbox_b13a0d1781cc",
+    "inbox_22a58175dbc2"
+  ],
+  "placeholder_confirmed": [
+    "62f611f3-060a-48a1-b4ab-752296f6d586",
+    "f4d9c430-8100-4465-aa1d-171538d396d7"
+  ],
+  "duplicate_face_owners": [
+    {
+      "identity_id": "8e44e38b-fea0-4e34-8c6e-0f3e40862e9b",
+      "name": "Unidentified Person 2973",
+      "state": "SKIPPED",
+      "list": "anchor_ids",
+      "merged_into": null
+    },
+    {
+      "identity_id": "3c9b8aef-db31-4b59-8540-a72b612f24ab",
+      "name": "Unidentified Person 3500",
+      "state": "INBOX",
+      "list": "anchor_ids",
+      "merged_into": null
+    }
+  ],
+  "orphan_face_count": 157,
+  "orphan_face_sample": [
+    {
+      "face_id": "inbox_00e6d523fd65",
+      "photo_id": "inbox_fox-charlie-001_12_01635_p_13akf5twbc0904",
+      "path": "raw_photos/01635_p_13akf5twbc0904.jpg"
+    },
+    {
+      "face_id": "inbox_03e95f7482ff",
+      "photo_id": "inbox_fox-charlie-001_236_01921_p_13akf5twbc2262",
+      "path": "raw_photos/01921_p_13akf5twbc2262.jpg"
+    },
+    {
+      "face_id": "inbox_047c6a30a358",
+      "photo_id": "inbox_fox-charlie-001_429_01656_p_13akf5twbc1016",
+      "path": "raw_photos/01656_p_13akf5twbc1016.jpg"
+    },
+    {
+      "face_id": "inbox_0651814017bc",
+      "photo_id": "inbox_fox-charlie-001_294_02098_p_13akf5twbc5278",
+      "path": "raw_photos/02098_p_13akf5twbc5278.jpg"
+    },
+    {
+      "face_id": "inbox_068980719b40",
+      "photo_id": "inbox_fox-charlie-001_574_01913_p_13akf5twbc2233",
+      "path": "raw_photos/01913_p_13akf5twbc2233.jpg"
+    },
+    {
+      "face_id": "inbox_0b67d7509526",
+      "photo_id": "inbox_fox-charlie-001_611_01572_p_13akf5twbc0685",
+      "path": "raw_photos/01572_p_13akf5twbc0685.jpg"
+    },
+    {
+      "face_id": "inbox_0b721073b6b9",
+      "photo_id": "inbox_fox-charlie-001_371_01837_p_13akf5twbc2268",
+      "path": "raw_photos/01837_p_13akf5twbc2268.jpg"
+    },
+    {
+      "face_id": "inbox_0de3eba1129b",
+      "photo_id": "inbox_fox-charlie-001_417_02148_p_13akf5twbc1864",
+      "path": "raw_photos/02148_p_13akf5twbc1864.jpg"
+    },
+    {
+      "face_id": "inbox_0fdac2e5e896",
+      "photo_id": "inbox_fox-charlie-001_391_02154_p_13akf5twbc3552_r",
+      "path": "raw_photos/02154_p_13akf5twbc3552_r.jpg"
+    },
+    {
+      "face_id": "inbox_109d5ba9c094",
+      "photo_id": "inbox_fox-charlie-001_42_02150_p_13akf5twbc1950",
+      "path": "raw_photos/02150_p_13akf5twbc1950.jpg"
+    },
+    {
+      "face_id": "inbox_123f8fb01c71",
+      "photo_id": "inbox_fox-charlie-001_178_01855_p_13akf5twbc4553",
+      "path": "raw_photos/01855_p_13akf5twbc4553.jpg"
+    },
+    {
+      "face_id": "inbox_12f0a6e3370b",
+      "photo_id": "inbox_fox-charlie-001_106_01719_p_13akf5twbc1119",
+      "path": "raw_photos/01719_p_13akf5twbc1119.jpg"
+    },
+    {
+      "face_id": "inbox_12f333c6e517",
+      "photo_id": "inbox_fox-charlie-001_576_01973_p_13akf5twbc1359",
+      "path": "raw_photos/01973_p_13akf5twbc1359.jpg"
+    },
+    {
+      "face_id": "inbox_16c832e2e197",
+      "photo_id": "inbox_fox-charlie-001_214_02100_p_13akf5twbc5382",
+      "path": "raw_photos/02100_p_13akf5twbc5382.jpg"
+    },
+    {
+      "face_id": "inbox_1a2fcad9319a",
+      "photo_id": "inbox_fox-charlie-001_176_01681_p_13akf5twbc5350",
+      "path": "raw_photos/01681_p_13akf5twbc5350.jpg"
+    },
+    {
+      "face_id": "inbox_1a93b0c29d88",
+      "photo_id": "inbox_fox-charlie-001_2_02187_s_13akf5twbc0622",
+      "path": "raw_photos/02187_s_13akf5twbc0622.jpg"
+    },
+    {
+      "face_id": "inbox_1c216b3dc350",
+      "photo_id": "inbox_fox-charlie-001_200_01724_p_13akf5twbc1141",
+      "path": "raw_photos/01724_p_13akf5twbc1141.jpg"
+    },
+    {
+      "face_id": "inbox_200886472c6b",
+      "photo_id": "inbox_fox-charlie-001_183_01582_p_13akf5twbc0720_z",
+      "path": "raw_photos/01582_p_13akf5twbc0720_z.jpg"
+    },
+    {
+      "face_id": "inbox_23438cc0a26f",
+      "photo_id": "inbox_fox-charlie-001_224_01772_p_13akf5twbc1783",
+      "path": "raw_photos/01772_p_13akf5twbc1783.jpg"
+    },
+    {
+      "face_id": "inbox_24525b557a57",
+      "photo_id": "inbox_fox-charlie-001_167_01765_p_13akf5twbc1696",
+      "path": "raw_photos/01765_p_13akf5twbc1696.jpg"
+    },
+    {
+      "face_id": "inbox_286f5607e681",
+      "photo_id": "inbox_fox-charlie-001_259_01758_p_13akf5twbc3793",
+      "path": "raw_photos/01758_p_13akf5twbc3793.jpg"
+    },
+    {
+      "face_id": "inbox_28afc29a3390",
+      "photo_id": "inbox_fox-charlie-001_10_02088_p_13akf5twbc5061",
+      "path": "raw_photos/02088_p_13akf5twbc5061.jpg"
+    },
+    {
+      "face_id": "inbox_2941a078a493",
+      "photo_id": "inbox_fox-charlie-001_55_01741_p_13akf5twbc1190",
+      "path": "raw_photos/01741_p_13akf5twbc1190.jpg"
+    },
+    {
+      "face_id": "inbox_29d97974315c",
+      "photo_id": "inbox_fox-charlie-001_323_02168_p_13akf5twbc3257",
+      "path": "raw_photos/02168_p_13akf5twbc3257.jpg"
+    },
+    {
+      "face_id": "inbox_2c451fdc6071",
+      "photo_id": "inbox_fox-charlie-001_342_02062_p_13akf5twbc3596",
+      "path": "raw_photos/02062_p_13akf5twbc3596.jpg"
+    }
+  ]
+}

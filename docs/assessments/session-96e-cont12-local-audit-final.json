@@ -1,0 +1,34 @@
+{
+  "summary": {
+    "total_identities": 3412,
+    "total_photos": 938,
+    "total_faces_in_index": 2640,
+    "total_embeddings": 2852,
+    "orphan_faces": 0,
+    "ghost_identities": 0,
+    "missing_identity_faces": 0,
+    "state_inconsistencies": 0,
+    "duplicate_faces": 0,
+    "merged_chains": 0,
+    "missing_upload_date": 0,
+    "missing_embeddings": 0
+  },
+  "issues": [
+    {
+      "check": "supabase_divergence",
+      "severity": "info",
+      "message": "Supabase not configured, skipping divergence check",
+      "sample_ids": [],
+      "fixable": false
+    },
+    {
+      "check": "community_membership",
+      "severity": "info",
+      "message": "Supabase not available, skipping community membership check",
+      "sample_ids": [],
+      "fixable": false
+    }
+  ],
+  "fixes_applied": [],
+  "has_critical": false
+}

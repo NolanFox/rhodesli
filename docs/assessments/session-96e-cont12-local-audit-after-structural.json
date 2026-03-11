@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "total_identities": 3412,
+    "total_photos": 938,
+    "total_faces_in_index": 2640,
+    "total_embeddings": 2844,
+    "orphan_faces": 0,
+    "ghost_identities": 0,
+    "missing_identity_faces": 0,
+    "state_inconsistencies": 0,
+    "duplicate_faces": 0,
+    "merged_chains": 0,
+    "missing_upload_date": 0,
+    "missing_embeddings": 8
+  },
+  "issues": [
+    {
+      "check": "supabase_divergence",
+      "severity": "info",
+      "message": "Supabase not configured, skipping divergence check",
+      "sample_ids": [],
+      "fixable": false
+    },
+    {
+      "check": "community_membership",
+      "severity": "info",
+      "message": "Supabase not available, skipping community membership check",
+      "sample_ids": [],
+      "fixable": false
+    },
+    {
+      "check": "embedding_coverage",
+      "severity": "warning",
+      "message": "8 identity faces have no embedding",
+      "sample_ids": [
+        "inbox_12981500c242",
+        "inbox_39a0672080c4",
+        "inbox_527751e0fa99",
+        "inbox_5ffc1adbcff4",
+        "inbox_7b1c0f809276",
+        "inbox_80058bc11db8",
+        "inbox_a56c556100a9",
+        "inbox_e64c25fc88a7"
+      ],
+      "fixable": false
+    }
+  ],
+  "fixes_applied": [],
+  "has_critical": false
+}
