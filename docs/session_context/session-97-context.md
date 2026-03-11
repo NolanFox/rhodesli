@@ -73,12 +73,12 @@ This context file is intentionally phase-scoped. Read the overview first, then o
 5. `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
 6. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-217
 7. `docs/HARNESS_DECISIONS.md` entries HD-024 and HD-025
+8. `docs/assessments/session-97-gemini-review.md` (Crucial tradeoff analysis and 4 required implementation changes)
 
 ### Read only if present before implementation starts
 
-1. Gemini review artifact for this package
-2. Any post-review delta assessment added after 2026-03-11
-3. Any new Fox-family data audit or pair-count refresh
+1. Any post-review delta assessment added after 2026-03-11
+2. Any new Fox-family data audit or pair-count refresh
 
 If those files exist, absorb them before coding. If they do not, continue with the artifacts above.
 
