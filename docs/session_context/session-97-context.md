@@ -70,13 +70,14 @@ This context file is intentionally phase-scoped. Read the overview first, then o
 2. `docs/prds/038_longitudinal_face_modeling.md`
 3. `docs/prds/SDD-038_longitudinal_face_modeling.md`
 4. `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
-5. `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
-6. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-217
-7. `docs/HARNESS_DECISIONS.md` entries HD-024 and HD-025
-8. `docs/assessments/session-97-gemini-review.md`
-9. `docs/assessments/session-97-gemini-followup.md`
-10. `docs/assessments/session-97-post-gemini-assessment.md`
-11. `docs/assessments/session-97-post-followup-assessment.md`
+5. `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`
+6. `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
+7. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-217
+8. `docs/HARNESS_DECISIONS.md` entries HD-024 and HD-025
+9. `docs/assessments/session-97-gemini-review.md`
+10. `docs/assessments/session-97-gemini-followup.md`
+11. `docs/assessments/session-97-post-gemini-assessment.md`
+12. `docs/assessments/session-97-post-followup-assessment.md`
 
 ### Read only if present before implementation starts
 
@@ -105,6 +106,9 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - baseline JSON report
 - dominant and tail identity slice metrics
 - shared scorer interface used by both clustering paths
+- prompt-lineage contract for any Gemini-backed stage touched in Session 97:
+  `prompt_family`, `prompt_version`, `prompt_variant`,
+  `prompt_contract_version`, and experiment / shadow-run identifiers
 
 **Do not proceed** until the baseline can be reproduced on the current repo state.
 
@@ -210,6 +214,8 @@ Use the existing ML service architecture docs as the north star:
 3. New model outputs are proposals only.
 4. New research or user feedback must be written to harness artifacts before reuse.
 5. Do not change app-visible matcher behavior until shadow eval and manual diff review pass.
+6. Any Gemini path changed in Session 97 must log both exact prompt text and a
+   compact prompt-manifest identity so prompt variants can be grouped and A/B tested later.
 
 ---
 

@@ -2445,6 +2445,7 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   3. Replace the draft "best face per decade" idea with a **small quality-aware prototype bank** per identity plus a **multifeature longitudinal reranker** on frozen embeddings.
   4. Keep **LoRA / PEFT** as an experiment track gated by hard-slice wins, not as the first implementation milestone.
   5. Preserve **additive-only, review-first** behavior: confirmed identities remain human ground truth and new model outputs stay proposals.
+  6. Treat **Gemini prompt families and variants as versioned artifacts**: logging exact prompt text is necessary but not sufficient; each Gemini-backed decision path should also carry compact prompt lineage fields so prompt A/B testing is practical.
 - **Why**:
   - The repo cannot currently prove improvement on the live schema, so eval repair is the first correctness step.
   - `core/auto_cluster.py` is the production path; improving only legacy scripts would create inconsistent matching behavior.
@@ -2463,4 +2464,5 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - multiple admins need the same ML queue without Nolan's laptop being available
 - **Post-review clarifications**: Gemini review tightened three points that were adopted into the package: temporal-diversity override in prototype selection, dominant-identity bias gates, and reversible active-learning labels. Codex kept those changes but declined to treat all Gemini recommendations as mandatory without further evaluation.
 - **Post-followup clarifications**: Gemini follow-up added exact citations plus concrete dominant-bias and label-toxicity eval designs. Codex adopted the metric structure, reversible-label rules, and kinship feature-family direction, while keeping numeric thresholds provisional until Phase 0 reports real slice sizes.
+- **Prompt-lineage clarification**: Later user feedback tightened the replay requirement: Gemini-backed stages must distinguish prompt family, version, and variant, not just model and raw prompt text, so prompt evolution can be compared the way model evolution is compared.
 - **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-gemini-followup.md`, `docs/assessments/session-97-post-gemini-assessment.md`, `docs/assessments/session-97-post-followup-assessment.md`

@@ -57,7 +57,13 @@ system with retroactive discovery and future cloud workers, it is not.
    - We cannot reliably reconstruct the complete grouping state for a given
      scorer version at a prior moment in time
 
-4. **Auto-cluster path is not fully aligned with registry event history**
+4. **No universal prompt lineage for Gemini-driven decisions**
+   - Some interactive Gemini calls store full prompt / response and prompt
+     metadata
+   - Other Gemini paths still log only model, status, and summary fields
+   - This makes prompt-family A/B tests much harder than model A/B tests
+
+5. **Auto-cluster path is not fully aligned with registry event history**
    - ML candidate additions are partly visible through discovery logging
    - They are not yet modeled as a scorer-versioned assignment history
 
@@ -91,7 +97,19 @@ So yes: your concern is real, and it is important.
      - timestamp
      - input snapshot hashes for identities / embeddings / metadata slices
 
-2. **Assignment event log**
+2. **Prompt manifest for Gemini-backed analysis**
+   - record one durable prompt artifact per callable prompt family with:
+     - `prompt_family` (`date_estimation`, `face_alignment`, `combined_enrichment`)
+     - `prompt_version`
+     - `prompt_variant`
+     - response schema / contract version
+     - context recipe flags (`gedcom`, `face`, `geo`, `time`, `batch`, `interactive`)
+     - git commit or prompt artifact hash
+   - each Gemini API call should reference these fields explicitly
+   - exact prompt text should still be logged for replay, but the manifest is
+     what makes A/B testing and grouped analysis practical
+
+3. **Assignment event log**
    - record per-face or per-source-identity events with:
      - `run_id`
      - face id
@@ -101,16 +119,17 @@ So yes: your concern is real, and it is important.
      - score / rank / tier
      - minimal explanation payload
 
-3. **Supersession tracking**
+4. **Supersession tracking**
    - when a new run replaces prior proposals, mark prior ML proposals as
      superseded by `run_id`, rather than silently losing the old state
 
-4. **Replayability**
+5. **Replayability**
    - it must be possible to answer:
      - current proposals for a face
      - prior proposals for a face
      - first run that suggested a target identity
      - scorer version responsible for a proposal
+     - prompt family / version / variant responsible for a Gemini output
 
 ---
 
@@ -123,5 +142,6 @@ lineage is:
 - scoring run
 - assignment event
 - human decision on that event
+- prompt artifact version for any Gemini-backed stage
 
 That is enough to reconstruct how the ML flow grouped people over time.

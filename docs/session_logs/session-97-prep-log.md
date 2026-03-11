@@ -23,6 +23,7 @@
    - gated adapter experiments
 6. Added a Session 97 context file, prompt file, Gemini review bundle, prep assessment, and log stub.
 7. Updated decision logs and roadmap/backlog breadcrumbs.
+8. Recorded a late user requirement that Gemini prompt families and variants must be versioned artifacts, not just raw prompt text, so future prompt A/B testing is possible.
 
 ## New Or Updated Artifacts
 
@@ -30,6 +31,7 @@
 - `docs/prds/SDD-038_longitudinal_face_modeling.md`
 - `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
 - `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
+- `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`
 - `docs/session_context/session-97-context.md`
 - `docs/session_context/session-97-gemini-review-context.md`
 - `docs/prompts/session-97-prompt.md`
@@ -56,6 +58,11 @@ Research was written into:
 User constraints and operating sequence were written into:
 - `docs/session_context/session-97-context.md`
 - `docs/assessments/session-97-prep-assessment.md`
+
+Additional lineage requirements were written into:
+- `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`
+- `docs/session_context/session-97-context.md`
+- `docs/prompts/session-97-prompt.md`
 
 ## Next Review Flow
 

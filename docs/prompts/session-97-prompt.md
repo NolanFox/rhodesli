@@ -42,6 +42,8 @@ for this package, read it before Act 1 and fold it in.
    safety or community safety.
 5. All research, decisions, and implementation breadcrumbs are preserved in the
    harness.
+6. Any Gemini-backed path touched in this session emits enough lineage to
+   compare prompt variants as first-class artifacts, not just raw prompt text.
 
 ## Act 0: Orient, Review, And Isolate
 
@@ -73,6 +75,10 @@ This is the first hard gate. Do not skip it.
   - `core/auto_cluster.py` (architectural source of truth for offline batch matching)
   - `scripts/cluster_new_faces.py` (CLI wrapper over the shared pipeline)
   - upload proposal-generation paths
+- If any Gemini path is changed during this act or later, define and document a
+  compact prompt identity with at least:
+  `prompt_family`, `prompt_version`, `prompt_variant`,
+  `prompt_contract_version`, and `experiment_id` / `shadow_run_id` when relevant
 
 ### Parallelization
 
@@ -218,6 +224,9 @@ Final commit: `[codex] docs(session-97): assessment and verification`
 - No leaving research or review feedback only in chat or terminal output.
 - No switching to a cloud-serving rewrite during this session.
 - No broad architecture changes unless the evidence forces them and the decision
+  is logged.
+- No new Gemini prompt path that logs only model name without prompt-family and
+  prompt-variant attribution.
   is logged.
 
 ## Required Session Outputs
