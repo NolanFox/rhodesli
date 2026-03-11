@@ -134,6 +134,9 @@
   - result: `185 passed`
 - Regenerated the normalized GEDCOM diff report after removing raw-node
   line-number noise.
+- After merging the committed Session 97 branch into Session 98, reran the
+  combined GEDCOM + lineage + calibration verification slice:
+  - `323 passed`
 
 ## Audit Outcome
 
@@ -150,6 +153,9 @@
 - Live Supabase migration/import was preflighted but not executed from this
   environment because direct Postgres access failed and no `exec_sql` RPC is
   available on the project.
-- Decision-log updates and merge choreography after Sessions 96 and 97 settle.
-- Final main-branch merge, push, and worktree cleanup must respect user order:
+- Session 98 branch was pushed as `origin/codex-session-98-gedcom` after
+  merging the committed `codex-session-97-impl` branch state.
+- Final main-branch merge and worktree cleanup are blocked until the active
+  Session 96 and Session 97 worktrees are no longer dirty.
+- Final merge choreography must still respect user order:
   `96 -> 97 -> 98`.
