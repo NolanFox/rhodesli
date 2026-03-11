@@ -1,0 +1,160 @@
+{
+  "session": "96e-cont11",
+  "generated_at": "2026-03-11T03:47:40.911707+00:00",
+  "git_head": "f8ee9739c97df800454fa5d253390a8552977c30",
+  "baseline_ref": "HEAD:data/identities.json",
+  "data_file": "data/identities.json",
+  "backups": [
+    "data/backups/identities.json.20260311_033425_792917",
+    "data/backups/identities.json.20260311_033427_839865"
+  ],
+  "audit_artifacts": {
+    "before": "docs/assessments/session-96e-cont11-local-audit-before.json",
+    "after": "docs/assessments/session-96e-cont11-local-audit-after.json"
+  },
+  "delta_summary": {
+    "added_identities_count": 87,
+    "removed_identities_count": 0,
+    "changed_identities_count": 922,
+    "added_merged_identities_count": 87,
+    "changed_field_patterns": [
+      {
+        "fields": [
+          "updated_at"
+        ],
+        "count": 812
+      },
+      {
+        "fields": [
+          "metadata",
+          "updated_at",
+          "version_id"
+        ],
+        "count": 56
+      },
+      {
+        "fields": [
+          "created_at",
+          "updated_at"
+        ],
+        "count": 40
+      },
+      {
+        "fields": [
+          "first_name",
+          "last_name",
+          "name",
+          "updated_at",
+          "version_id"
+        ],
+        "count": 10
+      },
+      {
+        "fields": [
+          "updated_at",
+          "version_id"
+        ],
+        "count": 3
+      },
+      {
+        "fields": [
+          "name",
+          "updated_at"
+        ],
+        "count": 1
+      }
+    ],
+    "history_events_added_count": 24,
+    "history_events_by_action": {
+      "rename": 22,
+      "state_change": 2
+    },
+    "substantive_renames": [
+      {
+        "identity_id": "7a10cf17-7df9-4c24-9c72-1e2e66649d2d",
+        "previous_name": "Unidentified Person 556",
+        "new_name": "Violet israel (twin)"
+      },
+      {
+        "identity_id": "88a05618-aa53-4195-b2cc-e0fa333d8173",
+        "previous_name": "Unidentified Person 554",
+        "new_name": "Molly israel"
+      },
+      {
+        "identity_id": "eaa668ac-7d96-4ac7-a93c-6b48c25a51ab",
+        "previous_name": "Unidentified Person 553",
+        "new_name": "Lucy israel"
+      },
+      {
+        "identity_id": "88a2d2cc-81ce-4d68-b03c-a58ffcc1d6ed",
+        "previous_name": "Unidentified Person 555",
+        "new_name": "Emily israel"
+      }
+    ],
+    "substantive_rename_count": 4,
+    "no_op_rename_event_count": 18,
+    "forced_state_changes": [
+      {
+        "identity_id": "62f611f3-060a-48a1-b4ab-752296f6d586",
+        "previous_state": "CONFIRMED",
+        "new_state": "INBOX",
+        "reason": "confirmed_placeholder_name"
+      },
+      {
+        "identity_id": "f4d9c430-8100-4465-aa1d-171538d396d7",
+        "previous_state": "CONFIRMED",
+        "new_state": "INBOX",
+        "reason": "confirmed_placeholder_name"
+      }
+    ],
+    "merge_chain_repairs_count": 55,
+    "quarantined_missing_faces": [
+      {
+        "identity_id": "64096284-ace8-4790-aebb-a82ff1f288a5",
+        "name": "Netanel Menashe",
+        "entries": [
+          {
+            "face_id": "inbox_b13a0d1781cc",
+            "removed_from": "anchor_ids",
+            "reason": "missing_from_photo_index_face_to_photo",
+            "quarantined_at": "2026-03-11T01:19:12.413921+00:00"
+          },
+          {
+            "face_id": "inbox_22a58175dbc2",
+            "removed_from": "anchor_ids",
+            "reason": "missing_from_photo_index_face_to_photo",
+            "quarantined_at": "2026-03-11T01:19:12.413921+00:00"
+          }
+        ]
+      }
+    ]
+  },
+  "remaining_face_artifact_gaps": [
+    {
+      "face_id": "inbox_a56c556100a9",
+      "identity_id": "4369c2f0-5c5e-43ff-9e47-1b6806a46531",
+      "identity_name": "Caden Franco Sadis",
+      "photo_id": "d5bc8746012a6da3",
+      "photo_url": "https://rhodesli.nolanandrewfox.com/photo/d5bc8746012a6da3",
+      "person_url": "https://rhodesli.nolanandrewfox.com/person/4369c2f0-5c5e-43ff-9e47-1b6806a46531",
+      "status": "registry_record_preserved_missing_embedding_and_crop",
+      "notes": "Present in identities.json and photo_index.json; missing embedding/crop artifacts; live photo page now surfaces archival-record warning instead of silently dropping it."
+    },
+    {
+      "face_id": "inbox_e64c25fc88a7",
+      "identity_id": "df1a2b64-c88f-4b6f-83d2-52374cb269f6",
+      "identity_name": "Unidentified Person df1a2b64",
+      "photo_id": "92229cbf4ca92644",
+      "photo_url": "https://rhodesli.nolanandrewfox.com/photo/92229cbf4ca92644",
+      "person_url": "https://rhodesli.nolanandrewfox.com/person/df1a2b64-c88f-4b6f-83d2-52374cb269f6",
+      "status": "registry_record_preserved_missing_embedding_and_crop",
+      "notes": "Likely historical false positive or unreproducible detection on newspaper image; preserved non-destructively for manual review."
+    }
+  ],
+  "unwind_notes": [
+    "Restore data/backups/identities.json.20260311_033425_792917 to return to the exact pre-cont11 local identities state captured during the reversible repair pass.",
+    "Use docs/assessments/session-96e-cont11-local-audit-before.json and docs/assessments/session-96e-cont11-local-audit-after.json to identify which audit categories changed.",
+    "Use the added identity-history events in current identities.json to selectively replay or reverse rename/state-change fixes.",
+    "Quarantined missing Netanel Menashe face refs were preserved in metadata.quarantined_missing_faces for manual restoration if later evidence warrants it."
+  ]
+}

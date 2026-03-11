@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-03-11T01:19:49.297123+00:00",
+  "git_head": "8934d5b727b50601387023b4e9346f54c9a5bc2b",
+  "audit": {
+    "summary": {
+      "total_identities": 3406,
+      "total_photos": 932,
+      "total_faces_in_index": 2634,
+      "total_embeddings": 2844,
+      "orphan_faces": 0,
+      "ghost_identities": 0,
+      "missing_identity_faces": 0,
+      "state_inconsistencies": 0,
+      "duplicate_faces": 0,
+      "merged_chains": 0,
+      "missing_upload_date": 0,
+      "missing_embeddings": 2
+    },
+    "issues": [
+      {
+        "check": "supabase_divergence",
+        "severity": "info",
+        "message": "Supabase not configured, skipping divergence check",
+        "ids": [],
+        "fixable": false
+      },
+      {
+        "check": "community_membership",
+        "severity": "info",
+        "message": "Supabase not available, skipping community membership check",
+        "ids": [],
+        "fixable": false
+      },
+      {
+        "check": "embedding_coverage",
+        "severity": "warning",
+        "message": "2 identity faces have no embedding",
+        "ids": [
+          "inbox_a56c556100a9",
+          "inbox_e64c25fc88a7"
+        ],
+        "fixable": false
+      }
+    ],
+    "fixes_applied": [],
+    "has_critical": false
+  },
+  "affected_identities": {
+    "64096284-ace8-4790-aebb-a82ff1f288a5": {
+      "name": "Netanel Menashe",
+      "state": "CONFIRMED",
+      "anchor_ids": [
+        "inbox_04a426269905",
+        "inbox_44254017d2da"
+      ],
+      "created_at": "2026-02-14T14:50:49.079764+00:00",
+      "updated_at": "2026-03-11T01:19:12.413921+00:00",
+      "version_id": 9,
+      "identity_id": "64096284-ace8-4790-aebb-a82ff1f288a5",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": [],
+      "metadata": {
+        "quarantined_missing_faces": [
+          {
+            "face_id": "inbox_b13a0d1781cc",
+            "removed_from": "anchor_ids",
+            "reason": "missing_from_photo_index_face_to_photo",
+            "quarantined_at": "2026-03-11T01:19:12.413921+00:00"
+          },
+          {
+            "face_id": "inbox_22a58175dbc2",
+            "removed_from": "anchor_ids",
+            "reason": "missing_from_photo_index_face_to_photo",
+            "quarantined_at": "2026-03-11T01:19:12.413921+00:00"
+          }
+        ]
+      }
+    },
+    "62f611f3-060a-48a1-b4ab-752296f6d586": {
+      "name": "Unidentified Person 494",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_413e03f922aa"
+      ],
+      "created_at": "2026-02-14T14:48:02.408088+00:00",
+      "updated_at": "2026-03-11T01:19:12.739450+00:00",
+      "version_id": 4,
+      "identity_id": "62f611f3-060a-48a1-b4ab-752296f6d586",
+      "display_name": null,
+      "negative_ids": [
+        "identity:52966904-f1e5-4025-bcf3-b249ca673be3"
+      ],
+      "candidate_ids": []
+    },
+    "f4d9c430-8100-4465-aa1d-171538d396d7": {
+      "name": "Unidentified Person 724",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_2c63949434e1"
+      ],
+      "created_at": "2026-02-14T14:51:47.354583+00:00",
+      "updated_at": "2026-03-11T01:19:12.739737+00:00",
+      "version_id": 3,
+      "identity_id": "f4d9c430-8100-4465-aa1d-171538d396d7",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
+    }
+  },
+  "existing_backups": [
+    "data/backups/identities.json.20260310_233849_957326",
+    "data/backups/identities.json.20260310_233852_147053",
+    "data/backups/identities.json.20260311_011912_414670",
+    "data/backups/identities.json.20260311_011912_585497",
+    "data/backups/identities.json.20260311_011912_739862"
+  ]
+}
