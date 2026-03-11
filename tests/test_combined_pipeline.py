@@ -259,17 +259,14 @@ class TestGedcomContextBuilder:
         assert _build_parsed_gedcom_from_supabase([]) is None
         assert _build_parsed_gedcom_from_supabase(None) is None
 
-    def test_gedcom_context_handles_no_supabase(self):
-        """Returns None when Supabase client unavailable."""
-        individuals_data = [
-            self._make_individual_row("@I1@", "Isaac Franco"),
-        ]
+    def test_load_gedcom_data_handles_no_supabase(self):
+        """load_gedcom_data returns None when Supabase client unavailable."""
         with patch("app.supabase_data.get_supabase_client", return_value=None):
             import sys
             from pathlib import Path
             sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-            from run_combined_pipeline import _build_parsed_gedcom_from_supabase
-            assert _build_parsed_gedcom_from_supabase(individuals_data) is None
+            from run_combined_pipeline import load_gedcom_data
+            assert load_gedcom_data() is None
 
     def test_gedcom_context_reconstructs_families(self):
         """Families are reconstructed from relationship rows."""
@@ -289,26 +286,11 @@ class TestGedcomContextBuilder:
              "relationship_type": "child", "family_gedcom_id": "@F1@"},
         ]
 
-        mock_sb = MagicMock()
-        table_call_names = []
-
-        def mock_table(name):
-            table_call_names.append(name)
-            mock_chain = MagicMock()
-            if name == "gedcom_events":
-                mock_chain.select.return_value.range.return_value.execute.return_value = MagicMock(data=[])
-            elif name == "gedcom_relationships":
-                mock_chain.select.return_value.range.return_value.execute.return_value = MagicMock(data=relationship_data)
-            return mock_chain
-
-        mock_sb.table = mock_table
-
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
-            import sys
-            from pathlib import Path
-            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-            from run_combined_pipeline import _build_parsed_gedcom_from_supabase
-            result = _build_parsed_gedcom_from_supabase(individuals_data)
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        from run_combined_pipeline import _build_parsed_gedcom_from_supabase
+        result = _build_parsed_gedcom_from_supabase(individuals_data, relationships_data=relationship_data)
 
         assert len(result.families) == 1
         fam = result.families["@F1@"]

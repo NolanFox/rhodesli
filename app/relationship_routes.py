@@ -21,6 +21,7 @@ from core.registry import IdentityState
 from core.ui_safety import ensure_utf8_display
 
 from app.main import rt
+from rhodesli_ml.importers.gedcom_matching import resolve_redirect_chain
 
 import app.main as _main_mod
 
@@ -28,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 _gedcom_matches_cache = None
+_gedcom_tree_relationships_cache = None
 
 
 def _load_gedcom_matches():
@@ -117,10 +119,15 @@ def post(person_a: str, person_b: str, type: str, sess=None):
 
 _gedcom_individuals_cache = None
 _gedcom_face_links_cache = None
+_gedcom_redirects_cache = None
+_gedcom_tree_relationships_cache_loaded_at = 0.0
+_gedcom_tree_relationships_cache_failed_at = 0.0
 _gedcom_individuals_cache_loaded_at = 0.0
 _gedcom_individuals_cache_failed_at = 0.0
 _gedcom_face_links_cache_loaded_at = 0.0
 _gedcom_face_links_cache_failed_at = 0.0
+_gedcom_redirects_cache_loaded_at = 0.0
+_gedcom_redirects_cache_failed_at = 0.0
 _GEDCOM_CACHE_TTL_SECONDS = 300
 _GEDCOM_FAILURE_BACKOFF_SECONDS = 30
 
@@ -206,16 +213,27 @@ def _load_gedcom_individuals():
             if not sb:
                 return []
 
-            select_fields = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
+            thin_fields = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
+            rich_fields = (
+                "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place,"
+                "birth_event_json,death_event_json,events_json,names_json,notes_json,citations_json,"
+                "media_refs_json,custom_tags_json,source_file"
+            )
             try:
                 # AD-163: prefer the current-only view when it exists.
-                return _load_gedcom_rows(sb, "current_gedcom_individuals", select_fields)
+                try:
+                    return _load_gedcom_rows(sb, "current_gedcom_individuals", rich_fields)
+                except Exception:
+                    return _load_gedcom_rows(sb, "current_gedcom_individuals", thin_fields)
             except Exception as exc:
                 msg = str(exc)
                 if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
                     raise
                 logging.info("current_gedcom_individuals unavailable; falling back to gedcom_individuals")
-                return _load_gedcom_rows(sb, "gedcom_individuals", select_fields)
+                try:
+                    return _load_gedcom_rows(sb, "gedcom_individuals", rich_fields)
+                except Exception:
+                    return _load_gedcom_rows(sb, "gedcom_individuals", thin_fields)
 
         all_rows = _run_gedcom_query(_query, "GEDCOM individuals load")
 
@@ -249,10 +267,20 @@ def _load_gedcom_face_links():
             if not sb:
                 return {}
             resp = sb.table("gedcom_face_links").select("identity_id,gedcom_id,confidence,linked_by").execute()
+            redirects = _load_gedcom_entity_redirects()
             links = {}
             if resp and resp.data:
                 for row in resp.data:
-                    links[row["identity_id"]] = row
+                    original_gedcom_id = row.get("gedcom_id")
+                    resolved_gedcom_id = resolve_redirect_chain(original_gedcom_id or "", redirects) if original_gedcom_id else ""
+                    links[row["identity_id"]] = {
+                        **row,
+                        "gedcom_id": resolved_gedcom_id or original_gedcom_id,
+                        "original_gedcom_id": original_gedcom_id,
+                        "redirected_from": original_gedcom_id
+                        if resolved_gedcom_id and resolved_gedcom_id != original_gedcom_id
+                        else None,
+                    }
             return links
 
         links = _run_gedcom_query(_query, "GEDCOM face links load")
@@ -267,15 +295,154 @@ def _load_gedcom_face_links():
     return _gedcom_face_links_cache
 
 
+def _load_gedcom_entity_redirects(entity_type: str = "individual", community_id: str = "rhodesli"):
+    """Load GEDCOM redirect mappings for rekeyed or merged entities."""
+    global _gedcom_redirects_cache, _gedcom_redirects_cache_loaded_at, _gedcom_redirects_cache_failed_at
+    if _gedcom_redirects_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_redirects_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
+        return _gedcom_redirects_cache.get((community_id, entity_type), {})
+    if _failure_backoff_active(_gedcom_redirects_cache_failed_at, _GEDCOM_FAILURE_BACKOFF_SECONDS):
+        return (_gedcom_redirects_cache or {}).get((community_id, entity_type), {})
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return {}
+            try:
+                rows = _load_gedcom_rows(
+                    sb,
+                    "gedcom_entity_redirects",
+                    "community_id,entity_type,old_key,new_key",
+                )
+            except Exception as exc:
+                msg = str(exc)
+                if "gedcom_entity_redirects" in msg or "PGRST205" in msg or "relation" in msg:
+                    return {}
+                raise
+
+            grouped: dict[tuple[str, str], dict[str, str]] = {}
+            for row in rows:
+                row_community = row.get("community_id") or "rhodesli"
+                row_entity_type = row.get("entity_type") or "individual"
+                old_key = row.get("old_key")
+                new_key = row.get("new_key")
+                if not old_key or not new_key:
+                    continue
+                grouped.setdefault((row_community, row_entity_type), {})[old_key] = new_key
+            return grouped
+
+        redirect_groups = _run_gedcom_query(_query, "GEDCOM redirects load")
+        _gedcom_redirects_cache = redirect_groups
+        _gedcom_redirects_cache_loaded_at = time.monotonic()
+        _gedcom_redirects_cache_failed_at = 0.0
+    except Exception as e:
+        _gedcom_redirects_cache_failed_at = time.monotonic()
+        logging.warning(f"Failed to load GEDCOM redirects: {e}")
+        return (_gedcom_redirects_cache or {}).get((community_id, entity_type), {})
+
+    return _gedcom_redirects_cache.get((community_id, entity_type), {})
+
+
+def _load_current_gedcom_relationship_edges():
+    """Load current GEDCOM parent/spouse edges for tree rendering.
+
+    The JSON relationship graph now acts as a manual overlay. Current GEDCOM
+    relationships should come from Supabase so tree rendering follows the
+    latest imported family structure.
+    """
+    global _gedcom_tree_relationships_cache
+    global _gedcom_tree_relationships_cache_loaded_at, _gedcom_tree_relationships_cache_failed_at
+    if _gedcom_tree_relationships_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_tree_relationships_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
+        return _gedcom_tree_relationships_cache
+    if _failure_backoff_active(_gedcom_tree_relationships_cache_failed_at, _GEDCOM_FAILURE_BACKOFF_SECONDS):
+        return _gedcom_tree_relationships_cache or []
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return []
+            select_fields = "individual_gedcom_id,related_gedcom_id,relationship_type,family_gedcom_id"
+            try:
+                rows = _load_gedcom_rows(sb, "current_gedcom_relationships", select_fields)
+            except Exception as exc:
+                msg = str(exc)
+                if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                    raise
+                rows = _load_gedcom_rows(sb, "gedcom_relationships", select_fields)
+
+            edges = []
+            seen_spouses = set()
+            for row in rows:
+                rel_type = row.get("relationship_type")
+                person_a = row.get("individual_gedcom_id")
+                person_b = row.get("related_gedcom_id")
+                if not person_a or not person_b:
+                    continue
+                if rel_type == "parent":
+                    edges.append(
+                        {
+                            "person_a": person_a,
+                            "person_b": person_b,
+                            "type": "parent_child",
+                            "source": "gedcom_current",
+                            "gedcom_family_id": row.get("family_gedcom_id"),
+                        }
+                    )
+                elif rel_type == "spouse":
+                    pair = tuple(sorted((person_a, person_b)))
+                    if pair in seen_spouses:
+                        continue
+                    seen_spouses.add(pair)
+                    edges.append(
+                        {
+                            "person_a": person_a,
+                            "person_b": person_b,
+                            "type": "spouse",
+                            "source": "gedcom_current",
+                            "gedcom_family_id": row.get("family_gedcom_id"),
+                        }
+                    )
+            return edges
+
+        edges = _run_gedcom_query(_query, "GEDCOM tree relationships load")
+        _gedcom_tree_relationships_cache = edges
+        _gedcom_tree_relationships_cache_loaded_at = time.monotonic()
+        _gedcom_tree_relationships_cache_failed_at = 0.0
+    except Exception as e:
+        _gedcom_tree_relationships_cache_failed_at = time.monotonic()
+        logging.warning(f"Failed to load current GEDCOM tree relationships: {e}")
+        return _gedcom_tree_relationships_cache or []
+
+    return _gedcom_tree_relationships_cache
+
+
 def _invalidate_gedcom_cache():
     """Invalidate GEDCOM caches after link/unlink operations."""
     global _gedcom_individuals_cache_loaded_at, _gedcom_individuals_cache_failed_at
     global _gedcom_face_links_cache, _gedcom_face_links_cache_loaded_at, _gedcom_face_links_cache_failed_at
+    global _gedcom_redirects_cache, _gedcom_redirects_cache_loaded_at, _gedcom_redirects_cache_failed_at
+    global _gedcom_tree_relationships_cache, _gedcom_tree_relationships_cache_loaded_at
+    global _gedcom_tree_relationships_cache_failed_at
     _gedcom_individuals_cache_loaded_at = 0.0
     _gedcom_individuals_cache_failed_at = 0.0
     _gedcom_face_links_cache = None
     _gedcom_face_links_cache_loaded_at = 0.0
     _gedcom_face_links_cache_failed_at = 0.0
+    _gedcom_redirects_cache = None
+    _gedcom_redirects_cache_loaded_at = 0.0
+    _gedcom_redirects_cache_failed_at = 0.0
+    _gedcom_tree_relationships_cache = None
+    _gedcom_tree_relationships_cache_loaded_at = 0.0
+    _gedcom_tree_relationships_cache_failed_at = 0.0
 
 
 def _load_gedcom_versions():
@@ -465,8 +632,10 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
         individuals = _main_mod._load_gedcom_individuals()
         gedcom_name = "Unknown"
         birth_year = death_year = birth_place = None
+        gedcom_row = None
         for row in individuals:
             if row["gedcom_id"] == gedcom_id:
+                gedcom_row = row
                 gedcom_name = row.get("name") or "Unknown"
                 bd = row.get("birth_date") or ""
                 dd = row.get("death_date") or ""
@@ -490,6 +659,27 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
             life_parts.append(birth_place)
         life_str = " · ".join(life_parts) if life_parts else ""
 
+        alt_names = []
+        facts_preview = []
+        source_count = 0
+        if gedcom_row:
+            alt_names = [
+                name.get("full_name")
+                for name in gedcom_row.get("names_json", []) or []
+                if name.get("full_name") and name.get("full_name") != gedcom_name
+            ][:3]
+            for event in (gedcom_row.get("events_json") or [])[:3]:
+                event_type = (event.get("event_type") or "event").replace("_", " ").title()
+                event_parts = [event_type]
+                if event.get("raw_date"):
+                    event_parts.append(event["raw_date"])
+                if event.get("place"):
+                    event_parts.append(event["place"])
+                facts_preview.append(" · ".join(event_parts))
+            source_count = len(gedcom_row.get("citations_json") or [])
+            for event in gedcom_row.get("events_json") or []:
+                source_count += len(event.get("citations") or event.get("citations_json") or [])
+
         return Div(
             H3("Family Tree Link", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
             Div(
@@ -499,6 +689,15 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
                     Span(f" ({life_str})" if life_str else "", cls="text-slate-400 text-xs ml-1"),
                     cls="flex items-baseline flex-wrap gap-1",
                 ),
+                P(f"Also recorded as: {', '.join(alt_names)}", cls="text-xs text-slate-400 mt-2") if alt_names else None,
+                P(
+                    f"Link auto-resolved from retired GEDCOM id {link.get('redirected_from')}",
+                    cls="text-xs text-amber-300 mt-1",
+                )
+                if link.get("redirected_from")
+                else None,
+                P(f"Additional GEDCOM facts: {facts_preview[0]}", cls="text-xs text-slate-400 mt-1") if facts_preview else None,
+                P(f"Sources attached: {source_count}", cls="text-xs text-slate-500 mt-1") if source_count else None,
                 Button(
                     "Unlink",
                     cls="mt-2 px-3 py-1 text-xs text-red-400 hover:text-red-300 border border-red-800 "
@@ -918,4 +1117,3 @@ async def post(photo_id: str, sess=None):
         cls="p-3 bg-emerald-950/30 rounded-lg border border-emerald-700/30 text-center",
         id=f"review-{photo_id[:8]}",
     )
-

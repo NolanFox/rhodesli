@@ -40,6 +40,7 @@ _TEST_IDENTITIES = {
 def mock_tree_data():
     """Mock data loading for tree API tests."""
     with patch("app.main._load_relationship_graph", return_value=_TEST_GRAPH), \
+         patch("app.main._load_current_gedcom_relationship_edges", return_value=[]), \
          patch("app.main._load_gedcom_individuals", return_value=[]), \
          patch("app.main._load_gedcom_face_links", return_value={}), \
          patch("app.main.get_crop_files", return_value=set()):
@@ -210,6 +211,7 @@ class TestSharedPhotosInTree:
         mock_f2p = {"face-a1": "photo-1", "face-a2": "photo-2", "face-b1": "photo-1"}
 
         with patch("app.main._load_relationship_graph", return_value=test_graph), \
+             patch("app.main._load_current_gedcom_relationship_edges", return_value=[]), \
              patch("app.main._load_gedcom_individuals", return_value=[]), \
              patch("app.main._load_gedcom_face_links", return_value={}), \
              patch("app.main.get_crop_files", return_value=set()), \
@@ -248,6 +250,7 @@ class TestSharedPhotosInTree:
         mock_registry.get_identity = lambda pid: test_identities["identities"].get(pid)
 
         with patch("app.main._load_relationship_graph", return_value=test_graph), \
+             patch("app.main._load_current_gedcom_relationship_edges", return_value=[]), \
              patch("app.main._load_gedcom_individuals", return_value=[]), \
              patch("app.main._load_gedcom_face_links", return_value={}), \
              patch("app.main.get_crop_files", return_value=set()), \

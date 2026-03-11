@@ -2435,3 +2435,24 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Type 2 error (missed match manual merge)**: When admin manually merges Albert Fox (Rhodes) with an unidentified Fox Family face, the merged identity gains Fox Family faces → automatically appears in Fox Family's Review section going forward.
 - **Performance**: Cache the photo-derived set with same TTL as community photo IDs (60s). For 636 photos × ~2.6 faces/photo, the computation is ~1652 face lookups — fast.
 - **Context file**: `docs/session_context/session-96c-context.md`
+
+### AD-219: GEDCOM Rich Mirror With Redirect Lineage
+- **Date**: 2026-03-11 | **Session**: 98
+- **Context**: The thin GEDCOM versioning path from AD-163 tracked only a small subset of the export and implicitly treated GEDCOM xrefs as stable identities. Session 98's raw export audit showed that the March 11 Ancestry GEDCOM includes rich sources, notes, media refs, repeated names, custom tags, and xref churn across families, media objects, and a small set of removed/rekeyed people.
+- **Decision**: Treat the GEDCOM as a mirror source, not a lossy flattening step. Preserve top-level `INDI`, `FAM`, `SOUR`, and `OBJE` records plus exact raw record text. Store rich structured payloads for names, notes, citations, media refs, events, family structure, and raw nodes. Add append-only `gedcom_entity_redirects` so removed GEDCOM ids can resolve to current ids without mutating the original `gedcom_face_links`.
+- **Import semantics**:
+  1. Snapshot and diff all mirrored entity classes, not only individuals.
+  2. Stage replacement rows as `is_current = false`, supersede prior current rows, then activate the new rows so unique current-row indexes remain valid.
+  3. On the first versioned bootstrap, supersede all legacy current GEDCOM rows, not only modified ones.
+  4. Record high-confidence removed-to-current redirects as lineage artifacts, not destructive rewrites.
+- **Why this shape**:
+  - preserves everything the export actually contains
+  - keeps rollback/audit possible through append-only rows and redirect artifacts
+  - gives the app and Gemini pipeline access to richer current GEDCOM context
+  - stays compatible with Session 97's requirement that future AI/ML lineage reference explicit versioned input artifacts
+- **Rejected**:
+  - overwrite-in-place GEDCOM sync (breaks audit and rollback)
+  - keeping xrefs as de facto permanent identities (breaks on rekeys/merges)
+  - flattening rich GEDCOM structures into only birth/death/name columns (silent data loss)
+- **Affects**: `rhodesli_ml/importers/gedcom_parser.py`, `rhodesli_ml/importers/gedcom_rich.py`, `rhodesli_ml/importers/gedcom_snapshot.py`, `rhodesli_ml/importers/gedcom_matching.py`, `scripts/import_gedcom_version.py`, `scripts/run_combined_pipeline.py`, `app/admin_routes.py`, `app/relationship_routes.py`, `app/page_routes.py`, `scripts/supabase_migration_003_gedcom_rich_mirror.sql`
+- **Artifacts**: `docs/assessments/session-98-gedcom-audit.md`, `docs/analysis/session-98-gedcom-research.md`, `docs/assessments/session-98-gedcom-diff-report.json`

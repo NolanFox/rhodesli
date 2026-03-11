@@ -86,6 +86,10 @@ class MockSupabaseQuery:
     def neq(self, col, val):
         return self
 
+    def in_(self, col, values):
+        self._filters.append(('in', col, tuple(values)))
+        return self
+
     def or_(self, expr):
         return self
 
@@ -110,6 +114,8 @@ class MockSupabaseQuery:
         for op, col, val in self._filters:
             if op == 'eq':
                 data = [r for r in data if r.get(col) == val]
+            elif op == 'in':
+                data = [r for r in data if r.get(col) in val]
         if self._order_col:
             data = sorted(data, key=lambda r: r.get(self._order_col, 0),
                           reverse=self._order_desc)
@@ -427,8 +433,47 @@ class TestImportVersioned:
         assert result['added'] == 0
 
         # Old row was marked as superseded
-        assert len(individuals_table._update_calls) == 1
-        assert individuals_table._update_calls[0]['is_current'] is False
+        assert any(call.get('is_current') is False for call in individuals_table._update_calls)
+        assert any(call.get('is_current') is True for call in individuals_table._update_calls)
+
+    def test_baseline_execute_supersedes_unchanged_legacy_rows(self):
+        """First versioned import must retire all legacy current rows, even unchanged ones."""
+        individuals_table = MockSupabaseTable([
+            {
+                'id': 'legacy-uuid',
+                'gedcom_id': 'I001',
+                'name': 'Sol Capeluto',
+                'given_name': 'Sol',
+                'surname': 'Capeluto',
+                'gender': 'M',
+                'birth_date': '1905',
+                'birth_place': 'Rhodes',
+                'death_date': None,
+                'death_place': None,
+                'is_current': True,
+            },
+        ])
+
+        sb = MockSupabase({
+            'gedcom_versions': MockSupabaseTable([]),
+            'gedcom_individuals': individuals_table,
+            'gedcom_events': MockSupabaseTable([]),
+            'gedcom_relationships': MockSupabaseTable([]),
+            'gedcom_change_log': MockSupabaseTable([]),
+            'gedcom_face_links': MockSupabaseTable([]),
+            'gedcom_enrichment_queue': MockSupabaseTable([]),
+        })
+
+        parsed = make_parsed(
+            ('I001', make_individual('Sol Capeluto', 'Sol', 'Capeluto', 'M', birth_raw='1905', birth_place='Rhodes')),
+        )
+
+        result = import_versioned(sb, parsed, 'baseline.ged', 'baseline-hash', dry_run=False)
+
+        assert result['version_number'] == 1
+        assert len(individuals_table._insert_calls) == 1
+        assert any(call.get('is_current') is False for call in individuals_table._update_calls)
+        assert any(call.get('is_current') is True for call in individuals_table._update_calls)
 
     def test_enrichment_queue_for_linked_modified(self):
         """Modified individuals with face links trigger enrichment queue."""
@@ -466,6 +511,103 @@ class TestImportVersioned:
         assert queued['identity_id'] == 'identity-abc'
         assert queued['trigger'] == 'gedcom_update'
         assert queued['status'] == 'pending'
+
+    def test_dry_run_detects_redirect_for_rekeyed_individual(self):
+        """Removed old GEDCOM ids should surface as redirect candidates."""
+        versions_table = MockSupabaseTable([
+            {'id': 'version-1', 'version_number': 1, 'community_id': 'rhodesli'},
+        ])
+        individuals_table = MockSupabaseTable([
+            {
+                'id': 'old-uuid',
+                'gedcom_id': 'I001',
+                'name': 'Nolan Fox',
+                'given_name': 'Nolan',
+                'surname': 'Fox',
+                'gender': 'M',
+                'birth_date': '1985',
+                'birth_place': 'Clearwater, Florida, USA',
+                'death_date': None,
+                'death_place': None,
+                'is_current': True,
+            },
+        ])
+
+        sb = MockSupabase({
+            'gedcom_versions': versions_table,
+            'gedcom_individuals': individuals_table,
+            'gedcom_events': MockSupabaseTable([]),
+            'gedcom_relationships': MockSupabaseTable([]),
+            'gedcom_families': MockSupabaseTable([]),
+            'gedcom_sources': MockSupabaseTable([]),
+            'gedcom_media_objects': MockSupabaseTable([]),
+            'gedcom_records': MockSupabaseTable([]),
+            'gedcom_face_links': MockSupabaseTable([]),
+            'gedcom_change_log': MockSupabaseTable([]),
+            'gedcom_enrichment_queue': MockSupabaseTable([]),
+            'gedcom_entity_redirects': MockSupabaseTable([]),
+        })
+
+        parsed = make_parsed(
+            ('I999', make_individual('Nolan Fox', 'Nolan', 'Fox', 'M', birth_raw='1985', birth_place='Clearwater, Pinellas, Florida, USA')),
+        )
+
+        result = import_versioned(sb, parsed, 'rekey.ged', 'hash-rekey', dry_run=True)
+
+        assert result['redirects']['detected'] == 1
+        redirect = result['redirects']['sample'][0]
+        assert redirect['old_key'] == 'I001'
+        assert redirect['new_key'] == 'I999'
+
+    def test_execute_writes_redirect_rows_for_rekeyed_individual(self):
+        """Execute mode should persist redirect metadata for removed -> current matches."""
+        versions_table = MockSupabaseTable([
+            {'id': 'version-1', 'version_number': 1, 'community_id': 'rhodesli'},
+        ])
+        individuals_table = MockSupabaseTable([
+            {
+                'id': 'old-uuid',
+                'gedcom_id': 'I001',
+                'name': 'Nolan Fox',
+                'given_name': 'Nolan',
+                'surname': 'Fox',
+                'gender': 'M',
+                'birth_date': '1985',
+                'birth_place': 'Clearwater, Florida, USA',
+                'death_date': None,
+                'death_place': None,
+                'is_current': True,
+            },
+        ])
+        redirect_table = MockSupabaseTable([])
+        change_log_table = MockSupabaseTable([])
+
+        sb = MockSupabase({
+            'gedcom_versions': versions_table,
+            'gedcom_individuals': individuals_table,
+            'gedcom_events': MockSupabaseTable([]),
+            'gedcom_relationships': MockSupabaseTable([]),
+            'gedcom_families': MockSupabaseTable([]),
+            'gedcom_sources': MockSupabaseTable([]),
+            'gedcom_media_objects': MockSupabaseTable([]),
+            'gedcom_records': MockSupabaseTable([]),
+            'gedcom_face_links': MockSupabaseTable([]),
+            'gedcom_change_log': change_log_table,
+            'gedcom_enrichment_queue': MockSupabaseTable([]),
+            'gedcom_entity_redirects': redirect_table,
+        })
+
+        parsed = make_parsed(
+            ('I999', make_individual('Nolan Fox', 'Nolan', 'Fox', 'M', birth_raw='1985', birth_place='Clearwater, Pinellas, Florida, USA')),
+        )
+
+        result = import_versioned(sb, parsed, 'rekey.ged', 'hash-rekey-2', dry_run=False)
+
+        assert result['redirects']['detected'] == 1
+        assert len(redirect_table._insert_calls) == 1
+        assert redirect_table._insert_calls[0]['old_key'] == 'I001'
+        assert redirect_table._insert_calls[0]['new_key'] == 'I999'
+        assert any(entry['change_type'] == 'redirected' for entry in change_log_table._insert_calls)
 
 
 class TestCompareFieldsCoverage:

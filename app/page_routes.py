@@ -9099,11 +9099,10 @@ def _build_tree_adjacency(show_theory=True):
     is one connected component instead of two disconnected clusters.
     """
     rel_graph = _main_mod._load_relationship_graph()
-    rels = [
-        r
-        for r in rel_graph.get("relationships", [])
-        if not r.get("removed") and (show_theory or r.get("confidence") != "theory")
-    ]
+    manual_rels = [r for r in rel_graph.get("relationships", []) if r.get("source") != "gedcom"]
+    current_gedcom_rels = _main_mod._load_current_gedcom_relationship_edges()
+    combined_rels = manual_rels + current_gedcom_rels if current_gedcom_rels else rel_graph.get("relationships", [])
+    rels = [r for r in combined_rels if not r.get("removed") and (show_theory or r.get("confidence") != "theory")]
 
     # Build GEDCOM xref -> identity UUID mapping to unify the graph
     gedcom_links = _main_mod._load_gedcom_face_links()

@@ -2790,6 +2790,12 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
             modified = diff_result.get("modified", 0)
             removed = diff_result.get("removed", 0)
             unchanged = diff_result.get("unchanged", 0)
+            entity_summaries = diff_result.get("entity_summaries", {}) or {}
+            sample_changes = diff_result.get("sample_changes", []) or []
+            missing_tables = diff_result.get("missing_tables", []) or []
+            schema_ready = diff_result.get("schema_ready", True)
+            redirect_summary = diff_result.get("redirects", {}) or {}
+            redirect_sample = redirect_summary.get("sample", []) or []
 
             diff_badges = []
             if added:
@@ -2808,15 +2814,81 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
                 diff_badges.append(
                     Span(f"={unchanged} unchanged", cls="px-2 py-1 rounded bg-slate-700 text-slate-400 text-sm")
                 )
+            if redirect_summary.get("detected"):
+                diff_badges.append(
+                    Span(
+                        f"{redirect_summary['detected']} redirects",
+                        cls="px-2 py-1 rounded bg-sky-900/40 text-sky-300 text-sm",
+                    )
+                )
 
-            return Div(
-                P(
-                    f"Parsed {parsed.individual_count:,} individuals, {parsed.family_count:,} families",
-                    cls="text-emerald-400 font-medium",
-                ),
-                H3("Change Summary", cls="text-white font-semibold mt-3 mb-2"),
-                Div(*diff_badges, cls="flex flex-wrap gap-2 mb-4"),
-                Div(
+            parsed_counts = Div(
+                Div(P(f"{parsed.individual_count:,}", cls="text-xl font-semibold text-white"), P("Individuals", cls="text-xs text-slate-400")),
+                Div(P(f"{parsed.family_count:,}", cls="text-xl font-semibold text-white"), P("Families", cls="text-xs text-slate-400")),
+                Div(P(f"{parsed.source_count:,}", cls="text-xl font-semibold text-white"), P("Sources", cls="text-xs text-slate-400")),
+                Div(P(f"{parsed.media_count:,}", cls="text-xl font-semibold text-white"), P("Media", cls="text-xs text-slate-400")),
+                Div(P(f"{len(parsed.records):,}", cls="text-xl font-semibold text-white"), P("Raw Records", cls="text-xs text-slate-400")),
+                cls="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4",
+            )
+
+            entity_cards = []
+            for label, key in (
+                ("Individuals", "individuals"),
+                ("Events", "events"),
+                ("Families", "families"),
+                ("Relationships", "relationships"),
+                ("Sources", "sources"),
+                ("Media", "media_objects"),
+                ("Records", "records"),
+            ):
+                summary = entity_summaries.get(key, {})
+                entity_cards.append(
+                    Div(
+                        P(label, cls="text-sm text-slate-300"),
+                        P(
+                            f"+{summary.get('added', 0)}  ~{summary.get('modified', 0)}  -{summary.get('removed', 0)}",
+                            cls="text-xs text-slate-400 mt-1",
+                        ),
+                        cls="rounded-lg border border-slate-700/50 bg-slate-900/40 px-3 py-2",
+                    )
+                )
+
+            sample_items = []
+            for item in sample_changes[:5]:
+                change_preview = []
+                for change in item.get("changes", [])[:3]:
+                    old_value = change.get("old_value")
+                    new_value = change.get("new_value")
+                    old_text = json.dumps(old_value)[:40] if isinstance(old_value, (dict, list)) else str(old_value)[:40]
+                    new_text = json.dumps(new_value)[:40] if isinstance(new_value, (dict, list)) else str(new_value)[:40]
+                    change_preview.append(f"{change.get('path')}: {old_text} → {new_text}")
+                sample_items.append(
+                    Div(
+                        P(f"{item.get('entity_type')} · {item.get('entity_id')}", cls="text-sm text-white font-medium"),
+                        P(" | ".join(change_preview), cls="text-xs text-slate-400 mt-1"),
+                        cls="rounded-lg border border-slate-700/50 bg-slate-900/40 px-3 py-2",
+                    )
+                )
+
+            redirect_items = []
+            for item in redirect_sample[:5]:
+                redirect_items.append(
+                    Div(
+                        P(
+                            f"{item.get('entity_type')} · {item.get('old_key')} -> {item.get('new_key')}",
+                            cls="text-sm text-white font-medium",
+                        ),
+                        P(
+                            f"{item.get('redirect_type')} · score {item.get('match_score')} · {', '.join(item.get('reasons') or [])}",
+                            cls="text-xs text-slate-400 mt-1",
+                        ),
+                        cls="rounded-lg border border-slate-700/50 bg-slate-900/40 px-3 py-2",
+                    )
+                )
+
+            action_row = None
+            if schema_ready:
+                action_row = Div(
                     Button(
                         "Apply Changes",
                         cls="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium mr-2",
@@ -2832,7 +2904,32 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
                     ),
                     Span("Applying...", id="apply-spinner", cls="htmx-indicator text-sm text-slate-400 ml-2"),
                     cls="flex items-center",
-                ),
+                )
+            else:
+                action_row = Div(
+                    P(
+                        "Rich GEDCOM schema migration is required before apply. Dry-run diff is safe; live import is blocked.",
+                        cls="text-amber-300 text-sm",
+                    ),
+                    P(", ".join(missing_tables), cls="text-xs text-slate-500 mt-1") if missing_tables else None,
+                    Button(
+                        "Cancel",
+                        cls="mt-3 px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium",
+                        hx_post="/admin/gedcom/cancel",
+                        hx_target="#gedcom-results",
+                    ),
+                )
+
+            return Div(
+                parsed_counts,
+                H3("Change Summary", cls="text-white font-semibold mt-3 mb-2"),
+                Div(*diff_badges, cls="flex flex-wrap gap-2 mb-4"),
+                Div(*entity_cards, cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4"),
+                H3("Sample Changes", cls="text-white font-semibold mt-3 mb-2") if sample_items else None,
+                Div(*sample_items, cls="space-y-2 mb-4") if sample_items else None,
+                H3("Detected Redirects", cls="text-white font-semibold mt-3 mb-2") if redirect_items else None,
+                Div(*redirect_items, cls="space-y-2 mb-4") if redirect_items else None,
+                action_row,
                 cls="bg-indigo-900/20 border border-indigo-700/50 rounded-lg p-4 mt-4",
                 data_testid="gedcom-diff-preview",
             )
@@ -2889,6 +2986,15 @@ def post(sess=None):
     preview = _gedcom_upload_preview
     if not preview:
         return Div(P("No pending upload to apply. Please upload a file first.", cls="text-amber-400"), cls="mt-4")
+
+    diff_result = preview.get("diff") or {}
+    if not diff_result.get("schema_ready", True):
+        missing_tables = diff_result.get("missing_tables", []) or []
+        return Div(
+            P("Cannot apply GEDCOM import until the rich-schema migration is in place.", cls="text-amber-300"),
+            P(", ".join(missing_tables), cls="text-xs text-slate-500 mt-1") if missing_tables else None,
+            cls="mt-4",
+        )
 
     tmp_path = preview.get("tmp_path")
     filename = preview.get("filename", "unknown.ged")

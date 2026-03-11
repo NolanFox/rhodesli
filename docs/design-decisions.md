@@ -162,6 +162,35 @@ This document tracks product and UX decisions. Each entry is authoritative and s
 
 ---
 
+## DD-008: GEDCOM Diff Preview + Current-Graph Tree Overlay
+
+**Date:** 2026-03-11  
+**Status:** Decided
+
+**Context:** The GEDCOM admin page previously exposed only a thin change summary,
+and the tree still depended on stale JSON GEDCOM edges even after versioned
+Supabase imports existed.
+
+**Decision:** Surface GEDCOM changes as an audit-first admin preview and treat
+current Supabase GEDCOM relationships as the authoritative GEDCOM graph:
+1. upload preview shows parsed counts, per-entity deltas, sample changes, and
+   detected redirects before apply
+2. apply is blocked when the rich GEDCOM schema is missing
+3. `data/relationships.json` is kept as a manual overlay, not the primary
+   GEDCOM relationship source
+
+**Rationale:** GEDCOM updates change a connected family graph. The safe UX is a
+review surface that makes the blast radius visible before apply, and a tree
+that reflects the latest current GEDCOM state instead of stale exported JSON.
+
+**Tradeoffs:** The admin preview is denser and more technical, but it is an
+admin-only surface where audit clarity matters more than simplification.
+
+**Revisit If:** The preview becomes too noisy to review without additional
+change bucketing or filtering.
+
+---
+
 ## Template for New Decisions
 
 ```markdown
