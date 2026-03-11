@@ -43,6 +43,7 @@ class TestUploadProvenanceDisplay:
         assert resp.status_code == 200
         assert "user@example.com" in resp.text
         assert "Uploaded by" in resp.text
+        assert "Mar 5, 2026 at 12:00 PM UTC" in resp.text
 
     def test_photo_page_shows_source_in_metadata_section(self, client):
         """Photo page shows source in collection/source section, not in provenance line (BUG-5 fix)."""
@@ -83,8 +84,8 @@ class TestUploadProvenanceDisplay:
         result = _build_upload_provenance_line({"source": "Betty Capeluto Album"})
         assert result is None, "Provenance line should not show source fallback"
 
-    def test_photo_page_shows_added_to_archive_when_upload_date_backfilled(self, client):
-        """Backfilled upload dates should render even when no uploader email exists."""
+    def test_photo_page_shows_archive_timestamp_when_upload_date_backfilled(self, client):
+        """Backfilled upload dates should render with explicit missing-uploader wording."""
         mock_photo_cache = {
             "test_backfilled": {
                 "filename": "test.jpg",
@@ -113,7 +114,8 @@ class TestUploadProvenanceDisplay:
             resp = client.get("/photo/test_backfilled")
 
         assert resp.status_code == 200
-        assert "Added to archive: Feb 10, 2026" in resp.text
+        assert "Archive entry recorded on Feb 10, 2026 at 12:00 AM UTC" in resp.text
+        assert "uploader not recorded for this import" in resp.text
 
 
 class TestRecentlyReviewedCards:

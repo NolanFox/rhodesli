@@ -3716,6 +3716,7 @@ def _build_caches():
             filename_to_face_ids_ordered = {}
             filename_to_metadata = {}
             filename_to_photo_index_id = {}
+            filename_to_photo_index_order = {}
 
             def _filename_entry_score(path: str, metadata: dict, face_ids) -> tuple:
                 """Rank duplicate basename entries so the richest archive metadata wins."""
@@ -3730,7 +3731,7 @@ def _build_caches():
                 )
 
             best_raw_entries = {}
-            for pid, photo_data in photo_index_raw.get("photos", {}).items():
+            for photo_index_order, (pid, photo_data) in enumerate(photo_index_raw.get("photos", {}).items()):
                 path = photo_data.get("path", "")
                 if not path:
                     continue
@@ -3738,6 +3739,7 @@ def _build_caches():
                 candidate = {
                     "pid": pid,
                     "path": path,
+                    "photo_index_order": photo_index_order,
                     "ordered_face_ids": [fid for fid in photo_data.get("face_ids", []) if isinstance(fid, str) and fid],
                     "metadata": {k: v for k, v in photo_data.items() if v},
                 }
@@ -3750,6 +3752,7 @@ def _build_caches():
             for fname, candidate in best_raw_entries.items():
                 filename_to_face_ids_ordered[fname] = candidate["ordered_face_ids"]
                 filename_to_photo_index_id[fname] = candidate["pid"]
+                filename_to_photo_index_order[fname] = candidate["photo_index_order"]
 
             best_registry_entries = {}
             for pid in photo_registry._photos:
@@ -3849,6 +3852,8 @@ def _build_caches():
                 merged.update(metadata)
                 if merged:
                     _photo_cache[photo_id].update(merged)
+                if fname in filename_to_photo_index_order:
+                    _photo_cache[photo_id]["photo_index_order"] = filename_to_photo_index_order[fname]
 
             # Preserve photo_index-only photos even when embeddings are absent.
             for fname, photo_index_id in filename_to_photo_index_id.items():
@@ -3879,6 +3884,8 @@ def _build_caches():
                 metadata = filename_to_metadata.get(fname, {})
                 if metadata:
                     photo_data.update(metadata)
+                if fname in filename_to_photo_index_order:
+                    photo_data["photo_index_order"] = filename_to_photo_index_order[fname]
                 if placeholder_faces:
                     photo_data["missing_face_artifacts"] = len(placeholder_faces)
                 _photo_cache[cache_id] = photo_data
@@ -7155,6 +7162,7 @@ def render_photos_section(
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
+                "photo_index_order": photo_data.get("photo_index_order"),
                 "has_back": has_back,
                 "media_role": photo_data.get("media_role", "front"),
             }
@@ -7396,13 +7404,13 @@ def render_photos_section(
                     P(f"\U0001f4c1 {photo['source']}", cls="text-xs text-slate-500 leading-snug")
                     if photo["source"]
                     else None,
-                    Span(
-                        share_button(photo["photo_id"], style="icon"),
-                        A(
-                            "Open",
-                            href=f"/photo/{photo['photo_id']}",
-                            cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
-                            target="_blank",
+                        Span(
+                            share_button(photo["photo_id"], style="icon"),
+                            A(
+                                "Public Page",
+                                href=f"/photo/{photo['photo_id']}",
+                                cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
+                                target="_blank",
                         ),
                         cls="flex items-center gap-0.5 flex-shrink-0",
                         **{"_": "on click halt the event's bubbling"},

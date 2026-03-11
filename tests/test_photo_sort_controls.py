@@ -194,6 +194,58 @@ class TestSortPhotosHelper:
         result = _sort_photos(photos, "upload_newest")
         assert [p["photo_id"] for p in result] == ["new-no-upload", "old-no-upload", "no-timestamps"]
 
+    def test_upload_newest_breaks_true_timestamp_ties_by_photo_index_order(self):
+        from app.main import _sort_photos
+
+        tied_timestamp = "2026-03-10T17:53:28.672276+00:00"
+        photos = [
+            {
+                "photo_id": "older-entry",
+                "filename": "a.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": tied_timestamp,
+                "photo_index_order": 932,
+            },
+            {
+                "photo_id": "newer-entry",
+                "filename": "z.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": tied_timestamp,
+                "photo_index_order": 938,
+            },
+        ]
+
+        result = _sort_photos(photos, "upload_newest")
+        assert [p["photo_id"] for p in result] == ["newer-entry", "older-entry"]
+
+    def test_upload_oldest_breaks_true_timestamp_ties_by_photo_index_order(self):
+        from app.main import _sort_photos
+
+        tied_timestamp = "2026-03-10T17:53:28.672276+00:00"
+        photos = [
+            {
+                "photo_id": "older-entry",
+                "filename": "a.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": tied_timestamp,
+                "photo_index_order": 932,
+            },
+            {
+                "photo_id": "newer-entry",
+                "filename": "z.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": tied_timestamp,
+                "photo_index_order": 938,
+            },
+        ]
+
+        result = _sort_photos(photos, "upload_oldest")
+        assert [p["photo_id"] for p in result] == ["older-entry", "newer-entry"]
+
 
 class TestPhotosRouteDropdown:
     """Verify the /photos route includes the new sort options in the dropdown."""

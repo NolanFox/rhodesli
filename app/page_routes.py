@@ -3639,7 +3639,7 @@ def photo_view_content(
                     else None,
                     _main_mod.share_button(photo_id, style="link", label="Share"),
                     A(
-                        "Open",
+                        "Public Page",
                         href=f"/photo/{photo_id}",
                         cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                         target="_blank",
@@ -5495,12 +5495,14 @@ def _sort_photos(photos: list, sort_by: str) -> list:
             created_at = p.get("created_at") or ""
             updated_at = p.get("updated_at") or ""
             primary_timestamp = upload_date or created_at or updated_at
+            photo_index_order = p.get("photo_index_order")
             return (
                 1 if primary_timestamp else 0,
                 primary_timestamp,
                 upload_date,
                 created_at,
                 updated_at,
+                photo_index_order if photo_index_order is not None else -1,
                 p.get("photo_id", ""),
                 p.get("filename", ""),
             )
@@ -5510,12 +5512,14 @@ def _sort_photos(photos: list, sort_by: str) -> list:
             created_at = p.get("created_at") or ""
             updated_at = p.get("updated_at") or ""
             primary_timestamp = upload_date or created_at or updated_at or no_date
+            photo_index_order = p.get("photo_index_order")
             return (
                 0 if (upload_date or created_at or updated_at) else 1,
                 primary_timestamp,
                 upload_date or no_date,
                 created_at or no_date,
                 updated_at or no_date,
+                photo_index_order if photo_index_order is not None else 10**9,
                 p.get("photo_id", ""),
                 p.get("filename", ""),
             )
@@ -5698,6 +5702,7 @@ def get(
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
+                "photo_index_order": photo_data.get("photo_index_order"),
             }
         )
 
@@ -5994,6 +5999,7 @@ def photos_more(
                 "upload_date": photo_data.get("upload_date", ""),
                 "created_at": photo_data.get("created_at", ""),
                 "updated_at": photo_data.get("updated_at", ""),
+                "photo_index_order": photo_data.get("photo_index_order"),
             }
         )
 
@@ -10713,6 +10719,17 @@ def public_photo_page(
                             data_testid="identify-mode-toggle",
                         )
                         if face_overlays and (unidentified_count > 0 or is_admin)
+                        else None,
+                        A(
+                            NotStr(
+                                '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
+                            ),
+                            "Back to Workstation",
+                            href="/?section=photos",
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
+                            data_testid="back-to-workstation",
+                        )
+                        if is_admin
                         else None,
                         A(
                             NotStr(

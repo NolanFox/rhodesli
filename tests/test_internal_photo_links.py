@@ -153,7 +153,7 @@ class TestOgTagsHelper:
 
 
 class TestPhotoModalShareButton:
-    """Photo context modal contains share button and open link."""
+    """Photo context modal contains share button and public-page link."""
 
     def test_partial_has_share_button(self, client, real_photo_id):
         """The photo partial (modal content) has a share button."""
@@ -167,8 +167,8 @@ class TestPhotoModalShareButton:
         assert 'data-action="share-photo"' in html
         assert f"/photo/{real_photo_id}" in html
 
-    def test_partial_has_open_link(self, client, real_photo_id):
-        """The photo partial has an 'Open' link to the public viewer."""
+    def test_partial_has_public_page_link(self, client, real_photo_id):
+        """The photo partial has an explicit public-page link."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
         response = client.get(
@@ -176,7 +176,7 @@ class TestPhotoModalShareButton:
             headers={"HX-Request": "true"}
         )
         html = response.text
-        assert ">Open</a>" in html or "Open" in html
+        assert "Public Page" in html
         assert 'target="_blank"' in html
 
     def test_no_full_page_text(self, client, real_photo_id):
@@ -193,7 +193,7 @@ class TestPhotoModalShareButton:
 
 
 class TestPhotosGridShareButton:
-    """Photos grid section has share buttons."""
+    """Photos grid section has share buttons and explicit public-page links."""
 
     def test_photos_section_has_share_buttons(self, client):
         """The photos section renders share buttons."""
@@ -201,11 +201,12 @@ class TestPhotosGridShareButton:
         html = response.text
         assert 'data-action="share-photo"' in html
 
-    def test_photos_section_has_open_link(self, client):
-        """Photos grid has 'Open' links to public viewer."""
+    def test_photos_section_has_public_page_link(self, client):
+        """Photos grid has explicit public-page links."""
         response = client.get("/?section=photos")
         html = response.text
         assert '/photo/' in html
+        assert "Public Page" in html
 
     def test_photos_section_no_full_page_text(self, client):
         """'Full Page' text no longer appears on photos grid."""
@@ -248,6 +249,15 @@ class TestGlobalShareJS:
         html = response.text
         assert "_sharePhotoUrl" in html
         assert "_showShareToast" in html
+
+    def test_public_photo_page_has_back_to_workstation_link(self, client, real_photo_id):
+        """Admin-capable public photo page should expose a workstation return link."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "Back to Workstation" in html
+        assert "/?section=photos" in html
 
     def test_share_handler_in_global_delegation(self, client):
         """Global event delegation handles share-photo action."""
