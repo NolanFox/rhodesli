@@ -104,6 +104,11 @@ The correct near-term path is not a React/Next.js migration. The right next step
   - attribution boundaries remain clear across user orchestration, Antigravity-authored research/revision, Codex-authored audit artifacts, and PR-thread collaboration
   - recommendation: proceed to Session 99 prompt writing, but keep the existing scope boundaries and final harmonization pass intact during implementation
 
+## Successor Artifacts
+- Codex-authored Session 99 handoff created from the finalized PR #7 scoping package:
+  - `docs/prompts/session-99-prompt.md`
+  - `docs/session_context/session-99-context.md`
+
 ## Latest Prompt Artifact
 - New Codex-authored prompt for the next Antigravity correction round:
   - `docs/prompts/pr-7-antigravity-final-correction-prompt.md`
