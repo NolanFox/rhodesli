@@ -1004,7 +1004,7 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
 
     identity_id = source_identity["identity_id"]
     try:
-        registry.rename_identity(identity_id, name, user_source="face_tag")
+        previous_name = registry.rename_identity(identity_id, name, user_source="face_tag")
     except (KeyError, ValueError) as e:
         return Response(
             to_xml(_main_mod.toast(f"Could not rename: {e}", "error")),
@@ -1014,10 +1014,10 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
     # Auto-confirm when naming from tag dropdown (tagging = "this IS that person")
     current_state = source_identity.get("state", "INBOX")
     _notify = None
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     if current_state in ("INBOX", "PROPOSED", "SKIPPED"):
         try:
             registry.confirm_identity(identity_id, user_source="face_tag")
-            _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
             _notify = {
                 "identity_id": identity_id,
                 "identity_name": name,
@@ -1027,6 +1027,14 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
         except Exception:
             pass  # Already confirmed, or other benign error
     _main_mod.save_registry(registry, confirmed_identity_info=_notify)
+    _main_mod.log_user_action(
+        "RENAME_IDENTITY",
+        identity_id=identity_id,
+        previous_name=previous_name or "",
+        new_name=name,
+        admin=_user.email if _user else "admin",
+        source="face_tag",
+    )
 
     # Re-render the photo view to show the new name
     # If seq=1, stay in sequential mode for the next unidentified face
@@ -2133,6 +2141,15 @@ def post(identity_id: str, name: str = "", sess=None):
     try:
         previous_name = registry.rename_identity(identity_id, name, user_source="web")
         _main_mod.save_registry(registry)
+        user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _main_mod.log_user_action(
+            "RENAME_IDENTITY",
+            identity_id=identity_id,
+            previous_name=previous_name or "",
+            new_name=name,
+            admin=user.email if user else "admin",
+            source="web",
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -2464,8 +2481,17 @@ def post(
     if display_name.strip():
         try:
             registry = _main_mod.load_registry()
-            registry.rename_identity(identity_id, display_name.strip(), user_source="admin_web")
+            previous_name = registry.rename_identity(identity_id, display_name.strip(), user_source="admin_web")
             _main_mod.save_registry(registry)
+            user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+            _main_mod.log_user_action(
+                "RENAME_IDENTITY",
+                identity_id=identity_id,
+                previous_name=previous_name or "",
+                new_name=display_name.strip(),
+                admin=user.email if user else "admin",
+                source="admin_web",
+            )
             renamed = True
         except KeyError:
             return _main_mod.toast("Identity not found.", "error")
@@ -3247,7 +3273,7 @@ def post(identity_id: str, name: str = "", sess=None):
 
     try:
         registry = _main_mod.load_registry()
-        registry.rename_identity(identity_id, name, user_source="web_review")
+        previous_name = registry.rename_identity(identity_id, name, user_source="web_review")
         registry.confirm_identity(identity_id, user_source="web_review")
         _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _main_mod.save_registry(
@@ -3266,7 +3292,13 @@ def post(identity_id: str, name: str = "", sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    _main_mod.log_user_action("CONFIRM_NAMED", identity_id=identity_id, name=name)
+    _main_mod.log_user_action(
+        "CONFIRM_NAMED",
+        identity_id=identity_id,
+        name=name,
+        previous_name=previous_name or "",
+        admin=_user.email if _user else "admin",
+    )
 
     return (
         _main_mod.get_next_skipped_focus_card(exclude_id=identity_id),

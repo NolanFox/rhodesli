@@ -1323,6 +1323,46 @@ def log_user_action(action: str, **kwargs) -> None:
     with open(log_file, "a") as f:
         f.write(line)
 
+    try:
+        from app.supabase_data import sync_audit_log_entry
+
+        target_id = (
+            kwargs.get("annotation_id")
+            or kwargs.get("identity_id")
+            or kwargs.get("target_identity_id")
+            or kwargs.get("target_id")
+            or kwargs.get("photo_id")
+            or kwargs.get("job_id")
+            or action.lower()
+        )
+        if kwargs.get("annotation_id"):
+            target_type = "annotation_action"
+        elif kwargs.get("identity_id") or kwargs.get("target_identity_id"):
+            target_type = "identity_action"
+        elif kwargs.get("photo_id"):
+            target_type = "photo_action"
+        elif kwargs.get("job_id"):
+            target_type = "upload_action"
+        else:
+            target_type = "user_action"
+        actor = (
+            kwargs.get("admin")
+            or kwargs.get("user")
+            or kwargs.get("actor")
+            or kwargs.get("uploaded_by")
+            or "system"
+        )
+        sync_audit_log_entry(
+            action=action,
+            target_id=str(target_id),
+            actor=str(actor),
+            entry_data={"timestamp": timestamp, **kwargs},
+            target_type=target_type,
+        )
+    except Exception:
+        # Structured Supabase audit is best-effort and must never block local writes.
+        pass
+
 
 # =============================================================================
 # PENDING UPLOADS REGISTRY
