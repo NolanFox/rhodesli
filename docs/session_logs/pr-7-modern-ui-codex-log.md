@@ -93,10 +93,17 @@ The correct near-term path is not a React/Next.js migration. The right next step
   - the `/identify/{id}` invariants are still repo-inaccurate: there is no `[data-testid="identify-person-form"]`, and the hidden field is `name="person_id"`, not `name="identity_id"`
   - `_public_nav_links` is still classified as `safe to restyle globally`, but it is reused by many out-of-scope public routes; that conflicts with the zero-leakage scope rule unless the scope is widened explicitly
   - net: one more narrow Antigravity docs-only correction is still recommended before Session 99 prompt writing
+- Codex assessment after `cf10199`:
+  - the three previously-blocking issues are resolved: identify invariants, the deterministic workstation route, and `_public_nav_links` leakage classification
+  - one final repo-accuracy issue remains in the workstation preservation inventory
+  - the current revision still describes the `/?section=...` section-navigation contract as HTMX `hx-get="/?section=..."`, but the actual section switching in `app/main.py::sidebar` is regular anchor `href` navigation with count badges
+  - net: one tiny Antigravity docs-only precision pass is still recommended before Session 99 prompt writing, because the user explicitly asked for a high-confidence, repo-backed scoping document
 
 ## Latest Prompt Artifact
 - New Codex-authored prompt for the next Antigravity correction round:
   - `docs/prompts/pr-7-antigravity-final-correction-prompt.md`
+- New Codex-authored precision prompt for the last repo-accuracy fix:
+  - `docs/prompts/pr-7-antigravity-precision-prompt.md`
 - Latest PR follow-up comment:
   - https://github.com/NolanFox/rhodesli/pull/7#issuecomment-4042314706
 
