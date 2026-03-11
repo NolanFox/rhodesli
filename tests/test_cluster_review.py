@@ -120,6 +120,67 @@ def _mock_no_community_filter():
     return patch("app.cluster_review_routes._main_mod._get_community_identity_ids", return_value=None)
 
 
+def _mock_active_learning_queue(payload=None):
+    """Patch the offline active-learning queue payload."""
+    if payload is None:
+        payload = {
+            "queue_run_id": "queue-1",
+            "stats": {
+                "queue_count": 2,
+                "underrepresented_or_hard_share": 0.5,
+                "first_batch_max_per_identity": 1,
+            },
+            "items": [
+                {
+                    "queue_item_id": "pair-1",
+                    "pair_key": "inbox_abc123::anchor_roland_1",
+                    "face_id_a": "inbox_abc123",
+                    "face_id_b": "anchor_roland_1",
+                    "source_identity_id": "src-001",
+                    "source_identity_name": "Unidentified Person 100",
+                    "target_identity_id": "tgt-001",
+                    "target_identity_name": "Roland Fox",
+                    "distance": 0.98,
+                    "baseline_rank": 1,
+                    "margin": 0.04,
+                    "reasons": ["boundary_distance", "ambiguous_margin"],
+                },
+                {
+                    "queue_item_id": "pair-2",
+                    "pair_key": "inbox_ghi789::anchor_betty_1",
+                    "face_id_a": "inbox_ghi789",
+                    "face_id_b": "anchor_betty_1",
+                    "source_identity_id": "src-003",
+                    "source_identity_name": "Unidentified Person 300",
+                    "target_identity_id": "tgt-002",
+                    "target_identity_name": "Betty Capeluto Fox",
+                    "distance": 1.01,
+                    "baseline_rank": 2,
+                    "margin": 0.03,
+                    "reasons": ["tail_identity", "topk_alternative"],
+                },
+            ],
+        }
+    return patch("app.cluster_review_routes._active_learning_queue_payload", return_value=payload)
+
+
+def _mock_recent_active_learning_labels(labels=None):
+    """Patch recent active-learning labels."""
+    if labels is None:
+        labels = [
+            {
+                "pair_key": "inbox_abc123::anchor_roland_1",
+                "face_id_a": "inbox_abc123",
+                "face_id_b": "anchor_roland_1",
+                "is_match": False,
+                "active": True,
+                "source_surface": "admin/upload-review-active-learning",
+                "labeled_at": "2026-03-11T12:00:00+00:00",
+            }
+        ]
+    return patch("app.cluster_review_routes._active_learning_labels", return_value=labels)
+
+
 class TestUploadReviewPage:
     """Test the /admin/upload-review page."""
 
@@ -202,9 +263,29 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
             stack.enter_context(_mock_no_community_filter())
+            stack.enter_context(_mock_active_learning_queue())
+            stack.enter_context(_mock_recent_active_learning_labels())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "GEDCOM Triage" in html
+
+    def test_page_shows_active_learning_section(self):
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_proposals())
+            stack.enter_context(_mock_registry())
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_no_community_filter())
+            stack.enter_context(_mock_active_learning_queue())
+            stack.enter_context(_mock_recent_active_learning_labels())
+            resp = client.get("/admin/upload-review")
+        html = resp.text
+        assert "Learning Queue" in html
+        assert "Same Person" in html
+        assert "Different People" in html
+        assert "Recent Queue Labels" in html
 
     def test_page_requires_admin(self):
         client = _get_test_client()
@@ -327,6 +408,35 @@ class TestClusterReviewActions:
             )
             resp = client.get("/api/cluster-review/gedcom-panel?identity_id=tgt-001&name=Roland+Fox")
         assert resp.status_code == 200
+
+    def test_active_learning_same_endpoint(self):
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes.record_active_learning_label"))
+            stack.enter_context(patch("app.cluster_review_routes.get_supabase_client", return_value=None))
+            resp = client.post(
+                "/api/cluster-review/learn-same?face_id_a=inbox_abc123&face_id_b=anchor_roland_1"
+                "&source_identity_id=src-001&target_identity_id=tgt-001&queue_item_id=pair-1&queue_run_id=queue-1"
+            )
+        assert resp.status_code == 200
+        assert "Canonical identity state unchanged" in resp.text
+
+    def test_active_learning_revert_endpoint(self):
+        client = _get_test_client()
+        reverted = {
+            "pair_key": "inbox_abc123::anchor_roland_1",
+            "active": False,
+        }
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(
+                patch("app.cluster_review_routes.revert_active_learning_label", return_value=reverted)
+            )
+            stack.enter_context(patch("app.cluster_review_routes.get_supabase_client", return_value=None))
+            resp = client.post("/api/cluster-review/learn-revert?face_id_a=inbox_abc123&face_id_b=anchor_roland_1")
+        assert resp.status_code == 200
+        assert "Reverted" in resp.text
 
 
 class TestConfidenceBadge:

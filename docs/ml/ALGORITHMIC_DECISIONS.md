@@ -2523,3 +2523,73 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - **Use only `calibration_pairs` with no state-event mirror** — too weak for reversal chains and forensic debugging.
   - **Defer conflict checking to manual review** — too error-prone once recalibration becomes routine.
 - **Execution artifacts**: `rhodesli_ml/calibration_lineage.py`, `rhodesli_ml/recalibration_hooks.py`, `rhodesli_ml/similarity_calibration.py`, `scripts/recalibrate.py`, `scripts/sql/create_calibration_pairs.sql`, `scripts/sql/alter_calibration_pairs_add_lineage_fields.sql`, `docs/assessments/session-97-calibration-status.json`, `docs/assessments/session-97-recalibration-dry-run.json`, `docs/session_logs/session-97-log.md`
+
+### AD-220: Longitudinal Shadow Reranker Uses Baseline Retrieval As The Safe Candidate Gate
+- **Date**: 2026-03-11 | **Session**: 97
+- **Context**: Session 97 Phase 2 introduced a prototype-bank longitudinal reranker and a shared rerank hook in the offline scorer. The first live shadow evaluation showed candidate-level AUC lift but no top-1 or age-gap retrieval gain large enough to justify rollout. The PRD-038 gate requires explicit proof on hard slices before changing proposal generation.
+- **Decision**:
+  1. Keep the **baseline Euclidean shortlist as the safety gate**. The longitudinal model only reranks candidates inside that shortlist.
+  2. Keep the reranker **opt-in only** via explicit scorer flags and artifact loading. Default proposal generation remains baseline.
+  3. Only persist a reusable reranker artifact when the **Phase 2 gate passes**, unless an operator explicitly forces a save for research.
+  4. Treat the current shadow harness as a **measurement and iteration tool**, not a rollout approval.
+- **Why**:
+  - Shortlist-gating preserves current precision behavior and respects the additive proposal model.
+  - Candidate-level lift without retrieval lift is useful research evidence, but not enough to alter live clustering behavior.
+  - Blocking artifact promotion on gate failure keeps experimentation reviewable and rollback-safe.
+- **Current evidence**:
+  - Live dry-run report showed baseline top-1 recall about `0.9714` on the rerankable eval subset.
+  - The best current shadow variant improved candidate-level AUC but did **not** improve top-1 retrieval or the year-gap >=20 slice enough to pass the gate.
+  - Result: the reranker remains experimental and disabled by default.
+- **Rejected alternatives**:
+  - **Let the reranker replace baseline retrieval directly** — too risky before hard-slice wins exist.
+  - **Promote any variant with higher AUC** — insufficient; rollout is governed by retrieval and safety gates, not aggregate pair scoring alone.
+  - **Save every trained shadow artifact automatically** — creates noise and weakens the review boundary.
+- **Execution artifacts**: `rhodesli_ml/longitudinal_reranker.py`, `scripts/evaluate_longitudinal_shadow.py`, `docs/assessments/session-97-phase2-shadow-report.json`, `docs/assessments/session-97-phase2-prototype-bank.json`, `docs/assessments/session-97-phase2-shadow-assessment.md`, `docs/session_logs/session-97-log.md`
+
+### AD-221: Active Learning Runs As An Offline Queue With Reversible Pair Labels
+- **Date**: 2026-03-11 | **Session**: 97
+- **Context**: PRD-038 Phase 3 required active learning inside the existing review UX without violating AD-110. Request-time pair mining would make `/admin/upload-review` expensive and brittle, but a disconnected labeling tool would repeat the same review fragmentation the user explicitly rejected.
+- **Decision**:
+  1. Build the active-learning queue **offline** as an artifact (`active_learning_queue.json`), not during page render.
+  2. Surface that queue inside `/admin/upload-review`, next to proposal review, so labeling lives in the same admin workflow.
+  3. Store queue labels as **reversible calibration-style pair state** with:
+     - local current-state cache (`active_learning_labels.json`)
+     - local + Supabase audit events
+     - optional upsert into `calibration_pairs` when Supabase is available
+  4. Keep queue labels **non-canonical**: they do not confirm or reject identities directly.
+  5. Enforce queue diversity at build time:
+     - no more than 2 items for the same target identity in the first batch of 10
+     - prioritize underrepresented, boundary, ambiguous, and alternative-candidate slices
+- **Why**:
+  - Offline queue generation preserves AD-110 and keeps the review page fast.
+  - Reversible pair labels make label-toxicity debugging possible before recalibration consumes them.
+  - Reusing the review surface satisfies AD-215: learning work should appear where admins already fix matcher mistakes.
+  - Making labels non-canonical separates "help the scorer learn" from "change identity truth."
+- **Rejected alternatives**:
+  - **Mine uncertain pairs inside the request path** — too expensive and operationally wrong.
+  - **Create a separate active-learning dashboard** — fragments review and hides labels from the main workflow.
+  - **Tie queue labels directly to identity state changes** — conflates calibration signal with canonical truth.
+- **Execution artifacts**: `rhodesli_ml/active_learning.py`, `scripts/build_active_learning_queue.py`, `app/cluster_review_routes.py`, `data/active_learning_queue.json`, `docs/assessments/session-97-phase3-queue-report.json`, `docs/assessments/session-97-phase3-active-learning-assessment.md`, `docs/session_logs/session-97-log.md`
+
+### AD-222: Phase 4 Uses A Frozen-Embedding Adapter Harness Before Any LoRA Attempt
+- **Date**: 2026-03-11 | **Session**: 97
+- **Context**: The PRD-038 plan left Phase 4 open as an adapter / LoRA experiment track. In the live repo, the immediate practical constraint is not wiring PEFT into the ArcFace backbone; it is proving that any learned adapter can win on held-out identity and family slices without destabilizing the current matcher.
+- **Decision**:
+  1. Implement Phase 4 as an **experiment-only embedding-adapter harness** on frozen embeddings.
+  2. Require both **identity-held-out** and **family-held-out** evaluation splits.
+  3. Evaluate the adapter against the same safety slices used elsewhere:
+     - same-family false positive rate
+     - year-gap >= 20 recall when available
+     - dominant vs tail positive recall
+  4. Keep artifact save **off by default** unless the gate passes or an operator forces it.
+  5. Treat this as the last stop before any future backbone LoRA work.
+- **Why**:
+  - It produces a runnable experiment harness now, instead of speculative LoRA scaffolding with no evaluation path.
+  - It stays consistent with earlier decisions that ArcFace-style convolutional backbones are a poor first LoRA target for this repo.
+  - Family-held-out evaluation is the important anti-overfitting check at current scale.
+  - A frozen-embedding adapter keeps rollback cheap and avoids re-embedding the archive.
+- **Rejected alternatives**:
+  - **Implement PEFT plumbing now without a real eval harness** — too speculative and not reviewable.
+  - **Jump straight to backbone LoRA** — wrong sequencing given AD-035 and the current measurement needs.
+  - **Skip Phase 4 entirely because Phase 2 failed rollout** — leaves no experiment path for the next plateau.
+- **Execution artifacts**: `rhodesli_ml/embedding_adapter_experiment.py`, `scripts/run_embedding_adapter_experiment.py`, `docs/assessments/session-97-phase4-adapter-report.json`, `docs/assessments/session-97-phase4-adapter-assessment.md`, `docs/session_logs/session-97-log.md`

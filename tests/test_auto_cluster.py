@@ -205,6 +205,44 @@ class TestAutoClusterFace:
         assert target_id == "conf-a"
         assert tier == "tier_1"
 
+    def test_optional_reranker_reorders_shortlist(self):
+        """A shadow reranker can reorder baseline candidates without changing defaults."""
+        from core.auto_cluster import auto_cluster_face
+
+        mu_a = _make_mu([1.0, 0.0, 0.0])
+        mu_b = _make_mu([0.2, 0.0, 0.0])
+        query_mu = _make_mu([0.98, 0.0, 0.0])
+
+        confirmed_clusters = {
+            "conf-a": {
+                "name": "Person A",
+                "embeddings": mu_a.reshape(1, -1),
+                "face_ids": ["face_a"],
+            },
+            "conf-b": {
+                "name": "Person B",
+                "embeddings": mu_b.reshape(1, -1),
+                "face_ids": ["face_b"],
+            },
+        }
+
+        class _ReverseReranker:
+            def rerank(self, face_id, face, candidate_rows, identity_index, *, source_identity=None):
+                del face_id, face, identity_index, source_identity
+                return list(reversed(candidate_rows))
+
+        tier, target_id, distance = auto_cluster_face(
+            "query_face",
+            query_mu,
+            confirmed_clusters,
+            {},
+            reranker=_ReverseReranker(),
+        )
+
+        assert target_id == "conf-b"
+        assert tier == "tier_1"
+        assert distance is not None
+
 
 class TestDedupInbox:
     """Tests for dedup_inbox() — per-face deduplication (Session 78)."""

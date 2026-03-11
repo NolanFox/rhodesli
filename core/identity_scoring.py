@@ -53,6 +53,41 @@ def compute_min_distance(face_embedding, identity_embeddings) -> float:
     return float(np.min(dists))
 
 
+def score_identity_distances(
+    face_embedding,
+    identity_index: dict[str, dict],
+    *,
+    excluded_identity_ids: set[str] | None = None,
+    excluded_photo_ids: set[str] | None = None,
+) -> list[dict]:
+    """Return all candidate identity distances for one face, sorted best-first."""
+    excluded_identity_ids = excluded_identity_ids or set()
+    excluded_photo_ids = excluded_photo_ids or set()
+
+    candidates = []
+    for identity_id, identity_info in identity_index.items():
+        if identity_id in excluded_identity_ids:
+            continue
+        if excluded_photo_ids and excluded_photo_ids.intersection(identity_info.get("photo_ids", set())):
+            continue
+
+        distance = compute_min_distance(face_embedding, identity_info["embeddings"])
+        candidates.append(
+            {
+                "identity_id": identity_id,
+                "distance": distance,
+                "name": identity_info.get("name", f"Unknown ({identity_id[:8]})"),
+                "face_count": identity_info.get("face_count", len(identity_info.get("face_ids", []))),
+                "photo_ids": identity_info.get("photo_ids", set()),
+            }
+        )
+
+    candidates.sort(key=lambda candidate: candidate["distance"])
+    for index, candidate in enumerate(candidates, start=1):
+        candidate["baseline_rank"] = index
+    return candidates
+
+
 def build_identity_embedding_index(
     identities_data: dict,
     face_data: dict,
@@ -104,31 +139,20 @@ def score_best_identity_match(
     excluded_photo_ids: set[str] | None = None,
 ) -> dict:
     """Return the best and second-best identity distances for one face."""
-    excluded_identity_ids = excluded_identity_ids or set()
-    excluded_photo_ids = excluded_photo_ids or set()
-
-    best_match = None
-    best_distance = float("inf")
-    second_best_distance = float("inf")
-
-    for identity_id, identity_info in identity_index.items():
-        if identity_id in excluded_identity_ids:
-            continue
-        if excluded_photo_ids and excluded_photo_ids.intersection(identity_info.get("photo_ids", set())):
-            continue
-
-        distance = compute_min_distance(face_embedding, identity_info["embeddings"])
-        if distance < best_distance:
-            second_best_distance = best_distance
-            best_distance = distance
-            best_match = identity_id
-        elif distance < second_best_distance:
-            second_best_distance = distance
+    candidates = score_identity_distances(
+        face_embedding,
+        identity_index,
+        excluded_identity_ids=excluded_identity_ids,
+        excluded_photo_ids=excluded_photo_ids,
+    )
+    best = candidates[0] if candidates else None
+    second = candidates[1] if len(candidates) > 1 else None
 
     return {
-        "best_match": best_match,
-        "best_distance": best_distance,
-        "second_best_distance": second_best_distance,
+        "best_match": best["identity_id"] if best else None,
+        "best_distance": best["distance"] if best else float("inf"),
+        "second_best_distance": second["distance"] if second else float("inf"),
+        "ranked_candidates": candidates,
     }
 
 
@@ -139,6 +163,8 @@ def find_candidate_matches(
     *,
     unresolved_states: Iterable[str] = ("INBOX", "PROPOSED", "SKIPPED"),
     ambiguous_margin_threshold: float = 0.15,
+    reranker=None,
+    reranker_top_k: int = 5,
 ) -> list[dict]:
     """Find best-linkage candidate matches for unresolved identities."""
     identities = identities_data.get("identities", {})
@@ -182,10 +208,25 @@ def find_candidate_matches(
                 },
                 excluded_photo_ids=source_photo_ids,
             )
+            ranked_candidates = score["ranked_candidates"]
 
-            best_match = score["best_match"]
-            best_distance = score["best_distance"]
-            second_best_distance = score["second_best_distance"]
+            if reranker is not None and ranked_candidates:
+                shortlist = ranked_candidates[:reranker_top_k]
+                reranked_candidates = reranker.rerank(
+                    face_id,
+                    face,
+                    shortlist,
+                    confirmed_index,
+                    source_identity=identity,
+                )
+            else:
+                reranked_candidates = ranked_candidates
+
+            best_candidate = reranked_candidates[0] if reranked_candidates else None
+            second_candidate = reranked_candidates[1] if len(reranked_candidates) > 1 else None
+            best_match = best_candidate["identity_id"] if best_candidate else None
+            best_distance = best_candidate["distance"] if best_candidate else float("inf")
+            second_best_distance = second_candidate["distance"] if second_candidate else float("inf")
 
             if best_match is None or best_distance >= threshold:
                 continue
@@ -205,6 +246,9 @@ def find_candidate_matches(
                     "target_identity_name": confirmed_index[best_match]["name"],
                     "distance": best_distance,
                     "target_face_count": confirmed_index[best_match]["face_count"],
+                    "baseline_rank": best_candidate.get("baseline_rank", 1),
+                    "reranker_score": best_candidate.get("reranker_score"),
+                    "scorer_variant": best_candidate.get("scorer_variant", "baseline"),
                     "margin": round(margin, 3),
                     "ambiguous": margin < ambiguous_margin_threshold and second_best_distance < threshold,
                 }

@@ -1,10 +1,14 @@
 """Tests for calibration label lineage and pre-fit safety checks."""
 
+import json
+from unittest.mock import patch
+
 from rhodesli_ml.calibration_lineage import (
     LABEL_TYPE_EXPLICIT_NEGATIVE,
     LABEL_TYPE_EXPLICIT_POSITIVE,
     build_calibration_pair_row,
     build_recalibration_status_report,
+    record_pair_state_event,
     prepare_pairs_for_recalibration,
 )
 
@@ -119,3 +123,32 @@ def test_status_report_without_model_recommends_fit():
     assert report["status"] == "ok"
     assert report["should_recalibrate"] is True
     assert report["reason"] == "no_model_exists"
+
+
+def test_record_pair_state_event_appends_local_audit(tmp_path):
+    row = build_calibration_pair_row(
+        "face_a",
+        "face_b",
+        similarity_score=0.91,
+        is_match=True,
+        source="merge_admin",
+        label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+        state_event_action="merge",
+        actor_id="admin@test.com",
+        source_surface="test",
+    )
+
+    with patch("rhodesli_ml.calibration_lineage.DATA_DIR", str(tmp_path)), patch(
+        "app.supabase_data.sync_audit_log_entry"
+    ) as mock_sync:
+        event = record_pair_state_event(
+            row,
+            source_surface="test",
+            actor_id="admin@test.com",
+            action="merge",
+        )
+
+    audit = json.loads((tmp_path / "audit_log.json").read_text(encoding="utf-8"))
+    assert audit["entries"][-1]["target_id"] == row["pair_key"]
+    assert audit["entries"][-1]["data"]["event_id"] == event["event_id"]
+    mock_sync.assert_called_once()

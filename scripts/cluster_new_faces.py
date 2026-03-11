@@ -125,6 +125,8 @@ def find_matches(
     identities_data: dict,
     face_data: dict,
     threshold: float,
+    *,
+    reranker=None,
 ) -> list[dict]:
     """Find suggested matches for unresolved faces.
 
@@ -142,7 +144,7 @@ def find_matches(
         return []
 
     print(f"Confirmed identities (multi-anchor): {confirmed_count}")
-    return find_candidate_matches(identities_data, face_data, threshold)
+    return find_candidate_matches(identities_data, face_data, threshold, reranker=reranker)
 
 
 def apply_suggestions(
@@ -252,6 +254,18 @@ def main():
         default=None,
         help="Limit number of suggestions to apply",
     )
+    parser.add_argument(
+        "--scorer",
+        choices=("baseline", "longitudinal-shadow"),
+        default="baseline",
+        help="Shared scorer variant to use for proposal generation",
+    )
+    parser.add_argument(
+        "--reranker-artifact-dir",
+        type=Path,
+        default=project_root / "rhodesli_ml" / "artifacts" / "longitudinal_shadow",
+        help="Artifact dir for --scorer longitudinal-shadow",
+    )
     args = parser.parse_args()
 
     if args.execute:
@@ -266,6 +280,7 @@ def main():
     print(f"Data path: {data_path}")
     print(f"Threshold: {args.threshold}")
     print(f"Mode: {'DRY RUN' if args.dry_run else 'EXECUTE'}")
+    print(f"Scorer: {args.scorer}")
     print()
 
     # Load data
@@ -279,8 +294,20 @@ def main():
     print(f"Loaded {len(face_data)} face embeddings")
     print()
 
+    reranker = None
+    if args.scorer == "longitudinal-shadow":
+        from rhodesli_ml.longitudinal_reranker import LongitudinalShadowReranker
+
+        reranker = LongitudinalShadowReranker.load(
+            args.reranker_artifact_dir,
+            identities_data,
+            face_data,
+            data_path,
+        )
+        print(f"Loaded shadow reranker from {args.reranker_artifact_dir}")
+
     # Find matches
-    suggestions = find_matches(identities_data, face_data, args.threshold)
+    suggestions = find_matches(identities_data, face_data, args.threshold, reranker=reranker)
 
     if args.limit:
         suggestions = suggestions[:args.limit]
@@ -341,6 +368,8 @@ def main():
             "face_id": s["face_id"],
             "distance": round(s["distance"], 4),
             "confidence": confidence_label(s["distance"]),
+            "scorer_variant": s.get("scorer_variant", args.scorer),
+            "reranker_score": s.get("reranker_score"),
             "margin": s.get("margin", 0),
             "ambiguous": s.get("ambiguous", False),
         })

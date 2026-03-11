@@ -452,6 +452,37 @@ class TestClusterNewFaces:
         suggestions = find_matches(identities_data, face_data, threshold=5.0)
         assert len(suggestions) > 0
 
+    def test_find_matches_can_use_shadow_reranker(self, data_dir):
+        """Shared scorer should accept a reranker that reorders the shortlist."""
+        from scripts.cluster_new_faces import load_face_data
+
+        identities_data = load_identities(data_dir)
+        face_data = load_face_data(data_dir)
+
+        class _PreferBobReranker:
+            def rerank(self, face_id, face, candidate_rows, identity_index, *, source_identity=None):
+                del face_id, face, identity_index, source_identity
+                reranked = []
+                for candidate in candidate_rows:
+                    updated = dict(candidate)
+                    updated["reranker_score"] = 1.0 if candidate["identity_id"] == "id-bob" else 0.0
+                    updated["scorer_variant"] = "longitudinal_shadow:test"
+                    reranked.append(updated)
+                reranked.sort(key=lambda row: (row["reranker_score"], -row["distance"]), reverse=True)
+                return reranked
+
+        suggestions = find_matches(
+            identities_data,
+            face_data,
+            threshold=5.0,
+            reranker=_PreferBobReranker(),
+        )
+
+        unknown1 = next(s for s in suggestions if s["face_id"] == "photo_E:face0")
+        assert unknown1["target_identity_id"] == "id-bob"
+        assert unknown1["scorer_variant"] == "longitudinal_shadow:test"
+        assert unknown1["reranker_score"] == 1.0
+
     def test_find_matches_sorted_by_distance(self, data_dir):
         from scripts.cluster_new_faces import load_face_data
 

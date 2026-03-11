@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-03-11T18:49:23.354475+00:00",
+  "git_commit": "c198caf3aed52e0d110fe25a102a6d9850723ceb",
+  "dataset": {
+    "confirmed_identities": 84,
+    "multi_face_identities": 28,
+    "families_with_labels": 33
+  },
+  "identity_holdout": {
+    "status": "ok",
+    "counts": {
+      "train_pairs": 3697,
+      "eval_pairs": 136
+    },
+    "baseline": {
+      "auc": 0.9715,
+      "threshold": 0.2313,
+      "slices": {
+        "same_family_false_positive_rate": 0.0,
+        "year_gap_ge_20_recall": null,
+        "dominant_positive_recall": 1.0,
+        "tail_positive_recall": 0.5
+      }
+    },
+    "adapter": {
+      "auc": 0.972,
+      "threshold": 0.8609,
+      "slices": {
+        "same_family_false_positive_rate": 0.0,
+        "year_gap_ge_20_recall": null,
+        "dominant_positive_recall": 1.0,
+        "tail_positive_recall": 0.5
+      }
+    }
+  },
+  "family_holdout": {
+    "status": "ok",
+    "counts": {
+      "train_pairs": 2694,
+      "eval_pairs": 770
+    },
+    "baseline": {
+      "auc": 0.9985,
+      "threshold": 0.2313,
+      "slices": {
+        "same_family_false_positive_rate": 0.0339,
+        "year_gap_ge_20_recall": null,
+        "dominant_positive_recall": 0.9892,
+        "tail_positive_recall": 0.8
+      }
+    },
+    "adapter": {
+      "auc": 0.9987,
+      "threshold": 0.8599,
+      "slices": {
+        "same_family_false_positive_rate": 0.0169,
+        "year_gap_ge_20_recall": null,
+        "dominant_positive_recall": 0.9914,
+        "tail_positive_recall": 0.8
+      }
+    }
+  },
+  "gate": {
+    "identity_holdout": {
+      "passes": false,
+      "auc_ok": true,
+      "same_family_ok": true,
+      "year20_improvement": 0.0
+    },
+    "family_holdout": {
+      "passes": false,
+      "auc_ok": true,
+      "same_family_ok": true,
+      "year20_improvement": 0.0
+    },
+    "passes": false
+  },
+  "artifact_manifest": null
+}

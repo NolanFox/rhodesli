@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from core.config import DATA_DIR
+
 logger = logging.getLogger(__name__)
 
 LABEL_TYPE_EXPLICIT_POSITIVE = "explicit_positive"
@@ -41,6 +43,33 @@ STATE_EVENT_SCHEMA_VERSION = 1
 def utcnow_iso() -> str:
     """Return the current UTC timestamp in ISO format."""
     return datetime.now(timezone.utc).isoformat()
+
+
+def _append_local_audit_entry(event: dict[str, Any], *, actor_id: str) -> None:
+    """Append one calibration event to the local audit log cache."""
+    audit_path = Path(DATA_DIR) / "audit_log.json"
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+
+    audit = {"entries": []}
+    if audit_path.exists():
+        try:
+            audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, ValueError):
+            audit = {"entries": []}
+
+    audit["entries"].append(
+        {
+            "action": event.get("action"),
+            "target_id": event.get("target_id"),
+            "target_type": event.get("target_type"),
+            "actor": actor_id,
+            "admin": actor_id,
+            "timestamp": event.get("created_at") or utcnow_iso(),
+            "details": event.get("reason_code", ""),
+            "data": event,
+        }
+    )
+    audit_path.write_text(json.dumps(audit, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def canonicalize_pair(face_id_a: str, face_id_b: str) -> tuple[str, str]:
@@ -254,6 +283,11 @@ def record_pair_state_event(
         linked_event_id=linked_event_id or row.get("linked_event_id"),
         reversed_by_event_id=row.get("reversed_by_event_id"),
     )
+
+    try:
+        _append_local_audit_entry(event, actor_id=actor_id)
+    except Exception as exc:
+        logger.warning("Calibration pair local audit append failed for %s: %s", row["pair_key"], exc)
 
     try:
         from app.supabase_data import sync_audit_log_entry

@@ -29,9 +29,9 @@ Context: docs/session_context/session-97-context.md
 - [x] Phase 0: wire prompt-manifest lineage into touched Gemini paths
 - [x] Phase 0: record baseline artifacts and slice metrics
 - [x] Phase 1: recalibration hygiene and label taxonomy
-- [ ] Phase 2: longitudinal reranker shadow path
-- [ ] Phase 3: active learning in review UX
-- [ ] Phase 4: adapter experiment harness
+- [x] Phase 2: longitudinal reranker shadow path
+- [x] Phase 3: active learning in review UX
+- [x] Phase 4: adapter experiment harness
 - [ ] Final verification and assessment
 
 ## Progress
@@ -152,7 +152,60 @@ Context: docs/session_context/session-97-context.md
 - Decision breadcrumb added:
   - `docs/ml/ALGORITHMIC_DECISIONS.md` → `AD-219`
 
+### 2026-03-11 18:02 EDT
+- Implemented Phase 2 shadow reranker:
+  - `rhodesli_ml/longitudinal_reranker.py`
+  - `scripts/evaluate_longitudinal_shadow.py`
+  - shared offline rerank hooks in `core/identity_scoring.py`, `core/auto_cluster.py`, and `scripts/cluster_new_faces.py`
+- Focused validation passed:
+  - `pytest rhodesli_ml/tests/test_longitudinal_reranker.py tests/test_evaluate_longitudinal_shadow.py -q` → `4 passed`
+  - `pytest tests/test_auto_cluster.py tests/test_ml_clustering.py -q` → `87 passed`
+- Live shadow report captured:
+  - `docs/assessments/session-97-phase2-shadow-report.json`
+  - `docs/assessments/session-97-phase2-prototype-bank.json`
+- Result:
+  - best variant `distance_only`
+  - candidate-level AUC improved
+  - top-1 and year-gap >=20 retrieval did not improve enough for rollout
+- Decision breadcrumb added:
+  - `docs/ml/ALGORITHMIC_DECISIONS.md` → `AD-220`
+
+### 2026-03-11 18:44 EDT
+- Implemented Phase 3 active learning inside the existing upload-review surface:
+  - offline queue builder in `scripts/build_active_learning_queue.py`
+  - queue + reversible labels in `rhodesli_ml/active_learning.py`
+  - review UI and label/revert endpoints in `app/cluster_review_routes.py`
+- Tightened calibration lineage to mirror local audit events, not only Supabase audit sync.
+- Focused validation passed:
+  - `pytest rhodesli_ml/tests/test_active_learning_queue.py rhodesli_ml/tests/test_calibration_lineage.py tests/test_cluster_review.py tests/test_recalibrate_cli.py -q`
+- Live queue artifact captured:
+  - `python scripts/build_active_learning_queue.py --output data/active_learning_queue.json --report-output docs/assessments/session-97-phase3-queue-report.json`
+- Result:
+  - queue size `20`
+  - candidate pool `5619`
+  - first-batch max per identity `2`
+  - hard / underrepresented share `1.0`
+- Decision breadcrumb added:
+  - `docs/ml/ALGORITHMIC_DECISIONS.md` → `AD-221`
+
+### 2026-03-11 18:49 EDT
+- Implemented Phase 4 as an experiment-only embedding adapter harness, not backbone LoRA:
+  - `rhodesli_ml/embedding_adapter_experiment.py`
+  - `scripts/run_embedding_adapter_experiment.py`
+- Focused validation passed:
+  - `pytest rhodesli_ml/tests/test_embedding_adapter_experiment.py tests/test_run_embedding_adapter_experiment.py -q`
+- Live experiment report captured:
+  - `python scripts/run_embedding_adapter_experiment.py --dry-run --output docs/assessments/session-97-phase4-adapter-report.json`
+- Result:
+  - identity-held-out AUC improved slightly (`0.9715` → `0.9720`)
+  - family-held-out AUC improved slightly (`0.9985` → `0.9987`)
+  - same-family FP improved on family holdout (`0.0339` → `0.0169`)
+  - year-gap >=20 slice had no usable evidence in the current split, so the gate stayed closed
+- Decision breadcrumb added:
+  - `docs/ml/ALGORITHMIC_DECISIONS.md` → `AD-222`
+
 ## Open Notes
 - First implementation slice will centralize face-data loading and shared best-linkage scoring before touching thresholds.
 - Prompt-manifest lineage will be added to `gemini_api_calls` as explicit columns plus caller-side manifest fields for date estimation and face alignment.
-- Phase 1 is closed. Next work starts from Phase 2 shadow-mode longitudinal reranking, not more recalibration archaeology unless new conflicts are found.
+- Active-learning labels now share the calibration-lineage envelope and have a local fallback cache. Local recalibration can merge that cache explicitly with `--active-learning-labels`.
+- Phase 4 stopped at a frozen-embedding adapter harness by design. Any future LoRA work should start from the new split/report outputs, not from fresh scaffolding.

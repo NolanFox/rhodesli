@@ -13,13 +13,23 @@ Two sections on one page:
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlencode
 
 from fasthtml.common import *
 
 from app.main import rt
 import app.main as _main_mod
+from app.supabase_data import get_supabase_client
 from core import storage
 from core.registry import IdentityRegistry
+from rhodesli_ml.active_learning import (
+    default_labels_path,
+    default_queue_path,
+    load_active_learning_queue,
+    recent_active_learning_labels,
+    record_active_learning_label,
+    revert_active_learning_label,
+)
 
 
 def _load_proposals():
@@ -60,6 +70,177 @@ def _confidence_badge(distance):
     return Span(
         f"{label} ({distance:.2f})",
         cls=f"px-2 py-0.5 rounded-full text-xs font-medium {color}",
+    )
+
+
+def _safe_dom_id(value: str) -> str:
+    """Return a HTMX-safe DOM identifier fragment."""
+    return value.replace(":", "_").replace("/", "_").replace(".", "_")
+
+
+def _data_dir() -> Path:
+    """Return the canonical data directory for queue and label artifacts."""
+    storage_dir = os.getenv("STORAGE_DIR")
+    if storage_dir:
+        return Path(storage_dir) / "data"
+    return Path(os.getenv("DATA_DIR", "data"))
+
+
+def _active_learning_queue_payload():
+    """Load the offline active-learning queue artifact."""
+    return load_active_learning_queue(default_queue_path(_data_dir()))
+
+
+def _active_learning_labels():
+    """Load recent active-learning label cache entries."""
+    return recent_active_learning_labels(labels_path=default_labels_path(_data_dir()), limit=10)
+
+
+def _active_learning_action_url(action: str, item: dict, queue_run_id: str) -> str:
+    """Build one active-learning label action URL."""
+    params = {
+        "face_id_a": item["face_id_a"],
+        "face_id_b": item["face_id_b"],
+        "source_identity_id": item.get("source_identity_id", ""),
+        "target_identity_id": item.get("target_identity_id", ""),
+        "queue_item_id": item.get("queue_item_id", ""),
+        "queue_run_id": queue_run_id,
+        "reasons": ",".join(item.get("reasons", [])),
+    }
+    return f"/api/cluster-review/{action}?{urlencode(params)}"
+
+
+def _active_learning_reason_badges(reasons: list[str]):
+    """Render compact reason badges for one queue item."""
+    if not reasons:
+        return Span("General coverage", cls="px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-200")
+
+    tone = {
+        "boundary_distance": "bg-amber-600/80 text-black",
+        "ambiguous_margin": "bg-orange-600/80 text-black",
+        "tail_identity": "bg-sky-700 text-white",
+        "family_name_overlap": "bg-rose-700 text-white",
+        "dominant_identity": "bg-fuchsia-700 text-white",
+        "topk_alternative": "bg-indigo-700 text-white",
+    }
+    labels = {
+        "boundary_distance": "Boundary",
+        "ambiguous_margin": "Ambiguous",
+        "tail_identity": "Tail Identity",
+        "family_name_overlap": "Family Risk",
+        "dominant_identity": "Dominant Family",
+        "topk_alternative": "Alt Candidate",
+    }
+    return Div(
+        *[
+            Span(
+                labels.get(reason, reason.replace("_", " ").title()),
+                cls=f"px-2 py-0.5 rounded-full text-xs font-medium {tone.get(reason, 'bg-slate-700 text-slate-200')}",
+            )
+            for reason in reasons
+        ],
+        cls="flex flex-wrap gap-1 mt-2",
+    )
+
+
+def _active_learning_card(item, queue_run_id: str):
+    """Render one active-learning queue card."""
+    pair_dom_id = _safe_dom_id(item["pair_key"])
+    source_crop = _get_crop_url_for_face(item["face_id_a"])
+    target_crop = _get_crop_url_for_face(item["face_id_b"])
+
+    return Div(
+        Div(
+            Div(
+                Img(src=source_crop, alt=item["face_id_a"], cls="w-20 h-20 object-cover rounded", loading="lazy"),
+                P(item.get("source_identity_name", "Unknown"), cls="text-xs text-slate-300 mt-2"),
+                P(item["face_id_a"][:18], cls="text-[11px] text-slate-500"),
+                cls="flex-shrink-0",
+            ),
+            Div(
+                Span("vs", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                P(
+                    f"distance {item['distance']:.2f}",
+                    cls="text-sm text-slate-300 mt-2",
+                ),
+                P(
+                    f"rank {item['baseline_rank']} • margin {item['margin'] if item.get('margin') is not None else 'n/a'}",
+                    cls="text-xs text-slate-500",
+                ),
+                cls="px-3 text-center",
+            ),
+            Div(
+                Img(src=target_crop, alt=item["face_id_b"], cls="w-20 h-20 object-cover rounded", loading="lazy"),
+                P(item.get("target_identity_name", "Unknown"), cls="text-xs text-slate-300 mt-2"),
+                P(item["face_id_b"][:18], cls="text-[11px] text-slate-500"),
+                cls="flex-shrink-0",
+            ),
+            cls="flex items-center",
+        ),
+        Div(
+            P(
+                "Collect a pair label without changing canonical identity state.",
+                cls="text-xs text-slate-400",
+            ),
+            _active_learning_reason_badges(item.get("reasons", [])),
+            Div(
+                Button(
+                    "Same Person",
+                    cls="px-3 py-1.5 text-xs font-medium bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                    hx_post=_active_learning_action_url("learn-same", item, queue_run_id),
+                    hx_target=f"#active-learning-card-{pair_dom_id}",
+                    hx_swap="outerHTML",
+                ),
+                Button(
+                    "Different People",
+                    cls="px-3 py-1.5 text-xs font-medium bg-red-700/80 hover:bg-red-600 text-white rounded transition-colors ml-2",
+                    hx_post=_active_learning_action_url("learn-different", item, queue_run_id),
+                    hx_target=f"#active-learning-card-{pair_dom_id}",
+                    hx_swap="outerHTML",
+                ),
+                cls="mt-3",
+            ),
+            cls="ml-4 flex-1 min-w-0",
+        ),
+        id=f"active-learning-card-{pair_dom_id}",
+        cls="p-4 bg-slate-800/60 border border-slate-700 rounded-lg flex flex-col lg:flex-row lg:items-center",
+    )
+
+
+def _recent_active_learning_card(label):
+    """Render one recent active-learning label with revert action."""
+    pair_dom_id = _safe_dom_id(label["pair_key"])
+    source_crop = _get_crop_url_for_face(label["face_id_a"])
+    target_crop = _get_crop_url_for_face(label["face_id_b"])
+    label_text = "Same Person" if label.get("is_match") else "Different People"
+    label_color = "text-emerald-400" if label.get("is_match") else "text-red-400"
+
+    return Div(
+        Div(
+            Img(src=source_crop, alt=label["face_id_a"], cls="w-14 h-14 object-cover rounded", loading="lazy"),
+            Img(src=target_crop, alt=label["face_id_b"], cls="w-14 h-14 object-cover rounded ml-2", loading="lazy"),
+            cls="flex-shrink-0 flex",
+        ),
+        Div(
+            P(label_text, cls=f"text-sm font-medium {label_color}"),
+            P(label["pair_key"], cls="text-[11px] text-slate-500 break-all"),
+            P(
+                f"{label.get('source_surface', 'unknown')} • {label.get('labeled_at', '')[:19].replace('T', ' ')}",
+                cls="text-xs text-slate-500 mt-1",
+            ),
+            cls="ml-3 flex-1 min-w-0",
+        ),
+        Button(
+            "Revert",
+            cls="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors",
+            hx_post=f"/api/cluster-review/learn-revert?{urlencode({'face_id_a': label['face_id_a'], 'face_id_b': label['face_id_b']})}",
+            hx_target=f"#active-learning-label-{pair_dom_id}",
+            hx_swap="outerHTML",
+        )
+        if label.get("active", True)
+        else Span("Reverted", cls="text-xs text-slate-500"),
+        id=f"active-learning-label-{pair_dom_id}",
+        cls="p-3 bg-slate-900/50 border border-slate-700/60 rounded-lg flex items-center",
     )
 
 
@@ -428,6 +609,87 @@ def get(sess=None, request=None):
             cls="mb-12",
         )
 
+    # --- Section 3: Active-Learning Queue (offline-built, review-only labels) ---
+    queue_payload = _active_learning_queue_payload()
+    queue_items = queue_payload.get("items", [])
+    if community and community_identity_ids is not None:
+        queue_items = [
+            item
+            for item in queue_items
+            if item.get("source_identity_id") in community_identity_ids
+            or item.get("target_identity_id") in community_identity_ids
+        ]
+    queue_stats = dict(queue_payload.get("stats") or {})
+    recent_labels = _active_learning_labels()
+
+    if queue_items or recent_labels:
+        active_learning_section = Div(
+            H2("Learning Queue", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P(
+                "Offline-ranked pair labels for uncertainty, diversity, and tail coverage. "
+                "These labels feed recalibration later, but they do not change canonical identities.",
+                cls="text-sm text-slate-400 mb-4",
+            ),
+            Div(
+                Div(
+                    Span(str(queue_stats.get("queue_count", len(queue_items))), cls="text-lg font-semibold text-white"),
+                    P("queue items", cls="text-xs text-slate-500"),
+                    cls="p-3 bg-slate-900/60 border border-slate-700 rounded-lg",
+                ),
+                Div(
+                    Span(
+                        f"{(queue_stats.get('underrepresented_or_hard_share', 0.0) * 100):.0f}%",
+                        cls="text-lg font-semibold text-white",
+                    ),
+                    P("hard / tail share", cls="text-xs text-slate-500"),
+                    cls="p-3 bg-slate-900/60 border border-slate-700 rounded-lg",
+                ),
+                Div(
+                    Span(
+                        str(queue_stats.get("first_batch_max_per_identity", 0)),
+                        cls="text-lg font-semibold text-white",
+                    ),
+                    P("max same target in first 10", cls="text-xs text-slate-500"),
+                    cls="p-3 bg-slate-900/60 border border-slate-700 rounded-lg",
+                ),
+                cls="grid gap-3 sm:grid-cols-3 mb-5",
+            )
+            if queue_items
+            else None,
+            Div(
+                *[_active_learning_card(item, queue_payload.get("queue_run_id", "unknown")) for item in queue_items[:10]],
+                cls="space-y-3",
+            )
+            if queue_items
+            else Div(
+                P("No active-learning queue artifact found yet.", cls="text-sm text-slate-300"),
+                P(
+                    "Run `python scripts/build_active_learning_queue.py` in the worktree to generate it.",
+                    cls="text-xs text-slate-500 mt-1",
+                ),
+                cls="p-4 bg-slate-900/50 border border-slate-700 rounded-lg",
+            ),
+            Div(
+                H3("Recent Queue Labels", cls="text-sm font-semibold text-white mt-6 mb-3"),
+                Div(
+                    *[_recent_active_learning_card(label) for label in recent_labels],
+                    cls="space-y-2",
+                )
+                if recent_labels
+                else P("No recent active-learning labels recorded yet.", cls="text-sm text-slate-500"),
+            ),
+            cls="mb-12",
+        )
+    else:
+        active_learning_section = Div(
+            H2("Learning Queue", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P(
+                "No queue artifact or recent labels yet. Generate the queue offline before reviewing here.",
+                cls="text-sm text-slate-400",
+            ),
+            cls="mb-12",
+        )
+
     # Build GEDCOM triage section
     # Registry already loaded above for grouped section
 
@@ -479,6 +741,7 @@ def get(sess=None, request=None):
             ),
             grouped_section,
             cluster_section,
+            active_learning_section,
             gedcom_section,
             cls="max-w-5xl mx-auto px-4 py-8",
         ),
@@ -651,6 +914,158 @@ def post(identity_id: str = "", sess=None):
             cls="flex items-center",
         ),
         cls="p-4 bg-red-900/30 border border-red-700/50 rounded-xl mb-6",
+    )
+
+
+def _active_learning_actor(sess) -> str:
+    """Return the best available actor identity for queue labels."""
+    if _main_mod.is_auth_enabled():
+        user = _main_mod.get_current_user(sess or {})
+        if user and getattr(user, "email", None):
+            return user.email
+    return "admin"
+
+
+def _active_learning_status_card(message: str, tone: str, *, face_id_a: str, face_id_b: str):
+    """Render one compact status card for a labeled or reverted pair."""
+    pair_dom_id = _safe_dom_id("::".join(sorted([face_id_a, face_id_b])))
+    tone_map = {
+        "success": "text-emerald-400 bg-emerald-900/30 border-emerald-700/50",
+        "danger": "text-red-400 bg-red-900/30 border-red-700/50",
+        "info": "text-slate-300 bg-slate-900/40 border-slate-700/50",
+    }
+    palette = tone_map.get(tone, tone_map["info"])
+    return Div(
+        Div(
+            Span(message, cls="text-sm"),
+            Button(
+                "Revert",
+                cls="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors ml-3",
+                hx_post=f"/api/cluster-review/learn-revert?{urlencode({'face_id_a': face_id_a, 'face_id_b': face_id_b})}",
+                hx_target=f"#active-learning-card-{pair_dom_id}",
+                hx_swap="outerHTML",
+            ),
+            cls="flex items-center",
+        ),
+        id=f"active-learning-card-{pair_dom_id}",
+        cls=f"p-3 border rounded-lg {palette}",
+    )
+
+
+@rt("/api/cluster-review/learn-same")
+def post(
+    face_id_a: str = "",
+    face_id_b: str = "",
+    source_identity_id: str = "",
+    target_identity_id: str = "",
+    queue_item_id: str = "",
+    queue_run_id: str = "",
+    reasons: str = "",
+    sess=None,
+):
+    """Record a positive active-learning label without mutating canonical identity state."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    actor = _active_learning_actor(sess)
+    try:
+        record_active_learning_label(
+            face_id_a,
+            face_id_b,
+            is_same_person=True,
+            actor_id=actor,
+            source_surface="admin/upload-review-active-learning",
+            labels_path=default_labels_path(_data_dir()),
+            supabase_client=get_supabase_client(),
+            metadata={
+                "queue_item_id": queue_item_id,
+                "queue_run_id": queue_run_id,
+                "source_identity_id": source_identity_id,
+                "target_identity_id": target_identity_id,
+                "reasons": [reason for reason in reasons.split(",") if reason],
+            },
+        )
+    except Exception as exc:
+        return Div(P(f"Error: {exc}", cls="text-red-400 text-sm"), cls="p-2")
+
+    return _active_learning_status_card(
+        "Recorded: same person. Canonical identity state unchanged.",
+        "success",
+        face_id_a=face_id_a,
+        face_id_b=face_id_b,
+    )
+
+
+@rt("/api/cluster-review/learn-different")
+def post(
+    face_id_a: str = "",
+    face_id_b: str = "",
+    source_identity_id: str = "",
+    target_identity_id: str = "",
+    queue_item_id: str = "",
+    queue_run_id: str = "",
+    reasons: str = "",
+    sess=None,
+):
+    """Record a negative active-learning label without mutating canonical identity state."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    actor = _active_learning_actor(sess)
+    try:
+        record_active_learning_label(
+            face_id_a,
+            face_id_b,
+            is_same_person=False,
+            actor_id=actor,
+            source_surface="admin/upload-review-active-learning",
+            labels_path=default_labels_path(_data_dir()),
+            supabase_client=get_supabase_client(),
+            metadata={
+                "queue_item_id": queue_item_id,
+                "queue_run_id": queue_run_id,
+                "source_identity_id": source_identity_id,
+                "target_identity_id": target_identity_id,
+                "reasons": [reason for reason in reasons.split(",") if reason],
+            },
+        )
+    except Exception as exc:
+        return Div(P(f"Error: {exc}", cls="text-red-400 text-sm"), cls="p-2")
+
+    return _active_learning_status_card(
+        "Recorded: different people. Canonical identity state unchanged.",
+        "danger",
+        face_id_a=face_id_a,
+        face_id_b=face_id_b,
+    )
+
+
+@rt("/api/cluster-review/learn-revert")
+def post(face_id_a: str = "", face_id_b: str = "", sess=None):
+    """Revert one active-learning label before recalibration consumes it."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    actor = _active_learning_actor(sess)
+    reverted = revert_active_learning_label(
+        face_id_a,
+        face_id_b,
+        actor_id=actor,
+        source_surface="admin/upload-review-active-learning",
+        labels_path=default_labels_path(_data_dir()),
+        supabase_client=get_supabase_client(),
+    )
+    if reverted is None:
+        return Div(P("Label not found.", cls="text-slate-400 text-sm"), cls="p-2")
+
+    pair_dom_id = _safe_dom_id(reverted["pair_key"])
+    return Div(
+        Span("Reverted", cls="text-slate-400 text-sm"),
+        id=f"active-learning-label-{pair_dom_id}",
+        cls="p-3 bg-slate-900/40 border border-slate-700/50 rounded-lg",
     )
 
 

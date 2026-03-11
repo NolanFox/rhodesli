@@ -27,6 +27,7 @@ from rhodesli_ml.calibration_lineage import (  # noqa: E402
     prepare_pairs_for_recalibration,
     resolve_git_commit,
 )
+from rhodesli_ml.active_learning import load_active_learning_labels  # noqa: E402
 from rhodesli_ml.similarity_calibration import SimilarityCalibrator  # noqa: E402
 
 
@@ -43,14 +44,23 @@ def _default_report_path(fit: bool) -> Path:
 
 def _load_pairs(args) -> tuple[list[dict], str]:
     if args.pairs_json:
-        return load_pairs_from_json(args.pairs_json), f"json:{Path(args.pairs_json).name}"
+        pairs = load_pairs_from_json(args.pairs_json)
+        source = f"json:{Path(args.pairs_json).name}"
+    else:
+        from app.supabase_data import get_supabase_client
 
-    from app.supabase_data import get_supabase_client
+        sb = get_supabase_client()
+        if not sb:
+            raise RuntimeError("Supabase client unavailable and no --pairs-json provided")
+        pairs = load_pairs_from_supabase(sb)
+        source = "supabase:calibration_pairs"
 
-    sb = get_supabase_client()
-    if not sb:
-        raise RuntimeError("Supabase client unavailable and no --pairs-json provided")
-    return load_pairs_from_supabase(sb), "supabase:calibration_pairs"
+    if args.active_learning_labels:
+        cache = load_active_learning_labels(args.active_learning_labels)
+        pairs = pairs + list(cache.get("labels", {}).values())
+        source = f"{source}+active_learning:{Path(args.active_learning_labels).name}"
+
+    return pairs, source
 
 
 def _load_current_model_report(model_dir: Path) -> dict:
@@ -86,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--fit", action="store_true", help="Fit a new local calibration model")
     parser.add_argument("--dry-run", action="store_true", help="Do not persist the fitted model")
     parser.add_argument("--pairs-json", help="Use a local JSON payload instead of Supabase")
+    parser.add_argument(
+        "--active-learning-labels",
+        help="Merge active-learning labels from the local current-state cache into the recalibration snapshot",
+    )
     parser.add_argument("--write-pairs", help="Write filtered active pairs to this JSON path")
     parser.add_argument("--write-report", help="Write the status/run manifest to this JSON path")
     parser.add_argument("--model-dir", default=str(_default_model_dir()), help="Directory for calibration artifacts")

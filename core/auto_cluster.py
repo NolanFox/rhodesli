@@ -27,6 +27,7 @@ from pathlib import Path
 from core.identity_scoring import (
     build_identity_embedding_index,
     extract_face_ids as shared_extract_face_ids,
+    score_identity_distances,
     score_best_identity_match,
 )
 
@@ -37,7 +38,7 @@ TIER_2_THRESHOLD = 1.30  # Suggest: raised from 1.10, approved by Nolan (Session
 _log_lock = threading.Lock()
 
 
-def auto_cluster_face(face_id, face_mu, confirmed_clusters, face_data):
+def auto_cluster_face(face_id, face_mu, confirmed_clusters, face_data, *, reranker=None, reranker_top_k: int = 5):
     """
     Classify a face against confirmed identities using best-linkage distance.
 
@@ -60,9 +61,21 @@ def auto_cluster_face(face_id, face_mu, confirmed_clusters, face_data):
     if face_mu is None or len(confirmed_clusters) == 0:
         return ("no_match", None, None)
 
-    score = score_best_identity_match(face_mu, confirmed_clusters)
-    best_identity_id = score["best_match"]
-    best_distance = score["best_distance"]
+    if reranker is not None:
+        ranked_candidates = score_identity_distances(face_mu, confirmed_clusters)
+        reranked = reranker.rerank(
+            face_id,
+            {"mu": face_mu},
+            ranked_candidates[:reranker_top_k],
+            confirmed_clusters,
+        )
+        best_candidate = reranked[0] if reranked else None
+        best_identity_id = best_candidate["identity_id"] if best_candidate else None
+        best_distance = best_candidate["distance"] if best_candidate else None
+    else:
+        score = score_best_identity_match(face_mu, confirmed_clusters)
+        best_identity_id = score["best_match"]
+        best_distance = score["best_distance"]
 
     if best_identity_id is None:
         return ("no_match", None, None)
