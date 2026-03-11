@@ -73,6 +73,12 @@
 | 81C | 2026-03-01 | - | [assess](../assessments/session-81c-assessment.md) | - | [continuation](../session_context/session-81-continuation-plan.md) | Complete |
 | 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
 
+## PR-Linked Audit Trail
+
+| PR | Date | Branch | Log | Assessment | Context | Prompt | Status |
+|----|------|--------|-----|------------|---------|--------|--------|
+| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt](../prompts/pr-7-antigravity-follow-up-prompt.md) | In review |
+
 ## B-Path Analysis
 
 Sessions with letter suffixes (B/C/D/E/F/G) represent b-path branches triggered when
