@@ -7,6 +7,7 @@
 """
 
 import asyncio
+import threading
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,6 +34,26 @@ def _to_html(element) -> str:
     return to_xml(element) if not isinstance(element, str) else element
 
 
+def _run_async(coro):
+    """Run a coroutine in a dedicated thread-owned event loop."""
+    result = {}
+    error = {}
+
+    def _runner():
+        try:
+            result["value"] = asyncio.run(coro)
+        except BaseException as exc:  # pragma: no cover - surfaced to caller
+            error["value"] = exc
+
+    thread = threading.Thread(target=_runner)
+    thread.start()
+    thread.join()
+
+    if "value" in error:
+        raise error["value"]
+    return result.get("value")
+
+
 # ---------------------------------------------------------------------------
 # E1: Email Notifications
 # ---------------------------------------------------------------------------
@@ -46,7 +67,7 @@ class TestEmailNotifications:
         from app.notification_routes import send_notification_email
 
         with patch("app.notification_routes.RESEND_API_KEY", ""):
-            result = asyncio.run(send_notification_email("test@example.com", "Subject", "<p>Body</p>"))
+            result = _run_async(send_notification_email("test@example.com", "Subject", "<p>Body</p>"))
             assert result is False
 
     def test_send_email_calls_resend_api(self):
@@ -66,7 +87,7 @@ class TestEmailNotifications:
             stack.enter_context(patch("app.notification_routes.httpx.AsyncClient", return_value=mock_client))
 
             # We need to patch at the import level inside the function
-            result = asyncio.run(send_notification_email("user@example.com", "Test Subject", "<p>Hello</p>"))
+            result = _run_async(send_notification_email("user@example.com", "Test Subject", "<p>Hello</p>"))
 
             assert result is True
             mock_client.post.assert_called_once()
@@ -94,7 +115,7 @@ class TestEmailNotifications:
             stack.enter_context(patch("app.notification_routes.RESEND_API_KEY", "re_test_key"))
             stack.enter_context(patch("app.notification_routes.httpx.AsyncClient", return_value=mock_client))
 
-            result = asyncio.run(send_notification_email("user@example.com", "Subject", "<p>Body</p>"))
+            result = _run_async(send_notification_email("user@example.com", "Subject", "<p>Body</p>"))
             assert result is False
 
     def test_email_template_has_inline_css(self):
@@ -208,7 +229,7 @@ class TestEmailNotifications:
             stack.enter_context(patch("app.notification_routes.RESEND_API_KEY", "re_test_key"))
             stack.enter_context(patch("app.notification_routes.httpx.AsyncClient", return_value=mock_client))
 
-            result = asyncio.run(send_notification_email("user@example.com", "Subject", "<p>Body</p>"))
+            result = _run_async(send_notification_email("user@example.com", "Subject", "<p>Body</p>"))
             assert result is False
 
     def test_create_discovery_notification(self):

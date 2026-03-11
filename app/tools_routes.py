@@ -166,9 +166,12 @@ def get(sess=None):
 
 
 @rt("/estimate")
-def get_estimate_redirect(sess=None):
+def get_estimate_redirect(photo: str = "", sess=None):
     """Redirect /estimate → /tools/estimate for backward compatibility."""
-    return RedirectResponse("/tools/estimate", status_code=302)
+    target = "/tools/estimate"
+    if photo:
+        target += f"?photo={photo}"
+    return RedirectResponse(target, status_code=302)
 
 
 @rt("/compare")

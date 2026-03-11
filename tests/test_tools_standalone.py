@@ -214,6 +214,15 @@ class TestRedirects:
         assert resp.status_code == 302
         assert "/tools/estimate" in resp.headers["location"]
 
+    def test_estimate_redirect_preserves_photo_param(self, client_no_follow):
+        """GET /estimate?photo=X preserves the selected photo in the redirect."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            resp = client_no_follow.get("/estimate?photo=photo-123")
+        assert resp.status_code == 302
+        location = resp.headers["location"]
+        assert "/tools/estimate" in location
+        assert "photo=photo-123" in location
+
     def test_compare_redirect(self, client_no_follow):
         """GET /compare returns 302 redirect to /tools/compare."""
         with patch("app.main.is_auth_enabled", return_value=False):

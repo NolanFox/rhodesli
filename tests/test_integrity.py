@@ -118,6 +118,7 @@ class TestUndoDeterminism:
 
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
+            name="Undo Person",
             user_source="test",
         )
 
@@ -158,6 +159,7 @@ class TestReplayDeterminism:
             identity_id = registry1.create_identity(
                 anchor_ids=["face_001"],
                 candidate_ids=["face_002", "face_003", "face_004"],
+                name="Replay Person",
                 user_source="test",
             )
 

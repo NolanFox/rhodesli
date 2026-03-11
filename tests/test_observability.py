@@ -20,7 +20,11 @@ class TestSentryInit:
     def test_sentry_init_called_when_dsn_set(self):
         """Sentry init is called with correct params when DSN is provided."""
         mock_sentry = MagicMock()
-        with patch.dict(os.environ, {"SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0"}):
+        with patch.dict(
+            os.environ,
+            {"SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0"},
+            clear=True,
+        ):
             # Simulate the init block from main.py
             if os.environ.get("SENTRY_DSN"):
                 mock_sentry.init(
@@ -39,7 +43,7 @@ class TestSentryInit:
     def test_sentry_pii_disabled(self):
         """Heritage app must never send PII — faces are PII."""
         mock_sentry = MagicMock()
-        with patch.dict(os.environ, {"SENTRY_DSN": "https://test@sentry.io/1"}):
+        with patch.dict(os.environ, {"SENTRY_DSN": "https://test@sentry.io/1"}, clear=True):
             if os.environ.get("SENTRY_DSN"):
                 mock_sentry.init(
                     dsn=os.environ["SENTRY_DSN"],
