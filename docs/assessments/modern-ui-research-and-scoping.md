@@ -29,10 +29,13 @@ To achieve this modern look rapidly without reinventing the wheel, we should lev
 *   **Origin UI**: Excellent for micro-interactions, highly refined form inputs, and sleek notification systems.
 
 ## 5. Rapid Prototyping & Generative Workflows
-Emerging workflows can drastically reduce the time to build new interfaces:
+Emerging workflows can drastically reduce the time to build new interfaces by giving AI assistants (like Claude Code or Gemini) design superpowers:
+*   **AI Mockup Generation (Nano Banana 2 / Google Gemini)**: Using dedicated image generators to create high-fidelity UI mockups with readable text, which then serve as ideal reference images for code-generating models.
+*   **Stitch MCP (Google)**: A Model Context Protocol tool designed to help AI coding agents iterate on designs at the speed of thought. **Evaluation:** Highly usable; we can integrate this MCP server to give the agent direct control over design iteration.
+*   **AI Designer Skills (UI UX Pro Max)**: Utilizing specialized prompt libraries or GitHub repositories (like "UI UX Pro Max") that act as "skills" for the AI. **Evaluation:** Highly actionable. We can clone these markdown skills into our `.agents/skills/` directory so the agent can read and adopt professional designer behaviors before writing code.
 *   **Screenshot-to-Code**: Utilizing open-source tools to convert screenshots of inspirational sites directly into clean React/Tailwind code.
-*   **AI Mockup Generation**: Using image generators like Google Gemini or Nano Banana to create high-fidelity UI mockups (with readable text), then iterating on them via AI sandboxes (like Cursor) for implementation.
-*   **Cinematic Scroll Integration**: Generating high-quality video assets via Google Veo and employing Claude or other LLMs to write the complex GSAP ScrollTrigger logic needed to sync the video to the user's scroll position.
+*   **3D & Reactive Asset Integration (21st.dev)**: Using component marketplaces specifically for premium 3D models and reactive components (e.g., interactive keyboards, cinematic ethereal glows) rather than building them from scratch.
+*   **Cinematic Scroll Integration**: Generating high-quality video assets via Google Veo and employing LLMs to write the complex GSAP ScrollTrigger logic needed to sync the video to the user's scroll position.
 
 ## 6. Implementation Scoping & Requirements
 To adopt these libraries and techniques within Rhodesli, the following architecture and skills are required:
