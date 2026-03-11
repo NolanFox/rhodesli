@@ -1187,12 +1187,16 @@ def save_registry(registry, confirmed_identity_info=None):
 # _pl imported from app.utils
 
 
-def _format_display_date(date_str: str) -> str | None:
-    """Format an ISO date for UI display."""
+def _format_display_date(date_str: str, include_time: bool = False) -> str | None:
+    """Format an ISO timestamp for UI display."""
     if not date_str:
         return None
     try:
         dt = datetime.fromisoformat(str(date_str).replace("Z", "+00:00"))
+        if include_time:
+            base = dt.strftime("%b %-d, %Y at %-I:%M %p")
+            tz_name = dt.tzname()
+            return f"{base} {tz_name}" if tz_name else base
         return dt.strftime("%b %-d, %Y")
     except (TypeError, ValueError):
         return None
@@ -1200,7 +1204,7 @@ def _format_display_date(date_str: str) -> str | None:
 
 def _build_upload_provenance_line(photo: dict):
     """Build the archive-entry/source line shown on photo pages."""
-    upload_date_label = _format_display_date(photo.get("upload_date", ""))
+    upload_date_label = _format_display_date(photo.get("upload_date", ""), include_time=True)
 
     if photo.get("uploaded_by"):
         text = f"Uploaded by {photo['uploaded_by']}"
@@ -1209,7 +1213,10 @@ def _build_upload_provenance_line(photo: dict):
         return Span(text, cls="text-xs text-slate-500")
 
     if upload_date_label:
-        return Span(f"Added to archive: {upload_date_label}", cls="text-xs text-slate-500")
+        return Span(
+            f"Archive entry recorded on {upload_date_label} · uploader not recorded for this import",
+            cls="text-xs text-slate-500",
+        )
 
     # Source is already shown in the Collection/Source/URL section of photo context modal.
     # Don't duplicate it here (BUG-5, Session 96e-cont6).
@@ -2067,9 +2074,71 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     Each subsection has provenance styling (AI = indigo, human = emerald).
     Returns None if no AI data available for this photo.
     """
+    def _build_reanalyze_controls(label: dict | None = None, button_label: str = "Re-analyze Photo"):
+        if not is_admin:
+            return None
+
+        last_analyzed_el = None
+        if label:
+            analysis_ts = label.get("reanalyzed_at") or label.get("analyzed_at") or label.get("timestamp")
+            analysis_label = _format_display_date(analysis_ts, include_time=True)
+            if analysis_label:
+                last_analyzed_el = Span(
+                    f"Last analyzed: {analysis_label}",
+                    cls="text-[10px] text-slate-500 mr-2",
+                    data_testid="last-analyzed",
+                )
+
+        safe_id = photo_id.replace(".", "_")
+        return Div(
+            last_analyzed_el,
+            Button(
+                NotStr(
+                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'
+                ),
+                button_label,
+                hx_post=f"/api/photo/{photo_id}/reanalyze",
+                hx_target=f"#reanalyze-result-{safe_id}",
+                hx_swap="innerHTML",
+                hx_indicator=f"#reanalyze-spinner-{safe_id}",
+                cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-2 py-1 transition-colors cursor-pointer",
+                data_testid="reanalyze-button",
+                title="Date, location, and scene analysis",
+            ),
+            Span(
+                cls="htmx-indicator animate-spin inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full ml-2",
+                id=f"reanalyze-spinner-{safe_id}",
+            ),
+            cls="flex items-center",
+        )
+
     labels = _load_date_labels()
     label = labels.get(photo_id)
     if not label:
+        if is_admin:
+            return Section(
+                Div(
+                    Div(
+                        Div(
+                            Span("\u2728", cls="text-lg mr-2"),
+                            H2("AI Analysis", cls="text-lg font-serif font-semibold text-white inline"),
+                            cls="flex items-center",
+                        ),
+                        _build_reanalyze_controls(button_label="Run AI Analysis"),
+                        cls="flex items-center justify-between mb-1",
+                    ),
+                    P("No Gemini analysis has been run on this photo yet.", cls="text-[11px] text-indigo-400/70 mb-2"),
+                    P(
+                        "Run the first analysis to generate date, location, scene, and evidence fields.",
+                        cls="text-sm text-slate-400 mb-4",
+                        data_testid="ai-analysis-empty",
+                    ),
+                    Div(id=f"reanalyze-result-{photo_id.replace('.', '_')}", cls="mb-3"),
+                    cls="max-w-[900px] mx-auto",
+                    data_testid="ai-analysis",
+                ),
+                cls="px-4 sm:px-6 py-6 border-t border-slate-800/50",
+            )
         return None
 
     # Build search index entry for tags/scene (check both photo_id and cache_photo_id)
@@ -2391,49 +2460,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     if not sections:
         return None
 
-    # Admin re-analyze button (AD-202) + "Last analyzed" timestamp
-    reanalyze_btn = None
-    if is_admin:
-        # Build "Last analyzed" timestamp
-        last_analyzed_el = None
-        analysis_ts = label.get("reanalyzed_at") or label.get("analyzed_at") or label.get("timestamp")
-        if analysis_ts:
-            try:
-                from datetime import datetime as _dt
-
-                if isinstance(analysis_ts, str):
-                    dt = _dt.fromisoformat(analysis_ts.replace("Z", "+00:00"))
-                    last_analyzed_el = Span(
-                        f"Last analyzed: {dt.strftime('%b %-d, %Y')}",
-                        cls="text-[10px] text-slate-500 mr-2",
-                        data_testid="last-analyzed",
-                    )
-            except (ValueError, TypeError):
-                pass
-
-        # Sanitize photo_id for use in CSS selectors (dots break HTMX targets)
-        safe_id = photo_id.replace(".", "_")
-        reanalyze_btn = Div(
-            last_analyzed_el,
-            Button(
-                NotStr(
-                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'
-                ),
-                "Re-analyze Photo",
-                hx_post=f"/api/photo/{photo_id}/reanalyze",
-                hx_target=f"#reanalyze-result-{safe_id}",
-                hx_swap="innerHTML",
-                hx_indicator=f"#reanalyze-spinner-{safe_id}",
-                cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-2 py-1 transition-colors cursor-pointer",
-                data_testid="reanalyze-button",
-                title="Date, location, and scene analysis",
-            ),
-            Span(
-                cls="htmx-indicator animate-spin inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full ml-2",
-                id=f"reanalyze-spinner-{safe_id}",
-            ),
-            cls="flex items-center",
-        )
+    reanalyze_btn = _build_reanalyze_controls(label)
 
     return Section(
         Div(

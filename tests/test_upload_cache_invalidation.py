@@ -170,6 +170,7 @@ class TestUploadStatusMessages:
                 text = response.text
                 assert "3 faces" in text
                 assert "3 added to Inbox" in text
+                assert "/?section=to_review&amp;view=browse" in text or "/?section=to_review&view=browse" in text
         finally:
             status_path.unlink(missing_ok=True)
 

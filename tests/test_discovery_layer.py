@@ -1163,3 +1163,31 @@ class TestPhotoContextModalAIAnalysis:
 
         main_module._date_labels_cache = None
         main_module._search_index_cache = None
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_modal_shows_ai_empty_state_for_admin_when_no_labels(self, mock_reg, mock_dim, mock_meta):
+        """Admin photo modal should still show an AI entry point before first analysis."""
+        import app.main as main_module
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+            "source": "Test Collection",
+        }
+        mock_reg.return_value = MagicMock()
+        main_module._date_labels_cache = {}
+        main_module._search_index_cache = []
+
+        result = photo_view_content("unknown_photo", is_partial=True, is_admin=True)
+        html = to_xml(result)
+
+        assert "AI Analysis" in html
+        assert 'data-testid="ai-analysis"' in html
+        assert 'data-testid="ai-analysis-empty"' in html
+        assert "Run AI Analysis" in html
+
+        main_module._date_labels_cache = None
+        main_module._search_index_cache = None

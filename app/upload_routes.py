@@ -1277,7 +1277,13 @@ def get(job_id: str):
                     error_summary += f", +{len(errors) - 3} more"
                 elements.append(P(f"Failed: {error_summary}", cls="text-red-500 text-xs"))
 
-        elements.append(A("Refresh to see inbox", href="/", cls="text-indigo-400 hover:underline text-xs mt-1 block"))
+        elements.append(
+            A(
+                "Refresh to see inbox",
+                href="/?section=to_review&view=browse",
+                cls="text-indigo-400 hover:underline text-xs mt-1 block",
+            )
+        )
 
         return Div(*elements, cls="p-2 bg-amber-900/30 border border-amber-500/30 rounded")
 
@@ -1315,6 +1321,10 @@ def get(job_id: str):
 
     return Div(
         P(success_text, cls="text-emerald-400 text-sm font-medium"),
-        A("Refresh to see inbox", href="/", cls="text-indigo-400 hover:underline text-xs ml-2"),
+        A(
+            "Refresh to see inbox",
+            href="/?section=to_review&view=browse",
+            cls="text-indigo-400 hover:underline text-xs ml-2",
+        ),
         cls="p-2 bg-emerald-900/30 border border-emerald-500/30 rounded flex items-center",
     )
