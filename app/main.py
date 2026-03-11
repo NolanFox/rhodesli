@@ -3177,8 +3177,18 @@ def load_face_embeddings() -> dict[str, dict]:
             mu = entry["mu"]
             sigma_sq = entry["sigma_sq"]
         else:
-            # Legacy format: use embedding directly, compute default sigma_sq
-            mu = np.asarray(entry["embedding"], dtype=np.float32)
+            # Legacy format: use stored embedding directly, compute default sigma_sq
+            embedding_vec = entry.get("embedding")
+            if embedding_vec is None:
+                embedding_vec = entry.get("embeddings")
+            if embedding_vec is None:
+                logging.warning(
+                    "Skipping embedding row for %s with unsupported keys: %s",
+                    filename,
+                    sorted(entry.keys()),
+                )
+                continue
+            mu = np.asarray(embedding_vec, dtype=np.float32)
             # Default sigma_sq based on det_score if available
             det_score = entry.get("det_score", 0.5)
             sigma_sq_val = 1.0 - (det_score * 0.9)  # 0.1 to 1.0
@@ -5499,8 +5509,10 @@ def render_to_review_section(
             to_review = sorted(to_review, key=lambda x: (x.get("name") or "").lower())
         # default: newest (already sorted by created_at desc above)
 
+        display_limit = 150
+        display_review = to_review[:display_limit]
         grid_items = []
-        for identity in to_review:
+        for identity in display_review:
             card = identity_card(
                 identity, crop_files, lane_color="amber", show_actions=False, is_admin=is_admin, show_triage=True
             )
@@ -5512,7 +5524,19 @@ def render_to_review_section(
         cards = [c for c in grid_items if c]  # Filter None
 
         if cards:
-            content = Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+            grid = Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+            if len(to_review) > display_limit:
+                content = Div(
+                    Div(
+                        f"Showing first {display_limit} review cards to keep the workstation responsive. "
+                        f"Refine with triage filters, search, or sort to narrow the set.",
+                        cls="text-sm text-slate-300 bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-3",
+                    ),
+                    grid,
+                    cls="space-y-4",
+                )
+            else:
+                content = grid
         else:
             content = Div("All caught up! No new faces to review right now.", cls="text-center py-12 text-slate-400")
 

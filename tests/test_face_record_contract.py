@@ -89,3 +89,28 @@ class TestFaceIdPreservation:
             f"Expected 'Image_001:face0' for legacy entry. "
             f"Got keys: {list(face_data.keys())}"
         )
+
+    def test_plural_embeddings_key_is_supported(self):
+        """Rows with 'embeddings' should load like legacy single-vector rows."""
+        mock_embedding = {
+            "face_id": "inbox_plural_123",
+            "filename": "plural.jpg",
+            "embeddings": np.zeros(512, dtype=np.float32),
+            "det_score": 0.95,
+            "bbox": [10, 10, 20, 20],
+            "quality": 0.0,
+        }
+
+        mock_embeddings = np.array([mock_embedding], dtype=object)
+
+        with patch("numpy.load", return_value=mock_embeddings):
+            with patch("pathlib.Path.exists", return_value=True):
+                from app.main import load_face_embeddings
+
+                import app.main
+                app.main._face_data_cache = None
+
+                face_data = load_face_embeddings()
+
+        assert "inbox_plural_123" in face_data
+        assert face_data["inbox_plural_123"]["mu"].shape == (512,)

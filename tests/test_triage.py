@@ -700,3 +700,28 @@ class TestPhotoNavBoundaryIndicators:
             html = to_xml(*result)
             assert "First photo" not in html
             assert "Last photo" not in html
+
+
+class TestBrowseRenderCap:
+    """Browse mode should cap the initial workstation payload."""
+
+    @patch("app.main._get_identities_with_proposals")
+    @patch("app.main._get_best_proposal_for_identity")
+    def test_browse_mode_caps_initial_render(self, mock_best, mock_ids):
+        from app.main import render_to_review_section
+
+        mock_ids.return_value = set()
+        mock_best.return_value = None
+
+        to_review = [make_identity(f"id{i:03d}") for i in range(180)]
+        rendered = render_to_review_section(
+            to_review=to_review,
+            crop_files=set(),
+            view_mode="browse",
+            counts={"to_review": 180, "confirmed": 0, "skipped": 0, "rejected": 0, "photos": 0},
+            is_admin=True,
+        )
+        html = str(rendered)
+
+        assert "Showing first 150 review cards" in html
+        assert html.count('class="identity-card') == 150
