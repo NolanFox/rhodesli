@@ -1,5 +1,7 @@
 # Session 96e-cont10 Assessment
 
+> Superseded by `docs/assessments/session-96e-cont11-assessment.md`, which closes the deferred embedding, test-gate, and audit-trail follow-up work.
+
 ## Shipped
 
 ### Phase 0: Deploy Check — PASS

@@ -170,3 +170,37 @@ upload validation on Rhodes and Fox Family.
   - historical audit gaps,
   - remaining 2 embedding misses,
   - any production drift still present after deploy/verification.
+
+## Final Closeout
+- Required gates are now green:
+  - `pytest tests/ -x -q` → `4091 passed, 7 skipped`
+  - `pytest rhodesli_ml/tests/ -x -q` → `566 passed`
+- Latest live deployment:
+  - Railway deployment `49b4b3af-d47f-40b7-98d8-044398b4bee5` → `SUCCESS`
+  - `/health` returned `200` with `1885` identities and `938` photos
+- Photo-face contract bug closed:
+  - local and live `d5bc8746012a6da3` now preserve `11` face records,
+  - live page shows the archival-record note and includes `Caden Franco Sadis` in the people strip,
+  - live `92229cbf4ca92644` now preserves `4` face records and surfaces the archival-record note instead of silently hiding the unmatched record.
+- Remaining low-risk archival face records:
+  - `inbox_a56c556100a9` → `Caden Franco Sadis`
+  - `inbox_e64c25fc88a7` → `Unidentified Person df1a2b64`
+- InsightFace follow-up conclusion:
+  - InsightFace was run locally in the earlier session,
+  - the 124 missing embeddings were reduced to 2,
+  - the remaining issue was not fabricated work but a registry/artifact drift problem that the UI had been handling unsafely.
+- Reversible data trail now exists in:
+  - `docs/assessments/session-96e-cont11-local-audit-before.json`
+  - `docs/assessments/session-96e-cont11-local-audit-after.json`
+  - `docs/assessments/session-96e-cont11-local-delta.json`
+
+## User Feedback Captured
+- The user emphasized:
+  - no destructive data handling,
+  - explicit unwind breadcrumbs,
+  - small incremental pushed commits,
+  - confidence that community support would not break Rhodes or Fox uploads,
+  - and concern that dismissed / declined non-faces might be disappearing without audit history.
+- The Jacob/Person 863 review ended with the user’s updated interpretation:
+  - there may not be a truly missing visible face on that image,
+  - but the incident should still be documented as a prior auditability scare so future recurrences are easy to trace.

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.9] — 2026-03-11 (Session 96e-cont11: Stability Closeout + Audit Trail)
+
+### Fixed
+- **Photo pages no longer silently lose registry-only face records** — `_build_caches()` now preserves `photo_index.json` face IDs even when the matching embedding row is missing. Missing-artifact faces remain visible in the people strip with an explicit archival-record note instead of disappearing.
+- **Photo APIs tolerate bbox-less archival face records** — photo JSON and face-alignment paths now skip records without usable bounding boxes instead of assuming every face in cache is overlay-ready.
+- **Calibration early stopping flake** — calibration training now requires a meaningful `min_delta` before resetting patience, so the ML suite no longer fails when eval loss improves only by noise-sized amounts.
+- **Photo cache fixture isolation** — photo-ID consistency tests now patch a synthetic `data_path`, matching the real cache contract that reads raw `photo_index.json`.
+- **Archival face notice wording** — live note grammar corrected for singular vs plural records.
+
+### Added
+- **Regression tests for registry/photo-index fallback** — added coverage proving a face can remain in the archive even when the embedding artifact is gone, and that `/api/photo/{id}` skips bbox-less archival records safely.
+- **Machine-readable data unwind trail** — added `docs/assessments/session-96e-cont11-local-audit-before.json`, `docs/assessments/session-96e-cont11-local-audit-after.json`, and `docs/assessments/session-96e-cont11-local-delta.json`.
+
+### Verification
+- Local audit: `0` critical, `0` orphan faces, `0` duplicate faces, `0` missing identity refs, `0` merge chains, `2` remaining archival face records without embeddings
+- App tests: `4091 passed, 7 skipped`
+- ML tests: `566 passed`
+- Live deploy: Railway `49b4b3af-d47f-40b7-98d8-044398b4bee5` SUCCESS
+- Live photo verification:
+  - `/photo/d5bc8746012a6da3` → `11 people detected · 10 identified`, Caden restored in people strip
+  - `/photo/92229cbf4ca92644` → `4 people detected · 0 identified`, archival-record note visible
+
 ## [v0.97.8] — 2026-03-10 (Session 96e-cont10: Data Integrity Audit + Fixes)
 
 ### Fixed

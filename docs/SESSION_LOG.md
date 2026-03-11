@@ -1,58 +1,40 @@
-# Session 96e-cont10 Log — Data Integrity Audit + Fixes
-## Mission: Run comprehensive data audit, fix ALL issues, add prevention, deploy + verify
+# Session 96e-cont11 Log — Stability Closeout + Audit Trail
+## Mission: close remaining regressions from cont10, verify data confidence, preserve a reversible audit trail, and make live testing safe
 ## Started: 2026-03-10
-## Version: v0.97.8
-## Assessment: docs/assessments/session-96e-cont10-assessment.md
+## Version: v0.97.9
+## Assessment: docs/assessments/session-96e-cont11-assessment.md
 
-### Phase 0: Deploy Check
-- [x] Deploy `6847f566` confirmed SUCCESS (DOCKERFILE builder)
-- [x] Health endpoint: 1885 identities, 938 photos, ML ready
+### Phase 1: Close Outstanding Findings
+- [x] Structured-anchor merge regression accounted for and fixed in shipped code
+- [x] Force-state now records append-only history instead of mutating registry state directly
+- [x] Approval / discovery mutations now record append-only identity history
+- [x] Full app suite gate restored to green
+- [x] Full ML suite gate restored to green
+- [x] Harness docs reconciled with the true final state
 
-### Phase 1: Data Integrity Audit
-- [x] Audit script (`scripts/data_integrity_audit.py`) ran on local data
-- [x] Found 7 issue categories, ALL fixed:
-  - 1 duplicate face assignment (critical) → removed from INBOX identity
-  - 3 CONFIRMED placeholders → reverted to INBOX/SKIPPED
-  - 121+ merge chains → flattened
-  - 157+ orphan faces → created INBOX identities
-  - 637 missing upload_dates → backfilled
-  - 2 ghost faces → removed from Netanel Menashe
-  - 124 missing embeddings → DEFERRED (needs InsightFace)
+### Phase 2: Photo-Face Investigation
+- [x] Traced the Holocaust collage discrepancy to an embeddings-first cache contract bug
+- [x] Confirmed `Caden Franco Sadis` still existed in registry and photo index despite being hidden from the photo page
+- [x] Confirmed the wedding newspaper extra face record also survived in registry / photo index without current embedding artifacts
+- [x] Updated photo pages to preserve registry / `photo_index.json` face records even when bbox / embedding artifacts are missing
+- [x] Live URLs documented for both remaining archival face records
 
-### Phase 2: Root Cause Analysis
-- [x] Duplicate face: merge_identities() didn't check target's candidate_ids
-- [x] Orphan faces: per-file orphan check missed batch-wide grouping gaps
-- [x] Missing upload_date: CLI had no --upload-date arg
-- [x] Merge chains: successive merges not flattened at merge time
-- [x] CONFIRMED placeholders: confirmed without renaming
-- [x] Ghost faces: faces referenced but not in photo_index
+### Phase 3: Verification
+- [x] Local audit: `0` critical, `0` orphan faces, `0` duplicate faces, `0` missing identity refs, `0` merge chains, `2` remaining archival face records
+- [x] `pytest tests/ -x -q` → `4091 passed, 7 skipped`
+- [x] `pytest rhodesli_ml/tests/ -x -q` → `566 passed`
+- [x] Railway deployment `49b4b3af-d47f-40b7-98d8-044398b4bee5` → SUCCESS
+- [x] `/health` → `200`, `1885` identities, `938` photos, ML ready
+- [x] Live Holocaust collage page now shows `11 people detected · 10 identified` and includes Caden in the people strip
+- [x] Live newspaper page now shows `4 people detected · 0 identified` and preserves the archival-record note
 
-### Phase 3: Prevention Code
-- [x] `core/ingest_inbox.py`: --upload-date/--uploaded-by CLI args, auto-default
-- [x] `core/ingest_inbox.py`: process_single_image() always sets upload_date
-- [x] `core/registry.py`: merge cross-list dedup (anchors + candidates)
-- [x] `app/identity_routes.py`: /api/admin/force-state/{id}/{state}
-- [x] Lessons 118-121 documented
-
-### Phase 4: Deploy + Verify
-- [x] Commit e3c2025 deployed (DOCKERFILE builder, SUCCESS)
-- [x] Commit ff75d89 deployed (force-state endpoint, SUCCESS)
-- [x] Person 2973: SKIPPED via force-state API
-- [x] Persons 494/724: INBOX via force-state API
-- [x] Fox Family: 635 photos, 1016 matches, 17 proposals
-- [x] Rhodes photos page: 278 photo elements rendered
-- [x] Health: OK
-
-### Phase 5: Documentation
-- [x] Assessment: docs/assessments/session-96e-cont10-assessment.md
-- [x] SESSION_LOG.md updated
-- [x] CHANGELOG.md: v0.97.8 entry
-- [x] ROADMAP.md: DATA-008 completed, Recently Completed entry
-- [x] BACKLOG.md: EMBED-001, INGEST-001 entries
-- [x] Lessons 118-121 in tasks/lessons.md + tasks/lessons/data-lessons.md
+### Phase 4: Data Trail
+- [x] Backup-bearing local data state preserved in `data/backups/identities.json.20260311_033425_792917`
+- [x] Machine-readable before/after audit artifacts captured
+- [x] Machine-readable delta artifact written: `docs/assessments/session-96e-cont11-local-delta.json`
+- [x] No destructive deletes or blind overwrites performed during cont11 closeout
 
 ### Key Commits
-- `57ff3dd` feat(data): comprehensive data integrity audit script + tests
-- `e3c2025` fix(data): comprehensive data integrity fixes + prevention
-- `ff75d89` feat(admin): force-state API for data integrity fixes
-- `39f7b50` docs: session 96e-cont10 assessment
+- `6ea729f` `[codex] fix(photo): preserve archived face records`
+- `f8ee973` `[codex] fix(ml): stabilize calibration early stopping`
+- `76240a9` `[codex] fix(photo): polish archival face notice`

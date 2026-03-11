@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.8 · ~3970 tests · 938 photos · 3319 identities · 69 confirmed
+Current: v0.97.9 · ~4657 tests · 932 photos · 3406 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -156,6 +156,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-11: **v0.97.9 — Session 96e-cont11**: Stability closeout + audit trail. Fixed the remaining post-cont10 regressions: structured-anchor merge safety, append-only history bypasses, embeddings-first photo cache hiding valid face records, and ML early-stopping flake. Verified `pytest tests/ -x -q` (`4091 passed`) and `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Confirmed InsightFace had been run earlier and reduced 124 missing embeddings to 2 archival face records. Live verified: Holocaust collage now shows `11 people detected · 10 identified` and preserves `Caden Franco Sadis`; wedding newspaper now preserves its archival unmatched face record. Reversible audit trail added via before/after/delta artifacts. Deploy SUCCESS.
 
 - [x] 2026-03-10: **v0.97.8 — Session 96e-cont10**: Data Integrity Audit + Fixes. Comprehensive audit found and fixed: 1 duplicate face (critical), 3 CONFIRMED placeholders, 121+ merge chains, 157+ orphan faces, 637 missing upload_dates, 2 ghost faces. Prevention: CLI --upload-date/--uploaded-by args, auto-default upload_date, merge cross-list dedup, admin force-state API. Lessons 118-121. Data integrity audit script with --fix. Browser verified: Person 2973 SKIPPED, Fox Family 635 photos. Deploy SUCCESS.
 
