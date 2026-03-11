@@ -97,6 +97,8 @@ The correct near-term path is not a React/Next.js migration. The right next step
 ## Latest Prompt Artifact
 - New Codex-authored prompt for the next Antigravity correction round:
   - `docs/prompts/pr-7-antigravity-final-correction-prompt.md`
+- Latest PR follow-up comment:
+  - https://github.com/NolanFox/rhodesli/pull/7#issuecomment-4042314706
 
 ## Verification Notes
 - No code or data-model changes made
