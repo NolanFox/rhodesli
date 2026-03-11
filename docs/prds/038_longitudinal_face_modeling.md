@@ -14,6 +14,7 @@
 - **[Implementation Specs](038_longitudinal/IMPLEMENTATION_SPECS.md)** — Per-workstream code changes, function signatures, test specs, LoRA data growth strategy
 - **[Evaluation & Safety](038_longitudinal/EVALUATION_AND_SAFETY.md)** — Hold-out evaluation, retroactive improvement safety, community resilience, notification flow
 - **[Research References](038_longitudinal/RESEARCH_REFERENCES.md)** — Academic papers, Google Photos analysis, LoRA best practices, heritage-specific challenges
+- **[ML Lineage & Replay](038_longitudinal/LINEAGE_AND_REPLAY.md)** — Current logging gaps, run/version lineage requirements, and what must exist before iterative scorer refreshes are trustworthy
 - **[Session 97 Context](../session_context/session-97-context.md)** — Phase-scoped execution context, captured user constraints, and scale triggers
 - **[Session 97 Prompt](../prompts/session-97-prompt.md)** — Codex-optimized implementation and test prompt for the future build pass
 - **[Session 97 Prep Assessment](../assessments/session-97-prep-assessment.md)** — Planning-package audit and handoff status
