@@ -66,6 +66,21 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: After processing an entire batch/directory, run a batch-wide orphan face check covering ALL processed faces against ALL created identities.
 - **Prevention**: `process_directory()` should do a final batch-wide orphan sweep after all files are processed.
 
+### Lesson 122: Canonical registry records must define face existence, not derivative artifacts
+- **Mistake**: Face records still existed in `identities.json` and `photo_index.json`, but the UI trusted embeddings/crops too much when building photo views. When a derivative artifact was missing or drifted, the face appeared to vanish even though the canonical archive record still existed.
+- **Rule**: `identities.json` and `photo_index.json` are the canonical record of whether a face exists in the archive. Embeddings, crops, and overlay coordinates are derivative artifacts. Missing artifacts may degrade presentation, but they must never erase the underlying face from the UI or audit trail.
+- **Prevention**: (1) Photo caches must preserve registry-backed face records even when embeddings or bbox data are missing. (2) Tests must cover artifact-drift scenarios explicitly. (3) Any UI that cannot render a full overlay must show an explicit archival-record notice rather than silently dropping the face.
+
+### Lesson 123: Additive-only shadow sync is not reconciliation
+- **Mistake**: Corrected snapshots were upserted into Supabase, but stale rows were never removed. Production could therefore remain polluted even after the audited local snapshot was clean, because the shadow store accumulated obsolete identities over time.
+- **Rule**: A shadow-store reconcile job must compare the full audited snapshot to the target store and identify rows that should no longer exist. Upsert-only sync is suitable for propagation, not for integrity recovery.
+- **Prevention**: (1) Add a dry-run reconcile mode that emits a machine-readable stale-row report before applying changes. (2) Require an explicit backup artifact before pruning stale shadow rows. (3) Add a verification step that compares snapshot counts to live store counts after reconcile.
+
+### Lesson 124: Multi-store data repairs need a machine-readable unwind trail before cleanup
+- **Mistake**: The system had enough layers that a human-readable summary alone was not sufficient to safely unwind production cleanup later. Without a checked-in backup artifact, stale-row pruning and cross-store repair would be hard to reconstruct or reverse.
+- **Rule**: Any production data repair that goes beyond pure append/update semantics must create a machine-readable before/after trail and capture recovery artifacts before cleanup happens.
+- **Prevention**: (1) For every production reconciliation, write before/after audit JSON plus any prune backup JSON into `docs/assessments/`. (2) Capture live backup filenames or snapshot identifiers in the assessment. (3) Do not prune anything from production unless the recovery artifact already exists and is linked from the session assessment.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

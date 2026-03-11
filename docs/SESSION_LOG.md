@@ -44,6 +44,7 @@
 - [x] Railway deployment `99170803-089c-4dc4-8299-b52fba96e5a9` -> `SUCCESS`
 - [x] `/health` -> `200`, `1931` active identities, `938` photos, ML ready
 - [x] Live photos page and photo partials rechecked after reconciliation
+- [x] Lessons `122`-`124` added for canonical-vs-derivative data contracts, stale-row reconciliation, and backup-first production repair
 
 ### Key Commits
 - `0e78426` `[codex] fix(photos): prefer canonical alias metadata`

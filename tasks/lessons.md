@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-121 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+124 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -119,6 +119,9 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 119 | **Merge must deduplicate faces across anchor AND candidate lists — cross-list duplicates slip through** |
 | 120 | **Data integrity audit must run after every ingest and before every deploy** |
 | 121 | **Batch orphan detection must be batch-wide, not per-file — per-file misses cross-file grouping gaps** |
+| 122 | **Canonical registry records must define face existence — derivative artifacts can degrade UI but not erase faces** |
+| 123 | **Additive-only shadow sync is not reconciliation — stale rows must be detected and pruned safely** |
+| 124 | **Production data repairs need machine-readable unwind artifacts before cleanup** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

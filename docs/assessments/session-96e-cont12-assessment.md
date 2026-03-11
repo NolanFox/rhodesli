@@ -3,6 +3,10 @@
 ## Verdict
 PASS.
 
+This file is the canonical human-readable summary artifact for the cont12 closeout.
+It is intentionally breadcrumbed to the machine-readable audit chain, the recovery
+artifacts, the backlog follow-ups, and the lessons created from this incident.
+
 - Local data audit is clean:
   - `0` critical issues
   - `0` orphan faces
@@ -82,6 +86,27 @@ This was not one bug. It was a stack of weak contracts that compounded:
 
 The architecture intent was right. What failed was enforcement during the transition: Postgres became important before every mutation, cache, audit path, and recovery path was fully Postgres-native and continuously checked for drift.
 
+## Related Artifacts
+
+- Summary + verdict:
+  - `docs/assessments/session-96e-cont12-assessment.md`
+- Session context:
+  - `docs/session_context/session-96e-cont12-context.md`
+- Machine-readable audits:
+  - `docs/assessments/session-96e-cont12-local-audit-before.json`
+  - `docs/assessments/session-96e-cont12-local-audit-after-structural.json`
+  - `docs/assessments/session-96e-cont12-local-audit-after-embedding-repair.json`
+  - `docs/assessments/session-96e-cont12-local-audit-final.json`
+  - `docs/assessments/session-96e-cont12-embedding-repair-report.json`
+- Recovery / unwind artifacts:
+  - `docs/assessments/session-96e-cont12-supabase-prune-backup.json`
+  - `docs/assessments/session-96e-cont12-supabase-prune-result.json`
+- Follow-up backlog items:
+  - `DATA-009` in `docs/BACKLOG.md`
+  - `DATA-010` in `docs/BACKLOG.md`
+- Lessons created from this incident:
+  - Lessons `122`-`124` in `tasks/lessons/data-lessons.md`
+
 ## Reversible Data Trail
 
 Production-affecting changes were preserved non-destructively:
@@ -113,3 +138,9 @@ I am not claiming the risk is mathematically zero. The remaining systemic harden
 - automated backup/restore drills instead of manual, session-driven recovery
 
 Those are now breadcrumbed as backlog items rather than hidden unknowns.
+
+## Lessons Created
+
+- **Lesson 122**: canonical registry records must define face existence, not derivative artifacts
+- **Lesson 123**: additive-only shadow sync is not reconciliation
+- **Lesson 124**: production data repairs need machine-readable unwind artifacts before cleanup
