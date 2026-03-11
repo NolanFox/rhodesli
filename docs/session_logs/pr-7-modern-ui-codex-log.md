@@ -71,6 +71,7 @@ The correct near-term path is not a React/Next.js migration. The right next step
   - `144f019` selector/source corrections
   - `6ae6b52` shared-surface / scope / sequencing pass
   - `9784201` implementation touch map / single-source-of-truth / risk-register pass
+  - `0a9f540` helper-classification / leakage-rule correction pass
 - Codex assessment after `6ae6b52`:
   - the dangerous stack-mismatch and fake-selector issues are mostly resolved
   - attribution and handoff boundaries are now clear enough for later Claude audit
@@ -86,6 +87,16 @@ The correct near-term path is not a React/Next.js migration. The right next step
     - tightening route invariants to only repo-stable public/admin behaviors
     - making shared-helper changes conditional/scoped where necessary
     - preserving the new parallel-track + harmonization workflow
+- Codex assessment after `0a9f540`:
+  - the plan is close, but it is still not ready for Session 99 prompt writing
+  - `/?section=inbox` remains in the verification gates even though the only valid workstation sections are `to_review`, `confirmed`, `skipped`, `rejected`, and `photos`
+  - the `/identify/{id}` invariants are still repo-inaccurate: there is no `[data-testid="identify-person-form"]`, and the hidden field is `name="person_id"`, not `name="identity_id"`
+  - `_public_nav_links` is still classified as `safe to restyle globally`, but it is reused by many out-of-scope public routes; that conflicts with the zero-leakage scope rule unless the scope is widened explicitly
+  - net: one more narrow Antigravity docs-only correction is still recommended before Session 99 prompt writing
+
+## Latest Prompt Artifact
+- New Codex-authored prompt for the next Antigravity correction round:
+  - `docs/prompts/pr-7-antigravity-final-correction-prompt.md`
 
 ## Verification Notes
 - No code or data-model changes made

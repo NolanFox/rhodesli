@@ -77,7 +77,7 @@
 
 | PR | Date | Branch | Log | Assessment | Context | Prompt | Status |
 |----|------|--------|-----|------------|---------|--------|--------|
-| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt](../prompts/pr-7-antigravity-follow-up-prompt.md) | Codex review posted |
+| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt-1](../prompts/pr-7-antigravity-follow-up-prompt.md), [prompt-2](../prompts/pr-7-antigravity-final-correction-prompt.md) | Another Antigravity pass required |
 
 ## B-Path Analysis
 
