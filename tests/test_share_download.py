@@ -8,10 +8,14 @@ Tests cover:
 - Toast notification function exists
 """
 
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 from starlette.testclient import TestClient
 
-from app.main import app, load_embeddings_for_photos
+from app.main import app, load_embeddings_for_photos, photos_path
+from core import storage
 
 
 def get_real_photo_id():
@@ -20,6 +24,20 @@ def get_real_photo_id():
     if photos:
         return next(iter(photos.keys()))
     return None
+
+
+def has_download_source(photo_id: str | None) -> bool:
+    """Return True when the selected photo can be downloaded in this environment."""
+    if not photo_id:
+        return False
+    photos = load_embeddings_for_photos()
+    photo = photos.get(photo_id) or {}
+    filename = photo.get("filename")
+    if not filename:
+        return False
+    if storage.is_r2_mode():
+        return True
+    return (photos_path / Path(filename).name).exists()
 
 
 @pytest.fixture
@@ -104,8 +122,8 @@ class TestDownloadEndpoint:
 
     def test_download_returns_file(self, client, real_photo_id):
         """Download endpoint returns a file response."""
-        if not real_photo_id:
-            pytest.skip("No embeddings available")
+        if not has_download_source(real_photo_id):
+            pytest.skip("No downloadable photo source available in this repo snapshot")
         response = client.get(f"/photo/{real_photo_id}/download", follow_redirects=False)
         # In local mode: 200 with file content
         # In R2 mode: 302 redirect to R2 URL
@@ -118,12 +136,38 @@ class TestDownloadEndpoint:
 
     def test_download_has_content_disposition(self, client, real_photo_id):
         """Download response has Content-Disposition attachment header."""
-        if not real_photo_id:
-            pytest.skip("No embeddings available")
+        if not has_download_source(real_photo_id):
+            pytest.skip("No downloadable photo source available in this repo snapshot")
         response = client.get(f"/photo/{real_photo_id}/download", follow_redirects=False)
         if response.status_code == 200:
             assert "content-disposition" in response.headers
             assert "attachment" in response.headers["content-disposition"]
+
+    def test_download_redirects_in_r2_mode(self, client, real_photo_id):
+        """Download endpoint redirects when R2-backed storage is enabled."""
+        photo_id = real_photo_id or "test-photo-id"
+        with patch("app.main.get_photo_metadata", return_value={"filename": "folder/example.jpg"}), \
+             patch("app.photo_routes.storage.is_r2_mode", return_value=True), \
+             patch("app.photo_routes.photo_url", return_value="https://cdn.example/raw_photos/example.jpg"):
+            response = client.get(f"/photo/{photo_id}/download", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "https://cdn.example/raw_photos/example.jpg"
+
+    def test_download_serves_local_file_when_present(self, client, tmp_path, real_photo_id):
+        """Download endpoint serves a local file when the original exists on disk."""
+        photo_id = real_photo_id or "test-photo-id"
+        basename = "example.jpg"
+        local_file = tmp_path / basename
+        local_file.write_bytes(b"test-image")
+
+        with patch("app.main.get_photo_metadata", return_value={"filename": basename}), \
+             patch("app.main.photos_path", tmp_path), \
+             patch("app.photo_routes.storage.is_r2_mode", return_value=False):
+            response = client.get(f"/photo/{photo_id}/download", follow_redirects=False)
+
+        assert response.status_code == 200
+        assert "content-disposition" in response.headers
+        assert "attachment" in response.headers["content-disposition"]
 
 
 class TestActionBar:

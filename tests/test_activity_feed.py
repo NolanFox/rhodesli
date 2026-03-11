@@ -39,6 +39,21 @@ class TestActivityFeed:
             assert response.status_code == 200
             assert "No activity yet" in response.text
 
+    def test_activity_page_handles_missing_timestamp(self, client):
+        """Activity page tolerates partially populated activity records."""
+        actions = [
+            {
+                "type": "CONFIRM",
+                "description": "An identity was confirmed",
+                "timestamp": None,
+            }
+        ]
+
+        with patch("app.main._load_activity_feed", return_value=actions):
+            response = client.get("/activity")
+            assert response.status_code == 200
+            assert "An identity was confirmed" in response.text
+
     def test_load_activity_feed_from_log(self, tmp_path):
         """_load_activity_feed reads from user_actions.log."""
         from app.main import _load_activity_feed

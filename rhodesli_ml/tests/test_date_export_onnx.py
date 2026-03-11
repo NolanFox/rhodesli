@@ -10,6 +10,27 @@ ARTIFACTS_DIR = Path(__file__).resolve().parent.parent / "artifacts"
 ONNX_PATH = ARTIFACTS_DIR / "date_estimation_v1.onnx"
 
 
+def _best_checkpoint():
+    """Return the best local date-estimation checkpoint, if present."""
+    ckpt_dir = Path(__file__).resolve().parent.parent / "checkpoints"
+    if not ckpt_dir.exists():
+        return None
+
+    best_ckpt = None
+    best_mae = float("inf")
+    for epoch_dir in ckpt_dir.iterdir():
+        if not epoch_dir.is_dir():
+            continue
+        for f in epoch_dir.glob("*.ckpt"):
+            if "mae_decades=" not in f.stem:
+                continue
+            mae = float(f.stem.split("mae_decades=")[1])
+            if mae < best_mae:
+                best_mae = mae
+                best_ckpt = f
+    return best_ckpt
+
+
 class TestONNXExportScript:
     """Tests for the export script utilities."""
 
@@ -110,19 +131,7 @@ class TestONNXModel:
         """ONNX and PyTorch produce the same decade predictions."""
         import onnxruntime as ort
 
-        ckpt_dir = Path(__file__).resolve().parent.parent / "checkpoints"
-        best_ckpt = None
-        best_mae = float("inf")
-        for epoch_dir in ckpt_dir.iterdir():
-            if not epoch_dir.is_dir():
-                continue
-            for f in epoch_dir.glob("*.ckpt"):
-                if "mae_decades=" in f.stem:
-                    mae = float(f.stem.split("mae_decades=")[1])
-                    if mae < best_mae:
-                        best_mae = mae
-                        best_ckpt = f
-
+        best_ckpt = _best_checkpoint()
         if best_ckpt is None:
             pytest.skip("No checkpoint found")
 
@@ -168,19 +177,7 @@ class TestONNXModel:
         """Raw logit differences stay within acceptable tolerance for CNN."""
         import onnxruntime as ort
 
-        ckpt_dir = Path(__file__).resolve().parent.parent / "checkpoints"
-        best_ckpt = None
-        best_mae = float("inf")
-        for epoch_dir in ckpt_dir.iterdir():
-            if not epoch_dir.is_dir():
-                continue
-            for f in epoch_dir.glob("*.ckpt"):
-                if "mae_decades=" in f.stem:
-                    mae = float(f.stem.split("mae_decades=")[1])
-                    if mae < best_mae:
-                        best_mae = mae
-                        best_ckpt = f
-
+        best_ckpt = _best_checkpoint()
         if best_ckpt is None:
             pytest.skip("No checkpoint found")
 

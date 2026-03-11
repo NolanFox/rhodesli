@@ -1817,8 +1817,8 @@
     }
   },
   "best_variant": "distance_only",
-  "trained_at": "2026-03-11T18:10:22.045478+00:00",
-  "git_commit": "c198caf3aed52e0d110fe25a102a6d9850723ceb",
+  "trained_at": "2026-03-11T18:54:19.903457+00:00",
+  "git_commit": "a0aa2ce04120d97b50742350d11c5d2eb4f5a9e5",
   "phase2_gate": {
     "passes": false,
     "age20_improvement": 0.0,

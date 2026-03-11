@@ -1134,19 +1134,22 @@ def get(sess=None):
 
     rows = []
     for a in actions:
+        action_type = a.get("type") or "unknown"
+        description = a.get("description") or "Activity updated"
+        timestamp = a.get("timestamp") or ""
         icon = {
             "MERGE": "🔗",
             "CONFIRM": "✓",
             "RENAME": "✏️",
             "SKIP": "⏭",
             "annotation_approved": "📝",
-        }.get(a["type"], "•")
+        }.get(action_type, "•")
 
         rows.append(
             Div(
                 Span(icon, cls="text-lg mr-2"),
-                Span(a["description"], cls="text-sm text-slate-300"),
-                Span(a["timestamp"][:10], cls="text-xs text-slate-500 ml-auto"),
+                Span(description, cls="text-sm text-slate-300"),
+                Span(timestamp[:10], cls="text-xs text-slate-500 ml-auto"),
                 cls="flex items-center gap-2 py-2 border-b border-slate-800",
             )
         )

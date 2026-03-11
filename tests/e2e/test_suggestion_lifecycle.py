@@ -8,6 +8,8 @@ Tests run against a real server with auth disabled (all routes accessible).
 """
 
 import re
+import json
+from pathlib import Path
 
 import pytest
 
@@ -15,12 +17,25 @@ pytestmark = pytest.mark.e2e
 
 GOTO_OPTS = {"wait_until": "domcontentloaded", "timeout": 15000}
 SETTLE_MS = 600
+ANNOTATION_TEXT = "A mi querida Estrella de tu hermano Samuel"
 
 
 def _goto(page, url):
     """Navigate to a URL and wait for DOM + HTMX settle."""
     page.goto(url, **GOTO_OPTS)
     page.wait_for_timeout(SETTLE_MS)
+
+
+def _has_annotation_fixture() -> bool:
+    """Return True when the approved annotation fixture exists in local data."""
+    annotations_path = Path("data/annotations.json")
+    if not annotations_path.exists():
+        return False
+    try:
+        payload = json.loads(annotations_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, ValueError):
+        return False
+    return any(ANNOTATION_TEXT in str(item.get("value", "")) for item in payload.get("annotations", {}).values())
 
 
 # ---------------------------------------------------------------------------
@@ -30,23 +45,27 @@ def _goto(page, url):
 def test_annotation_visible_on_person_page(page, app_server):
     """Approved bio annotation from Claude Benatar should be visible on the
     public person page /person/54682ede-9424-4295-abca-9317679e5636."""
+    if not _has_annotation_fixture():
+        pytest.skip("Approved annotation fixture not present in this repo snapshot")
     _goto(page, f"{app_server}/person/54682ede-9424-4295-abca-9317679e5636")
 
     # The page should contain the annotation text
     content = page.content()
-    assert "A mi querida Estrella de tu hermano Samuel" in content, (
+    assert ANNOTATION_TEXT in content, (
         "Approved annotation text not visible on person page"
     )
 
 
 def test_duplicate_annotations_deduped_on_display(page, app_server):
     """Two identical approved annotations should display as one on the page."""
+    if not _has_annotation_fixture():
+        pytest.skip("Approved annotation fixture not present in this repo snapshot")
     _goto(page, f"{app_server}/person/54682ede-9424-4295-abca-9317679e5636")
 
     # Count occurrences of the annotation text in visible page content
     # Should appear exactly once, not twice (deduplication)
     content = page.text_content("body")
-    count = content.count("A mi querida Estrella de tu hermano Samuel")
+    count = content.count(ANNOTATION_TEXT)
     assert count == 1, (
         f"Annotation text appears {count} times, expected 1 (deduplication broken)"
     )
