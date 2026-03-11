@@ -1655,6 +1655,27 @@ def post(ann_id: str, sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
+    if ann.get("status") == "approved":
+        return Div(
+            Div(
+                Span("Already approved", cls="text-sm font-bold text-emerald-400"),
+                Span(
+                    f" — {ann['value']} (suggested by {ann['submitted_by']})",
+                    cls="text-sm text-slate-400",
+                ),
+                cls="flex-1",
+            ),
+            Button(
+                "Undo",
+                hx_post=f"/admin/approvals/{ann_id}/undo",
+                hx_target=f"#annotation-{ann_id}",
+                hx_swap="outerHTML",
+                cls="px-3 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-500 ml-2 flex-shrink-0",
+            ),
+            cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700 flex items-center",
+            id=f"annotation-{ann_id}",
+        )
+
     from datetime import datetime, timezone
 
     ann["status"] = "approved"

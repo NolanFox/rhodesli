@@ -178,6 +178,27 @@ class TestIdentityState:
         assert history[-1]["metadata"]["previous_state"] == IdentityState.CONFIRMED.value
         assert history[-1]["metadata"]["new_state"] == IdentityState.SKIPPED.value
 
+    def test_rename_identity_is_noop_for_same_name(self):
+        """Renaming to the existing name must not create history churn."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="Known Person",
+            user_source="manual",
+        )
+
+        previous_name = registry.rename_identity(identity_id, "Known Person", user_source="manual")
+
+        identity = registry.get_identity(identity_id)
+        history = registry.get_history(identity_id)
+
+        assert previous_name == "Known Person"
+        assert identity["version_id"] == 1
+        assert len(history) == 1
+        assert history[0]["action"] == "create"
+
     def test_state_change_syncs_identity_audit_event(self):
         """State changes should also emit a durable identity-event audit record."""
         from unittest.mock import patch

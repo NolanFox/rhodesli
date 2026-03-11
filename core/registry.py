@@ -1084,18 +1084,26 @@ class IdentityRegistry:
         if not new_name:
             raise ValueError("Name cannot be empty")
 
-        previous_name = identity.get("name")
-        previous_version = identity["version_id"]
-
-        identity["name"] = new_name
         # Auto-parse structured name fields (BE-010)
         parts = new_name.rsplit(" ", 1)
         if len(parts) == 2:
-            identity["first_name"] = parts[0]
-            identity["last_name"] = parts[1]
+            parsed_first_name = parts[0]
+            parsed_last_name = parts[1]
         else:
-            identity["first_name"] = new_name
-            identity["last_name"] = ""
+            parsed_first_name = new_name
+            parsed_last_name = ""
+
+        previous_name = identity.get("name")
+        if previous_name == new_name:
+            identity["first_name"] = parsed_first_name
+            identity["last_name"] = parsed_last_name
+            return previous_name
+
+        previous_version = identity["version_id"]
+
+        identity["name"] = new_name
+        identity["first_name"] = parsed_first_name
+        identity["last_name"] = parsed_last_name
         identity["version_id"] += 1
         identity["updated_at"] = datetime.now(timezone.utc).isoformat()
 

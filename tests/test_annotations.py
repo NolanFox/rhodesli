@@ -210,6 +210,65 @@ class TestAnnotationApproval:
         assert registry._history[-1]["metadata"]["previous_name"] == "Unidentified Person 1"
         assert registry._history[-1]["metadata"]["new_name"] == "Leon Capeluto"
 
+    def test_name_suggestion_approval_is_idempotent_once_approved(self, client, tmp_path):
+        """Re-approving an approved suggestion must not replay the rename side effects."""
+        from core.registry import IdentityRegistry
+        from app.main import _invalidate_annotations_cache
+
+        ann_id = "test-ann-approved"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "identity-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "certain",
+                    "reason": "Family confirmation",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "approved",
+                    "reviewed_by": "admin@test.com",
+                    "reviewed_at": "2026-02-10T01:00:00Z",
+                }
+            },
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        registry = IdentityRegistry()
+        now = datetime.now(timezone.utc).isoformat()
+        registry._identities["identity-1"] = {
+            "identity_id": "identity-1",
+            "name": "Leon Capeluto",
+            "state": "INBOX",
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": now,
+            "updated_at": now,
+            "provenance": {"source": "test"},
+            "metadata": {},
+        }
+
+        _invalidate_annotations_cache()
+
+        with (
+            patch("app.main.data_path", tmp_path),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry") as mock_save_registry,
+        ):
+            response = client.post(f"/admin/approvals/{ann_id}/approve")
+
+        assert response.status_code == 200
+        assert "Already approved" in response.text
+        assert len(registry._history) == 0
+        assert registry._identities["identity-1"]["version_id"] == 1
+        assert mock_save_registry.call_count == 0
+
     def test_annotation_rejection_no_data_change(self, client, tmp_path):
         """Rejecting an annotation doesn't modify identity data."""
         ann_id = "test-ann-2"
