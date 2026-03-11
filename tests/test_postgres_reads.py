@@ -389,6 +389,8 @@ def _make_mock_photo_rows():
             "upload_date": "2026-01-15T00:00:00+00:00",
             "uploaded_by": "admin",
             "job_id": None,
+            "created_at": "2026-01-15T12:30:00+00:00",
+            "updated_at": "2026-01-15T13:00:00+00:00",
             "face_count": 2,
         },
         {
@@ -402,6 +404,8 @@ def _make_mock_photo_rows():
             "upload_date": None,
             "uploaded_by": None,
             "job_id": None,
+            "created_at": "2026-01-16T09:00:00+00:00",
+            "updated_at": "2026-01-16T10:00:00+00:00",
             "face_count": 0,
         },
     ]
@@ -470,6 +474,8 @@ class TestPhotoRegistryPostgresLoad:
         assert photo["collection"] == "Betty Capeluto Miami Collection"
         assert photo["width"] == 800
         assert photo["height"] == 600
+        assert photo["created_at"] == "2026-01-15T12:30:00+00:00"
+        assert photo["updated_at"] == "2026-01-15T13:00:00+00:00"
         assert isinstance(photo["face_ids"], set)
         assert "Image 001_compress:face0" in photo["face_ids"]
         assert "Image 001_compress:face1" in photo["face_ids"]

@@ -112,6 +112,56 @@ class TestSortPhotosHelper:
         result_newest = _sort_photos(list(photos_with_upload_dates), "upload_newest")
         assert [p["photo_id"] for p in result_recent] == [p["photo_id"] for p in result_newest]
 
+    def test_upload_newest_breaks_same_day_ties_by_created_at(self):
+        from app.main import _sort_photos
+
+        photos = [
+            {
+                "photo_id": "early",
+                "filename": "early.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "2026-03-10",
+                "created_at": "2026-03-10T08:00:00+00:00",
+            },
+            {
+                "photo_id": "late",
+                "filename": "late.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "2026-03-10",
+                "created_at": "2026-03-10T20:00:00+00:00",
+            },
+        ]
+
+        result = _sort_photos(photos, "upload_newest")
+        assert [p["photo_id"] for p in result] == ["late", "early"]
+
+    def test_upload_oldest_breaks_same_day_ties_by_created_at(self):
+        from app.main import _sort_photos
+
+        photos = [
+            {
+                "photo_id": "early",
+                "filename": "early.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "2026-03-10",
+                "created_at": "2026-03-10T08:00:00+00:00",
+            },
+            {
+                "photo_id": "late",
+                "filename": "late.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "2026-03-10",
+                "created_at": "2026-03-10T20:00:00+00:00",
+            },
+        ]
+
+        result = _sort_photos(photos, "upload_oldest")
+        assert [p["photo_id"] for p in result] == ["early", "late"]
+
 
 class TestPhotosRouteDropdown:
     """Verify the /photos route includes the new sort options in the dropdown."""

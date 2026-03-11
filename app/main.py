@@ -7084,6 +7084,8 @@ def render_photos_section(
                 "confirmed_count": confirmed_count,
                 "identified_faces": identified_faces[:4],  # Max 4 for display
                 "upload_date": photo_data.get("upload_date", ""),
+                "created_at": photo_data.get("created_at", ""),
+                "updated_at": photo_data.get("updated_at", ""),
                 "has_back": has_back,
                 "media_role": photo_data.get("media_role", "front"),
             }

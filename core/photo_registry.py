@@ -257,6 +257,8 @@ class PhotoRegistry:
             "uploaded_by",
             "upload_date",
             "job_id",
+            "created_at",
+            "updated_at",
             "media_group_id",
             "media_role",
             "parent_photo_id",
@@ -419,6 +421,10 @@ class PhotoRegistry:
                     entry["uploaded_by"] = row["uploaded_by"]
                 if row.get("job_id"):
                     entry["job_id"] = row["job_id"]
+                if row.get("created_at"):
+                    entry["created_at"] = row["created_at"]
+                if row.get("updated_at"):
+                    entry["updated_at"] = row["updated_at"]
                 registry._photos[photo_id] = entry
 
             registry._face_to_photo = face_to_photo

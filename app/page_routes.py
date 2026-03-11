@@ -5429,14 +5429,36 @@ def _sort_photos(photos: list, sort_by: str) -> list:
       - recently_uploaded: legacy alias for upload_newest
     """
     if sort_by in ("upload_newest", "upload_oldest", "recently_uploaded"):
-        reverse = sort_by in ("upload_newest", "recently_uploaded")
-        # Sort by actual upload_date; photos without a date go to the end
-        NO_DATE = "" if reverse else "9999-99-99"
+        newest_first = sort_by in ("upload_newest", "recently_uploaded")
+        no_date = "9999-99-99T99:99:99+00:00"
 
-        def _upload_key(p):
-            return p.get("upload_date") or NO_DATE
+        def _upload_key_newest(p):
+            upload_date = p.get("upload_date") or ""
+            created_at = p.get("created_at") or ""
+            updated_at = p.get("updated_at") or ""
+            return (
+                1 if upload_date else 0,
+                upload_date,
+                created_at,
+                updated_at,
+                p.get("photo_id", ""),
+                p.get("filename", ""),
+            )
 
-        photos.sort(key=_upload_key, reverse=reverse)
+        def _upload_key_oldest(p):
+            upload_date = p.get("upload_date") or no_date
+            created_at = p.get("created_at") or p.get("updated_at") or no_date
+            updated_at = p.get("updated_at") or no_date
+            return (
+                0 if p.get("upload_date") else 1,
+                upload_date,
+                created_at,
+                updated_at,
+                p.get("photo_id", ""),
+                p.get("filename", ""),
+            )
+
+        photos.sort(key=_upload_key_newest if newest_first else _upload_key_oldest, reverse=newest_first)
     elif sort_by in ("oldest", "newest"):
         labels = _main_mod._load_date_labels()
         NO_DATE = 9999 if sort_by == "oldest" else 0
@@ -5612,6 +5634,8 @@ def get(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "created_at": photo_data.get("created_at", ""),
+                "updated_at": photo_data.get("updated_at", ""),
             }
         )
 
@@ -5906,6 +5930,8 @@ def photos_more(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "created_at": photo_data.get("created_at", ""),
+                "updated_at": photo_data.get("updated_at", ""),
             }
         )
 

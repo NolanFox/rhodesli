@@ -294,6 +294,8 @@ def get(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "created_at": photo_data.get("created_at", ""),
+                "updated_at": photo_data.get("updated_at", ""),
                 "back_image": photo_data.get("back_image", ""),
                 "media_role": photo_data.get("media_role", "front"),
             }
@@ -639,6 +641,8 @@ def photos_more(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "created_at": photo_data.get("created_at", ""),
+                "updated_at": photo_data.get("updated_at", ""),
                 "back_image": photo_data.get("back_image", ""),
                 "media_role": photo_data.get("media_role", "front"),
             }
