@@ -807,6 +807,11 @@ class IdentityRegistry:
                 f"Identity {identity_id} cannot be confirmed from state "
                 f"'{identity['state']}' (must be INBOX, PROPOSED, or SKIPPED)"
             )
+        if not self._is_real_name(identity.get("name")):
+            raise ValueError(
+                f"Identity {identity_id} cannot be confirmed with placeholder name "
+                f"'{identity.get('name', '')}'. Rename it first."
+            )
 
         previous_state = identity["state"]
         previous_version = identity["version_id"]

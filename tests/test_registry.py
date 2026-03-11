@@ -84,6 +84,7 @@ class TestIdentityState:
         registry = IdentityRegistry()
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
+            name="Known Person",
             user_source="manual",
         )
 
@@ -99,6 +100,7 @@ class TestIdentityState:
         registry = IdentityRegistry()
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
+            name="Known Person",
             user_source="manual",
         )
 
@@ -107,6 +109,19 @@ class TestIdentityState:
         identity = registry.get_identity(identity_id)
         assert identity["version_id"] == 2
 
+    def test_confirm_placeholder_name_raises(self):
+        """Placeholder identities must be renamed before confirmation."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="manual",
+        )
+
+        with pytest.raises(ValueError, match="Rename it first"):
+            registry.confirm_identity(identity_id, user_source="manual")
+
     def test_contest_identity_changes_state(self):
         """Contesting an identity should change state to CONTESTED."""
         from core.registry import IdentityRegistry, IdentityState
@@ -114,6 +129,7 @@ class TestIdentityState:
         registry = IdentityRegistry()
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
+            name="Known Person",
             user_source="manual",
         )
         registry.confirm_identity(identity_id, user_source="manual")
@@ -130,6 +146,7 @@ class TestIdentityState:
         registry = IdentityRegistry()
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
+            name="Known Person",
             user_source="manual",
         )
         registry.confirm_identity(identity_id, user_source="manual")
@@ -169,7 +186,11 @@ class TestIdentityState:
 
         registry = IdentityRegistry()
         with patch("app.supabase_data.sync_identity_history_event") as mock_sync:
-            identity_id = registry.create_identity(anchor_ids=["face_001"], user_source="manual")
+            identity_id = registry.create_identity(
+                anchor_ids=["face_001"],
+                name="Known Person",
+                user_source="manual",
+            )
             registry.confirm_identity(identity_id, user_source="manual")
 
         assert mock_sync.call_count >= 2
@@ -454,6 +475,7 @@ class TestReplay:
             identity_id = registry1.create_identity(
                 anchor_ids=["face_001"],
                 candidate_ids=["face_002", "face_003"],
+                name="Replay Person",
                 user_source="manual",
             )
             registry1.promote_candidate(identity_id, "face_002", "manual")
@@ -510,6 +532,7 @@ class TestVersioning:
         identity_id = registry.create_identity(
             anchor_ids=["face_001"],
             candidate_ids=["face_002", "face_003"],
+            name="Versioned Person",
             user_source="manual",
         )
 
@@ -563,7 +586,7 @@ class TestListOperations:
         from core.registry import IdentityRegistry, IdentityState
 
         registry = IdentityRegistry()
-        id1 = registry.create_identity(anchor_ids=["face_001"], user_source="manual")
+        id1 = registry.create_identity(anchor_ids=["face_001"], name="Confirmed Person", user_source="manual")
         id2 = registry.create_identity(anchor_ids=["face_002"], user_source="manual")
         registry.confirm_identity(id1, "manual")
 
