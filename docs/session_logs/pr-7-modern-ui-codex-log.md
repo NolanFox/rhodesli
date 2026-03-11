@@ -26,8 +26,8 @@
 - [x] Audited Antigravity's research note
 - [x] Reviewed recent external sources
 - [x] Logged source provenance in the audit document
-- [ ] Post PR review comment
-- [ ] Commit and push Codex-authored harness artifacts
+- [x] Post PR review comment
+- [x] Commit and push Codex-authored harness artifacts
 
 ## Research Trail
 - Local repo sources:
@@ -47,6 +47,11 @@
 
 ## Key Decision
 The correct near-term path is not a React/Next.js migration. The right next step is a stack-correct FastHTML/HTMX redesign plan that uses current anti-generic design research without sacrificing route/test safety.
+
+## Breadcrumbs
+- Codex docs commit: `8a1d684` (`[codex] docs(research): add PR 7 UI audit trail`)
+- PR review comment:
+  - https://github.com/NolanFox/rhodesli/pull/7#issuecomment-4042060858
 
 ## Verification Notes
 - No code or data-model changes made
