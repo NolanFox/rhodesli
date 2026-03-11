@@ -34,6 +34,7 @@ import numpy as np
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 from core.embeddings_io import generate_face_id, load_face_data as shared_load_face_data
+from core.identity_scoring import extract_face_ids as shared_extract_face_ids
 
 
 def load_face_data(data_path: Path) -> dict:
@@ -45,10 +46,11 @@ def load_face_data(data_path: Path) -> dict:
 
 
 def load_confirmed_identities(data_path: Path) -> list[dict]:
-    """Load confirmed identities with 2+ anchor faces.
+    """Load confirmed identities with 2+ confirmed faces.
 
     Returns list of dicts with keys: identity_id, name, anchor_ids.
-    Only includes identities with state=CONFIRMED and 2+ anchors.
+    Only includes identities with state=CONFIRMED, non-merged, and 2+ faces
+    across both anchors and confirmed candidates.
     """
     identities_path = data_path / "identities.json"
     if not identities_path.exists():
@@ -64,13 +66,7 @@ def load_confirmed_identities(data_path: Path) -> list[dict]:
         if ident.get("merged_into"):
             continue
 
-        # Extract anchor face IDs (handle both string and dict formats)
-        anchors = []
-        for entry in ident.get("anchor_ids", []):
-            if isinstance(entry, str):
-                anchors.append(entry)
-            elif isinstance(entry, dict) and "face_id" in entry:
-                anchors.append(entry["face_id"])
+        anchors = shared_extract_face_ids(ident)
 
         if len(anchors) >= 2:
             confirmed.append({

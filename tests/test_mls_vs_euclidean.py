@@ -482,6 +482,27 @@ class TestLoadConfirmedIdentities:
         assert len(confirmed) == 1
         assert confirmed[0]["anchor_ids"] == ["f1", "f2"]
 
+    def test_candidate_ids_count_toward_confirmed_faces(self, tmp_path):
+        identities = {
+            "schema_version": 1,
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Alice",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": ["f2"],
+                    "negative_ids": [],
+                },
+            },
+        }
+        with open(tmp_path / "identities.json", "w") as f:
+            json.dump(identities, f)
+
+        confirmed = load_confirmed_identities(tmp_path)
+        assert len(confirmed) == 1
+        assert confirmed[0]["anchor_ids"] == ["f1", "f2"]
+
     def test_missing_file_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             load_confirmed_identities(tmp_path)

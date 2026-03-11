@@ -88,6 +88,26 @@ Context: docs/session_context/session-97-context.md
   - Euclidean at threshold `1.196`: precision `0.9005`, recall `0.8424`, F1 `0.8705`
   - MLS vs Euclidean (`cross_pairs=200`, `seed=42`): Euclidean AUC `0.9844`, MLS AUC `0.9446`
 
+### 2026-03-11 13:15 EDT
+- Added `scripts/evaluate_longitudinal.py` as the reproducible Phase 0 baseline command.
+- Corrected MLS baseline identity loading so confirmed candidate faces count as confirmed ground truth in the MLS-vs-Euclidean path.
+- Generated versioned baseline artifacts:
+  - `evaluation/golden_set_v2.json`
+  - `evaluation/baselines/longitudinal_phase0_baseline.json`
+- Current rebuilt baseline on live repo data:
+  - Golden Set V2: `257` mappings / `84` identities / `46` photos
+  - Euclidean @ `1.196`: precision `0.9036`, recall `0.8451`, F1 `0.8734`
+  - Dominant positive-pair recall: `0.8747`
+  - Tail positive-pair recall: `0.7143`
+  - MLS vs Euclidean (same=`1453`, cross=`200`): Euclidean AUC `0.9851`, MLS AUC `0.9245`
+
+### 2026-03-11 13:18 EDT
+- User merge-order instruction recorded here for compaction safety:
+  - commit regularly and push when done
+  - do not merge this worktree until Session 96 has completed and pushed
+  - merge Session 97 before Session 98
+  - preserve full audit/review/rollback traceability in harness artifacts
+
 ## Open Notes
 - First implementation slice will centralize face-data loading and shared best-linkage scoring before touching thresholds.
 - Prompt-manifest lineage will be added to `gemini_api_calls` as explicit columns plus caller-side manifest fields for date estimation and face alignment.
