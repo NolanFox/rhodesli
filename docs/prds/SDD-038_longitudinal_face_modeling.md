@@ -14,6 +14,7 @@
 3. Ship a **frozen-embedding longitudinal reranker** before any adapter training.
 4. Treat LoRA / PEFT as a **gated experiment**, not the first milestone.
 5. Build the later implementation prompt from the outputs of Phase 0 and Phase 1.
+6. Treat **prompt and state lineage as Phase 0 infrastructure**, because PRD-038 will reuse Gemini outputs and repeated state transitions as downstream ML signal.
 
 ---
 
@@ -55,6 +56,12 @@
    - Straight MLS underperforms that baseline at about 0.953 on the same asset.
    - The Euclidean threshold that reaches about 90% precision is about 1.196 on the stale golden set.
 
+8. **Observability is uneven across app state and Gemini paths.**
+   - Identity history is append-only and relatively strong.
+   - Annotation moderation has usable audit trails.
+   - Gemini call lineage is route-dependent.
+   - Date / location / alignment writes often preserve latest state but not a clean mutation envelope.
+
 ---
 
 ## Where I Agree With The Existing PRD
@@ -72,18 +79,22 @@
 1. **Evaluation repair comes before all five workstreams.**
    - The current repo cannot reliably measure improvement on the live schema.
 
-2. **The primary target is `core/auto_cluster.py`, not only `scripts/cluster_new_faces.py`.**
+2. **Lineage repair belongs in the same first phase.**
+   - PRD-038 will reuse Gemini-derived labels and repeated state transitions.
+   - Without prompt manifests and canonical mutation events, later A/B tests and replay analysis are weak.
+
+3. **The primary target is `core/auto_cluster.py`, not only `scripts/cluster_new_faces.py`.**
    - That is the production batch path.
    - `cluster_new_faces.py` should become a thin wrapper around shared scoring code.
 
-3. **"Best face per decade" is too brittle as the main longitudinal abstraction.**
+4. **"Best face per decade" is too brittle as the main longitudinal abstraction.**
    - Use a small prototype bank per identity instead: 3-5 medoid-style anchors chosen for temporal spread and quality.
 
-4. **Metadata should feed a reranker, not the legacy isotonic module.**
+5. **Metadata should feed a reranker, not the legacy isotonic module.**
    - Scalar isotonic calibration cannot absorb mixed feature sets cleanly.
    - The right target is a multifeature offline ranker with optional post-hoc calibration.
 
-5. **LoRA readiness should be decided by slice gates, not raw pair count.**
+6. **LoRA readiness should be decided by slice gates, not raw pair count.**
    - The repo now has enough pairs to experiment, but the representation skew is still severe.
 
 ---
@@ -146,10 +157,17 @@
 - Fix the embedding loaders used by eval scripts so mixed `mu` / `embeddings` files are supported.
 - Rebuild the golden set from current confirmed identities.
 - Add identity-level CV plus slice reports.
+- Define prompt-manifest and canonical state-event schemas for PRD-038-linked AI and app mutations.
+- Inventory mutating routes and Gemini-backed paths as covered / partial / missing.
 - Extract a shared scorer interface used by:
   - `core/auto_cluster.py`
   - `scripts/cluster_new_faces.py`
   - upload proposal generation paths
+
+**Parallel tracks if file overlap stays low**
+- Track A: eval asset repair and baseline reporting
+- Track B: prompt/state lineage schema, Gemini call coverage, and mutation-route audit
+- Track C: scorer-core extraction and wrapper unification
 
 **Deliverables**
 - `scripts/evaluate_longitudinal.py`
@@ -157,6 +175,8 @@
 - baseline JSON report checked into docs or evaluation artifacts
 - skew report for the rebuilt training / evaluation assets
 - dominant vs tail identity slice report
+- prompt-manifest spec and mutation-event coverage matrix
+- migration plan for `gemini_api_calls` prompt lineage fields and route coverage
 - shared face/metadata loader module
 
 ## Phase 1: Recalibration Hygiene And Label Taxonomy
@@ -274,23 +294,3 @@
      - live compare tools
      - self-serve archive onboarding at materially higher volume
      - same-day SLA expectations for large community uploads
-
----
-
-## Prompt-Prep Outputs
-
-The planning pass already packages the later execution bundle:
-- `docs/prompts/session-97-prompt.md`
-- `docs/session_context/session-97-context.md`
-- `docs/assessments/session-97-prep-assessment.md`
-- `docs/session_logs/session-97-log-stub.md`
-
-Phase 0 and Phase 1 should then produce the exact runtime assets that Session 97 needs:
-
-1. A stable file map for the real scoring path
-2. A working eval CLI and baseline report
-3. A feature dictionary for the reranker
-4. A label taxonomy and recalibration workflow
-5. A shortlist of open questions that actually block coding
-
-Those outputs are what the future implementation prompt should reference, not just the original PRD prose.

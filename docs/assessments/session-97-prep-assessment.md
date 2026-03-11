@@ -13,6 +13,8 @@
   - `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
 - Eval and safety package:
   - `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
+- Prompt and state lineage package:
+  - `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`
 - Session 97 implementation handoff:
   - `docs/session_context/session-97-context.md`
   - `docs/prompts/session-97-prompt.md`
@@ -25,7 +27,11 @@
 
 - AD-217: eval-first prototype-bank longitudinal matcher with cloud-ready
   offline job boundaries
+- AD-218: prompt manifests and canonical state events as first-class lineage
+  for AI-assisted and ML-derived state
 - HD-025: phase-scoped context and artifact-first research for Session 97
+- HD-026: AI/ML implementation bundles must preserve prompt/state lineage when
+  outputs feed later models or canonical app state
 
 ## User Constraints Now Preserved In Artifacts
 
@@ -35,6 +41,8 @@
 - plan for later cloud extraction without forcing it now
 - expect Gemini review before implementation, then a later Claude review
 - future implementation should stay autonomous but fully documented
+- preserve prompt-manifest lineage and canonical mutation history because
+  Gemini-derived labels may later feed downstream ML
 
 ## Remaining Pre-Implementation Inputs
 
@@ -61,6 +69,8 @@ actual Session 97 implementation pass.
 - Pair skew may still block useful adapter gains even after Phase 2.
 - The repo still contains overlapping matcher paths that Phase 0 must unify
   cleanly before later acts touch thresholds or features.
+- App-state and Gemini lineage are still uneven in the live repo until Phase 0
+  instruments the highest-risk routes and finalizes the schema.
 
 ## Assessment
 
@@ -71,3 +81,5 @@ the initial PRD draft because it:
 - preserves the research trail and user constraints in files
 - gives a future Codex session an explicit, testable execution path
 - defines cloud-migration triggers without forcing premature infrastructure work
+- now treats prompt evolution and canonical state changes as replayable inputs,
+  not just incidental logs

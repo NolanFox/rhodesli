@@ -44,6 +44,8 @@ for this package, read it before Act 1 and fold it in.
    harness.
 6. Any Gemini-backed path touched in this session emits enough lineage to
    compare prompt variants as first-class artifacts, not just raw prompt text.
+7. Canonical app mutations touched in this session emit a standard state-event
+   envelope or are documented as deliberate Phase 0 deferrals.
 
 ## Act 0: Orient, Review, And Isolate
 
@@ -75,6 +77,9 @@ This is the first hard gate. Do not skip it.
   - `core/auto_cluster.py` (architectural source of truth for offline batch matching)
   - `scripts/cluster_new_faces.py` (CLI wrapper over the shared pipeline)
   - upload proposal-generation paths
+- Implement the prompt/state lineage spec from
+  `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md` for the highest-risk
+  app and Gemini paths touched in this session
 - If any Gemini path is changed during this act or later, define and document a
   compact prompt identity with at least:
   `prompt_family`, `prompt_version`, `prompt_variant`,
@@ -82,9 +87,10 @@ This is the first hard gate. Do not skip it.
 
 ### Parallelization
 
-Use at most two worktree tracks if file overlap stays low:
+Use at most three worktree tracks if file overlap stays low:
 - Track A: eval asset repair + baseline reporting
-- Track B: scorer-core extraction + wrapper updates
+- Track B: prompt-manifest + state-event schema / route coverage
+- Track C: scorer-core extraction + wrapper updates
 
 If the file overlap is messy, stay sequential.
 
@@ -94,6 +100,9 @@ If the file overlap is messy, stay sequential.
 - baseline JSON artifact
 - updated docs noting the baseline and any changed assumptions
 - tests for mixed-schema loading and scorer-path parity
+- prompt-manifest storage or schema changes for touched Gemini paths
+- mutation-event coverage inventory for touched canonical write paths
+- at least one documented A/B-ready query grouped by prompt manifest fields
 
 ### Gate
 
@@ -227,7 +236,8 @@ Final commit: `[codex] docs(session-97): assessment and verification`
   is logged.
 - No new Gemini prompt path that logs only model name without prompt-family and
   prompt-variant attribution.
-  is logged.
+- No new canonical write path that bypasses mutation-event logging without a
+  written deferment note in the session artifacts.
 
 ## Required Session Outputs
 

@@ -3,6 +3,9 @@
 **Parent**: [docs/prds/038_longitudinal_face_modeling.md](../038_longitudinal_face_modeling.md)
 **Reviewed**: 2026-03-11
 
+**Detailed schema companion**:
+[docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md](PROMPT_AND_STATE_LINEAGE.md)
+
 ---
 
 ## Why This Matters
@@ -108,6 +111,8 @@ So yes: your concern is real, and it is important.
    - each Gemini API call should reference these fields explicitly
    - exact prompt text should still be logged for replay, but the manifest is
      what makes A/B testing and grouped analysis practical
+   - the concrete manifest and state-event envelope are specified in
+     `PROMPT_AND_STATE_LINEAGE.md`
 
 3. **Assignment event log**
    - record per-face or per-source-identity events with:

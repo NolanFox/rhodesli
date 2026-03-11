@@ -71,13 +71,14 @@ This context file is intentionally phase-scoped. Read the overview first, then o
 3. `docs/prds/SDD-038_longitudinal_face_modeling.md`
 4. `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
 5. `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`
-6. `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
-7. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-217
-8. `docs/HARNESS_DECISIONS.md` entries HD-024 and HD-025
-9. `docs/assessments/session-97-gemini-review.md`
-10. `docs/assessments/session-97-gemini-followup.md`
-11. `docs/assessments/session-97-post-gemini-assessment.md`
-12. `docs/assessments/session-97-post-followup-assessment.md`
+6. `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`
+7. `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
+8. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-218
+9. `docs/HARNESS_DECISIONS.md` entries HD-024 through HD-026
+10. `docs/assessments/session-97-gemini-review.md`
+11. `docs/assessments/session-97-gemini-followup.md`
+12. `docs/assessments/session-97-post-gemini-assessment.md`
+13. `docs/assessments/session-97-post-followup-assessment.md`
 
 ### Read only if present before implementation starts
 
@@ -106,6 +107,8 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - baseline JSON report
 - dominant and tail identity slice metrics
 - shared scorer interface used by both clustering paths
+- prompt-manifest schema for Gemini-backed routes
+- mutation-event coverage matrix for canonical app writes
 - prompt-lineage contract for any Gemini-backed stage touched in Session 97:
   `prompt_family`, `prompt_version`, `prompt_variant`,
   `prompt_contract_version`, and experiment / shadow-run identifiers
@@ -216,6 +219,8 @@ Use the existing ML service architecture docs as the north star:
 5. Do not change app-visible matcher behavior until shadow eval and manual diff review pass.
 6. Any Gemini path changed in Session 97 must log both exact prompt text and a
    compact prompt-manifest identity so prompt variants can be grouped and A/B tested later.
+7. Any canonical state mutation path touched in Session 97 must emit or adopt
+   the standard mutation-event envelope, or be listed explicitly as deferred.
 
 ---
 
@@ -228,6 +233,7 @@ By the end of Session 97, the implementation pass should leave:
 - updated research references if new sources materially changed decisions
 - eval artifacts and reproducible commands
 - explicit note on whether cloud migration thresholds changed
+- route coverage note for prompt manifests and state-mutation events
 
 ---
 

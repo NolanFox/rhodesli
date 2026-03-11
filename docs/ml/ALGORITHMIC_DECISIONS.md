@@ -2466,3 +2466,22 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Post-followup clarifications**: Gemini follow-up added exact citations plus concrete dominant-bias and label-toxicity eval designs. Codex adopted the metric structure, reversible-label rules, and kinship feature-family direction, while keeping numeric thresholds provisional until Phase 0 reports real slice sizes.
 - **Prompt-lineage clarification**: Later user feedback tightened the replay requirement: Gemini-backed stages must distinguish prompt family, version, and variant, not just model and raw prompt text, so prompt evolution can be compared the way model evolution is compared.
 - **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-gemini-followup.md`, `docs/assessments/session-97-post-gemini-assessment.md`, `docs/assessments/session-97-post-followup-assessment.md`
+
+### AD-218: Prompt Manifests And Canonical State Events For Replayable AI/ML Lineage
+- **Date**: 2026-03-11 | **Session**: 97-prep
+- **Context**: The user clarified that Gemini-derived outputs such as date estimates may later become ML inputs, so model logging alone is insufficient. Current repo behavior is uneven: some Gemini paths store exact prompt text and full response, others only store summary metadata; identity history is strong, but app-wide canonical mutation logging is inconsistent outside registry and annotation flows.
+- **Decision**:
+  1. Introduce a versioned **prompt-manifest abstraction** for every Gemini-backed prompt family. Every call should carry `prompt_manifest_id`, `prompt_family`, `prompt_version`, `prompt_variant`, and `prompt_contract_version` in addition to exact `prompt_text` and `full_response`.
+  2. Standardize canonical writes around a shared **state-transition event envelope** containing before/after state, actor, action, source surface, linked event ids, and optional `ml_run_id` / `prompt_manifest_id`.
+  3. Keep existing storage backends where practical (`audit_log`, registry history, `gemini_api_calls`), but require them to carry the shared lineage fields so replay and A/B analysis do not depend on ad hoc parsing.
+  4. Treat this as **Phase 0 infrastructure** and parallelize it with eval repair and scorer unification where file overlap is clean.
+- **Why**:
+  - Prompt A/B testing requires grouped, human-readable prompt identities, not only raw prompt blobs.
+  - UX debugging and rollback analysis require knowing which canonical write happened, who or what initiated it, and what changed.
+  - Downstream ML built on Gemini-derived labels is only trustworthy if those labels preserve prompt lineage and acceptance / reversal history.
+  - Reusing existing stores with a shared envelope is faster and safer than introducing a full new event platform before PRD-038 ships.
+- **Rejected alternatives**:
+  - **Store only raw `prompt_text` and rely on hashes later** — too weak for grouped analysis and prompt-family comparisons.
+  - **Defer prompt/state lineage until cloud migration** — wrong sequencing; by then historical data is already under-specified.
+  - **Replace every current audit store immediately** — too disruptive for Phase 0; standardizing envelopes first is the pragmatic path.
+- **Execution artifacts**: `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-prep-assessment.md`

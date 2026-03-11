@@ -583,3 +583,22 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Parallelize everything** — harms correctness when files overlap heavily.
 
 **Breadcrumbs:** `docs/prompts/session-97-prompt.md`, `docs/session_context/session-97-context.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-gemini-followup.md`, `docs/assessments/session-97-post-gemini-assessment.md`, `docs/assessments/session-97-post-followup-assessment.md`, `docs/session_logs/session-97-log-stub.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
+
+## HD-026: AI/ML Bundles Must Preserve Prompt And State Lineage
+
+**Date:** 2026-03-11
+**Status:** ACCEPTED
+**Decision:** When an implementation bundle covers AI/ML features whose outputs feed later models, evaluations, or canonical app state, the bundle must include an explicit prompt/state lineage spec and require those fields in the execution prompt.
+
+**Context:** Session 97 planning started with strong ML-eval packaging, but the user clarified an additional requirement: Gemini prompt evolution should be analyzable the same way model evolution is analyzable, and canonical app mutations should be replayable for UX/debugging purposes. Without encoding this in the harness, future sessions could preserve model names but silently omit prompt-family identity or mutation-event coverage.
+
+**What this changes:**
+1. Planning bundles now need a concrete lineage artifact when AI outputs may become ML inputs.
+2. Implementation prompts must call out prompt manifests and canonical mutation events as explicit scope, not background assumptions.
+3. Context files must list the lineage spec in required reading before implementation starts.
+
+**Rejected alternatives:**
+- **Rely on ALGORITHMIC_DECISIONS alone** — insufficient for execution; the requirement needs to appear in the actual prompt/context bundle.
+- **Treat prompt lineage as a Gemini-only special case** — too narrow; the same principle applies to any future AI provider and to app-state changes triggered by AI-assisted workflows.
+
+**Breadcrumbs:** `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/ml/ALGORITHMIC_DECISIONS.md` (AD-218)
