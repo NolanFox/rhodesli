@@ -26,8 +26,8 @@ To ensure zero regressions, any design update must preserve the following repo-v
 | Route | Preserved Behavior | Repo-Verified DOM Invariants |
 | :--- | :--- | :--- |
 | **`/` (Landing)** | Anonymous access only; redirects logged-in users. | `.hero-mosaic`. (There is no `[data-testid="community-landing"]` for the default Rhodes view). |
-| **`/?section=...`** | Workstation root / Dashboard | The HTMX sidebar structure (`hx-get="/?section=..."`) and section count badges. (Do NOT rely on `[data-testid="admin-nav-bar"]`). |
-| **`/identify/{id}`** | Public share-ready ID flows | The `<form>` containing `name="name"`, `name="relationship"`, `name="email"`, and the "Yes, I know this person!" submission text. |
+| **`/?section=...`** | Workstation root / Dashboard | The HTMX sidebar structure (`hx-get="/?section=..."`) and section count badges. |
+| **`/identify/{id}`** | Public share-ready ID flows | The presence of the `[data-testid="identify-person-form"]` and the `name="identity_id"` hidden input, plus `og:title`/`og:image` meta tags. |
 | **`/photo/{id}`** | Public / Admin photo detail view | `[data-testid="photo-metadata-overlay"]`. Admin edits `[data-testid="photo-inline-edit"]`. |
 | **`/person/{id}`** | Public / Admin person profile | `[data-testid="life-details"]`, `[data-testid="person-action-bar"]`. |
 | **`/photos`** | Photo grid | HTMX pagination markers and grid structure. |
@@ -41,10 +41,10 @@ I do not want route-by-route "one-off" styling. Cross-surface primitives must re
 
 | Primitive | Purpose & Usage | Source of Truth Enforcement |
 | :--- | :--- | :--- |
-| **Face Cards** | Display a cropped/masked face (Landing, ID flows, Queues) | **Existing shared helper:** Must update `app/main.py::face_card` explicitly. |
+| **Face Cards** | Display a cropped/masked face (Landing, ID flows, Queues) | **Existing shared helper:** Update `app/main.py::face_card` with a scoped aesthetic class or variant pattern. |
 | **Metadata / Provenance** | Display collection, date, and source info (`/photo`, `/identify`, Admin) | **Shared CSS class hierarchy:** Create typography classes specifically for metadata blocks in `app/page_routes.py`. |
 | **Action Bars / CTAs** | Drive main user action (`/identify`, queues) | **Shared CSS class / Shared helper:** Extract button variants into a new semantic Tailwind abstraction if necessary. |
-| **Section Headers** | Title a page or queue state | **Existing shared helper:** Update `app/main.py::section_header`. |
+| **Section Headers** | Title a page or queue state | **Existing shared helper:** Update `app/main.py::section_header` with scoped classes. |
 | **Empty States** | Display when no data exists in a queue | **New shared helper:** Rather than inline creation across routes, abstract to a shared function in `main.py`. |
 | **Loading / HTMX** | Network activity indicator | **Shared CSS class:** Update global `.htmx-indicator` style definition. |
 | **Public Nav Chrome** | Orientation on public pages | **Existing shared helper:** Update `app/main.py::_public_nav_links`. |
@@ -63,17 +63,20 @@ To guarantee zero regressions and no accidental spread into high-risk routes, Se
 ### Implementation Touch Map
 - `app/page_routes.py::landing_page` ➔ `needs scoped variant` (Update public view).
 - `app/page_routes.py` identify route `get(person_id, ...)` ➔ `needs scoped variant`.
-- `app/main.py` route `/?section=...` ➔ `safe to restyle globally`.
-- `app/main.py::_admin_dashboard_banner` ➔ `safe to restyle globally`.
-- `app/main.py::sidebar` ➔ `safe to restyle globally`.
-- `app/main.py::section_header` ➔ `safe to restyle globally`.
-- `app/main.py::face_card` ➔ `safe to restyle globally`.
-- `app/main.py::_public_nav_links` ➔ `safe to restyle globally`.
+- `app/page_routes.py` workstation route (`/?section=...`) ➔ `safe to restyle globally`.
+- `app/main.py::_admin_dashboard_banner` ➔ `needs scoped variant` (Reused on out-of-scope admin sub-routes where regression is risky).
+- `app/main.py::sidebar` ➔ `needs scoped variant` (Heavily linked to out-of-scope metadata forms and map routes).
+- `app/main.py::section_header` ➔ `needs scoped variant` (Heavily reused across `/photos`, `/tools/compare`, and public flows).
+- `app/main.py::face_card` ➔ `needs scoped variant` (Used extensively in `/person/{id}`, `/identify/{id}/match/{id}`, and `/timeline`).
+- `app/main.py::_public_nav_links` ➔ `safe to restyle globally` (Centralized public typography asset).
 
 ### Out-of-Scope Leakage Rules
 - `/tools/compare` is HIGH RISK. `must not be touched in Session 99`.
 - `/photo/{id}`, `/person/{id}`, `/photos`, `/timeline`, `/tree` are HIGH RISK. `must not be touched in Session 99`.
-- **Leakage Policy:** If applying global styles to `app/main.py::face_card` or `app/main.py::section_header` breaks the DOM structure of out-of-scope pages like `/photos` or `/person/{id}`, the Session 99 developer MUST NOT edit the out-of-scope page. Instead, they must introduce a scoped variant or gracefully handle the style inheritance within the shared helper.
+- **Explicit Shared Helper Rule:** Because `face_card`, `section_header`, `sidebar`, and `_admin_dashboard_banner` are heavily used by out-of-scope routes, **Session 99 MUST NOT restyle them globally.** 
+- **Leakage Policy:** To solve this, developers must strictly:
+  1. Introduce a scoped rendering variant parameter (e.g., `view_mode="archival"`).
+  2. OR apply route-local CSS composition that does not leak out of the `#target-container`.
 
 ## 6. Wow Without Slop (Aesthetic Rules)
 To elevate Rhodesli from amateur to premium *without* looking like generic AI SaaS, Session 99 must follow these rules:
@@ -92,12 +95,12 @@ Session 99 implementation must be executed in strict parallel tracks to avoid ge
 **Track B: Public Share-Ready Page (`/identify/{id}`)**
 - Redesign the "Can you help?" flow to look premium, tactile, and connected to the Landing Page aesthetic.
 **Track C: Workstation Root (`/?section=...`)**
-- Overhaul the header (`_admin_dashboard_banner`), navigation (`sidebar`), and cues (`section_header`) to apply the denser, utilitarian variant of the Shared Surface primitives.
+- Overhaul the header (`_admin_dashboard_banner`), navigation (`sidebar`), and cues (`section_header`) to apply the denser, utilitarian variant.
 
 **Track D: Final Harmonization & Convergence**
 - A deliberate pause to run `diff` comparisons across touched files.
 - Compare Face Cards rendered on Track A vs Track C to ensure identical classes are used.
-- Enforce the "Single Source of Truth Strategy" outlined in Section 4. Reconcile any repeated inline primitives into shared helpers before merge.
+- Enforce the "Single Source of Truth Strategy" outlined in Section 4. Reconcile any repeated inline primitives into shared helpers using the scoped variant rules before merge.
 
 ## 8. Verification Gates (Strict Enforcement)
 Before merging Session 99 changes, the following gates MUST pass:
@@ -105,8 +108,8 @@ Before merging Session 99 changes, the following gates MUST pass:
 2.  **Repo-Verified DOM Invariants:** Ensure the elements listed in Section 3 remain accessible to `BeautifulSoup` inside the pytest suites.
 3.  **Deterministic Route Smoke Checks:** 
     * `/` (Landing)
-    * `/?section=inbox` (Workstation)
-    * `/identify/test-unidentified-1` (Or dynamically extracting an unidentified ID from the landing page to curl). Do not rely on `/identify/random`.
+    * `/?section=inbox` (Workstation root handled in `app/page_routes.py`)
+    * `/identify/unknown-1` (Or `test-unidentified-1` based on DB fixtures).
 4.  **Screenshot Checkpoints:** Export rendered screenshots of the three in-scope redesign surfaces (`/`, `/identify/{id}`, and `/?section=inbox`) as visual proofs of the archival aesthetic.
 
 ---
