@@ -21,7 +21,7 @@
    - prototype bank + longitudinal reranker
    - active learning in review UX
    - gated adapter experiments
-6. Added a Session 97 context file, prompt file, prep assessment, and log stub.
+6. Added a Session 97 context file, prompt file, Gemini review bundle, prep assessment, and log stub.
 7. Updated decision logs and roadmap/backlog breadcrumbs.
 
 ## New Or Updated Artifacts
@@ -31,7 +31,9 @@
 - `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
 - `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`
 - `docs/session_context/session-97-context.md`
+- `docs/session_context/session-97-gemini-review-context.md`
 - `docs/prompts/session-97-prompt.md`
+- `docs/prompts/session-97-gemini-review-prompt.md`
 - `docs/assessments/session-97-prep-assessment.md`
 - `docs/session_logs/session-97-log-stub.md`
 - `docs/ml/ALGORITHMIC_DECISIONS.md` (AD-217)
