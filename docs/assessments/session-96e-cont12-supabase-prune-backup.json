@@ -1,0 +1,1824 @@
+{
+  "generated_at": "2026-03-11T14:10:39.637056+00:00",
+  "source_commit": "839caa6427654fd4e9d2f352f9db1cde92fbda61",
+  "sync_api_backups": {
+    "identities_json_backup": "identities.json.bak.1773237513",
+    "photo_index_json_backup": "photo_index.json.bak.1773237513"
+  },
+  "snapshot_counts": {
+    "identities": 3412
+  },
+  "supabase_counts_before_prune": {
+    "identities": 3524,
+    "stale_identity_rows": 112
+  },
+  "stale_identity_state_counts": {
+    "INBOX": 112
+  },
+  "stale_identity_rows": [
+    {
+      "identity_id": "0401f614-aae7-4ada-8f26-e13587c420d9",
+      "name": "Unidentified Person 0401f614",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_650c3b8992a7"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "06d02283-1382-469d-82c4-a474459e4a9e",
+      "name": "Unidentified Person 06d02283",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c2ffdbf56e61"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "0b95898c-495c-44e2-8afc-bfc016b0c720",
+      "name": "Unidentified Person 0b95898c",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a1bc4d95671b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "0ceda5ed-9798-41e6-8988-4cb164db78dc",
+      "name": "Unidentified Person 0ceda5ed",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_de75df56d8ea"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "0d443369-26a7-4ba4-874b-2fbc00b6c666",
+      "name": "Unidentified Person 0d443369",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f6432742a407"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "0f737391-e831-4b36-896b-dd752ae9dbf8",
+      "name": "Unidentified Person 0f737391",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_2f7b4393c61e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "16df6f4a-695e-48ad-aed2-f7853ce4c720",
+      "name": "Unidentified Person 16df6f4a",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8e0ba2afd13d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "16ff6dcd-612f-4adf-80e3-88fb53d812b6",
+      "name": "Unidentified Person 2198",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9a363cdc1a55"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
+      "created_at": "2026-03-10T16:06:18.663964+00:00",
+      "updated_at": "2026-03-10T20:25:32.76465+00:00"
+    },
+    {
+      "identity_id": "17deee02-ad55-4132-8d48-733725ae85fc",
+      "name": "Unidentified Person 17deee02",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_913b98556711"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "1abba0e2-9638-4a57-bc58-25886682e44d",
+      "name": "Unidentified Person 1abba0e2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_e80c1330dd44"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "24adef3d-6105-4a0d-9232-af7c60205328",
+      "name": "Unidentified Person 24adef3d",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_e64c25fc88a7"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "25524d6d-defa-4306-a8a6-15fe394e8e57",
+      "name": "Unidentified Person 25524d6d",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d83c4552bcf1"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "25d326f2-3b34-47ba-a659-b3a324de755d",
+      "name": "Unidentified Person 25d326f2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_4e5225d542c7"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "28071602-f363-4383-bbe9-cc2ed45ffcd4",
+      "name": "Unidentified Person 28071602",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7a62acfd6425"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "2859d293-1c8a-46e7-9e9f-0cf23c11172d",
+      "name": "Unidentified Person 2859d293",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_ae03b3628bfe"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "28a68e0e-0b1e-4b8b-b3c3-5b54541b9491",
+      "name": "Unidentified Person 28a68e0e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_792dd755d7ab"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "2e79319e-aee2-4ebc-8e01-f744056498f5",
+      "name": "Unidentified Person 2e79319e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_bc76c03be914"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "30613a5f-1d56-4124-a8c7-64a2118a3081",
+      "name": "Unidentified Person 30613a5f",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_fe92d247a5e0"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "306a0628-1500-4c3b-93d3-3d0dfd9fa255",
+      "name": "Unidentified Person 306a0628",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_3f291817f9cb"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "30750b45-99bf-42ef-8a3d-9f93bb3986a7",
+      "name": "Unidentified Person 30750b45",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d03f0f36cd4e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "334605c9-0836-4709-9f9b-7ac9129a811f",
+      "name": "Unidentified Person 1300",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b171baf6fd54"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
+      "created_at": "2026-03-10T16:06:18.663964+00:00",
+      "updated_at": "2026-03-10T20:25:31.921597+00:00"
+    },
+    {
+      "identity_id": "349e2cb4-f146-4c47-8bb9-1ccd4ffffb63",
+      "name": "Unidentified Person 349e2cb4",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0e7f078f2c2c"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "363b9fbe-70ec-438c-b4c7-fca9c4ef9b6c",
+      "name": "Unidentified Person 363b9fbe",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_019e539b7357"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "36a7f64e-76c9-498f-87dd-0c86ba097382",
+      "name": "Unidentified Person 36a7f64e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c531017f208c"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "37b7c609-59ab-4402-9822-c6ad4d3722fa",
+      "name": "Unidentified Person 37b7c609",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_91472894dba5"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "3dfed0da-69fc-4b4c-a43c-1644c9789ee1",
+      "name": "Unidentified Person 3dfed0da",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9de241fafb4d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "3fff243c-743f-4cb0-9436-1796f88cd701",
+      "name": "Unidentified Person 3fff243c",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_5a77bb0d4ef0"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "43780542-ee69-4635-ac7e-42f7f34b6773",
+      "name": "Unidentified Person 43780542",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_39a0672080c4"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "44883bf6-fafc-4bd5-84d5-c4b9719b5c37",
+      "name": "Unidentified Person 44883bf6",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_80058bc11db8"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "46f965d8-d470-4e81-9d79-1005dba81e0d",
+      "name": "Unidentified Person 46f965d8",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_899f1e9e023a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "482598f5-9fff-43f8-8150-462c6d19aa20",
+      "name": "Unidentified Person 482598f5",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8be9475aa2ac"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "49bfc543-8ef5-40e9-b735-fe94e97fb9c6",
+      "name": "Unidentified Person 49bfc543",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c61f9bef988a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "49d93f20-a125-46e3-9d0f-dd7e0e07623b",
+      "name": "Unidentified Person 49d93f20",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_17c8313ce8ea"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "4c369cf6-370d-4363-ae03-3072ad5cbfa7",
+      "name": "Unidentified Person 4c369cf6",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b6d2995b52da"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "5000ebe2-3c9a-4a2f-8cb4-7b94fb224588",
+      "name": "Unidentified Person 5000ebe2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_527751e0fa99"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "5223168a-cd6b-4856-9c24-c0082148258f",
+      "name": "Unidentified Person 5223168a",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d1cac4775a22"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "56133bdd-25c0-40a1-91ad-e3f32372b0da",
+      "name": "Unidentified Person 56133bdd",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_927c9a6fc62e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "634c3351-9ba1-4695-a07b-aa9968bc3dbd",
+      "name": "Unidentified Person 634c3351",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_024326c4d472"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "6386371b-6bcc-4e4f-953e-92162a13b197",
+      "name": "Unidentified Person 6386371b",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9bcdb5cbf280"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "6561f46c-d1e3-4b7e-85d2-c786855c017b",
+      "name": "Unidentified Person 6561f46c",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7f89c7b43b14"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "66623005-1bac-4994-b084-b345c60ae092",
+      "name": "Unidentified Person 66623005",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a4c3a5701b51"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "682985f2-9d3e-4677-8ec9-a0f9aa16c046",
+      "name": "Unidentified Person 682985f2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f08939fa817d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "6f125b55-6dd6-4f8d-8117-0706a750f8dd",
+      "name": "Unidentified Person 6f125b55",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7f9e00a474e8"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "735c6b1f-fdee-4d74-a671-50b5075d8641",
+      "name": "Unidentified Person 735c6b1f",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_3636cc4d9c56"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "7445fc0c-7fb6-4d2a-a3c4-840512506cf3",
+      "name": "Unidentified Person 7445fc0c",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_12981500c242"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "7659912a-2963-42a8-831f-654ccc5a7b23",
+      "name": "Unidentified Person 7659912a",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b4011c0d3e21"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "7700de88-f008-412c-aa4a-a3f63bee11d4",
+      "name": "Unidentified Person 7700de88",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_89f9303f9ecb"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "77d13df5-6d69-4d16-9315-eaca87ee82e3",
+      "name": "Unidentified Person 77d13df5",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8d8e06bfb609"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "7924b0a2-bc0c-4e27-8173-da836ed89b46",
+      "name": "Unidentified Person 7924b0a2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_1a4c2b4cb2d6"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "7a3bbf21-f2cb-4015-8ffe-2e14c11ba3cf",
+      "name": "Unidentified Person 7a3bbf21",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_df7b002e40b6"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "7ecb8ec2-d0f9-4654-99cf-ecefea93be5d",
+      "name": "Unidentified Person 7ecb8ec2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a8257e809a37"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "7ffb0350-725f-4f59-943c-5ad133eeafdc",
+      "name": "Unidentified Person 7ffb0350",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9427bbf5dfa4"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "8445bae7-bba3-4b56-94fc-cf9190a81c1e",
+      "name": "Unidentified Person 8445bae7",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_63e77107ce4a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "85314582-b139-4cab-90e3-efdfec516248",
+      "name": "Unidentified Person 85314582",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_58ef6d36e355"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "888f5f85-71a9-4d83-8bd0-4d53de923ff4",
+      "name": "Unidentified Person 888f5f85",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_de0bbdbefbb6"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "89b67829-7aae-4016-a9b1-c24aca162bb4",
+      "name": "Unidentified Person 89b67829",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_511a29a241cc"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "8b2a6ae7-843a-4c51-b4c2-7f9399dd8fe5",
+      "name": "Unidentified Person 8b2a6ae7",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_427de6f559b8"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "8d2a07cd-4bb1-487f-836a-4623e1646831",
+      "name": "Unidentified Person 8d2a07cd",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b46bc78c3f2c"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "8f482d87-d377-4a96-aea6-c230092302d2",
+      "name": "Unidentified Person 8f482d87",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a72c8f465e4e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "90d126df-edc4-4b1f-8b24-c274eb4fae7b",
+      "name": "Unidentified Person 90d126df",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b855e5c5179d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "94be37a9-e43e-4c4b-9c82-d4363d8de2be",
+      "name": "Unidentified Person 94be37a9",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_bcb252913cdc"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "967815fa-9c42-4b8a-a7cf-8650ee4a19a9",
+      "name": "Unidentified Person 967815fa",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8079b0cee85f"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "98cba8f0-b21b-473e-9e00-301131fef3ee",
+      "name": "Unidentified Person 98cba8f0",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d924d4b1d1da"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "9902b7d9-7ace-40f9-bef4-e82e15dde1af",
+      "name": "Unidentified Person 9902b7d9",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_6bf460b4e31a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "99856a1e-4b3f-4795-9e5a-9bf311f14db4",
+      "name": "Unidentified Person 99856a1e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_ca18a7a2e1b2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "9f7956e4-d9e9-4eec-bd9e-bbca442ea327",
+      "name": "Unidentified Person 9f7956e4",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_41b296570be0"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "a0fc65b5-b676-49f5-b369-db7a87fdbfab",
+      "name": "Unidentified Person a0fc65b5",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_71b2df78bbad"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "a8692516-894c-40be-a535-79a82f41793a",
+      "name": "Unidentified Person a8692516",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c8b3284a864a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "aae134c8-c277-4680-b6e1-ad17bbb9e979",
+      "name": "Unidentified Person aae134c8",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d0f23bc897e4"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "ace035d7-2bb4-41ac-bc95-ac25af2bd28d",
+      "name": "Unidentified Person ace035d7",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_33ea7fc5b9bb"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "afdb3df9-e31c-47da-a661-4c0d8e25ea37",
+      "name": "Unidentified Person afdb3df9",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_42af2ea30479"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "b0f9752f-fd24-4412-a886-f0e8ca757f7f",
+      "name": "Unidentified Person b0f9752f",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7a69e88be872"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "b17482f2-6d1d-4565-91ed-672f259ac50a",
+      "name": "Unidentified Person b17482f2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_3d67fd28180b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "b2219844-e6e3-4889-901c-638dcbe7e5b9",
+      "name": "Unidentified Person b2219844",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_42c7a42649ed"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "b295e359-3803-4f22-9498-3ee42fc7dbe9",
+      "name": "Unidentified Person b295e359",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_70b90fd97cea"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "b36a1bfa-22a7-47f9-b69c-409eaa8bcb5b",
+      "name": "Unidentified Person b36a1bfa",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_31a521c46272"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "b71a1432-1164-4c6c-bea8-eb115b0afcb7",
+      "name": "Unidentified Person b71a1432",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_afd49ea04bfa"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "baf83f7f-5c91-49bb-93ab-f662f9854d4d",
+      "name": "Unidentified Person baf83f7f",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a9ce55cb81a5"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "bc459345-f7ae-4a83-b52d-15af9db9cf6f",
+      "name": "Unidentified Person 4099",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_12981500c242"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T16:06:18.663964+00:00",
+      "updated_at": "2026-03-10T20:25:32.76465+00:00"
+    },
+    {
+      "identity_id": "be8af40b-9df3-4c00-945f-4267d9fcfcf9",
+      "name": "Unidentified Person be8af40b",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_425622472192"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "c02984a4-789a-4826-a50b-03014241b455",
+      "name": "Unidentified Person c02984a4",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_ba78e95c0416"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "c0697679-0e8e-4d07-9912-fd6f285611e2",
+      "name": "Unidentified Person c0697679",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_cb7581a1d398"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "c47171c2-56c9-4999-8ceb-54d3d77d9b67",
+      "name": "Unidentified Person c47171c2",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_2b17b3d77e4a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "c50ee5d4-5963-490c-a9de-4eda49d81ba1",
+      "name": "Unidentified Person c50ee5d4",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c2daa4325ea2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "c555c962-f312-4a1b-9636-eb6ecf02a31b",
+      "name": "Unidentified Person c555c962",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_6902d3d9daaa"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "cbef9f48-c328-471d-895f-60394a45b8b7",
+      "name": "Unidentified Person cbef9f48",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_4c304ef2cd7b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "ccd150d7-3fdc-4e34-ad42-b8c9370a3a1a",
+      "name": "Unidentified Person ccd150d7",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_6a65090412c7"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "ce702354-13bb-4e51-8cff-1ff7edcf4121",
+      "name": "Unidentified Person ce702354",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_57c3f78ec251"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "d23402e4-6c0e-42f3-83d6-5def7996746e",
+      "name": "Unidentified Person d23402e4",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_e79b28c3de19"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "d367433e-770a-4f2b-9ee5-be3d4736f1b9",
+      "name": "Unidentified Person d367433e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a7199edcbf96"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "d36d8b94-3ead-4adf-beed-4f690e0c58ca",
+      "name": "Unidentified Person d36d8b94",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f289d6901882"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "d44abf1b-98dc-4679-a18d-8a050697900b",
+      "name": "Unidentified Person d44abf1b",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_600c83ed3604"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "d588dd60-0845-405a-9379-9e43a9e6ceb7",
+      "name": "Unidentified Person d588dd60",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_838df9a7957d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "d7e808c6-6566-4499-b6fe-c9a41977aaf8",
+      "name": "Unidentified Person d7e808c6",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_2147878379db"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "d88b6380-0407-48c3-bc7e-8d8c0533280f",
+      "name": "Unidentified Person d88b6380",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d3ffd762d77e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "d999b885-d962-418c-a05a-4fad74f954a6",
+      "name": "Unidentified Person d999b885",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_ab35b0397838"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "dcf9e52c-11b8-4210-9d48-05cee818805e",
+      "name": "Unidentified Person dcf9e52c",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f74b01636981"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "e2087c28-1af0-48da-9d08-60b45e417f03",
+      "name": "Unidentified Person e2087c28",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_858b951193c3"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "e620ce97-6893-4cb4-8b59-443f9c1add6c",
+      "name": "Unidentified Person e620ce97",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b1100f7e83d2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "eab20cd0-b60a-4244-b178-57be1dbdc476",
+      "name": "Unidentified Person eab20cd0",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_755500a923f8"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "eda3a8d0-8941-4d63-a659-ba523ff8db06",
+      "name": "Unidentified Person eda3a8d0",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_ba6b39b34435"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "ef5eecfc-0093-469d-851d-2045ba411d07",
+      "name": "Unidentified Person ef5eecfc",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b9fe34026ff3"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "ef74428f-a9df-4397-b167-9d97588a8c48",
+      "name": "Unidentified Person ef74428f",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b6d968a4eda3"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "f01f8c8b-f83a-4141-b58e-960145aacb82",
+      "name": "Unidentified Person f01f8c8b",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_5ffc1adbcff4"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "f02229f3-f91d-4319-932f-9c9f6329b1f9",
+      "name": "Unidentified Person f02229f3",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c90f9dfff65d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "f297431e-f2a2-4b97-8d7f-8a8d26fe9f1f",
+      "name": "Unidentified Person f297431e",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_67a71f0d8807"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "f3025304-c19a-4b78-b00e-bb8fde9be032",
+      "name": "Unidentified Person f3025304",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_46ec1cf6d0aa"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "f832bad6-dead-4451-8265-be74795b0c8f",
+      "name": "Unidentified Person f832bad6",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7b1c0f809276"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "f8c75183-8ec6-46f3-8174-bc35839109e6",
+      "name": "Unidentified Person f8c75183",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a77dc89b3097"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.670359+00:00",
+      "updated_at": "2026-03-10T20:25:31.238505+00:00"
+    },
+    {
+      "identity_id": "faf007f3-faa5-4292-b6f6-fd5b5c899bb9",
+      "name": "Unidentified Person faf007f3",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8f99750a2ea9"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    },
+    {
+      "identity_id": "fd2d9845-e2dc-468d-9133-78510293215c",
+      "name": "Unidentified Person fd2d9845",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_401f9261cc19"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:30.848928+00:00"
+    },
+    {
+      "identity_id": "fecb3190-779b-4d56-971b-a6f6c7aa95f2",
+      "name": "Unidentified Person fecb3190",
+      "display_name": null,
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b79f59199131"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "metadata": {},
+      "version_id": 1,
+      "merged_into": null,
+      "created_at": "2026-03-10T18:36:17.748096+00:00",
+      "updated_at": "2026-03-10T20:25:31.328726+00:00"
+    }
+  ],
+  "preserved_photo_alias_rows": [
+    {
+      "photo_id": "d2642d16f5f0139c",
+      "reason": "cache-id alias for an inbox photo_index entry; not pruned",
+      "maps_to_photo_index_id": "inbox_658979c2_0_family_search_david_capeloto_declaration_of_intent_image"
+    }
+  ],
+  "related_identity_communities_rows": [],
+  "production_schema_notes": {
+    "photo_faces_identity_id_present": false,
+    "note": "Production photo_faces table does not expose an identity_id column, so stale identity pruning only touched identities and identity_communities."
+  }
+}

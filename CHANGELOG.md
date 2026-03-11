@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.97.10] — 2026-03-11 (Session 96e-cont12: Production Reconciliation + Root Cause Closeout)
+
+### Fixed
+- **Production-backed integrity drift** — reconciled the audited `3412`-identity / `938`-photo snapshot across local data, live volume JSON, and Supabase shadow tables. After writing the clean snapshot, `112` stale Supabase identity rows were exported to a checked-in backup artifact and then pruned.
+- **Embedding coverage fully restored** — cont12 repaired the remaining `8` missing embeddings from the local audit baseline, including crop-matched recovery of the last `2` archival records. Final local audit reports `0` missing embeddings.
+- **Staged upload artifact publication** — staged production pushes now publish `embeddings.npy`, closing a gap where durable face records could reach production before their embedding artifact.
+- **Timeline filter false-empty state** — the `/timeline` person filter now only offers people with at least one visible dated photo under the current filters, restoring the full app test gate.
+
+### Added
+- **Machine-readable cont12 audit chain** — added `session-96e-cont12-local-audit-before.json`, `session-96e-cont12-local-audit-after-structural.json`, `session-96e-cont12-local-audit-after-embedding-repair.json`, `session-96e-cont12-local-audit-final.json`, and `session-96e-cont12-embedding-repair-report.json`.
+- **Machine-readable Supabase unwind trail** — added `session-96e-cont12-supabase-prune-backup.json` and `session-96e-cont12-supabase-prune-result.json` so the only destructive production step in cont12 can be reviewed or reversed later.
+
+### Verification
+- Local audit: `3412` identities, `938` photos, `2640` indexed faces, `2852` embeddings, `0` structural integrity failures, `0` missing embeddings
+- App tests: `4098 passed, 7 skipped`
+- ML tests: `566 passed`
+- Live deploy: Railway `99170803-089c-4dc4-8299-b52fba96e5a9` SUCCESS
+- Live `/health`: `200`, `1931` active identities, `938` photos, ML ready
+
 ## [v0.97.9] — 2026-03-11 (Session 96e-cont11: Stability Closeout + Audit Trail)
 
 ### Fixed

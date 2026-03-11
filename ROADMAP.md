@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.97.9 · ~4657 tests · 932 photos · 3406 identities · 84 confirmed
+Current: v0.97.10 · ~4664 tests · 938 photos · 3412 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -156,6 +156,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-11: **v0.97.10 — Session 96e-cont12**: Production reconciliation + root-cause closeout. Closed the remaining local structural drift (`157` orphans, `122` merge chains, `1` duplicate face, `2` ghost refs), finished embedding repair (`10` missing -> `0`), reconciled production with the audited `3412`-identity / `938`-photo snapshot, and pruned `112` stale Supabase identity rows only after exporting them to a checked-in JSON backup artifact. Also restored the app gate by making `/timeline` person filters timeline-backed. Verified `pytest tests/ -x -q` (`4098 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Deploy SUCCESS.
 
 - [x] 2026-03-11: **v0.97.9 — Session 96e-cont11**: Stability closeout + audit trail. Fixed the remaining post-cont10 regressions: structured-anchor merge safety, append-only history bypasses, embeddings-first photo cache hiding valid face records, and ML early-stopping flake. Verified `pytest tests/ -x -q` (`4091 passed`) and `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Confirmed InsightFace had been run earlier and reduced 124 missing embeddings to 2 archival face records. Live verified: Holocaust collage now shows `11 people detected · 10 identified` and preserves `Caden Franco Sadis`; wedding newspaper now preserves its archival unmatched face record. Reversible audit trail added via before/after/delta artifacts. Deploy SUCCESS.
 
