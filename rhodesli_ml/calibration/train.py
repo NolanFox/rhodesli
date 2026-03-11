@@ -114,6 +114,7 @@ def train(
     neg_ratio: int = 3,
     hard_neg_threshold: float = 1.2,
     patience: int = 20,
+    min_delta: float = 1e-3,
     weight_decay: float = 1e-2,
     seed: int = 42,
     use_mlflow: bool = True,
@@ -181,6 +182,7 @@ def train(
                 "weight_decay": weight_decay,
                 "epochs": epochs,
                 "patience": patience,
+                "min_delta": min_delta,
                 "seed": seed,
                 "train_pairs": len(train_pairs),
                 "eval_pairs": len(eval_pairs) if eval_pairs else 0,
@@ -246,7 +248,7 @@ def train(
                 pass
 
         # Early stopping
-        if avg_eval_loss < best_eval_loss:
+        if avg_eval_loss < (best_eval_loss - min_delta):
             best_eval_loss = avg_eval_loss
             best_model_state = {k: v.clone() for k, v in model.state_dict().items()}
             epochs_without_improvement = 0
@@ -330,6 +332,7 @@ def main():
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--neg-ratio", type=int, default=3)
     parser.add_argument("--patience", type=int, default=20)
+    parser.add_argument("--min-delta", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--no-mlflow", action="store_true")
@@ -343,6 +346,7 @@ def main():
         batch_size=args.batch_size,
         neg_ratio=args.neg_ratio,
         patience=args.patience,
+        min_delta=args.min_delta,
         weight_decay=args.weight_decay,
         seed=args.seed,
         use_mlflow=not args.no_mlflow,
