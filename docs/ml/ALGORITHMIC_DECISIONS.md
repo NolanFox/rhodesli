@@ -2435,3 +2435,53 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Type 2 error (missed match manual merge)**: When admin manually merges Albert Fox (Rhodes) with an unidentified Fox Family face, the merged identity gains Fox Family faces → automatically appears in Fox Family's Review section going forward.
 - **Performance**: Cache the photo-derived set with same TTL as community photo IDs (60s). For 636 photos × ~2.6 faces/photo, the computation is ~1652 face lookups — fast.
 - **Context file**: `docs/session_context/session-96c-context.md`
+
+### AD-217: Longitudinal Matching — Eval-First Prototype Bank With Cloud-Ready Offline Jobs
+- **Date**: 2026-03-11 | **Session**: 97-prep
+- **Context**: PRD-038 planning review found that the live matcher path is split across `core/auto_cluster.py` and `scripts/cluster_new_faces.py`, the eval scripts are stale against the current embedding schema, the local confirmed dataset is stronger than the original PRD assumed, and the main blocker for adapter work is pair skew rather than pair count. The user also required that the architecture be designed for later cloud extraction without forcing that migration now.
+- **Decision**:
+  1. Start with **evaluation repair and scorer-path unification** before any model change.
+  2. Keep **training, recalibration, and shadow evaluation local-only** for now, but structure the new scorer as an **artifact-based offline job** so it can later run on queued cloud workers without changing behavior.
+  3. Replace the draft "best face per decade" idea with a **small quality-aware prototype bank** per identity plus a **multifeature longitudinal reranker** on frozen embeddings.
+  4. Keep **LoRA / PEFT** as an experiment track gated by hard-slice wins, not as the first implementation milestone.
+  5. Preserve **additive-only, review-first** behavior: confirmed identities remain human ground truth and new model outputs stay proposals.
+  6. Treat **Gemini prompt families and variants as versioned artifacts**: logging exact prompt text is necessary but not sufficient; each Gemini-backed decision path should also carry compact prompt lineage fields so prompt A/B testing is practical.
+- **Why**:
+  - The repo cannot currently prove improvement on the live schema, so eval repair is the first correctness step.
+  - `core/auto_cluster.py` is the production path; improving only legacy scripts would create inconsistent matching behavior.
+  - A prototype-bank + reranker design uses the new longitudinal signal without overfitting to a brittle decade abstraction.
+  - Artifact-based offline jobs preserve AD-110 while making later cloud extraction an operational move instead of a model rewrite.
+- **Rejected alternatives**:
+  - **Best face per decade as the primary representation** — too brittle when dates are sparse or wrong.
+  - **Push all new metadata into the legacy isotonic calibrator** — scalar isotonic is not the right home for mixed longitudinal features.
+  - **Immediate ML service extraction for PRD-038** — unnecessary before local eval, scorer semantics, and label taxonomy stabilize.
+  - **Stay laptop-specific indefinitely** — unacceptable once throughput or admin concurrency grows.
+- **Cloud migration triggers**: Move the offline scorer / retraining jobs off the laptop when any of these become true:
+  - end-to-end batch scoring or shadow replay routinely exceeds ~45 minutes
+  - new-face volume is consistently above ~100 faces per day
+  - scale reaches ~10k identities or ~100k embeddings
+  - retraining / backfill cadence becomes operationally unreliable on a single local machine
+  - multiple admins need the same ML queue without Nolan's laptop being available
+- **Post-review clarifications**: Gemini review tightened three points that were adopted into the package: temporal-diversity override in prototype selection, dominant-identity bias gates, and reversible active-learning labels. Codex kept those changes but declined to treat all Gemini recommendations as mandatory without further evaluation.
+- **Post-followup clarifications**: Gemini follow-up added exact citations plus concrete dominant-bias and label-toxicity eval designs. Codex adopted the metric structure, reversible-label rules, and kinship feature-family direction, while keeping numeric thresholds provisional until Phase 0 reports real slice sizes.
+- **Prompt-lineage clarification**: Later user feedback tightened the replay requirement: Gemini-backed stages must distinguish prompt family, version, and variant, not just model and raw prompt text, so prompt evolution can be compared the way model evolution is compared.
+- **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-gemini-followup.md`, `docs/assessments/session-97-post-gemini-assessment.md`, `docs/assessments/session-97-post-followup-assessment.md`
+
+### AD-218: Prompt Manifests And Canonical State Events For Replayable AI/ML Lineage
+- **Date**: 2026-03-11 | **Session**: 97-prep
+- **Context**: The user clarified that Gemini-derived outputs such as date estimates may later become ML inputs, so model logging alone is insufficient. Current repo behavior is uneven: some Gemini paths store exact prompt text and full response, others only store summary metadata; identity history is strong, but app-wide canonical mutation logging is inconsistent outside registry and annotation flows.
+- **Decision**:
+  1. Introduce a versioned **prompt-manifest abstraction** for every Gemini-backed prompt family. Every call should carry `prompt_manifest_id`, `prompt_family`, `prompt_version`, `prompt_variant`, and `prompt_contract_version` in addition to exact `prompt_text` and `full_response`.
+  2. Standardize canonical writes around a shared **state-transition event envelope** containing before/after state, actor, action, source surface, linked event ids, and optional `ml_run_id` / `prompt_manifest_id`.
+  3. Keep existing storage backends where practical (`audit_log`, registry history, `gemini_api_calls`), but require them to carry the shared lineage fields so replay and A/B analysis do not depend on ad hoc parsing.
+  4. Treat this as **Phase 0 infrastructure** and parallelize it with eval repair and scorer unification where file overlap is clean.
+- **Why**:
+  - Prompt A/B testing requires grouped, human-readable prompt identities, not only raw prompt blobs.
+  - UX debugging and rollback analysis require knowing which canonical write happened, who or what initiated it, and what changed.
+  - Downstream ML built on Gemini-derived labels is only trustworthy if those labels preserve prompt lineage and acceptance / reversal history.
+  - Reusing existing stores with a shared envelope is faster and safer than introducing a full new event platform before PRD-038 ships.
+- **Rejected alternatives**:
+  - **Store only raw `prompt_text` and rely on hashes later** — too weak for grouped analysis and prompt-family comparisons.
+  - **Defer prompt/state lineage until cloud migration** — wrong sequencing; by then historical data is already under-specified.
+  - **Replace every current audit store immediately** — too disruptive for Phase 0; standardizing envelopes first is the pragmatic path.
+- **Execution artifacts**: `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-prep-assessment.md`
