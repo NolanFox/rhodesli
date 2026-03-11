@@ -171,7 +171,52 @@ class TestGhostIdentities:
 
 
 # ---------------------------------------------------------------------------
-# Check 3: State consistency
+# Check 3: Missing identity face refs
+# ---------------------------------------------------------------------------
+
+
+class TestMissingIdentityFaces:
+    """Identity face refs missing from photo_index.face_to_photo."""
+
+    def test_no_missing_identity_faces(self):
+        from scripts.data_integrity_audit import AuditResult, check_missing_identity_faces
+
+        f2p = {"f1": "p1", "f2": "p1"}
+        identities = {
+            "id1": {"state": "CONFIRMED", "anchor_ids": ["f1"], "candidate_ids": ["f2"], "name": "Known"},
+        }
+        result = AuditResult()
+        missing = check_missing_identity_faces(f2p, identities, result)
+        assert missing == {}
+        assert result.summary["missing_identity_faces"] == 0
+
+    def test_confirmed_missing_anchor_is_critical(self):
+        from scripts.data_integrity_audit import AuditResult, check_missing_identity_faces
+
+        f2p = {"f1": "p1"}
+        identities = {
+            "id1": {"state": "CONFIRMED", "anchor_ids": ["f1", "f_missing"], "candidate_ids": [], "name": "Known"},
+        }
+        result = AuditResult()
+        missing = check_missing_identity_faces(f2p, identities, result)
+        assert missing["id1"]["anchor_ids"] == ["f_missing"]
+        assert any(i.check == "missing_identity_faces" and i.severity == "critical" for i in result.issues)
+
+    def test_missing_candidate_is_warning(self):
+        from scripts.data_integrity_audit import AuditResult, check_missing_identity_faces
+
+        f2p = {"f1": "p1"}
+        identities = {
+            "id1": {"state": "INBOX", "anchor_ids": ["f1"], "candidate_ids": ["f_missing"], "name": "Unknown"},
+        }
+        result = AuditResult()
+        missing = check_missing_identity_faces(f2p, identities, result)
+        assert missing["id1"]["candidate_ids"] == ["f_missing"]
+        assert any(i.check == "missing_identity_faces" and i.severity == "warning" for i in result.issues)
+
+
+# ---------------------------------------------------------------------------
+# Check 4: State consistency
 # ---------------------------------------------------------------------------
 
 
@@ -655,6 +700,127 @@ class TestFixMergedChains:
         count = fix_merged_chains(identities, tmp_path, result)
         # At least doesn't crash
         assert isinstance(count, int)
+
+
+class TestFixMissingIdentityFaces:
+    """Quarantine partial missing face refs without losing undo context."""
+
+    def test_quarantines_and_removes_partial_missing_faces(self, tmp_path):
+        from scripts.data_integrity_audit import AuditResult, fix_missing_identity_faces
+
+        write_identities(
+            tmp_path,
+            {
+                "id1": {
+                    "state": "CONFIRMED",
+                    "name": "Known",
+                    "anchor_ids": ["f1", "f_missing"],
+                    "candidate_ids": ["c_missing"],
+                    "metadata": {},
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                }
+            },
+        )
+
+        result = AuditResult()
+        count = fix_missing_identity_faces(
+            {"id1": {"anchor_ids": ["f_missing"], "candidate_ids": ["c_missing"]}},
+            tmp_path,
+            result,
+        )
+        assert count == 2
+
+        data = json.loads((tmp_path / "identities.json").read_text())
+        ident = data["identities"]["id1"]
+        assert ident["anchor_ids"] == ["f1"]
+        assert ident["candidate_ids"] == []
+        quarantined = ident["metadata"]["quarantined_missing_faces"]
+        assert {entry["face_id"] for entry in quarantined} == {"f_missing", "c_missing"}
+
+    def test_skips_full_ghost_identity(self, tmp_path):
+        from scripts.data_integrity_audit import AuditResult, fix_missing_identity_faces
+
+        write_identities(
+            tmp_path,
+            {
+                "id1": {
+                    "state": "CONFIRMED",
+                    "name": "Known",
+                    "anchor_ids": ["f_missing"],
+                    "candidate_ids": [],
+                    "metadata": {},
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                }
+            },
+        )
+
+        result = AuditResult()
+        count = fix_missing_identity_faces(
+            {"id1": {"anchor_ids": ["f_missing"], "candidate_ids": []}},
+            tmp_path,
+            result,
+        )
+        assert count == 0
+
+
+class TestFixStateInconsistencies:
+    """Demote invalid placeholder confirmations via audited state history."""
+
+    def test_moves_confirmed_placeholder_back_to_inbox(self, tmp_path):
+        from scripts.data_integrity_audit import AuditResult, fix_state_inconsistencies
+
+        write_identities(
+            tmp_path,
+            {
+                "id1": {
+                    "state": "CONFIRMED",
+                    "name": "Unidentified Person 494",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                }
+            },
+        )
+
+        result = AuditResult()
+        count = fix_state_inconsistencies(["id1"], tmp_path, result)
+        assert count == 1
+
+        data = json.loads((tmp_path / "identities.json").read_text())
+        ident = data["identities"]["id1"]
+        assert ident["state"] == "INBOX"
+        assert data["history"][-1]["action"] == "state_change"
+        assert data["history"][-1]["metadata"]["reason"] == "confirmed_placeholder_name"
+
+    def test_skips_named_confirmed_identity(self, tmp_path):
+        from scripts.data_integrity_audit import AuditResult, fix_state_inconsistencies
+
+        write_identities(
+            tmp_path,
+            {
+                "id1": {
+                    "state": "CONFIRMED",
+                    "name": "Known Person",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                }
+            },
+        )
+
+        result = AuditResult()
+        count = fix_state_inconsistencies(["id1"], tmp_path, result)
+        assert count == 0
 
 
 # ---------------------------------------------------------------------------

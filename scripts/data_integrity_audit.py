@@ -17,13 +17,14 @@ Exit codes:
 Audit checks:
     1. Orphan faces — faces in photo_index with no identity
     2. Ghost identities — identities with faces not in any photo
-    3. State consistency — CONFIRMED with no name or "Unidentified" name
-    4. Supabase divergence — identity_overrides vs identities.json state mismatch
-    5. Duplicate face assignments — same face_id in multiple identities
-    6. Merged identity chains — merged_into pointing to another merged identity
-    7. Upload date completeness — photos missing upload_date
-    8. Community membership gaps — photos with faces but no community
-    9. Embedding coverage — identity faces with no embedding
+    3. Missing identity face refs — identity anchors/candidates not in photo_index
+    4. State consistency — CONFIRMED with no name or "Unidentified" name
+    5. Supabase divergence — identity_overrides vs identities.json state mismatch
+    6. Duplicate face assignments — same face_id in multiple identities
+    7. Merged identity chains — merged_into pointing to another merged identity
+    8. Upload date completeness — photos missing upload_date
+    9. Community membership gaps — photos with faces but no community
+    10. Embedding coverage — identity faces with no embedding
 
 Created: Session 96e data integrity hardening
 """
@@ -33,6 +34,7 @@ import json
 import logging
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Ensure project root is importable
@@ -231,6 +233,57 @@ def check_ghost_identities(face_to_photo: dict, identities: dict, result: AuditR
     return ghosts
 
 
+def check_missing_identity_faces(face_to_photo: dict, identities: dict, result: AuditResult) -> dict[str, dict[str, list[str]]]:
+    """Check 3: Identity face refs missing from photo_index.face_to_photo."""
+    all_known_faces = set(face_to_photo.keys())
+    affected: dict[str, dict[str, list[str]]] = {}
+    total_missing = 0
+
+    for iid, ident in identities.items():
+        if ident.get("merged_into"):
+            continue
+
+        missing_anchors = []
+        for anchor in ident.get("anchor_ids", []):
+            fid = anchor if isinstance(anchor, str) else anchor.get("face_id", "")
+            if fid and fid not in all_known_faces:
+                missing_anchors.append(fid)
+
+        missing_candidates = []
+        for candidate in ident.get("candidate_ids", []):
+            fid = candidate if isinstance(candidate, str) else candidate.get("face_id", "")
+            if fid and fid not in all_known_faces:
+                missing_candidates.append(fid)
+
+        if not missing_anchors and not missing_candidates:
+            continue
+
+        affected[iid] = {
+            "anchor_ids": missing_anchors,
+            "candidate_ids": missing_candidates,
+        }
+        total_missing += len(missing_anchors) + len(missing_candidates)
+
+        name = ident.get("name", "?")
+        state = ident.get("state", "")
+        severity = "critical" if state == IdentityState.CONFIRMED.value and missing_anchors else "warning"
+        parts = []
+        if missing_anchors:
+            parts.append(f"{len(missing_anchors)} anchor")
+        if missing_candidates:
+            parts.append(f"{len(missing_candidates)} candidate")
+        result.add(
+            check="missing_identity_faces",
+            severity=severity,
+            message=f"Identity {iid[:8]} ({name}) has {' and '.join(parts)} face refs missing from photo_index",
+            ids=[iid, *missing_anchors[:3], *missing_candidates[:3]],
+            fixable=True,
+        )
+
+    result.summary["missing_identity_faces"] = total_missing
+    return affected
+
+
 def check_state_consistency(identities: dict, result: AuditResult) -> list[str]:
     """Check 3: CONFIRMED identities with no name or 'Unidentified Person' name.
 
@@ -267,6 +320,7 @@ def check_state_consistency(identities: dict, result: AuditResult) -> list[str]:
                     severity="critical",
                     message=f"CONFIRMED identity {iid[:8]} has no name",
                     ids=[iid],
+                    fixable=True,
                 )
             elif re.match(r"^Unidentified Person\b", name):
                 inconsistent.append(iid)
@@ -275,6 +329,7 @@ def check_state_consistency(identities: dict, result: AuditResult) -> list[str]:
                     severity="warning",
                     message=f"CONFIRMED identity {iid[:8]} still named '{name}'",
                     ids=[iid],
+                    fixable=True,
                 )
 
     result.summary["state_inconsistencies"] = len(inconsistent)
@@ -574,35 +629,93 @@ def fix_orphan_faces(orphan_face_ids: set[str], data_dir: Path, result: AuditRes
     path = data_dir / "identities.json"
     if not path.exists():
         return 0
-
-    data = json.loads(path.read_text())
-    identities = data.get("identities", {})
-
-    import uuid
-    from datetime import datetime, timezone
+    registry = IdentityRegistry.load(path)
 
     count = 0
     for face_id in sorted(orphan_face_ids):
-        identity_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
-        identities[identity_id] = {
-            "identity_id": identity_id,
-            "name": f"Unidentified Person {identity_id[:8]}",
-            "state": "INBOX",
-            "anchor_ids": [face_id],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "version_id": 1,
-            "created_at": now,
-            "updated_at": now,
-            "provenance": {"source": "data_integrity_audit", "action": "orphan_fix"},
-        }
+        registry.create_identity(
+            anchor_ids=[face_id],
+            user_source="data_integrity_audit",
+            state=IdentityState.INBOX,
+            provenance={"source": "data_integrity_audit", "action": "orphan_fix"},
+        )
         count += 1
 
-    data["identities"] = identities
-    path.write_text(json.dumps(data, indent=2))
+    registry.save(path)
     result.fixes_applied.append(f"Created {count} INBOX identities for orphan faces")
     return count
+
+
+def fix_missing_identity_faces(missing_refs: dict[str, dict[str, list[str]]], data_dir: Path, result: AuditResult) -> int:
+    """Quarantine and remove partial missing face refs from identities.
+
+    Only fixes identities that still retain at least one valid face after cleanup.
+    Full ghosts are left untouched for manual review.
+    """
+    if not missing_refs:
+        return 0
+
+    path = data_dir / "identities.json"
+    if not path.exists():
+        return 0
+
+    registry = IdentityRegistry.load(path)
+    timestamp = datetime.now(timezone.utc).isoformat()
+    removed = 0
+
+    for iid, missing in missing_refs.items():
+        ident = registry._identities.get(iid)
+        if not ident:
+            continue
+
+        current_face_ids = registry.get_all_face_ids(iid)
+        missing_face_ids = set(missing.get("anchor_ids", []) + missing.get("candidate_ids", []))
+        valid_remaining = [fid for fid in current_face_ids if fid not in missing_face_ids]
+        if not valid_remaining:
+            continue
+
+        metadata = ident.setdefault("metadata", {})
+        quarantine = metadata.setdefault("quarantined_missing_faces", [])
+        changed = False
+
+        for fid in missing.get("anchor_ids", []):
+            if fid in registry._face_id_set(ident.get("anchor_ids", [])):
+                registry._remove_anchor_by_face_id(ident, fid)
+                if not any(entry.get("face_id") == fid and entry.get("removed_from") == "anchor_ids" for entry in quarantine):
+                    quarantine.append(
+                        {
+                            "face_id": fid,
+                            "removed_from": "anchor_ids",
+                            "reason": "missing_from_photo_index_face_to_photo",
+                            "quarantined_at": timestamp,
+                        }
+                    )
+                removed += 1
+                changed = True
+
+        for fid in missing.get("candidate_ids", []):
+            if fid in registry._face_id_set(ident.get("candidate_ids", [])):
+                registry._remove_candidate_by_face_id(ident, fid)
+                if not any(entry.get("face_id") == fid and entry.get("removed_from") == "candidate_ids" for entry in quarantine):
+                    quarantine.append(
+                        {
+                            "face_id": fid,
+                            "removed_from": "candidate_ids",
+                            "reason": "missing_from_photo_index_face_to_photo",
+                            "quarantined_at": timestamp,
+                        }
+                    )
+                removed += 1
+                changed = True
+
+        if changed:
+            ident["version_id"] = ident.get("version_id", 1) + 1
+            ident["updated_at"] = timestamp
+            result.fixes_applied.append(f"Quarantined missing face refs on {iid[:8]} ({ident.get('name', '?')})")
+
+    if removed:
+        registry.save(path)
+    return removed
 
 
 def fix_merged_chains(identities: dict, data_dir: Path, result: AuditResult) -> int:
@@ -611,8 +724,9 @@ def fix_merged_chains(identities: dict, data_dir: Path, result: AuditResult) -> 
     if not path.exists():
         return 0
 
-    data = json.loads(path.read_text())
-    idents = data.get("identities", {})
+    registry = IdentityRegistry.load(path)
+    idents = registry._identities
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     count = 0
     for iid, ident in idents.items():
@@ -631,15 +745,61 @@ def fix_merged_chains(identities: dict, data_dir: Path, result: AuditResult) -> 
             current = idents[current]["merged_into"]
 
         if current != target:
+            metadata = ident.setdefault("metadata", {})
+            repairs = metadata.setdefault("merge_chain_repairs", [])
+            repairs.append(
+                {
+                    "source": "data_integrity_audit",
+                    "flattened_at": timestamp,
+                    "previous_merged_into": target,
+                    "new_merged_into": current,
+                }
+            )
             ident["merged_into"] = current
+            ident["version_id"] = ident.get("version_id", 1) + 1
+            ident["updated_at"] = timestamp
             count += 1
 
     if count > 0:
-        data["identities"] = idents
-        path.write_text(json.dumps(data, indent=2))
+        registry.save(path)
         result.fixes_applied.append(f"Flattened {count} chained merge references")
 
     return count
+
+
+def fix_state_inconsistencies(inconsistent_ids: list[str], data_dir: Path, result: AuditResult) -> int:
+    """Demote invalid CONFIRMED placeholders back to INBOX via audited state history."""
+    if not inconsistent_ids:
+        return 0
+
+    path = data_dir / "identities.json"
+    if not path.exists():
+        return 0
+
+    registry = IdentityRegistry.load(path)
+    fixed = 0
+
+    for iid in inconsistent_ids:
+        ident = registry._identities.get(iid)
+        if not ident or ident.get("state") != IdentityState.CONFIRMED.value:
+            continue
+        if registry._is_real_name(ident.get("name")):
+            continue
+
+        registry.force_state(
+            iid,
+            IdentityState.INBOX.value,
+            user_source="data_integrity_audit",
+            reason="confirmed_placeholder_name",
+        )
+        fixed += 1
+        result.fixes_applied.append(
+            f"Moved invalid confirmed placeholder {iid[:8]} back to INBOX"
+        )
+
+    if fixed:
+        registry.save(path)
+    return fixed
 
 
 # ---------------------------------------------------------------------------
@@ -672,7 +832,8 @@ def run_audit(data_dir: Path, fix: bool = False) -> AuditResult:
     # Run checks
     orphans = check_orphan_faces(photos, face_to_photo, identities, result)
     check_ghost_identities(face_to_photo, identities, result)
-    check_state_consistency(identities, result)
+    missing_face_refs = check_missing_identity_faces(face_to_photo, identities, result)
+    inconsistent = check_state_consistency(identities, result)
     check_supabase_divergence(identities, result)
     duplicates = check_duplicate_face_assignments(identities, result)
     chained = check_merged_chains(identities, result)
@@ -683,7 +844,9 @@ def run_audit(data_dir: Path, fix: bool = False) -> AuditResult:
     # Apply fixes if requested
     if fix:
         fix_orphan_faces(orphans, data_dir, result)
+        fix_missing_identity_faces(missing_face_refs, data_dir, result)
         fix_merged_chains(identities, data_dir, result)
+        fix_state_inconsistencies(inconsistent, data_dir, result)
 
     return result
 
