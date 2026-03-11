@@ -74,11 +74,13 @@ This context file is intentionally phase-scoped. Read the overview first, then o
 6. `docs/ml/ALGORITHMIC_DECISIONS.md` entries AD-215 through AD-217
 7. `docs/HARNESS_DECISIONS.md` entries HD-024 and HD-025
 8. `docs/assessments/session-97-gemini-review.md`
+9. `docs/assessments/session-97-gemini-followup.md`
+10. `docs/assessments/session-97-post-gemini-assessment.md`
+11. `docs/assessments/session-97-post-followup-assessment.md`
 
 ### Read only if present before implementation starts
 
-1. `docs/assessments/session-97-post-gemini-assessment.md`
-2. Any new Fox-family data audit or pair-count refresh
+1. Any new Fox-family data audit or pair-count refresh
 
 If those files exist, absorb them before coding. If they do not, continue with the artifacts above.
 
@@ -101,6 +103,7 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - working schema-tolerant eval CLI
 - refreshed golden-set asset
 - baseline JSON report
+- dominant and tail identity slice metrics
 - shared scorer interface used by both clustering paths
 
 **Do not proceed** until the baseline can be reproduced on the current repo state.
@@ -118,6 +121,7 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - explicit label provenance taxonomy
 - status reporting
 - tests proving production hooks stay write-only
+- reverted-label exclusion and logical-consistency checks
 
 ### Phase 2 — Frozen-Embedding Longitudinal Reranker
 
@@ -130,7 +134,7 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - prototype-bank builder
 - longitudinal feature builder
 - shadow-mode reranker behind a flag
-- ablation and slice reports
+- ablation and slice reports including dominant / tail identity bias slices
 
 ### Phase 3 — Active Learning In Review UX
 
@@ -143,6 +147,7 @@ If those files exist, absorb them before coding. If they do not, continue with t
 - active-learning queue integrated into review UX
 - diversity rules
 - audit trail for labels
+- audit / revert path before recalibration consumes labels
 
 ### Phase 4 — Adapter / LoRA Experiment Track
 

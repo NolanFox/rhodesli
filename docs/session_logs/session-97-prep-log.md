@@ -35,6 +35,10 @@
 - `docs/prompts/session-97-prompt.md`
 - `docs/prompts/session-97-gemini-review-prompt.md`
 - `docs/assessments/session-97-prep-assessment.md`
+- `docs/assessments/session-97-gemini-review.md`
+- `docs/assessments/session-97-gemini-followup.md`
+- `docs/assessments/session-97-post-gemini-assessment.md`
+- `docs/assessments/session-97-post-followup-assessment.md`
 - `docs/session_logs/session-97-log-stub.md`
 - `docs/ml/ALGORITHMIC_DECISIONS.md` (AD-217)
 - `docs/HARNESS_DECISIONS.md` (HD-025)
@@ -58,6 +62,9 @@ User constraints and operating sequence were written into:
 1. Gemini reviews this planning package.
 2. Codex writes a post-review assessment documenting which Gemini recommendations
    were adopted, modified, or deferred.
-3. User finishes Session 96 stabilization work.
-4. Session 97 implementation proceeds from the prompt/context bundle plus the
-   Gemini review and post-review assessment.
+3. Gemini follow-up adds exact eval specifications and citations.
+4. Codex writes a post-followup assessment documenting what became part of the
+   plan and what remained provisional.
+5. User finishes Session 96 stabilization work.
+6. Session 97 implementation proceeds from the prompt/context bundle plus the
+   Gemini review, follow-up, and Codex response artifacts.

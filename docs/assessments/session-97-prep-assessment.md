@@ -49,8 +49,11 @@ actual Session 97 implementation pass.
 
 - Gemini review received:
   - `docs/assessments/session-97-gemini-review.md`
+- Gemini follow-up received:
+  - `docs/assessments/session-97-gemini-followup.md`
 - Codex response and adoption notes:
   - `docs/assessments/session-97-post-gemini-assessment.md`
+  - `docs/assessments/session-97-post-followup-assessment.md`
 
 ## Risks Still Open
 

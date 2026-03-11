@@ -57,6 +57,9 @@
 
 - Build a slice that isolates overrepresented identities and families.
 - Track whether the reranker gains are concentrated only on the biggest families.
+- Starting point:
+  - dominant slice = top 3 identities by face volume
+  - tail slice = target identities with fewer than 5 confirmed faces
 
 ---
 
@@ -75,7 +78,8 @@
 - Recall on year-gap >= 20
 - Recall on year-gap >= 30
 - Same-family false positive rate
-- Dominant-identity lift vs non-dominant-identity lift
+- `dominant_lift_ratio`
+- `tail_recall_delta`
 - Cross-community leakage count
 - Quality-bucket Rank-1
 
@@ -95,13 +99,21 @@
 - Eval CLI runs on current schema without manual patching.
 - Golden Set V2 generated successfully.
 - Baseline JSON report saved and reproducible.
+- Dominant and tail slices are emitted with the baseline.
+
+## Phase 1 Gate: Recalibration Hygiene
+
+- Reverted labels are excluded from recalibration export.
+- Pre-flight logical consistency checks run before recalibration.
+- Recalibration aborts on unresolved transitive conflicts in unconsumed labels.
 
 ## Phase 2 Gate: Frozen-Embedding Reranker
 
 - Rank-1 and Rank-3 do not regress by more than 1 point.
 - Recall on year-gap >= 20 improves by at least 5 points.
 - Same-family false positive rate is flat or improved.
-- Gains are not confined to the most overrepresented identities.
+- `dominant_lift_ratio` must stay below a provisional ceiling of `3.0`.
+- `tail_recall_delta` must be `>= 0.0`.
 - No new community leakage in shadow replay.
 - Top 50 changed proposals reviewed manually before enablement.
 
@@ -112,6 +124,7 @@
   - no more than 2 pairs from the same identity in a batch of 10
 - At least 30% of surfaced pairs come from underrepresented identities or hard slices.
 - Recent labels can be audited and reverted before recalibration consumes them.
+- Recalibration is blocked if newly added active-learning labels introduce unresolved transitive conflicts.
 
 ## Phase 4 Gate: Adapter / LoRA
 
@@ -175,6 +188,10 @@ TEST: dominant-identity bias gate blocks misleading wins
 TEST: active-learning labels remain reversible
   - Queue label is written, then reverted before recalibration
   - Assert: recalibration export excludes the reverted label
+
+TEST: recalibration aborts on logical conflict
+  - Inject A=B, B=C, A!=C into unconsumed labels
+  - Assert: pre-flight check aborts before model export
 ```
 
 ---

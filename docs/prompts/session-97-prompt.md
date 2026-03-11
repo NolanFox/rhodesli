@@ -46,8 +46,11 @@ for this package, read it before Act 1 and fold it in.
 ## Act 0: Orient, Review, And Isolate
 
 1. Read the required files from `docs/session_context/session-97-context.md`.
-2. If a Gemini review artifact exists for the PRD-038 package (`docs/assessments/session-97-gemini-review.md`), read it and
-   update the plan docs before changing code. Evaluate Gemini's recommendations one by one and either adopt them or document a reasoned rejection in harness artifacts before implementation proceeds.
+2. If Gemini review artifacts exist for the PRD-038 package, read:
+   - `docs/assessments/session-97-gemini-review.md`
+   - `docs/assessments/session-97-gemini-followup.md`
+   - `docs/assessments/session-97-post-gemini-assessment.md`
+   Then evaluate the recommendations one by one and either adopt them or document a reasoned rejection in harness artifacts before implementation proceeds.
 3. Create a dedicated worktree/branch for Session 97 implementation.
 4. Create or replace `docs/session_logs/session-97-log.md` from the stub.
 5. Record:
@@ -104,13 +107,14 @@ Commit: `[codex] feat(ml): repair eval path and unify offline scorer`
   - `explicit_negative`
   - `implicit_negative`
   - `discovery_confirmed`
-- Add status reporting and tests.
+- Add status reporting, reverted-label exclusion, logical-consistency checks, and tests.
 
 ### Required outputs
 
 - runnable recalibration command
 - status endpoint or status report path
 - tests proving production hooks do not try to retrain on Railway
+- tests proving reverted labels are excluded and transitive conflicts block recalibration
 - decision-log update if label semantics changed materially
 
 ### Gate
@@ -136,6 +140,8 @@ Commit: `[codex] feat(calibration): harden local recalibration workflow`
 - slice report for:
   - year-gap >= 20
   - year-gap >= 30
+  - dominant_lift_ratio
+  - tail_recall_delta
   - same-family false positives
   - cross-community leakage
 

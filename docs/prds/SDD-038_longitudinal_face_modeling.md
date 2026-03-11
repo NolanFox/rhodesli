@@ -116,7 +116,7 @@
      - gap to identity year span
      - age compatibility when birth-year estimate exists
      - GEDCOM / surname / family-risk features
-     - explicit kinship-risk features for same-era close-relative collisions
+     - kinship-risk feature family for same-era close-relative collisions
      - same-community / cross-community flag
 
 4. **Offline Reranker**
@@ -156,6 +156,7 @@
 - versioned `golden_set_v2.json`
 - baseline JSON report checked into docs or evaluation artifacts
 - skew report for the rebuilt training / evaluation assets
+- dominant vs tail identity slice report
 - shared face/metadata loader module
 
 ## Phase 1: Recalibration Hygiene And Label Taxonomy
@@ -174,6 +175,7 @@
 - local recalibration CLI
 - calibration status endpoint / status report
 - label schema update and tests
+- reverted-label exclusion and logical-consistency checks before recalibration export
 
 ## Phase 2: Frozen-Embedding Longitudinal Reranker
 
@@ -186,6 +188,7 @@
 **Success condition**
 - beats current policy on age-gap slices without worsening kin false positives
 - does not show dominant-identity bias toward the most overrepresented families
+- preserves tail-identity recall
 
 ## Phase 3: Active Learning Inside Review UX
 
