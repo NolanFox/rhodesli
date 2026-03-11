@@ -558,7 +558,12 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         **kwargs: Optional fields: prompt_tokens, completion_tokens, total_tokens,
                   cost_usd, latency_ms, status, error_message, rate_limit_type,
                   response_summary, gemini_config, batch_id,
-                  prompt_text, full_response, gedcom_context
+                  prompt_text, full_response, gedcom_context,
+                  prompt_manifest_id, prompt_family, prompt_version,
+                  prompt_variant, prompt_contract_version, prompt_hash,
+                  full_response_hash, experiment_id, shadow_run_id,
+                  request_surface, request_mode, related_state_event_id,
+                  contract_valid
 
     Returns True on success, False on failure.
     """
@@ -587,6 +592,19 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         "prompt_text",
         "full_response",
         "gedcom_context",
+        "prompt_manifest_id",
+        "prompt_family",
+        "prompt_version",
+        "prompt_variant",
+        "prompt_contract_version",
+        "prompt_hash",
+        "full_response_hash",
+        "experiment_id",
+        "shadow_run_id",
+        "request_surface",
+        "request_mode",
+        "related_state_event_id",
+        "contract_valid",
     ]:
         if field in kwargs and kwargs[field] is not None:
             row[field] = kwargs[field]

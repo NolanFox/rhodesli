@@ -40,6 +40,15 @@ from core.config import (
     MATCH_THRESHOLD_MODERATE,
     MATCH_THRESHOLD_VERY_HIGH,
 )
+from core.embeddings_io import generate_face_id as shared_generate_face_id
+from core.embeddings_io import load_face_data as shared_load_face_data
+from core.identity_scoring import (
+    collect_identity_embeddings as shared_collect_identity_embeddings,
+    compute_min_distance as shared_compute_min_distance,
+    extract_face_ids as shared_extract_face_ids,
+    find_candidate_matches,
+    get_photo_id as shared_get_photo_id,
+)
 
 
 def load_face_data(data_path: Path) -> dict:
@@ -48,48 +57,12 @@ def load_face_data(data_path: Path) -> dict:
     Mirrors the logic in app/main.py load_face_embeddings().
     Uses deferred imports per CLAUDE.md rules.
     """
-    import numpy as np
-
-    embeddings_path = data_path / "embeddings.npy"
-    if not embeddings_path.exists():
-        raise FileNotFoundError(f"Embeddings not found: {embeddings_path}")
-
-    embeddings = np.load(embeddings_path, allow_pickle=True)
-
-    face_data = {}
-    filename_face_counts = {}
-
-    for entry in embeddings:
-        filename = entry["filename"]
-
-        if filename not in filename_face_counts:
-            filename_face_counts[filename] = 0
-        face_index = filename_face_counts[filename]
-        filename_face_counts[filename] += 1
-
-        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
-
-        if "mu" in entry:
-            mu = entry["mu"]
-            sigma_sq = entry["sigma_sq"]
-        else:
-            mu = np.asarray(entry["embedding"], dtype=np.float32)
-            det_score = entry.get("det_score", 0.5)
-            sigma_sq_val = 1.0 - (det_score * 0.9)
-            sigma_sq = np.full(512, sigma_sq_val, dtype=np.float32)
-
-        face_data[face_id] = {
-            "mu": np.asarray(mu, dtype=np.float32),
-            "sigma_sq": np.asarray(sigma_sq, dtype=np.float32),
-        }
-
-    return face_data
+    return shared_load_face_data(data_path / "embeddings.npy")
 
 
 def generate_face_id(filename: str, face_index: int) -> str:
     """Generate a stable face ID from filename and index."""
-    stem = Path(filename).stem
-    return f"{stem}:face{face_index}"
+    return shared_generate_face_id(filename, face_index)
 
 
 def load_identities(data_path: Path) -> dict:
@@ -107,24 +80,12 @@ def extract_face_ids(identity: dict) -> list[str]:
 
     Handles both string and dict anchor formats.
     """
-    face_ids = []
-
-    for anchor in identity.get("anchor_ids", []):
-        if isinstance(anchor, str):
-            face_ids.append(anchor)
-        elif isinstance(anchor, dict):
-            face_ids.append(anchor["face_id"])
-
-    face_ids.extend(identity.get("candidate_ids", []))
-
-    return face_ids
+    return shared_extract_face_ids(identity)
 
 
 def get_photo_id(face_id: str) -> str | None:
     """Extract photo identifier from face_id (everything before :faceN)."""
-    if ":" in face_id:
-        return face_id.rsplit(":", 1)[0]
-    return None
+    return shared_get_photo_id(face_id)
 
 
 def collect_identity_embeddings(face_ids: list[str], face_data: dict):
@@ -133,19 +94,7 @@ def collect_identity_embeddings(face_ids: list[str], face_data: dict):
     Returns numpy matrix of embeddings or None if no valid faces.
     Does NOT average — each face embedding is preserved as a separate anchor.
     """
-    import numpy as np
-
-    embeddings = []
-    valid_fids = []
-    for fid in face_ids:
-        if fid in face_data:
-            embeddings.append(face_data[fid]["mu"])
-            valid_fids.append(fid)
-
-    if not embeddings:
-        return None, []
-
-    return np.vstack(embeddings), valid_fids
+    return shared_collect_identity_embeddings(face_ids, face_data)
 
 
 def compute_min_distance(face_embedding, identity_embeddings) -> float:
@@ -154,12 +103,7 @@ def compute_min_distance(face_embedding, identity_embeddings) -> float:
     This is the best-linkage / single-linkage approach per AD-001.
     Uses the same metric as core/neighbors.py (Euclidean distance via cdist).
     """
-    import numpy as np
-    from scipy.spatial.distance import cdist
-
-    face_matrix = face_embedding.reshape(1, -1)
-    dists = cdist(face_matrix, identity_embeddings, metric='euclidean')
-    return float(np.min(dists))
+    return shared_compute_min_distance(face_embedding, identity_embeddings)
 
 
 def confidence_label(distance: float) -> str:
@@ -186,130 +130,19 @@ def find_matches(
 
     Returns list of match suggestions, sorted by distance (best first).
     """
-    identities = identities_data.get("identities", {})
-
-    # Step 1: Build confirmed identity face embeddings (multi-anchor, AD-001)
-    confirmed_identities = {}
-    confirmed_photos = {}  # identity_id -> set of photo_ids (for co-occurrence check)
-
-    for identity_id, identity in identities.items():
-        if identity.get("state") != "CONFIRMED":
-            continue
-        if identity.get("merged_into"):
-            continue
-
-        face_ids = extract_face_ids(identity)
-        if not face_ids:
-            continue
-
-        emb_matrix, valid_fids = collect_identity_embeddings(face_ids, face_data)
-        if emb_matrix is None:
-            continue
-
-        confirmed_identities[identity_id] = {
-            "embeddings": emb_matrix,
-            "name": identity.get("name", f"Unknown ({identity_id[:8]})"),
-            "face_count": len(valid_fids),
-        }
-
-        # Track photos for co-occurrence check
-        photos = set()
-        for fid in valid_fids:
-            photo_id = get_photo_id(fid)
-            if photo_id:
-                photos.add(photo_id)
-        confirmed_photos[identity_id] = photos
-
-    if not confirmed_identities:
+    confirmed_count = len(
+        [
+            identity_id
+            for identity_id, identity in identities_data.get("identities", {}).items()
+            if identity.get("state") == "CONFIRMED" and not identity.get("merged_into")
+        ]
+    )
+    if confirmed_count == 0:
         print("WARNING: No confirmed identities with embeddings found.")
         return []
 
-    print(f"Confirmed identities (multi-anchor): {len(confirmed_identities)}")
-
-    # Step 2: Find unresolved identities (INBOX, PROPOSED, or SKIPPED)
-    # SKIPPED means "deferred, not recognized yet" — NOT a terminal state.
-    # These faces are the largest pool of unresolved work and must be
-    # re-evaluated against confirmed identities.
-    unresolved_states = {"INBOX", "PROPOSED", "SKIPPED"}
-    suggestions = []
-
-    for identity_id, identity in identities.items():
-        if identity.get("state") not in unresolved_states:
-            continue
-        if identity.get("merged_into"):
-            continue
-
-        face_ids = extract_face_ids(identity)
-        if not face_ids:
-            continue
-
-        # Get photos for co-occurrence check
-        source_photos = set()
-        for fid in face_ids:
-            photo_id = get_photo_id(fid)
-            if photo_id:
-                source_photos.add(photo_id)
-
-        # For each face in this identity, find closest confirmed identity
-        # using min-distance to any face (best-linkage / AD-001)
-        for face_id in face_ids:
-            if face_id not in face_data:
-                continue
-
-            face_embedding = face_data[face_id]["mu"]
-            best_match = None
-            best_distance = float("inf")
-            second_best_distance = float("inf")
-
-            # Get rejection pairs for this identity
-            source_negative_ids = set(identity.get("negative_ids", []))
-
-            for conf_id, conf_info in confirmed_identities.items():
-                # Rejection memory: skip if this pair was explicitly rejected (AD-004)
-                if f"identity:{conf_id}" in source_negative_ids:
-                    continue
-
-                # Co-occurrence check: skip if face's photo appears in confirmed identity
-                face_photo = get_photo_id(face_id)
-                if face_photo and face_photo in confirmed_photos.get(conf_id, set()):
-                    continue
-
-                distance = compute_min_distance(
-                    face_embedding, conf_info["embeddings"]
-                )
-
-                if distance < best_distance:
-                    second_best_distance = best_distance
-                    best_distance = distance
-                    best_match = conf_id
-                elif distance < second_best_distance:
-                    second_best_distance = distance
-
-            if best_match and best_distance < threshold:
-                # Margin-based ambiguity detection (ML-006 / family resemblance)
-                # If best and second-best are too close, the match is ambiguous
-                margin = (second_best_distance - best_distance) / best_distance if best_distance > 0 else float("inf")
-                is_ambiguous = margin < 0.15 and second_best_distance < threshold
-
-                suggestions.append({
-                    "face_id": face_id,
-                    "source_identity_id": identity_id,
-                    "source_identity_name": identity.get(
-                        "name", f"Unknown ({identity_id[:8]})"
-                    ),
-                    "source_state": identity.get("state", "INBOX"),
-                    "target_identity_id": best_match,
-                    "target_identity_name": confirmed_identities[best_match]["name"],
-                    "distance": best_distance,
-                    "target_face_count": confirmed_identities[best_match]["face_count"],
-                    "margin": round(margin, 3),
-                    "ambiguous": is_ambiguous,
-                })
-
-    # Sort by distance (best matches first)
-    suggestions.sort(key=lambda s: s["distance"])
-
-    return suggestions
+    print(f"Confirmed identities (multi-anchor): {confirmed_count}")
+    return find_candidate_matches(identities_data, face_data, threshold)
 
 
 def apply_suggestions(

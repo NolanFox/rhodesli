@@ -377,6 +377,22 @@ class TestLoadFaceData:
         face_data = load_face_data(tmp_path)
         assert "inbox_abc123" in face_data
 
+    def test_load_legacy_embeddings_key(self, tmp_path):
+        """Legacy `embeddings` rows are normalized into `mu`/`sigma_sq` face data."""
+        embeddings = np.array([
+            {
+                "filename": "photo2.jpg",
+                "embeddings": np.ones(512, dtype=np.float32),
+                "det_score": 0.75,
+            },
+        ], dtype=object)
+
+        np.save(tmp_path / "embeddings.npy", embeddings)
+        face_data = load_face_data(tmp_path)
+        assert "photo2:face0" in face_data
+        assert face_data["photo2:face0"]["mu"].shape == (512,)
+        assert face_data["photo2:face0"]["sigma_sq"].shape == (512,)
+
     def test_missing_file_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             load_face_data(tmp_path)

@@ -94,6 +94,36 @@ class TestLogGeminiCall:
         call_row = mock_sb.table.return_value.insert.call_args[0][0]
         assert call_row["batch_id"] == "batch_20260223"
 
+    def test_includes_prompt_manifest_fields(self):
+        """Prompt-manifest lineage fields are logged as first-class columns."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+
+            log_gemini_call(
+                "p1",
+                "model",
+                "date_estimation",
+                prompt_manifest_id="date_estimation:v3:quick_visual_only:contract2",
+                prompt_family="date_estimation",
+                prompt_version="v3",
+                prompt_variant="quick_visual_only",
+                prompt_contract_version="contract2",
+                prompt_hash="abc123",
+                full_response_hash="def456",
+                request_surface="app.estimate_routes._call_gemini_date_estimate",
+                request_mode="interactive",
+                contract_valid=True,
+            )
+
+        call_row = mock_sb.table.return_value.insert.call_args[0][0]
+        assert call_row["prompt_manifest_id"] == "date_estimation:v3:quick_visual_only:contract2"
+        assert call_row["prompt_family"] == "date_estimation"
+        assert call_row["prompt_variant"] == "quick_visual_only"
+        assert call_row["contract_valid"] is True
+
 
 class TestGetGeminiCallSummary:
     """Tests for get_gemini_call_summary."""

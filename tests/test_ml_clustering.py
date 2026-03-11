@@ -397,6 +397,25 @@ class TestClusterNewFaces:
         assert get_photo_id("photo_A:face3") == "photo_A"
         assert get_photo_id("no_colon") is None
 
+    def test_load_face_data_accepts_embeddings_key(self, tmp_path):
+        from scripts.cluster_new_faces import load_face_data
+
+        embeddings = np.array(
+            [
+                {
+                    "filename": "legacy_photo.jpg",
+                    "embeddings": np.ones(512, dtype=np.float32),
+                    "det_score": 0.8,
+                }
+            ],
+            dtype=object,
+        )
+        np.save(tmp_path / "embeddings.npy", embeddings)
+
+        face_data = load_face_data(tmp_path)
+        assert "legacy_photo:face0" in face_data
+        assert face_data["legacy_photo:face0"]["mu"].shape == (512,)
+
     def test_collect_identity_embeddings(self, data_dir):
         from scripts.cluster_new_faces import load_face_data
 

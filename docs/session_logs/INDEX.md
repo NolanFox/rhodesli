@@ -94,7 +94,7 @@ the original session scope was completed, blocked, or required follow-up work.
 | 81 | Yes (B,C,D) | Browser verification | 81B=fix real issues, 81C=data consistency, 81D=final verification |
 
 | 93 | 2026-03-08 | [log](session-93-log.md) | [assessment](../assessments/session-93-assessment.md) | [prompt](../prompts/session-93-prompt.md) | [ctx](../session_context/session-93-context.md) | Complete |
-| 97 | 2026-03-11 | [prep](session-97-prep-log.md), [stub](session-97-log-stub.md) | [prep](../assessments/session-97-prep-assessment.md) | [prompt](../prompts/session-97-prompt.md) | [ctx](../session_context/session-97-context.md) | Planned (PRD-038 implementation package) |
+| 97 | 2026-03-11 | [prep](session-97-prep-log.md), [log](session-97-log.md), [stub](session-97-log-stub.md) | [prep](../assessments/session-97-prep-assessment.md) | [prompt](../prompts/session-97-prompt.md) | [ctx](../session_context/session-97-context.md) | In Progress |
 
 ## Session Analytics
 - **Total sessions tracked:** 57 (47B through 97)
