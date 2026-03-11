@@ -27,7 +27,7 @@ To ensure zero regressions, any design update must preserve the following repo-v
 | :--- | :--- | :--- |
 | **`/` (Landing)** | Anonymous access only; redirects logged-in users. | `.hero-mosaic`. (There is no `[data-testid="community-landing"]` for the default Rhodes view). |
 | **`/?section=...`** | Workstation root / Dashboard | The HTMX sidebar structure (`hx-get="/?section=..."`) and section count badges. |
-| **`/identify/{id}`** | Public share-ready ID flows | The presence of the `[data-testid="identify-person-form"]` and the `name="identity_id"` hidden input, plus `og:title`/`og:image` meta tags. |
+| **`/identify/{id}`** | Public share-ready ID flows | The hidden `name="person_id"` input, `name="name"`, `name="relationship"`, `hx-post="/api/identify/{id}/respond"`, and `og:title`/`og:image` meta tags. |
 | **`/photo/{id}`** | Public / Admin photo detail view | `[data-testid="photo-metadata-overlay"]`. Admin edits `[data-testid="photo-inline-edit"]`. |
 | **`/person/{id}`** | Public / Admin person profile | `[data-testid="life-details"]`, `[data-testid="person-action-bar"]`. |
 | **`/photos`** | Photo grid | HTMX pagination markers and grid structure. |
@@ -47,7 +47,7 @@ I do not want route-by-route "one-off" styling. Cross-surface primitives must re
 | **Section Headers** | Title a page or queue state | **Existing shared helper:** Update `app/main.py::section_header` with scoped classes. |
 | **Empty States** | Display when no data exists in a queue | **New shared helper:** Rather than inline creation across routes, abstract to a shared function in `main.py`. |
 | **Loading / HTMX** | Network activity indicator | **Shared CSS class:** Update global `.htmx-indicator` style definition. |
-| **Public Nav Chrome** | Orientation on public pages | **Existing shared helper:** Update `app/main.py::_public_nav_links`. |
+| **Public Nav Chrome** | Orientation on public pages | **Existing shared helper:** Update `app/main.py::_public_nav_links` with scoped classes. |
 | **Workstation Nav Chrome** | Utilities and routing for admins | **Existing shared helper:** Update `app/main.py::sidebar` and `app/main.py::_admin_dashboard_banner`. |
 
 ### Consistency Risk Register
@@ -68,12 +68,12 @@ To guarantee zero regressions and no accidental spread into high-risk routes, Se
 - `app/main.py::sidebar` ➔ `needs scoped variant` (Heavily linked to out-of-scope metadata forms and map routes).
 - `app/main.py::section_header` ➔ `needs scoped variant` (Heavily reused across `/photos`, `/tools/compare`, and public flows).
 - `app/main.py::face_card` ➔ `needs scoped variant` (Used extensively in `/person/{id}`, `/identify/{id}/match/{id}`, and `/timeline`).
-- `app/main.py::_public_nav_links` ➔ `safe to restyle globally` (Centralized public typography asset).
+- `app/main.py::_public_nav_links` ➔ `needs scoped variant` (Heavily reused across out-of-scope public routes like `/photos`, `/timeline`, `/tree`, etc.).
 
 ### Out-of-Scope Leakage Rules
 - `/tools/compare` is HIGH RISK. `must not be touched in Session 99`.
 - `/photo/{id}`, `/person/{id}`, `/photos`, `/timeline`, `/tree` are HIGH RISK. `must not be touched in Session 99`.
-- **Explicit Shared Helper Rule:** Because `face_card`, `section_header`, `sidebar`, and `_admin_dashboard_banner` are heavily used by out-of-scope routes, **Session 99 MUST NOT restyle them globally.** 
+- **Explicit Shared Helper Rule:** Because `face_card`, `section_header`, `sidebar`, `_admin_dashboard_banner`, and `_public_nav_links` are heavily used by out-of-scope routes, **Session 99 MUST NOT restyle them globally.** 
 - **Leakage Policy:** To solve this, developers must strictly:
   1. Introduce a scoped rendering variant parameter (e.g., `view_mode="archival"`).
   2. OR apply route-local CSS composition that does not leak out of the `#target-container`.
@@ -108,9 +108,9 @@ Before merging Session 99 changes, the following gates MUST pass:
 2.  **Repo-Verified DOM Invariants:** Ensure the elements listed in Section 3 remain accessible to `BeautifulSoup` inside the pytest suites.
 3.  **Deterministic Route Smoke Checks:** 
     * `/` (Landing)
-    * `/?section=inbox` (Workstation root handled in `app/page_routes.py`)
+    * `/?section=to_review` (Workstation root deterministic queue section)
     * `/identify/unknown-1` (Or `test-unidentified-1` based on DB fixtures).
-4.  **Screenshot Checkpoints:** Export rendered screenshots of the three in-scope redesign surfaces (`/`, `/identify/{id}`, and `/?section=inbox`) as visual proofs of the archival aesthetic.
+4.  **Screenshot Checkpoints:** Export rendered screenshots of the three in-scope redesign surfaces (`/`, `/identify/{id}`, and `/?section=to_review`) as visual proofs of the archival aesthetic.
 
 ---
 
