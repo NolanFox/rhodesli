@@ -165,6 +165,20 @@ class TestCalibrationReport:
         assert report["version"] == 1
         assert report["pair_count"] == 60
 
+    def test_load_latest_model_round_trip(self, tmp_path):
+        """Public load/save helpers round-trip a fitted model."""
+        cal = SimilarityCalibrator(model_dir=tmp_path / "cal")
+        cal.fit(_make_synthetic_pairs())
+        saved_path = cal.save_model()
+
+        reloaded = SimilarityCalibrator(model_dir=tmp_path / "cal")
+        loaded_model = reloaded.load_latest_model()
+
+        assert saved_path is not None
+        assert loaded_model is not None
+        assert loaded_model.version == 1
+        assert reloaded.calibration_report()["pair_count"] == 60
+
 
 class TestShouldRecalibrate:
     """Tests for should_recalibrate()."""
@@ -183,3 +197,24 @@ class TestShouldRecalibrate:
         should, reason = cal.should_recalibrate()
         assert should is False
         assert "no trigger met" in reason
+
+    def test_local_pair_loader_excludes_inactive_rows(self, tmp_path):
+        """Inactive rows are excluded from local pair loading."""
+        cal = SimilarityCalibrator(model_dir=tmp_path / "cal")
+        cal._model_dir.mkdir(parents=True, exist_ok=True)
+        pairs_path = cal._model_dir / "calibration_pairs.json"
+        pairs_path.write_text(
+            """
+{
+  "pairs": [
+    {"similarity_score": 0.8, "is_match": true, "weight": 1.0, "active": true},
+    {"similarity_score": 0.2, "is_match": false, "weight": 1.0, "active": false}
+  ]
+}
+""".strip()
+        )
+
+        loaded_pairs = cal._load_pairs()
+
+        assert len(loaded_pairs) == 1
+        assert loaded_pairs[0]["is_match"] is True

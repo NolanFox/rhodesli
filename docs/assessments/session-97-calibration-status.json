@@ -1,0 +1,37 @@
+{
+  "run_id": "777d5621-a9f7-4df4-8b9e-25d33c7acd0d",
+  "run_type": "recalibration",
+  "started_at": "2026-03-11T17:49:56.690947+00:00",
+  "git_commit": "ad9bb73a119ce495186f2f280b4322aaf9e57901",
+  "pair_source": "json:calibration_pairs_session63.json",
+  "preflight": {
+    "generated_at": "2026-03-11T17:49:56.690903+00:00",
+    "git_commit": "ad9bb73a119ce495186f2f280b4322aaf9e57901",
+    "source": "json:calibration_pairs_session63.json",
+    "status": "ok",
+    "should_recalibrate": true,
+    "reason": "no_model_exists",
+    "counts": {
+      "active_pair_count": 348,
+      "inactive_pair_count": 0,
+      "match_count": 221,
+      "nonmatch_count": 127,
+      "label_type_counts": {
+        "explicit_positive": 221,
+        "implicit_negative": 127
+      }
+    },
+    "conflicts": [],
+    "current_model": {
+      "status": "no_model"
+    }
+  },
+  "fit": {
+    "requested": false,
+    "executed": false,
+    "dry_run": false,
+    "saved_model_path": null
+  },
+  "status": "ok",
+  "finished_at": "2026-03-11T17:49:56.705883+00:00"
+}

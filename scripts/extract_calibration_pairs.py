@@ -24,6 +24,12 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from rhodesli_ml.calibration_lineage import (
+    LABEL_TYPE_EXPLICIT_POSITIVE,
+    LABEL_TYPE_IMPLICIT_NEGATIVE,
+    build_calibration_pair_row,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -172,16 +178,19 @@ def extract_match_pairs(identities: dict, face_map: dict) -> list:
         face_ids = list(face_embeddings.keys())
         for fa, fb in combinations(face_ids, 2):
             sim = compute_cosine_similarity(face_embeddings[fa], face_embeddings[fb])
-            # Canonical ordering
-            pair = (min(fa, fb), max(fa, fb))
-            pairs.append({
-                "face_id_a": pair[0],
-                "face_id_b": pair[1],
-                "similarity_score": round(sim, 6),
-                "is_match": True,
-                "source": "admin_merge",
-                "weight": 1.0,
-            })
+            pairs.append(
+                build_calibration_pair_row(
+                    fa,
+                    fb,
+                    similarity_score=sim,
+                    is_match=True,
+                    source="admin_merge",
+                    label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+                    state_event_action="bootstrap_match_extract",
+                    actor_id="system_bootstrap",
+                    source_surface="scripts.extract_calibration_pairs",
+                )
+            )
 
     return pairs
 
@@ -224,15 +233,19 @@ def extract_nonmatch_pairs(
         fa, emb_a, name_a = identity_faces[ia]
         fb, emb_b, name_b = identity_faces[ib]
         sim = compute_cosine_similarity(emb_a, emb_b)
-        pair = (min(fa, fb), max(fa, fb))
-        all_pairs.append({
-            "face_id_a": pair[0],
-            "face_id_b": pair[1],
-            "similarity_score": round(sim, 6),
-            "is_match": False,
-            "source": "implicit_different_id",
-            "weight": 1.0,
-        })
+        all_pairs.append(
+            build_calibration_pair_row(
+                fa,
+                fb,
+                similarity_score=sim,
+                is_match=False,
+                source="implicit_different_id",
+                label_type=LABEL_TYPE_IMPLICIT_NEGATIVE,
+                state_event_action="bootstrap_nonmatch_extract",
+                actor_id="system_bootstrap",
+                source_surface="scripts.extract_calibration_pairs",
+            )
+        )
 
     if target_count and len(all_pairs) > target_count:
         # Stratified sampling: prioritize hard negatives

@@ -24,11 +24,11 @@ Context: docs/session_context/session-97-context.md
 ## Phase Checklist
 - [x] Act 0: isolate Session 97 implementation worktree
 - [x] Act 0: merge approved PRD-038 planning package into implementation branch
-- [ ] Phase 0: repair mixed-schema eval loaders
-- [ ] Phase 0: unify offline scorer path across `core/auto_cluster.py` and `scripts/cluster_new_faces.py`
-- [ ] Phase 0: wire prompt-manifest lineage into touched Gemini paths
-- [ ] Phase 0: record baseline artifacts and slice metrics
-- [ ] Phase 1: recalibration hygiene and label taxonomy
+- [x] Phase 0: repair mixed-schema eval loaders
+- [x] Phase 0: unify offline scorer path across `core/auto_cluster.py` and `scripts/cluster_new_faces.py`
+- [x] Phase 0: wire prompt-manifest lineage into touched Gemini paths
+- [x] Phase 0: record baseline artifacts and slice metrics
+- [x] Phase 1: recalibration hygiene and label taxonomy
 - [ ] Phase 2: longitudinal reranker shadow path
 - [ ] Phase 3: active learning in review UX
 - [ ] Phase 4: adapter experiment harness
@@ -108,6 +108,51 @@ Context: docs/session_context/session-97-context.md
   - merge Session 97 before Session 98
   - preserve full audit/review/rollback traceability in harness artifacts
 
+### 2026-03-11 17:46 EDT
+- Implemented Phase 1 calibration-lineage core:
+  - added `rhodesli_ml/calibration_lineage.py`
+  - made `rhodesli_ml/recalibration_hooks.py` write-only and lineage-aware
+  - added local `scripts/recalibrate.py`
+  - added calibration SQL artifacts:
+    - `scripts/sql/create_calibration_pairs.sql`
+    - `scripts/sql/alter_calibration_pairs_add_lineage_fields.sql`
+- Calibration labels now persist with:
+  - `label_type`
+  - `active`
+  - `state_event_id`
+  - `state_event_action`
+  - `source_surface`
+  - `actor_id`
+  - reversal links
+- `audit_log` now becomes the state-event mirror for calibration writes via
+  `target_type=calibration_pair`.
+- `rhodesli_ml/similarity_calibration.py` now exposes public load/save helpers
+  and excludes inactive local/supabase pair rows by default.
+
+### 2026-03-11 17:48 EDT
+- Phase 1 focused validation passed:
+  - `pytest rhodesli_ml/tests/test_recalibration_hooks.py rhodesli_ml/tests/test_calibration_lineage.py rhodesli_ml/tests/test_similarity_calibration.py -q` → `35 passed`
+  - `pytest tests/test_recalibration_wiring.py tests/test_recalibrate_cli.py -q` → `12 passed`
+- New tests cover:
+  - write-only recalibration hooks
+  - inactive/reverted label exclusion
+  - transitive conflict blocking
+  - local recalibration CLI fit/block behavior
+
+### 2026-03-11 17:50 EDT
+- Captured real Phase 1 status artifacts using the historical Session 63 pair snapshot:
+  - `python scripts/recalibrate.py --check --pairs-json results/calibration_pairs_session63.json --write-report docs/assessments/session-97-calibration-status.json`
+  - `python scripts/recalibrate.py --fit --dry-run --pairs-json results/calibration_pairs_session63.json --write-report docs/assessments/session-97-recalibration-dry-run.json`
+- Results:
+  - active pairs `348`
+  - inactive pairs `0`
+  - label mix: `221 explicit_positive`, `127 implicit_negative`
+  - pre-fit status: `should_recalibrate=True` because no local model exists
+  - dry-run fit: AUC `0.9577`, threshold@90p `0.2681`, threshold@95p `0.2691`
+- Decision breadcrumb added:
+  - `docs/ml/ALGORITHMIC_DECISIONS.md` → `AD-219`
+
 ## Open Notes
 - First implementation slice will centralize face-data loading and shared best-linkage scoring before touching thresholds.
 - Prompt-manifest lineage will be added to `gemini_api_calls` as explicit columns plus caller-side manifest fields for date estimation and face alignment.
+- Phase 1 is closed. Next work starts from Phase 2 shadow-mode longitudinal reranking, not more recalibration archaeology unless new conflicts are found.

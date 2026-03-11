@@ -13,6 +13,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from rhodesli_ml.calibration_lineage import (
+    LABEL_TYPE_EXPLICIT_NEGATIVE,
+    LABEL_TYPE_EXPLICIT_POSITIVE,
+)
 from rhodesli_ml.recalibration_hooks import (
     _compute_similarity,
     _insert_pair,
@@ -92,8 +96,6 @@ class TestOnFaceMerge:
         with patch(
             "rhodesli_ml.recalibration_hooks._get_embedding",
             side_effect=lambda fid, **kw: fake_emb_a if fid == "face_aaa" else fake_emb_b,
-        ), patch(
-            "rhodesli_ml.recalibration_hooks._check_recalibration",
         ):
             asyncio.run(on_face_merge(
                 "face_aaa", "face_bbb", merged_by="admin",
@@ -106,7 +108,31 @@ class TestOnFaceMerge:
         assert row["is_match"] is True
         assert row["source"] == "merge_admin"
         assert row["weight"] == 1.0
+        assert row["label_type"] == LABEL_TYPE_EXPLICIT_POSITIVE
+        assert row["state_event_action"] == "merge"
+        assert row["active"] is True
         assert -1.0 <= row["similarity_score"] <= 1.0
+
+    def test_merge_hook_never_recalibrates_inline(self):
+        """Merge hook only writes labels; it never retrains inline."""
+        fake_emb_a = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+        fake_emb_b = np.array([0.9, 0.1, 0.0], dtype=np.float32)
+
+        mock_client = MagicMock()
+        mock_table = MagicMock()
+        mock_client.table.return_value = mock_table
+        mock_table.upsert.return_value = mock_table
+        mock_table.execute.return_value = MagicMock()
+
+        with patch(
+            "rhodesli_ml.recalibration_hooks._get_embedding",
+            side_effect=lambda fid, **kw: fake_emb_a if fid == "face_aaa" else fake_emb_b,
+        ), patch(
+            "rhodesli_ml.similarity_calibration.SimilarityCalibrator.recalibrate_if_needed"
+        ) as mock_recalibrate:
+            asyncio.run(on_face_merge("face_aaa", "face_bbb", supabase_client=mock_client))
+
+        mock_recalibrate.assert_not_called()
 
     # -------------------------------------------------------------------
     # 5. on_face_merge with missing embeddings logs warning (not error)
@@ -162,8 +188,6 @@ class TestOnMatchReject:
         with patch(
             "rhodesli_ml.recalibration_hooks._get_embedding",
             side_effect=lambda fid, **kw: fake_emb_a if fid == "face_p" else fake_emb_b,
-        ), patch(
-            "rhodesli_ml.recalibration_hooks._check_recalibration",
         ):
             asyncio.run(on_match_reject(
                 "face_p", "face_q", rejected_by="admin",
@@ -176,6 +200,8 @@ class TestOnMatchReject:
         assert row["is_match"] is False
         assert row["weight"] == 1.5
         assert row["source"] == "reject_admin"
+        assert row["label_type"] == LABEL_TYPE_EXPLICIT_NEGATIVE
+        assert row["state_event_action"] == "reject"
 
     def test_missing_embedding_logs_warning(self, caplog):
         """on_match_reject also logs WARNING on missing embedding."""
@@ -206,7 +232,18 @@ class TestInsertPairCanonicalOrdering:
         mock_table.upsert.return_value = mock_table
         mock_table.execute.return_value = MagicMock()
 
-        _insert_pair(mock_client, "aaa", "zzz", 0.85, True, "test")
+        _insert_pair(
+            mock_client,
+            "aaa",
+            "zzz",
+            0.85,
+            True,
+            "test",
+            label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+            state_event_action="merge",
+            actor_id="admin",
+            source_surface="test",
+        )
 
         row = mock_table.upsert.call_args[0][0]
         assert row["face_id_a"] == "aaa"
@@ -220,7 +257,18 @@ class TestInsertPairCanonicalOrdering:
         mock_table.upsert.return_value = mock_table
         mock_table.execute.return_value = MagicMock()
 
-        _insert_pair(mock_client, "zzz", "aaa", 0.75, False, "test")
+        _insert_pair(
+            mock_client,
+            "zzz",
+            "aaa",
+            0.75,
+            False,
+            "test",
+            label_type=LABEL_TYPE_EXPLICIT_NEGATIVE,
+            state_event_action="reject",
+            actor_id="admin",
+            source_surface="test",
+        )
 
         row = mock_table.upsert.call_args[0][0]
         assert row["face_id_a"] == "aaa"
@@ -234,7 +282,18 @@ class TestInsertPairCanonicalOrdering:
         mock_table.upsert.return_value = mock_table
         mock_table.execute.return_value = MagicMock()
 
-        _insert_pair(mock_client, "same", "same", 1.0, True, "test")
+        _insert_pair(
+            mock_client,
+            "same",
+            "same",
+            1.0,
+            True,
+            "test",
+            label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+            state_event_action="merge",
+            actor_id="admin",
+            source_surface="test",
+        )
 
         row = mock_table.upsert.call_args[0][0]
         assert row["face_id_a"] == "same"
@@ -248,7 +307,19 @@ class TestInsertPairCanonicalOrdering:
         mock_table.upsert.return_value = mock_table
         mock_table.execute.return_value = MagicMock()
 
-        _insert_pair(mock_client, "a", "b", 0.9, True, "test", weight=2.0)
+        _insert_pair(
+            mock_client,
+            "a",
+            "b",
+            0.9,
+            True,
+            "test",
+            label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+            state_event_action="merge",
+            actor_id="admin",
+            source_surface="test",
+            weight=2.0,
+        )
 
         upsert_kwargs = mock_table.upsert.call_args[1]
         assert upsert_kwargs["on_conflict"] == "face_id_a,face_id_b"
@@ -256,6 +327,7 @@ class TestInsertPairCanonicalOrdering:
         row = mock_table.upsert.call_args[0][0]
         assert row["weight"] == 2.0
         assert row["similarity_score"] == 0.9
+        assert row["pair_key"] == "a::b"
 
     def test_insert_exception_logs_warning(self, caplog):
         """If supabase upsert throws, _insert_pair logs WARNING (not crash)."""
@@ -263,6 +335,17 @@ class TestInsertPairCanonicalOrdering:
         mock_client.table.side_effect = Exception("connection refused")
 
         with caplog.at_level(logging.WARNING, logger="rhodesli_ml.recalibration_hooks"):
-            _insert_pair(mock_client, "a", "b", 0.5, False, "test")
+            _insert_pair(
+                mock_client,
+                "a",
+                "b",
+                0.5,
+                False,
+                "test",
+                label_type=LABEL_TYPE_EXPLICIT_NEGATIVE,
+                state_event_action="reject",
+                actor_id="admin",
+                source_surface="test",
+            )
 
         assert any("Failed to insert calibration pair" in r.message for r in caplog.records)

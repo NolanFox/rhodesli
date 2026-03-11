@@ -1,0 +1,77 @@
+{
+  "run_id": "9b0dfbb5-01a2-474a-bf28-599159c4a972",
+  "run_type": "recalibration",
+  "started_at": "2026-03-11T17:50:10.623911+00:00",
+  "git_commit": "ad9bb73a119ce495186f2f280b4322aaf9e57901",
+  "pair_source": "json:calibration_pairs_session63.json",
+  "preflight": {
+    "generated_at": "2026-03-11T17:50:10.623870+00:00",
+    "git_commit": "ad9bb73a119ce495186f2f280b4322aaf9e57901",
+    "source": "json:calibration_pairs_session63.json",
+    "status": "ok",
+    "should_recalibrate": true,
+    "reason": "no_model_exists",
+    "counts": {
+      "active_pair_count": 348,
+      "inactive_pair_count": 0,
+      "match_count": 221,
+      "nonmatch_count": 127,
+      "label_type_counts": {
+        "explicit_positive": 221,
+        "implicit_negative": 127
+      }
+    },
+    "conflicts": [],
+    "current_model": {
+      "status": "no_model"
+    }
+  },
+  "fit": {
+    "requested": true,
+    "executed": true,
+    "dry_run": true,
+    "saved_model_path": null
+  },
+  "new_model": {
+    "version": 1,
+    "created_at": "2026-03-11T17:50:11.970736+00:00",
+    "pair_count": 348,
+    "match_count": 221,
+    "nonmatch_count": 127,
+    "auc": 0.9577,
+    "threshold_at_90_precision": 0.2681,
+    "threshold_at_95_precision": 0.2691
+  },
+  "new_model_version": 1,
+  "postfit": {
+    "generated_at": "2026-03-11T17:50:11.975941+00:00",
+    "git_commit": "ad9bb73a119ce495186f2f280b4322aaf9e57901",
+    "source": "json:calibration_pairs_session63.json",
+    "status": "ok",
+    "should_recalibrate": false,
+    "reason": "no trigger met",
+    "counts": {
+      "active_pair_count": 348,
+      "inactive_pair_count": 0,
+      "match_count": 221,
+      "nonmatch_count": 127,
+      "label_type_counts": {
+        "explicit_positive": 221,
+        "implicit_negative": 127
+      }
+    },
+    "conflicts": [],
+    "current_model": {
+      "version": 1,
+      "created_at": "2026-03-11T17:50:11.970736+00:00",
+      "pair_count": 348,
+      "match_count": 221,
+      "nonmatch_count": 127,
+      "auc": 0.9577,
+      "threshold_at_90_precision": 0.2681,
+      "threshold_at_95_precision": 0.2691
+    }
+  },
+  "status": "ok",
+  "finished_at": "2026-03-11T17:50:11.975973+00:00"
+}

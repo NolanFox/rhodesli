@@ -2485,3 +2485,41 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - **Defer prompt/state lineage until cloud migration** — wrong sequencing; by then historical data is already under-specified.
   - **Replace every current audit store immediately** — too disruptive for Phase 0; standardizing envelopes first is the pragmatic path.
 - **Execution artifacts**: `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`, `docs/prds/038_longitudinal/LINEAGE_AND_REPLAY.md`, `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-prep-assessment.md`
+
+### AD-219: Calibration Labels Are Append-Only State With Explicit Local Recalibration
+- **Date**: 2026-03-11 | **Session**: 97
+- **Context**: Session 97 Phase 1 found that production recalibration hooks still attempted inline retraining behavior, calibration pairs only captured latest-state fields, and the repo had no safe, explicit local recalibration command that could exclude reverted labels or block logically inconsistent labels. The PRD-038 review package and Gemini follow-up both required write-only production hooks, reversible labels, and conflict checks before recalibration consumes them.
+- **Decision**:
+  1. Production hooks remain **write-only**. They record calibration labels plus lineage fields, but do not fit or refresh the model inline.
+  2. `calibration_pairs` becomes a **current-state table with lineage columns**:
+     - `label_type`
+     - `active`
+     - `state_event_id`
+     - `state_event_action`
+     - `source_surface`
+     - `actor_id`
+     - `linked_event_id`
+     - `reversed_by_event_id`
+     - `labeled_at`
+     - `metadata`
+  3. Every calibration write mirrors a **state-event envelope** into `audit_log` with `target_type=calibration_pair`.
+  4. Local recalibration moves to `scripts/recalibrate.py`, which:
+     - loads labels from Supabase or JSON
+     - excludes inactive / reverted rows
+     - blocks on direct or transitive logical conflicts
+     - emits auditable status and dry-run / fit reports
+  5. Label taxonomy is explicit and fixed at this layer:
+     - `explicit_positive`
+     - `explicit_negative`
+     - `implicit_negative`
+     - `discovery_confirmed`
+- **Why**:
+  - Inline retraining in request paths violates the local-only ML boundary and hides failure modes.
+  - Reversal-aware labels are required to debug UX and to keep bad labels from silently poisoning later recalibration.
+  - A local CLI with status artifacts is the simplest cloud-ready boundary: the same contract can later run on a queued worker without changing label semantics.
+  - Using `audit_log` for the mutation envelope preserves replayability without introducing a brand-new event platform mid-session.
+- **Rejected alternatives**:
+  - **Keep `_check_recalibration()` in production hooks** — impossible to trust on Railway and wrong execution boundary even if dependencies existed.
+  - **Use only `calibration_pairs` with no state-event mirror** — too weak for reversal chains and forensic debugging.
+  - **Defer conflict checking to manual review** — too error-prone once recalibration becomes routine.
+- **Execution artifacts**: `rhodesli_ml/calibration_lineage.py`, `rhodesli_ml/recalibration_hooks.py`, `rhodesli_ml/similarity_calibration.py`, `scripts/recalibrate.py`, `scripts/sql/create_calibration_pairs.sql`, `scripts/sql/alter_calibration_pairs_add_lineage_fields.sql`, `docs/assessments/session-97-calibration-status.json`, `docs/assessments/session-97-recalibration-dry-run.json`, `docs/session_logs/session-97-log.md`

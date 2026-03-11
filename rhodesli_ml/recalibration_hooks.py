@@ -1,67 +1,55 @@
-"""
-Recalibration Hooks: Auto-update calibration pairs on admin actions.
+"""Write-only calibration hooks for admin review decisions.
 
-These hooks fire after face merges, rejections, and identity confirmations
-to keep the calibration model current. They insert new pairs into the
-calibration_pairs table and check if recalibration is needed.
+These hooks fire after merge, reject, and confirm actions to record
+calibration labels with enough lineage for later replay and rollback.
+They intentionally do not fit or refresh models in production.
 
-Designed to handle the future "reject" UX non-match spike gracefully:
-- Rate limit: max 1 recalibration per hour
-- Drift detection: threshold shift > 0.1 → flag for review
-- Weight explicit rejections 1.5x (more informative than implicit)
-- Never retroactively change past merge decisions
-
-Session: 63 | AD-149
+Session: 63, 97 | AD-149, AD-217, AD-218
 """
 
 import logging
-import os
 from typing import Optional
 
 import numpy as np
 
+from core.config import DATA_DIR
+from core.embeddings_io import load_face_data
+from rhodesli_ml.calibration_lineage import (
+    LABEL_TYPE_EXPLICIT_NEGATIVE,
+    LABEL_TYPE_EXPLICIT_POSITIVE,
+    LABEL_TYPE_IMPLICIT_NEGATIVE,
+    build_calibration_pair_row,
+    record_calibration_pair,
+)
+
 logger = logging.getLogger(__name__)
+
+_EMBEDDINGS_CACHE: dict[str, np.ndarray] | None = None
+_EMBEDDINGS_CACHE_MTIME: float | None = None
 
 
 def _get_embedding(face_id: str, embeddings_path: str = "data/embeddings.npy") -> Optional[np.ndarray]:
     """Get embedding vector for a face_id."""
     from pathlib import Path
 
+    global _EMBEDDINGS_CACHE
+    global _EMBEDDINGS_CACHE_MTIME
+
     emb_path = Path(embeddings_path)
+    if embeddings_path == "data/embeddings.npy":
+        emb_path = Path(DATA_DIR) / "embeddings.npy"
     if not emb_path.exists():
         return None
 
-    embeddings = np.load(str(emb_path), allow_pickle=True)
-    filename_groups = {}
+    mtime = emb_path.stat().st_mtime
+    if _EMBEDDINGS_CACHE is None or _EMBEDDINGS_CACHE_MTIME != mtime:
+        face_data = load_face_data(emb_path)
+        _EMBEDDINGS_CACHE = {fid: row["mu"] for fid, row in face_data.items() if row.get("mu") is not None}
+        _EMBEDDINGS_CACHE_MTIME = mtime
 
-    for emb in embeddings:
-        # Explicit face_id match
-        if emb.get("face_id") == face_id:
-            mu = emb.get("mu")
-            if mu is not None:
-                return np.array(mu, dtype=np.float32)
-
-        # Build filename index for legacy face_ids
-        fn = emb.get("filename", "")
-        if fn:
-            filename_groups.setdefault(fn, []).append(emb)
-
-    # Try legacy face_id format: "filename:faceN"
-    if ":" in face_id:
-        parts = face_id.rsplit(":", 1)
-        stem = parts[0]
-        idx_str = parts[1].replace("face", "")
-        try:
-            idx = int(idx_str)
-            for fn, entries in filename_groups.items():
-                if Path(fn).stem == stem and idx < len(entries):
-                    mu = entries[idx].get("mu")
-                    if mu is not None:
-                        return np.array(mu, dtype=np.float32)
-        except ValueError:
-            pass
-
-    return None
+    if _EMBEDDINGS_CACHE is None:
+        return None
+    return _EMBEDDINGS_CACHE.get(face_id)
 
 
 def _compute_similarity(emb_a: np.ndarray, emb_b: np.ndarray) -> float:
@@ -74,32 +62,59 @@ def _compute_similarity(emb_a: np.ndarray, emb_b: np.ndarray) -> float:
     return float(dot / (norm_a * norm_b))
 
 
-def _insert_pair(supabase_client, face_id_a: str, face_id_b: str,
-                 similarity: float, is_match: bool, source: str,
-                 weight: float = 1.0):
-    """Insert a calibration pair into Supabase (upsert on conflict)."""
-    # Canonical ordering
-    a, b = (min(face_id_a, face_id_b), max(face_id_a, face_id_b))
-    row = {
-        "face_id_a": a,
-        "face_id_b": b,
-        "similarity_score": round(similarity, 6),
-        "is_match": is_match,
-        "source": source,
-        "weight": weight,
-    }
+def _insert_pair(
+    supabase_client,
+    face_id_a: str,
+    face_id_b: str,
+    similarity: float,
+    is_match: bool,
+    source: str,
+    *,
+    label_type: str,
+    state_event_action: str,
+    actor_id: str,
+    source_surface: str,
+    weight: float | None = None,
+    metadata: dict | None = None,
+):
+    """Insert one lineage-rich calibration pair into Supabase."""
+    row = build_calibration_pair_row(
+        face_id_a,
+        face_id_b,
+        similarity_score=similarity,
+        is_match=is_match,
+        source=source,
+        label_type=label_type,
+        weight=weight,
+        state_event_action=state_event_action,
+        actor_id=actor_id,
+        source_surface=source_surface,
+        metadata=metadata,
+    )
     try:
-        supabase_client.table('calibration_pairs').upsert(
-            row, on_conflict='face_id_a,face_id_b'
-        ).execute()
-        logger.info(f"Calibration pair: {a[:20]}..↔{b[:20]}.. sim={similarity:.3f} match={is_match} source={source}")
+        saved = record_calibration_pair(
+            supabase_client,
+            row,
+            source_surface=source_surface,
+            actor_id=actor_id,
+            action=state_event_action,
+        )
+        logger.info(
+            "Calibration pair: %s sim=%.3f match=%s label_type=%s source=%s",
+            saved["pair_key"],
+            similarity,
+            is_match,
+            saved["label_type"],
+            source,
+        )
     except Exception as e:
         logger.warning(f"Failed to insert calibration pair: {e}")
 
 
 async def on_face_merge(face_id_a: str, face_id_b: str,
                         merged_by: str = "admin",
-                        supabase_client=None):
+                        supabase_client=None,
+                        source_surface: str = "app.engagement_routes._fire_recalibration_hook"):
     """
     Hook: called when two faces are confirmed as the same person.
 
@@ -115,16 +130,24 @@ async def on_face_merge(face_id_a: str, face_id_b: str,
     similarity = _compute_similarity(emb_a, emb_b)
 
     if supabase_client:
-        _insert_pair(supabase_client, face_id_a, face_id_b,
-                     similarity, is_match=True, source=f"merge_{merged_by}")
-
-        # Check recalibration
-        _check_recalibration(supabase_client)
+        _insert_pair(
+            supabase_client,
+            face_id_a,
+            face_id_b,
+            similarity,
+            is_match=True,
+            source=f"merge_{merged_by}",
+            label_type=LABEL_TYPE_EXPLICIT_POSITIVE,
+            state_event_action="merge",
+            actor_id=merged_by,
+            source_surface=source_surface,
+        )
 
 
 async def on_match_reject(face_id_a: str, face_id_b: str,
                           rejected_by: str = "admin",
-                          supabase_client=None):
+                          supabase_client=None,
+                          source_surface: str = "app.engagement_routes._fire_recalibration_hook"):
     """
     Hook: called when a proposed match is rejected ("not same person").
 
@@ -142,18 +165,26 @@ async def on_match_reject(face_id_a: str, face_id_b: str,
     similarity = _compute_similarity(emb_a, emb_b)
 
     if supabase_client:
-        # Weight 1.5x for explicit rejections (more informative)
-        _insert_pair(supabase_client, face_id_a, face_id_b,
-                     similarity, is_match=False, source=f"reject_{rejected_by}",
-                     weight=1.5)
-
-        _check_recalibration(supabase_client)
+        _insert_pair(
+            supabase_client,
+            face_id_a,
+            face_id_b,
+            similarity,
+            is_match=False,
+            source=f"reject_{rejected_by}",
+            label_type=LABEL_TYPE_EXPLICIT_NEGATIVE,
+            state_event_action="reject",
+            actor_id=rejected_by,
+            source_surface=source_surface,
+            weight=1.5,
+        )
 
 
 async def on_identity_confirm(identity_id: str, anchor_face_ids: list[str],
                               confirmed_by: str = "admin",
                               supabase_client=None,
-                              max_negative_samples: int = 10):
+                              max_negative_samples: int = 10,
+                              source_surface: str = "app.engagement_routes._fire_recalibration_hook"):
     """
     Hook: called when an identity is confirmed.
 
@@ -194,24 +225,17 @@ async def on_identity_confirm(identity_id: str, anchor_face_ids: list[str],
             for other_fid, other_emb in other_faces:
                 similarity = _compute_similarity(emb, other_emb)
                 if supabase_client:
-                    _insert_pair(supabase_client, fid, other_fid,
-                                 similarity, is_match=False,
-                                 source=f"implicit_confirm_{confirmed_by}")
+                    _insert_pair(
+                        supabase_client,
+                        fid,
+                        other_fid,
+                        similarity,
+                        is_match=False,
+                        source=f"implicit_confirm_{confirmed_by}",
+                        label_type=LABEL_TYPE_IMPLICIT_NEGATIVE,
+                        state_event_action="confirm",
+                        actor_id=confirmed_by,
+                        source_surface=source_surface,
+                        metadata={"identity_id": identity_id},
+                    )
             break  # One face from this identity is enough
-
-    if supabase_client:
-        _check_recalibration(supabase_client)
-
-
-def _check_recalibration(supabase_client):
-    """Check if recalibration is needed and trigger if so."""
-    try:
-        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-        cal = SimilarityCalibrator(supabase_client=supabase_client)
-        recalibrated, warning = cal.recalibrate_if_needed()
-        if recalibrated:
-            logger.info(f"Auto-recalibrated calibration model")
-            if warning:
-                logger.warning(warning)
-    except Exception as e:
-        logger.warning(f"Recalibration check failed: {e}")
