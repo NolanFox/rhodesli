@@ -10,9 +10,16 @@ All notable changes to this project will be documented in this file.
 - **Archive provenance ambiguity** — photo pages now show full archive timestamps, and older imports without uploader attribution explicitly say that uploader attribution was not recorded for that historical import.
 - **Same-timestamp upload ordering drift** — when imports share the exact same `upload_date`, upload-newest/upload-oldest now break ties by archival `photo_index.json` insertion order instead of cache-ID or filename order.
 - **Public/admin navigation clarity** — workstation photo links now say `Public Page`, and admin-capable public photo pages expose `Back to Workstation`.
+- **File-only audit split** — `log_user_action()` now dual-writes to Supabase `audit_log`, so user-action provenance is no longer trapped in `logs/user_actions.log`.
+- **Missing structured photo edit audit** — photo collection/source/source URL edits now emit structured audit events with actor information.
+- **Missing structured rename audit** — rename flows now emit structured audit events with actor information, reducing future ambiguity when answering “who changed this person?”
+
+### Added
+- **Machine-readable attribution artifact** — `docs/assessments/session-96f-attribution-findings.json` captures the exact evidence chain for the observed `Jenny israel` / `Emily israel` local rename events, including the current attribution boundary.
 
 ### Verification
 - Targeted UX regression slices: `50 passed`
+- Targeted audit regression slices: `8 passed`
 - App tests: `4102 passed, 7 skipped`
 - ML tests: `566 passed`
 - Live deploy: Railway `705b0eff-f8aa-4aee-b347-081c17c82df2` SUCCESS

@@ -43,7 +43,17 @@
 - [x] Lessons `125`-`126` added in `tasks/lessons/data-lessons.md` and indexed in `tasks/lessons.md`
 - [x] No repo data files staged into Session 96f
 
+### Phase 5: Attribution Follow-Up + Audit Hardening
+- [x] Exact local rename provenance recovered for `Emily israel` and `Jenny israel`
+- [x] Machine-readable evidence artifact added: `docs/assessments/session-96f-attribution-findings.json`
+- [x] `app/main.py`: `log_user_action()` now dual-writes to Supabase `audit_log`
+- [x] `app/page_routes.py`: photo metadata edits now emit structured audit events with actor data
+- [x] `app/identity_routes.py` + `app/page_routes.py`: rename flows now emit structured audit events with actor data
+- [x] Backlog items added for canonical actor attribution/timeline UI and annotation approval-state reconciliation
+- [x] Lessons `127`-`128` added and indexed
+
 ### Key Commits
 - `8009c87` `[codex] docs(session): add 96f prompt and context`
 - `92f12a9` `[codex] fix(upload): restore browse inbox and first-run ai entry`
 - `161d6bf` `[codex] fix(photos): stabilize upload ordering and clarify navigation`
+- `d94375d` `[codex] fix(audit): durably log mutation actions`

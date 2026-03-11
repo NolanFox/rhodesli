@@ -87,6 +87,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
+- [ ] AUDIT-001: Canonical actor attribution + person/photo history timelines — registry history still records `user_source` rather than actor identity, and entity-level timeline UI is still missing. Build canonical actor fields on mutations, Supabase-backed read paths, and admin timelines on `/person` + `/photo`. See `docs/BACKLOG.md`.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -157,7 +158,7 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Recently Completed
 
-- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, and clarified public/workstation navigation (`Public Page`, `Back to Workstation`). Verified `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
+- [x] 2026-03-11: **v0.97.11 — Session 96f**: Live UX closeout after the data reconciliation. Fixed the wrong upload success destination (`/?section=to_review&view=browse`), restored a first-run AI Analysis entry point for unlabeled admin photo views, made archive provenance explicit with full timestamps and missing-uploader wording, stabilized upload-date tie ordering using archival `photo_index.json` order, clarified public/workstation navigation (`Public Page`, `Back to Workstation`), and hardened attribution by dual-writing `log_user_action()` to Supabase plus logging photo metadata edits and rename flows with actor data. Verified targeted audit slices (`8 passed`) in addition to the earlier `pytest tests/ -x -q` (`4102 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Live deploy `705b0eff` SUCCESS.
 
 - [x] 2026-03-11: **v0.97.10 — Session 96e-cont12**: Production reconciliation + root-cause closeout. Closed the remaining local structural drift (`157` orphans, `122` merge chains, `1` duplicate face, `2` ghost refs), finished embedding repair (`10` missing -> `0`), reconciled production with the audited `3412`-identity / `938`-photo snapshot, and pruned `112` stale Supabase identity rows only after exporting them to a checked-in JSON backup artifact. Also restored the app gate by making `/timeline` person filters timeline-backed. Verified `pytest tests/ -x -q` (`4098 passed`) + `pytest rhodesli_ml/tests/ -x -q` (`566 passed`). Deploy SUCCESS.
 

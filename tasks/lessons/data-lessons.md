@@ -91,6 +91,16 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: An empty admin state must still preserve the primary action needed to populate that state.
 - **Prevention**: Render an explicit empty-state AI Analysis panel for unlabeled admin photo views, including the first-run action and copy explaining what will be generated.
 
+### Lesson 127: File-only audit trails are not enough for archival mutation history
+- **Mistake**: `log_user_action()` wrote only to local `logs/user_actions.log`, so a meaningful slice of mutation history lived outside the structured Supabase audit trail. That is survivable for debugging but not acceptable for archival provenance after a multi-session data integrity incident.
+- **Rule**: Any audit-relevant mutation trail that the team may need for recovery, attribution, or incident review must be durably recorded in the structured store, not just appended to a local file.
+- **Prevention**: Dual-write user action logs to Supabase `audit_log`, and treat the local file as a convenience mirror rather than the only durable copy.
+
+### Lesson 128: `user_source` is provenance class, not actor identity
+- **Mistake**: Identity registry events recorded `user_source` values like `approved_name_suggestion` or `web_review`, but not the actual actor email/user ID. Reconstructing "who changed this person?" then required correlating multiple logs after the fact.
+- **Rule**: Capture actor identity at mutation time on the canonical event, not as an inference assembled later from neighboring systems.
+- **Prevention**: Add explicit actor fields to canonical registry/photo mutation records and expose them through entity history timelines. Use `user_source` only for workflow/provenance class.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

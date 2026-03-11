@@ -27,6 +27,16 @@ testing so Rhodesli is actually ready for routine use.
      `/?section=to_review&view=browse`
    - It should not dump the user into focus mode.
 
+6. Mutation attribution is incomplete.
+   - Determine who made the observed local renames for:
+     - `531c8221-a115-4bdd-ac96-bd930a27135b` -> `Jenny israel`
+     - `44ee07e0-bc1c-4839-9ee3-149e9ef349db` -> `Emily israel`
+   - Preserve the exact supporting evidence in a machine-readable artifact.
+   - Make the future audit trail more durable: Supabase-backed, resilient to
+     community middleware, and not dependent on local-only log files.
+   - If full person/photo timeline UI is too risky for this pass, add it to the
+     roadmap/backlog explicitly instead of leaving it implied.
+
 ## User-Supplied Live Examples
 - Photos page: `https://rhodesli.nolanandrewfox.com/?section=photos&filter_collection=&filter_source=&sort_by=upload_newest&media_filter=all`
 - Photo detail: `https://rhodesli.nolanandrewfox.com/photo/7b7b3499b2006f61`
