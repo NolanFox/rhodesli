@@ -85,18 +85,18 @@ class TestSortPhotosHelper:
 
         result = _sort_photos(photos_with_upload_dates, "upload_newest")
         ids = [p["photo_id"] for p in result]
-        # bbb(Mar 1) > aaa(Feb 10) > ccc(Jan 15) > ddd(no date)
+        # bbb(Mar 1) > aaa(Feb 10) > ccc(Jan 15) > ddd(no archive timestamp)
         assert ids.index("bbb222") < ids.index("aaa111") < ids.index("ccc333")
-        assert ids[-1] == "ddd444", "Photo without upload_date should sort to end"
+        assert ids[-1] == "ddd444", "Photo without upload_date or created_at should sort to end"
 
     def test_upload_oldest_sorts_by_upload_date_ascending(self, photos_with_upload_dates):
         from app.main import _sort_photos
 
         result = _sort_photos(photos_with_upload_dates, "upload_oldest")
         ids = [p["photo_id"] for p in result]
-        # ccc(Jan 15) < aaa(Feb 10) < bbb(Mar 1) < ddd(no date)
+        # ccc(Jan 15) < aaa(Feb 10) < bbb(Mar 1) < ddd(no archive timestamp)
         assert ids.index("ccc333") < ids.index("aaa111") < ids.index("bbb222")
-        assert ids[-1] == "ddd444", "Photo without upload_date should sort to end"
+        assert ids[-1] == "ddd444", "Photo without upload_date or created_at should sort to end"
 
     def test_filename_az_sorts_alphabetically(self, photos_with_upload_dates):
         from app.main import _sort_photos
@@ -161,6 +161,38 @@ class TestSortPhotosHelper:
 
         result = _sort_photos(photos, "upload_oldest")
         assert [p["photo_id"] for p in result] == ["early", "late"]
+
+    def test_upload_newest_falls_back_to_created_at_when_upload_date_missing(self):
+        from app.main import _sort_photos
+
+        photos = [
+            {
+                "photo_id": "old-no-upload",
+                "filename": "old.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "",
+                "created_at": "2026-03-09T08:00:00+00:00",
+            },
+            {
+                "photo_id": "new-no-upload",
+                "filename": "new.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "",
+                "created_at": "2026-03-10T20:00:00+00:00",
+            },
+            {
+                "photo_id": "no-timestamps",
+                "filename": "none.jpg",
+                "collection": "A",
+                "face_count": 1,
+                "upload_date": "",
+            },
+        ]
+
+        result = _sort_photos(photos, "upload_newest")
+        assert [p["photo_id"] for p in result] == ["new-no-upload", "old-no-upload", "no-timestamps"]
 
 
 class TestPhotosRouteDropdown:
@@ -321,6 +353,72 @@ class TestBuildCachesMetadataFallback:
 
             cached = main_mod._photo_cache["sha256match01"]
             assert cached.get("upload_date") == "2026-02-10T00:00:00+00:00"
+        finally:
+            main_mod._photo_cache = orig_cache
+            main_mod._face_to_photo_cache = orig_f2p
+            main_mod._photo_id_aliases = orig_aliases
+
+    def test_duplicate_basename_prefers_richer_inbox_metadata(self, tmp_path):
+        """When SHA and inbox IDs share a basename, keep the richer upload metadata."""
+        import json
+
+        from app.main import _build_caches
+
+        photo_index = {
+            "schema_version": 1,
+            "photos": {
+                "sha_old": {
+                    "path": "family_search_david_capeloto_declaration_of_intent_image.jpg",
+                    "face_ids": [],
+                    "source": "FamilySearch",
+                    "collection": "Immigration Records",
+                    "created_at": "2026-03-09T21:50:25.730264+00:00",
+                },
+                "inbox_new": {
+                    "path": "raw_photos/family_search_david_capeloto_declaration_of_intent_image.jpg",
+                    "face_ids": [],
+                    "source": "FamilySearch",
+                    "collection": "Immigration Records",
+                    "upload_date": "2026-03-10T17:53:28.672276+00:00",
+                    "created_at": "2026-03-10T15:54:58.625824+00:00",
+                    "updated_at": "2026-03-10T20:18:21.437235+00:00",
+                    "uploaded_by": "admin@example.com",
+                },
+            },
+            "face_to_photo": {},
+        }
+        (tmp_path / "photo_index.json").write_text(json.dumps(photo_index))
+
+        fake_cache = {
+            "d2642d16f5f0139c": {
+                "filename": "family_search_david_capeloto_declaration_of_intent_image.jpg",
+                "faces": [],
+                "source": "",
+                "collection": "",
+            }
+        }
+
+        import app.main as main_mod
+
+        orig_cache = main_mod._photo_cache
+        orig_f2p = main_mod._face_to_photo_cache
+        orig_aliases = main_mod._photo_id_aliases
+
+        try:
+            main_mod._photo_cache = None
+            main_mod._face_to_photo_cache = None
+            main_mod._photo_id_aliases = None
+
+            with (
+                patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
+                patch.object(main_mod, "data_path", tmp_path),
+            ):
+                _build_caches()
+
+            cached = main_mod._photo_cache["d2642d16f5f0139c"]
+            assert cached.get("upload_date") == "2026-03-10T17:53:28.672276+00:00"
+            assert cached.get("created_at") == "2026-03-10T15:54:58.625824+00:00"
+            assert cached.get("uploaded_by") == "admin@example.com"
         finally:
             main_mod._photo_cache = orig_cache
             main_mod._face_to_photo_cache = orig_f2p

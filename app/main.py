@@ -3689,15 +3689,42 @@ def _build_caches():
             filename_to_face_ids_ordered = {}
             filename_to_metadata = {}
             filename_to_photo_index_id = {}
+
+            def _filename_entry_score(path: str, metadata: dict, face_ids) -> tuple:
+                """Rank duplicate basename entries so the richest archive metadata wins."""
+                return (
+                    1 if metadata.get("upload_date") else 0,
+                    1 if metadata.get("uploaded_by") else 0,
+                    1 if metadata.get("job_id") else 0,
+                    1 if str(path).startswith("raw_photos/") else 0,
+                    metadata.get("created_at", ""),
+                    metadata.get("updated_at", ""),
+                    len(face_ids or []),
+                )
+
+            best_raw_entries = {}
             for pid, photo_data in photo_index_raw.get("photos", {}).items():
                 path = photo_data.get("path", "")
                 if not path:
                     continue
                 fname = Path(path).name
-                filename_to_face_ids_ordered[fname] = [
-                    fid for fid in photo_data.get("face_ids", []) if isinstance(fid, str) and fid
-                ]
-                filename_to_photo_index_id[fname] = pid
+                candidate = {
+                    "pid": pid,
+                    "path": path,
+                    "ordered_face_ids": [fid for fid in photo_data.get("face_ids", []) if isinstance(fid, str) and fid],
+                    "metadata": {k: v for k, v in photo_data.items() if v},
+                }
+                existing = best_raw_entries.get(fname)
+                if existing is None or _filename_entry_score(
+                    candidate["path"], candidate["metadata"], candidate["ordered_face_ids"]
+                ) > _filename_entry_score(existing["path"], existing["metadata"], existing["ordered_face_ids"]):
+                    best_raw_entries[fname] = candidate
+
+            for fname, candidate in best_raw_entries.items():
+                filename_to_face_ids_ordered[fname] = candidate["ordered_face_ids"]
+                filename_to_photo_index_id[fname] = candidate["pid"]
+
+            best_registry_entries = {}
             for pid in photo_registry._photos:
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
@@ -3707,16 +3734,31 @@ def _build_caches():
                 metadata = photo_registry.get_metadata(pid)
                 if path:
                     fname = Path(path).name
-                    if source:
-                        filename_to_source[fname] = source
-                    if collection:
-                        filename_to_collection[fname] = collection
-                    if source_url:
-                        filename_to_source_url[fname] = source_url
-                    filename_to_face_ids[fname] = face_ids
-                    filename_to_face_ids_ordered.setdefault(fname, sorted(face_ids))
-                    if metadata:
-                        filename_to_metadata[fname] = metadata
+                    candidate = {
+                        "path": path,
+                        "source": source,
+                        "collection": collection,
+                        "source_url": source_url,
+                        "face_ids": face_ids,
+                        "metadata": metadata,
+                    }
+                    existing = best_registry_entries.get(fname)
+                    if existing is None or _filename_entry_score(
+                        candidate["path"], candidate["metadata"], candidate["face_ids"]
+                    ) > _filename_entry_score(existing["path"], existing["metadata"], existing["face_ids"]):
+                        best_registry_entries[fname] = candidate
+
+            for fname, candidate in best_registry_entries.items():
+                if candidate["source"]:
+                    filename_to_source[fname] = candidate["source"]
+                if candidate["collection"]:
+                    filename_to_collection[fname] = candidate["collection"]
+                if candidate["source_url"]:
+                    filename_to_source_url[fname] = candidate["source_url"]
+                filename_to_face_ids[fname] = candidate["face_ids"]
+                filename_to_face_ids_ordered.setdefault(fname, sorted(candidate["face_ids"]))
+                if candidate["metadata"]:
+                    filename_to_metadata[fname] = candidate["metadata"]
 
             for photo_id in _photo_cache:
                 filename = _photo_cache[photo_id].get("filename", "")

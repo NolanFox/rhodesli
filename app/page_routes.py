@@ -5436,8 +5436,10 @@ def _sort_photos(photos: list, sort_by: str) -> list:
             upload_date = p.get("upload_date") or ""
             created_at = p.get("created_at") or ""
             updated_at = p.get("updated_at") or ""
+            primary_timestamp = upload_date or created_at or updated_at
             return (
-                1 if upload_date else 0,
+                1 if primary_timestamp else 0,
+                primary_timestamp,
                 upload_date,
                 created_at,
                 updated_at,
@@ -5446,14 +5448,16 @@ def _sort_photos(photos: list, sort_by: str) -> list:
             )
 
         def _upload_key_oldest(p):
-            upload_date = p.get("upload_date") or no_date
-            created_at = p.get("created_at") or p.get("updated_at") or no_date
-            updated_at = p.get("updated_at") or no_date
+            upload_date = p.get("upload_date") or ""
+            created_at = p.get("created_at") or ""
+            updated_at = p.get("updated_at") or ""
+            primary_timestamp = upload_date or created_at or updated_at or no_date
             return (
-                0 if p.get("upload_date") else 1,
-                upload_date,
-                created_at,
-                updated_at,
+                0 if (upload_date or created_at or updated_at) else 1,
+                primary_timestamp,
+                upload_date or no_date,
+                created_at or no_date,
+                updated_at or no_date,
                 p.get("photo_id", ""),
                 p.get("filename", ""),
             )
