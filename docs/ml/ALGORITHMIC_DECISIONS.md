@@ -2461,4 +2461,5 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - scale reaches ~10k identities or ~100k embeddings
   - retraining / backfill cadence becomes operationally unreliable on a single local machine
   - multiple admins need the same ML queue without Nolan's laptop being available
-- **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`
+- **Post-review clarifications**: Gemini review tightened three points that were adopted into the package: temporal-diversity override in prototype selection, dominant-identity bias gates, and reversible active-learning labels. Codex kept those changes but declined to treat all Gemini recommendations as mandatory without further evaluation.
+- **Execution artifacts**: `docs/prds/SDD-038_longitudinal_face_modeling.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`, `docs/prds/038_longitudinal/EVALUATION_AND_SAFETY.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-post-gemini-assessment.md`

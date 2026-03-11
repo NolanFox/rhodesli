@@ -47,7 +47,7 @@ for this package, read it before Act 1 and fold it in.
 
 1. Read the required files from `docs/session_context/session-97-context.md`.
 2. If a Gemini review artifact exists for the PRD-038 package (`docs/assessments/session-97-gemini-review.md`), read it and
-   update the plan docs before changing code. **Specifically ensure you implement the 4 "Recommended Changes" from that review.**
+   update the plan docs before changing code. Evaluate Gemini's recommendations one by one and either adopt them or document a reasoned rejection in harness artifacts before implementation proceeds.
 3. Create a dedicated worktree/branch for Session 97 implementation.
 4. Create or replace `docs/session_logs/session-97-log.md` from the stub.
 5. Record:
@@ -65,10 +65,10 @@ This is the first hard gate. Do not skip it.
 ### Scope
 
 - Repair eval loaders for mixed `mu` / `embeddings` schema.
-- Rebuild or version the golden set from current confirmed identities. **Explicitly log the data skew (Gini coefficient) of the newly rebuilt golden set in the session log.**
+- Rebuild or version the golden set from current confirmed identities. Explicitly log skew / concentration metrics for the rebuilt training and evaluation assets in the session log.
 - Create a single shared offline scoring core used by:
-  - `core/auto_cluster.py` **(This must be the architectural source of truth for offline batch matching)**
-  - `scripts/cluster_new_faces.py` **(This should merely be a CLI wrapper that imports and calls the core pipeline)**
+  - `core/auto_cluster.py` (architectural source of truth for offline batch matching)
+  - `scripts/cluster_new_faces.py` (CLI wrapper over the shared pipeline)
   - upload proposal-generation paths
 
 ### Parallelization
@@ -123,9 +123,9 @@ Commit: `[codex] feat(calibration): harden local recalibration workflow`
 
 ### Scope
 
-- Build the per-identity prototype bank. **Strict Prototype Selection Override: The prototype bank must contain anchors from distinct chronological eras (e.g., separated by >= 15 years) if the metadata allows, even if it means discarding a higher-quality face score from a redundant era.**
+- Build the per-identity prototype bank with temporal diversity override when metadata allows.
 - Build longitudinal features.
-- Train a frozen-embedding reranker in shadow mode. **Add a boolean `has_kinship_risk` feature to the reranker's input dictionary based on GEDCOM relatives alive in the same era.**
+- Train a frozen-embedding reranker in shadow mode with at least one explicit kinship-risk feature and a dominant-identity bias check.
 - Keep rollout behind a flag.
 
 ### Required outputs
@@ -159,7 +159,7 @@ Commit: `[codex] feat(ml): add longitudinal reranker in shadow mode`
 - uncertainty/diversity queue
 - no duplicate already-labeled pairs
 - audit trail for same/different actions
-- **actionable audit log UI allowing admins to review and revert their recent active learning labels before initiating a recalibration run**
+- actionable audit/revert path for recent active-learning labels before recalibration consumes them
 - tests for diversity and label persistence
 
 ### Gate

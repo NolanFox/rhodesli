@@ -53,6 +53,11 @@
 - Snapshot unresolved faces and current proposal outputs.
 - Use this to compare scorer versions before rollout.
 
+## 6. Dominant-Identity Bias Set
+
+- Build a slice that isolates overrepresented identities and families.
+- Track whether the reranker gains are concentrated only on the biggest families.
+
 ---
 
 ## Mandatory Metrics
@@ -70,6 +75,7 @@
 - Recall on year-gap >= 20
 - Recall on year-gap >= 30
 - Same-family false positive rate
+- Dominant-identity lift vs non-dominant-identity lift
 - Cross-community leakage count
 - Quality-bucket Rank-1
 
@@ -95,6 +101,7 @@
 - Rank-1 and Rank-3 do not regress by more than 1 point.
 - Recall on year-gap >= 20 improves by at least 5 points.
 - Same-family false positive rate is flat or improved.
+- Gains are not confined to the most overrepresented identities.
 - No new community leakage in shadow replay.
 - Top 50 changed proposals reviewed manually before enablement.
 
@@ -104,6 +111,7 @@
 - Queue diversity rule holds:
   - no more than 2 pairs from the same identity in a batch of 10
 - At least 30% of surfaced pairs come from underrepresented identities or hard slices.
+- Recent labels can be audited and reverted before recalibration consumes them.
 
 ## Phase 4 Gate: Adapter / LoRA
 
@@ -159,6 +167,14 @@ TEST: longitudinal slice report is generated
 TEST: kinship safety gate blocks regressions
   - Candidate scorer improves global Rank-1 but worsens same-family FP rate
   - Assert: rollout gate fails
+
+TEST: dominant-identity bias gate blocks misleading wins
+  - Candidate scorer improves only on the top 2 most-overrepresented identities
+  - Assert: rollout gate fails
+
+TEST: active-learning labels remain reversible
+  - Queue label is written, then reverted before recalibration
+  - Assert: recalibration export excludes the reverted label
 ```
 
 ---

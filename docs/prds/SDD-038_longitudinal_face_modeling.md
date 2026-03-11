@@ -94,13 +94,15 @@
 
 1. **Retriever**
    - Fast Euclidean top-K candidate retrieval on frozen `mu` embeddings.
-   - Shared by `core/auto_cluster.py` and `scripts/cluster_new_faces.py`.
+   - `core/auto_cluster.py` is the source of truth for offline batch matching.
+   - `scripts/cluster_new_faces.py` should become a thin CLI wrapper over the shared scorer.
 
 2. **Prototype Bank**
    - New per-identity cache of 3-5 representative anchors.
    - Selection rule:
      - maximize temporal spread when dates exist
-     - prefer high-quality faces
+     - enforce a tunable minimum era gap where metadata allows
+     - only then prefer high-quality faces
      - avoid near-duplicate anchors from the same era
 
 3. **Longitudinal Feature Builder**
@@ -114,6 +116,7 @@
      - gap to identity year span
      - age compatibility when birth-year estimate exists
      - GEDCOM / surname / family-risk features
+     - explicit kinship-risk features for same-era close-relative collisions
      - same-community / cross-community flag
 
 4. **Offline Reranker**
@@ -152,6 +155,7 @@
 - `scripts/evaluate_longitudinal.py`
 - versioned `golden_set_v2.json`
 - baseline JSON report checked into docs or evaluation artifacts
+- skew report for the rebuilt training / evaluation assets
 - shared face/metadata loader module
 
 ## Phase 1: Recalibration Hygiene And Label Taxonomy
@@ -181,6 +185,7 @@
 
 **Success condition**
 - beats current policy on age-gap slices without worsening kin false positives
+- does not show dominant-identity bias toward the most overrepresented families
 
 ## Phase 3: Active Learning Inside Review UX
 
@@ -192,6 +197,7 @@
   - underrepresented identities
   - age-gap and kinship slices
 - Support one-click same / different actions plus batch review.
+- Include a reversible audit path so recent active-learning labels can be inspected and undone before recalibration.
 
 **Why**
 - AD-215 is right: fixing errors must be easier than making them.

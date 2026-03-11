@@ -56,6 +56,8 @@ User constraints and operating sequence were written into:
 ## Next Review Flow
 
 1. Gemini reviews this planning package.
-2. User finishes Session 96 stabilization work.
-3. Gemini feedback is merged into the package if it changes the plan.
-4. Session 97 implementation proceeds from the prompt/context bundle.
+2. Codex writes a post-review assessment documenting which Gemini recommendations
+   were adopted, modified, or deferred.
+3. User finishes Session 96 stabilization work.
+4. Session 97 implementation proceeds from the prompt/context bundle plus the
+   Gemini review and post-review assessment.

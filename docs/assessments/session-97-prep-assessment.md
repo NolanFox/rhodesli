@@ -45,6 +45,13 @@
 These do not block review of the package itself. They are expected inputs to the
 actual Session 97 implementation pass.
 
+## Post-Review Delta
+
+- Gemini review received:
+  - `docs/assessments/session-97-gemini-review.md`
+- Codex response and adoption notes:
+  - `docs/assessments/session-97-post-gemini-assessment.md`
+
 ## Risks Still Open
 
 - The live golden-set asset is stale until Phase 0 rebuilds it.

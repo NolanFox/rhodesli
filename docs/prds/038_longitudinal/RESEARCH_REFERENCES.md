@@ -51,6 +51,17 @@
 
 ---
 
+## Review-Validated Additions
+
+| Source | Key takeaway | Plan impact |
+|---|---|---|
+| Sentence Transformers, Retrieve & Re-Rank: https://www.sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html | A two-stage stack of fast retrieval followed by reranking is a standard pattern when a richer second-stage scorer is needed. | Reinforces the retriever + longitudinal reranker structure in PRD-038. |
+| Sentence Transformers Cross-Encoder training overview: https://www.sbert.net/docs/cross_encoder/training_overview.html | Reranking should be evaluated against the first-stage retriever rather than in isolation. | Reinforces the requirement to compare reranker lift on top of frozen-embedding retrieval, not only standalone classifier metrics. |
+| Wang et al., 2024 survey on deep active learning in medical image analysis: https://pubmed.ncbi.nlm.nih.gov/38776841/ | Uncertainty sampling remains useful, but batch construction and review quality controls matter in low-label, expert-in-the-loop settings. | Reinforces diversity rules and label-audit requirements for the active-learning queue. |
+| Follmer et al., 2024, uncertainty-aware submodular selection: https://proceedings.mlr.press/v250/follmer24a.html | Batch active learning works better when uncertainty is balanced with diversity / representativeness. | Supports the queue policy of mixing uncertainty with underrepresented identities and hard slices instead of pure uncertainty sampling. |
+
+---
+
 ## What The Research Supports
 
 ### 1. Quality-aware matching is low-risk and high-value
@@ -96,6 +107,14 @@
   - add batching only when live inference volume justifies it
 - This matches AD-110 and the existing ML service architecture draft.
 
+### 7. Reranking and active learning need more than raw uncertainty
+
+- Gemini's review was directionally correct that uncertainty alone is not enough.
+- The review itself did not provide exact links, so the validated sources above were added here.
+- The key implications are:
+  - evaluate reranker lift against the first-stage retriever
+  - guard active learning with diversity and audit / revert paths
+
 ---
 
 ## Research-Driven Recommendations
@@ -109,6 +128,7 @@
 4. Do not hide active learning in a disconnected widget. Put it where review already happens.
 5. Do not let research or user feedback live only in chat state. Every new source or requirement should land in a harness artifact before it shapes implementation.
 6. Do not couple the future cloud migration to PRD-038 launch. Keep the scorer interface job-oriented now so queued cloud execution is an extraction, not a rewrite.
+7. Do not treat uncertainty sampling alone as sufficient for active learning. Combine uncertainty with diversity, underrepresented-identity targeting, and reversible label audit.
 
 ---
 

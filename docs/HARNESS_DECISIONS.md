@@ -582,4 +582,4 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Single giant context dump** — increases confusion and contradicts current agent-guidance research.
 - **Parallelize everything** — harms correctness when files overlap heavily.
 
-**Breadcrumbs:** `docs/prompts/session-97-prompt.md`, `docs/session_context/session-97-context.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/session_logs/session-97-log-stub.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
+**Breadcrumbs:** `docs/prompts/session-97-prompt.md`, `docs/session_context/session-97-context.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/assessments/session-97-gemini-review.md`, `docs/assessments/session-97-post-gemini-assessment.md`, `docs/session_logs/session-97-log-stub.md`, `docs/prds/038_longitudinal/RESEARCH_REFERENCES.md`
