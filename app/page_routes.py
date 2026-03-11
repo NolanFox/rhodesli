@@ -3092,6 +3092,8 @@ def photo_view_content(
     seq_active_face_id = unidentified_face_ids[0] if (seq_mode and unidentified_face_ids) else None
     identified_count = total_face_count - len(unidentified_face_ids)
     missing_face_artifacts = sum(1 for fd in photo.get("faces", []) if fd.get("missing_artifacts"))
+    missing_face_label = "record" if missing_face_artifacts == 1 else "records"
+    missing_face_verb = "lacks" if missing_face_artifacts == 1 else "lack"
 
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
@@ -3533,8 +3535,8 @@ def photo_view_content(
         seq_banner,
         name_faces_banner,
         Div(
-            f"{missing_face_artifacts} archived face record{'s' if missing_face_artifacts != 1 else ''} "
-            "lack current overlay coordinates. The registry link is preserved for auditability.",
+            f"{missing_face_artifacts} archived face {missing_face_label} "
+            f"{missing_face_verb} current overlay coordinates. The registry link is preserved for auditability.",
             cls="mb-2 px-3 py-2 text-xs text-amber-200 bg-amber-950/40 border border-amber-700/40 rounded-lg",
         )
         if missing_face_artifacts
@@ -9957,6 +9959,8 @@ def public_photo_page(
     identified_names = []
     unidentified_count = 0
     missing_face_artifacts = sum(1 for face in photo.get("faces", []) if face.get("missing_artifacts"))
+    missing_face_label = "record" if missing_face_artifacts == 1 else "records"
+    missing_face_verb = "is" if missing_face_artifacts == 1 else "are"
     crop_files = _main_mod.get_crop_files()
 
     for face_data in photo.get("faces", []):
@@ -10787,8 +10791,8 @@ def public_photo_page(
                             cls="text-slate-500 text-xs mt-1",
                         ),
                         P(
-                            f"{missing_face_artifacts} archived face record{'s' if missing_face_artifacts != 1 else ''} "
-                            "are preserved below without overlay coordinates.",
+                            f"{missing_face_artifacts} archived face {missing_face_label} "
+                            f"{missing_face_verb} preserved below without overlay coordinates.",
                             cls="text-amber-300/80 text-xs mt-1",
                         )
                         if missing_face_artifacts
