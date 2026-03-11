@@ -65,6 +65,22 @@ The correct near-term path is not a React/Next.js migration. The right next step
 - PR review comment:
   - https://github.com/NolanFox/rhodesli/pull/7#issuecomment-4042060858
 
+## Later Audit State
+- Antigravity revision rounds landed after the initial Codex audit:
+  - `29b6ae2` initial architecture-safe revision
+  - `144f019` selector/source corrections
+  - `6ae6b52` shared-surface / scope / sequencing pass
+- Codex assessment after `6ae6b52`:
+  - the dangerous stack-mismatch and fake-selector issues are mostly resolved
+  - attribution and handoff boundaries are now clear enough for later Claude audit
+  - the remaining gap is implementation abstraction: the revision still needs a code-aware single-source-of-truth strategy for repeated UI primitives before Session 99 prompt writing
+- Current Codex recommendation:
+  - do one more narrow Antigravity docs-only pass focused on:
+    - primitive-to-function/file mapping
+    - single-source-of-truth strategy for shared surfaces
+    - explicit parallel-track + harmonization workflow
+    - preventing global helper changes from leaking into out-of-scope routes
+
 ## Verification Notes
 - No code or data-model changes made
 - No tests run because this pass is documentation/review only
