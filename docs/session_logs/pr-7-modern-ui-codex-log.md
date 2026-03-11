@@ -7,6 +7,9 @@
 ## Prompt: `docs/prompts/pr-7-antigravity-follow-up-prompt.md`
 
 ## Attribution Ledger
+- User role:
+  - orchestrated the agent workflow
+  - required explicit provenance, no-regression planning, and later Claude-audit readability
 - Antigravity work preserved:
   - opened PR #7
   - created `docs/assessments/modern-ui-research-and-scoping.md`
@@ -17,6 +20,15 @@
   - posted a review comment back to PR #7
 - Collaborative state:
   - PR thread becomes collaborative only after Codex review comment and any Antigravity reply/revision
+
+## Collaboration Timeline
+1. User requested Antigravity research + PR creation.
+2. Antigravity opened PR #7 with the original research/scoping note.
+3. User requested an independent Codex audit and fresh outside research.
+4. Codex created the audit/context/log/prompt artifacts and posted the first PR review comment.
+5. User asked Antigravity for a constrained revision based on the Codex audit.
+6. Antigravity added `docs/assessments/pr-7-modern-ui-antigravity-revision.md`.
+7. User asked Codex to verify whether the revision is genuinely prompt-ready.
 
 ## Checklist
 - [x] Confirmed PR scope is docs-only

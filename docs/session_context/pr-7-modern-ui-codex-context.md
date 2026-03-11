@@ -6,6 +6,10 @@
 **Primary audited artifact:** `docs/assessments/modern-ui-research-and-scoping.md`
 
 ## Attribution Ledger
+- **User-authored / user-directed**
+  - requested the independent Codex audit of PR #7
+  - required recent external research, non-regression constraints, and explicit attribution boundaries
+  - directed the two-agent handoff pattern: Antigravity research/revision, Codex audit/critique, later Claude audit
 - **Antigravity-authored**
   - `docs/assessments/modern-ui-research-and-scoping.md`
   - PR #7 initial description and branch setup
@@ -19,6 +23,21 @@
   - PR #7 discussion thread after Codex posts the review comment
   - any future Antigravity revisions prompted by Codex's audit
   - no shared code implementation has happened yet
+
+## Collaboration Model
+1. User asked Antigravity to research modern UI/UX direction and open PR #7.
+2. User then asked Codex to independently audit that work, do fresh research, and challenge weak assumptions.
+3. Codex reviewed the PR against repo architecture, current design discourse, and regression constraints.
+4. Codex wrote harness artifacts and a PR comment that preserved authorship boundaries and an explicit follow-up ask.
+5. User sent a narrowed follow-up request back to Antigravity.
+6. Antigravity revised its own planning document on the same branch.
+7. Codex performed another audit pass on the revision and prepared the next user-to-Antigravity prompt.
+
+## How Claude Should Read This Trail
+- Treat the user as the orchestrator and decision-maker.
+- Treat Antigravity as the source of the original research memo and subsequent revision memo.
+- Treat Codex as the independent reviewer/auditor who verified repo fit, current-source research, and prompt readiness.
+- Treat PR comments as the collaborative boundary where handoffs happened between the user-directed agents.
 
 ## Goal
 Audit PR #7 against:
