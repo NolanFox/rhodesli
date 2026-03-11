@@ -2625,6 +2625,8 @@ def get(photo_id: str):
 
     for face_data in photo["faces"]:
         face_id = face_data["face_id"]
+        if not _main_mod.has_displayable_face_bbox(face_data):
+            continue
         bbox = face_data["bbox"]  # [x1, y1, x2, y2]
 
         # Find identity for this face
@@ -2898,6 +2900,8 @@ async def post(photo_id: str, sess=None):
     faces = []
     registry = _main_mod.load_registry()
     for face_data in photo["faces"]:
+        if not _main_mod.has_displayable_face_bbox(face_data):
+            continue
         identity = _main_mod.get_identity_for_face(registry, face_data["face_id"])
         faces.append(
             FaceDetection(
@@ -3087,6 +3091,7 @@ def photo_view_content(
     unidentified_face_ids.sort(key=_face_x1)
     seq_active_face_id = unidentified_face_ids[0] if (seq_mode and unidentified_face_ids) else None
     identified_count = total_face_count - len(unidentified_face_ids)
+    missing_face_artifacts = sum(1 for fd in photo.get("faces", []) if fd.get("missing_artifacts"))
 
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
@@ -3095,6 +3100,8 @@ def photo_view_content(
     face_overlays = []
     if has_dimensions:
         for face_data in photo["faces"]:
+            if not _main_mod.has_displayable_face_bbox(face_data):
+                continue
             face_id = face_data["face_id"]
             face_id_encoded = _url_quote(face_id, safe="")
             bbox = face_data["bbox"]  # [x1, y1, x2, y2]
@@ -3525,6 +3532,13 @@ def photo_view_content(
         back_to_compare,
         seq_banner,
         name_faces_banner,
+        Div(
+            f"{missing_face_artifacts} archived face record{'s' if missing_face_artifacts != 1 else ''} "
+            "lack current overlay coordinates. The registry link is preserved for auditability.",
+            cls="mb-2 px-3 py-2 text-xs text-amber-200 bg-amber-950/40 border border-amber-700/40 rounded-lg",
+        )
+        if missing_face_artifacts
+        else None,
         # Photo container with overlays and nav arrows
         Div(
             Img(src=photo_url(photo["filename"]), alt=photo["filename"], cls="max-w-full h-auto"),
@@ -9942,6 +9956,7 @@ def public_photo_page(
     face_info_list = []
     identified_names = []
     unidentified_count = 0
+    missing_face_artifacts = sum(1 for face in photo.get("faces", []) if face.get("missing_artifacts"))
     crop_files = _main_mod.get_crop_files()
 
     for face_data in photo.get("faces", []):
@@ -10771,6 +10786,13 @@ def public_photo_page(
                             f"{identified_count} identified",
                             cls="text-slate-500 text-xs mt-1",
                         ),
+                        P(
+                            f"{missing_face_artifacts} archived face record{'s' if missing_face_artifacts != 1 else ''} "
+                            "are preserved below without overlay coordinates.",
+                            cls="text-amber-300/80 text-xs mt-1",
+                        )
+                        if missing_face_artifacts
+                        else None,
                         P(
                             A(
                                 photo.get("source_url", ""),

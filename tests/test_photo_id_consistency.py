@@ -126,23 +126,28 @@ def reset_caches():
     import app.main as main
     main._photo_cache = None
     main._face_to_photo_cache = None
+    main._photo_id_aliases = None
     yield
     main._photo_cache = None
     main._face_to_photo_cache = None
+    main._photo_id_aliases = None
 
 
 @pytest.fixture
-def mock_data():
+def mock_data(tmp_path):
     """Patch load_embeddings_for_photos and PhotoRegistry.load with synthetic data."""
     embeddings_result = _build_synthetic_embeddings_result()
     registry = _build_synthetic_photo_registry()
+    photo_index = _build_synthetic_photo_index()
+    (tmp_path / "photo_index.json").write_text(json.dumps(photo_index))
 
     with patch("app.main.load_embeddings_for_photos", return_value=embeddings_result), \
-         patch("core.photo_registry.PhotoRegistry.load", return_value=registry):
+         patch("core.photo_registry.PhotoRegistry.load", return_value=registry), \
+         patch("app.main.data_path", tmp_path):
         yield {
             "embeddings": embeddings_result,
             "registry": registry,
-            "photo_index": _build_synthetic_photo_index(),
+            "photo_index": photo_index,
         }
 
 
@@ -276,6 +281,7 @@ class TestFilenameFallbackLookup:
     def test_inbox_style_id_resolves_source_via_filename(self):
         """When photo_index uses inbox-style IDs, source should still resolve via filename fallback."""
         import app.main as main
+        from tempfile import TemporaryDirectory
 
         filename = "test_inbox_photo.jpg"
         sha_pid = _photo_id(filename)
@@ -311,9 +317,26 @@ class TestFilenameFallbackLookup:
         )
         registry.get_metadata = lambda pid: {}
 
-        with patch("app.main.load_embeddings_for_photos", return_value=embeddings_result), \
-             patch("core.photo_registry.PhotoRegistry.load", return_value=registry):
-            main._build_caches()
+        with TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            (tmp_path / "photo_index.json").write_text(json.dumps({
+                "schema_version": 1,
+                "photos": {
+                    inbox_pid: {
+                        "path": filename,
+                        "face_ids": [_face_id(filename, 0)],
+                        "source": "Inbox Collection",
+                    }
+                },
+                "face_to_photo": {
+                    _face_id(filename, 0): inbox_pid,
+                },
+            }))
+
+            with patch("app.main.load_embeddings_for_photos", return_value=embeddings_result), \
+                 patch("core.photo_registry.PhotoRegistry.load", return_value=registry), \
+                 patch("app.main.data_path", tmp_path):
+                main._build_caches()
 
         # The SHA256-keyed entry should have the source resolved via filename fallback
         assert sha_pid in main._photo_cache

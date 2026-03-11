@@ -103,6 +103,8 @@ def get(photo_id: str):
 
     for face_data in photo["faces"]:
         face_id = face_data["face_id"]
+        if not _main_mod.has_displayable_face_bbox(face_data):
+            continue
         bbox = face_data["bbox"]  # [x1, y1, x2, y2]
 
         # Find identity for this face
@@ -346,6 +348,8 @@ async def post(photo_id: str, sess=None):
     faces = []
     registry = _main_mod.load_registry()
     for face_data in photo["faces"]:
+        if not _main_mod.has_displayable_face_bbox(face_data):
+            continue
         identity = _main_mod.get_identity_for_face(registry, face_data["face_id"])
         faces.append(
             FaceDetection(

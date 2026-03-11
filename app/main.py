@@ -3357,6 +3357,14 @@ def load_embeddings_for_photos():
     return photos
 
 
+def has_displayable_face_bbox(face: dict) -> bool:
+    """Return True when a face record has a usable [x1, y1, x2, y2] bbox."""
+    bbox = face.get("bbox")
+    if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+        return False
+    return all(value is not None for value in bbox)
+
+
 _photo_dimensions_cache = None
 
 
@@ -3665,6 +3673,11 @@ def _build_caches():
         try:
             from core.photo_registry import PhotoRegistry
 
+            photo_index_raw = {}
+            photo_index_path = data_path / "photo_index.json"
+            if photo_index_path.exists():
+                with open(photo_index_path) as f:
+                    photo_index_raw = json.load(f)
             photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
 
             # Build filename-based fallback maps for photos with mismatched IDs
@@ -3673,7 +3686,18 @@ def _build_caches():
             filename_to_collection = {}
             filename_to_source_url = {}
             filename_to_face_ids = {}
+            filename_to_face_ids_ordered = {}
             filename_to_metadata = {}
+            filename_to_photo_index_id = {}
+            for pid, photo_data in photo_index_raw.get("photos", {}).items():
+                path = photo_data.get("path", "")
+                if not path:
+                    continue
+                fname = Path(path).name
+                filename_to_face_ids_ordered[fname] = [
+                    fid for fid in photo_data.get("face_ids", []) if isinstance(fid, str) and fid
+                ]
+                filename_to_photo_index_id[fname] = pid
             for pid in photo_registry._photos:
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
@@ -3690,6 +3714,7 @@ def _build_caches():
                     if source_url:
                         filename_to_source_url[fname] = source_url
                     filename_to_face_ids[fname] = face_ids
+                    filename_to_face_ids_ordered.setdefault(fname, sorted(face_ids))
                     if metadata:
                         filename_to_metadata[fname] = metadata
 
@@ -3698,11 +3723,34 @@ def _build_caches():
                 fname = Path(filename).name
 
                 # Filter faces to only registered ones from photo_index
-                registered_ids = filename_to_face_ids.get(fname)
+                registered_ids = filename_to_face_ids_ordered.get(fname)
+                if registered_ids is None:
+                    registered_ids = sorted(filename_to_face_ids.get(fname, []))
                 if registered_ids:
-                    _photo_cache[photo_id]["faces"] = [
-                        f for f in _photo_cache[photo_id]["faces"] if f["face_id"] in registered_ids
-                    ]
+                    existing_faces = {
+                        face["face_id"]: face for face in _photo_cache[photo_id]["faces"] if face["face_id"] in registered_ids
+                    }
+                    merged_faces = []
+                    missing_artifacts = 0
+                    for face_id in registered_ids:
+                        face = existing_faces.get(face_id)
+                        if face:
+                            merged_faces.append(face)
+                            continue
+                        missing_artifacts += 1
+                        merged_faces.append(
+                            {
+                                "face_id": face_id,
+                                "bbox": [],
+                                "face_index": None,
+                                "det_score": 0.0,
+                                "quality": 0.0,
+                                "missing_artifacts": True,
+                            }
+                        )
+                    _photo_cache[photo_id]["faces"] = merged_faces
+                    if missing_artifacts:
+                        _photo_cache[photo_id]["missing_face_artifacts"] = missing_artifacts
 
                 # Set source (provenance)
                 source = photo_registry.get_source(photo_id)
@@ -3732,6 +3780,39 @@ def _build_caches():
                 merged.update(metadata)
                 if merged:
                     _photo_cache[photo_id].update(merged)
+
+            # Preserve photo_index-only photos even when embeddings are absent.
+            for fname, photo_index_id in filename_to_photo_index_id.items():
+                cache_id = generate_photo_id(fname)
+                if cache_id in _photo_cache:
+                    continue
+                registered_ids = filename_to_face_ids_ordered.get(fname)
+                if registered_ids is None:
+                    registered_ids = sorted(filename_to_face_ids.get(fname, []))
+                placeholder_faces = [
+                    {
+                        "face_id": face_id,
+                        "bbox": [],
+                        "face_index": None,
+                        "det_score": 0.0,
+                        "quality": 0.0,
+                        "missing_artifacts": True,
+                    }
+                    for face_id in registered_ids
+                ]
+                photo_data = {
+                    "filename": fname,
+                    "faces": placeholder_faces,
+                    "source": filename_to_source.get(fname, ""),
+                    "collection": filename_to_collection.get(fname, ""),
+                    "source_url": filename_to_source_url.get(fname, ""),
+                }
+                metadata = filename_to_metadata.get(fname, {})
+                if metadata:
+                    photo_data.update(metadata)
+                if placeholder_faces:
+                    photo_data["missing_face_artifacts"] = len(placeholder_faces)
+                _photo_cache[cache_id] = photo_data
         except FileNotFoundError:
             # No photo_index.json yet, set empty sources
             for photo_id in _photo_cache:
