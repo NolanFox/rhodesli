@@ -1,10 +1,10 @@
 # PRD-040 / SDD-040: Session 100
 
 **Title:** Multi-Community Bootstrap, Neutral Platform Entry, and Face Card Consistency  
-**Status:** Ready for Review  
+**Status:** In Progress — execution checklist attached  
 **Date:** 2026-03-11  
 **Authors:** User direction + Codex planning  
-**References:** `docs/prds/035_multi_community_platform.md`, `docs/prds/036_workspace_onboarding.md`, `docs/BACKLOG.md`, `docs/assessments/session-100-codex-research.md`, `docs/assessments/session-100-antigravity-plan-review.md`
+**References:** `docs/prds/035_multi_community_platform.md`, `docs/prds/036_workspace_onboarding.md`, `docs/BACKLOG.md`, `docs/assessments/session-100-codex-research.md`, `docs/assessments/session-100-antigravity-plan-review.md`, `docs/assessments/session-100-prd-execution-checklist.md`, `docs/assessments/session-100-design-method-research.md`
 
 ## Goal
 Make it safe and practical to launch another family archive while fixing the

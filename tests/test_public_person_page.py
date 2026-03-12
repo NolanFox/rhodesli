@@ -713,3 +713,40 @@ class TestAdminControlsOnPersonPage:
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
         assert response.status_code == 200
         assert 'data-testid="admin-controls"' not in response.text
+
+    def test_community_admin_find_similar_link_stays_in_community(self, client, monkeypatch, auth_disabled):
+        del auth_disabled
+
+        class FakeRegistry:
+            def get_identity(self, person_id):
+                return {
+                    "identity_id": person_id,
+                    "name": "Roland Fox",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-a"],
+                    "candidate_ids": [],
+                }
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-1"]
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr(
+            "app.main.get_photo_metadata",
+            lambda _pid: {"photo_id": "photo-1", "filename": "photo-1.jpg", "collection": "Fox", "faces": []},
+        )
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops=None: f"/crops/{fid}.jpg")
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda _fid: "photo-1")
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            response = client.get("/c/fox-family/person/test-person")
+
+        assert '/c/fox-family/people/test-person/similar' in response.text

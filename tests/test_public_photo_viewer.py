@@ -114,6 +114,79 @@ class TestPhotoCarousel:
         collection_links = re.findall(r'href="/collection/[^"]+"', response.text)
         assert len(collection_links) > 0
 
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch(
+        "app.main._photo_cache",
+        {
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "a.jpg",
+                "collection": "Vida Capeluto NYC Collection",
+                "source": "Vida Capeluto NYC Collection",
+                "faces": [],
+            },
+            "photo-2": {
+                "photo_id": "photo-2",
+                "filename": "b.jpg",
+                "collection": "Vida Capeluto NYC Collection",
+                "source": "Vida Capeluto NYC Collection",
+                "faces": [],
+            },
+        },
+    )
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_standalone_photo_page_includes_touch_swipe_navigation(
+        self,
+        mock_date_badge,
+        mock_alignment,
+        mock_ai,
+        mock_date_meta,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        del (
+            mock_date_badge,
+            mock_alignment,
+            mock_ai,
+            mock_date_meta,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        mock_reg.return_value = MagicMock()
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "a.jpg",
+            "collection": "Vida Capeluto NYC Collection",
+            "source": "Vida Capeluto NYC Collection",
+            "faces": [],
+        }
+
+        html = to_xml(public_photo_page("photo-1", community_slug="rhodes"))
+
+        assert "touchstart" in html
+        assert "touchend" in html
+        assert ".photo-hero-container" in html
+        assert "window.location.href = '/photo/photo-2'" in html
+
 
 class TestFaceClickBehavior:
     """Face clicks navigate to person/identify pages."""

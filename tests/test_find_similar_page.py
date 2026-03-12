@@ -106,3 +106,22 @@ class TestFindSimilarPage:
         """Standalone similar page should include share JS handler."""
         resp = client.get("/people/id-leon/similar")
         assert "_sharePhotoUrl" in resp.text
+
+    def test_admin_actions_present_on_full_page(self, client, mock_similar_data):
+        """Admin-capable similar page keeps Merge / Not Same actions available."""
+        resp = client.get("/people/id-leon/similar")
+        assert "Merge" in resp.text
+        assert "Not Same" in resp.text
+        assert "/api/identity/id-leon/merge/id-nace?source=similar_page" in resp.text
+
+    def test_community_route_preserves_prefixed_links(self, client, mock_similar_data):
+        """Community-scoped similar page should keep person and API links inside the community."""
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            resp = client.get("/c/fox-family/people/id-leon/similar")
+        html = resp.text
+        assert '/c/fox-family/person/id-leon' in html
+        assert '/c/fox-family/person/id-nace' in html
+        assert '/c/fox-family/api/identity/id-leon/merge/id-nace?source=similar_page' in html

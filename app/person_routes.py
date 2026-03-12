@@ -1105,8 +1105,8 @@ def public_person_page(
                             ),
                             A(
                                 "Find Similar",
-                                href=f"/people/{person_id}/similar",
-                                cls="text-xs text-indigo-400 hover:text-white",
+                                href=f"{nav_prefix}/people/{person_id}/similar",
+                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
                             ),
                             cls="flex items-center justify-center gap-3 mb-3",
                         ),

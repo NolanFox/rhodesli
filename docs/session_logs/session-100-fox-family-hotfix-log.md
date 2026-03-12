@@ -204,3 +204,47 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
   - `ruff check app/page_routes.py app/photo_routes.py app/person_routes.py tests/test_sequential_identify.py tests/test_public_person_page.py tests/test_public_photo_viewer.py`
   - `pytest tests/test_sequential_identify.py tests/test_public_person_page.py tests/test_public_photo_viewer.py -x -q`
     - `73 passed, 2 skipped`
+
+## Session 100 Continuation Audit (Codex)
+
+- **Correction:** Codex previously treated the Fox Family hotfix + speed-loop
+  slice as if Session 100 were complete. That was incorrect.
+- **Failure mode:** scope collapse under production pressure. The live breakage
+  got fixed, but broader Session 100 items around community context,
+  admin/public separation, and similar/merge workflow were still incomplete.
+- **User-reported gaps explicitly logged here:**
+  - mobile collection photo viewer lost swipe navigation
+  - full-page `/people/{id}/similar` dropped community/admin context
+  - full-page similar view did not allow merge from the page
+  - public/community navigation around Fox Family remained brittle
+  - local `data/identities.json` drift mixed real edits with stale merge-chain noise
+
+### Continuation Files Touched
+- [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+- [app/browse_routes.py](/Users/nolanfox/rhodesli/app/browse_routes.py)
+- [app/person_routes.py](/Users/nolanfox/rhodesli/app/person_routes.py)
+- [app/identity_routes.py](/Users/nolanfox/rhodesli/app/identity_routes.py)
+- [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+- [tests/test_find_similar_page.py](/Users/nolanfox/rhodesli/tests/test_find_similar_page.py)
+- [tests/test_public_person_page.py](/Users/nolanfox/rhodesli/tests/test_public_person_page.py)
+- [docs/assessments/session-100-identities-json-audit.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-identities-json-audit.md)
+- [docs/assessments/session-100-prd-execution-checklist.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-prd-execution-checklist.md)
+- [docs/assessments/session-100-design-method-research.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-design-method-research.md)
+
+### Continuation Scope
+- restore touch-swipe navigation on standalone public photo pages
+- keep full-page similar flows inside the active community
+- restore admin actionability on full-page similar pages
+- make the person-page `Find Similar` entry more visible and community-correct
+- document the mixed `identities.json` state instead of committing or discarding it blindly
+- attach a no-drop execution checklist and a documented design-review method to Session 100
+
+### Continuation Verification
+- `ruff check app/page_routes.py app/browse_routes.py app/person_routes.py app/identity_routes.py tests/test_find_similar_page.py tests/test_public_person_page.py tests/test_public_photo_viewer.py`
+- `pytest tests/test_find_similar_page.py tests/test_public_person_page.py tests/test_public_photo_viewer.py tests/test_photo_navigation.py tests/test_internal_photo_links.py -x -q`
+  - `118 passed, 2 skipped`
+
+### Attribution Update
+- User: live-usage bug reports, sharper completion bar, demand for no-drop execution
+- Antigravity: earlier critique/mockup signal that helped identify workflow gaps
+- Codex: continuation implementation, regression tests, PRD execution checklist, design-method research, identities audit

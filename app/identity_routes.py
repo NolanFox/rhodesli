@@ -1438,6 +1438,7 @@ def post(
     target_id: str,
     source_id: str,
     source: str = "web",
+    return_to: str = "",
     resolved_name: str = None,
     custom_name: str = None,
     from_focus: bool = False,
@@ -1632,6 +1633,9 @@ def post(
             _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter),
             merge_toast,
         )
+
+    if source == "similar_page":
+        return HttpHeader("HX-Redirect", return_to or f"/person/{actual_target_id}")
 
     return (
         _main_mod.identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),

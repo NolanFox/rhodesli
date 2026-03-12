@@ -898,6 +898,7 @@ def get(identity_id: str, sess=None, request=None):
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
     try:
@@ -953,11 +954,38 @@ def get(identity_id: str, sess=None, request=None):
     for n in neighbors:
         if not n.get("crop_url"):
             continue
+        nid = n["identity_id"]
         tier_label, tier_cls = confidence_tier_from_distance(n.get("distance", 99))
+        admin_actions = []
+        if is_admin:
+            admin_actions.append(
+                Button(
+                    "Merge",
+                    cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+                    hx_post=(
+                        f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}"
+                        f"?source=similar_page&return_to={nav_prefix}/people/{identity_id}/similar"
+                    ),
+                    hx_target=f"#search-result-{nid}",
+                    hx_swap="outerHTML",
+                    hx_confirm=f"Merge {n.get('name', 'this identity')} into {name or 'this identity'}?",
+                    type="button",
+                )
+            )
+            admin_actions.append(
+                Button(
+                    "Not Same",
+                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-300 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
+                    hx_target=f"#search-result-{nid}",
+                    hx_swap="outerHTML",
+                    type="button",
+                )
+            )
         card = Div(
             A(
                 Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full h-full object-cover", loading="lazy"),
-                href=f"/person/{n['identity_id']}",
+                href=f"{nav_prefix}/person/{nid}",
                 cls="block aspect-[3/4] overflow-hidden bg-slate-800",
             ),
             Div(
@@ -973,11 +1001,13 @@ def get(identity_id: str, sess=None, request=None):
                 )
                 if n.get("face_count", 0) > 1
                 else None,
+                Div(*admin_actions, cls="flex flex-wrap gap-2 mt-3") if admin_actions else None,
                 cls="p-2.5",
             ),
             cls="rounded-lg overflow-hidden bg-slate-800 border border-slate-700"
             " hover:border-slate-500 hover:shadow-lg hover:shadow-slate-900/50"
             " hover:-translate-y-1 transition-all duration-300",
+            id=f"search-result-{nid}",
         )
         result_cards.append(card)
 
@@ -986,7 +1016,7 @@ def get(identity_id: str, sess=None, request=None):
     # Share button for similar page hero
     similar_share_btn = (
         _main_mod.share_button(
-            url=f"/person/{identity_id}",
+            url=f"{nav_prefix}/person/{identity_id}",
             style="button",
             label="Share",
             title=f"{name} — Jews of Rhodes Heritage Archive",
@@ -1006,12 +1036,17 @@ def get(identity_id: str, sess=None, request=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
+            _main_mod._admin_bar(user, community_slug=community_slug),
             # Hero section
             Section(
                 Div(
@@ -1019,11 +1054,15 @@ def get(identity_id: str, sess=None, request=None):
                         A(
                             NotStr("&larr; "),
                             "Back to Profile",
-                            href=f"/person/{identity_id}",
+                            href=f"{nav_prefix}/person/{identity_id}",
                             cls="text-sm text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1",
                         ),
                         Span(" | ", cls="text-slate-600 mx-2"),
-                        A("All People", href="/people", cls="text-sm text-slate-400 hover:text-slate-300"),
+                        A(
+                            "All People",
+                            href=f"{nav_prefix}/people",
+                            cls="text-sm text-slate-400 hover:text-slate-300",
+                        ),
                         cls="mb-4 flex items-center",
                     ),
                     Div(
@@ -1041,9 +1080,16 @@ def get(identity_id: str, sess=None, request=None):
                             Div(
                                 A(
                                     "View Profile",
-                                    href=f"/person/{identity_id}",
+                                    href=f"{nav_prefix}/person/{identity_id}",
                                     cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors",
                                 ),
+                                A(
+                                    "Edit in Admin",
+                                    href=f"{nav_prefix}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{identity_id}",
+                                    cls="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
+                                )
+                                if is_admin
+                                else None,
                                 similar_share_btn,
                                 cls="flex flex-wrap gap-3 items-center",
                             ),
