@@ -8,6 +8,7 @@ functional navigation, admin inline edit.
 import re
 import pytest
 from starlette.testclient import TestClient
+from unittest.mock import MagicMock, patch
 
 from app.main import app, load_embeddings_for_photos
 
@@ -179,3 +180,103 @@ class TestPhotoInlineEdit:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         assert 'data-testid="photo-inline-edit"' not in response.text
+
+
+class TestSession100PhotoWorkflow:
+    """Session 100 dense multi-face and context-preserving workflow regressions."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    @patch("app.main.get_crop_files", return_value={"crop-set"})
+    @patch("app.main.resolve_face_image_url", side_effect=lambda fid, _crops=None: f"/crops/{fid}.jpg")
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_dense_multi_face_photo_uses_grid_and_keeps_person_context(
+        self,
+        mock_date_badge,
+        mock_photo_badge,
+        mock_alignment,
+        mock_ai,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_crop_url,
+        mock_crop_files,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        del (
+            mock_date_badge,
+            mock_photo_badge,
+            mock_alignment,
+            mock_ai,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_crop_url,
+            mock_crop_files,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        faces = [{"face_id": f"face-{i}", "bbox": [10 + i * 15, 10, 70 + i * 15, 80]} for i in range(7)]
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "dense.jpg",
+            "faces": faces,
+            "collection": "Fox Collection",
+            "source": "Fox Collection",
+        }
+
+        def _identity_for_face(_registry, face_id):
+            idx = int(face_id.split("-")[1])
+            if idx < 3:
+                return {"identity_id": f"person-{idx}", "name": f"Person {idx}", "state": "CONFIRMED"}
+            return {"identity_id": f"unknown-{idx}", "name": f"Unidentified Person {idx}", "state": "INBOX"}
+
+        mock_get_id.side_effect = _identity_for_face
+
+        registry = MagicMock()
+        registry.get_identity.return_value = {
+            "identity_id": "context-1",
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_ids": [f"face-{i}" for i in range(3)],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = registry
+
+        photo_registry = MagicMock()
+        photo_registry.get_photos_for_faces.return_value = ["photo-1"]
+        mock_photo_reg.return_value = photo_registry
+
+        result = public_photo_page(
+            "photo-1",
+            identity_id="context-1",
+            sort_by="date_asc",
+            user=None,
+            is_admin=True,
+            community_slug="fox-family",
+        )
+        html = to_xml(result)
+
+        assert 'data-testid="photo-people-grid"' in html
+        assert "/c/fox-family/photo/photo-1/partial" in html
+        assert "seq=1" in html
+        assert "identity_id=context-1" in html
+        assert "sort_by=date_asc" in html
+        assert "Back to Roland Fox" in html

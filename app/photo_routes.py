@@ -473,9 +473,11 @@ def get(
     nav_idx: int = -1,
     nav_total: int = 0,
     identity_id: str = None,
+    sort_by: str = "date_asc",
     from_compare: bool = False,
     seq: bool = False,
     sess=None,
+    request=None,
 ):
     """
     Render photo view partial for HTMX modal injection.
@@ -492,6 +494,7 @@ def get(
         if _main_mod.is_auth_enabled()
         else True
     )
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     return _main_mod.photo_view_content(
         photo_id,
         selected_face_id=face,
@@ -501,9 +504,11 @@ def get(
         nav_idx=nav_idx,
         nav_total=nav_total,
         identity_id=identity_id,
+        sort_by=sort_by,
         is_admin=user_is_admin,
         from_compare=from_compare,
         seq_mode=seq and user_is_admin,
+        community_slug=community_slug,
     )
 
 

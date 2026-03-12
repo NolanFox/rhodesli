@@ -3,8 +3,9 @@
 ## Purpose
 Preserve the active performance/context audit and hotfix work for the Fox Family workflow before further implementation.
 
-## Branch
-`codex/session-100-perf-hotfix`
+## Branches
+- `codex/session-100-perf-hotfix` — preserved the Fox Family performance/context recovery
+- `codex/session-100-speed-loop` — layered the Session 100 tagging-loop implementation on top
 
 ## User Feedback Captured
 - Tree page looked broken, then eventually loaded after multiple minutes.
@@ -123,3 +124,36 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
   2. `Mockup B: The Speed Loop` - A 2-pane triage UI with auto-advance and 1-click "Ignore Stranger".
   3. `Mockup C: The Wrap Grid` - A progressively disclosed expanded grid for dense group photos.
 - **Top Conclusion:** The highest ROI, lowest-risk first step is implementing `Mockup B (The Speed Loop)`. By simply adding an auto-advance behavior driven by a `queue_id` or query parameter directly in the existing Identify route, the process changes from a CMS to a triage engine without requiring complex new backend cluster logic upfront.
+
+## Session 100 Speed Loop Implementation (Codex)
+
+### Scope Implemented
+- Preserved gallery/archive context through sequential photo tagging
+- Added cross-photo auto-advance in sequential mode when working from a person-gallery context
+- Added explicit `Ignore Stranger` action using the existing `SKIPPED` state
+- Added dense multi-face grid fallback on the public photo page
+- Added regression coverage for the new context/auto-advance/grid behavior
+
+### Files Touched
+- [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+- [app/photo_routes.py](/Users/nolanfox/rhodesli/app/photo_routes.py)
+- [app/identity_routes.py](/Users/nolanfox/rhodesli/app/identity_routes.py)
+- [tests/test_sequential_identify.py](/Users/nolanfox/rhodesli/tests/test_sequential_identify.py)
+- [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+- [docs/assessments/session-100-speed-loop-implementation.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-speed-loop-implementation.md)
+
+### Verification
+- Focused gates:
+  - `ruff check app/page_routes.py app/photo_routes.py app/identity_routes.py tests/test_sequential_identify.py tests/test_public_photo_viewer.py`
+  - `pytest tests/test_sequential_identify.py tests/test_public_photo_viewer.py tests/test_photo_navigation.py tests/test_inline_face_actions.py tests/test_public_person_page.py tests/test_identify.py -x -q`
+    - `151 passed, 2 skipped`
+- Full ML suite:
+  - `pytest rhodesli_ml/tests/ -x -q`
+    - `590 passed`
+- Full app suite in this working tree:
+  - blocked by active local `data/identities.json` drift from live app usage, not by the code changes
+  - failure surfaced in `tests/test_data_integrity.py::TestOrphanedIdentities::test_confirmed_anchors_in_face_to_photo`
+
+### Important Working-Tree Note
+- `data/identities.json` is dirty from live archive work and must stay out of the Session 100 commit.
+- Merge-quality verification should happen in a clean worktree after committing the code/test/docs changes.

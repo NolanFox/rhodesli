@@ -3100,6 +3100,116 @@ def _load_photo_bytes(photo_id: str, filename: str) -> bytes | None:
     return None
 
 
+def _normalize_gallery_sort(sort_by: str | None) -> str:
+    """Return a supported person-gallery sort key."""
+    if sort_by in {"date_asc", "date_desc", "uploaded_desc", "uploaded_asc"}:
+        return sort_by
+    return "date_asc"
+
+
+def _parse_gallery_year(value) -> int | None:
+    try:
+        return int(str(value)[:4])
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_gallery_uploaded_timestamp(value) -> float | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_gallery_sort_meta(photo_id: str, photo_meta: dict | None, date_labels: dict) -> dict:
+    """Build a stable sort meta record for person-gallery photos."""
+    photo_meta = photo_meta or {}
+    year = _parse_gallery_year((date_labels.get(photo_id) or {}).get("best_year_estimate"))
+    if year is None:
+        year = _parse_gallery_year(photo_meta.get("date_taken"))
+    uploaded_ts = _parse_gallery_uploaded_timestamp(photo_meta.get("created_at") or photo_meta.get("updated_at"))
+    return {
+        "year": year,
+        "has_year": year is not None,
+        "uploaded_ts": uploaded_ts,
+        "has_uploaded_ts": uploaded_ts is not None,
+    }
+
+
+def _gallery_sort_key(sort_by: str, sort_meta: dict, stable: str):
+    """Sort key shared by person/photo gallery views."""
+    year = sort_meta["year"] if sort_meta["has_year"] else 0
+    uploaded_ts = sort_meta["uploaded_ts"] if sort_meta["has_uploaded_ts"] else 0.0
+    if sort_by == "date_desc":
+        return (0 if sort_meta["has_year"] else 1, -year, -uploaded_ts, stable)
+    if sort_by == "uploaded_desc":
+        return (
+            0 if sort_meta["has_uploaded_ts"] else 1,
+            -uploaded_ts,
+            year if sort_meta["has_year"] else 9999,
+            stable,
+        )
+    if sort_by == "uploaded_asc":
+        return (
+            0 if sort_meta["has_uploaded_ts"] else 1,
+            uploaded_ts,
+            year if sort_meta["has_year"] else 9999,
+            stable,
+        )
+    return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
+
+
+def _ordered_identity_photo_ids(registry, identity_id: str, sort_by: str = "date_asc") -> tuple[list[str], str]:
+    """Return ordered unique photo IDs for a person's gallery context."""
+    if not identity_id:
+        return [], ""
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return [], ""
+
+    display_name = ensure_utf8_display(identity.get("name", "")) or "Person"
+    all_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    face_id_strings = []
+    for face_entry in all_faces:
+        fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+        if fid:
+            face_id_strings.append(fid)
+
+    ordered_photo_ids = []
+    try:
+        photo_registry = _main_mod.load_photo_registry()
+        ordered_photo_ids = list(photo_registry.get_photos_for_faces(face_id_strings))
+    except Exception:
+        ordered_photo_ids = []
+
+    if not ordered_photo_ids:
+        seen_photo_ids = []
+        for fid in face_id_strings:
+            pid = _main_mod.get_photo_id_for_face(fid)
+            if pid and pid not in seen_photo_ids:
+                seen_photo_ids.append(pid)
+        ordered_photo_ids = seen_photo_ids
+
+    if not ordered_photo_ids:
+        return [], display_name
+
+    date_labels = _main_mod._load_date_labels()
+    normalized_sort = _normalize_gallery_sort(sort_by)
+    ordered_photo_ids = sorted(
+        ordered_photo_ids,
+        key=lambda pid: _gallery_sort_key(
+            normalized_sort,
+            _build_gallery_sort_meta(pid, _main_mod.get_photo_metadata(pid), date_labels),
+            pid,
+        ),
+    )
+    return ordered_photo_ids, display_name
+
+
 def photo_view_content(
     photo_id: str,
     selected_face_id: str = None,
@@ -3109,9 +3219,11 @@ def photo_view_content(
     nav_idx: int = -1,
     nav_total: int = 0,
     identity_id: str = None,
+    sort_by: str = "date_asc",
     is_admin: bool = False,
     from_compare: bool = False,
     seq_mode: bool = False,
+    community_slug: str = "rhodes",
 ) -> tuple:
     """
     Build the photo view content with face overlays.
@@ -3141,30 +3253,21 @@ def photo_view_content(
     has_dimensions = width > 0 and height > 0
 
     registry = _main_mod.load_registry()
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+    sort_by = _normalize_gallery_sort(sort_by)
+    context_identity_id = identity_id
+    context_photo_ids, context_person_name = _ordered_identity_photo_ids(registry, context_identity_id, sort_by)
 
     # Identity-based navigation: when identity_id is provided and no explicit
     # prev/next, compute navigation from the identity's unique photo list.
-    if identity_id and not prev_id and not next_id:
-        try:
-            identity_nav = registry.get_identity(identity_id)
-            all_faces = identity_nav.get("anchor_ids", []) + identity_nav.get("candidate_ids", [])
-            # Build ordered list of unique photo IDs from identity's faces
-            seen_pids = []
-            for f in all_faces:
-                fid = f if isinstance(f, str) else f.get("face_id", "")
-                pid = _main_mod.get_photo_id_for_face(fid)
-                if pid and pid not in seen_pids:
-                    seen_pids.append(pid)
-            if photo_id in seen_pids:
-                idx = seen_pids.index(photo_id)
-                if idx > 0:
-                    prev_id = seen_pids[idx - 1]
-                if idx < len(seen_pids) - 1:
-                    next_id = seen_pids[idx + 1]
-                nav_idx = idx
-                nav_total = len(seen_pids)
-        except KeyError:
-            pass
+    if context_identity_id and context_photo_ids and not prev_id and not next_id and photo_id in context_photo_ids:
+        idx = context_photo_ids.index(photo_id)
+        if idx > 0:
+            prev_id = context_photo_ids[idx - 1]
+        if idx < len(context_photo_ids) - 1:
+            next_id = context_photo_ids[idx + 1]
+        nav_idx = idx
+        nav_total = len(context_photo_ids)
 
     # Pre-pass: identify unidentified faces for sequential mode + "Name These Faces" button
     # Sort by left-to-right bbox position for natural left-to-right naming order
@@ -3194,10 +3297,77 @@ def photo_view_content(
     missing_face_label = "record" if missing_face_artifacts == 1 else "records"
     missing_face_verb = "lacks" if missing_face_artifacts == 1 else "lack"
 
+    from urllib.parse import quote as _url_quote, urlencode as _url_encode
+
+    context_query = {}
+    if context_identity_id:
+        context_query["identity_id"] = context_identity_id
+        context_query["sort_by"] = sort_by
+    context_query_suffix = f"&{_url_encode(context_query)}" if context_query else ""
+    seq_query_suffix = f"&seq=1{context_query_suffix}" if seq_mode else context_query_suffix
+    action_context_suffix = f"&context_identity_id={context_identity_id}&sort_by={sort_by}" if context_identity_id else ""
+
+    def _partial_photo_url(
+        target_photo_id: str,
+        *,
+        selected_face: str | None = None,
+        prev_photo_id: str | None = None,
+        next_photo_id: str | None = None,
+        nav_index: int | None = None,
+        nav_size: int | None = None,
+        seq_active: bool = False,
+    ) -> str:
+        params = {}
+        if selected_face:
+            params["face"] = selected_face
+        if prev_photo_id:
+            params["prev_id"] = prev_photo_id
+        if next_photo_id:
+            params["next_id"] = next_photo_id
+        if nav_index is not None and nav_index >= 0:
+            params["nav_idx"] = nav_index
+        if nav_size is not None and nav_size > 0:
+            params["nav_total"] = nav_size
+        if context_identity_id:
+            params["identity_id"] = context_identity_id
+            params["sort_by"] = sort_by
+        if seq_active:
+            params["seq"] = "1"
+        query_string = _url_encode(params)
+        return f"{nav_prefix}/photo/{target_photo_id}/partial?{query_string}" if query_string else f"{nav_prefix}/photo/{target_photo_id}/partial"
+
+    next_seq_photo_id = None
+    next_seq_unidentified_count = 0
+    seq_queue_summary = None
+    if seq_mode and context_photo_ids and photo_id in context_photo_ids:
+        unresolved_counts = {}
+        for queued_photo_id in context_photo_ids:
+            queue_photo = _main_mod.get_photo_metadata(queued_photo_id) or {}
+            unresolved = 0
+            for queued_face in queue_photo.get("faces", []):
+                queued_identity = _main_mod.get_identity_for_face(registry, queued_face.get("face_id", ""))
+                queued_state = queued_identity.get("state", "INBOX") if queued_identity else None
+                queued_name = queued_identity.get("name", "Unidentified") if queued_identity else "Unidentified"
+                if queued_state != "CONFIRMED" or queued_name.startswith("Unidentified"):
+                    unresolved += 1
+            unresolved_counts[queued_photo_id] = unresolved
+
+        current_queue_index = context_photo_ids.index(photo_id)
+        unresolved_photo_count = sum(1 for count in unresolved_counts.values() if count > 0)
+        seq_queue_summary = (
+            f"{context_person_name}: photo {current_queue_index + 1} of {len(context_photo_ids)}"
+            f" · {unresolved_photo_count} photo{'s' if unresolved_photo_count != 1 else ''} still need review"
+        )
+        if not unidentified_face_ids:
+            for queued_photo_id in context_photo_ids[current_queue_index + 1:]:
+                queued_unresolved = unresolved_counts.get(queued_photo_id, 0)
+                if queued_unresolved > 0:
+                    next_seq_photo_id = queued_photo_id
+                    next_seq_unidentified_count = queued_unresolved
+                    break
+
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
-    from urllib.parse import quote as _url_quote
-
     face_overlays = []
     if has_dimensions:
         for face_data in photo["faces"]:
@@ -3219,12 +3389,16 @@ def photo_view_content(
             # UI BOUNDARY: sanitize display_name for safe rendering
             raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
             display_name = ensure_utf8_display(raw_name)
-            identity_id = identity["identity_id"] if identity else None
+            face_identity_id = identity["identity_id"] if identity else None
 
             # Calculate age at time of photo if both birth year and photo year exist
             age_at_photo = None
-            if identity_id and identity and identity.get("state") == "CONFIRMED":
-                birth_year, by_source, _ = _main_mod._get_birth_year(identity_id, identity, include_unreviewed=False)
+            if face_identity_id and identity and identity.get("state") == "CONFIRMED":
+                birth_year, by_source, _ = _main_mod._get_birth_year(
+                    face_identity_id,
+                    identity,
+                    include_unreviewed=False,
+                )
                 if birth_year:
                     # Get photo year from date labels or photo metadata
                     date_labels = _main_mod._load_date_labels()
@@ -3294,11 +3468,11 @@ def photo_view_content(
 
             # Click handler: confirmed faces navigate to identity card;
             # all other faces open the tag dropdown.
-            if state == "CONFIRMED" and identity_id:
+            if state == "CONFIRMED" and face_identity_id:
                 tag_script = (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #photo-modal "
-                    f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+                    f"then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{face_identity_id}'"
                 )
             else:
                 tag_script = (
@@ -3333,8 +3507,11 @@ def photo_view_content(
                 placeholder=tag_placeholder,
                 cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                 "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
-                hx_get=f"/api/face/tag-search?face_id={face_id_encoded}{seq_param}",
-                hx_trigger="keyup changed delay:300ms, keydown[key=='Enter']",
+                hx_get=(
+                    f"{nav_prefix}/api/face/tag-search?face_id={face_id_encoded}"
+                    f"{seq_param}{action_context_suffix}"
+                ),
+                hx_trigger="keyup changed delay:180ms, keydown[key=='Enter']",
                 hx_target=f"#{tag_results_id}",
                 hx_include="this",
                 name="q",
@@ -3346,7 +3523,7 @@ def photo_view_content(
                 close_btn = Button(
                     "Done",
                     cls="text-xs text-indigo-400 hover:text-indigo-300 ml-auto",
-                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
                     type="button",
@@ -3364,7 +3541,7 @@ def photo_view_content(
                 tag_search_input,
                 # Results container (pre-populated with existing suggestions if any)
                 Div(
-                    *_main_mod._existing_suggestions_for_identity(identity_id, face_id_encoded),
+                    *_main_mod._existing_suggestions_for_identity(face_identity_id, face_id_encoded),
                     id=tag_results_id,
                     cls="mt-1 max-h-48 overflow-y-auto",
                 ),
@@ -3374,24 +3551,29 @@ def photo_view_content(
                         "Go to Face Card",
                         cls="text-xs text-indigo-400 hover:text-indigo-300",
                         **{
-                            "_": f"on click add .hidden to #photo-modal then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+                            "_": f"on click add .hidden to #photo-modal then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{face_identity_id}'"
                         }
-                        if identity_id
+                        if face_identity_id
                         else {},
                         type="button",
                     )
-                    if (identity_id and not seq_mode)
+                    if (face_identity_id and not seq_mode)
                     else None,
                     # UX-075: Skip button in sequential mode
                     Button(
-                        "Skip \u2192",
+                        "Ignore Stranger \u2192",
                         cls="text-xs text-amber-400 hover:text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 hover:bg-amber-500/10",
-                        hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=skip&photo_id={photo_id}&seq=1",
+                        hx_post=(
+                            f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                            f"&action=skip&photo_id={photo_id}&seq=1{action_context_suffix}"
+                        ),
                         hx_target="#photo-modal-content",
                         hx_swap="innerHTML",
+                        title="Mark this face as background noise or defer it for later review",
+                        data_testid="seq-ignore-stranger",
                         type="button",
                     )
-                    if (seq_mode and identity_id)
+                    if (seq_mode and face_identity_id)
                     else None,
                     close_btn,
                     cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700",
@@ -3405,7 +3587,7 @@ def photo_view_content(
             # Build inline quick-action buttons for admin users
             # Only for actionable states (INBOX, PROPOSED, SKIPPED)
             quick_actions = None
-            if is_admin and identity_id and state in ("INBOX", "PROPOSED", "SKIPPED"):
+            if is_admin and face_identity_id and state in ("INBOX", "PROPOSED", "SKIPPED"):
                 action_btns = []
                 # Confirm button
                 action_btns.append(
@@ -3413,7 +3595,10 @@ def photo_view_content(
                         "\u2713",
                         cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs "
                         "flex items-center justify-center",
-                        hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=confirm&photo_id={photo_id}",
+                        hx_post=(
+                            f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                            f"&action=confirm&photo_id={photo_id}{action_context_suffix}{seq_param}"
+                        ),
                         hx_target="#photo-modal-content",
                         hx_swap="innerHTML",
                         title="Confirm",
@@ -3428,10 +3613,13 @@ def photo_view_content(
                             "\u23f8",
                             cls="w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-xs "
                             "flex items-center justify-center",
-                            hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=skip&photo_id={photo_id}",
+                            hx_post=(
+                                f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                                f"&action=skip&photo_id={photo_id}{action_context_suffix}{seq_param}"
+                            ),
                             hx_target="#photo-modal-content",
                             hx_swap="innerHTML",
-                            title="Skip",
+                            title="Ignore / Skip",
                             type="button",
                             **{"_": "on click halt the event's bubbling"},
                         )
@@ -3442,7 +3630,10 @@ def photo_view_content(
                         "\u2717",
                         cls="w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs "
                         "flex items-center justify-center",
-                        hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=reject&photo_id={photo_id}",
+                        hx_post=(
+                            f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                            f"&action=reject&photo_id={photo_id}{action_context_suffix}{seq_param}"
+                        ),
                         hx_target="#photo-modal-content",
                         hx_swap="innerHTML",
                         title="Reject",
@@ -3497,7 +3688,7 @@ def photo_view_content(
                 style=_overlay_style,
                 title=display_name,
                 data_face_id=face_id,
-                data_identity_id=identity_id or "",
+                data_identity_id=face_identity_id or "",
                 **{"_": tag_script},
             )
             face_overlays.append(overlay)
@@ -3514,10 +3705,13 @@ def photo_view_content(
         # data-nav-idx, and data-nav-url to dispatch navigation. This pattern
         # survives HTMX content swaps because the listener is on document, not
         # on the swapped DOM nodes.
-        # Build URL suffix for identity context continuity
-        _id_suffix = f"&identity_id={identity_id}" if identity_id else ""
         if prev_id:
-            prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}{_id_suffix}"
+            prev_url = _partial_photo_url(
+                prev_id,
+                nav_index=nav_idx - 1,
+                nav_size=nav_total,
+                seq_active=seq_mode,
+            )
             nav_prev = Button(
                 Span("\u25c0", cls="text-xl"),
                 cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white "
@@ -3530,7 +3724,12 @@ def photo_view_content(
                 data_nav_url=prev_url,
             )
         if next_id:
-            next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}{_id_suffix}"
+            next_url = _partial_photo_url(
+                next_id,
+                nav_index=nav_idx + 1,
+                nav_size=nav_total,
+                seq_active=seq_mode,
+            )
             nav_next = Button(
                 Span("\u25b6", cls="text-xl"),
                 cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white "
@@ -3582,7 +3781,7 @@ def photo_view_content(
             Button(
                 f"Name These Faces ({len(unidentified_face_ids)} unidentified)",
                 cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors",
-                hx_get=f"/photo/{photo_id}/partial?seq=1",
+                hx_get=_partial_photo_url(photo_id, seq_active=True),
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
                 type="button",
@@ -3596,7 +3795,17 @@ def photo_view_content(
         remaining = len(unidentified_face_ids)
         if remaining > 0:
             seq_banner = Div(
-                Span(f"Naming faces: {identified_count} of {total_face_count} identified", cls="text-sm text-white"),
+                Div(
+                    Span(f"Naming faces: {identified_count} of {total_face_count} identified", cls="text-sm text-white"),
+                    Span(seq_queue_summary, cls="text-[11px] text-indigo-200/80")
+                    if seq_queue_summary
+                    else None,
+                    Span(
+                        "Enter picks the top name. Ignore Stranger marks background noise as skipped.",
+                        cls="text-[11px] text-slate-300/80",
+                    ),
+                    cls="flex flex-col gap-0.5",
+                ),
                 Div(
                     Div(
                         style=f"width: {(identified_count / total_face_count * 100) if total_face_count > 0 else 0:.0f}%",
@@ -3607,20 +3816,59 @@ def photo_view_content(
                 Button(
                     "Done",
                     cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
-                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
                     type="button",
                 ),
                 cls="flex items-center gap-2 mb-2 px-3 py-2 bg-indigo-900/30 border border-indigo-500/30 rounded-lg",
             )
+        elif next_seq_photo_id:
+            next_seq_url = _partial_photo_url(next_seq_photo_id, seq_active=True)
+            seq_banner = Div(
+                Div(
+                    Span("Photo complete.", cls="text-sm text-emerald-300 font-medium"),
+                    Span(
+                        f"Advancing to the next photo with {next_seq_unidentified_count} unresolved "
+                        f"face{'s' if next_seq_unidentified_count != 1 else ''}.",
+                        cls="text-[11px] text-slate-300/80",
+                    ),
+                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80")
+                    if seq_queue_summary
+                    else None,
+                    cls="flex flex-col gap-0.5",
+                ),
+                Button(
+                    "Open next photo now",
+                    cls="text-xs px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors ml-auto",
+                    hx_get=next_seq_url,
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                Div(
+                    hx_get=next_seq_url,
+                    hx_trigger="load delay:250ms",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    cls="hidden",
+                    data_testid="seq-auto-advance",
+                ),
+                cls="flex items-center gap-2 mb-2 px-3 py-2 bg-emerald-900/30 border border-emerald-500/30 rounded-lg",
+            )
         else:
             seq_banner = Div(
-                Span("All faces identified!", cls="text-sm text-emerald-300 font-medium"),
+                Div(
+                    Span("All faces identified!", cls="text-sm text-emerald-300 font-medium"),
+                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80")
+                    if seq_queue_summary
+                    else None,
+                    cls="flex flex-col gap-0.5",
+                ),
                 Button(
                     "Done",
                     cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors ml-auto",
-                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
                     type="button",
@@ -3681,7 +3929,11 @@ def photo_view_content(
                     _main_mod.share_button(photo_id, style="link", label="Share"),
                     A(
                         "Public Page",
-                        href=f"/photo/{photo_id}",
+                        href=(
+                            f"{nav_prefix}/photo/{photo_id}?identity_id={context_identity_id}&sort_by={sort_by}"
+                            if context_identity_id
+                            else f"{nav_prefix}/photo/{photo_id}"
+                        ),
                         cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                         target="_blank",
                         rel="noopener",
@@ -10397,7 +10649,7 @@ def public_photo_page(
         identity = _main_mod.get_identity_for_face(registry, face_id)
         raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
         display_name = ensure_utf8_display(raw_name)
-        identity_id = identity["identity_id"] if identity else None
+        face_identity_id = identity["identity_id"] if identity else None
         state = identity.get("state", "INBOX") if identity else None
         is_identified = state == "CONFIRMED" and not display_name.startswith("Unidentified")
 
@@ -10414,7 +10666,7 @@ def public_photo_page(
                 "face_id": face_id,
                 "bbox": bbox,
                 "display_name": display_name,
-                "identity_id": identity_id,
+                "identity_id": face_identity_id,
                 "state": state,
                 "is_identified": is_identified,
                 "crop_url": crop_url,
@@ -10425,6 +10677,7 @@ def public_photo_page(
     first_unidentified_id = next(
         (fi["identity_id"] for fi in face_info_list if not fi["is_identified"] and fi["identity_id"]), None
     )
+    dense_faces_layout = len(face_info_list) >= 7
 
     # --- Build face overlays (simplified for public view — no admin actions) ---
     face_overlays = []
@@ -10494,7 +10747,7 @@ def public_photo_page(
             overlay = overlay_inner
             face_overlays.append(overlay)
 
-    # --- Build person cards strip ---
+    # --- Build person cards strip / dense grid ---
     person_cards = []
     for fi in face_info_list:
         card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
@@ -10588,7 +10841,14 @@ def public_photo_page(
             ),
             quick_id_area,
             id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
-            cls=f"photo-face-card photo-card-frame flex flex-col items-center p-4 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-amber-900/10 transition-colors",
+            cls=(
+                f"photo-face-card photo-card-frame flex flex-col items-center rounded-xl border {card_border} "
+                + (
+                    "p-3 hover:bg-amber-900/10 transition-colors min-w-0 w-full"
+                    if dense_faces_layout
+                    else "p-4 min-w-[140px] flex-shrink-0 hover:bg-amber-900/10 transition-colors"
+                )
+            ),
         )
 
         if card_href and not quick_id_btn:
@@ -10745,6 +11005,21 @@ def public_photo_page(
         .person-strip::-webkit-scrollbar-thumb {
             background: #475569;
             border-radius: 3px;
+        }
+        .person-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .person-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) {
+            .person-grid {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+            }
         }
         /* CSS 3D Flip Animation — Premium "turning over a real photo" feel */
         .photo-flip-container {
@@ -11076,8 +11351,12 @@ def public_photo_page(
                             NotStr(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
                             ),
-                            "Back to Workstation",
-                            href=f"{nav_prefix}/?section=photos",
+                            f"Back to {context_person_name}" if identity_id and context_person_name else "Back to Workstation",
+                            href=(
+                                f"{nav_prefix}/person/{identity_id}?view=photos&sort_by={sort_by}"
+                                if identity_id and context_person_name
+                                else f"{nav_prefix}/?section=photos"
+                            ),
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="back-to-workstation",
                         )
@@ -11134,7 +11413,14 @@ def public_photo_page(
                             f"Name These Faces ({unidentified_count} unidentified)",
                             cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
                             type="button",
-                            hx_get=f"/photo/{photo_id}/partial?seq=1",
+                            hx_get=(
+                                f"{nav_prefix}/photo/{photo_id}/partial?seq=1"
+                                + (
+                                    f"&identity_id={identity_id}&sort_by={sort_by}"
+                                    if identity_id
+                                    else ""
+                                )
+                            ),
                             hx_target="#photo-modal-content",
                             hx_swap="innerHTML",
                             data_testid="name-these-faces-public",
@@ -11351,7 +11637,11 @@ def public_photo_page(
                         ),
                         cls="flex items-center justify-between mb-4",
                     ),
-                    Div(*person_cards, cls="person-strip")
+                    Div(
+                        *person_cards,
+                        cls="person-grid" if dense_faces_layout else "person-strip",
+                        data_testid="photo-people-grid" if dense_faces_layout else "photo-people-strip",
+                    )
                     if person_cards
                     else P("No faces detected in this photo.", cls="text-slate-500 text-sm"),
                     cls="max-w-[900px] mx-auto",
@@ -11532,9 +11822,11 @@ def get(
     nav_idx: int = -1,
     nav_total: int = 0,
     identity_id: str = None,
+    sort_by: str = "date_asc",
     from_compare: bool = False,
     seq: bool = False,
     sess=None,
+    request=None,
 ):
     """
     Render photo view partial for HTMX modal injection.
@@ -11551,6 +11843,7 @@ def get(
         if _main_mod.is_auth_enabled()
         else True
     )
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     return _main_mod.photo_view_content(
         photo_id,
         selected_face_id=face,
@@ -11560,9 +11853,11 @@ def get(
         nav_idx=nav_idx,
         nav_total=nav_total,
         identity_id=identity_id,
+        sort_by=sort_by,
         is_admin=user_is_admin,
         from_compare=from_compare,
         seq_mode=seq and user_is_admin,
+        community_slug=community_slug,
     )
 
 
