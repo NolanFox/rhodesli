@@ -81,22 +81,23 @@ def test_landing_page_hero(page, app_server):
 
 
 def test_landing_page_stats(page, app_server):
-    """Landing page should have animated stat counters."""
+    """Root should show platform-level archive, photo, and people totals."""
     _goto(page, app_server)
 
-    stats = page.locator("#stats .stat-number[data-count]")
-    assert stats.count() >= 3, f"Expected >=3 stat counters, found {stats.count()}"
+    stats = page.locator("#stats")
+    assert stats.count() > 0, "Missing root stats section"
+    assert stats.locator(":text('archives')").count() > 0
+    assert stats.locator(":text('photos')").count() > 0
+    assert stats.locator(":text('people')").count() > 0
 
 
 def test_landing_page_navigation(page, app_server):
-    """Landing page nav should link to photos and people sections."""
+    """Root nav should expose platform-level actions, not archive content tabs."""
     _goto(page, app_server)
 
-    nav = page.locator("nav")
-    assert nav.count() > 0, "No nav bar found"
-
-    assert page.locator("nav a:has-text('Photos')").count() > 0
-    assert page.locator("nav a:has-text('People')").count() > 0
+    assert page.locator("a:has-text('Compare')").count() > 0
+    assert page.locator("a:has-text('Estimate')").count() > 0
+    assert page.locator("a:has-text('About')").count() > 0
 
 
 # ---------------------------------------------------------------------------
