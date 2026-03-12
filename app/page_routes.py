@@ -11116,6 +11116,10 @@ def public_photo_page(
             other_face["conflict_names"].add(face_info["raw_name"])
 
     has_bbox_conflicts = any(fi["bbox_conflict"] for fi in face_info_list)
+    context_identity_conflict = any(
+        fi["is_context_identity"] and (fi["bbox_conflict"] or fi["state"] in {"REJECTED", "CONTESTED"})
+        for fi in face_info_list
+    )
 
     # First unidentified face from this photo — for contextual "Help Identify" CTA
     first_unidentified_id = next(
@@ -11704,6 +11708,23 @@ def public_photo_page(
                 cls="px-4 sm:px-6 pt-4 pb-1",
                 data_testid="photo-breadcrumb",
             ),
+            Div(
+                Div(
+                    Span(
+                        "Needs review",
+                        cls="text-[11px] font-semibold uppercase tracking-wide text-rose-200 bg-rose-500/15 border border-rose-500/30 px-2 py-1 rounded-full",
+                    ),
+                    P(
+                        f"The current assignment for {context_person_name} overlaps another face on this photo. Treat this as disputed until it is reviewed.",
+                        cls="text-sm text-rose-100/90 leading-relaxed",
+                    ),
+                    cls="max-w-[900px] mx-auto flex flex-col sm:flex-row sm:items-center gap-3 bg-rose-950/40 border border-rose-500/20 rounded-xl px-4 py-3",
+                    data_testid="photo-context-conflict-banner",
+                ),
+                cls="px-4 sm:px-6 pt-2",
+            )
+            if context_identity_conflict and context_person_name
+            else None,
             # Hero photo section
             Section(
                 Div(

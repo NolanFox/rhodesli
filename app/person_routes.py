@@ -7,6 +7,7 @@ Shared helpers (caches, registries, UI builders) remain in app.main.
 
 import json
 import logging
+import re
 import uuid
 from datetime import datetime, timedelta
 
@@ -34,6 +35,63 @@ logger = logging.getLogger(__name__)
 # --- Person Comments ---
 # _load_person_comments, _save_person_comments, and _person_comments_cache
 # remain in app.main so that test patches on app.main work correctly.
+
+
+def _bbox_iou(box_a, box_b) -> float:
+    """Compute IoU for two [x1, y1, x2, y2] boxes."""
+    if not box_a or not box_b or len(box_a) < 4 or len(box_b) < 4:
+        return 0.0
+    ax1, ay1, ax2, ay2 = box_a
+    bx1, by1, bx2, by2 = box_b
+    inter_x1 = max(ax1, bx1)
+    inter_y1 = max(ay1, by1)
+    inter_x2 = min(ax2, bx2)
+    inter_y2 = min(ay2, by2)
+    if inter_x2 <= inter_x1 or inter_y2 <= inter_y1:
+        return 0.0
+    inter_area = (inter_x2 - inter_x1) * (inter_y2 - inter_y1)
+    area_a = max(ax2 - ax1, 0) * max(ay2 - ay1, 0)
+    area_b = max(bx2 - bx1, 0) * max(by2 - by1, 0)
+    union_area = area_a + area_b - inter_area
+    if union_area <= 0:
+        return 0.0
+    return inter_area / union_area
+
+
+def _photo_context_conflict(photo_meta: dict | None, registry, person_id: str) -> bool:
+    """Return True when this person's presence in the photo is disputed."""
+    if not photo_meta or not person_id:
+        return False
+
+    face_infos = []
+    for face in photo_meta.get("faces", []):
+        bbox = face.get("bbox") or []
+        if len(bbox) < 4:
+            continue
+        identity = _main_mod.get_identity_for_face(registry, face.get("face_id", ""))
+        if not identity:
+            continue
+        face_infos.append(
+            {
+                "bbox": bbox,
+                "identity_id": identity.get("identity_id"),
+                "state": identity.get("state", "INBOX"),
+            }
+        )
+
+    context_faces = [fi for fi in face_infos if fi.get("identity_id") == person_id]
+    if not context_faces:
+        return False
+    if any(fi.get("state") in {"REJECTED", "CONTESTED"} for fi in context_faces):
+        return True
+
+    for context_face in context_faces:
+        for other in face_infos:
+            if other is context_face or other.get("identity_id") == person_id:
+                continue
+            if _bbox_iou(context_face["bbox"], other["bbox"]) >= 0.8:
+                return True
+    return False
 
 
 def _life_events_section(person_id: str):
@@ -295,6 +353,7 @@ def public_person_page(
         # Find the photo for this face
         face_photo_id = _main_mod.get_photo_id_for_face(fid)
         face_photo = _main_mod.get_photo_metadata(face_photo_id) if face_photo_id else None
+        context_conflict = _photo_context_conflict(face_photo, registry, person_id)
         source_label = ""
         if face_photo:
             source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
@@ -305,18 +364,35 @@ def public_person_page(
                     _build_sort_meta(face_photo_id, face_photo), f"{face_photo_id or 'zz'}:{fid}"
                 ),
                 "item": A(
-                    Img(
-                        src=crop_url,
-                        alt=f"{display_name}",
-                        cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
-                        onerror="this.style.display='none'",
+                    Div(
+                        Img(
+                            src=crop_url,
+                            alt=f"{display_name}",
+                            cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                            onerror="this.style.display='none'",
+                        ),
+                        Span(
+                            "Needs review",
+                            cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
+                            data_testid="person-gallery-conflict",
+                        )
+                        if context_conflict
+                        else None,
+                        cls="relative",
                     ),
+                    P(
+                        "Conflicting face assignment",
+                        cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
+                    )
+                    if context_conflict
+                    else None,
                     P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
                     if source_label
                     else None,
                     href=_person_photo_href(face_photo_id),
                     cls="flex flex-col items-center group",
                     title=f"View photo of {display_name}",
+                    data_testid="person-gallery-item-conflicted" if context_conflict else None,
                 ),
             }
         )
@@ -332,6 +408,7 @@ def public_person_page(
             continue
         filename = pm["filename"]
         collection_label = pm.get("collection", "") or ""
+        context_conflict = _photo_context_conflict(pm, registry, person_id)
         photo_entries.append(
             {
                 "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
@@ -343,14 +420,28 @@ def public_person_page(
                             cls="w-full h-48 sm:h-56 object-cover rounded-lg",
                             loading="lazy",
                         ),
+                        Span(
+                            "Needs review",
+                            cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
+                            data_testid="person-gallery-conflict",
+                        )
+                        if context_conflict
+                        else None,
                         cls="relative overflow-hidden rounded-lg",
                     ),
+                    P(
+                        "Conflicting face assignment",
+                        cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
+                    )
+                    if context_conflict
+                    else None,
                     P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug")
                     if collection_label
                     else None,
                     href=_person_photo_href(pid),
                     cls="flex flex-col group",
                     title=f"View photo of {display_name}",
+                    data_testid="person-gallery-item-conflicted" if context_conflict else None,
                 ),
             }
         )
@@ -1491,6 +1582,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                 "photo_id": pid,
                 "photo_meta": pm,
                 "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+                "context_conflict": _photo_context_conflict(pm, registry, person_id),
             }
         )
     ordered_photo_entries.sort(key=lambda e: e["sort_key"])
@@ -1516,6 +1608,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                 continue
             face_photo_id = _main_mod.get_photo_id_for_face(fid)
             face_photo = _main_mod.get_photo_metadata(face_photo_id) if face_photo_id else None
+            context_conflict = _photo_context_conflict(face_photo, registry, person_id)
             source_label = ""
             if face_photo:
                 source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
@@ -1525,18 +1618,35 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                         _build_sort_meta(face_photo_id, face_photo), f"{face_photo_id or 'zz'}:{fid}"
                     ),
                     "item": A(
-                        Img(
-                            src=crop_url,
-                            alt=display_name,
-                            cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
-                            loading="lazy",
-                            onerror="this.style.display='none'",
+                        Div(
+                            Img(
+                                src=crop_url,
+                                alt=display_name,
+                                cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                                loading="lazy",
+                                onerror="this.style.display='none'",
+                            ),
+                            Span(
+                                "Needs review",
+                                cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
+                                data_testid="person-gallery-conflict",
+                            )
+                            if context_conflict
+                            else None,
+                            cls="relative",
                         ),
+                        P(
+                            "Conflicting face assignment",
+                            cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
+                        )
+                        if context_conflict
+                        else None,
                         P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
                         if source_label
                         else None,
                         href=_person_photo_href(face_photo_id),
                         cls="flex flex-col items-center group",
+                        data_testid="person-gallery-item-conflicted" if context_conflict else None,
                     ),
                 }
             )
@@ -1550,6 +1660,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             pm = entry["photo_meta"]
             filename = pm["filename"]
             collection_label = pm.get("collection", "") or ""
+            context_conflict = entry["context_conflict"]
             photo_entries.append(
                 {
                     "sort_key": entry["sort_key"],
@@ -1561,13 +1672,27 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                                 cls="w-full h-48 sm:h-56 object-cover rounded-lg",
                                 loading="lazy",
                             ),
+                            Span(
+                                "Needs review",
+                                cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
+                                data_testid="person-gallery-conflict",
+                            )
+                            if context_conflict
+                            else None,
                             cls="relative overflow-hidden rounded-lg",
                         ),
+                        P(
+                            "Conflicting face assignment",
+                            cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
+                        )
+                        if context_conflict
+                        else None,
                         P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug")
                         if collection_label
                         else None,
                         href=_person_photo_href(pid),
                         cls="flex flex-col group",
+                        data_testid="person-gallery-item-conflicted" if context_conflict else None,
                     ),
                 }
             )

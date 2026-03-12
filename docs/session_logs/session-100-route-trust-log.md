@@ -80,3 +80,23 @@
     - `131 passed, 2 skipped`
   - `pytest tests/test_admin_dashboard.py tests/test_public_photo_viewer.py tests/test_identify.py tests/test_photo_navigation.py tests/test_sequential_identify.py tests/test_collections.py -x -q`
     - `132 passed`
+
+## Person/Photo Conflict Context Follow-Up
+- full `/person/{id}` pages and the HTMX gallery partial now agree on disputed
+  context instead of hiding it on one surface and showing it on another
+- overlapping or disputed person-photo assignments now render `Needs review`
+  plus a `Conflicting face assignment` hint on the person gallery item
+- context-linked photo pages now show a photo-level warning banner when the
+  selected person assignment overlaps another face or is already disputed
+- files:
+  - [app/person_routes.py](/Users/nolanfox/rhodesli/app/person_routes.py)
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [tests/test_public_person_page.py](/Users/nolanfox/rhodesli/tests/test_public_person_page.py)
+  - [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+  - [session-100-person-photo-conflict-context-followup.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-person-photo-conflict-context-followup.md)
+- verification:
+  - `python3 -m py_compile app/person_routes.py app/page_routes.py`
+  - `pytest tests/test_public_person_page.py tests/test_public_photo_viewer.py -x -q`
+    - `60 passed, 2 skipped`
+  - `pytest tests/test_public_person_page.py tests/test_public_photo_viewer.py tests/test_identify.py tests/test_photo_navigation.py tests/test_collections.py tests/test_inline_find_similar.py tests/test_find_similar_page.py -x -q`
+    - `180 passed, 2 skipped`

@@ -303,6 +303,58 @@ class TestPersonPageOrdering:
         assert "sort_by=date_asc" in html
         assert "seq=1" in html
 
+    def test_person_gallery_flags_conflicted_photo_context(self, client, monkeypatch):
+        class FakeRegistry:
+            def get_identity(self, person_id):
+                return {
+                    "identity_id": person_id,
+                    "name": "Jacob Cohen",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-a"],
+                    "candidate_ids": [],
+                }
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-1"]
+
+        photo_meta = {
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "photo-1.jpg",
+                "collection": "Franco Family",
+                "created_at": "2025-01-01T00:00:00+00:00",
+                "faces": [
+                    {"face_id": "face-a", "bbox": [100, 100, 200, 240]},
+                    {"face_id": "face-b", "bbox": [108, 108, 198, 235]},
+                ],
+            }
+        }
+        face_to_photo = {"face-a": "photo-1"}
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda pid: photo_meta.get(pid))
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: face_to_photo.get(fid))
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+
+        def _identity_for_face(_registry, face_id):
+            if face_id == "face-a":
+                return {"identity_id": "test-person", "name": "Jacob Cohen", "state": "CONFIRMED"}
+            return {"identity_id": "other-person", "name": "Caden Franco Sadis", "state": "CONFIRMED"}
+
+        monkeypatch.setattr("app.main.get_identity_for_face", _identity_for_face)
+
+        response = client.get("/person/test-person?view=photos&sort_by=date_asc")
+        assert response.status_code == 200
+        html = response.text
+
+        assert "Needs review" in html
+        assert 'data-testid="person-gallery-conflict"' in html
+
 
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""
