@@ -575,21 +575,21 @@ def landing_page(stats, featured_photos):
         )
 
     # Navigation bar
-    _nav_cls = "text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"
+    _nav_cls = "text-amber-100/70 hover:text-amber-50 transition-colors font-serif tracking-wide text-sm md:text-base ui99-landing-nav"
     nav_items = [
         A("Photos", href="/photos", cls=_nav_cls),
         A("Collections", href="/collections", cls=_nav_cls),
         A("People", href="/people", cls=_nav_cls),
         A("Map", href="/map", cls=_nav_cls),
         A("Timeline", href="/timeline", cls=_nav_cls),
-        Span("|", cls="text-slate-700 hidden md:inline"),
+        Span("|", cls="text-amber-900/40 hidden md:inline"),
         A("Tree", href="/tree", cls=_nav_cls),
         A("Compare", href="/tools/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
         A(
             "Help Identify",
             href="/help",
-            cls="text-amber-400 hover:text-amber-300 font-medium text-sm md:text-base transition-colors border border-amber-500/30 px-3 py-1 rounded ml-2",
+            cls="text-amber-400 hover:text-amber-300 font-serif font-medium text-sm md:text-base transition-colors border border-amber-800/50 hover:bg-amber-900/20 px-3 py-1 rounded-sm ml-2",
         ),
     ]
     if auth_enabled:
@@ -597,7 +597,7 @@ def landing_page(stats, featured_photos):
             A(
                 "Sign In",
                 href="/login",
-                cls="text-amber-300 hover:text-amber-200 font-medium transition-colors text-sm md:text-base ml-2",
+                cls="text-amber-500 hover:text-amber-400 font-serif transition-colors text-sm md:text-base ml-2",
             )
         )
 
@@ -778,38 +778,47 @@ def landing_page(stats, featured_photos):
         .animate-gentle-pulse { animation: gentle-pulse 3s ease-in-out infinite; }
 
         /* CTA buttons */
-        .btn-primary {
+        .btn-ui99-primary {
             display: inline-block;
-            padding: 0.875rem 2rem;
+            padding: 0.875rem 2.5rem;
             background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
             color: #fff;
             font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s;
+            font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            letter-spacing: 0.025em;
+            border-radius: 4px;
+            border: 1px solid #f59e0b;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             text-decoration: none;
-            font-size: 1rem;
-            box-shadow: 0 2px 10px rgba(180, 83, 9, 0.3);
+            font-size: 1.125rem;
+            box-shadow: 0 4px 14px rgba(180, 83, 9, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
         }
-        .btn-primary:hover {
+        .btn-ui99-primary:hover {
             background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-            box-shadow: 0 4px 20px rgba(180, 83, 9, 0.4);
-            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(180, 83, 9, 0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
-        .btn-secondary {
+        .btn-ui99-secondary {
             display: inline-block;
-            padding: 0.875rem 2rem;
-            border: 1px solid #5d4e3c;
-            color: #d4c4a8;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s;
+            padding: 0.875rem 2.5rem;
+            border: 1px solid #78350f;
+            background: rgba(69, 26, 3, 0.5);
+            color: #fcd34d;
+            font-weight: 500;
+            font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            letter-spacing: 0.025em;
+            border-radius: 4px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 1.125rem;
+            backdrop-filter: blur(4px);
         }
-        .btn-secondary:hover {
-            border-color: #a08c6e;
-            background: rgba(61, 52, 40, 0.4);
-            color: #f5e6d3;
+        .btn-ui99-secondary:hover {
+            border-color: #b45309;
+            background: rgba(120, 53, 15, 0.7);
+            color: #fffbeb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(120, 53, 15, 0.4);
         }
 
         /* About section separator */
@@ -1001,17 +1010,17 @@ def landing_page(stats, featured_photos):
             Nav(
                 Div(
                     Div(
-                        Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-100 tracking-wide font-display"),
+                        Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-50 tracking-wide font-display ui99-title"),
                         Span(
                             "Heritage Archive",
-                            cls="text-xs text-amber-400/60 ml-2 hidden md:inline tracking-widest uppercase",
+                            cls="text-xs text-amber-500/80 ml-2 hidden md:inline tracking-[0.2em] uppercase font-mono",
                         ),
                         cls="flex items-baseline",
                     ),
                     Div(*nav_items, cls="hidden sm:flex items-center gap-4 md:gap-6"),
-                    cls="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3",
+                    cls="max-w-6xl mx-auto px-4 md:px-6 py-5 flex items-center justify-between flex-wrap gap-3",
                 ),
-                cls="border-b border-amber-900/30 bg-black/20 backdrop-blur-sm sticky top-0 z-50",
+                cls="border-b border-amber-900/20 bg-[#16120e]/95 backdrop-blur-md sticky top-0 z-50",
             ),
             # Hero section
             Section(
@@ -1019,28 +1028,28 @@ def landing_page(stats, featured_photos):
                     # Headline area
                     Div(
                         Div(
-                            Div(cls="ornament mb-6"),
+                            Div(cls="ornament mb-8"),
                             H1(
                                 Span("Preserving the faces and stories", cls="block"),
-                                Span("of the Jewish Community of Rhodes", cls="block text-amber-200"),
-                                cls="text-3xl md:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight tracking-tight font-display",
+                                Span("of the Jewish Community of Rhodes", cls="block text-amber-400 mt-2"),
+                                cls="text-4xl md:text-6xl lg:text-7xl font-bold text-amber-50 leading-tight tracking-tight font-display ui99-landing-title drop-shadow-lg",
                             ),
                             P(
                                 "For over 450 years, a Sephardic community thrived on the island of Rhodes \u2014 speaking Ladino, "
                                 "preserving ancient traditions, and filling the Juderia with life. In July 1944, nearly all were "
                                 "deported to Auschwitz. Only 151 survived. This archive uses face recognition to reconnect their "
                                 "descendants with the faces and stories that remain.",
-                                cls="text-base md:text-lg text-amber-100/60 mt-6 max-w-2xl mx-auto leading-relaxed",
+                                cls="text-lg md:text-xl text-amber-100/70 mt-8 max-w-3xl mx-auto leading-relaxed font-serif ui99-landing-body",
                             ),
                             # CTA buttons
                             Div(
-                                A("Start Exploring", href="/photos", cls="btn-primary"),
-                                A("Help Identify", href="/help", cls="btn-secondary"),
-                                cls="mt-8 flex flex-wrap gap-4 justify-center",
+                                A("Start Exploring", href="/photos", cls="btn-ui99-primary"),
+                                A("Help Identify", href="/help", cls="btn-ui99-secondary"),
+                                cls="mt-10 flex flex-wrap gap-5 justify-center",
                             ),
                             cls="text-center animate-fade-in-up",
                         ),
-                        cls="py-10 md:py-16 px-4 md:px-6",
+                        cls="py-12 md:py-20 px-4 md:px-6",
                     ),
                     # Photo mosaic with face detection hover
                     Div(
@@ -1256,11 +1265,11 @@ def landing_page(stats, featured_photos):
                     if mystery_faces
                     else None,
                     Div(
-                        A("Help Identify People", href="/help", cls="btn-primary mt-8 inline-block"),
+                        A("Help Identify People", href="/help", cls="btn-ui99-primary mt-8 inline-block"),
                         A(
-                            f"See all {stats['needs_help']} \u2192",
+                            f"See all {stats['needs_help']} →",
                             href="/help",
-                            cls="text-amber-400/60 hover:text-amber-300 text-sm ml-4 mt-8 inline-block",
+                            cls="text-amber-400/60 hover:text-amber-300 text-sm ml-4 mt-8 inline-block font-serif",
                         ),
                         cls="text-center",
                     ),
@@ -1371,8 +1380,8 @@ def landing_page(stats, featured_photos):
                         cls="text-amber-100/50 text-center mb-8 max-w-lg mx-auto",
                     ),
                     Div(
-                        A("Start Exploring", href="/?section=photos", cls="btn-primary"),
-                        A("Browse People", href="/?section=confirmed", cls="btn-secondary"),
+                        A("Start Exploring", href="/?section=photos", cls="btn-ui99-primary"),
+                        A("Browse People", href="/?section=confirmed", cls="btn-ui99-secondary"),
                         cls="flex flex-wrap gap-4 justify-center",
                     ),
                     cls="max-w-3xl mx-auto text-center",
@@ -1888,15 +1897,16 @@ def get(
             sort_by=sort_by,
             triage_filter=filter,
             nav_prefix=nav_prefix,
+            variant="session99",
         )
     elif section == "confirmed":
         main_content = _main_mod.render_confirmed_section(
-            confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by, nav_prefix=nav_prefix
+            confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by, nav_prefix=nav_prefix, variant="session99"
         )
     elif section == "skipped":
         skipped_view = view if view in ("focus", "browse") else "focus"
         main_content = _main_mod.render_skipped_section(
-            skipped_list, crop_files, counts, is_admin=user_is_admin, view_mode=skipped_view, current_id=current
+            skipped_list, crop_files, counts, is_admin=user_is_admin, view_mode=skipped_view, current_id=current, variant="session99"
         )
     elif section == "photos":
         main_content = _main_mod.render_photos_section(
@@ -1908,9 +1918,10 @@ def get(
             filter_collection,
             media_filter,
             community=community,
+            variant="session99",
         )
     else:  # rejected
-        main_content = _main_mod.render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin)
+        main_content = _main_mod.render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin, variant="session99")
 
     # Prepend discovery banner to main content if present
     if discovery_banner:
@@ -2314,15 +2325,15 @@ def get(
             # Sidebar overlay (mobile backdrop)
             sidebar_overlay,
             # Sidebar (fixed)
-            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community),
+            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community, variant="session99"),
             # Main content (offset for sidebar, bottom padding for mobile tabs)
             Main(
                 # First-time welcome banner (non-blocking, dismissible)
                 _main_mod._welcome_banner() if not user else None,
                 # Admin dashboard banner (only for admins)
-                _main_mod._admin_dashboard_banner(counts, section) if user_is_admin else None,
+                _main_mod._admin_dashboard_banner(counts, section, variant="session99") if user_is_admin else None,
                 Div(main_content, cls="max-w-6xl mx-auto px-4 sm:px-8 py-6 pb-20 lg:pb-6"),
-                cls="main-content min-h-screen overflow-x-hidden",
+                cls="main-content min-h-screen overflow-x-hidden ui99-workstation",
             ),
             # Mobile bottom tabs
             mobile_tabs,
@@ -4096,12 +4107,12 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         Img(
             src=avatar_url,
             alt="Unidentified person",
-            cls="w-48 h-48 sm:w-64 sm:h-64 rounded-2xl object-cover border-4 border-amber-500/30 shadow-lg shadow-amber-500/10 mx-auto",
+            cls="w-48 h-48 sm:w-64 sm:h-64 rounded-md object-cover border border-amber-900/40 shadow-md shadow-black/40 mx-auto ui99-face-crop",
         )
         if avatar_url
         else Div(
-            Span("?", cls="text-6xl text-slate-500"),
-            cls="w-48 h-48 rounded-2xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center mx-auto",
+            Span("?", cls="text-6xl text-amber-900/30 font-serif"),
+            cls="w-48 h-48 rounded-md bg-amber-900/5 border border-amber-900/20 flex items-center justify-center mx-auto",
         ),
         _source_photo_link,
         cls="mb-8 text-center",
@@ -4226,55 +4237,56 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     user_email = user.email if user else ""
 
     # Admin gets direct apply option
-    form_heading = "You're an admin \u2014 apply this name directly?" if is_admin else "Do you recognize this person?"
+    form_heading = "You're an admin — apply this name directly?" if is_admin else "Do you recognize this person?"
     submit_label = "Apply Name" if is_admin else "Yes, I know this person!"
-    submit_cls = "w-full py-3 font-semibold rounded-lg transition-colors " + (
-        "bg-indigo-600 hover:bg-indigo-500 text-white" if is_admin else "bg-emerald-600 hover:bg-emerald-500 text-white"
-    )
+    submit_cls = "w-full " + ("btn-ui99-primary" if not is_admin else "py-3 font-semibold rounded-md transition-colors bg-indigo-600 hover:bg-indigo-500 text-white font-serif")
+
+    _input_cls = "w-full px-4 py-2.5 bg-[#1e1b18] border border-amber-900/40 rounded-md text-amber-50 placeholder-amber-900/40 focus:border-amber-500/50 focus:outline-none font-serif transition-colors"
+    _label_cls = "text-sm text-amber-100/60 font-serif tracking-wide block mb-1.5"
 
     # Hide email field for logged-in users (auto-filled from session)
     email_field = (
         Div(
-            Label("Your email (optional, for follow-up)", fr="resp_email", cls="text-sm text-slate-400 block mb-1"),
+            Label("Your email (optional, for follow-up)", fr="resp_email", cls=_label_cls),
             Input(
                 type="email",
                 name="email",
                 id="resp_email",
                 value=user_email,
                 placeholder="you@example.com",
-                cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                cls=_input_cls,
             ),
             cls="mb-6",
         )
         if not user
         else None
-    )  # Hide email entirely if logged in
+    )
 
     form_section = Div(
-        H3(form_heading, cls="text-lg font-serif font-semibold text-white mb-4"),
+        H3(form_heading, cls="text-xl font-display font-medium text-amber-50 mb-5 text-center"),
         Form(
             Input(type="hidden", name="person_id", value=person_id),
             Div(
-                Label("Their name", fr="resp_name", cls="text-sm text-slate-400 block mb-1"),
+                Label("Their name", fr="resp_name", cls=_label_cls),
                 Input(
                     type="text",
                     name="name",
                     id="resp_name",
                     placeholder="e.g., Sarah Capeluto",
-                    cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    cls=_input_cls,
                 ),
                 cls="mb-4",
             ),
             Div(
-                Label("How do you know?", fr="resp_relationship", cls="text-sm text-slate-400 block mb-1"),
+                Label("How do you know?", fr="resp_relationship", cls=_label_cls),
                 Input(
                     type="text",
                     name="relationship",
                     id="resp_relationship",
                     placeholder="e.g., She's my grandmother",
-                    cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    cls=_input_cls,
                 ),
-                cls="mb-4",
+                cls="mb-5",
             ),
             email_field,
             Button(submit_label, type="submit", cls=submit_cls),
@@ -4283,7 +4295,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             hx_swap="innerHTML",
         ),
         id="identify-response-area",
-        cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 max-w-md mx-auto",
+        cls="bg-amber-900/5 rounded-lg p-7 border border-amber-900/20 max-w-md mx-auto shadow-sm",
     )
 
     # Gap 5: Submission persistence — show success banner if submitted=true query param
@@ -4399,8 +4411,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         cls="mt-10 pt-6 border-t border-slate-700/30",
     )
 
-    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug)
-    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug, variant="session99")
+    page_style = Style("html, body { margin: 0; } body { background-color: #16120e; }")
 
     return (
         Title("Can you identify this person? — Rhodesli"),
@@ -4410,27 +4422,27 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             # Navigation
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-lg font-serif font-bold text-white"), href="/"),
+                    A(Span("Rhodesli", cls="text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"), href="/"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
-                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+                cls="bg-[#16120e]/95 backdrop-blur-md border-b border-amber-900/20 sticky top-0 z-50",
             ),
             # Content
             Section(
                 Div(
                     H1(
                         "Can you identify this person?",
-                        cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2",
+                        cls="text-3xl sm:text-4xl font-display tracking-tight font-bold text-amber-50 text-center mb-3 ui99-landing-title drop-shadow-sm",
                     ),
                     P(
                         "The AI found this face in a heritage photo but couldn't determine their name.",
-                        cls="text-amber-300/60 text-xs text-center mb-1",
+                        cls="text-amber-500/70 text-xs font-mono uppercase tracking-[0.1em] text-center mb-2",
                         data_testid="identify-ai-note",
                     ),
                     P(
                         "This person appears in photos from the Rhodes Jewish Heritage Archive. If you recognize them, please let us know.",
-                        cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto",
+                        cls="text-amber-100/70 text-base font-serif text-center mb-10 max-w-xl mx-auto leading-relaxed ui99-landing-body",
                     ),
                     face_section,
                     # Gap 2: Admin quick-nav on identify page
@@ -4448,12 +4460,12 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     photos_section,
                     matches_section,
                     form_section,
-                    Div(share_btn, cls="flex justify-center mt-8 mb-4"),
+                    Div(share_btn, cls="flex justify-center mt-10 mb-6"),
                     explore_section,
-                    cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
+                    cls="max-w-3xl mx-auto pt-12 pb-20 px-6",
                 ),
             ),
-            cls="min-h-screen bg-slate-900 text-white",
+            cls="min-h-screen bg-[#16120e] text-amber-50 ui99-surface ui99-identify-page",
         ),
         _main_mod._share_script(),
     )

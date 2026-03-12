@@ -1,0 +1,10 @@
+The final implementation rigor pass for Session 99 is complete.
+
+New additions to the scoping revision:
+1. **Implementation Touch Map:** Explicitly classified key files (`app/page_routes.py::landing_page`, `app/main.py::sidebar`, etc.) as either `safe to restyle globally`, `needs scoped variant`, or `must not be touched`.
+2. **Single Source of Truth Strategy:** Mapped every shared primitive to its exact enforcement mechanism (e.g., existing shared helper, shared CSS class hierarchy) to prevent one-off route styling.
+3. **Consistency Risk Register:** Documented the exact failure modes if Session 99 developers bypass the shared helpers (e.g., shattered typography rhythms on mobile, permanent drift of hover physics).
+4. **Parallel Tracks + Final Sync:** Detailed an execution sequence across Track A (Landing), Track B (Identify), and Track C (Workstation Root), enforcing a deliberate Track D (Final Harmonization) pause to run diffs and reconcile primitives before merge.
+5. **Out-of-Scope Leakage Rules:** Added explicit governance over high-risk routes like `/tools/compare` and `/photos`, mandating scoped variants if a shared helper change would break their DOM.
+
+All attribution boundaries remain preserved. The PR is ready.

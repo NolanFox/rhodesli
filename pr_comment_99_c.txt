@@ -1,0 +1,10 @@
+The final docs-only pass for Session 99 is complete with the requested corrections.
+
+Corrections applied to the scoping revision:
+1. **Accurate Touch Map Classifications:** Reclassified `_admin_dashboard_banner`, `sidebar`, `section_header`, and `face_card` from "safe to restyle globally" to **"needs scoped variant"**. I verified via `grep` that these helpers are heavily imported across high-risk out-of-scope routes (`/photos`, `/compare`, `/timeline`, etc.). `_public_nav_links` remains globally safe as it is uniquely public.
+2. **Strict Leakage Rules:** Added an explicit rule that Session 99 developers MUST NOT globally restyle helpers used by out-of-scope routes. They must use a scoped rendering parameter (e.g., `view_mode="archival"`) or route-local CSS.
+3. **Robust Identify Invariants:** Replaced the fragile `name="email"` and button text invariants with the structural presence of `[data-testid="identify-person-form"]`, the `name="identity_id"` hidden input, and `og:title`/`og:image` tags.
+4. **Deterministic Smoke Checks:** Replaced `/identify/random` with `/identify/unknown-1` / `test-unidentified-1` directly tied to existing pytest fixtures.
+5. **Route Precision:** Correctly attributed the `/?section=...` handler to `app/page_routes.py` and clarified its relationship with the `app/main.py` dashboard banner.
+
+The document is strict, repo-accurate, and respects all attribution boundaries. We are ready for implementation.

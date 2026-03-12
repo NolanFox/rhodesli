@@ -297,3 +297,32 @@ Face cards were inconsistent across admin sections. The New Matches browse view 
 - DD-005: Photo-Dominant Identity Cards (preserved in unified card)
 - Session 84: docs/sessions/SESSION_084.md
 - Tests: tests/test_inline_find_similar.py (25 tests)
+
+---
+
+## DD-016: Scoped Variants for Architectural UI Upgrades
+
+- **Date:** 2026-03-11
+- **Session:** 99
+- **Status:** Decided
+
+### Context
+
+The Modern UI upgrade (PR #7) mandated a strict "zero-regression" rollout. Deeply shared primitives like `face_card` and `section_header` are utilized across dozen of administrative and public routes. A global CSS overhaul would invariably break out-of-scope dashboards. 
+
+### Decision
+
+1. **Variant Injection**: Rather than changing CSS defaults on `app/main.py` builders, we introduced an optional `variant: str = None` parameter to primitive signatures (`face_card`, `sidebar`, `section_header`, etc.).
+2. **Explicit Opt-in**: Targeted surfaces (e.g. Landing, Identify, Workstation root) pass `variant="session99"` down the DOM tree. 
+3. **Internal Branches**: The builders check `if variant == "session99"` and apply the `ui99-*` archival CSS taxonomy, falling back to the legacy Tailwind classes otherwise.
+
+### Alternatives Rejected
+
+1. **Duplicating Functions**: (e.g., `face_card_v2`) — High maintenance burden and code duplication.
+2. **Route-Specific CSS overrides**: Overly fragile; CSS specificity wars.
+3. **Global Launch**: Unacceptable risk of regression on the complex GEDCOM and Administration panels.
+
+### Breadcrumbs
+
+- PR #7: Modern UI Audit
+- Session 99: docs/session_logs/session-99-log.md

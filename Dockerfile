@@ -51,6 +51,12 @@ COPY scripts/ scripts/
 # .dockerignore strips tests, notebooks, virtualenvs, checkpoints, and other local-heavy directories,
 # so the image includes the full importable package surface without shipping development baggage.
 COPY rhodesli_ml/ rhodesli_ml/
+COPY rhodesli_ml/graph/ rhodesli_ml/graph/
+COPY rhodesli_ml/importers/ rhodesli_ml/importers/
+COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
+COPY rhodesli_ml/calibration/ rhodesli_ml/calibration/
+COPY rhodesli_ml/artifacts/ rhodesli_ml/artifacts/
+COPY rhodesli_ml/date_inference/ rhodesli_ml/date_inference/
 
 # Copy CHANGELOG.md for dynamic version display
 COPY CHANGELOG.md .
