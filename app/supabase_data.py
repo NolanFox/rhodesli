@@ -1060,6 +1060,21 @@ def sync_identity_history_event(event: dict) -> None:
     )
 
 
+def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
+    """Return True when PostgREST reports a missing column for a legacy schema."""
+    if getattr(exc, "code", None) == "42703":
+        return True
+    return f"column {column_name} does not exist" in str(exc)
+
+
+def _looks_like_identity_history_event(event: dict) -> bool:
+    """Heuristic fallback for legacy audit_log schemas without target_type."""
+    if not isinstance(event, dict):
+        return False
+    required_keys = {"event_id", "identity_id", "action", "timestamp", "previous_version_id"}
+    return required_keys.issubset(event.keys())
+
+
 def load_identity_history_from_supabase() -> list[dict] | None:
     """Load append-only identity registry events from Supabase audit_log."""
     sb = get_supabase_client()
@@ -1070,14 +1085,28 @@ def load_identity_history_from_supabase() -> list[dict] | None:
         all_rows = []
         page_size = 1000
         offset = 0
+        use_shape_filter = False
         while True:
-            result = (
-                sb.table("audit_log")
-                .select("*")
-                .eq("target_type", "identity_event")
-                .range(offset, offset + page_size - 1)
-                .execute()
-            )
+            try:
+                query = (
+                    sb.table("audit_log")
+                    .select("*")
+                    .eq("target_type", "identity_event")
+                    .range(offset, offset + page_size - 1)
+                )
+                result = query.execute()
+            except _SUPABASE_ERRORS as e:
+                if not _is_missing_column_error(e, "audit_log.target_type"):
+                    raise
+                logger.info(
+                    "Supabase audit_log.target_type missing; "
+                    "falling back to shape-filtered identity history sync"
+                )
+                use_shape_filter = True
+                all_rows = []
+                offset = 0
+                break
+
             batch = result.data or []
             if not batch:
                 break
@@ -1086,11 +1115,29 @@ def load_identity_history_from_supabase() -> list[dict] | None:
                 break
             offset += page_size
 
+        if use_shape_filter:
+            while True:
+                result = (
+                    sb.table("audit_log")
+                    .select("*")
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
+                batch = result.data or []
+                if not batch:
+                    break
+                all_rows.extend(batch)
+                if len(batch) < page_size:
+                    break
+                offset += page_size
+
         events = []
         seen_event_ids = set()
         for row in all_rows:
             event = row.get("data") or {}
             if not isinstance(event, dict):
+                continue
+            if use_shape_filter and not _looks_like_identity_history_event(event):
                 continue
             event_id = event.get("event_id")
             if not event_id or event_id in seen_event_ids:

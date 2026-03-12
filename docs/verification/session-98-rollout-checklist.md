@@ -14,6 +14,11 @@ Executed successfully on 2026-03-11.
 - current mirror counts match the March 11 GEDCOM export
 - existing `gedcom_face_links` verified: `0` unresolved against current GEDCOM individuals
 - final live state recorded in `docs/assessments/session-98-supabase-postimport-state.json`
+- deploy closeout completed on 2026-03-12:
+  - `main` commit `7e4046e` fixed Railway packaging for runtime `rhodesli_ml` imports
+  - Railway deployment `2dbb0a2f-3373-4929-b3df-552134710c9d` reached `SUCCESS`
+  - `https://rhodesli.nolanandrewfox.com/health` returned `200`
+  - GitHub Actions run `22981172101` passed
 
 ## Preconditions
 

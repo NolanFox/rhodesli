@@ -184,6 +184,25 @@
   - change-log rows were accumulated in memory before insertion
   - importer now streams change-log writes in bounded batches
 
+## Deploy Closeout
+
+- Initial `main` deploy for commit `7a65091` failed on Railway at startup because
+  the image copied a curated subset of `rhodesli_ml/`, while the app now imports
+  additional runtime modules such as `rhodesli_ml.active_learning`.
+- Fixed with commit `7e4046e` (`[codex] fix(deploy): package full ml runtime`)
+  by copying `rhodesli_ml/` wholesale and relying on `.dockerignore` to exclude
+  tests, notebooks, checkpoints, and local virtualenv state.
+- Railway production deployment `2dbb0a2f-3373-4929-b3df-552134710c9d` reached
+  `SUCCESS` after the packaging fix.
+- Production verification after deploy:
+  - `GET /health` returned `200` on `2026-03-12`
+  - homepage HTML returned successfully
+  - GitHub Actions run `22981172101` completed `success`
+- Startup logs also exposed a legacy-schema warning for
+  `audit_log.target_type`. Session 98 closed that compatibility gap with a
+  fallback in `app/supabase_data.py` plus regression coverage in
+  `tests/test_supabase_migration.py`.
+
 ## User Q&A Captured
 
 - Session 98 design questions and answers are recorded in:

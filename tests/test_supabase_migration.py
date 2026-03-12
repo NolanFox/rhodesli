@@ -294,6 +294,62 @@ class TestIdentityHistoryAuditLog:
 
         assert [e["event_id"] for e in events] == ["evt-1", "evt-2"]
 
+    def test_load_identity_history_from_supabase_falls_back_when_target_type_missing(self, mock_sb_client):
+        legacy_error = Exception("{'message': 'column audit_log.target_type does not exist', 'code': '42703'}")
+
+        filtered_page = mock_sb_client.table.return_value.select.return_value.eq.return_value.range.return_value
+        filtered_page.execute.side_effect = legacy_error
+
+        page1 = MagicMock()
+        page1.data = [
+            {
+                "data": {
+                    "event_id": "evt-2",
+                    "timestamp": "2026-03-10T11:00:00+00:00",
+                    "identity_id": "id123",
+                    "action": "state_change",
+                    "face_ids": [],
+                    "user_source": "web",
+                    "confidence_weight": 1.0,
+                    "previous_version_id": 2,
+                    "metadata": {"new_state": "SKIPPED"},
+                }
+            },
+            {
+                "data": {
+                    "action": "annotation_approved",
+                    "timestamp": "2026-03-10T10:30:00+00:00",
+                    "identity_id": "id999",
+                }
+            },
+            {
+                "data": {
+                    "event_id": "evt-1",
+                    "timestamp": "2026-03-10T10:00:00+00:00",
+                    "identity_id": "id123",
+                    "action": "state_change",
+                    "face_ids": [],
+                    "user_source": "web",
+                    "confidence_weight": 1.0,
+                    "previous_version_id": 1,
+                    "metadata": {"new_state": "CONTESTED"},
+                }
+            },
+        ]
+        page2 = MagicMock()
+        page2.data = []
+
+        unfiltered_page = mock_sb_client.table.return_value.select.return_value.range.return_value
+        unfiltered_page.execute.side_effect = [page1, page2]
+
+        with (
+            patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client),
+            patch("app.supabase_data._SUPABASE_ERRORS", (Exception,)),
+        ):
+            events = load_identity_history_from_supabase()
+
+        assert [e["event_id"] for e in events] == ["evt-1", "evt-2"]
+
     def test_load_identity_overrides_from_supabase(self, mock_sb_client):
         result = MagicMock()
         result.data = [

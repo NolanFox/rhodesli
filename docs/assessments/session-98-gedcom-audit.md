@@ -135,6 +135,13 @@ Operational notes from the live rollout:
   linked GEDCOM id required redirect repair after the bootstrap import
 - the importer was still hardened after apply so future first-time bootstraps
   can emit redirect lineage when conservative matching finds a safe rekey/merge
+- the first post-import deploy failed because the Railway image omitted runtime
+  `rhodesli_ml` modules; this was fixed by shipping the full package surface in
+  commit `7e4046e`, after which Railway deployment
+  `2dbb0a2f-3373-4929-b3df-552134710c9d` passed health checks
+- production startup also exposed a legacy `audit_log` schema without
+  `target_type`; Session 98 added a shape-filter fallback so identity-history
+  sync remains available until that column is standardized everywhere
 
 ## UX / ML Outcome
 
