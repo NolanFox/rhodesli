@@ -197,6 +197,7 @@ def public_person_page(
     state = identity.get("state", "INBOX")
     is_confirmed = state == "CONFIRMED" and not display_name.startswith("Unidentified")
     target_proposals = _main_mod._get_proposal_targets_for_identity(person_id) if is_admin else []
+    similar_container_id = f"person-similar-{person_id}"
 
     def _person_photo_href(photo_id: str) -> str:
         if not photo_id:
@@ -1105,7 +1106,16 @@ def public_person_page(
                                 cls="text-xs text-indigo-400 hover:text-white",
                                 data_testid="edit-in-admin-link",
                             ),
-                            A(
+                            Button(
+                                "Find Similar",
+                                hx_get=f"{nav_prefix}/api/identity/{person_id}/neighbors?container_id={similar_container_id}",
+                                hx_target=f"#{similar_container_id}",
+                                hx_swap="innerHTML",
+                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
+                                type="button",
+                            )
+                            if is_admin
+                            else A(
                                 "Find Similar",
                                 href=f"{nav_prefix}/people/{person_id}/similar",
                                 cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
@@ -1196,6 +1206,9 @@ def public_person_page(
                         cls="bg-slate-800/50 rounded-lg p-4 border border-indigo-500/20 mb-4",
                         data_testid="admin-controls",
                     )
+                    if is_admin
+                    else None,
+                    Div(id=similar_container_id, cls="mb-6", data_testid="person-similar-container")
                     if is_admin
                     else None,
                     # Cross-feature action bar

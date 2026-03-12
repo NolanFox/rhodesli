@@ -36,3 +36,13 @@
 - This log is a bounded follow-up artifact because
   [session-100-fox-family-hotfix-log.md](/Users/nolanfox/rhodesli/docs/session_logs/session-100-fox-family-hotfix-log.md)
   is already at the harness line limit.
+
+## Person Page Similar Follow-Up
+- admin `Find Similar` on public person pages now opens the inline neighbors
+  review panel instead of forcing a separate page transition
+- community-scoped person pages keep the inline similar target inside the
+  active archive
+- verification:
+  - `ruff check app/person_routes.py tests/test_public_person_page.py`
+  - `pytest tests/test_public_person_page.py tests/test_find_similar_page.py tests/test_inline_find_similar.py -x -q`
+    - `77 passed, 2 skipped`

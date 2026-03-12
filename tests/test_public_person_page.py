@@ -705,6 +705,7 @@ class TestAdminControlsOnPersonPage:
         assert 'data-testid="admin-controls"' in response.text
         assert "Edit in Admin" in response.text
         assert "Find Similar" in response.text
+        assert 'data-testid="person-similar-container"' in response.text
 
     def test_anonymous_no_admin_controls(self, client, confirmed_identity, auth_enabled, no_user):
         """Anonymous users do NOT see admin controls."""
@@ -714,7 +715,7 @@ class TestAdminControlsOnPersonPage:
         assert response.status_code == 200
         assert 'data-testid="admin-controls"' not in response.text
 
-    def test_community_admin_find_similar_link_stays_in_community(self, client, monkeypatch, auth_disabled):
+    def test_community_admin_find_similar_panel_stays_in_community(self, client, monkeypatch, auth_disabled):
         del auth_disabled
 
         class FakeRegistry:
@@ -750,5 +751,6 @@ class TestAdminControlsOnPersonPage:
         ):
             response = client.get("/c/fox-family/person/test-person")
 
-        assert '/c/fox-family/people/test-person/similar' in response.text
+        assert '/c/fox-family/api/identity/test-person/neighbors?container_id=person-similar-test-person' in response.text
+        assert 'id="person-similar-test-person"' in response.text
         assert '/c/fox-family/admin/upload-review#identity-group-test-person' in response.text
