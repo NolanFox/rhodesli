@@ -41,6 +41,15 @@
 - `pytest tests/ -x -q` -> `4151 passed, 7 skipped`
 - `pytest rhodesli_ml/tests/ -x -q` -> `590 passed`
 
+### Durable Visual Evidence
+- Antigravity completed a narrow Chrome/browser verification pass after the Codex cleanup.
+- Codex archived the resulting captures into repo-local artifacts for audit durability:
+  - `docs/screenshots/session-99/landing-page-ui99-after.png`
+  - `docs/screenshots/session-99/public-identify-ui99-after.png`
+  - `docs/screenshots/session-99/workstation-to-review-ui99-after.png`
+  - `docs/screenshots/session-99/VERIFICATION_LOG.md`
+- Note: the Antigravity verification used a live identify UUID route (`/identify/203c8eab-13d0-4ce3-a938-b8727a49d2f2`) rather than the original fixture-backed example from the prompt. The exact verified route is recorded in the verification log.
+
 ## Related Artifacts
 - `docs/assessments/session-99-assessment.md` — preserved Antigravity self-assessment snapshot
 - `docs/assessments/session-99-codex-review.md` — Codex review of PR #8 strengths, weaknesses, and corrections

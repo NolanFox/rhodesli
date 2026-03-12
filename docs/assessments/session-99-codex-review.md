@@ -24,6 +24,7 @@ Review PR #8 after Antigravity's initial implementation and after the Session 98
 - Fixed the sidebar lint failure.
 - Removed unused Session 99 `face_card` variant plumbing to reduce shared-helper blast radius.
 - Corrected session/index/design-decision status so the branch reflects in-progress reality rather than self-reported completion.
+- Archived Antigravity's browser-verification screenshots into repo-local harness artifacts and corrected the PR narrative so the verification trail is durable.
 
 ## Current Verdict
 Antigravity provided the visual direction and first-pass implementation. Codex is acting as the tightening layer: scope control, regression discipline, verification, and artifact hygiene. That split is useful and should remain explicit in the eventual PR history.
