@@ -141,6 +141,7 @@ def public_person_page(
     No authentication required.
     """
     registry = _main_mod.load_registry()
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     try:
         identity = registry.get_identity(person_id)
     except KeyError:
@@ -149,7 +150,7 @@ def public_person_page(
     # UX-038: Redirect merged identities to canonical person
     if identity and identity.get("merged_into"):
         canonical_id = identity["merged_into"]
-        return RedirectResponse(f"/person/{canonical_id}", status_code=301)
+        return RedirectResponse(f"{nav_prefix}/person/{canonical_id}", status_code=301)
 
     if not identity:
         style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
@@ -162,7 +163,11 @@ def public_person_page(
                 Main(
                     Nav(
                         Div(
-                            A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                            A(
+                                Span("Rhodesli", cls="text-xl font-bold text-white"),
+                                href=f"{nav_prefix}/",
+                                cls="hover:opacity-90",
+                            ),
                             cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
                         ),
                         cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800",
@@ -174,7 +179,7 @@ def public_person_page(
                             P("This person hasn't been identified in our archive yet.", cls="text-slate-400 mb-8"),
                             A(
                                 "Explore the Archive",
-                                href="/?section=photos",
+                                href=f"{nav_prefix}/?section=photos",
                                 cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
                             ),
                             cls="text-center",
@@ -191,6 +196,10 @@ def public_person_page(
     display_name = raw_name or f"Person {person_id[:8]}"
     state = identity.get("state", "INBOX")
     is_confirmed = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+    def _person_photo_href(photo_id: str) -> str:
+        if not photo_id:
+            return "#"
+        return f"{nav_prefix}/photo/{photo_id}?identity_id={person_id}&sort_by={sort_by}"
 
     # Get all face IDs for this person
     anchor_ids = identity.get("anchor_ids", [])
@@ -296,7 +305,7 @@ def public_person_page(
                     P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
                     if source_label
                     else None,
-                    href=f"/photo/{face_photo_id}" if face_photo_id else "#",
+                    href=_person_photo_href(face_photo_id),
                     cls="flex flex-col items-center group",
                     title=f"View photo of {display_name}",
                 ),
@@ -330,7 +339,7 @@ def public_person_page(
                     P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug")
                     if collection_label
                     else None,
-                    href=f"/photo/{pid}",
+                    href=_person_photo_href(pid),
                     cls="flex flex-col group",
                     title=f"View photo of {display_name}",
                 ),
@@ -405,7 +414,7 @@ def public_person_page(
                         cls="text-xs text-slate-400 mt-1 text-center truncate max-w-[140px]",
                         title=companion["name"],
                     ),
-                    href=f"/person/{companion['id']}",
+                    href=f"{nav_prefix}/person/{companion['id']}",
                     cls="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity",
                     title=f"View {companion['name']}",
                 )
@@ -446,7 +455,11 @@ def public_person_page(
                         r_ident = registry.get_identity(rid)
                         r_name = ensure_utf8_display(r_ident.get("name", "Unknown"))
                         names.append(
-                            A(r_name, href=f"/person/{rid}", cls="text-indigo-400 hover:text-indigo-300 underline")
+                            A(
+                                r_name,
+                                href=f"{nav_prefix}/person/{rid}",
+                                cls="text-indigo-400 hover:text-indigo-300 underline",
+                            )
                         )
                     except KeyError:
                         continue
@@ -468,7 +481,7 @@ def public_person_page(
                 family_items.append(
                     A(
                         "View in Family Tree →",
-                        href=f"/tree?person={person_id}",
+                        href=f"{nav_prefix}/tree?person={person_id}",
                         cls="text-xs text-indigo-400 hover:text-indigo-300 mt-3 inline-block",
                         data_testid="family-tree-link",
                     ),
@@ -522,7 +535,7 @@ def public_person_page(
                     Div(
                         A(
                             c_name,
-                            href=f"/person/{conn['person_id']}",
+                            href=f"{nav_prefix}/person/{conn['person_id']}",
                             cls="text-indigo-400 hover:text-indigo-300 text-sm",
                         ),
                         badge,
@@ -534,12 +547,12 @@ def public_person_page(
                     Div(
                         A(
                             "Find connections →",
-                            href=f"/connect?person_a={person_id}",
+                            href=f"{nav_prefix}/connect?person_a={person_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300 mr-4",
                         ),
                         A(
                             "View in Tree →",
-                            href=f"/tree?person={person_id}",
+                            href=f"{nav_prefix}/tree?person={person_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300",
                         ),
                         cls="mt-2 flex gap-4",
@@ -612,7 +625,7 @@ def public_person_page(
     og_image_url = avatar_url or ""
     if og_image_url and not og_image_url.startswith("http"):
         og_image_url = f"{_main_mod.SITE_URL}{og_image_url}"
-    og_page_url = f"{_main_mod.SITE_URL}/person/{person_id}"
+    og_page_url = f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}"
 
     og_meta_tags = (
         Meta(property="og:title", content=og_title),
@@ -639,7 +652,7 @@ def public_person_page(
             "Faces",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors "
             + ("bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
-            hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
+            hx_get=f"{workstation_prefix}/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
             hx_target="#person-gallery-container",
             hx_swap="innerHTML",
             type="button",
@@ -652,7 +665,7 @@ def public_person_page(
                 if not faces_active
                 else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
-            hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
+            hx_get=f"{workstation_prefix}/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
             hx_target="#person-gallery-container",
             hx_swap="innerHTML",
             type="button",
@@ -666,7 +679,7 @@ def public_person_page(
         Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
         Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
         cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
-        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_get=f"{workstation_prefix}/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
         hx_target="#person-gallery-container",
         hx_swap="innerHTML",
         hx_trigger="change",
@@ -843,10 +856,10 @@ def public_person_page(
                 Span("Unknown", cls="text-slate-600 text-sm italic"),
                 A(
                     f" — {prompt_text}",
-                    href=f"/identify/{person_id}" if not is_confirmed else "#",
+                    href=f"{nav_prefix}/identify/{person_id}" if not is_confirmed else "#",
                     cls="text-indigo-400/60 hover:text-indigo-300 text-xs ml-1",
                     data_action="share-photo" if is_confirmed else None,
-                    data_share_url=f"{_main_mod.SITE_URL}/person/{person_id}" if is_confirmed else None,
+                    data_share_url=f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}" if is_confirmed else None,
                     data_share_title=f"Help us learn more about {display_name}" if is_confirmed else None,
                 )
                 if not is_admin
@@ -912,12 +925,12 @@ def public_person_page(
             # Top navigation bar
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
                     Div(
                         *nav_links,
                         A(
                             "Explore More Photos",
-                            href="/photos",
+                            href=f"{nav_prefix}/photos",
                             cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4",
                         ),
                         cls="hidden sm:flex items-center gap-6",
@@ -926,7 +939,7 @@ def public_person_page(
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
-            _main_mod._admin_bar(user),
+            _main_mod._admin_bar(user, community_slug=community_slug),
             # Hero section
             Section(
                 Div(
@@ -962,7 +975,7 @@ def public_person_page(
                         ),
                         A(
                             "Help identify this person",
-                            href=f"/identify/{person_id}",
+                            href=f"{nav_prefix}/identify/{person_id}",
                             cls="inline-block mt-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium",
                         ),
                         cls="text-center mb-4 bg-amber-500/5 border border-amber-500/20 rounded-lg px-4 py-3 max-w-lg mx-auto",
@@ -1173,23 +1186,23 @@ def public_person_page(
                     Div(
                         A(
                             "Timeline",
-                            href=f"/timeline?person={person_id}",
+                        href=f"{nav_prefix}/timeline?person={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Map",
-                            href=f"/map?person={person_id}",
+                            href=f"{nav_prefix}/map?person={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                             data_testid="person-map-link",
                         ),
                         A(
                             "Family Tree",
-                            href=f"/tree?person={person_id}",
+                            href=f"{nav_prefix}/tree?person={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Connections",
-                            href=f"/connect?person_a={person_id}",
+                            href=f"{nav_prefix}/connect?person_a={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
@@ -1267,12 +1280,12 @@ def public_person_page(
                     Div(
                         A(
                             "Upload Photos",
-                            href="/?section=upload",
+                            href=f"{workstation_prefix}/?section=upload",
                             cls="inline-block px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors",
                         ),
                         A(
                             "Help Identify",
-                            href=f"/identify/{person_id}",
+                            href=f"{nav_prefix}/identify/{person_id}",
                             cls="inline-block px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
                         )
                         if not is_confirmed
@@ -1292,9 +1305,9 @@ def public_person_page(
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     Div(
-                        A("Photos", href="/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Photos", href=f"{nav_prefix}/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("People", href="/people", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("People", href=f"{nav_prefix}/people", cls="text-xs text-slate-500 hover:text-slate-300"),
                         cls="flex items-center gap-2 mt-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col items-center",
@@ -1348,10 +1361,12 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
 
 
 @rt("/api/person/{person_id}/gallery")
-def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None):
+def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None, request=None):
     """Return gallery toggle + grid as HTMX partial for fast Faces/Photos switching."""
     user = get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
     try:
@@ -1426,6 +1441,11 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             )
         return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
 
+    def _person_photo_href(photo_id: str) -> str:
+        if not photo_id:
+            return "#"
+        return f"{nav_prefix}/photo/{photo_id}?identity_id={person_id}&sort_by={sort_by}"
+
     faces_active = view != "photos"
 
     if faces_active:
@@ -1456,7 +1476,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                         P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
                         if source_label
                         else None,
-                        href=f"/photo/{face_photo_id}" if face_photo_id else "#",
+                        href=_person_photo_href(face_photo_id),
                         cls="flex flex-col items-center group",
                     ),
                 }
@@ -1488,7 +1508,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                         P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug")
                         if collection_label
                         else None,
-                        href=f"/photo/{pid}",
+                        href=_person_photo_href(pid),
                         cls="flex flex-col group",
                     ),
                 }
@@ -1505,7 +1525,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             "Faces",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors "
             + ("bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
-            hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
+            hx_get=f"{nav_prefix}/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
             hx_target="#person-gallery-container",
             hx_swap="innerHTML",
             type="button",
@@ -1518,7 +1538,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                 if not faces_active
                 else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
-            hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
+            hx_get=f"{nav_prefix}/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
             hx_target="#person-gallery-container",
             hx_swap="innerHTML",
             type="button",
@@ -1532,7 +1552,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
         Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
         Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
         cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
-        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_get=f"{nav_prefix}/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
         hx_target="#person-gallery-container",
         hx_swap="innerHTML",
         hx_trigger="change",

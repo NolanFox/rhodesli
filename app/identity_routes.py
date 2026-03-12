@@ -655,7 +655,15 @@ def get(q: str = ""):
 
 
 @rt("/api/face/tag-search")
-def get(face_id: str, q: str = "", seq: str = "", sess=None):
+def get(
+    face_id: str,
+    q: str = "",
+    seq: str = "",
+    context_identity_id: str = "",
+    sort_by: str = "date_asc",
+    sess=None,
+    request=None,
+):
     """
     Search for identities to tag a face with (Instagram-style tagging).
 
@@ -669,7 +677,10 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
     safe_face_id = face_id.replace(":", "-").replace(" ", "_")
     face_id_encoded = _url_quote(face_id, safe="")
     seq_suffix = "&seq=1" if seq == "1" else ""
+    context_suffix = f"&context_identity_id={context_identity_id}&sort_by={sort_by}" if context_identity_id else ""
     results_id = f"tag-results-{safe_face_id}"
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if len(q.strip()) < 2:
         return Div(id=results_id)
@@ -719,7 +730,7 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
                     cls="flex flex-col min-w-0 text-left",
                 ),
                 cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
-                hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}{seq_suffix}",
+                hx_post=f"{nav_prefix}/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}{seq_suffix}{context_suffix}",
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
                 type="button",
@@ -767,7 +778,10 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
             ),
             cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
             "border-t border-slate-700 mt-1 pt-1",
-            hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}{seq_suffix}",
+            hx_post=(
+                f"{nav_prefix}/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}"
+                f"{seq_suffix}{context_suffix}"
+            ),
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             type="button",
@@ -813,7 +827,15 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
 
 
 @rt("/api/face/tag")
-def post(face_id: str, target_id: str, seq: str = "", sess=None):
+def post(
+    face_id: str,
+    target_id: str,
+    seq: str = "",
+    context_identity_id: str = "",
+    sort_by: str = "date_asc",
+    sess=None,
+    request=None,
+):
     """
     Tag a face with an identity by merging the face's current identity into target.
 
@@ -877,8 +899,16 @@ def post(face_id: str, target_id: str, seq: str = "", sess=None):
             # Re-render the photo view to reflect the merge
             # If seq=1, stay in sequential mode for the next unidentified face
             seq_mode = seq == "1"
+            community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
             photo_content = _main_mod.photo_view_content(
-                photo_id, selected_face_id=face_id, is_partial=True, is_admin=True, seq_mode=seq_mode
+                photo_id,
+                selected_face_id=face_id,
+                is_partial=True,
+                identity_id=context_identity_id or None,
+                sort_by=sort_by,
+                is_admin=True,
+                seq_mode=seq_mode,
+                community_slug=community_slug,
             )
             oob_toast = Div(
                 _main_mod.toast(f"Tagged as {target_name}!", "success"),
@@ -896,7 +926,16 @@ def post(face_id: str, target_id: str, seq: str = "", sess=None):
 
 
 @rt("/api/face/quick-action")
-def post(identity_id: str, action: str, photo_id: str, sess=None):
+def post(
+    identity_id: str,
+    action: str,
+    photo_id: str,
+    seq: str = "",
+    context_identity_id: str = "",
+    sort_by: str = "date_asc",
+    sess=None,
+    request=None,
+):
     """
     Quick inline action on a face overlay: confirm, skip, or reject.
 
@@ -929,7 +968,7 @@ def post(identity_id: str, action: str, photo_id: str, sess=None):
         )
 
     state = identity.get("state", "INBOX")
-    action_name = action.capitalize()
+    action_name = "Ignored" if action == "skip" else action.capitalize()
 
     try:
         if action == "confirm":
@@ -956,16 +995,36 @@ def post(identity_id: str, action: str, photo_id: str, sess=None):
         )
 
     # Re-render the photo view with updated overlay colors
-    photo_content = _main_mod.photo_view_content(photo_id, is_partial=True, is_admin=True)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    photo_content = _main_mod.photo_view_content(
+        photo_id,
+        is_partial=True,
+        identity_id=context_identity_id or None,
+        sort_by=sort_by,
+        is_admin=True,
+        seq_mode=seq == "1",
+        community_slug=community_slug,
+    )
     oob_toast = Div(
-        _main_mod.toast(f"{action_name}ed identity!", "success"),
+        _main_mod.toast(
+            "Ignored for now. You can still rediscover it later." if action == "skip" else f"{action_name}ed identity!",
+            "success",
+        ),
         hx_swap_oob="beforeend:#toast-container",
     )
     return (*photo_content, oob_toast)
 
 
 @rt("/api/face/create-identity")
-def post(face_id: str, name: str, seq: str = "", sess=None):
+def post(
+    face_id: str,
+    name: str,
+    seq: str = "",
+    context_identity_id: str = "",
+    sort_by: str = "date_asc",
+    sess=None,
+    request=None,
+):
     """
     Create a named identity for a face by renaming its current identity.
 
@@ -1041,8 +1100,16 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
     seq_mode = seq == "1"
     photo_id = _main_mod.get_photo_id_for_face(face_id)
     if photo_id:
+        community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
         photo_content = _main_mod.photo_view_content(
-            photo_id, selected_face_id=face_id, is_partial=True, is_admin=True, seq_mode=seq_mode
+            photo_id,
+            selected_face_id=face_id,
+            is_partial=True,
+            identity_id=context_identity_id or None,
+            sort_by=sort_by,
+            is_admin=True,
+            seq_mode=seq_mode,
+            community_slug=community_slug,
         )
         oob_toast = Div(
             _main_mod.toast(f'Named as "{name}"!', "success"),

@@ -351,6 +351,127 @@ class TestSeqPropagation:
         assert "Naming faces" in html or "All faces identified" in html
 
 
+class TestSeqContextAndAdvance:
+    """Sequential mode should preserve gallery context and auto-advance across photos."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    def test_seq_ignore_button_preserves_context(
+        self,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        """Ignore button keeps context identity, sort order, and community prefix."""
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = _make_photo_meta(face_count=3)
+        mock_get_id.side_effect = _identity_for_face(set())
+
+        registry = MagicMock()
+        registry.get_identity.return_value = {
+            "identity_id": "context-1",
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-0", "face-1", "face-2"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = registry
+
+        photo_registry = MagicMock()
+        photo_registry.get_photos_for_faces.return_value = ["p1", "p2"]
+        mock_photo_reg.return_value = photo_registry
+
+        result = photo_view_content(
+            "p1",
+            is_partial=True,
+            is_admin=True,
+            identity_id="context-1",
+            sort_by="uploaded_desc",
+            seq_mode=True,
+            community_slug="fox-family",
+        )
+        html = to_xml(result)
+
+        assert "Ignore Stranger" in html
+        assert 'data-testid="seq-ignore-stranger"' in html
+        assert "/c/fox-family/api/face/quick-action" in html
+        assert "context_identity_id=context-1" in html
+        assert "sort_by=uploaded_desc" in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    def test_seq_completion_auto_advances_to_next_context_photo(
+        self,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        """When current photo is done, seq mode auto-loads the next unresolved photo."""
+        from app.main import photo_view_content, to_xml
+
+        photo_map = {
+            "p1": {
+                "filename": "done.jpg",
+                "faces": [{"face_id": "face-done", "bbox": [10, 10, 90, 90]}],
+                "source": "Test Collection",
+            },
+            "p2": {
+                "filename": "next.jpg",
+                "faces": [{"face_id": "face-next", "bbox": [10, 10, 90, 90]}],
+                "source": "Test Collection",
+            },
+        }
+        mock_meta.side_effect = lambda pid: photo_map[pid]
+
+        def _id_for_face(_registry, face_id):
+            if face_id == "face-done":
+                return {"identity_id": "done-id", "name": "Roland Fox", "state": "CONFIRMED"}
+            return {"identity_id": "next-id", "name": "Unidentified Person", "state": "INBOX"}
+
+        mock_get_id.side_effect = _id_for_face
+
+        registry = MagicMock()
+        registry.get_identity.return_value = {
+            "identity_id": "context-1",
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-done", "face-next"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = registry
+
+        photo_registry = MagicMock()
+        photo_registry.get_photos_for_faces.return_value = ["p1", "p2"]
+        mock_photo_reg.return_value = photo_registry
+
+        result = photo_view_content(
+            "p1",
+            is_partial=True,
+            is_admin=True,
+            identity_id="context-1",
+            seq_mode=True,
+            community_slug="fox-family",
+        )
+        html = to_xml(result)
+
+        assert "Photo complete." in html
+        assert 'data-testid="seq-auto-advance"' in html
+        assert "/c/fox-family/photo/p2/partial" in html
+        assert "identity_id=context-1" in html
+        assert "seq=1" in html
+
+
 class TestPartialRouteSeqParam:
     """The /photo/{id}/partial route accepts and passes seq parameter."""
 

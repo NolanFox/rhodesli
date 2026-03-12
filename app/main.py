@@ -7203,7 +7203,9 @@ def render_photos_section(
     photos = []
     sources_set = set()
     collections_set = set()
-    for photo_id, photo_data in _photo_cache.items():
+    # Snapshot cache items so patched/shared test dictionaries cannot invalidate
+    # the iterator mid-render under parallel test execution.
+    for photo_id, photo_data in list(_photo_cache.items()):
         # Apply community filter
         if community_photo_ids is not None and photo_id not in community_photo_ids:
             continue
@@ -10078,8 +10080,10 @@ _load_relationship_graph = relationship_routes._load_relationship_graph
 _save_relationship_graph = relationship_routes._save_relationship_graph
 _load_gedcom_individuals = relationship_routes._load_gedcom_individuals
 _load_gedcom_individual = relationship_routes._load_gedcom_individual
+_load_gedcom_individuals_by_ids = relationship_routes._load_gedcom_individuals_by_ids
 _load_gedcom_face_links = relationship_routes._load_gedcom_face_links
 _load_current_gedcom_relationship_edges = relationship_routes._load_current_gedcom_relationship_edges
+_load_gedcom_relationship_edges_for_ids = relationship_routes._load_gedcom_relationship_edges_for_ids
 _invalidate_gedcom_cache = relationship_routes._invalidate_gedcom_cache
 _search_gedcom_individuals = relationship_routes._search_gedcom_individuals
 _person_gedcom_link_section = relationship_routes._person_gedcom_link_section

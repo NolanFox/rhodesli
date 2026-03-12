@@ -438,7 +438,7 @@ def get(photo_id: str):
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, sess=None, request=None):
+def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str = "date_asc", sess=None, request=None):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -447,12 +447,20 @@ def get(photo_id: str, face: str = None, sess=None, request=None):
 
     Query params:
     - face: Optional face_id to highlight
+    - identity_id: Optional person context for prev/next photo navigation
+    - sort_by: Optional person-gallery sort mode for prev/next navigation
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     return _main_mod.public_photo_page(
-        photo_id, selected_face_id=face, user=user, is_admin=user_is_admin, community_slug=community_slug
+        photo_id,
+        selected_face_id=face,
+        identity_id=identity_id,
+        sort_by=sort_by,
+        user=user,
+        is_admin=user_is_admin,
+        community_slug=community_slug,
     )
 
 
@@ -465,9 +473,11 @@ def get(
     nav_idx: int = -1,
     nav_total: int = 0,
     identity_id: str = None,
+    sort_by: str = "date_asc",
     from_compare: bool = False,
     seq: bool = False,
     sess=None,
+    request=None,
 ):
     """
     Render photo view partial for HTMX modal injection.
@@ -484,6 +494,7 @@ def get(
         if _main_mod.is_auth_enabled()
         else True
     )
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     return _main_mod.photo_view_content(
         photo_id,
         selected_face_id=face,
@@ -493,9 +504,11 @@ def get(
         nav_idx=nav_idx,
         nav_total=nav_total,
         identity_id=identity_id,
+        sort_by=sort_by,
         is_admin=user_is_admin,
         from_compare=from_compare,
         seq_mode=seq and user_is_admin,
+        community_slug=community_slug,
     )
 
 

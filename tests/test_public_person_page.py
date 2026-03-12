@@ -230,6 +230,16 @@ class TestPersonPageOrdering:
         assert "view=photos&amp;sort_by=date_desc" in html
         assert "Earliest Last" in html
 
+    def test_community_photo_links_preserve_person_context(self, client, monkeypatch):
+        self._mock_person_data(monkeypatch)
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            response = client.get("/c/fox-family/person/test-person?view=photos&sort_by=date_asc")
+        html = response.text
+        assert '/c/fox-family/photo/photo-1?identity_id=test-person&amp;sort_by=date_asc' in html
+
 
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""

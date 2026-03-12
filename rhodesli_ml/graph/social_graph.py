@@ -269,26 +269,31 @@ def get_closest_connections(graph: dict, person_id: str, n: int = 5) -> list:
     if person_id not in graph["nodes"]:
         return []
 
+    adj = _build_adjacency(graph)
+    visited = {person_id}
+    queue = deque([(person_id, 0, 0.0, None)])  # node, path_length, total_weight, first_edge_type
     connections = []
-    for other in graph["nodes"]:
-        if other == person_id:
-            continue
-        path = find_shortest_path(graph, person_id, other)
-        if path is None:
-            continue
-        proximity = compute_proximity(graph, person_id, other)
-        # Determine primary edge type for the direct connection
-        if len(path) == 1:
-            edge_type = path[0]["edge"]["type"]
-        else:
-            edge_type = "indirect"
+    while queue:
+        current, path_length, total_weight, first_edge_type = queue.popleft()
+        if path_length > 0:
+            proximity = (total_weight / path_length) * (1.0 / path_length)
+            connections.append({
+                "person_id": current,
+                "proximity": round(proximity, 3),
+                "path_length": path_length,
+                "edge_type": first_edge_type if path_length == 1 else "indirect",
+            })
 
-        connections.append({
-            "person_id": other,
-            "proximity": round(proximity, 3),
-            "path_length": len(path),
-            "edge_type": edge_type,
-        })
+        for neighbor, edge in adj.get(current, []):
+            if neighbor in visited:
+                continue
+            visited.add(neighbor)
+            queue.append((
+                neighbor,
+                path_length + 1,
+                total_weight + edge.get("weight", 1.0),
+                edge.get("type") if path_length == 0 else first_edge_type,
+            ))
 
     connections.sort(key=lambda c: c["proximity"], reverse=True)
     return connections[:n]

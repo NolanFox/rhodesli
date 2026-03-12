@@ -13,6 +13,7 @@
     var allNodes = [];
     var currentPersonId = "";
     var showTheory = "true";
+    var communityPrefix = "";
     var photoPeople = []; // People from photo navigation (for smart subtree)
     var baseNodeIds = {};
     var expandedDirs = {};
@@ -60,10 +61,11 @@
     };
 
     // --- Initialization ---
-    window.initRhodesliTree = function(personId, theory, peopleList) {
+    window.initRhodesliTree = function(personId, theory, peopleList, prefix) {
         currentPersonId = personId;
         showTheory = theory;
         photoPeople = peopleList || [];
+        communityPrefix = prefix || "";
         setupSearch();
         setupPopupDismiss();
         setupKeyboard();
@@ -76,7 +78,7 @@
         var loading = document.getElementById("tree-loading");
         if (loading) loading.style.display = "block";
 
-        var url = "/api/tree/data?depth=" + (depth || 1) + "&show_theory=" + showTheory;
+        var url = communityPrefix + "/api/tree/data?depth=" + (depth || 1) + "&show_theory=" + showTheory;
         if (personId) url += "&person_id=" + encodeURIComponent(personId);
         if (photoPeople && photoPeople.length > 1) url += "&people=" + encodeURIComponent(photoPeople.join(","));
 
@@ -109,7 +111,7 @@
 
     function expandNode(personId, direction) {
         var key = personId + "|" + direction;
-        var url = "/api/tree/expand?person_id=" + encodeURIComponent(personId)
+        var url = communityPrefix + "/api/tree/expand?person_id=" + encodeURIComponent(personId)
             + "&direction=" + direction + "&show_theory=" + showTheory;
         fetch(url)
             .then(function(r) { return r.json(); })
@@ -1498,7 +1500,7 @@
             var q = input.value.trim();
             if (q.length < 2) { results.classList.add("hidden"); results.innerHTML = ""; return; }
             searchTimeout = setTimeout(function() {
-                fetch("/api/tree/search?q=" + encodeURIComponent(q))
+                fetch(communityPrefix + "/api/tree/search?q=" + encodeURIComponent(q))
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (!data.results || data.results.length === 0) {
@@ -1527,7 +1529,7 @@
                 input.value = item.querySelector(".name").textContent;
                 results.classList.add("hidden");
                 loadTreeData(pid, 2);
-                window.history.pushState({}, "", "/tree?person=" + encodeURIComponent(pid));
+                window.history.pushState({}, "", communityPrefix + "/tree?person=" + encodeURIComponent(pid));
             }
         });
 
