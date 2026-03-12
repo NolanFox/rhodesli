@@ -14,7 +14,7 @@ import pytest
 
 pytestmark = pytest.mark.e2e
 
-GOTO_OPTS = {"wait_until": "domcontentloaded", "timeout": 15000}
+GOTO_OPTS = {"wait_until": "domcontentloaded", "timeout": 30000}
 SETTLE_MS = 600
 
 

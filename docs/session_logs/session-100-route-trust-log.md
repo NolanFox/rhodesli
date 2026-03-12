@@ -183,3 +183,14 @@
 - verification:
   - `pytest tests/test_public_browsing.py tests/test_face_count_badge.py -x -q`
     - `30 passed`
+
+## Discovery-Layer Browser Timeout Alignment
+- the provenance-style browser check timed out on cold photo-detail navigation
+  even though the route itself returned quickly under direct request timing
+- raised the discovery-layer Playwright `goto` timeout to 30 seconds so the
+  test validates provenance styling instead of failing on cold subprocess
+  navigation overhead
+- files:
+  - [tests/e2e/test_discovery_layer.py](/Users/nolanfox/rhodesli/tests/e2e/test_discovery_layer.py)
+- verification:
+  - targeted re-run pending after timeout alignment
