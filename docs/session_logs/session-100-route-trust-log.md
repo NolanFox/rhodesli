@@ -130,6 +130,9 @@
 - updated a timeline browser test that was also checking archive navigation on
   `/`; it now verifies the timeline link from the Rhodes archive surface where
   that navigation actually lives
+- updated the legacy `tests/test_landing_about.py` expectations so Rhodes
+  historical-copy assertions run against `/c/rhodes/` for anonymous users
+  rather than the neutral platform root
 - the e2e app-server fixture now sets `NO_ALBUMENTATIONS_UPDATE=1` so browser
   startup time is not inflated by Albumentations' external version check
 - the same fixture now waits up to 30 seconds for a cold app start, matching
@@ -138,6 +141,7 @@
   - [tests/e2e/test_critical_paths.py](/Users/nolanfox/rhodesli/tests/e2e/test_critical_paths.py)
   - [tests/e2e/test_timeline.py](/Users/nolanfox/rhodesli/tests/e2e/test_timeline.py)
   - [tests/e2e/conftest.py](/Users/nolanfox/rhodesli/tests/e2e/conftest.py)
+  - [tests/test_landing_about.py](/Users/nolanfox/rhodesli/tests/test_landing_about.py)
 - verification:
   - `pytest tests/e2e/test_critical_paths.py::test_landing_page_hero tests/e2e/test_critical_paths.py::test_landing_page_stats tests/e2e/test_critical_paths.py::test_landing_page_navigation tests/e2e/test_timeline.py::test_timeline_in_navigation -x -q`
     - re-run after fixture update pending

@@ -28,28 +28,28 @@ class TestLandingStats:
         assert isinstance(stats["needs_help"], int)
 
     def test_landing_page_shows_awaiting_identification(self, client):
-        """Landing page uses 'awaiting identification' label, not 'still unidentified'."""
-        with patch("app.main.is_auth_enabled", return_value=False), \
+        """Rhodes archive landing uses 'awaiting identification' label, not older phrasing."""
+        with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
-            response = client.get("/")
+            response = client.get("/c/rhodes/")
             assert response.status_code == 200
             assert "awaiting identification" in response.text
             assert "still unidentified" not in response.text
 
     def test_landing_page_no_collection_names(self, client):
-        """Landing page doesn't list specific collection names."""
-        with patch("app.main.is_auth_enabled", return_value=False), \
+        """Rhodes archive landing doesn't list specific collection names."""
+        with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
-            response = client.get("/")
+            response = client.get("/c/rhodes/")
             assert response.status_code == 200
             assert "Betty Capeluto Miami Collection" not in response.text
             assert "Nace Capeluto Tampa Collection" not in response.text
 
     def test_landing_page_has_historical_copy(self, client):
-        """Landing page includes historically grounded copy about Rhodes."""
-        with patch("app.main.is_auth_enabled", return_value=False), \
+        """Rhodes archive landing includes historically grounded copy about Rhodes."""
+        with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
-            response = client.get("/")
+            response = client.get("/c/rhodes/")
             assert response.status_code == 200
             assert "La Juderia" in response.text
             assert "1492" in response.text
