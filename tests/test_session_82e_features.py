@@ -5,8 +5,10 @@ Tests for: Help page, identify mode, landing help section.
 Pruned: CSS class assertions (masonry, hamburger breakpoints, animations).
 """
 
+from contextlib import ExitStack
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch
 from starlette.testclient import TestClient
 from app.main import app, _public_nav_links
 
@@ -77,6 +79,41 @@ class TestHelpNeededPage:
             links = _public_nav_links(active="")
             hrefs = [link.attrs.get("href", "") for link in links]
             assert "/help" in hrefs
+
+    def test_community_help_cards_keep_prefix(self, client):
+        """Community-scoped help cards should keep identify/profile links inside the community."""
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = [
+            {
+                "identity_id": "unknown-fox-1",
+                "name": "Unidentified Person 1",
+                "state": "INBOX",
+                "anchor_ids": ["face-fox-1"],
+                "candidate_ids": [],
+            }
+        ]
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=False))
+            stack.enter_context(patch("app.main._build_caches"))
+            stack.enter_context(patch("app.main.load_registry", return_value=mock_registry))
+            stack.enter_context(patch("app.main.get_crop_files", return_value={"face-fox-1.jpg"}))
+            stack.enter_context(patch("app.main.get_best_face_id", return_value="face-fox-1"))
+            stack.enter_context(patch("app.main.resolve_face_image_url", return_value="/static/crops/face-fox-1.jpg"))
+            stack.enter_context(patch("app.main.get_photo_id_for_face", return_value="photo-1"))
+            stack.enter_context(patch("app.main._photo_cache", {"photo-1": {"collection": "Fox Test Collection"}}))
+            stack.enter_context(
+                patch(
+                    "app.supabase_data.get_community_by_slug",
+                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+                )
+            )
+            response = client.get("/c/fox-family/help")
+
+        html = response.text
+        assert response.status_code == 200
+        assert 'href="/c/fox-family/identify/unknown-fox-1"' in html
+        assert 'href="/c/fox-family/person/unknown-fox-1"' in html
 
 
 class TestIdentifyModeFocusState:

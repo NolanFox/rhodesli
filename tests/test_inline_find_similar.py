@@ -75,6 +75,26 @@ class TestInlineFindSimilarEndpoint:
         if "similar-face-tile" in html:
             assert "Compare" in html or "Merge" in html or "Not Same" in html
 
+    def test_community_route_preserves_prefixed_links(self, client):
+        """Community-scoped inline similar panel should keep person/API links inside the community."""
+        from app.main import load_registry
+
+        registry = load_registry()
+        ids = list(registry._identities.keys())
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 identities")
+
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            response = client.get(f"/c/fox-family/api/find-similar/{ids[0]}")
+
+        html = response.text
+        assert f'/c/fox-family/person/{ids[0]}' in html
+        assert "/c/fox-family/person/" in html
+        assert f"/c/fox-family/api/identity/{ids[0]}/" in html
+
 
 class TestFullNeighborsSidebar:
     """Tests for GET /api/identity/{id}/neighbors with container_id."""

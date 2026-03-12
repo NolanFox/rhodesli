@@ -4532,7 +4532,7 @@ def get(sess=None, request=None):
                         else None,
                         cls="p-2.5",
                     ),
-                    href=f"/identify/{_iid}",
+                    href=f"{nav_prefix}/identify/{_iid}",
                     cls="block",
                 ),
                 Div(
@@ -5601,6 +5601,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
     ident_a = _main_mod._safe_get_identity(registry, person_a)
@@ -5886,7 +5887,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         explore_links.append(
             A(
                 f"See all photos in {primary_collection}",
-                href=f"/collection/{col_slug}",
+                href=f"{nav_prefix}/collection/{col_slug}",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
         )
@@ -5894,17 +5895,17 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         [
             A(
                 "Browse identified people",
-                href="/people",
+                href=f"{nav_prefix}/people",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
             A(
                 "Help identify more faces",
-                href="/",
+                href=f"{nav_prefix}/",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
             A(
                 "View the timeline",
-                href="/timeline",
+                href=f"{nav_prefix}/timeline",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
         ]
@@ -6196,7 +6197,7 @@ def _sort_photos(photos: list, sort_by: str) -> list:
     return photos
 
 
-def _build_photo_cards(photos: list, masonry: bool = False) -> list:
+def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "") -> list:
     """Build photo card elements for a list of photo dicts.
 
     Args:
@@ -6289,7 +6290,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                 if photo["collection"] or provenance
                 else None,
                 match_label,
-                href=f"/photo/{photo['photo_id']}",
+                href=f"{nav_prefix}/photo/{photo['photo_id']}",
                 cls=card_cls,
                 style=card_style if card_style else None,
             )
@@ -6376,7 +6377,7 @@ def get(
 
     # Build photo cards (paginated — 24 per page for lazy loading)
     PHOTOS_PER_PAGE = 24
-    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True)
+    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True, nav_prefix=nav_prefix)
 
     # Lazy loading sentinel: loads next page when scrolled into view
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -6677,7 +6678,7 @@ def photos_more(
     if not page_photos:
         return ""  # No more photos
 
-    cards = _build_photo_cards(page_photos, masonry=True)
+    cards = _build_photo_cards(page_photos, masonry=True, nav_prefix=nav_prefix)
 
     # Add sentinel for next page if there are more
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -7119,7 +7120,7 @@ def get(identity_id: str, sess=None, request=None):
 
 
 @rt("/api/find-similar/{identity_id}")
-def get(identity_id: str, sess=None):
+def get(identity_id: str, sess=None, request=None):
     """Inline Find Similar — returns HTML fragment for expansion panel (AD-194).
 
     Admin-only HTMX endpoint. Returns hero face + scrollable similar faces
@@ -7128,6 +7129,8 @@ def get(identity_id: str, sess=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
     try:
@@ -7201,7 +7204,7 @@ def get(identity_id: str, sess=None):
                 Button(
                     "Compare",
                     cls="text-xs px-2 py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
-                    hx_get=f"/api/identity/{identity_id}/compare/{nid}",
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/compare/{nid}",
                     hx_target="#compare-modal-content",
                     hx_swap="innerHTML",
                     **{"_": "on click remove .hidden from #compare-modal"},
@@ -7220,7 +7223,7 @@ def get(identity_id: str, sess=None):
                     Button(
                         "Merge",
                         cls="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
-                        hx_post=f"/api/identity/{identity_id}/merge/{nid}",
+                        hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}",
                         hx_target=f"#expand-{css_id}",
                         hx_swap="innerHTML",
                         hx_confirm=_merge_confirm,
@@ -7232,7 +7235,7 @@ def get(identity_id: str, sess=None):
                 Button(
                     "Not Same",
                     cls="text-xs px-2 py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
-                    hx_post=f"/api/identity/{identity_id}/reject-match/{nid}",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
                     hx_target=f"#similar-tile-{_main_mod.make_css_id(nid)}",
                     hx_swap="outerHTML",
                     type="button",
@@ -7247,7 +7250,7 @@ def get(identity_id: str, sess=None):
                     cls="w-full aspect-[3/4] object-cover rounded-lg",
                     loading="lazy",
                 ),
-                href=f"/person/{nid}",
+                href=f"{nav_prefix}/person/{nid}",
                 cls="block overflow-hidden",
             ),
             Div(
@@ -7282,7 +7285,7 @@ def get(identity_id: str, sess=None):
             Span(f"{len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}", cls="text-sm text-slate-400"),
             A(
                 "View Profile",
-                href=f"/person/{identity_id}",
+                href=f"{nav_prefix}/person/{identity_id}",
                 cls="text-xs text-indigo-400 hover:text-indigo-300 block mt-1",
             ),
             cls="min-w-0",

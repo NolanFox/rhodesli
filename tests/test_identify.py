@@ -544,6 +544,24 @@ class TestMatchConfirmation:
         # Collection link should use slug
         assert "/collection/test-collection" in resp.text
 
+    def test_community_explore_archive_links_keep_prefix(self, client):
+        """Community-scoped match page should keep explore links inside the community."""
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(
+                patch(
+                    "app.supabase_data.get_community_by_slug",
+                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+                )
+            )
+            resp = client.get("/c/fox-family/identify/unknown-1/match/unknown-2")
+        html = resp.text
+        assert "/c/fox-family/people" in html
+        assert "/c/fox-family/timeline" in html
+        assert "/c/fox-family/collection/test-collection" in html
+        assert "/c/fox-family/" in html
+
     def test_face_crops_are_clickable_links(self, client):
         """Face crops must be wrapped in <a> tags linking to person/identify pages."""
         with ExitStack() as stack:
