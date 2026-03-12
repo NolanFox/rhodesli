@@ -178,3 +178,29 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
 ### Important Working-Tree Note
 - `data/identities.json` is dirty from live archive work and must stay out of the Session 100 commit.
 - Merge-quality verification should happen in a clean worktree after committing the code/test/docs changes.
+
+## Post-Merge Usability Follow-Up (Codex)
+
+- **Trigger:** Antigravity's live review exhausted quota mid-pass, but the
+  partial output still identified a real discoverability gap around the speed loop.
+- **Key diagnosis:** the standalone photo page exposed a speed-loop CTA that
+  still assumed modal-only DOM targets, so the main person -> photo workflow
+  did not make the faster path obvious or reliable enough.
+- **Follow-up branch:** `codex/session-100-usability-followup`
+- **Files touched:**
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [app/photo_routes.py](/Users/nolanfox/rhodesli/app/photo_routes.py)
+  - [app/person_routes.py](/Users/nolanfox/rhodesli/app/person_routes.py)
+  - [tests/test_sequential_identify.py](/Users/nolanfox/rhodesli/tests/test_sequential_identify.py)
+  - [tests/test_public_person_page.py](/Users/nolanfox/rhodesli/tests/test_public_person_page.py)
+  - [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+  - [docs/assessments/session-100-usability-followup.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-usability-followup.md)
+- **Scope:**
+  - standalone `/photo/{id}?seq=1` speed-loop support
+  - full-page HTMX target container for sequential actions
+  - direct `Start Speed Loop` CTA on public photo pages
+  - direct `Start Speed Loop` CTA on person galleries
+- **Focused verification:**
+  - `ruff check app/page_routes.py app/photo_routes.py app/person_routes.py tests/test_sequential_identify.py tests/test_public_person_page.py tests/test_public_photo_viewer.py`
+  - `pytest tests/test_sequential_identify.py tests/test_public_person_page.py tests/test_public_photo_viewer.py -x -q`
+    - `73 passed, 2 skipped`

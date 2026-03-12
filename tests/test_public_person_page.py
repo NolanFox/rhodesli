@@ -240,6 +240,69 @@ class TestPersonPageOrdering:
         html = response.text
         assert '/c/fox-family/photo/photo-1?identity_id=test-person&amp;sort_by=date_asc' in html
 
+    def test_person_gallery_exposes_speed_loop_entry(self, client, monkeypatch, auth_disabled):
+        del auth_disabled
+
+        class FakeRegistry:
+            def get_identity(self, person_id):
+                return {
+                    "identity_id": person_id,
+                    "name": "Roland Fox",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-a", "face-b"],
+                    "candidate_ids": [],
+                }
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-1", "photo-2"]
+
+        photo_meta = {
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "photo-1.jpg",
+                "collection": "C1",
+                "created_at": "2025-01-01T00:00:00+00:00",
+                "faces": [{"face_id": "face-a", "bbox": [0, 0, 50, 50]}],
+            },
+            "photo-2": {
+                "photo_id": "photo-2",
+                "filename": "photo-2.jpg",
+                "collection": "C1",
+                "created_at": "2024-01-01T00:00:00+00:00",
+                "faces": [{"face_id": "face-b", "bbox": [0, 0, 50, 50]}],
+            },
+        }
+        face_to_photo = {"face-a": "photo-1", "face-b": "photo-2"}
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda pid: photo_meta.get(pid))
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg", "face-b.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: face_to_photo.get(fid))
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+        monkeypatch.setattr(
+            "app.main.get_identity_for_face",
+            lambda _registry, _face_id: {
+                "identity_id": "unknown-1",
+                "name": "Unidentified Person 1",
+                "state": "INBOX",
+            },
+        )
+
+        response = client.get("/api/person/test-person/gallery?view=photos&sort_by=date_asc")
+        assert response.status_code == 200
+        html = response.text
+
+        assert "Start Speed Loop" in html
+        assert 'data-testid="person-speed-loop"' in html
+        assert "/photo/photo-1" in html
+        assert "identity_id=test-person" in html
+        assert "sort_by=date_asc" in html
+        assert "seq=1" in html
+
 
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""

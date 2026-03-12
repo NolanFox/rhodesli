@@ -275,7 +275,7 @@ class TestSession100PhotoWorkflow:
         html = to_xml(result)
 
         assert 'data-testid="photo-people-grid"' in html
-        assert "/c/fox-family/photo/photo-1/partial" in html
+        assert "/c/fox-family/photo/photo-1?seq=1" in html
         assert "seq=1" in html
         assert "identity_id=context-1" in html
         assert "sort_by=date_asc" in html

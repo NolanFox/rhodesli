@@ -4014,15 +4014,28 @@ def photo_view_content(
             z-index: 10;
         }
     """)
+    back_href = (
+        f"{nav_prefix}/person/{context_identity_id}?view=photos&sort_by={sort_by}"
+        if context_identity_id and context_person_name
+        else f"{nav_prefix}/?section=to_review"
+    )
+    back_label = f"Back to {context_person_name}" if context_identity_id and context_person_name else "Back to Review Queue"
+    heading = "Speed Loop" if seq_mode else "Photo Context"
+    subtitle = (
+        "Stay in flow while naming faces. Enter accepts the top suggestion and ignored faces stay reversible."
+        if seq_mode
+        else "Review this photo with full face context."
+    )
 
     return (
-        Title(f"Photo - {photo['filename']}"),
+        Title(f"{heading} - {photo['filename']}"),
         style,
         Main(
             # Back button
-            A("< Back to Workstation", href="/", cls="text-slate-400 hover:text-slate-300 mb-4 inline-block"),
-            H1("Photo Context", cls="text-2xl font-serif font-bold text-white mb-4"),
-            content,
+            A(f"< {back_label}", href=back_href, cls="text-slate-400 hover:text-slate-300 mb-2 inline-block"),
+            H1(heading, cls="text-2xl font-serif font-bold text-white mb-1"),
+            P(subtitle, cls="text-sm text-slate-400 mb-4"),
+            Div(content, id="photo-modal-content"),
             cls="p-4 md:p-8 max-w-6xl mx-auto bg-slate-900 min-h-screen",
         ),
     )
@@ -10464,6 +10477,7 @@ def public_photo_page(
     selected_face_id: str = None,
     identity_id: str = None,
     sort_by: str = "date_asc",
+    seq_mode: bool = False,
     user=None,
     is_admin: bool = False,
     community_slug: str = "rhodes",
@@ -10512,6 +10526,18 @@ def public_photo_page(
             )
         )
         return HTMLResponse(page_html, status_code=404)
+
+    if seq_mode and is_admin:
+        return photo_view_content(
+            photo_id,
+            selected_face_id=selected_face_id,
+            is_partial=False,
+            identity_id=identity_id,
+            sort_by=sort_by,
+            is_admin=is_admin,
+            seq_mode=True,
+            community_slug=community_slug,
+        )
 
     filename = photo["filename"]
     width, height = _main_mod.get_photo_dimensions(filename)
@@ -11409,20 +11435,17 @@ def public_photo_page(
                         if identified_person_ids
                         else None,
                         # Admin: Name These Faces button (2+ unidentified faces required)
-                        Button(
-                            f"Name These Faces ({unidentified_count} unidentified)",
-                            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
-                            type="button",
-                            hx_get=(
-                                f"{nav_prefix}/photo/{photo_id}/partial?seq=1"
+                        A(
+                            f"Start Speed Loop ({unidentified_count} unidentified)",
+                            href=(
+                                f"{nav_prefix}/photo/{photo_id}?seq=1"
                                 + (
                                     f"&identity_id={identity_id}&sort_by={sort_by}"
                                     if identity_id
                                     else ""
                                 )
                             ),
-                            hx_target="#photo-modal-content",
-                            hx_swap="innerHTML",
+                            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="name-these-faces-public",
                         )
                         if is_admin and unidentified_count >= 2
@@ -11787,7 +11810,15 @@ def public_photo_page(
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str = "date_asc", sess=None, request=None):
+def get(
+    photo_id: str,
+    face: str = None,
+    identity_id: str = None,
+    sort_by: str = "date_asc",
+    seq: bool = False,
+    sess=None,
+    request=None,
+):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -11798,6 +11829,7 @@ def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str =
     - face: Optional face_id to highlight
     - identity_id: Optional person context for prev/next photo navigation
     - sort_by: Optional person-gallery sort mode for prev/next navigation
+    - seq: If True for admins, enter the standalone speed-loop flow
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
@@ -11807,6 +11839,7 @@ def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str =
         selected_face_id=face,
         identity_id=identity_id,
         sort_by=sort_by,
+        seq_mode=seq and user_is_admin,
         user=user,
         is_admin=user_is_admin,
         community_slug=community_slug,

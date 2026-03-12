@@ -221,6 +221,12 @@ def public_person_page(
 
     date_labels = _main_mod._load_date_labels()
 
+    def _is_unresolved_face(face_id: str) -> bool:
+        ident = _main_mod.get_identity_for_face(registry, face_id)
+        ident_state = ident.get("state", "INBOX") if ident else None
+        ident_name = ident.get("name", "Unidentified") if ident else "Unidentified"
+        return not (ident_state == "CONFIRMED" and not ident_name.startswith("Unidentified"))
+
     def _parse_year(value):
         try:
             return int(str(value)[:4])
@@ -1393,6 +1399,12 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
 
     date_labels = _main_mod._load_date_labels()
 
+    def _is_unresolved_face(face_id: str) -> bool:
+        ident = _main_mod.get_identity_for_face(registry, face_id)
+        ident_state = ident.get("state", "INBOX") if ident else None
+        ident_name = ident.get("name", "Unidentified") if ident else "Unidentified"
+        return not (ident_state == "CONFIRMED" and not ident_name.startswith("Unidentified"))
+
     def _parse_year(value):
         try:
             return int(str(value)[:4])
@@ -1446,6 +1458,30 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             return "#"
         return f"{nav_prefix}/photo/{photo_id}?identity_id={person_id}&sort_by={sort_by}"
 
+    ordered_photo_entries = []
+    for pid in photo_ids:
+        pm = _main_mod.get_photo_metadata(pid)
+        if not pm:
+            continue
+        ordered_photo_entries.append(
+            {
+                "photo_id": pid,
+                "photo_meta": pm,
+                "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+            }
+        )
+    ordered_photo_entries.sort(key=lambda e: e["sort_key"])
+
+    speed_loop_photo_id = None
+    speed_loop_photo_count = 0
+    if is_admin:
+        for entry in ordered_photo_entries:
+            unresolved_here = any(_is_unresolved_face(face.get("face_id", "")) for face in entry["photo_meta"].get("faces", []))
+            if unresolved_here:
+                speed_loop_photo_count += 1
+                if not speed_loop_photo_id:
+                    speed_loop_photo_id = entry["photo_id"]
+
     faces_active = view != "photos"
 
     if faces_active:
@@ -1486,15 +1522,14 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
         grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"
     else:
         photo_entries = []
-        for pid in photo_ids:
-            pm = _main_mod.get_photo_metadata(pid)
-            if not pm:
-                continue
+        for entry in ordered_photo_entries:
+            pid = entry["photo_id"]
+            pm = entry["photo_meta"]
             filename = pm["filename"]
             collection_label = pm.get("collection", "") or ""
             photo_entries.append(
                 {
-                    "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+                    "sort_key": entry["sort_key"],
                     "item": A(
                         Div(
                             Img(
@@ -1572,6 +1607,16 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
         if faces_active
         else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}"
     )
+    speed_loop_cta = (
+        A(
+            f"Start Speed Loop ({speed_loop_photo_count} photo{'s' if speed_loop_photo_count != 1 else ''} to review)",
+            href=f"{nav_prefix}/photo/{speed_loop_photo_id}?identity_id={person_id}&sort_by={sort_by}&seq=1",
+            cls="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors",
+            data_testid="person-speed-loop",
+        )
+        if speed_loop_photo_id
+        else None
+    )
 
     return Div(
         Div(
@@ -1582,9 +1627,10 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             ),
             Div(
                 toggle,
+                speed_loop_cta,
                 Div(Span("Sort:", cls="text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
                 Span(count_label, cls="text-xs text-slate-500 ml-3 self-center"),
-                cls="flex flex-wrap items-center",
+                cls="flex flex-wrap items-center gap-3",
             ),
             cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
         ),
