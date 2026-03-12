@@ -100,3 +100,24 @@
     - `60 passed, 2 skipped`
   - `pytest tests/test_public_person_page.py tests/test_public_photo_viewer.py tests/test_identify.py tests/test_photo_navigation.py tests/test_collections.py tests/test_inline_find_similar.py tests/test_find_similar_page.py -x -q`
     - `180 passed, 2 skipped`
+
+## Photo Registry Alias Follow-Up
+- photo provenance edits were failing on some live pages because the visible
+  photo ID could load through the viewer/cache path while the editable
+  `PhotoRegistry` did not recognize that same ID directly
+- `resolve_photo_registry_photo_id()` now bridges cache/view IDs back to the
+  canonical editable registry ID before collection/source/source-url updates
+- the duplicate editable routes in both
+  [page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py) and
+  [photo_routes.py](/Users/nolanfox/rhodesli/app/photo_routes.py) were updated
+  together so the live path and the legacy duplicate stay consistent
+- files:
+  - [app/main.py](/Users/nolanfox/rhodesli/app/main.py)
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [app/photo_routes.py](/Users/nolanfox/rhodesli/app/photo_routes.py)
+  - [tests/test_photo_provenance.py](/Users/nolanfox/rhodesli/tests/test_photo_provenance.py)
+  - [session-100-photo-registry-alias-followup.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-photo-registry-alias-followup.md)
+- verification:
+  - `python3 -m py_compile app/main.py app/page_routes.py`
+  - `pytest tests/test_photo_provenance.py tests/test_public_photo_viewer.py tests/test_collections.py -x -q`
+    - `61 passed`

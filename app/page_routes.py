@@ -3048,13 +3048,14 @@ def post(photo_id: str, sess, collection: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     previous_collection = (_main_mod.get_photo_metadata(photo_id) or {}).get("collection", "")
     updated_collection = collection.strip()
-    photo_reg.set_collection(photo_id, updated_collection)
+    photo_reg.set_collection(registry_photo_id, updated_collection)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
@@ -3082,13 +3083,14 @@ def post(photo_id: str, sess, source: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     previous_source = (_main_mod.get_photo_metadata(photo_id) or {}).get("source", "")
     updated_source = source.strip()
-    photo_reg.set_source(photo_id, updated_source)
+    photo_reg.set_source(registry_photo_id, updated_source)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
@@ -3116,13 +3118,14 @@ def post(photo_id: str, sess, source_url: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     previous_source_url = (_main_mod.get_photo_metadata(photo_id) or {}).get("source_url", "")
     updated_source_url = source_url.strip()
-    photo_reg.set_source_url(photo_id, updated_source_url)
+    photo_reg.set_source_url(registry_photo_id, updated_source_url)
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None

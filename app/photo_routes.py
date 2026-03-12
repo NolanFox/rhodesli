@@ -149,10 +149,11 @@ def post(photo_id: str, sess, collection: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_collection(photo_id, collection.strip())
+    photo_reg.set_collection(registry_photo_id, collection.strip())
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
@@ -173,10 +174,11 @@ def post(photo_id: str, sess, source: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_source(photo_id, source.strip())
+    photo_reg.set_source(registry_photo_id, source.strip())
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None
@@ -197,10 +199,11 @@ def post(photo_id: str, sess, source_url: str = ""):
     if admin_err:
         return admin_err
     photo_reg = _main_mod.load_photo_registry()
-    photo_path = photo_reg.get_photo_path(photo_id)
+    registry_photo_id = _main_mod.resolve_photo_registry_photo_id(photo_id, photo_reg)
+    photo_path = photo_reg.get_photo_path(registry_photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
-    photo_reg.set_source_url(photo_id, source_url.strip())
+    photo_reg.set_source_url(registry_photo_id, source_url.strip())
     _main_mod.save_photo_registry(photo_reg)
     _main_mod._photo_cache = None
     _main_mod._photo_id_aliases = None

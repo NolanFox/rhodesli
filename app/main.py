@@ -3974,6 +3974,47 @@ def get_photo_metadata(photo_id: str) -> dict:
     return result
 
 
+def resolve_photo_registry_photo_id(photo_id: str, photo_registry=None) -> str:
+    """Resolve viewer/cache IDs back to the editable PhotoRegistry ID.
+
+    Some live pages are addressed by SHA/cache IDs while the durable photo
+    registry still stores the canonical photo_index / inbox-style ID. Editing
+    routes must resolve through the same filename/alias bridge that read paths
+    use, or saves appear to silently fail.
+    """
+    if not photo_id:
+        return photo_id
+
+    photo_registry = photo_registry or load_photo_registry()
+    try:
+        if photo_registry.get_photo_path(photo_id):
+            return photo_id
+    except Exception:
+        pass
+
+    _build_caches()
+
+    if _photo_id_aliases:
+        for registry_photo_id, cache_photo_id in _photo_id_aliases.items():
+            if cache_photo_id == photo_id:
+                try:
+                    if photo_registry.get_photo_path(registry_photo_id):
+                        return registry_photo_id
+                except Exception:
+                    pass
+
+    photo_meta = get_photo_metadata(photo_id) or {}
+    filename = Path(photo_meta.get("filename", "")).name
+    if not filename:
+        return photo_id
+
+    for registry_photo_id, entry in getattr(photo_registry, "_photos", {}).items():
+        path = entry.get("path") or ""
+        if path and Path(path).name == filename:
+            return registry_photo_id
+    return photo_id
+
+
 def get_photo_id_for_face(face_id: str) -> str:
     """Get the photo_id containing a face."""
     _build_caches()

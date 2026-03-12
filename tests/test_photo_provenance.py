@@ -175,7 +175,7 @@ class TestProvenanceRoutes:
     def test_set_source_route(self, client, auth_disabled):
         """POST /api/photo/{id}/source sets provenance."""
         from unittest.mock import patch, MagicMock
-        with patch("app.main.load_photo_registry") as mock_reg:
+        with patch("app.main.load_photo_registry") as mock_reg, patch("app.main.save_photo_registry"):
             reg = MagicMock()
             reg.get_photo_path.return_value = "raw_photos/test.jpg"
             mock_reg.return_value = reg
@@ -191,7 +191,7 @@ class TestProvenanceRoutes:
     def test_set_source_url_route(self, client, auth_disabled):
         """POST /api/photo/{id}/source-url sets citation URL."""
         from unittest.mock import patch, MagicMock
-        with patch("app.main.load_photo_registry") as mock_reg:
+        with patch("app.main.load_photo_registry") as mock_reg, patch("app.main.save_photo_registry"):
             reg = MagicMock()
             reg.get_photo_path.return_value = "raw_photos/test.jpg"
             mock_reg.return_value = reg
@@ -203,6 +203,28 @@ class TestProvenanceRoutes:
             assert resp.status_code == 200
             assert "https://newspapers.com/article/123" in resp.text
             reg.set_source_url.assert_called_once_with("test-id", "https://newspapers.com/article/123")
+
+    def test_set_source_url_route_resolves_cache_id_alias(self, client, auth_disabled):
+        """Editable photo routes resolve cache-view IDs back to registry IDs."""
+        from unittest.mock import patch, MagicMock
+
+        with patch("app.main.load_photo_registry") as mock_reg, patch("app.main.save_photo_registry"), patch(
+            "app.main.get_photo_metadata",
+            return_value={"filename": "franco-family.jpg", "source_url": ""},
+        ):
+            reg = MagicMock()
+            reg._photos = {"inbox_photo_123": {"path": "raw_photos/franco-family.jpg"}}
+            reg.get_photo_path.side_effect = lambda pid: "raw_photos/franco-family.jpg" if pid == "inbox_photo_123" else None
+            mock_reg.return_value = reg
+
+            resp = client.post(
+                "/api/photo/cache_photo_abc/source-url",
+                data={"source_url": "https://www.facebook.com/groups/546890742472923/posts/947943075701019"},
+            )
+            assert resp.status_code == 200
+            reg.set_source_url.assert_called_once_with(
+                "inbox_photo_123", "https://www.facebook.com/groups/546890742472923/posts/947943075701019"
+            )
 
     def test_source_route_admin_only(self, client):
         """POST /api/photo/{id}/source requires admin."""
