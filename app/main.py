@@ -2941,7 +2941,7 @@ def _triage_category(identity: dict) -> str:
     return "unmatched"
 
 
-def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") -> Div:
+def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "", nav_prefix: str = "") -> Div:
     """Build the triage summary bar for the inbox."""
     counts = _compute_triage_counts(to_review)
 
@@ -2984,7 +2984,7 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") 
             A(
                 Span(str(count), cls="text-lg font-bold"),
                 Span(label, cls="text-xs" + ("" if is_active else " opacity-80")),
-                href=f"/?section=to_review&view={view_mode}&filter={filter_val}",
+                href=f"{nav_prefix}/?section=to_review&view={view_mode}&filter={filter_val}",
                 cls=pill_cls,
                 title=tooltip,
             )
@@ -5013,7 +5013,7 @@ def sidebar(
                     autocomplete="off",
                     cls="sidebar-label bg-transparent border-none outline-none text-sm text-slate-200 placeholder-slate-500 w-full ml-2",
                     id="sidebar-search-input",
-                    hx_get="/api/search",
+                    hx_get=f"{prefix}/api/search",
                     hx_trigger="keyup changed delay:300ms",
                     hx_target="#sidebar-search-results",
                     hx_swap="innerHTML",
@@ -5119,7 +5119,14 @@ def sidebar(
     )
 
 
-def section_header(title: str, subtitle: str, view_mode: str = None, section: str = None, variant: str = None) -> Div:
+def section_header(
+    title: str,
+    subtitle: str,
+    view_mode: str = None,
+    section: str = None,
+    variant: str = None,
+    nav_prefix: str = "",
+) -> Div:
     """
     Section header with optional Focus/Browse toggle.
     """
@@ -5149,17 +5156,17 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
         toggle = Div(
             A(
                 "Focus",
-                href="/?section=to_review&view=focus",
+                href=f"{nav_prefix}/?section=to_review&view=focus",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
             ),
             A(
                 "View All",
-                href="/?section=to_review&view=browse",
+                href=f"{nav_prefix}/?section=to_review&view=browse",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
             ),
             A(
                 "Match",
-                href="/?section=to_review&view=match",
+                href=f"{nav_prefix}/?section=to_review&view=match",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_match_active if view_mode == 'match' else _tab_inactive}",
             ),
             cls="flex items-center gap-2",
@@ -5169,12 +5176,12 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
         toggle = Div(
             A(
                 "Focus",
-                href="/?section=skipped&view=focus",
+                href=f"{nav_prefix}/?section=skipped&view=focus",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
             ),
             A(
                 "View All",
-                href="/?section=skipped&view=browse",
+                href=f"{nav_prefix}/?section=skipped&view=browse",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
             ),
             cls="flex items-center gap-2",
@@ -5253,7 +5260,9 @@ def _proposal_badge_inline(identity_id: str):
     )
 
 
-def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = True, triage_filter: str = "") -> Div:
+def identity_card_expanded(
+    identity: dict, crop_files: set, is_admin: bool = True, triage_filter: str = "", nav_prefix: str = ""
+) -> Div:
     """
     Expanded identity card for Focus Mode review.
     Shows larger thumbnail and prominent actions (admin only).
@@ -5300,7 +5309,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                             alt=f"Face {face_id[:8]}",
                         ),
                         cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
-                        hx_get=f"/photo/{face_photo_id}/partial?face={face_id}&identity_id={identity_id}",
+                        hx_get=f"{nav_prefix}/photo/{face_photo_id}/partial?face={face_id}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
                         type="button",
@@ -5318,12 +5327,16 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
 
     # Action buttons - only for admins
     if is_admin:
-        base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
-        base_reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+        base_confirm_url = (
+            f"{nav_prefix}/inbox/{identity_id}/confirm" if state == "INBOX" else f"{nav_prefix}/confirm/{identity_id}"
+        )
+        base_reject_url = (
+            f"{nav_prefix}/inbox/{identity_id}/reject" if state == "INBOX" else f"{nav_prefix}/reject/{identity_id}"
+        )
         _filter_suffix = f"&filter={triage_filter}" if triage_filter else ""
         confirm_url = f"{base_confirm_url}?from_focus=true{_filter_suffix}"
         reject_url = f"{base_reject_url}?from_focus=true{_filter_suffix}"
-        skip_url = f"/identity/{identity_id}/skip?from_focus=true{_filter_suffix}"
+        skip_url = f"{nav_prefix}/identity/{identity_id}/skip?from_focus=true{_filter_suffix}"
 
         actions = Div(
             Button(
@@ -5356,7 +5369,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             Button(
                 "Find Similar",
                 cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto min-h-[44px]",
-                hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?from_focus=true",
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
@@ -5377,7 +5390,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             Button(
                 "Find Similar",
                 cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors",
-                hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?from_focus=true",
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
@@ -5406,7 +5419,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                         cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center",
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"/photo/{main_photo_id}/partial?face={best_face_id}&identity_id={identity_id}"
+                    hx_get=f"{nav_prefix}/photo/{main_photo_id}/partial?face={best_face_id}&identity_id={identity_id}"
                     if main_photo_id
                     else None,
                     hx_target="#photo-modal-content",
@@ -5433,7 +5446,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     ),
                     A(
                         "View Public Page",
-                        href=f"/person/{identity_id}",
+                        href=f"{nav_prefix}/person/{identity_id}",
                         cls="text-xs text-indigo-400 hover:text-indigo-300 ml-3",
                         data_testid="view-public-page",
                     ),
@@ -5449,7 +5462,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     cls="mt-4",
                     **(
                         {
-                            "hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true",
+                            "hx_get": f"{nav_prefix}/api/identity/{identity_id}/neighbors?from_focus=true",
                             "hx_trigger": "load",
                             "hx_swap": "innerHTML",
                         }
@@ -5459,7 +5472,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 ),
                 actions,
                 # Suggest Name form (hidden by default, shown via Hyperscript toggle)
-                _suggest_name_form(identity_id),
+                _suggest_name_form(identity_id, nav_prefix=nav_prefix),
                 # Identity metadata (AN-012)
                 _identity_metadata_display(identity, is_admin=is_admin),
                 # Identity annotations (AN-013/AN-014)
@@ -5469,7 +5482,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     Button(
                         "Notes",
                         cls="text-xs text-slate-400 hover:text-slate-300 underline",
-                        hx_get=f"/api/identity/{identity_id}/notes",
+                        hx_get=f"{nav_prefix}/api/identity/{identity_id}/notes",
                         hx_target=f"#notes-{identity_id}",
                         hx_swap="innerHTML",
                         type="button",
@@ -5486,7 +5499,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
     )
 
 
-def _suggest_name_form(identity_id: str) -> Div:
+def _suggest_name_form(identity_id: str, nav_prefix: str = "") -> Div:
     """Hidden form for suggesting a name for an unidentified person."""
     return Div(
         H4("I Know This Person", cls="text-sm font-medium text-white mb-2"),
@@ -5517,7 +5530,7 @@ def _suggest_name_form(identity_id: str) -> Div:
                 type="submit",
                 cls="mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-500",
             ),
-            hx_post="/api/annotations/submit",
+            hx_post=f"{nav_prefix}/api/annotations/submit",
             hx_swap="beforeend",
             hx_target="#toast-container",
             cls="space-y-0",
@@ -5527,7 +5540,9 @@ def _suggest_name_form(identity_id: str) -> Div:
     )
 
 
-def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False, triage_filter: str = "") -> Div:
+def identity_card_mini(
+    identity: dict, crop_files: set, clickable: bool = False, triage_filter: str = "", nav_prefix: str = ""
+) -> Div:
     """
     Mini identity card for queue preview in Focus Mode.
 
@@ -5561,7 +5576,7 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False,
                 img_element,
                 cls="w-full aspect-square rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center hover:ring-2 hover:ring-indigo-400 transition-all",
             ),
-            href=f"/?section={section}&view=focus&current={identity_id}{filter_suffix}",
+            href=f"{nav_prefix}/?section={section}&view=focus&current={identity_id}{filter_suffix}",
             cls="w-24 flex-shrink-0 cursor-pointer",
             title="Click to review this identity",
         )
@@ -5590,7 +5605,7 @@ def render_to_review_section(
     """Render the To Review section with Focus or Browse mode."""
 
     # Build triage bar (shown above all views)
-    triage_bar = _build_triage_bar(to_review, view_mode, active_filter=triage_filter)
+    triage_bar = _build_triage_bar(to_review, view_mode, active_filter=triage_filter, nav_prefix=nav_prefix)
 
     # Apply triage filter if set
     if triage_filter in ("ready", "rediscovered", "unmatched"):
@@ -5672,12 +5687,14 @@ def render_to_review_section(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
                         *[
-                            identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter)
+                            identity_card_mini(
+                                i, crop_files, clickable=True, triage_filter=triage_filter, nav_prefix=nav_prefix
+                            )
                             for i in high_confidence[1:6]
                         ],
                         A(
                             f"+{len(high_confidence) - 6} more",
-                            href="/?section=to_review&view=browse",
+                            href=f"{nav_prefix}/?section=to_review&view=browse",
                             cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square hover:bg-slate-600 transition-colors cursor-pointer",
                         )
                         if len(high_confidence) > 6
@@ -5693,7 +5710,9 @@ def render_to_review_section(
             # in the page layout — no per-swap re-registration needed.
             content = Div(
                 banner,
-                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin, triage_filter=triage_filter),
+                identity_card_expanded(
+                    high_confidence[0], crop_files, is_admin=is_admin, triage_filter=triage_filter, nav_prefix=nav_prefix
+                ),
                 up_next,
                 id="focus-container",
             )
@@ -5705,14 +5724,18 @@ def render_to_review_section(
                 P("No items to review.", cls="text-slate-400 mt-1"),
                 A(
                     "Upload more photos →",
-                    href="/upload",
+                    href=f"{nav_prefix}/upload",
                     cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium",
                 ),
                 cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
             )
     elif view_mode == "match":
         # Match mode - gamified side-by-side pairing
-        match_url = f"/api/match/next-pair?filter={triage_filter}" if triage_filter else "/api/match/next-pair"
+        match_url = (
+            f"{nav_prefix}/api/match/next-pair?filter={triage_filter}"
+            if triage_filter
+            else f"{nav_prefix}/api/match/next-pair"
+        )
         content = Div(
             Div(
                 Div(
@@ -5806,6 +5829,7 @@ def render_to_review_section(
         view_mode=view_mode,
         section="to_review",
         variant=variant,
+        nav_prefix=nav_prefix,
     )
     if view_mode == "browse":
         # Client-side search filter for admin browse grid (Session 83a)
@@ -6002,6 +6026,7 @@ def render_skipped_section(
         view_mode=view_mode,
         section="skipped",
         variant=variant,
+        nav_prefix=nav_prefix,
     )
 
     if view_mode == "focus":
@@ -6032,10 +6057,13 @@ def render_skipped_section(
                 up_next = Div(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
-                        *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
+                        *[
+                            identity_card_mini(i, crop_files, clickable=True, nav_prefix=nav_prefix)
+                            for i in sorted_skipped[1:6]
+                        ],
                         A(
                             f"+{len(sorted_skipped) - 6} more",
-                            href="/?section=to_review&view=browse",
+                            href=f"{nav_prefix}/?section=to_review&view=browse",
                             cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square hover:bg-slate-600 transition-colors cursor-pointer",
                         )
                         if len(sorted_skipped) > 6
@@ -6047,11 +6075,11 @@ def render_skipped_section(
 
             # Progress counter
             total = counts["skipped"]
-            progress = _skipped_focus_progress()
+            progress = _skipped_focus_progress(nav_prefix=nav_prefix)
 
             content = Div(
                 progress,
-                skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=is_admin),
+                skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=is_admin, nav_prefix=nav_prefix),
                 up_next,
                 id="skipped-focus-container",
                 data_focus_mode="skipped",
@@ -6063,7 +6091,7 @@ def render_skipped_section(
                 P("No faces need help right now.", cls="text-slate-400 mt-1"),
                 A(
                     "← Back to Inbox",
-                    href="/?section=to_review",
+                    href=f"{nav_prefix}/?section=to_review",
                     cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium",
                 ),
                 cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
@@ -6087,7 +6115,7 @@ def render_skipped_section(
             badge = _actionability_badge(identity_id, ids_with_proposals)
             hint = Div(
                 id=f"skip-hint-{identity_id}",
-                hx_get=f"/api/identity/{identity_id}/skip-hints",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/skip-hints",
                 hx_trigger="revealed",
                 hx_swap="innerHTML",
                 cls="ml-4 mt-1 mb-3",
@@ -6259,7 +6287,7 @@ def _actionability_badge(identity_id: str, ids_with_proposals: set = None):
     return None
 
 
-def _skipped_focus_progress() -> Div:
+def _skipped_focus_progress(nav_prefix: str = "") -> Div:
     """Build progress counter for skipped focus mode.
 
     Uses client-side cookie to persist count across HTMX swaps.
@@ -6273,7 +6301,7 @@ def _skipped_focus_progress() -> Div:
         ),
         A(
             "← Exit Focus Mode",
-            href="/?section=skipped&view=browse",
+            href=f"{nav_prefix}/?section=skipped&view=browse",
             cls="text-sm text-slate-400 hover:text-white transition-colors",
         ),
         Script("""
@@ -6304,7 +6332,7 @@ def _skipped_focus_progress() -> Div:
     )
 
 
-def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True) -> Div:
+def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True, nav_prefix: str = "") -> Div:
     """
     Expanded identity card for Needs Help Focus Mode.
 
@@ -6333,16 +6361,18 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
         main_photo_id = get_photo_id_for_face(main_face_id)
 
     # Get top ML suggestions for side-by-side display + strip (compute first so we know best match)
-    suggestion_el, other_matches_strip, best_match_id = _build_skipped_suggestion_with_strip(identity_id, crop_files)
+    suggestion_el, other_matches_strip, best_match_id = _build_skipped_suggestion_with_strip(
+        identity_id, crop_files, nav_prefix=nav_prefix
+    )
 
     # Get photo context (collection, other identified people) — includes best match photo
     photo_context_el = _build_skipped_photo_context(
-        main_face_id, main_photo_id, identity_id, best_match_id=best_match_id
+        main_face_id, main_photo_id, identity_id, best_match_id=best_match_id, nav_prefix=nav_prefix
     )
 
     # Action buttons
     if is_admin:
-        actions = _build_skipped_focus_actions(identity_id, state)
+        actions = _build_skipped_focus_actions(identity_id, state, nav_prefix=nav_prefix)
     else:
         actions = Div(
             Button(
@@ -6375,7 +6405,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                 type="button",
                 **{"_": f"on click add .hidden to #skipped-name-form-{identity_id}"},
             ),
-            hx_post=f"/api/skipped/{identity_id}/name-and-confirm",
+            hx_post=f"{nav_prefix}/api/skipped/{identity_id}/name-and-confirm",
             hx_target="#skipped-focus-container",
             hx_swap="outerHTML",
             cls="flex gap-3 items-center",
@@ -6400,7 +6430,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                             alt="Face",
                         ),
                         cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                        hx_get=f"/photo/{face_photo_id}/partial?face={fid}&identity_id={identity_id}",
+                        hx_get=f"{nav_prefix}/photo/{face_photo_id}/partial?face={fid}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
                         type="button",
@@ -6422,7 +6452,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                         cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center",
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}"
+                    hx_get=f"{nav_prefix}/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}"
                     if main_photo_id
                     else None,
                     hx_target="#photo-modal-content",
@@ -6446,13 +6476,13 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                         "View Photo",
                         href="#",
                         cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
-                        hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}",
+                        hx_get=f"{nav_prefix}/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
                     ),
-                    share_button(main_photo_id, style="link", label="Share Photo"),
+                    share_button(f"{nav_prefix}/photo/{main_photo_id}", style="link", label="Share Photo"),
                     share_button(
-                        url=f"/identify/{identity_id}/match/{best_match_id}",
+                        url=f"{nav_prefix}/identify/{identity_id}/match/{best_match_id}",
                         style="link",
                         label="Share This Match",
                         title="Are these the same person?",
@@ -6480,7 +6510,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
         Div(
             id=f"neighbors-{identity_id}",
             cls="mt-4",
-            hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
             hx_trigger="load",
             hx_swap="innerHTML",
         ),
@@ -6494,7 +6524,9 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     )
 
 
-def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, best_match_id: str = None):
+def _build_skipped_photo_context(
+    face_id: str, photo_id: str, identity_id: str, best_match_id: str = None, nav_prefix: str = ""
+):
     """Build photo context panel showing collection info and co-identified faces.
 
     Shows both the "Who is this?" source photo and the Best Match source photo
@@ -6553,7 +6585,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
                 alt="Source photo",
             ),
             cls="p-0 bg-transparent cursor-pointer w-full",
-            hx_get=f"/photo/{photo_id}/partial?face={face_id}&identity_id={identity_id}",
+            hx_get=f"{nav_prefix}/photo/{photo_id}/partial?face={face_id}&identity_id={identity_id}",
             hx_target="#photo-modal-content",
             **{"_": "on click remove .hidden from #photo-modal"},
             type="button",
@@ -6562,7 +6594,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
         Div(*who_context_items, cls="flex flex-col gap-0.5 mt-1") if who_context_items else None,
         A(
             "View Photo Page",
-            href=f"/photo/{photo_id}",
+            href=f"{nav_prefix}/photo/{photo_id}",
             cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 inline-block",
         ),
         cls="flex-1 min-w-0",
@@ -6604,7 +6636,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
                                     alt=f"Source photo for {match_name}",
                                 ),
                                 cls="p-0 bg-transparent cursor-pointer w-full",
-                                hx_get=f"/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={best_match_id}",
+                                hx_get=f"{nav_prefix}/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={best_match_id}",
                                 hx_target="#photo-modal-content",
                                 **{"_": "on click remove .hidden from #photo-modal"},
                                 type="button",
@@ -6615,7 +6647,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
                             else None,
                             A(
                                 "View Photo Page",
-                                href=f"/photo/{match_photo_id}",
+                                href=f"{nav_prefix}/photo/{match_photo_id}",
                                 cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 inline-block",
                             ),
                             cls="flex-1 min-w-0",
@@ -6625,7 +6657,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
 
     # Share button shares the source photo page, not the match comparison
     share_el = share_button(
-        url=f"/photo/{photo_id}",
+        url=f"{nav_prefix}/photo/{photo_id}",
         style="link",
         label="Share",
         title="Check out this photo",
@@ -6724,12 +6756,12 @@ def _get_best_match_for_identity(identity_id: str):
     return _compute_best_neighbor(identity_id)
 
 
-def _build_skipped_suggestion(identity_id: str, crop_files: set):
+def _build_skipped_suggestion(identity_id: str, crop_files: set, nav_prefix: str = ""):
     """Build the 'Best Match' side-by-side panel for a skipped identity.
 
     Returns a single element (for backward compat with any callers).
     """
-    el, _ = _build_skipped_suggestion_with_strip(identity_id, crop_files)
+    el, _, _ = _build_skipped_suggestion_with_strip(identity_id, crop_files, nav_prefix=nav_prefix)
     return el
 
 
@@ -6938,7 +6970,7 @@ def _update_discovery_log_entry(face_id: str, target_identity_id: str, user_deci
         logging.error(f"[discovery_log] Failed to update: {e}")
 
 
-def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
+def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_prefix: str = ""):
     """Build 'Best Match' panel + horizontal strip of other matches.
 
     Returns (suggestion_el, other_matches_strip_el, best_match_id).
@@ -6995,7 +7027,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
                 "View Photo",
                 href="#",
                 cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
-                hx_get=f"/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={target_id}",
+                hx_get=f"{nav_prefix}/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={target_id}",
                 hx_target="#photo-modal-content",
                 **{"_": "on click remove .hidden from #photo-modal"},
             )
@@ -7006,7 +7038,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
         match_links.append(
             A(
                 "View Profile",
-                href=f"/person/{target_id}",
+                href=f"{nav_prefix}/person/{target_id}",
                 cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
             )
         )
@@ -7014,7 +7046,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
         match_links.append(
             A(
                 "Help Identify",
-                href=f"/identify/{target_id}",
+                href=f"{nav_prefix}/identify/{target_id}",
                 cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
             )
         )
@@ -7073,7 +7105,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
     return suggestion_el, other_matches_strip, target_id
 
 
-def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
+def _build_skipped_focus_actions(identity_id: str, state: str, nav_prefix: str = "") -> Div:
     """Build action buttons for skipped focus mode."""
     best = _get_best_match_for_identity(identity_id)
     has_suggestion = best is not None
@@ -7087,14 +7119,14 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
             Button(
                 "✓ Same Person",
                 cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
-                hx_post=f"/api/identity/{target_id}/merge/{identity_id}?from_focus=true&focus_section=skipped",
+                hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{identity_id}?from_focus=true&focus_section=skipped",
                 hx_target="#skipped-focus-container",
                 hx_swap="outerHTML",
                 type="button",
                 id="focus-btn-confirm",
                 title=f"Merge with {target_name}" if target_name else "Merge with suggestion",
                 **{
-                    "data-undo-url": f"/api/identity/{target_id}/undo-merge",
+                    "data-undo-url": f"{nav_prefix}/api/identity/{target_id}/undo-merge",
                     "data-undo-type": "merge",
                     "data-undo-identity": identity_id,
                 },
@@ -7104,14 +7136,14 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
             Button(
                 "✗ Not Same",
                 cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors min-h-[44px]",
-                hx_post=f"/api/skipped/{identity_id}/reject-suggestion?suggestion_id={target_id}",
+                hx_post=f"{nav_prefix}/api/skipped/{identity_id}/reject-suggestion?suggestion_id={target_id}",
                 hx_target="#skipped-focus-container",
                 hx_swap="outerHTML",
                 type="button",
                 id="focus-btn-reject",
                 title="Not the same person — reject this suggestion",
                 **{
-                    "data-undo-url": f"/api/identity/{identity_id}/unreject/{target_id}",
+                    "data-undo-url": f"{nav_prefix}/api/identity/{identity_id}/unreject/{target_id}",
                     "data-undo-type": "reject",
                     "data-undo-identity": identity_id,
                 },
@@ -7134,7 +7166,7 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
         Button(
             "→ Skip",
             cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors min-h-[44px]",
-            hx_post=f"/api/skipped/{identity_id}/focus-skip",
+            hx_post=f"{nav_prefix}/api/skipped/{identity_id}/focus-skip",
             hx_target="#skipped-focus-container",
             hx_swap="outerHTML",
             type="button",
@@ -7158,7 +7190,7 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
     )
 
 
-def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
+def get_next_skipped_focus_card(exclude_id: str = None, nav_prefix: str = "") -> Div:
     """
     Get the next skipped identity card for focus mode review.
 
@@ -7184,10 +7216,13 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
             up_next = Div(
                 H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                 Div(
-                    *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
+                    *[
+                        identity_card_mini(i, crop_files, clickable=True, nav_prefix=nav_prefix)
+                        for i in sorted_skipped[1:6]
+                    ],
                     A(
                         f"+{len(sorted_skipped) - 6} more",
-                        href="/?section=skipped&view=browse",
+                        href=f"{nav_prefix}/?section=skipped&view=browse",
                         cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square",
                     )
                     if len(sorted_skipped) > 6
@@ -7197,11 +7232,11 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
                 cls="mt-6",
             )
 
-        progress = _skipped_focus_progress()
+        progress = _skipped_focus_progress(nav_prefix=nav_prefix)
 
         return Div(
             progress,
-            skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=True),
+            skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=True, nav_prefix=nav_prefix),
             up_next,
             id="skipped-focus-container",
             data_focus_mode="skipped",
@@ -7213,7 +7248,7 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
             P("You've reviewed all the faces that need help.", cls="text-slate-400 mt-1"),
             A(
                 "← Back to Inbox",
-                href="/?section=to_review",
+                href=f"{nav_prefix}/?section=to_review",
                 cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium",
             ),
             cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
@@ -7243,7 +7278,7 @@ def render_rejected_section(
     return Div(section_header("Dismissed", f"{counts['rejected']} items dismissed", variant=variant), content, cls="space-y-6")
 
 
-def _photo_nav_url(photo_id: str, index: int, photos: list, total: int) -> str:
+def _photo_nav_url(photo_id: str, index: int, photos: list, total: int, nav_prefix: str = "") -> str:
     """Build /photo/{id}/partial URL with prev/next navigation context."""
     from urllib.parse import urlencode
 
@@ -7252,7 +7287,7 @@ def _photo_nav_url(photo_id: str, index: int, photos: list, total: int) -> str:
         params["prev_id"] = photos[index - 1]["photo_id"]
     if index < total - 1:
         params["next_id"] = photos[index + 1]["photo_id"]
-    return f"/photo/{photo_id}/partial?{urlencode(params)}"
+    return f"{nav_prefix}/photo/{photo_id}/partial?{urlencode(params)}"
 
 
 def render_photos_section(
@@ -7264,6 +7299,7 @@ def render_photos_section(
     filter_collection: str = "",
     media_filter: str = "all",
     community: dict | None = None,
+    nav_prefix: str = "",
     variant: str = "",
 ) -> Div:
     """
@@ -7437,7 +7473,7 @@ def render_photos_section(
                 *collection_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
-                onchange=f"window.location.href='/?section=photos&filter_collection=' + encodeURIComponent(this.value) + '&filter_source={_fs}&sort_by={sort_by}&media_filter={_mf}'",
+                onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection=' + encodeURIComponent(this.value) + '&filter_source={_fs}&sort_by={sort_by}&media_filter={_mf}'",
             ),
             cls="flex items-center min-w-0",
         ),
@@ -7448,7 +7484,7 @@ def render_photos_section(
                 *source_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
-                onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&media_filter={_mf}'",
+                onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&media_filter={_mf}'",
             ),
             cls="flex items-center min-w-0",
         ),
@@ -7459,7 +7495,7 @@ def render_photos_section(
                 *sort_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0",
-                onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by=' + this.value + '&media_filter={_mf}'",
+                onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by=' + this.value + '&media_filter={_mf}'",
             ),
             cls="flex items-center min-w-0",
         ),
@@ -7470,7 +7506,7 @@ def render_photos_section(
                 *media_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0",
-                onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by={sort_by}&media_filter=' + this.value",
+                onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by={sort_by}&media_filter=' + this.value",
             ),
             cls="flex items-center min-w-0",
         ),
@@ -7586,10 +7622,10 @@ def render_photos_section(
                     if photo["source"]
                     else None,
                         Span(
-                            share_button(photo["photo_id"], style="icon"),
+                            share_button(url=f"{nav_prefix}/photo/{photo['photo_id']}", style="icon"),
                             A(
                                 "Public Page",
-                                href=f"/photo/{photo['photo_id']}",
+                                href=f"{nav_prefix}/photo/{photo['photo_id']}",
                                 cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
                                 target="_blank",
                         ),
@@ -7617,7 +7653,7 @@ def render_photos_section(
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "
             "hover:border-slate-500 transition-colors cursor-pointer group",
-            hx_get=_photo_nav_url(photo["photo_id"], pi, display_photos, total_photos),
+            hx_get=_photo_nav_url(photo["photo_id"], pi, display_photos, total_photos, nav_prefix=nav_prefix),
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             # Show modal and set navigation index
@@ -7638,7 +7674,7 @@ def render_photos_section(
             window._photoNavIdx = idx;
             var prevId = idx > 0 ? ids[idx-1] : '';
             var nextId = idx < ids.length-1 ? ids[idx+1] : '';
-            var url = '/photo/' + ids[idx] + '/partial?nav_idx=' + idx + '&nav_total=' + ids.length;
+            var url = '{nav_prefix}/photo/' + ids[idx] + '/partial?nav_idx=' + idx + '&nav_total=' + ids.length;
             if (prevId) url += '&prev_id=' + prevId;
             if (nextId) url += '&next_id=' + nextId;
             htmx.ajax('GET', url, {{target:'#photo-modal-content', swap:'innerHTML'}});
@@ -7862,7 +7898,7 @@ def render_photos_section(
     )
 
 
-def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
+def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_prefix: str = ""):
     """
     Get the next identity card for focus mode review.
 
@@ -7936,12 +7972,14 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
                 H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                 Div(
                     *[
-                        identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter)
+                        identity_card_mini(
+                            i, crop_files, clickable=True, triage_filter=triage_filter, nav_prefix=nav_prefix
+                        )
                         for i in high_confidence[1:6]
                     ],
                     A(
                         f"+{len(high_confidence) - 6} more",
-                        href=f"/?section=to_review&view=browse{f'&filter={triage_filter}' if triage_filter else ''}",
+                        href=f"{nav_prefix}/?section=to_review&view=browse{f'&filter={triage_filter}' if triage_filter else ''}",
                         cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square",
                     )
                     if len(high_confidence) > 6
@@ -7955,7 +7993,9 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
         banner = _promotion_banner(high_confidence[0])
         return Div(
             banner,
-            identity_card_expanded(high_confidence[0], crop_files, is_admin=user_is_admin, triage_filter=triage_filter),
+            identity_card_expanded(
+                high_confidence[0], crop_files, is_admin=user_is_admin, triage_filter=triage_filter, nav_prefix=nav_prefix
+            ),
             up_next,
             id="focus-container",
         )
@@ -7967,7 +8007,7 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
             P("No more items to review.", cls="text-slate-400 mt-1"),
             A(
                 "Upload more photos →",
-                href="/upload",
+                href=f"{nav_prefix}/upload",
                 cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium",
             ),
             cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
@@ -8476,6 +8516,7 @@ def neighbor_card(
     focus_section: str = "",
     target_name: str = "",
     current_community: dict | None = None,
+    nav_prefix: str = "",
 ) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -8533,7 +8574,7 @@ def neighbor_card(
         merge_btn = Button(
             "Suggest Merge",
             cls="px-3 py-1 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
-            hx_post=f"/api/identity/{target_identity_id}/suggest-merge/{neighbor_id}",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/suggest-merge/{neighbor_id}",
             hx_target=f"#neighbor-{neighbor_id}",
             hx_swap="outerHTML",
             data_auth_action="suggest a merge",
@@ -8551,7 +8592,7 @@ def neighbor_card(
         merge_btn = Button(
             _merge_label,
             cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-            hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}",
             hx_target=merge_target,
             hx_swap=merge_swap,
             data_auth_action="merge these identities",
@@ -8564,7 +8605,7 @@ def neighbor_card(
     compare_btn = Button(
         "Compare",
         cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
-        hx_get=f"/api/identity/{target_identity_id}/compare/{neighbor_id}{_compare_filter}",
+        hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/compare/{neighbor_id}{_compare_filter}",
         hx_target="#compare-modal-content",
         hx_swap="innerHTML",
         **{"_": "on click remove .hidden from #compare-modal"},
@@ -8613,7 +8654,7 @@ def neighbor_card(
         _nav_prefix = community_url_prefix(_cross_slug)
     else:
         _community_slug = current_community.get("slug") if current_community else None
-        _nav_prefix = community_url_prefix(_community_slug)
+        _nav_prefix = nav_prefix or community_url_prefix(_community_slug)
 
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
     nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
@@ -8669,12 +8710,12 @@ def neighbor_card(
                 Button(
                     "Not Same",
                     cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
-                    hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}",
+                    hx_post=f"{_nav_prefix}/api/identity/{target_identity_id}/reject/{neighbor_id}",
                     hx_target=f"#neighbor-{neighbor_id}",
                     hx_swap="outerHTML",
                 ),
                 share_button(
-                    url=f"/identify/{target_identity_id}/match/{neighbor_id}",
+                    url=f"{_nav_prefix}/identify/{target_identity_id}/match/{neighbor_id}",
                     style="icon",
                     title="Are these the same person?",
                     text=f"Help identify: {name}",
@@ -8689,7 +8730,12 @@ def neighbor_card(
 
 
 def search_result_card(
-    result: dict, target_identity_id: str, crop_files: set, user_role: str = "admin", target_name: str = ""
+    result: dict,
+    target_identity_id: str,
+    crop_files: set,
+    user_role: str = "admin",
+    target_name: str = "",
+    nav_prefix: str = "",
 ) -> Div:
     """
     Card for a manual search result.
@@ -8713,7 +8759,7 @@ def search_result_card(
     compare_btn = Button(
         "Compare",
         cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
-        hx_get=f"/api/identity/{target_identity_id}/compare/{result_id}",
+        hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/compare/{result_id}",
         hx_target="#compare-modal-content",
         hx_swap="innerHTML",
         **{"_": "on click remove .hidden from #compare-modal"},
@@ -8725,7 +8771,7 @@ def search_result_card(
         merge_btn = Button(
             "Suggest Merge",
             cls="px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
-            hx_post=f"/api/identity/{target_identity_id}/suggest-merge/{result_id}",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/suggest-merge/{result_id}",
             hx_target=f"#search-result-{result_id}",
             hx_swap="outerHTML",
             data_auth_action="suggest a merge",
@@ -8739,7 +8785,7 @@ def search_result_card(
         merge_btn = Button(
             "Merge",
             cls="px-2 py-1 text-xs font-bold border border-blue-500/50 text-blue-400 rounded hover:bg-blue-500/20",
-            hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
             hx_target=f"#identity-{target_identity_id}",
             hx_swap="outerHTML",
             data_auth_action="merge these identities",
@@ -8776,7 +8822,12 @@ def search_result_card(
 
 
 def search_results_panel(
-    results: list, target_identity_id: str, crop_files: set, user_role: str = "admin", target_name: str = ""
+    results: list,
+    target_identity_id: str,
+    crop_files: set,
+    user_role: str = "admin",
+    target_name: str = "",
+    nav_prefix: str = "",
 ) -> Div:
     """Panel showing manual search results."""
     if not results:
@@ -8786,13 +8837,15 @@ def search_results_panel(
         )
 
     cards = [
-        search_result_card(r, target_identity_id, crop_files, user_role=user_role, target_name=target_name)
+        search_result_card(
+            r, target_identity_id, crop_files, user_role=user_role, target_name=target_name, nav_prefix=nav_prefix
+        )
         for r in results
     ]
     return Div(*cards, id=f"search-results-{target_identity_id}")
 
 
-def manual_search_section(identity_id: str) -> Div:
+def manual_search_section(identity_id: str, nav_prefix: str = "") -> Div:
     """
     Manual search input and results container.
     Positioned in neighbors sidebar after Load More, before Rejected section.
@@ -8804,7 +8857,7 @@ def manual_search_section(identity_id: str) -> Div:
             name="q",
             placeholder="Search by name...",
             cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder-slate-500",
-            hx_get=f"/api/identity/{identity_id}/search",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
             hx_trigger="keyup changed delay:300ms",
             hx_target=f"#search-results-{identity_id}",
             hx_include="this",
@@ -8827,6 +8880,7 @@ def neighbors_sidebar(
     target_name: str = "",
     container_id: str = "",
     current_community: dict | None = None,
+    nav_prefix: str = "",
 ) -> Div:
     # container_id allows targeting the browse expansion panel or the focus sidebar
     _target_id = container_id or f"neighbors-{identity_id}"
@@ -8862,7 +8916,7 @@ def neighbors_sidebar(
                 P("No similar identities.", cls="text-slate-400 italic"),
                 cls="flex items-center justify-between",
             ),
-            manual_search_section(identity_id),
+            manual_search_section(identity_id, nav_prefix=nav_prefix),
             cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600 overflow-hidden",
         )
 
@@ -8878,6 +8932,7 @@ def neighbors_sidebar(
             focus_section=focus_section,
             target_name=target_name,
             current_community=current_community,
+            nav_prefix=nav_prefix,
         )
         for n in neighbors
     ]
@@ -8888,7 +8943,7 @@ def neighbors_sidebar(
         Button(
             "Load More",
             cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-            hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}",
             hx_target=f"#{_target_id}",
             hx_swap="innerHTML",
         )
@@ -8931,7 +8986,7 @@ def neighbors_sidebar(
                 Button(
                     "Merge Selected",
                     type="button",
-                    hx_post=f"/api/identity/{identity_id}/bulk-merge",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/bulk-merge",
                     hx_include="closest form",
                     hx_target=f"#{_target_id}",
                     hx_swap="innerHTML",
@@ -8940,7 +8995,7 @@ def neighbors_sidebar(
                 Button(
                     "Not Same Selected",
                     type="button",
-                    hx_post=f"/api/identity/{identity_id}/bulk-reject",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/bulk-reject",
                     hx_include="closest form",
                     hx_target=f"#{_target_id}",
                     hx_swap="innerHTML",
@@ -8952,7 +9007,7 @@ def neighbors_sidebar(
         )
 
     # Manual search section - between Load More and Rejected
-    manual_search = manual_search_section(identity_id)
+    manual_search = manual_search_section(identity_id, nav_prefix=nav_prefix)
 
     rejected = (
         Div(
@@ -8961,7 +9016,7 @@ def neighbors_sidebar(
                 Button(
                     "Review",
                     cls="text-xs text-indigo-400 hover:text-indigo-300 ml-2",
-                    hx_get=f"/api/identity/{identity_id}/rejected",
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/rejected",
                     hx_target=f"#rejected-list-{identity_id}",
                     hx_swap="innerHTML",
                 ),
@@ -8993,7 +9048,9 @@ def neighbors_sidebar(
     )
 
 
-def name_display(identity_id: str, name: str, is_admin: bool = True, generation_qualifier: str = "") -> Div:
+def name_display(
+    identity_id: str, name: str, is_admin: bool = True, generation_qualifier: str = "", nav_prefix: str = ""
+) -> Div:
     """
     Identity name display with edit button (admin only).
     Returns the name header component that can be swapped for inline editing.
@@ -9006,7 +9063,7 @@ def name_display(identity_id: str, name: str, is_admin: bool = True, generation_
     edit_btn = (
         Button(
             "Edit",
-            hx_get=f"/api/identity/{identity_id}/rename-form",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/rename-form",
             hx_target=f"#name-{identity_id}",
             hx_swap="outerHTML",
             cls="ml-2 text-xs text-slate-400 hover:text-slate-300 underline",

@@ -56,3 +56,27 @@
   - `ruff check app/page_routes.py tests/test_public_photo_viewer.py`
   - `pytest tests/test_public_photo_viewer.py tests/test_public_person_page.py tests/test_identify.py -x -q`
     - `99 passed, 2 skipped`
+
+## Community HTMX Follow-Up
+- shared workstation/admin helpers were still leaking to root Rhodes after HTMX
+  re-renders because they emitted bare `/?section=...`, `/photo/...`,
+  `/person/...`, and `/api/...` paths
+- `app/main.py` now threads `nav_prefix` through section headers, triage bars,
+  mini/expanded cards, skipped focus, neighbors/search panels, rename displays,
+  and workstation photos
+- `app/identity_routes.py` now preserves `nav_prefix` across focus/skip/merge,
+  rename, notes, metadata, rejected, skip-hints, and photo-lightbox re-renders
+- workstation photo filter controls and modal navigation now stay inside the
+  active archive instead of snapping back to Rhodes
+- files:
+  - [app/main.py](/Users/nolanfox/rhodesli/app/main.py)
+  - [app/identity_routes.py](/Users/nolanfox/rhodesli/app/identity_routes.py)
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [tests/test_sidebar_community.py](/Users/nolanfox/rhodesli/tests/test_sidebar_community.py)
+  - [session-100-community-htmx-followup.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-community-htmx-followup.md)
+- verification:
+  - `python3 -m py_compile app/main.py app/identity_routes.py app/page_routes.py`
+  - `pytest tests/test_sidebar_community.py tests/test_public_person_page.py tests/test_inline_find_similar.py tests/test_find_similar_page.py tests/test_skipped_focus.py -x -q`
+    - `131 passed, 2 skipped`
+  - `pytest tests/test_admin_dashboard.py tests/test_public_photo_viewer.py tests/test_identify.py tests/test_photo_navigation.py tests/test_sequential_identify.py tests/test_collections.py -x -q`
+    - `132 passed`

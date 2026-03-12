@@ -96,8 +96,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # If from focus mode, return the next focus card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
             _main_mod.toast("Identity confirmed.", "success"),
         )
 
@@ -161,8 +162,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # If from focus mode, return the next focus card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
             _main_mod.toast("Identity contested.", "warning"),
         )
 
@@ -367,6 +369,7 @@ def get(
 
     target_name = ensure_utf8_display(identity.get("name", "")) or ""
     current_community = getattr(request.state, "community", None) if request else None
+    nav_prefix = _nav_prefix_from_request(request)
     return _main_mod.neighbors_sidebar(
         identity_id,
         neighbors,
@@ -380,6 +383,7 @@ def get(
         target_name=target_name,
         container_id=container_id,
         current_community=current_community,
+        nav_prefix=nav_prefix,
     )
 
 
@@ -401,7 +405,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/skip-hints")
-def get(identity_id: str):
+def get(identity_id: str, request=None):
     """
     Lazy-loaded ML hints for skipped identities.
 
@@ -451,6 +455,7 @@ def get(identity_id: str):
 
     # Build suggestion cards with visual confidence and action buttons
     crop_files = _main_mod.get_crop_files()
+    nav_prefix = _nav_prefix_from_request(request)
     suggestion_items = []
     for n in neighbors:
         name = ensure_utf8_display(n.get("name", "Unknown"))
@@ -486,7 +491,7 @@ def get(identity_id: str):
         compare_btn = Button(
             "Compare",
             cls="text-[10px] px-2 py-0.5 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded transition-colors",
-            hx_get=f"/api/identity/{identity_id}/compare/{neighbor_id}",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/compare/{neighbor_id}",
             hx_target="#compare-modal-content",
             hx_swap="innerHTML",
             type="button",
@@ -501,7 +506,7 @@ def get(identity_id: str):
             Button(
                 "Merge",
                 cls="text-[10px] px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors",
-                hx_post=f"/api/identity/{neighbor_id}/merge/{identity_id}",
+                hx_post=f"{nav_prefix}/api/identity/{neighbor_id}/merge/{identity_id}",
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
                 hx_confirm=_merge_confirm,
@@ -539,7 +544,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/search")
-def get(identity_id: str, q: str = "", sess=None):
+def get(identity_id: str, q: str = "", sess=None, request=None):
     """
     Search for identities by name for manual merge.
 
@@ -571,8 +576,14 @@ def get(identity_id: str, q: str = "", sess=None):
         _target_name = ""
 
     crop_files = _main_mod.get_crop_files()
+    nav_prefix = _nav_prefix_from_request(request)
     return _main_mod.search_results_panel(
-        results, identity_id, crop_files, user_role=_main_mod._get_user_role(sess), target_name=_target_name
+        results,
+        identity_id,
+        crop_files,
+        user_role=_main_mod._get_user_role(sess),
+        target_name=_target_name,
+        nav_prefix=nav_prefix,
     )
 
 
@@ -1131,7 +1142,7 @@ def post(
 
 
 @rt("/api/identity/{identity_id}/rejected")
-def get(identity_id: str):
+def get(identity_id: str, request=None):
     """
     Get list of rejected identities for contextual recovery.
 
@@ -1157,6 +1168,7 @@ def get(identity_id: str):
         )
 
     crop_files = _main_mod.get_crop_files()
+    nav_prefix = _nav_prefix_from_request(request)
     items = []
 
     for rejected_id in rejected_ids:
@@ -1194,7 +1206,7 @@ def get(identity_id: str):
         unblock_btn = Button(
             "Unblock",
             cls="px-2 py-0.5 text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-            hx_post=f"/api/identity/{identity_id}/unreject/{rejected_id}",
+            hx_post=f"{nav_prefix}/api/identity/{identity_id}/unreject/{rejected_id}",
             hx_target=f"#rejected-item-{rejected_id}",
             hx_swap="outerHTML",
             type="button",
@@ -1213,7 +1225,7 @@ def get(identity_id: str):
     close_list_btn = Button(
         "Hide",
         cls="text-xs text-slate-400 hover:text-slate-300",
-        hx_get=f"/api/identity/{identity_id}/rejected/close",
+        hx_get=f"{nav_prefix}/api/identity/{identity_id}/rejected/close",
         hx_target=f"#rejected-list-{identity_id}",
         hx_swap="innerHTML",
         type="button",
@@ -1425,7 +1437,7 @@ def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_so
     )
 
 
-def toast_with_merge_undo(message: str, target_id: str) -> Div:
+def toast_with_merge_undo(message: str, target_id: str, nav_prefix: str = "") -> Div:
     """Toast notification with Undo button for merge actions."""
     return Div(
         Span("\u2713", cls="mr-2"),
@@ -1433,7 +1445,7 @@ def toast_with_merge_undo(message: str, target_id: str) -> Div:
         Button(
             "Undo",
             cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
-            hx_post=f"/api/identity/{target_id}/undo-merge",
+            hx_post=f"{nav_prefix}/api/identity/{target_id}/undo-merge",
             hx_swap="outerHTML",
             hx_target="closest div",
             type="button",
@@ -1591,6 +1603,7 @@ def post(
     merge_toast = _main_mod.toast_with_merge_undo(
         f"Merged {_main_mod._pl(result['faces_merged'], 'face')} into {target_name}.",
         actual_target_id,
+        nav_prefix=_nav_prefix_from_request(request),
     )
 
     # Post-merge re-evaluation: suggest nearby unmatched faces (ML-005)
@@ -1608,7 +1621,7 @@ def post(
             Button(
                 "Add a name \u2192",
                 cls="text-xs text-indigo-400 hover:text-indigo-300 underline mt-1",
-                hx_get=f"/api/identity/{actual_target_id}/rename-form",
+                hx_get=f"{_nav_prefix_from_request(request)}/api/identity/{actual_target_id}/rename-form",
                 hx_target=f"#name-{actual_target_id}",
                 hx_swap="outerHTML",
                 type="button",
@@ -1635,13 +1648,14 @@ def post(
 
     # If from focus mode, advance to next identity instead of showing browse card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         if focus_section == "skipped":
             return (
-                _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id),
+                _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id, nav_prefix=nav_prefix),
                 merge_toast,
             )
         return (
-            _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter, nav_prefix=nav_prefix),
             merge_toast,
         )
 
@@ -1994,7 +2008,7 @@ def get(identity_id: str, sort: str = "date", page: int = 0):
 
 
 @rt("/api/identity/{identity_id}/photos")
-def get(identity_id: str, index: int = 0):
+def get(identity_id: str, index: int = 0, request=None):
     """Get a single photo for the lightbox, with face overlays and navigation."""
     try:
         registry = _main_mod.load_registry()
@@ -2024,6 +2038,7 @@ def get(identity_id: str, index: int = 0):
 
     face_overlays = []
     identity_name = ensure_utf8_display(identity.get("name")) or "Unknown"
+    nav_prefix = _nav_prefix_from_request(request)
     if has_dimensions:
         for fd in photo["faces"]:
             fid = fd["face_id"]
@@ -2062,7 +2077,7 @@ def get(identity_id: str, index: int = 0):
                 click_script = (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #photo-modal "
-                    f"then go to url '/?section={fi_section}&view=browse#identity-{fi_id}'"
+                    f"then go to url '{nav_prefix}/?section={fi_section}&view=browse#identity-{fi_id}'"
                 )
 
             face_overlays.append(
@@ -2080,7 +2095,7 @@ def get(identity_id: str, index: int = 0):
         Button(
             Span("\u25c0", cls="text-xl"),
             cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
-            hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={index - 1}",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             type="button",
@@ -2093,7 +2108,7 @@ def get(identity_id: str, index: int = 0):
         Button(
             Span("\u25b6", cls="text-xl"),
             cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
-            hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={index + 1}",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             type="button",
@@ -2129,7 +2144,7 @@ def get(identity_id: str, index: int = 0):
 
 
 @rt("/api/identity/{identity_id}/rename-form")
-def get(identity_id: str):
+def get(identity_id: str, request=None):
     """
     Return inline edit form for renaming an identity.
     Replaces the name display via HTMX.
@@ -2142,6 +2157,8 @@ def get(identity_id: str):
 
     # UI BOUNDARY: sanitize name for safe rendering in input value
     current_name = ensure_utf8_display(identity.get("name")) or ""
+
+    nav_prefix = _nav_prefix_from_request(request)
 
     return Form(
         Input(
@@ -2159,12 +2176,12 @@ def get(identity_id: str):
         Button(
             "Cancel",
             type="button",
-            hx_get=f"/api/identity/{identity_id}/name-display",
+            hx_get=f"{nav_prefix}/api/identity/{identity_id}/name-display",
             hx_target=f"#name-{identity_id}",
             hx_swap="outerHTML",
             cls="ml-1 text-slate-400 hover:text-slate-300 text-sm underline",
         ),
-        hx_post=f"/api/identity/{identity_id}/rename",
+        hx_post=f"{nav_prefix}/api/identity/{identity_id}/rename",
         hx_target=f"#name-{identity_id}",
         hx_swap="outerHTML",
         id=f"name-{identity_id}",
@@ -2173,7 +2190,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/name-display")
-def get(identity_id: str):
+def get(identity_id: str, request=None):
     """
     Return the name display component (for cancel button).
     """
@@ -2183,11 +2200,11 @@ def get(identity_id: str):
     except KeyError:
         return Response("Identity not found", status_code=404)
 
-    return _main_mod.name_display(identity_id, identity.get("name"))
+    return _main_mod.name_display(identity_id, identity.get("name"), nav_prefix=_nav_prefix_from_request(request))
 
 
 @rt("/api/identity/{identity_id}/rename")
-def post(identity_id: str, name: str = "", sess=None):
+def post(identity_id: str, name: str = "", sess=None, request=None):
     """Rename an identity. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2250,7 +2267,7 @@ def post(identity_id: str, name: str = "", sess=None):
 
     # Return updated name display + success toast
     return (
-        _main_mod.name_display(identity_id, name),
+        _main_mod.name_display(identity_id, name, nav_prefix=_nav_prefix_from_request(request)),
         _main_mod.toast(f"Renamed to '{name}'", "success"),
     )
 
@@ -2261,7 +2278,7 @@ def post(identity_id: str, name: str = "", sess=None):
 
 
 @rt("/api/identity/{identity_id}/notes")
-def get(identity_id: str):
+def get(identity_id: str, request=None):
     """Get notes for an identity and show the notes panel."""
     try:
         registry = _main_mod.load_registry()
@@ -2282,6 +2299,8 @@ def get(identity_id: str):
         for n in reversed(notes)  # Newest first
     ]
 
+    nav_prefix = _nav_prefix_from_request(request)
+
     return Div(
         H5("Notes", cls="text-sm font-semibold text-slate-300 mb-2"),
         Div(*note_items) if note_items else P("No notes yet.", cls="text-xs text-slate-500 italic"),
@@ -2300,7 +2319,7 @@ def get(identity_id: str):
                 type="submit",
                 cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
             ),
-            hx_post=f"/api/identity/{identity_id}/notes",
+            hx_post=f"{nav_prefix}/api/identity/{identity_id}/notes",
             hx_target=f"#notes-{identity_id}",
             hx_swap="innerHTML",
             cls="mt-2",
@@ -2310,7 +2329,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/notes")
-def post(identity_id: str, text: str = "", sess=None):
+def post(identity_id: str, text: str = "", sess=None, request=None):
     """Add a note to an identity. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2350,6 +2369,8 @@ def post(identity_id: str, text: str = "", sess=None):
         for n in reversed(notes)
     ]
 
+    nav_prefix = _nav_prefix_from_request(request)
+
     return Div(
         H5("Notes", cls="text-sm font-semibold text-slate-300 mb-2"),
         Div(*note_items),
@@ -2367,7 +2388,7 @@ def post(identity_id: str, text: str = "", sess=None):
                 type="submit",
                 cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
             ),
-            hx_post=f"/api/identity/{identity_id}/notes",
+            hx_post=f"{nav_prefix}/api/identity/{identity_id}/notes",
             hx_target=f"#notes-{identity_id}",
             hx_swap="innerHTML",
             cls="mt-2",
@@ -2377,7 +2398,7 @@ def post(identity_id: str, text: str = "", sess=None):
 
 
 @rt("/api/identity/{identity_id}/metadata-form")
-def get(identity_id: str, sess=None):
+def get(identity_id: str, sess=None, request=None):
     """Return an inline metadata edit form for an identity."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2393,6 +2414,8 @@ def get(identity_id: str, sess=None):
         "w-full px-2 py-1.5 text-sm bg-slate-700 border border-slate-600 text-white rounded "
         "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500"
     )
+
+    nav_prefix = _nav_prefix_from_request(request)
 
     return Div(
         Form(
@@ -2514,13 +2537,13 @@ def get(identity_id: str, sess=None):
                     "Cancel",
                     type="button",
                     cls="px-3 py-1.5 text-xs bg-slate-600 text-slate-300 rounded hover:bg-slate-500",
-                    hx_get=f"/api/identity/{identity_id}/metadata-display",
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/metadata-display",
                     hx_target=f"#metadata-{identity_id}",
                     hx_swap="innerHTML",
                 ),
                 cls="flex gap-2 mt-1",
             ),
-            hx_post=f"/api/identity/{identity_id}/metadata",
+            hx_post=f"{nav_prefix}/api/identity/{identity_id}/metadata",
             hx_target=f"#metadata-{identity_id}",
             hx_swap="innerHTML",
             cls="space-y-2",
@@ -2531,7 +2554,7 @@ def get(identity_id: str, sess=None):
 
 
 @rt("/api/identity/{identity_id}/metadata-display")
-def get(identity_id: str, sess=None):
+def get(identity_id: str, sess=None, request=None):
     """Return the metadata display (non-form) for an identity."""
     try:
         registry = _main_mod.load_registry()
@@ -2555,6 +2578,7 @@ def post(
     relationship_notes: str = "",
     bio: str = "",
     sess=None,
+    request=None,
 ):
     """Update identity metadata. Admin-only (BE-011)."""
     denied = _main_mod._check_admin(sess)
@@ -2630,7 +2654,13 @@ def post(
             updated_name = identity.get("name", "Unknown")
             gen_qual = identity.get("generation_qualifier", "")
             oob_name = Div(
-                _main_mod.name_display(identity_id, updated_name, is_admin=True, generation_qualifier=gen_qual),
+            _main_mod.name_display(
+                identity_id,
+                updated_name,
+                is_admin=True,
+                generation_qualifier=gen_qual,
+                nav_prefix=_nav_prefix_from_request(request),
+            ),
                 hx_swap_oob=f"outerHTML:#name-{identity_id}",
             )
             oob_parts.append(oob_name)
@@ -3105,8 +3135,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # If from focus mode, return the next focus card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
             _main_mod.toast("Identity confirmed.", "success"),
         )
 
@@ -3163,8 +3194,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # If from focus mode, return the next focus card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
             _main_mod.toast("Identity rejected.", "success"),
         )
 
@@ -3223,8 +3255,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # If from focus mode, return the next focus card
     if from_focus:
+        nav_prefix = _nav_prefix_from_request(request)
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
+            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
             _main_mod.toast("Skipped for later.", "info"),
         )
 
@@ -3299,7 +3332,7 @@ def post(identity_id: str, new_state: str, sess=None, request=None):
 
 
 @rt("/api/skipped/{identity_id}/focus-skip")
-def post(identity_id: str, sess=None):
+def post(identity_id: str, sess=None, request=None):
     """Advance to next identity in skipped focus mode without taking action."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3309,13 +3342,13 @@ def post(identity_id: str, sess=None):
     if is_merged:
         return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id),
+        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
         _main_mod.toast("Skipped for now.", "info"),
     )
 
 
 @rt("/api/skipped/{identity_id}/reject-suggestion")
-def post(identity_id: str, suggestion_id: str = "", sess=None):
+def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
     """Reject a suggestion for a skipped identity and advance to next."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3337,7 +3370,7 @@ def post(identity_id: str, suggestion_id: str = "", sess=None):
         Button(
             "Undo",
             cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
-            hx_post=f"/api/identity/{identity_id}/unreject/{suggestion_id}",
+            hx_post=f"{_nav_prefix_from_request(request)}/api/identity/{identity_id}/unreject/{suggestion_id}",
             hx_swap="outerHTML",
             hx_target="closest div",
             type="button",
@@ -3349,13 +3382,13 @@ def post(identity_id: str, suggestion_id: str = "", sess=None):
     )
 
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id),
+        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
         reject_toast,
     )
 
 
 @rt("/api/skipped/{identity_id}/name-and-confirm")
-def post(identity_id: str, name: str = "", sess=None):
+def post(identity_id: str, name: str = "", sess=None, request=None):
     """Name a skipped identity and confirm it, then advance to next in focus mode."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3399,7 +3432,7 @@ def post(identity_id: str, name: str = "", sess=None):
     )
 
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id),
+        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
         _main_mod.toast(f"Confirmed as {name}!", "success"),
     )
 

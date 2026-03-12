@@ -2223,6 +2223,7 @@ def get(
             filter_collection,
             media_filter,
             community=community,
+            nav_prefix=nav_prefix,
             variant="session99",
         )
     else:  # rejected

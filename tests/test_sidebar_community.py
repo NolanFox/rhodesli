@@ -294,6 +294,144 @@ class TestIdentityCardCommunity(unittest.TestCase):
         assert True  # Logic verified in sidebar tests
 
 
+class TestCommunityScopedHelpers(unittest.TestCase):
+    """Shared workstation helpers should preserve nav_prefix in community mode."""
+
+    def test_section_header_uses_nav_prefix_for_focus_tabs(self):
+        from app.main import section_header
+
+        html = repr(
+            section_header(
+                "New Matches",
+                "Review queue",
+                view_mode="focus",
+                section="to_review",
+                nav_prefix="/c/fox-family",
+            )
+        )
+
+        assert '/c/fox-family/?section=to_review&amp;view=focus' in html
+        assert '/c/fox-family/?section=to_review&amp;view=browse' in html
+        assert '/c/fox-family/?section=to_review&amp;view=match' in html
+
+    def test_identity_card_mini_uses_nav_prefix(self):
+        from app.main import identity_card_mini
+
+        identity = {"identity_id": "id-roland", "state": "INBOX", "anchor_ids": ["face-a"], "candidate_ids": []}
+        with (
+            patch("app.main.get_best_face_id", return_value="face-a"),
+            patch("app.main.resolve_face_image_url", return_value="/static/crops/test.jpg"),
+        ):
+            html = repr(identity_card_mini(identity, {"face-a.jpg"}, clickable=True, nav_prefix="/c/fox-family"))
+
+        assert '/c/fox-family/?section=to_review&amp;view=focus&amp;current=id-roland' in html
+
+    @patch("app.main._identity_annotations_section", return_value=None)
+    @patch("app.main._identity_metadata_display", return_value=None)
+    @patch("app.main._proposal_banner", return_value=None)
+    @patch("app.main._get_identities_with_proposals", return_value={"id-roland"})
+    @patch("app.main.get_photo_id_for_face", return_value="photo-1")
+    @patch("app.main.resolve_face_image_url", return_value="/static/crops/test.jpg")
+    @patch("app.main.get_best_face_id", return_value="face-a")
+    def test_identity_card_expanded_uses_nav_prefix_for_focus_urls(self, *_mocks):
+        from app.main import identity_card_expanded
+
+        identity = {
+            "identity_id": "id-roland",
+            "name": "Roland Fox",
+            "state": "INBOX",
+            "anchor_ids": ["face-a"],
+            "candidate_ids": [],
+        }
+
+        html = repr(identity_card_expanded(identity, {"face-a.jpg"}, nav_prefix="/c/fox-family"))
+
+        assert '/c/fox-family/inbox/id-roland/confirm?from_focus=true' in html
+        assert '/c/fox-family/identity/id-roland/skip?from_focus=true' in html
+        assert '/c/fox-family/api/identity/id-roland/neighbors?from_focus=true' in html
+        assert '/c/fox-family/person/id-roland' in html
+        assert '/c/fox-family/photo/photo-1/partial?face=face-a&amp;identity_id=id-roland' in html
+        assert '/c/fox-family/api/annotations/submit' in html
+        assert '/c/fox-family/api/identity/id-roland/notes' in html
+
+    def test_skipped_focus_actions_use_nav_prefix(self):
+        from app.main import _build_skipped_focus_actions
+
+        with patch(
+            "app.main._get_best_match_for_identity",
+            return_value={"target_identity_id": "id-match", "target_identity_name": "Roland Fox"},
+        ):
+            html = repr(_build_skipped_focus_actions("id-source", "SKIPPED", nav_prefix="/c/fox-family"))
+
+        assert '/c/fox-family/api/identity/id-match/merge/id-source?from_focus=true&amp;focus_section=skipped' in html
+        assert '/c/fox-family/api/skipped/id-source/reject-suggestion?suggestion_id=id-match' in html
+        assert '/c/fox-family/api/skipped/id-source/focus-skip' in html
+        assert '/c/fox-family/api/identity/id-source/unreject/id-match' in html
+
+    def test_neighbors_sidebar_uses_nav_prefix_for_actions(self):
+        from app.main import neighbors_sidebar
+
+        neighbors = [
+            {
+                "identity_id": "id-match",
+                "name": "Roland Fox",
+                "distance": 0.75,
+                "percentile": 0.2,
+                "confidence_gap": 12.0,
+                "can_merge": True,
+                "face_count": 3,
+                "co_occurrence": 0,
+                "anchor_face_ids": ["face-a"],
+                "candidate_face_ids": [],
+                "state": "CONFIRMED",
+            }
+        ]
+
+        with (
+            patch("app.main.resolve_face_image_url", return_value="/static/crops/test.jpg"),
+            patch("app.main.get_best_face_id", return_value="face-a"),
+        ):
+            html = repr(
+                neighbors_sidebar(
+                    "id-source",
+                    neighbors,
+                    {"face-a.jpg"},
+                    current_community={"slug": "fox-family", "id": "comm-fox"},
+                    nav_prefix="/c/fox-family",
+                )
+            )
+
+        assert '/c/fox-family/api/identity/id-source/compare/id-match' in html
+        assert '/c/fox-family/api/identity/id-source/merge/id-match' in html
+        assert '/c/fox-family/api/identity/id-source/reject/id-match' in html
+        assert '/c/fox-family/identify/id-source/match/id-match' in html
+        assert '/c/fox-family/api/identity/id-source/search' in html
+
+    def test_name_display_uses_nav_prefix(self):
+        from app.main import name_display
+
+        html = repr(name_display("id-roland", "Roland Fox", nav_prefix="/c/fox-family"))
+
+        assert '/c/fox-family/api/identity/id-roland/rename-form' in html
+
+    def test_triage_bar_uses_nav_prefix(self):
+        from app.main import _build_triage_bar
+
+        to_review = [
+            {"identity_id": "id-1", "state": "INBOX", "anchor_ids": [], "candidate_ids": []},
+            {"identity_id": "id-2", "state": "INBOX", "anchor_ids": [], "candidate_ids": [], "promoted_from": "x"},
+        ]
+
+        with (
+            patch("app.main._compute_triage_counts", return_value={"ready_to_confirm": 1, "rediscovered": 1, "unmatched": 1}),
+        ):
+            html = repr(_build_triage_bar(to_review, "browse", nav_prefix="/c/fox-family"))
+
+        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=ready' in html
+        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=rediscovered' in html
+        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=unmatched' in html
+
+
 class TestUploadRouteRequest(unittest.TestCase):
     """Upload route handler accepts request parameter."""
 
