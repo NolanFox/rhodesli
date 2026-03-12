@@ -8,6 +8,7 @@ from starlette.testclient import TestClient
 import app.main as main_mod
 import app.page_routes as page_routes
 from app.main import app, generate_photo_id
+from core.photo_registry import PhotoRegistry
 
 
 def _write_photo_index(tmp_path):
@@ -93,3 +94,54 @@ def test_api_photo_skips_faces_without_bbox(monkeypatch):
     data = response.json()
     assert [face["face_id"] for face in data["faces"]] == ["face_kept"]
 
+
+def test_get_photo_metadata_prefers_loaded_registry_values_in_postgres_mode(tmp_path, monkeypatch):
+    stale_data = {
+        "schema_version": 1,
+        "photos": {
+            "pg_photo": {
+                "path": "raw_photos/photo.jpg",
+                "face_ids": ["face_kept"],
+                "source": "Stale Source",
+                "collection": "Stale Collection",
+                "source_url": "",
+            }
+        },
+        "face_to_photo": {"face_kept": "pg_photo"},
+    }
+    (tmp_path / "photo_index.json").write_text(json.dumps(stale_data))
+
+    cache_id = generate_photo_id("photo.jpg")
+    embedding_cache = {
+        cache_id: {
+            "filename": "photo.jpg",
+            "faces": [
+                {
+                    "face_id": "face_kept",
+                    "bbox": [10, 20, 30, 40],
+                    "face_index": 0,
+                    "det_score": 0.99,
+                    "quality": 25.0,
+                }
+            ],
+        }
+    }
+
+    registry = PhotoRegistry()
+    registry.register_face("pg_photo", "raw_photos/photo.jpg", "face_kept", source="Fresh Source", collection="Fresh Collection")
+    registry.set_source_url("pg_photo", "https://fresh.example/source")
+
+    monkeypatch.setattr(main_mod, "DATA_SOURCE", "postgres")
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "load_embeddings_for_photos", lambda: embedding_cache)
+    monkeypatch.setattr(main_mod, "load_photo_registry", lambda: registry)
+
+    main_mod._invalidate_all_caches()
+    try:
+        photo = main_mod.get_photo_metadata("pg_photo")
+        assert photo is not None
+        assert photo["source"] == "Fresh Source"
+        assert photo["collection"] == "Fresh Collection"
+        assert photo["source_url"] == "https://fresh.example/source"
+    finally:
+        main_mod._invalidate_all_caches()

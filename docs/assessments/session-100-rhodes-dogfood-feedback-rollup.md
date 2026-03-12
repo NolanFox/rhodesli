@@ -27,6 +27,8 @@ Current reality: the workflow is still too brittle and slow for reliable day-to-
   - Rica Revah
   - Jacob Cohen
   - Jacob Franco
+- User later clarified one specific mis-tag / trust-break detail:
+  - in the Rica Revah photo flow, the mistagged person is Jacob Franco
 - This is confidence-breaking because it makes the archive look internally inconsistent.
 
 ### 3. Photo overlays obscure critical caption/provenance text

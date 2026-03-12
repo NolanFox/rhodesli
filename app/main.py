@@ -1521,9 +1521,7 @@ def _load_date_labels() -> dict:
     # Build filename → photo_index_id mapping for cross-referencing
     filename_to_index_id = {}
     try:
-        from core.photo_registry import PhotoRegistry
-
-        photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+        photo_registry = load_photo_registry()
         for pid in photo_registry._photos:
             path = photo_registry.get_photo_path(pid)
             if path:
@@ -1574,9 +1572,7 @@ def _load_search_index() -> list:
     # Build inbox_id → SHA256 ID mapping for cross-referencing
     index_to_sha = {}
     try:
-        from core.photo_registry import PhotoRegistry
-
-        photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+        photo_registry = load_photo_registry()
         for pid in photo_registry._photos:
             if pid.startswith("inbox_"):
                 path = photo_registry.get_photo_path(pid)
@@ -3731,14 +3727,12 @@ def _build_caches():
 
         # Merge source data and filter faces using photo_index.json
         try:
-            from core.photo_registry import PhotoRegistry
-
             photo_index_raw = {}
             photo_index_path = data_path / "photo_index.json"
             if photo_index_path.exists():
                 with open(photo_index_path) as f:
                     photo_index_raw = json.load(f)
-            photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+            photo_registry = load_photo_registry()
 
             # Build filename-based fallback maps for photos with mismatched IDs
             # (e.g., inbox_* IDs in photo_index.json vs SHA256 IDs in _photo_cache)

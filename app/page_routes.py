@@ -11065,6 +11065,7 @@ def public_photo_page(
                 "identity_id": face_identity_id,
                 "state": state,
                 "is_identified": is_identified,
+                "is_context_identity": bool(identity_id and face_identity_id == identity_id),
                 "crop_url": crop_url,
             }
         )
@@ -11093,7 +11094,16 @@ def public_photo_page(
             name_above = top_pct > 15  # Face is below top 15% — put name above
             name_pos_cls = "-top-6" if name_above else "-bottom-6"
 
-            if fi["is_identified"]:
+            if fi["is_context_identity"]:
+                overlay_cls = (
+                    "face-overlay-box absolute border-2 border-amber-300 bg-amber-400/10 "
+                    "ring-2 ring-amber-200/50 hover:bg-amber-400/15 transition-all cursor-pointer group"
+                )
+                name_el = Span(
+                    fi["display_name"],
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate",
+                )
+            elif fi["is_identified"]:
                 overlay_cls = "face-overlay-box absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
                 name_el = Span(
                     fi["display_name"],
@@ -11147,11 +11157,21 @@ def public_photo_page(
     person_cards = []
     for fi in face_info_list:
         card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
-        badge = (
-            Span("Identified", cls="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full")
-            if fi["is_identified"]
-            else Span("Unidentified", cls="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded-full")
-        )
+        if fi["is_context_identity"]:
+            badge = Span(
+                "Viewing",
+                cls="text-[10px] text-amber-200 bg-amber-500/15 px-1.5 py-0.5 rounded-full border border-amber-400/30",
+            )
+        elif fi["is_identified"]:
+            badge = Span("Identified", cls="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full")
+        elif fi["state"] == "SKIPPED":
+            badge = Span("Dismissed", cls="text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-full")
+        elif fi["state"] == "PROPOSED":
+            badge = Span("Proposed", cls="text-[10px] text-sky-300 bg-sky-500/10 px-1.5 py-0.5 rounded-full")
+        elif fi["state"] in {"REJECTED", "CONTESTED"}:
+            badge = Span("Contested", cls="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-full")
+        else:
+            badge = Span("Unidentified", cls="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded-full")
 
         crop_el = (
             Img(
@@ -11244,6 +11264,7 @@ def public_photo_page(
                     if dense_faces_layout
                     else "p-4 min-w-[140px] flex-shrink-0 hover:bg-amber-900/10 transition-colors"
                 )
+                + (" ring-2 ring-amber-400/50 bg-amber-950/10" if fi["is_context_identity"] else "")
             ),
         )
 
@@ -11252,7 +11273,7 @@ def public_photo_page(
                 A(
                     card_inner,
                     href=card_href,
-                    cls="no-underline cursor-pointer",
+                    cls="no-underline cursor-pointer block h-full w-full" if dense_faces_layout else "no-underline cursor-pointer block",
                     title=card_title,
                 )
             )
@@ -11357,7 +11378,7 @@ def public_photo_page(
     photo_metadata_overlay = (
         Div(
             *_interleaved_meta,
-            cls="absolute bottom-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
+            cls="absolute top-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
             data_testid="photo-metadata-overlay",
         )
         if overlay_meta_parts
@@ -11639,7 +11660,7 @@ def public_photo_page(
                                         cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"
                                     ),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public",
+                                    cls="absolute top-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public",
                                     id="face-overlay-legend-public",
                                     style=""
                                     if (is_admin or any(fi["is_identified"] for fi in face_info_list))
@@ -12106,9 +12127,9 @@ def public_photo_page(
                         A(
                             "I Can Help Identify",
                             href=(
-                                f"/?section=skipped&current={first_unidentified_id}"
+                                f"{nav_prefix}/identify/{first_unidentified_id}"
                                 if first_unidentified_id
-                                else "/?section=skipped"
+                                else f"{nav_prefix}/help"
                             ),
                             cls=(
                                 "inline-block px-8 py-4 bg-amber-600 text-white font-semibold text-lg rounded-lg hover:bg-amber-500 transition-colors"
@@ -12125,7 +12146,7 @@ def public_photo_page(
                         ),
                         A(
                             "Browse All Photos",
-                            href="/photos",
+                            href=f"{nav_prefix}/photos",
                             cls="inline-block px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-slate-400 hover:text-white transition-colors",
                         ),
                         cls="flex flex-wrap justify-center gap-4",
@@ -12150,11 +12171,11 @@ def public_photo_page(
                         cls="text-slate-500 text-sm",
                     ),
                     Div(
-                        A("Home", href="/", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Home", href=f"{nav_prefix}/", cls="text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("Photos", href="/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Photos", href=f"{nav_prefix}/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("People", href="/people", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("People", href=f"{nav_prefix}/people", cls="text-xs text-slate-500 hover:text-slate-300"),
                         cls="flex items-center gap-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3",
