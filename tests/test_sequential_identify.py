@@ -491,3 +491,50 @@ class TestPartialRouteSeqParam:
         # Should include sequential mode elements
         html = response.text
         assert "Naming faces" in html or "Name These Faces" in html or "All faces identified" in html
+
+
+class TestStandaloneSpeedLoopRoute:
+    """The standalone /photo route should be able to enter speed-loop mode."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    def test_full_photo_route_supports_seq_mode(
+        self,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+        client,
+        auth_disabled,
+    ):
+        """GET /photo/{id}?seq=1 renders the standalone speed-loop shell."""
+        del mock_dim, auth_disabled
+        mock_meta.return_value = _make_photo_meta(face_count=3)
+        mock_get_id.side_effect = _identity_for_face(set())
+
+        registry = MagicMock()
+        registry.get_identity.return_value = {
+            "identity_id": "context-1",
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-0", "face-1", "face-2"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = registry
+
+        photo_registry = MagicMock()
+        photo_registry.get_photos_for_faces.return_value = ["p1", "p2"]
+        mock_photo_reg.return_value = photo_registry
+
+        response = client.get("/photo/p1?identity_id=context-1&sort_by=uploaded_desc&seq=1")
+        assert response.status_code == 200
+        html = response.text
+
+        assert "Speed Loop" in html
+        assert 'id="photo-modal-content"' in html
+        assert "Ignore Stranger" in html
+        assert "Back to Roland Fox" in html

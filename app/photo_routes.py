@@ -438,7 +438,15 @@ def get(photo_id: str):
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str = "date_asc", sess=None, request=None):
+def get(
+    photo_id: str,
+    face: str = None,
+    identity_id: str = None,
+    sort_by: str = "date_asc",
+    seq: bool = False,
+    sess=None,
+    request=None,
+):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -449,6 +457,7 @@ def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str =
     - face: Optional face_id to highlight
     - identity_id: Optional person context for prev/next photo navigation
     - sort_by: Optional person-gallery sort mode for prev/next navigation
+    - seq: If True for admins, enter the standalone speed-loop flow
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
@@ -458,6 +467,7 @@ def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str =
         selected_face_id=face,
         identity_id=identity_id,
         sort_by=sort_by,
+        seq_mode=seq and user_is_admin,
         user=user,
         is_admin=user_is_admin,
         community_slug=community_slug,
