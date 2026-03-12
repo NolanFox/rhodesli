@@ -72,6 +72,13 @@
 | 81B | 2026-03-01 | - | [assess](../assessments/session-81b-assessment.md) | [prompt](../prompts/session-81b-prompt.md) | [analysis](../session_context/session-81c-analysis.md) | Complete |
 | 81C | 2026-03-01 | - | [assess](../assessments/session-81c-assessment.md) | - | [continuation](../session_context/session-81-continuation-plan.md) | Complete |
 | 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
+| 99 | 2026-03-11 | - | - | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | Planned |
+
+## PR-Linked Audit Trail
+
+| PR | Date | Branch | Log | Assessment | Context | Prompt | Status |
+|----|------|--------|-----|------------|---------|--------|--------|
+| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt-1](../prompts/pr-7-antigravity-follow-up-prompt.md), [prompt-2](../prompts/pr-7-antigravity-final-correction-prompt.md), [prompt-3](../prompts/pr-7-antigravity-precision-prompt.md) | Ready for Session 99 prompt writing |
 
 ## B-Path Analysis
 
@@ -102,7 +109,7 @@ the original session scope was completed, blocked, or required follow-up work.
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
 - **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
-- **Planned:** 0
+- **Planned:** 1
 - **Sessions with b-paths:** 12 (49, 51, 54, 55, 59, 60, 61, 64, 65, 66, 80, 81)
 - **Total b-path branches:** 29
 - **Gap period:** Sessions 53-55B had weakest archival coverage
