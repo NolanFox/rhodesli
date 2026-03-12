@@ -30,6 +30,8 @@ class TestSectionDescriptions:
             assert response.status_code == 200
             assert "People" in response.text
             assert "identified" in response.text
+            assert "Needs Tree" in response.text
+            assert "Linked" in response.text
 
     def test_skipped_displayed_as_help_identify(self, client):
         """UI shows 'Help Identify' instead of 'Skipped' in section header."""
@@ -90,6 +92,43 @@ class TestEmptyStates:
             is_admin=True
         ))
         assert "Browse the inbox" in html
+
+    def test_confirmed_section_tree_filter_shows_only_unlinked(self):
+        """Confirmed section can focus the GEDCOM-linking sweep on unlinked people."""
+        from app.main import render_confirmed_section
+        from fastcore.xml import to_xml
+
+        confirmed = [
+            {
+                "identity_id": "linked-id",
+                "name": "Linked Person",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-1"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "unlinked-id",
+                "name": "Needs Tree Person",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-2"],
+                "candidate_ids": [],
+            },
+        ]
+
+        with patch("app.main._load_gedcom_face_links", return_value={"linked-id": {"gedcom_id": "@I1@"}}):
+            html = to_xml(
+                render_confirmed_section(
+                    confirmed=confirmed,
+                    crop_files=set(),
+                    counts={"confirmed": 2},
+                    is_admin=True,
+                    confirmed_filter="tree_unlinked",
+                )
+            )
+
+        assert "Needs Tree Person" in html
+        assert "Linked Person" not in html
+        assert "still need family tree links" in html
 
     def test_skipped_empty_state_helpful(self):
         """Empty skipped section shows helpful guidance."""

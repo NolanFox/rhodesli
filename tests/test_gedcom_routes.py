@@ -607,7 +607,7 @@ class TestGedcomTreeButtonOnIdentityCard:
     """B3: Identity cards should show GEDCOM tree button for confirmed identities."""
 
     def test_confirmed_identity_shows_tree_link(self):
-        """Confirmed identity card shows tree link when not linked (DD-005 compact pills)."""
+        """Confirmed identity card opens inline GEDCOM link search when not linked."""
         from app.main import identity_card, to_xml
 
         identity = {
@@ -621,7 +621,8 @@ class TestGedcomTreeButtonOnIdentityCard:
         with patch("app.main._load_gedcom_face_links", return_value={}):
             html = to_xml(identity_card(identity, crop_files, is_admin=True))
         assert "Link Tree" in html
-        assert "/person/test-id-gedcom-001#gedcom" in html
+        assert "/api/cluster-review/gedcom-panel?identity_id=test-id-gedcom-001" in html
+        assert "#expand-face-card-test-id-gedcom-001" in html
 
     def test_linked_identity_shows_view_tree(self):
         """Confirmed identity card shows 'Tree' when linked (DD-005 compact pills)."""
@@ -672,6 +673,19 @@ class TestGedcomTreeButtonOnIdentityCard:
         with patch("app.main._load_gedcom_face_links", return_value={}):
             html = to_xml(identity_card(identity, crop_files, is_admin=False))
         assert "Link to Tree" not in html
+
+
+class TestGedcomPersonSectionAnchor:
+    """GEDCOM person section should support direct anchors and inline fallback."""
+
+    def test_person_gedcom_section_has_anchor_id(self):
+        from app.relationship_routes import _person_gedcom_link_section
+        from app.main import to_xml
+
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(_person_gedcom_link_section("person-1", "Leon Capeluto", is_admin=True))
+
+        assert 'id="gedcom"' in html
 
 
 class TestGedcomLoaderResilience:

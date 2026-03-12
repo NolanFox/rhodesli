@@ -5856,7 +5856,9 @@ def render_to_review_section(
     return Div(header, triage_bar, content, cls="space-y-6")
 
 
-def _sort_control(section: str, current_sort: str, view_mode: str = None, nav_prefix: str = "") -> Div:
+def _sort_control(
+    section: str, current_sort: str, view_mode: str = None, nav_prefix: str = "", extra_query: str = ""
+) -> Div:
     """Render sort control buttons for a section."""
     options = [
         ("name", "A-Z"),
@@ -5872,14 +5874,32 @@ def _sort_control(section: str, current_sort: str, view_mode: str = None, nav_pr
             cls += "bg-slate-600 text-white"
         else:
             cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-        buttons.append(A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}", cls=cls))
+        buttons.append(A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}{extra_query}", cls=cls))
     return Div(Span("Sort:", cls="text-xs text-slate-500 mr-1"), *buttons, cls="flex items-center gap-1")
 
 
 def render_confirmed_section(
-    confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name", nav_prefix: str = "", variant: str = ""
+    confirmed: list,
+    crop_files: set,
+    counts: dict,
+    is_admin: bool = True,
+    sort_by: str = "name",
+    nav_prefix: str = "",
+    variant: str = "",
+    confirmed_filter: str = "all",
 ) -> Div:
     """Render the Confirmed section with optional sorting."""
+    linked_identities = _load_gedcom_face_links()
+
+    def _has_tree_link(identity: dict) -> bool:
+        identity_id = identity.get("identity_id", "")
+        return bool(linked_identities.get(identity_id) or identity.get("gedcom_xref"))
+
+    if confirmed_filter == "tree_unlinked":
+        confirmed = [identity for identity in confirmed if not _has_tree_link(identity)]
+    elif confirmed_filter == "tree_linked":
+        confirmed = [identity for identity in confirmed if _has_tree_link(identity)]
+
     # Apply sorting
     if sort_by == "faces":
         confirmed = sorted(
@@ -5908,10 +5928,52 @@ def render_confirmed_section(
             cls="text-center py-12 text-slate-400",
         )
 
+    if confirmed_filter == "tree_unlinked":
+        subtitle = f"{len(confirmed)} of {counts['confirmed']} identified still need family tree links"
+    elif confirmed_filter == "tree_linked":
+        subtitle = f"{len(confirmed)} of {counts['confirmed']} identified already have family tree links"
+    else:
+        subtitle = f"{counts['confirmed']} identified — click anyone to see all their photos"
+
+    filter_options = [
+        ("all", "All"),
+        ("tree_unlinked", "Needs Tree"),
+        ("tree_linked", "Linked"),
+    ]
+    filter_buttons = []
+    for value, label in filter_options:
+        active = confirmed_filter == value
+        filter_cls = "px-2 py-1 text-xs font-medium rounded transition-colors "
+        if active:
+            filter_cls += "bg-emerald-700/70 text-white"
+        else:
+            filter_cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+        filter_buttons.append(
+            A(
+                label,
+                href=f"{nav_prefix}/?section=confirmed&sort_by={sort_by}&confirmed_filter={value}",
+                cls=filter_cls,
+            )
+        )
+
     return Div(
         Div(
-            section_header("People", f"{counts['confirmed']} identified — click anyone to see all their photos", variant=variant),
-            _sort_control("confirmed", sort_by, view_mode="browse", nav_prefix=nav_prefix),
+            section_header("People", subtitle, variant=variant),
+            Div(
+                _sort_control(
+                    "confirmed",
+                    sort_by,
+                    view_mode="browse",
+                    nav_prefix=nav_prefix,
+                    extra_query=f"&confirmed_filter={confirmed_filter}",
+                ),
+                Div(
+                    Span("Filter:", cls="text-xs text-slate-500 mr-1"),
+                    *filter_buttons,
+                    cls="flex items-center gap-1",
+                ),
+                cls="flex flex-wrap items-center gap-2",
+            ),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6",
         ),
         content,
@@ -9160,6 +9222,8 @@ def identity_card(
         cls=f"{_pill} text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15",
     )
 
+    _id_css = make_css_id(identity_id)
+
     # GEDCOM Tree link button (B3)
     gedcom_tree_btn = None
     if is_admin and state == "CONFIRMED":
@@ -9172,14 +9236,16 @@ def identity_card(
                 cls=f"{_pill} text-emerald-300 hover:bg-emerald-500/15",
             )
         else:
-            gedcom_tree_btn = A(
+            gedcom_tree_btn = Button(
                 "Link Tree",
-                href=f"{nav_prefix}/person/{identity_id}#gedcom",
+                hx_get=f"{nav_prefix}/api/cluster-review/gedcom-panel?identity_id={identity_id}",
+                hx_target=f"#expand-{_id_css}",
+                hx_swap="innerHTML",
+                type="button",
                 cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
     # Find Similar — admin: inline expansion with full neighbors_sidebar, public: full-page link
-    _id_css = make_css_id(identity_id)
     if is_admin:
         find_similar_btn = Button(
             "Similar",

@@ -930,6 +930,7 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
                 id=f"gedcom-link-panel-{person_id}",
                 cls="p-3 bg-emerald-900/20 border border-emerald-700/30 rounded-lg",
             ),
+            id="gedcom",
             cls="mt-10 pt-8 border-t border-slate-800",
             data_testid="gedcom-link-section",
         )
@@ -938,6 +939,7 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
         return Div(
             H3("Family Tree Link", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
             _main_mod._gedcom_link_panel(person_id, display_name),
+            id="gedcom",
             cls="mt-10 pt-8 border-t border-slate-800",
             data_testid="gedcom-link-section",
         )
@@ -945,6 +947,12 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
 
 def _gedcom_link_panel(identity_id: str, identity_name: str) -> Div:
     """Render the 'Link to Family Tree' panel for post-confirm GEDCOM linking."""
+    if not identity_name:
+        try:
+            identity = _main_mod.load_registry().get_identity(identity_id)
+            identity_name = identity.get("name", "")
+        except Exception:
+            identity_name = ""
     return Div(
         Div(
             H3("Link to Family Tree", cls="text-base font-semibold text-white"),

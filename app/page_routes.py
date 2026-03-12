@@ -2066,6 +2066,7 @@ def get(
     filter_source: str = "",
     filter_collection: str = "",
     sort_by: str = "newest",
+    confirmed_filter: str = "all",
     filter: str = "",
     media_filter: str = "all",
     request=None,
@@ -2160,6 +2161,9 @@ def get(
     if section not in valid_sections:
         section = "to_review"
 
+    if confirmed_filter not in {"all", "tree_unlinked", "tree_linked"}:
+        confirmed_filter = "all"
+
     # Validate view parameter
     if view not in ("focus", "browse", "match"):
         view = "focus"
@@ -2188,7 +2192,14 @@ def get(
         )
     elif section == "confirmed":
         main_content = _main_mod.render_confirmed_section(
-            confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by, nav_prefix=nav_prefix, variant="session99"
+            confirmed_list,
+            crop_files,
+            counts,
+            is_admin=user_is_admin,
+            sort_by=sort_by,
+            nav_prefix=nav_prefix,
+            variant="session99",
+            confirmed_filter=confirmed_filter,
         )
     elif section == "skipped":
         skipped_view = view if view in ("focus", "browse") else "focus"
