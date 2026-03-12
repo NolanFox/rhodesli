@@ -59,6 +59,10 @@ Live user feedback after the earlier Session 100 merge showed that:
 - Additional targeted gates already green in this continuation:
   - `pytest tests/test_notifications.py tests/test_life_events.py tests/test_ux_fixes_session92.py -x -q`
     - `95 passed`
+- Clean-worktree full-suite verification on commit `02af23f` caught one real
+  regression:
+  - `/identity/{id}/reset` referenced `request` without accepting it
+  - fixed before deploy by threading `request` into the handler
 
 ## What This Does Not Claim
 This slice does **not** complete all of PRD-040.

@@ -283,6 +283,8 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
     - `176 passed, 2 skipped`
   - `pytest tests/test_notifications.py tests/test_life_events.py tests/test_ux_fixes_session92.py -x -q`
     - `95 passed`
+  - clean-worktree full app suite first exposed a missed `request` thread on
+    `/identity/{id}/reset`; Codex fixed that before deploy preparation
 - **Still open after this slice:**
   - neutral `/` platform entry
   - full multi-community bootstrap polish

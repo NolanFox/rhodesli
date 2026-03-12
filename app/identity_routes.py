@@ -3405,7 +3405,7 @@ def post(identity_id: str, name: str = "", sess=None):
 
 
 @rt("/identity/{identity_id}/reset")
-def post(identity_id: str, sess=None):
+def post(identity_id: str, sess=None, request=None):
     """Reset identity back to Inbox. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
