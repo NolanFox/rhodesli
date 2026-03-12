@@ -1,7 +1,0 @@
-The final precision pass is complete.
-
-Updates to the scoping document:
-- **Workstation Navigation Invariant Fixed:** Removed the incorrect `hx-get` invariant from the `/?section=...` row. The preservation inventory now correctly identifies that the `app/main.py::sidebar` navigation uses standard anchor `href` links (e.g., `href="/?section=to_review"`), along with the visible section count badges and overall command-center structure.
-- Attribution boundaries remain fully preserved.
-
-The document is repo-accurate and ready for Session 99 prompt generation.

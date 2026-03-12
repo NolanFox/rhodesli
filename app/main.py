@@ -4758,7 +4758,7 @@ def sidebar(
         if variant == "session99":
             if is_active:
                 container_cls = "bg-amber-900/40 text-amber-100 shadow-inner border border-amber-700/50 ui99-nav-active"
-                badge_cls = f"bg-amber-500 text-amber-950 shadow-sm"
+                badge_cls = "bg-amber-500 text-amber-950 shadow-sm"
             else:
                 container_cls = "text-slate-400 hover:bg-[#1a1714] hover:text-slate-200 border border-transparent ui99-nav-inactive"
                 badge_cls = f"bg-{color}-500/20 text-{color}-400"
@@ -8200,7 +8200,6 @@ def face_card(
     show_actions: bool = False,
     show_detach: bool = False,
     is_admin: bool = True,
-    variant: str = None,
 ) -> Div:
     """
     Single face card with optional action buttons.
@@ -8274,41 +8273,6 @@ def face_card(
     if quality > 0:
         quality_word = "Excellent" if quality >= 30 else "Good" if quality >= 20 else "Fair" if quality >= 10 else "Low"
         quality_label = f"{quality_word} quality"
-
-    if variant == "session99":
-        return Div(
-            # Face hero — dominant visual element
-            Div(
-                Img(
-                    src=crop_url,
-                    alt=face_id,
-                    cls="w-full h-full object-cover sepia-[.20] contrast-[1.05] filter grayscale-[0.2] hover:sepia-0 hover:grayscale-0 hover:contrast-100 transition-all duration-500",
-                ),
-                era_badge(era) if era else None, # Note: if era_badge needs update we will fix it later
-                cls="relative border border-amber-900/40 rounded-sm overflow-hidden aspect-[3/4] shadow-sm group-hover:shadow-md transition-shadow ui99-face-crop",
-            ),
-            # Compact metadata
-            Div(
-                Span(
-                    quality_label,
-                    cls=f"text-[10px] font-mono tracking-wide uppercase {'text-emerald-600/80' if quality >= 20 else 'text-amber-600/80' if quality >= 10 else 'text-slate-500/80'}",
-                    title=f"Quality score: {quality:.2f}" if is_admin else None,
-                )
-                if quality_label
-                else None,
-                Div(
-                    view_photo_btn,
-                    full_page_link,
-                    detach_btn,
-                    cls="flex items-center" + ("" if show_detach else " opacity-0 group-hover:opacity-100 transition-opacity duration-300"),
-                )
-                if view_photo_btn or detach_btn or full_page_link
-                else None,
-                cls="mt-2 px-1 flex items-center justify-between",
-            ),
-            cls="face-card-archival group p-1.5 bg-white/5 border border-amber-900/10 hover:border-amber-900/30 rounded min-w-[150px] transition-colors duration-300",
-            id=make_css_id(face_id),
-        )
 
     return Div(
         # Face hero — dominant visual element (min 200px desktop, 150px mobile)
@@ -8963,7 +8927,7 @@ def name_display(identity_id: str, name: str, is_admin: bool = True, generation_
 FACES_PER_PAGE = 8
 
 
-def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach, is_admin=True, variant=""):
+def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach, is_admin=True):
     """Build face card elements from a list of face entries."""
     cards = []
     for face_entry in face_entries:
@@ -8986,7 +8950,6 @@ def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_det
                     photo_id=photo_id,
                     show_detach=can_detach,
                     is_admin=is_admin,
-                    variant=variant,
                 )
             )
         else:

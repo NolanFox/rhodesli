@@ -1,9 +1,0 @@
-The final scoping corrections from `pr-7-antigravity-final-correction-prompt.md` have been applied.
-
-Key updates:
-1. **Identify Invariants Fixed:** Replaced `[data-testid="identify-person-form"]` and `name="identity_id"` with the actual repo-backed invariants (`name="person_id"`, `name="name"`, `name="relationship"`, `hx-post="/api/identify/{id}/respond"`, and `og:title`/`og:image`).
-2. **Workstation Smoke Route Fixed:** Replaced `/section=inbox` with the deterministic `/?section=to_review` for smoke checks and screenshot checkpoints.
-3. **Public Nav Links Scope Fixed:** Resolved the contradiction by reclassifying `_public_nav_links` as `needs scoped variant` and adding it to the explicit leakage rule, since it is heavily reused by out-of-scope public routes (`/photos`, `/timeline`, etc.).
-4. **Attribution Perserved:** All attribution boundaries remain explicit.
-
-The scoping document is now 100% repo-accurate. We are ready for Session 99 prompt generation.

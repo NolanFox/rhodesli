@@ -2088,27 +2088,27 @@
     "56e2dd2b-8c12-4bfe-bc77-6f39685f50cf": {
       "name": "Unidentified Person 323",
       "state": "INBOX",
+      "anchor_ids": [
+        "inbox_441f60c145fb"
+      ],
+      "created_at": "2026-02-10T23:26:56.05578+00:00",
+      "updated_at": "2026-03-11T05:29:43.947689+00:00",
+      "version_id": 2,
+      "identity_id": "56e2dd2b-8c12-4bfe-bc77-6f39685f50cf",
+      "merged_into": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": [],
       "metadata": {
         "merge_chain_repairs": [
           {
             "source": "data_integrity_audit",
             "flattened_at": "2026-03-11T05:29:43.947689+00:00",
-            "new_merged_into": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
-            "previous_merged_into": "b3608797-a0ce-4375-a238-8247c98f50bb"
+            "previous_merged_into": "b3608797-a0ce-4375-a238-8247c98f50bb",
+            "new_merged_into": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18"
           }
         ]
-      },
-      "anchor_ids": [
-        "inbox_441f60c145fb"
-      ],
-      "created_at": "2026-02-10T23:26:56.05578+00:00",
-      "updated_at": "2026-03-12T01:25:54.119281+00:00",
-      "version_id": 1,
-      "identity_id": "56e2dd2b-8c12-4bfe-bc77-6f39685f50cf",
-      "merged_into": "b3608797-a0ce-4375-a238-8247c98f50bb",
-      "display_name": null,
-      "negative_ids": [],
-      "candidate_ids": []
+      }
     },
     "bc7f747d-c3a1-4df4-971e-5046a4192853": {
       "name": "Selma Capouya Capouano",
@@ -2762,7 +2762,7 @@
         "inbox_d6c0e200ec37"
       ],
       "created_at": "2026-02-04T04:10:44.934583+00:00",
-      "updated_at": "2026-03-12T01:25:54.338989+00:00",
+      "updated_at": "2026-03-10T20:18:21.635739+00:00",
       "version_id": 2,
       "identity_id": "e2cce5fb-ffd5-444b-9559-2708c64680a4",
       "display_name": null,
@@ -3588,7 +3588,7 @@
         "inbox_08cde0472d2f"
       ],
       "created_at": "2026-02-10T23:27:00.080366+00:00",
-      "updated_at": "2026-03-12T01:25:52.976784+00:00",
+      "updated_at": "2026-03-10T20:18:21.744113+00:00",
       "version_id": 4,
       "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
       "display_name": null,
@@ -5699,7 +5699,7 @@
         "inbox_e57332256894"
       ],
       "created_at": "2026-02-04T04:10:40.299705+00:00",
-      "updated_at": "2026-03-12T01:25:53.672004+00:00",
+      "updated_at": "2026-03-10T20:18:21.82543+00:00",
       "version_id": 2,
       "identity_id": "b8f6bd73-e300-45ad-8af6-4336e4b33db9",
       "merged_into": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
@@ -15055,7 +15055,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-14T14:52:02.030970+00:00",
-      "updated_at": "2026-03-11T15:41:18.540802+00:00",
+      "updated_at": "2026-03-12T02:34:13.672173+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -15078,7 +15078,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-14T14:52:02.030990+00:00",
-      "updated_at": "2026-03-11T15:41:16.546037+00:00",
+      "updated_at": "2026-03-12T02:34:11.672716+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -16095,7 +16095,7 @@
       "state": "INBOX",
       "anchor_ids": [],
       "created_at": "2026-03-09T20:57:48.497823+00:00",
-      "updated_at": "2026-03-12T01:25:54.04721+00:00",
+      "updated_at": "2026-03-10T20:18:22.216932+00:00",
       "version_id": 2,
       "identity_id": "eaed3483-aaf9-4497-8a32-5c1d35d01725",
       "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
@@ -16134,7 +16134,7 @@
       "state": "INBOX",
       "anchor_ids": [],
       "created_at": "2026-03-09T20:57:49.166356+00:00",
-      "updated_at": "2026-03-12T01:25:54.269773+00:00",
+      "updated_at": "2026-03-10T20:18:22.216932+00:00",
       "version_id": 2,
       "identity_id": "a5db4fd4-8313-44f0-ae90-fef81c9de251",
       "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
@@ -16225,7 +16225,7 @@
       "state": "INBOX",
       "anchor_ids": [],
       "created_at": "2026-03-09T20:57:49.486434+00:00",
-      "updated_at": "2026-03-12T01:25:54.560255+00:00",
+      "updated_at": "2026-03-10T20:18:22.216932+00:00",
       "version_id": 2,
       "identity_id": "b5b61799-a3fb-45ba-a2f5-feb3516ccc83",
       "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
@@ -26635,7 +26635,7 @@
         "inbox_bb4ebf382d40"
       ],
       "created_at": "2026-03-10T06:07:23.751718+00:00",
-      "updated_at": "2026-03-12T01:25:52.976784+00:00",
+      "updated_at": "2026-03-10T20:18:22.500675+00:00",
       "version_id": 1,
       "identity_id": "77481285-5084-49c3-90c5-af779d955484",
       "merged_into": "10aef910-9632-4a6c-a644-4551b6e91981",
@@ -27172,27 +27172,27 @@
     "fad5a277-3dad-4ea3-874e-3605bba99287": {
       "name": "Unidentified Person 2949",
       "state": "INBOX",
-      "metadata": {
-        "merge_chain_repairs": [
-          {
-            "source": "data_integrity_audit",
-            "flattened_at": "2026-03-11T05:29:43.947689+00:00",
-            "new_merged_into": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
-            "previous_merged_into": "4d48685b-b529-402f-b0e2-63c93d9d50fb"
-          }
-        ]
-      },
       "anchor_ids": [
         "inbox_123f8fb01c71"
       ],
       "created_at": "2026-03-10T06:07:23.899149+00:00",
-      "updated_at": "2026-03-11T14:52:22.90245+00:00",
+      "updated_at": "2026-03-11T05:29:43.947689+00:00",
       "version_id": 2,
       "identity_id": "fad5a277-3dad-4ea3-874e-3605bba99287",
       "merged_into": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
       "display_name": null,
       "negative_ids": [],
-      "candidate_ids": []
+      "candidate_ids": [],
+      "metadata": {
+        "merge_chain_repairs": [
+          {
+            "source": "data_integrity_audit",
+            "flattened_at": "2026-03-11T05:29:43.947689+00:00",
+            "previous_merged_into": "4d48685b-b529-402f-b0e2-63c93d9d50fb",
+            "new_merged_into": "85546ebf-75b9-4971-a9d4-b2ce2271bc19"
+          }
+        ]
+      }
     },
     "98987fa4-889d-4a5e-b10f-165bfbc4529f": {
       "name": "Unidentified Person 2950",
@@ -32893,27 +32893,27 @@
     "7df4ce2a-48c8-43eb-800f-83a16f20fcfa": {
       "name": "Unidentified Person 3093",
       "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d4278c9307f0"
+      ],
+      "created_at": "2026-03-10T06:07:24.050957+00:00",
+      "updated_at": "2026-03-11T05:29:43.947689+00:00",
+      "version_id": 2,
+      "identity_id": "7df4ce2a-48c8-43eb-800f-83a16f20fcfa",
+      "merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": [],
       "metadata": {
         "merge_chain_repairs": [
           {
             "source": "data_integrity_audit",
             "flattened_at": "2026-03-11T05:29:43.947689+00:00",
-            "new_merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f",
-            "previous_merged_into": "deed80a8-790c-448c-8b7f-52629f179dc4"
+            "previous_merged_into": "deed80a8-790c-448c-8b7f-52629f179dc4",
+            "new_merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f"
           }
         ]
-      },
-      "anchor_ids": [
-        "inbox_d4278c9307f0"
-      ],
-      "created_at": "2026-03-10T06:07:24.050957+00:00",
-      "updated_at": "2026-03-12T01:25:53.822182+00:00",
-      "version_id": 1,
-      "identity_id": "7df4ce2a-48c8-43eb-800f-83a16f20fcfa",
-      "merged_into": "deed80a8-790c-448c-8b7f-52629f179dc4",
-      "display_name": null,
-      "negative_ids": [],
-      "candidate_ids": []
+      }
     },
     "a0f6e403-43a8-4a08-9b99-1d4022bfe0fe": {
       "identity_id": "a0f6e403-43a8-4a08-9b99-1d4022bfe0fe",
@@ -34375,19 +34375,18 @@
       ]
     },
     "32d1f689-e12b-4375-8acd-7378cf74aca4": {
+      "identity_id": "32d1f689-e12b-4375-8acd-7378cf74aca4",
       "name": "Unidentified Person 3139",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_a2c926a5c88f"
       ],
-      "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-12T01:25:53.893689+00:00",
-      "version_id": 1,
-      "identity_id": "32d1f689-e12b-4375-8acd-7378cf74aca4",
-      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
-      "display_name": null,
+      "candidate_ids": [],
       "negative_ids": [],
-      "candidate_ids": []
+      "version_id": 1,
+      "created_at": "2026-03-10T06:07:03.103622+00:00",
+      "updated_at": "2026-03-10T13:20:44.102361+00:00",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db"
     },
     "e8f1a504-da50-4f27-ac74-df0575f840a6": {
       "identity_id": "e8f1a504-da50-4f27-ac74-df0575f840a6",
@@ -38254,19 +38253,18 @@
       "updated_at": "2026-03-10T06:07:03.103622+00:00"
     },
     "12d1b726-abf2-45bd-bb6d-2dc9b0f7e932": {
+      "identity_id": "12d1b726-abf2-45bd-bb6d-2dc9b0f7e932",
       "name": "Unidentified Person 3303",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_e676fe04a2bd"
       ],
-      "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-11T14:52:23.158833+00:00",
-      "version_id": 1,
-      "identity_id": "12d1b726-abf2-45bd-bb6d-2dc9b0f7e932",
-      "merged_into": "1109cff9-e3eb-4d21-aff9-bdcf12a35cda",
-      "display_name": null,
+      "candidate_ids": [],
       "negative_ids": [],
-      "candidate_ids": []
+      "version_id": 1,
+      "created_at": "2026-03-10T06:07:03.103622+00:00",
+      "updated_at": "2026-03-10T13:20:43.945007+00:00",
+      "merged_into": "1109cff9-e3eb-4d21-aff9-bdcf12a35cda"
     },
     "94f7419b-dd85-4ce6-bd31-48b65c45b5b6": {
       "identity_id": "94f7419b-dd85-4ce6-bd31-48b65c45b5b6",
@@ -40987,7 +40985,7 @@
         "inbox_55e69faf1839"
       ],
       "created_at": "2026-03-10T06:07:24.485773+00:00",
-      "updated_at": "2026-03-11T14:52:23.249697+00:00",
+      "updated_at": "2026-03-10T18:06:59.279694+00:00",
       "version_id": 1,
       "identity_id": "966699fb-51a2-4639-80ac-23843bacd634",
       "merged_into": "98772230-f4a2-4a10-b6cf-36d915e29225",
@@ -48836,27 +48834,27 @@
     "b5e52670-954c-428e-a547-4e3dc44fd5d0": {
       "name": "Unidentified Person 3784",
       "state": "INBOX",
+      "anchor_ids": [
+        "inbox_cd98d0d6c32d"
+      ],
+      "created_at": "2026-03-10T06:07:25.08334+00:00",
+      "updated_at": "2026-03-11T05:29:43.947689+00:00",
+      "version_id": 2,
+      "identity_id": "b5e52670-954c-428e-a547-4e3dc44fd5d0",
+      "merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": [],
       "metadata": {
         "merge_chain_repairs": [
           {
             "source": "data_integrity_audit",
             "flattened_at": "2026-03-11T05:29:43.947689+00:00",
-            "new_merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f",
-            "previous_merged_into": "36b4d107-375b-42b6-81f0-d06fb7cb5259"
+            "previous_merged_into": "36b4d107-375b-42b6-81f0-d06fb7cb5259",
+            "new_merged_into": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f"
           }
         ]
-      },
-      "anchor_ids": [
-        "inbox_cd98d0d6c32d"
-      ],
-      "created_at": "2026-03-10T06:07:25.08334+00:00",
-      "updated_at": "2026-03-12T01:25:53.051767+00:00",
-      "version_id": 1,
-      "identity_id": "b5e52670-954c-428e-a547-4e3dc44fd5d0",
-      "merged_into": "36b4d107-375b-42b6-81f0-d06fb7cb5259",
-      "display_name": null,
-      "negative_ids": [],
-      "candidate_ids": []
+      }
     },
     "8d828bd9-1bfa-4bcd-a3af-9bfd6d10e0ae": {
       "identity_id": "8d828bd9-1bfa-4bcd-a3af-9bfd6d10e0ae",
@@ -56598,7 +56596,7 @@
         "inbox_e4569963f935"
       ],
       "created_at": "2026-03-09T20:57:47.992456+00:00",
-      "updated_at": "2026-03-12T01:25:53.051767+00:00",
+      "updated_at": "2026-03-10T20:18:23.431754+00:00",
       "version_id": 1,
       "identity_id": "6b0f67f3-08f4-43a6-8287-ea73b009c703",
       "merged_into": "a71d7a56-8044-43b4-b61d-f78544d54d89",
@@ -56928,7 +56926,7 @@
         "inbox_8c20c5676f6f"
       ],
       "created_at": "2026-03-09T20:57:48.154564+00:00",
-      "updated_at": "2026-03-12T01:25:53.822182+00:00",
+      "updated_at": "2026-03-10T20:18:23.431754+00:00",
       "version_id": 1,
       "identity_id": "9a5831fd-0a31-414a-af47-faa76a5dc2c4",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -59809,7 +59807,7 @@
         "inbox_8c58df1f7feb"
       ],
       "created_at": "2026-03-09T20:57:49.166356+00:00",
-      "updated_at": "2026-03-12T01:25:54.04721+00:00",
+      "updated_at": "2026-03-10T20:18:23.562084+00:00",
       "version_id": 1,
       "identity_id": "1e8bee6b-e9b0-4b4b-bd6f-4c0c89181351",
       "merged_into": "d7e13b0a-9def-4de7-b7db-ae7d653f4845",
@@ -61834,7 +61832,7 @@
         "inbox_ca20474c7e40"
       ],
       "created_at": "2026-03-09T20:57:48.655889+00:00",
-      "updated_at": "2026-03-11T14:52:24.092338+00:00",
+      "updated_at": "2026-03-10T05:32:43.168399+00:00",
       "version_id": 1,
       "identity_id": "9ee925e9-e19d-465f-82d7-1d446e7f5b75",
       "merged_into": "bd5b82db-635c-4bd1-8a4d-c677b1d798a8",
@@ -62269,7 +62267,7 @@
         "inbox_9dc5abc6c265"
       ],
       "created_at": "2026-03-09T20:57:48.655889+00:00",
-      "updated_at": "2026-03-11T14:52:24.162157+00:00",
+      "updated_at": "2026-03-10T05:32:43.168399+00:00",
       "version_id": 1,
       "identity_id": "a2b6833a-b33c-4c45-a6ce-4c0f6b9bc467",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -63139,7 +63137,7 @@
         "inbox_811b4e74c244"
       ],
       "created_at": "2026-03-09T20:57:49.322493+00:00",
-      "updated_at": "2026-03-11T14:52:24.162157+00:00",
+      "updated_at": "2026-03-10T05:32:43.901129+00:00",
       "version_id": 1,
       "identity_id": "70164063-0fca-4c50-bc96-d88101bd18c3",
       "merged_into": "be9e9a98-a628-4f65-8d72-315690240c62",
@@ -63844,7 +63842,7 @@
         "inbox_f0ac8f7f6bdb"
       ],
       "created_at": "2026-03-10T16:06:18.663964+00:00",
-      "updated_at": "2026-03-12T01:25:53.430641+00:00",
+      "updated_at": "2026-03-10T20:18:23.8062+00:00",
       "version_id": 1,
       "identity_id": "2a3918a4-4f71-45df-a00b-d0333588c84b",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -63859,7 +63857,7 @@
         "inbox_bdd5e1fef2b3"
       ],
       "created_at": "2026-03-10T16:06:18.663964+00:00",
-      "updated_at": "2026-03-12T01:25:53.822182+00:00",
+      "updated_at": "2026-03-10T20:18:23.8062+00:00",
       "version_id": 1,
       "identity_id": "47bbde11-481f-4da1-9cf8-0e5b1528bf2f",
       "merged_into": "c9d1feb7-c62d-4fd3-aadd-d369a57c28eb",
@@ -63874,7 +63872,7 @@
         "inbox_cd98d0d6c32d"
       ],
       "created_at": "2026-03-10T16:06:18.663964+00:00",
-      "updated_at": "2026-03-12T01:25:54.269773+00:00",
+      "updated_at": "2026-03-10T20:18:23.8062+00:00",
       "version_id": 1,
       "identity_id": "a96408f0-cef1-48df-96cf-a9eec1ce1d2c",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -63889,7 +63887,7 @@
         "inbox_776a70b7034f"
       ],
       "created_at": "2026-03-10T16:06:18.663964+00:00",
-      "updated_at": "2026-03-12T01:25:54.269773+00:00",
+      "updated_at": "2026-03-10T20:18:23.8062+00:00",
       "version_id": 1,
       "identity_id": "fe634c89-7a71-43f3-96e1-b38b65fd55f9",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -63934,7 +63932,7 @@
         "inbox_0721648bf5ab"
       ],
       "created_at": "2026-03-10T18:36:17.670359+00:00",
-      "updated_at": "2026-03-12T01:25:52.481395+00:00",
+      "updated_at": "2026-03-10T20:18:23.8062+00:00",
       "version_id": 1,
       "identity_id": "024c05a8-8385-4f69-bb9d-6ee64561c5fb",
       "merged_into": "441c2d6e-59b5-47b8-bbb9-12bf5351a254",
@@ -104375,8 +104373,8 @@
       }
     },
     {
-      "event_id": "c0e8cf41-d58b-40e0-bb8e-55ab7af9dbcc",
-      "timestamp": "2026-03-11T15:41:16.546074+00:00",
+      "event_id": "b0a664b2-5aa2-4c02-bedf-bd49596df929",
+      "timestamp": "2026-03-12T02:34:11.672754+00:00",
       "identity_id": "44ee07e0-bc1c-4839-9ee3-149e9ef349db",
       "action": "rename",
       "face_ids": [],
@@ -104389,8 +104387,8 @@
       }
     },
     {
-      "event_id": "4710c2c7-acf3-4825-82c5-5fa8da45fc8a",
-      "timestamp": "2026-03-11T15:41:18.540827+00:00",
+      "event_id": "7042aee1-6eea-426d-804b-d4bf674a1563",
+      "timestamp": "2026-03-12T02:34:13.672202+00:00",
       "identity_id": "531c8221-a115-4bdd-ac96-bd930a27135b",
       "action": "rename",
       "face_ids": [],

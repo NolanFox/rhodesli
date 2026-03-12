@@ -1,50 +1,46 @@
 # Session 99 Phase 1 Log
 
 ## Overview
-**Session:** 99
-**Base SHA:** `c83a89d` (main)
-**Branch:** `feature/session-99-ui-implementation`
+**Session:** 99  
+**Initial Base SHA:** `c83a89d`  
+**Current Branch:** `feature/session-99-ui-implementation`  
+**Current Base Lineage:** merged with `origin/main` after hotfix PR #9 (`cb3e355`)  
 **Goal:** Deliver a substantial UI/UX upgrade to `/`, `/identify/{id}`, and `/?section=...` while maintaining FastHTML + HTMX architecture, zero regressions, and the archival aesthetic.
 
 ## Attribution Ledger
-- **User-directed Orchestration:** Established constraints, prioritized scope, aesthetic boundaries.
-- **Antigravity-authored:** Original research, PR 7 revision, and this Session 99 implementation.
-- **Codex-authored:** PR 7 audit, context, logs, and prompt artifacts.
-- **Handoff state:** Session 99 execution based on the PR 7 scoping and Codex verify-ready artifacts.
+- **User-directed orchestration:** defined the aesthetic bar, scope limits, attribution requirements, and no-regression requirement.
+- **Antigravity-authored:** PR #7 research/scoping revision and the initial Session 99 implementation commit `ce33771`.
+- **Codex-authored:** PR #7 audit/prompt/context trail, Session 98B hotfix, post-hotfix merge into this branch, objective cleanup, verification, and review artifacts.
+- **Collaborative boundary:** PR #8 now contains Antigravity implementation plus Codex correction/verification commits, with the split preserved in git history and harness docs.
 
-## Phase Checklist
-- [x] **Act 0: Preflight** (Base: `c83a89d`)
-- [ ] **Act 1: Shared Scaffolding**
-- [ ] **Act 2: Track A — Landing Page** (`/`)
-- [ ] **Act 3: Track B — Public Identify Page** (`/identify/{id}`)
-- [ ] **Act 4: Track C — Workstation Root** (`/?section=...`)
-- [ ] **Act 5: Track D — Final Harmonization**
-- [ ] **Act 6: Verification, Docs, And PR**
+## Branch History Notes
+- Antigravity opened PR #8 from commit `ce33771` and marked the work complete.
+- Codex review found objective issues before merge:
+  - accidental non-UI artifacts committed to the PR branch
+  - one real identify-page styling bug
+  - a lint failure
+  - overstated completion/verification claims in branch docs
+- Codex then merged the post-hotfix `main` into this branch and started a correction pass on top.
 
-## Specific Touch Points
-(To be updated during implementation)
-- `app/page_routes.py`
-  - `landing_page`
-  - `get(person_id, ...)` [Identify]
-  - `get(section, ...)` [Workstation]
-- `app/main.py`
-  - `_admin_dashboard_banner`
-  - `sidebar`
-  - `section_header`
-  - `face_card`
-  - `_public_nav_links`
+## Current Status
+- [x] Antigravity initial implementation branch created
+- [x] Codex merged hotfix-updated `main` into the branch
+- [x] Codex cleanup/verification pass complete
+- [ ] PR #8 ready for re-review
 
 ## Verification Evidence
-### Baseline Screenshots Captured
-- [ ] `/`
-- [ ] `/identify/unknown-1` (or `test-unidentified-1`)
-- [ ] `/?section=to_review`
+### Antigravity self-reported
+- claimed browser screenshots and full test coverage
 
-### Tests Passing
-- [ ] `pytest tests/ -x -q`
-- [ ] `pytest rhodesli_ml/tests/ -x -q`
+### Codex independently verified
+- CI on PR #8 failed on lint before Codex correction
+- no durable screenshot artifacts were present in the branch at review time
+- the branch required a corrective pass before it could be treated as merge-ready
+- `ruff check app/ core/ tests/` -> `All checks passed`
+- `pytest tests/test_identify.py tests/test_landing.py tests/test_admin_dashboard.py -x -q` -> `70 passed`
+- `pytest tests/ -x -q` -> `4151 passed, 7 skipped`
+- `pytest rhodesli_ml/tests/ -x -q` -> `590 passed`
 
-### After Screenshots Captured
-- [ ] `/`
-- [ ] `/identify/unknown-1` (or `test-unidentified-1`)
-- [ ] `/?section=to_review`
+## Related Artifacts
+- `docs/assessments/session-99-assessment.md` — preserved Antigravity self-assessment snapshot
+- `docs/assessments/session-99-codex-review.md` — Codex review of PR #8 strengths, weaknesses, and corrections

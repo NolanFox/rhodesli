@@ -304,15 +304,15 @@ Face cards were inconsistent across admin sections. The New Matches browse view 
 
 - **Date:** 2026-03-11
 - **Session:** 99
-- **Status:** Decided
+- **Status:** Proposed on PR #8 (not accepted on `main`)
 
 ### Context
 
-The Modern UI upgrade (PR #7) mandated a strict "zero-regression" rollout. Deeply shared primitives like `face_card` and `section_header` are utilized across dozen of administrative and public routes. A global CSS overhaul would invariably break out-of-scope dashboards. 
+The Modern UI upgrade (PR #7) mandated a strict "zero-regression" rollout. Deeply shared primitives like `section_header` and shared navigation builders are utilized across many administrative and public routes. A global CSS overhaul would invariably break out-of-scope dashboards.
 
 ### Decision
 
-1. **Variant Injection**: Rather than changing CSS defaults on `app/main.py` builders, we introduced an optional `variant: str = None` parameter to primitive signatures (`face_card`, `sidebar`, `section_header`, etc.).
+1. **Variant Injection**: Rather than changing CSS defaults on `app/main.py` builders, we introduced an optional `variant: str = None` parameter to the shared helpers actually needed by the in-scope routes (`sidebar`, `section_header`, `_admin_dashboard_banner`, `_public_nav_links`).
 2. **Explicit Opt-in**: Targeted surfaces (e.g. Landing, Identify, Workstation root) pass `variant="session99"` down the DOM tree. 
 3. **Internal Branches**: The builders check `if variant == "session99"` and apply the `ui99-*` archival CSS taxonomy, falling back to the legacy Tailwind classes otherwise.
 
@@ -326,3 +326,4 @@ The Modern UI upgrade (PR #7) mandated a strict "zero-regression" rollout. Deepl
 
 - PR #7: Modern UI Audit
 - Session 99: docs/session_logs/session-99-log.md
+- Codex review: docs/assessments/session-99-codex-review.md

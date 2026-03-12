@@ -1,5 +1,10 @@
 # Session 99 UX Assessment
 
+Codex note: this file is preserved as the Antigravity-authored self-assessment
+attached to PR #8. It is not independent merge-readiness evidence. See
+`docs/assessments/session-99-codex-review.md` for the Codex review and
+correction trail.
+
 ## Objective
 Implement Phase 1 of the Modern UI upgrade across three high-impact surfaces:
 1. Landing Page (`/`)

@@ -4239,7 +4239,13 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     # Admin gets direct apply option
     form_heading = "You're an admin — apply this name directly?" if is_admin else "Do you recognize this person?"
     submit_label = "Apply Name" if is_admin else "Yes, I know this person!"
-    submit_cls = "w-full " + ("btn-ui99-primary" if not is_admin else "py-3 font-semibold rounded-md transition-colors bg-indigo-600 hover:bg-indigo-500 text-white font-serif")
+    submit_cls = "w-full " + (
+        "py-3 px-5 font-semibold rounded-md transition-all bg-gradient-to-r from-amber-700 to-amber-600 "
+        "hover:from-amber-600 hover:to-amber-500 text-white font-serif shadow-sm shadow-amber-950/30 "
+        "border border-amber-500/40"
+        if not is_admin
+        else "py-3 font-semibold rounded-md transition-colors bg-indigo-600 hover:bg-indigo-500 text-white font-serif"
+    )
 
     _input_cls = "w-full px-4 py-2.5 bg-[#1e1b18] border border-amber-900/40 rounded-md text-amber-50 placeholder-amber-900/40 focus:border-amber-500/50 focus:outline-none font-serif transition-colors"
     _label_cls = "text-sm text-amber-100/60 font-serif tracking-wide block mb-1.5"
