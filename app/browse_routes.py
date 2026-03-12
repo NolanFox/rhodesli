@@ -621,11 +621,17 @@ def photos_more(
     search_q: str = "",
     tag: str = "",
     media_filter: str = "all",
+    request=None,
 ):
     """HTMX endpoint for infinite scroll — returns next batch of photo cards."""
     from urllib.parse import urlencode as _ue
 
     PHOTOS_PER_PAGE = 24
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+    community_photo_ids = _main_mod._get_community_photo_ids(community)
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -637,7 +643,15 @@ def photos_more(
         search_photo_ids = {r.get("cache_photo_id", r["photo_id"]): r.get("match_reason") for r in search_results}
 
     photos = []
+    _reverse_aliases = {}
+    if community_photo_ids is not None and _main_mod._photo_id_aliases:
+        for inbox_id, cache_id in _main_mod._photo_id_aliases.items():
+            _reverse_aliases[cache_id] = inbox_id
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
+        if community_photo_ids is not None:
+            alias_id = _reverse_aliases.get(photo_id_val)
+            if photo_id_val not in community_photo_ids and (alias_id is None or alias_id not in community_photo_ids):
+                continue
         collection = photo_data.get("collection", "")
         if filter_collection and collection != filter_collection:
             continue
@@ -709,7 +723,7 @@ def photos_more(
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
-                hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
+                hx_get=f"{nav_prefix}/api/photos/more?{_ue(_lazy_params)}",
                 hx_trigger="revealed",
                 hx_swap="outerHTML",
             )

@@ -163,6 +163,11 @@
 - verification:
   - `pytest tests/test_public_browsing.py tests/e2e/test_discovery_layer.py::test_photo_card_shows_date_badge tests/e2e/test_discovery_layer.py::test_date_badge_confidence_styling -x -q`
     - `24 passed`
+- the paired infinite-scroll endpoint `/api/photos/more` now mirrors the same
+  community/nav-prefix logic, so lazy loading no longer falls back to bare
+  photo links or bare `/api/...` continuation URLs
+- additional files:
+  - [tests/test_lazy_loading.py](/Users/nolanfox/rhodesli/tests/test_lazy_loading.py)
 
 ## Photo Modal Browser-Helper Stability
 - the critical-path browser helper was timing out on the workstation photo modal
