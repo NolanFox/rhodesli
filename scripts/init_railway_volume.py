@@ -34,7 +34,14 @@ CLI deploys to seed the volume.
 
 import os
 import shutil
+import sys
 from pathlib import Path
+
+# Ensure sibling packages (for example core/) are importable when this file is
+# executed as `python scripts/init_railway_volume.py` inside the container.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Storage configuration (mirrors core/config.py logic)
 STORAGE_DIR = os.getenv("STORAGE_DIR")  # Only set on Railway

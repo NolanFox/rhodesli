@@ -19,6 +19,7 @@ Executed successfully on 2026-03-11.
   - Railway deployment `2dbb0a2f-3373-4929-b3df-552134710c9d` reached `SUCCESS`
   - `https://rhodesli.nolanandrewfox.com/health` returned `200`
   - GitHub Actions run `22981172101` passed
+  - follow-up closeout also removed the non-fatal startup-backup import warning
 
 ## Preconditions
 

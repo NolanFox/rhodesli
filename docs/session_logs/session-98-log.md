@@ -202,6 +202,11 @@
   `audit_log.target_type`. Session 98 closed that compatibility gap with a
   fallback in `app/supabase_data.py` plus regression coverage in
   `tests/test_supabase_migration.py`.
+- Startup logs also exposed a non-fatal backup warning because
+  `scripts/init_railway_volume.py` was executed from `/app/scripts` without
+  first bootstrapping the project root for `core/` imports. Session 98 fixed
+  that bootstrap path and added regression coverage in
+  `tests/test_deploy_safety_gate.py`.
 
 ## User Q&A Captured
 

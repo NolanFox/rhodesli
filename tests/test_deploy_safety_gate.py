@@ -10,6 +10,8 @@ These tests prevent the 5th+ occurrence of deploy data loss.
 """
 
 import json
+import runpy
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -78,6 +80,19 @@ class TestCountConfirmedIdentities:
         path = tmp_path / "identities.json"
         _write_identities(path, confirmed=0, total=10)
         assert _count_confirmed_identities(path) == 0
+
+
+class TestInitRailwayVolumeBootstrap:
+    def test_script_bootstraps_project_root_for_core_imports(self, monkeypatch):
+        script_path = Path("scripts/init_railway_volume.py").resolve()
+        project_root = str(script_path.parent.parent)
+
+        filtered_path = [p for p in sys.path if Path(p or ".").resolve() != Path(project_root).resolve()]
+        monkeypatch.setattr(sys, "path", filtered_path)
+
+        runpy.run_path(str(script_path), run_name="scripts.init_railway_volume_bootstrap_test")
+
+        assert sys.path[0] == project_root
 
     def test_returns_negative_on_missing_file(self, tmp_path):
         from scripts.init_railway_volume import _count_confirmed_identities

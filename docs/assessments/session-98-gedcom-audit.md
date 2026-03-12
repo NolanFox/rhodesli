@@ -142,6 +142,10 @@ Operational notes from the live rollout:
 - production startup also exposed a legacy `audit_log` schema without
   `target_type`; Session 98 added a shape-filter fallback so identity-history
   sync remains available until that column is standardized everywhere
+- production startup also exposed a non-fatal R2-backup import warning because
+  `init_railway_volume.py` did not add the project root to `sys.path` before
+  importing `core.storage`; Session 98 fixed that bootstrap path and added a
+  regression test
 
 ## UX / ML Outcome
 
