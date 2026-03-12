@@ -153,6 +153,12 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
 - Full app suite in this working tree:
   - blocked by active local `data/identities.json` drift from live app usage, not by the code changes
   - failure surfaced in `tests/test_data_integrity.py::TestOrphanedIdentities::test_confirmed_anchors_in_face_to_photo`
+- Clean-worktree verification from commit `0605f95`:
+  - `pytest rhodesli_ml/tests/ -x -q`
+    - `590 passed`
+  - `pytest tests/ -x -q`
+    - first cold run hit an e2e app-server startup timeout
+    - second warm run passed: `4146 passed, 21 skipped`
 
 ### Important Working-Tree Note
 - `data/identities.json` is dirty from live archive work and must stay out of the Session 100 commit.

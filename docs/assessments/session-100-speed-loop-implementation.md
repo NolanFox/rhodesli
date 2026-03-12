@@ -71,6 +71,14 @@ Full suites:
   - blocked in this working tree by a user-created local `data/identities.json`
     delta during live app usage, not by the code changes
 
+Clean-worktree verification:
+- clean worktree at commit `0605f95`
+- `pytest rhodesli_ml/tests/ -x -q`
+  - `590 passed`
+- `pytest tests/ -x -q`
+  - first cold run hit an e2e app-server startup timeout
+  - second warm run passed: `4146 passed, 21 skipped`
+
 ## Important Verification Note
 
 The failing app-suite assertion in this working tree was:
