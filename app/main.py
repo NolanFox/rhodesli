@@ -7203,7 +7203,9 @@ def render_photos_section(
     photos = []
     sources_set = set()
     collections_set = set()
-    for photo_id, photo_data in _photo_cache.items():
+    # Snapshot cache items so patched/shared test dictionaries cannot invalidate
+    # the iterator mid-render under parallel test execution.
+    for photo_id, photo_data in list(_photo_cache.items()):
         # Apply community filter
         if community_photo_ids is not None and photo_id not in community_photo_ids:
             continue

@@ -79,6 +79,18 @@ Clean-worktree verification:
   - first cold run hit an e2e app-server startup timeout
   - second warm run passed: `4146 passed, 21 skipped`
 
+Follow-up CI stabilization:
+- GitHub CI later exposed one additional fast-test failure in
+  `tests/test_photo_sorting.py::TestPhotoSortBySource::test_by_source_option_in_dropdown`
+  caused by iterating `_photo_cache.items()` directly while tests patched the
+  shared cache.
+- Codex fixed that by snapshotting the cache items in
+  `render_photos_section()` before iterating.
+- Focused re-verification after that fix:
+  - `ruff check app/main.py`
+  - `pytest tests/test_photo_sorting.py tests/test_sequential_identify.py tests/test_public_photo_viewer.py -x -q`
+    - `45 passed`
+
 ## Important Verification Note
 
 The failing app-suite assertion in this working tree was:

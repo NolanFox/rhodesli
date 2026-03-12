@@ -147,6 +147,15 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
   - `ruff check app/page_routes.py app/photo_routes.py app/identity_routes.py tests/test_sequential_identify.py tests/test_public_photo_viewer.py`
   - `pytest tests/test_sequential_identify.py tests/test_public_photo_viewer.py tests/test_photo_navigation.py tests/test_inline_face_actions.py tests/test_public_person_page.py tests/test_identify.py -x -q`
     - `151 passed, 2 skipped`
+- Follow-up CI stabilization:
+  - GitHub fast tests exposed one additional failure in
+    `tests/test_photo_sorting.py::TestPhotoSortBySource::test_by_source_option_in_dropdown`
+    caused by live iteration over `_photo_cache.items()` under patched test dictionaries.
+  - Codex fixed that with a snapshot iteration in [app/main.py](/Users/nolanfox/rhodesli/app/main.py).
+  - Focused re-check after the fix:
+    - `ruff check app/main.py`
+    - `pytest tests/test_photo_sorting.py tests/test_sequential_identify.py tests/test_public_photo_viewer.py -x -q`
+      - `45 passed`
 - Full ML suite:
   - `pytest rhodesli_ml/tests/ -x -q`
     - `590 passed`
