@@ -121,3 +121,14 @@
   - `python3 -m py_compile app/main.py app/page_routes.py`
   - `pytest tests/test_photo_provenance.py tests/test_public_photo_viewer.py tests/test_collections.py -x -q`
     - `61 passed`
+
+## Root Landing E2E Alignment
+- the critical-path browser test was still asserting the retired Rhodes-only
+  landing CTA even though PRD-040 moved `/` to the neutral platform entry shell
+- updated the e2e contract to assert the platform-root archive entry actions
+  instead of the old `Start Exploring` expectation on `/`
+- files:
+  - [tests/e2e/test_critical_paths.py](/Users/nolanfox/rhodesli/tests/e2e/test_critical_paths.py)
+- verification:
+  - `pytest tests/e2e/test_critical_paths.py::test_landing_page_hero -x -q`
+    - `1 passed`

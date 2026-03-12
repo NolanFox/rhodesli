@@ -62,11 +62,11 @@ def _wait_for_photo_change(page, old_src, timeout=5000):
 
 
 # ---------------------------------------------------------------------------
-# Test 1: Landing page renders correctly
+# Test 1: Root landing / platform entry renders correctly
 # ---------------------------------------------------------------------------
 
 def test_landing_page_hero(page, app_server):
-    """Landing page should have hero section with headline and CTAs."""
+    """Root should render the neutral platform entry shell from PRD-040."""
     _goto(page, app_server)
 
     assert page.locator("#hero").count() > 0, "Missing #hero section"
@@ -75,8 +75,9 @@ def test_landing_page_hero(page, app_server):
     assert h1.count() > 0, "Missing h1 in hero"
     assert len(h1.text_content()) > 10, "H1 text too short"
 
-    assert page.locator("a:has-text('Start Exploring')").count() > 0
-    assert page.locator("a:has-text('Help Identify')").count() > 0
+    assert page.locator("a:has-text('Browse the Rhodes demo archive')").count() > 0
+    assert page.locator("a:has-text('Jump to the archive directory')").count() > 0
+    assert page.locator("a:has-text('Enter Archive')").count() >= 1
 
 
 def test_landing_page_stats(page, app_server):
