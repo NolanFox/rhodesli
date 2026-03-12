@@ -47,17 +47,10 @@ COPY app/ app/
 COPY core/ core/
 COPY scripts/ scripts/
 
-# Copy rhodesli_ml subpackages needed at runtime (graph + importers + calibration + date inference)
-# Full ML package has 3GB+ of .venv/checkpoints — only copy pure-Python modules
-COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
-COPY rhodesli_ml/gemini_config.py rhodesli_ml/gemini_config.py
-COPY rhodesli_ml/gemini_extraction.py rhodesli_ml/gemini_extraction.py
-COPY rhodesli_ml/gedcom_context.py rhodesli_ml/gedcom_context.py
-COPY rhodesli_ml/graph/ rhodesli_ml/graph/
-COPY rhodesli_ml/importers/ rhodesli_ml/importers/
-COPY rhodesli_ml/calibration/ rhodesli_ml/calibration/
-COPY rhodesli_ml/date_inference/ rhodesli_ml/date_inference/
-COPY rhodesli_ml/artifacts/ rhodesli_ml/artifacts/
+# Copy the runtime ML package wholesale.
+# .dockerignore strips tests, notebooks, virtualenvs, checkpoints, and other local-heavy directories,
+# so the image includes the full importable package surface without shipping development baggage.
+COPY rhodesli_ml/ rhodesli_ml/
 
 # Copy CHANGELOG.md for dynamic version display
 COPY CHANGELOG.md .
