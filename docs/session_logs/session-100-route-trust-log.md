@@ -46,3 +46,13 @@
   - `ruff check app/person_routes.py tests/test_public_person_page.py`
   - `pytest tests/test_public_person_page.py tests/test_find_similar_page.py tests/test_inline_find_similar.py -x -q`
     - `77 passed, 2 skipped`
+
+## Photo Conflict Follow-Up
+- public photo pages now flag overlapping face assignments as `Conflict`
+  instead of presenting them as clean truths
+- overlapping boxes now render `Needs review` overlays
+- a photo-level conflict banner appears when the rendered boxes collide
+- verification:
+  - `ruff check app/page_routes.py tests/test_public_photo_viewer.py`
+  - `pytest tests/test_public_photo_viewer.py tests/test_public_person_page.py tests/test_identify.py -x -q`
+    - `99 passed, 2 skipped`

@@ -11045,6 +11045,24 @@ def public_photo_page(
     back_css_filter = _main_mod.parse_transform_to_filter(back_transform_str)
 
     # Collect face info for overlays and person cards
+    def _bbox_iou(a, b) -> float:
+        """Return IoU for two [x1, y1, x2, y2] boxes; 0 for invalid boxes."""
+        if not isinstance(a, (list, tuple)) or not isinstance(b, (list, tuple)) or len(a) < 4 or len(b) < 4:
+            return 0.0
+        ax1, ay1, ax2, ay2 = a[:4]
+        bx1, by1, bx2, by2 = b[:4]
+        inter_x1 = max(ax1, bx1)
+        inter_y1 = max(ay1, by1)
+        inter_x2 = min(ax2, bx2)
+        inter_y2 = min(ay2, by2)
+        inter_w = max(0.0, inter_x2 - inter_x1)
+        inter_h = max(0.0, inter_y2 - inter_y1)
+        inter_area = inter_w * inter_h
+        area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+        area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+        union = area_a + area_b - inter_area
+        return (inter_area / union) if union > 0 else 0.0
+
     face_info_list = []
     identified_names = []
     unidentified_count = 0
@@ -11076,13 +11094,27 @@ def public_photo_page(
                 "face_id": face_id,
                 "bbox": bbox,
                 "display_name": display_name,
+                "raw_name": raw_name,
                 "identity_id": face_identity_id,
                 "state": state,
                 "is_identified": is_identified,
                 "is_context_identity": bool(identity_id and face_identity_id == identity_id),
                 "crop_url": crop_url,
+                "bbox_conflict": False,
+                "conflict_names": set(),
             }
         )
+
+    for i, face_info in enumerate(face_info_list):
+        for other_face in face_info_list[i + 1 :]:
+            if _bbox_iou(face_info["bbox"], other_face["bbox"]) < 0.8:
+                continue
+            face_info["bbox_conflict"] = True
+            other_face["bbox_conflict"] = True
+            face_info["conflict_names"].add(other_face["raw_name"])
+            other_face["conflict_names"].add(face_info["raw_name"])
+
+    has_bbox_conflicts = any(fi["bbox_conflict"] for fi in face_info_list)
 
     # First unidentified face from this photo — for contextual "Help Identify" CTA
     first_unidentified_id = next(
@@ -11108,7 +11140,16 @@ def public_photo_page(
             name_above = top_pct > 15  # Face is below top 15% — put name above
             name_pos_cls = "-top-6" if name_above else "-bottom-6"
 
-            if fi["is_context_identity"]:
+            if fi["bbox_conflict"]:
+                overlay_cls = (
+                    "face-overlay-box absolute border-2 border-rose-400/80 bg-rose-500/10 "
+                    "hover:bg-rose-500/20 transition-all cursor-pointer group"
+                )
+                name_el = Span(
+                    "Needs review",
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-rose-200 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[220%] truncate",
+                )
+            elif fi["is_context_identity"]:
                 overlay_cls = (
                     "face-overlay-box absolute border-2 border-amber-300 bg-amber-400/10 "
                     "ring-2 ring-amber-200/50 hover:bg-amber-400/15 transition-all cursor-pointer group"
@@ -11131,7 +11172,9 @@ def public_photo_page(
                 )
 
             # Click navigates to person page (identified) or identify page (unidentified)
-            if fi["is_identified"] and fi["identity_id"]:
+            if fi["bbox_conflict"]:
+                click_href = None
+            elif fi["is_identified"] and fi["identity_id"]:
                 click_href = f"{nav_prefix}/person/{fi['identity_id']}"
             elif fi["identity_id"]:
                 click_href = f"{nav_prefix}/identify/{fi['identity_id']}"
@@ -11142,16 +11185,21 @@ def public_photo_page(
                 f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
             )
             # Face labels: confirmed/identified faces visible for ALL users, others admin-only
-            _show_overlay = is_admin or fi["is_identified"]
+            _show_overlay = is_admin or fi["is_identified"] or fi["bbox_conflict"]
             _pub_overlay_style = _pub_overlay_base + (" display: block;" if _show_overlay else " display: none;")
             _id_attr = "true" if fi["is_identified"] else "false"
+            _title = (
+                "Conflicting face assignments: " + ", ".join(sorted(fi["conflict_names"] | {fi["raw_name"]}))
+                if fi["bbox_conflict"]
+                else fi["display_name"]
+            )
             overlay_inner = (
                 A(
                     name_el,
                     href=click_href,
                     cls=overlay_cls,
                     style=_pub_overlay_style,
-                    title=fi["display_name"],
+                    title=_title,
                     id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
                     data_identified=_id_attr,
                 )
@@ -11160,7 +11208,7 @@ def public_photo_page(
                     name_el,
                     cls=overlay_cls,
                     style=_pub_overlay_base + ("" if _show_overlay else " display: none;"),
-                    title=fi["display_name"],
+                    title=_title,
                     data_identified=_id_attr,
                 )
             )
@@ -11171,7 +11219,9 @@ def public_photo_page(
     person_cards = []
     for fi in face_info_list:
         card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
-        if fi["is_context_identity"]:
+        if fi["bbox_conflict"]:
+            badge = Span("Conflict", cls="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-full")
+        elif fi["is_context_identity"]:
             badge = Span(
                 "Viewing",
                 cls="text-[10px] text-amber-200 bg-amber-500/15 px-1.5 py-0.5 rounded-full border border-amber-400/30",
@@ -11266,6 +11316,12 @@ def public_photo_page(
                 if isinstance(name_el, str)
                 else Div(name_el, cls="text-sm font-medium mt-2 text-center font-display"),
                 badge,
+                P(
+                    "Overlaps another face assignment on this photo.",
+                    cls="text-[10px] text-rose-300/80 mt-1 text-center leading-snug",
+                )
+                if fi["bbox_conflict"]
+                else None,
                 see_all_link,
                 cls="flex flex-col items-center",
             ),
@@ -12085,13 +12141,20 @@ def public_photo_page(
                             f"{'People' if total_faces != 1 else 'Person'} in this photo",
                             cls="text-lg font-serif font-semibold text-white",
                         ),
+                        Span(
+                            "Potential tag conflicts detected",
+                            cls="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-full",
+                            data_testid="photo-face-conflict-banner",
+                        )
+                        if has_bbox_conflicts
+                        else None,
                         A(
                             "Compare faces",
                             href=f"/compare?photo_id={photo_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300 transition-colors",
                             data_testid="compare-photo-link",
                         ),
-                        cls="flex items-center justify-between mb-4",
+                        cls="flex items-center justify-between gap-3 flex-wrap mb-4",
                     ),
                     Div(
                         *person_cards,
