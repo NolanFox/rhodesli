@@ -106,6 +106,11 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: When two surfaces render the same archival objects, they must carry the same canonical metadata fields unless the omission is deliberate and tested.
 - **Prevention**: Centralize or explicitly mirror the photo-card metadata contract (`upload_date`, `uploaded_by`, `photo_index_order`, provenance text inputs) across all list builders, and add regression tests that compare workstation and public rendering behavior.
 
+### Lesson 130: Request-path GEDCOM search must never full-scan a versioned rich mirror
+- **Mistake**: Session 98 upgraded `_load_gedcom_individuals()` to page through the full rich GEDCOM mirror (`21,944` current people) and the admin GEDCOM link panel auto-fired search on person-page load. The first admin lookup therefore tried to pull the entire rich mirror across ~22 Supabase pages and made the linker feel broken.
+- **Rule**: Request-path search/link flows must prefilter candidates in the database and use exact-record lookups for selected rows. Full mirrored datasets are for offline analysis, background hydration, or explicitly cached browse surfaces, not on-demand admin search requests.
+- **Prevention**: (1) For GEDCOM search, fetch thin candidate rows from Supabase, then fuzzy-score in Python. (2) For link rendering and POST routes, fetch exactly one GEDCOM row by `gedcom_id`. (3) Add regression tests that fail if a link route falls back to the bulk mirror loader.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

@@ -72,6 +72,8 @@
 | 81B | 2026-03-01 | - | [assess](../assessments/session-81b-assessment.md) | [prompt](../prompts/session-81b-prompt.md) | [analysis](../session_context/session-81c-analysis.md) | Complete |
 | 81C | 2026-03-01 | - | [assess](../assessments/session-81c-assessment.md) | - | [continuation](../session_context/session-81-continuation-plan.md) | Complete |
 | 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
+| 98 | 2026-03-11 | [log](session-98-log.md) | [assess](../assessments/session-98-gedcom-audit.md) | [prompt](../prompts/session-98-prompt.md) | [ctx](../session_context/session-98-context.md) | Complete |
+| 98B | 2026-03-12 | [log](session-98b-log.md) | [assess](../assessments/session-98b-assessment.md) | - | - | Complete (hotfix branch) |
 | 99 | 2026-03-11 | - | - | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | Planned |
 
 ## PR-Linked Audit Trail
@@ -104,8 +106,8 @@ the original session scope was completed, blocked, or required follow-up work.
 | 97 | 2026-03-11 | [prep](session-97-prep-log.md), [log](session-97-log.md), [stub](session-97-log-stub.md) | [prep](../assessments/session-97-prep-assessment.md), [final](../assessments/session-97-assessment.md) | [prompt](../prompts/session-97-prompt.md) | [ctx](../session_context/session-97-context.md) | Complete |
 
 ## Session Analytics
-- **Total sessions tracked:** 57 (47B through 97)
-- **Complete** (has log): 29
+- **Total sessions tracked:** 59 (47B through 98B)
+- **Complete** (has log): 31
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
 - **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
