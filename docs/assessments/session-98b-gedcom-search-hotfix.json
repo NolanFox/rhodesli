@@ -1,0 +1,47 @@
+{
+  "date": "2026-03-12",
+  "issue": "GEDCOM link search regressed after Session 98 rich mirror rollout",
+  "live_route_timings_before_seconds": {
+    "health": 0.205,
+    "person_public_cold": 5.789,
+    "gallery_faces_cold": 16.584,
+    "people_cold": 11.386,
+    "person_public_warm": [1.003, 0.199, 0.193],
+    "gallery_faces_warm": [2.315, 0.169, 0.278],
+    "people_warm": [0.835, 0.391, 0.366]
+  },
+  "supabase_query_timings_before_seconds": {
+    "current_gedcom_individuals_thin_page_1000": 0.562,
+    "current_gedcom_individuals_rich_page_1000": 2.282,
+    "current_gedcom_relationships_page_1000": 0.413,
+    "gedcom_face_links": 0.135,
+    "gedcom_entity_redirects": 0.134
+  },
+  "production_counts": {
+    "current_gedcom_individuals": 21944,
+    "current_gedcom_relationships": 146592
+  },
+  "linked_identity": {
+    "identity_id": "a0a845d7-4eca-4255-b741-77ff310dc619",
+    "gedcom_id": "@I132559748883@"
+  },
+  "patched_function_timings_seconds": {
+    "load_gedcom_face_links_cold": 1.444,
+    "load_gedcom_individual_exact_rich_cold": 3.206,
+    "search_solly_galante_cold": 2.313
+  },
+  "patched_search_sample": [
+    {
+      "gedcom_id": "@I132559748883@",
+      "name": "Salomon ( Solomon Solly Salomone ) Galante",
+      "birth_year": 1917,
+      "death_year": 1956
+    },
+    {
+      "gedcom_id": "@I132583166811@",
+      "name": "Solomon ( Solly ) Galanti \\ Galante",
+      "birth_year": 1928,
+      "death_year": 2005
+    }
+  ]
+}

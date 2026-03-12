@@ -31,6 +31,13 @@ logger = logging.getLogger(__name__)
 _gedcom_matches_cache = None
 _gedcom_tree_relationships_cache = None
 
+_GEDCOM_THIN_FIELDS = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
+_GEDCOM_RICH_FIELDS = (
+    "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place,"
+    "birth_event_json,death_event_json,events_json,names_json,notes_json,citations_json,"
+    "media_refs_json,custom_tags_json,source_file"
+)
+
 
 def _load_gedcom_matches():
     """Load GEDCOM match proposals from data/gedcom_matches.json."""
@@ -175,12 +182,15 @@ def _run_gedcom_query(query_fn, label: str):
     raise last_error
 
 
-def _load_gedcom_rows(sb, table_name: str, select_fields: str) -> list[dict]:
+def _load_gedcom_rows(sb, table_name: str, select_fields: str, order_by: str | None = None) -> list[dict]:
     rows = []
     page_size = 1000
     offset = 0
     while True:
-        resp = sb.table(table_name).select(select_fields).range(offset, offset + page_size - 1).execute()
+        query = sb.table(table_name).select(select_fields)
+        if order_by:
+            query = query.order(order_by)
+        resp = query.range(offset, offset + page_size - 1).execute()
         if not resp or not resp.data:
             break
         rows.extend(resp.data)
@@ -213,27 +223,15 @@ def _load_gedcom_individuals():
             if not sb:
                 return []
 
-            thin_fields = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
-            rich_fields = (
-                "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place,"
-                "birth_event_json,death_event_json,events_json,names_json,notes_json,citations_json,"
-                "media_refs_json,custom_tags_json,source_file"
-            )
             try:
                 # AD-163: prefer the current-only view when it exists.
-                try:
-                    return _load_gedcom_rows(sb, "current_gedcom_individuals", rich_fields)
-                except Exception:
-                    return _load_gedcom_rows(sb, "current_gedcom_individuals", thin_fields)
+                return _load_gedcom_rows(sb, "current_gedcom_individuals", _GEDCOM_THIN_FIELDS)
             except Exception as exc:
                 msg = str(exc)
                 if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
                     raise
                 logging.info("current_gedcom_individuals unavailable; falling back to gedcom_individuals")
-                try:
-                    return _load_gedcom_rows(sb, "gedcom_individuals", rich_fields)
-                except Exception:
-                    return _load_gedcom_rows(sb, "gedcom_individuals", thin_fields)
+                return _load_gedcom_rows(sb, "gedcom_individuals", _GEDCOM_THIN_FIELDS)
 
         all_rows = _run_gedcom_query(_query, "GEDCOM individuals load")
 
@@ -247,6 +245,46 @@ def _load_gedcom_individuals():
         return _gedcom_individuals_cache or []
 
     return _gedcom_individuals_cache
+
+
+def _load_gedcom_individual(gedcom_id: str, include_rich: bool = False) -> dict | None:
+    """Load one GEDCOM individual by xref.
+
+    Broad search/list routes should use the thin bulk loader. Exact-link routes
+    should fetch one row to avoid reloading the full GEDCOM mirror.
+    """
+    if not gedcom_id:
+        return None
+
+    select_fields = _GEDCOM_RICH_FIELDS if include_rich else _GEDCOM_THIN_FIELDS
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return None
+            try:
+                resp = sb.table("current_gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
+            except Exception as exc:
+                msg = str(exc)
+                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                    raise
+                resp = sb.table("gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
+            rows = resp.data if resp and resp.data else []
+            return rows[0] if rows else None
+
+        row = _run_gedcom_query(_query, "GEDCOM individual load")
+        if row is not None:
+            return row
+    except Exception as e:
+        logging.warning(f"Failed to load GEDCOM individual {gedcom_id}: {e}")
+
+    for row in _load_gedcom_individuals():
+        if row.get("gedcom_id") == gedcom_id:
+            return row
+    return None
 
 
 def _load_gedcom_face_links():
@@ -317,6 +355,7 @@ def _load_gedcom_entity_redirects(entity_type: str = "individual", community_id:
                     sb,
                     "gedcom_entity_redirects",
                     "community_id,entity_type,old_key,new_key",
+                    order_by="old_key",
                 )
             except Exception as exc:
                 msg = str(exc)
@@ -378,7 +417,6 @@ def _load_current_gedcom_relationship_edges():
                 if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
                     raise
                 rows = _load_gedcom_rows(sb, "gedcom_relationships", select_fields)
-
             edges = []
             seen_spouses = set()
             for row in rows:
@@ -494,7 +532,9 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
     if not query or len(query.strip()) < 2:
         return [], 0
 
-    individuals = _main_mod._load_gedcom_individuals()
+    individuals = _query_gedcom_search_candidates(query)
+    if not individuals:
+        individuals = _main_mod._load_gedcom_individuals()
     if not individuals:
         return [], 0
 
@@ -519,12 +559,9 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
         "benvenisti": {"benveniste"},
     }
 
-    # Also load relationship data for spouse disambiguation
-    rel_graph = _main_mod._load_relationship_graph()
-
     import difflib
 
-    results = []
+    results_by_xref = {}
     for row in individuals:
         name = (row.get("name") or "").lower()
         given = (row.get("given_name") or "").lower()
@@ -600,22 +637,114 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
         if "rhodes" in bp or "rhodes" in dp or "rodi" in bp or "rodi" in dp:
             score += 0.05
 
-        results.append(
-            {
-                "xref_id": row["gedcom_id"],
-                "full_name": row.get("name") or "Unknown",
-                "birth_year": birth_year,
-                "death_year": death_year,
-                "birth_place": row.get("birth_place"),
-                "death_place": row.get("death_place"),
-                "score": score,
-            }
-        )
+        xref_id = row.get("gedcom_id")
+        if not xref_id:
+            continue
+        candidate = {
+            "xref_id": xref_id,
+            "full_name": row.get("name") or "Unknown",
+            "birth_year": birth_year,
+            "death_year": death_year,
+            "birth_place": row.get("birth_place"),
+            "death_place": row.get("death_place"),
+            "score": score,
+        }
+        existing = results_by_xref.get(xref_id)
+        if existing is None or candidate["score"] > existing["score"]:
+            results_by_xref[xref_id] = candidate
+
+    results = list(results_by_xref.values())
 
     # Sort by score descending, then by name
     results.sort(key=lambda x: (-x["score"], x["full_name"]))
     total = len(results)
     return results[offset : offset + limit], total
+
+
+def _query_gedcom_search_candidates(query: str, candidate_limit: int = 500) -> list[dict]:
+    """Prefilter GEDCOM candidates in Supabase before fuzzy scoring in Python."""
+    if not query or len(query.strip()) < 2:
+        return []
+
+    query_lower = query.strip().lower()
+    query_parts = [part for part in query_lower.split() if part]
+    if not query_parts:
+        return []
+
+    # Sephardic surname variants (common in Rhodes community)
+    surname_variants = {
+        "capeluto": {"capelluto", "capelouto", "capuano", "capouano", "capueto"},
+        "capelluto": {"capeluto", "capelouto", "capuano", "capouano", "capueto"},
+        "capuano": {"capeluto", "capelluto", "capelouto", "capouano", "capueto"},
+        "capouano": {"capeluto", "capelluto", "capelouto", "capuano", "capueto"},
+        "israel": {"yisrael"},
+        "yisrael": {"israel"},
+        "moussafer": {"mosafir", "musafir"},
+        "mosafir": {"moussafer", "musafir"},
+        "sedikaro": {"sedicaro"},
+        "sedicaro": {"sedikaro"},
+        "pizante": {"pizanti"},
+        "pizanti": {"pizante"},
+        "benveniste": {"benvenisti"},
+        "benvenisti": {"benveniste"},
+    }
+
+    terms = {query_lower}
+    if len(query_parts) >= 2:
+        surname_term = query_parts[-1]
+        terms.add(surname_term)
+        terms.update(surname_variants.get(surname_term, set()))
+    else:
+        only_term = query_parts[0]
+        terms.add(only_term)
+        terms.update(surname_variants.get(only_term, set()))
+
+    filters = []
+    for term in sorted({t for t in terms if t}):
+        escaped = term.replace(",", r"\,")
+        filters.extend(
+            [
+                f"name.ilike.%{escaped}%",
+                f"given_name.ilike.%{escaped}%",
+                f"surname.ilike.%{escaped}%",
+            ]
+        )
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return []
+            filter_expr = ",".join(dict.fromkeys(filters))
+            try:
+                resp = (
+                    sb.table("current_gedcom_individuals")
+                    .select(_GEDCOM_THIN_FIELDS)
+                    .or_(filter_expr)
+                    .order("gedcom_id")
+                    .range(0, candidate_limit - 1)
+                    .execute()
+                )
+            except Exception as exc:
+                msg = str(exc)
+                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                    raise
+                resp = (
+                    sb.table("gedcom_individuals")
+                    .select(_GEDCOM_THIN_FIELDS)
+                    .or_(filter_expr)
+                    .order("gedcom_id")
+                    .range(0, candidate_limit - 1)
+                    .execute()
+                )
+            return resp.data if resp and resp.data else []
+
+        return _run_gedcom_query(_query, "GEDCOM search prefilter")
+    except Exception as e:
+        logging.warning(f"GEDCOM search prefilter failed, falling back to in-memory scan: {e}")
+        return []
 
 
 def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: bool):
@@ -629,26 +758,22 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
     if link:
         # Already linked — show linked GEDCOM individual with unlink option
         gedcom_id = link.get("gedcom_id", "")
-        individuals = _main_mod._load_gedcom_individuals()
         gedcom_name = "Unknown"
         birth_year = death_year = birth_place = None
-        gedcom_row = None
-        for row in individuals:
-            if row["gedcom_id"] == gedcom_id:
-                gedcom_row = row
-                gedcom_name = row.get("name") or "Unknown"
-                bd = row.get("birth_date") or ""
-                dd = row.get("death_date") or ""
-                birth_place = row.get("birth_place")
-                for part in bd.split():
-                    if part.isdigit() and 1400 < int(part) < 2100:
-                        birth_year = int(part)
-                        break
-                for part in dd.split():
-                    if part.isdigit() and 1400 < int(part) < 2100:
-                        death_year = int(part)
-                        break
-                break
+        gedcom_row = _main_mod._load_gedcom_individual(gedcom_id, include_rich=True)
+        if gedcom_row:
+            gedcom_name = gedcom_row.get("name") or "Unknown"
+            bd = gedcom_row.get("birth_date") or ""
+            dd = gedcom_row.get("death_date") or ""
+            birth_place = gedcom_row.get("birth_place")
+            for part in bd.split():
+                if part.isdigit() and 1400 < int(part) < 2100:
+                    birth_year = int(part)
+                    break
+            for part in dd.split():
+                if part.isdigit() and 1400 < int(part) < 2100:
+                    death_year = int(part)
+                    break
 
         life_parts = []
         if birth_year:
@@ -946,24 +1071,22 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
         return Response("Missing identity_id or gedcom_id", status_code=400)
 
     # Look up the GEDCOM individual for display
-    individuals = _main_mod._load_gedcom_individuals()
+    gedcom_row = _main_mod._load_gedcom_individual(gedcom_id)
     gedcom_name = "Unknown"
     birth_year = None
     death_year = None
-    for row in individuals:
-        if row["gedcom_id"] == gedcom_id:
-            gedcom_name = row.get("name") or "Unknown"
-            bd = row.get("birth_date") or ""
-            dd = row.get("death_date") or ""
-            for part in bd.split():
-                if part.isdigit() and 1400 < int(part) < 2100:
-                    birth_year = int(part)
-                    break
-            for part in dd.split():
-                if part.isdigit() and 1400 < int(part) < 2100:
-                    death_year = int(part)
-                    break
-            break
+    if gedcom_row:
+        gedcom_name = gedcom_row.get("name") or "Unknown"
+        bd = gedcom_row.get("birth_date") or ""
+        dd = gedcom_row.get("death_date") or ""
+        for part in bd.split():
+            if part.isdigit() and 1400 < int(part) < 2100:
+                birth_year = int(part)
+                break
+        for part in dd.split():
+            if part.isdigit() and 1400 < int(part) < 2100:
+                death_year = int(part)
+                break
 
     # Save to Supabase
     try:
