@@ -34,23 +34,18 @@ trustworthy, and distinctly human without looking generic or "AI slop."
   - final implementation work
 
 ## Base-Branch Gate
-Session 98 wrap-up is still finishing as this context is written.
-Do not start Session 99 implementation on a stale base.
+Session 98 wrap-up is complete and PR #7 is merged into `main`.
+Session 99 should start from current `main`, not from `modern-ui-research`.
 
 PR #7 (`modern-ui-research`) is research/scoping only.
 Do not put Session 99 implementation commits on the PR #7 branch.
 
-Preferred base:
-- latest `main` after Session 98 wrap-up is merged
-- plus the PR #7 research/scoping docs, ideally already merged
-
-Acceptable fallback:
-- `modern-ui-research` updated with the latest `main` once Session 98 wrap-up lands,
-  followed by a fresh Session 99 implementation branch cut from that updated branch
+Required base:
+- latest `main` including merge commit `6178a60` or any later descendant
+- the merged PR #7 docs present on that base
 
 Unacceptable:
-- implementing on a base that is missing either the Session 98 wrap-up or the
-  finalized PR #7 scoping artifacts
+- implementing on a base older than the PR #7 merge into `main`
 - adding implementation work directly onto `modern-ui-research`
 
 ## Architecture And Design Non-Negotiables
@@ -227,6 +222,24 @@ Smoke checks should confirm, at minimum:
 - landing still renders `.hero-mosaic`
 - identify still renders `name="person_id"` and posts to `/api/identify/{id}/respond`
 - workstation still renders the command-center shell with sidebar navigation
+
+## Chrome Baseline Requirement
+Antigravity is strong at browser-based comparison. Use that deliberately.
+
+Before changing code, capture current live/deployed baseline screenshots for:
+- `/`
+- `/identify/unknown-1` or another deterministic fixture-equivalent route
+- `/?section=to_review`
+
+Use those baseline screenshots to guide:
+- what actually feels amateur today
+- what is already working and should be preserved
+- whether the implementation creates a visible quality jump
+
+The final Session 99 assessment should include:
+- before screenshots
+- after screenshots
+- a short explanation of what changed materially on each in-scope surface
 
 Strong preference:
 - run targeted route-specific tests after each track before merging into the final

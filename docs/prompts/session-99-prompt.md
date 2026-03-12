@@ -24,23 +24,16 @@ Read these files carefully:
 - `tasks/lessons.md`
 
 ## Hard Gate: Stable Base Required
-Session 98 wrap-up is still finishing.
-
-Do not start implementation on a stale base.
+Session 98 wrap-up is complete and PR #7 is already merged into `main`.
+Start from current `main`, not `modern-ui-research`.
 PR #7 (`modern-ui-research`) remains research/scoping only.
 Do not add Session 99 implementation commits to that branch.
 
-Preferred base:
-- latest `main` after Session 98 wrap-up is merged
-- plus the PR #7 docs already present
+Required base:
+- latest `main` including merge commit `6178a60` or a later descendant
+- the merged PR #7 docs present on that base
 
-Fallback:
-- `modern-ui-research` updated with latest `main` after Session 98 wrap-up,
-  then a fresh Session 99 implementation branch created from that updated branch
-
-If you cannot verify a stable base that includes both:
-- Session 98 wrap-up
-- finalized PR #7 docs
+If you cannot verify that base:
 
 Then:
 - create `docs/session_logs/session-99-log.md`
@@ -92,10 +85,15 @@ Then:
 ## Execution Plan
 
 ### Act 0: Preflight
-1. Verify the stable base condition above.
+1. Verify the required base condition above.
 2. Run `git status` and `git log --oneline -10`.
-3. Record the chosen base and why in `docs/session_logs/session-99-log.md`.
+3. Record the chosen base and exact SHA in `docs/session_logs/session-99-log.md`.
 4. Verify the real code touch points from the context file before planning edits.
+5. Use Chrome/browser inspection on the live deployed app to capture baseline screenshots for:
+   - `/`
+   - `/identify/unknown-1` or other deterministic fixture-backed route
+   - `/?section=to_review`
+6. Record the baseline screenshots and key visual shortcomings in the session log before editing code.
 
 ### Act 1: Shared Scaffolding (Sequential, Main Thread)
 Build the minimum scoped variant system needed for consistency across the three
@@ -236,6 +234,7 @@ Before opening or updating the PR, all of this must be done:
 - smoke check `/?section=to_review`
 - smoke check `/identify/unknown-1` or `test-unidentified-1`
 - capture screenshots for those three surfaces
+- include before/after screenshot sets for those three surfaces
 
 Minimum smoke-check assertions:
 - `/` still renders `.hero-mosaic`
@@ -248,12 +247,13 @@ Write:
 The assessment must include:
 - what changed
 - exact files/functions touched
+- exact base SHA used for the implementation branch
 - what was Antigravity-authored in implementation
 - what design/scoping source came from PR #7
 - what audit/handoff source came from Codex artifacts
 - targeted test evidence
 - full-suite evidence
-- screenshot evidence
+- before/after screenshot evidence
 - remaining risks / follow-ups
 
 If you introduce durable shared variant contracts, update:
