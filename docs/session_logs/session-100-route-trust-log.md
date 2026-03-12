@@ -169,3 +169,17 @@
   - [tests/e2e/test_critical_paths.py](/Users/nolanfox/rhodesli/tests/e2e/test_critical_paths.py)
 - verification:
   - targeted re-run pending after helper update
+
+## Full-Suite Cache Isolation Cleanup
+- the clean app-suite gate exposed a latent fixture-isolation bug in
+  [tests/test_face_count_badge.py](/Users/nolanfox/rhodesli/tests/test_face_count_badge.py):
+  the synthetic cache fixture reset `_photo_cache` and `_face_to_photo_cache`
+  but not `_photo_registry_cache`
+- when broader suites had already loaded the real registry, the synthetic test
+  accidentally pulled real face-to-photo entries and failed with archive-sized
+  counts instead of the expected 10 synthetic faces
+- the fixture now clears and restores `_photo_registry_cache` alongside the
+  other cache globals
+- verification:
+  - `pytest tests/test_public_browsing.py tests/test_face_count_badge.py -x -q`
+    - `30 passed`

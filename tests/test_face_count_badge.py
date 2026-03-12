@@ -134,9 +134,11 @@ def caches_from_synthetic(synthetic_data_dir):
 
     # Point data_path at our synthetic dir
     original_data_path = main.data_path
+    original_photo_registry_cache = main._photo_registry_cache
     main.data_path = synthetic_data_dir
     main._photo_cache = None
     main._face_to_photo_cache = None
+    main._photo_registry_cache = None
 
     try:
         main._build_caches()
@@ -146,6 +148,7 @@ def caches_from_synthetic(synthetic_data_dir):
         main.data_path = original_data_path
         main._photo_cache = None
         main._face_to_photo_cache = None
+        main._photo_registry_cache = original_photo_registry_cache
 
 
 # ---------------------------------------------------------------------------
