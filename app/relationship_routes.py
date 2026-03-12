@@ -463,6 +463,147 @@ def _load_current_gedcom_relationship_edges():
     return _gedcom_tree_relationships_cache
 
 
+def _normalize_gedcom_tree_edges(rows: list[dict]) -> list[dict]:
+    """Normalize GEDCOM relationship rows into tree edges."""
+    edges = []
+    seen_spouses = set()
+    for row in rows:
+        rel_type = row.get("relationship_type")
+        person_a = row.get("individual_gedcom_id")
+        person_b = row.get("related_gedcom_id")
+        if not person_a or not person_b:
+            continue
+        if rel_type == "parent":
+            edges.append(
+                {
+                    "person_a": person_a,
+                    "person_b": person_b,
+                    "type": "parent_child",
+                    "source": "gedcom_current",
+                    "gedcom_family_id": row.get("family_gedcom_id"),
+                }
+            )
+        elif rel_type == "spouse":
+            pair = tuple(sorted((person_a, person_b)))
+            if pair in seen_spouses:
+                continue
+            seen_spouses.add(pair)
+            edges.append(
+                {
+                    "person_a": person_a,
+                    "person_b": person_b,
+                    "type": "spouse",
+                    "source": "gedcom_current",
+                    "gedcom_family_id": row.get("family_gedcom_id"),
+                }
+            )
+    return edges
+
+
+def _load_gedcom_relationship_edges_for_ids(gedcom_ids: list[str] | set[str] | tuple[str, ...]) -> list[dict]:
+    """Load only the GEDCOM relationship edges touching the requested IDs."""
+    ids = sorted({gid for gid in (gedcom_ids or []) if gid})
+    if not ids:
+        return []
+    if _gedcom_tree_relationships_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_tree_relationships_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
+        id_set = set(ids)
+        return [
+            edge
+            for edge in _gedcom_tree_relationships_cache
+            if edge.get("person_a") in id_set or edge.get("person_b") in id_set
+        ]
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return []
+            select_fields = "individual_gedcom_id,related_gedcom_id,relationship_type,family_gedcom_id"
+            rows = []
+            for i in range(0, len(ids), 25):
+                chunk = ids[i : i + 25]
+                filter_expr = ",".join(
+                    f"{column}.eq.{gid}"
+                    for gid in chunk
+                    for column in ("individual_gedcom_id", "related_gedcom_id")
+                )
+                try:
+                    resp = (
+                        sb.table("current_gedcom_relationships")
+                        .select(select_fields)
+                        .or_(filter_expr)
+                        .execute()
+                    )
+                except Exception as exc:
+                    msg = str(exc)
+                    if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                        raise
+                    resp = (
+                        sb.table("gedcom_relationships")
+                        .select(select_fields)
+                        .or_(filter_expr)
+                        .execute()
+                    )
+                if resp and resp.data:
+                    rows.extend(resp.data)
+            return _normalize_gedcom_tree_edges(rows)
+
+        return _run_gedcom_query(_query, "GEDCOM tree targeted relationships load")
+    except Exception as e:
+        logging.warning(f"Failed to load targeted GEDCOM tree relationships: {e}")
+        return []
+
+
+def _load_gedcom_individuals_by_ids(
+    gedcom_ids: list[str] | set[str] | tuple[str, ...], include_rich: bool = False
+) -> list[dict]:
+    """Load only the GEDCOM individuals needed for a targeted tree slice."""
+    ids = sorted({gid for gid in (gedcom_ids or []) if gid})
+    if not ids:
+        return []
+    if _gedcom_individuals_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_individuals_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
+        id_set = set(ids)
+        return [row for row in _gedcom_individuals_cache if row.get("gedcom_id") in id_set]
+
+    select_fields = _GEDCOM_RICH_FIELDS if include_rich else _GEDCOM_THIN_FIELDS
+    try:
+        from app.supabase_data import get_supabase_client
+
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return []
+            rows = []
+            for i in range(0, len(ids), 100):
+                chunk = ids[i : i + 100]
+                try:
+                    resp = (
+                        sb.table("current_gedcom_individuals")
+                        .select(select_fields)
+                        .in_("gedcom_id", chunk)
+                        .execute()
+                    )
+                except Exception as exc:
+                    msg = str(exc)
+                    if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                        raise
+                    resp = sb.table("gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
+                if resp and resp.data:
+                    rows.extend(resp.data)
+            return rows
+
+        return _run_gedcom_query(_query, "GEDCOM targeted individuals load")
+    except Exception as e:
+        logging.warning(f"Failed to load targeted GEDCOM individuals: {e}")
+        return []
+
+
 def _invalidate_gedcom_cache():
     """Invalidate GEDCOM caches after link/unlink operations."""
     global _gedcom_individuals_cache_loaded_at, _gedcom_individuals_cache_failed_at
@@ -758,71 +899,24 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
     if link:
         # Already linked — show linked GEDCOM individual with unlink option
         gedcom_id = link.get("gedcom_id", "")
-        gedcom_name = "Unknown"
-        birth_year = death_year = birth_place = None
-        gedcom_row = _main_mod._load_gedcom_individual(gedcom_id, include_rich=True)
-        if gedcom_row:
-            gedcom_name = gedcom_row.get("name") or "Unknown"
-            bd = gedcom_row.get("birth_date") or ""
-            dd = gedcom_row.get("death_date") or ""
-            birth_place = gedcom_row.get("birth_place")
-            for part in bd.split():
-                if part.isdigit() and 1400 < int(part) < 2100:
-                    birth_year = int(part)
-                    break
-            for part in dd.split():
-                if part.isdigit() and 1400 < int(part) < 2100:
-                    death_year = int(part)
-                    break
-
-        life_parts = []
-        if birth_year:
-            life_parts.append(f"b. {birth_year}")
-        if death_year:
-            life_parts.append(f"d. {death_year}")
-        if birth_place:
-            life_parts.append(birth_place)
-        life_str = " · ".join(life_parts) if life_parts else ""
-
-        alt_names = []
-        facts_preview = []
-        source_count = 0
-        if gedcom_row:
-            alt_names = [
-                name.get("full_name")
-                for name in gedcom_row.get("names_json", []) or []
-                if name.get("full_name") and name.get("full_name") != gedcom_name
-            ][:3]
-            for event in (gedcom_row.get("events_json") or [])[:3]:
-                event_type = (event.get("event_type") or "event").replace("_", " ").title()
-                event_parts = [event_type]
-                if event.get("raw_date"):
-                    event_parts.append(event["raw_date"])
-                if event.get("place"):
-                    event_parts.append(event["place"])
-                facts_preview.append(" · ".join(event_parts))
-            source_count = len(gedcom_row.get("citations_json") or [])
-            for event in gedcom_row.get("events_json") or []:
-                source_count += len(event.get("citations") or event.get("citations_json") or [])
-
         return Div(
             H3("Family Tree Link", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
             Div(
                 Div(
-                    Span("Linked to: ", cls="text-slate-400 text-sm"),
-                    Span(gedcom_name, cls="text-white font-medium text-sm"),
-                    Span(f" ({life_str})" if life_str else "", cls="text-slate-400 text-xs ml-1"),
+                    Span("Linked GEDCOM record: ", cls="text-slate-400 text-sm"),
+                    Code(gedcom_id or "Unknown", cls="text-white font-medium text-sm"),
                     cls="flex items-baseline flex-wrap gap-1",
                 ),
-                P(f"Also recorded as: {', '.join(alt_names)}", cls="text-xs text-slate-400 mt-2") if alt_names else None,
                 P(
                     f"Link auto-resolved from retired GEDCOM id {link.get('redirected_from')}",
                     cls="text-xs text-amber-300 mt-1",
                 )
                 if link.get("redirected_from")
                 else None,
-                P(f"Additional GEDCOM facts: {facts_preview[0]}", cls="text-xs text-slate-400 mt-1") if facts_preview else None,
-                P(f"Sources attached: {source_count}", cls="text-xs text-slate-500 mt-1") if source_count else None,
+                P(
+                    "Use Family Tree or Connect to inspect linked family context without blocking the person page.",
+                    cls="text-xs text-slate-500 mt-1",
+                ),
                 Button(
                     "Unlink",
                     cls="mt-2 px-3 py-1 text-xs text-red-400 hover:text-red-300 border border-red-800 "

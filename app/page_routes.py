@@ -4057,12 +4057,19 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+    community_name = (
+        community.get("name")
+        if isinstance(community, dict) and community.get("name")
+        else ("Rhodes Jewish Heritage Archive" if community_slug == "rhodes" else community_slug.replace("-", " ").title())
+    )
 
     registry = _main_mod.load_registry()
     identity = _main_mod._safe_get_identity(registry, person_id)
     # UX-038: Redirect merged identities to canonical person
     if identity and identity.get("merged_into"):
-        return RedirectResponse(f"/identify/{identity['merged_into']}", status_code=301)
+        return RedirectResponse(f"{nav_prefix}/identify/{identity['merged_into']}", status_code=301)
     if not identity:
         html_404 = to_xml(Title("Person Not Found")) + to_xml(
             Main(
@@ -4078,7 +4085,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
 
     # If already identified, redirect to person page
     if is_identified:
-        return RedirectResponse(f"/person/{person_id}", status_code=303)
+        return RedirectResponse(f"{nav_prefix}/person/{person_id}", status_code=303)
 
     # Get face crops and photos
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
@@ -4095,7 +4102,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     _source_photo_link = (
         A(
             "View source photo \u2192",
-            href=f"/photo/{_first_photo_id}",
+            href=f"{nav_prefix}/photo/{_first_photo_id}",
             cls="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block",
             data_testid="view-source-photo-link",
         )
@@ -4152,7 +4159,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                 ),
                 P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
                 P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
-                href=f"/photo/{face_photo_id}",
+                href=f"{nav_prefix}/photo/{face_photo_id}",
                 cls="block hover:opacity-80 transition-opacity",
                 data_testid="source-photo-card",
             )
@@ -4173,7 +4180,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                         Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
                         P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
                         P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
-                        href=f"/photo/{pid}",
+                        href=f"{nav_prefix}/photo/{pid}",
                         cls="block hover:opacity-80 transition-opacity",
                         data_testid="source-photo-card",
                     )
@@ -4215,7 +4222,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                                 n_name if not n_name.startswith("Unidentified") else "Unknown",
                                 cls="text-xs text-slate-300 mt-1 text-center truncate w-20",
                             ),
-                            href=f"/identify/{person_id}/match/{n_id}",
+                            href=f"{nav_prefix}/identify/{person_id}/match/{n_id}",
                             cls="flex flex-col items-center hover:opacity-80 transition-opacity",
                         )
                     )
@@ -4296,7 +4303,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             ),
             email_field,
             Button(submit_label, type="submit", cls=submit_cls),
-            hx_post=f"/api/identify/{person_id}/respond",
+            hx_post=f"{nav_prefix}/api/identify/{person_id}/respond",
             hx_target="#identify-response-area",
             hx_swap="innerHTML",
         ),
@@ -4329,14 +4336,14 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         form_section = Div(submission_banner, form_section)
 
     # Share button
-    share_url = f"{_main_mod.SITE_URL}/identify/{person_id}"
+    share_url = f"{_main_mod.SITE_URL}{nav_prefix}/identify/{person_id}"
     share_btn = Button(
         "Share to help identify",
         cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
         data_action="share-photo",
         data_share_url=share_url,
         data_share_title="Can you identify this person?",
-        data_share_text="Help us identify this person in the Rhodesli Heritage Archive",
+        data_share_text=f"Help us identify this person in {community_name}.",
     )
 
     # OG tags — include collection context for better social sharing
@@ -4347,11 +4354,11 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     if photo_ids:
         _pm = (_main_mod._photo_cache or {}).get(photo_ids[0], {})
         _og_collection = _pm.get("collection", "")
-    _og_title = "Help identify this person from the Rhodes Jewish community"
+    _og_title = f"Help identify this person from {community_name}"
     _og_desc = (
         f"This photo is from {_og_collection}. Can you help us identify who this is?"
         if _og_collection
-        else "Help us identify this person from the Rhodes Jewish Heritage Archive. Share with family members who might recognize them."
+        else f"Help us identify this person from {community_name}. Share with family members who might recognize them."
     )
     og_meta = (
         Meta(property="og:title", content=_og_title),
@@ -4372,7 +4379,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         explore_links.append(
             A(
                 f"See all {len(photo_ids)} photos of this person",
-                href=f"/identify/{person_id}#photos",
+                href=f"{nav_prefix}/identify/{person_id}#photos",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
         )
@@ -4380,17 +4387,17 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         [
             A(
                 "Browse all photos",
-                href="/photos",
+                href=f"{nav_prefix}/photos",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
             A(
                 "View identified people",
-                href="/people",
+                href=f"{nav_prefix}/people",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
             A(
                 "Explore the timeline",
-                href="/timeline",
+                href=f"{nav_prefix}/timeline",
                 cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center",
             ),
         ]
@@ -4400,7 +4407,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         P("Have a photo that might be this person?", cls="text-sm text-slate-400 mb-2"),
         A(
             "Compare faces with our photo tool",
-            href="/tools/compare",
+            href=f"{nav_prefix}/tools/compare",
             cls="text-amber-300 hover:text-amber-200 text-sm font-medium",
             data_testid="identify-compare-cta",
         ),
@@ -4410,7 +4417,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         compare_suggestion,
         H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4 mt-6"),
         P(
-            "Hundreds of photos from the Rhodes Jewish community await identification.",
+            f"Hundreds of photos from {community_name} await identification.",
             cls="text-sm text-slate-400 text-center mb-5",
         ),
         Div(*explore_links, cls="flex flex-wrap justify-center gap-3"),
@@ -4428,12 +4435,16 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             # Navigation
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"), href="/"),
+                    A(
+                        Span("Rhodesli", cls="text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"),
+                        href=f"{nav_prefix}/",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
                 cls="bg-[#16120e]/95 backdrop-blur-md border-b border-amber-900/20 sticky top-0 z-50",
             ),
+            _main_mod._admin_bar(user, community_slug=community_slug),
             # Content
             Section(
                 Div(
@@ -4447,7 +4458,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                         data_testid="identify-ai-note",
                     ),
                     P(
-                        "This person appears in photos from the Rhodes Jewish Heritage Archive. If you recognize them, please let us know.",
+                        f"This person appears in photos from {community_name}. If you recognize them, please let us know.",
                         cls="text-amber-100/70 text-base font-serif text-center mb-10 max-w-xl mx-auto leading-relaxed ui99-landing-body",
                     ),
                     face_section,
@@ -4478,7 +4489,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
 
 
 @rt("/api/identify/{person_id}/respond")
-def post(person_id: str, name: str = "", relationship: str = "", email: str = "", sess=None):
+def post(person_id: str, name: str = "", relationship: str = "", email: str = "", sess=None, request=None):
     """Save an identification response via the annotations system.
 
     Creates an annotation that appears in admin approvals. Also saves to
@@ -4492,6 +4503,8 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
         )
 
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     is_admin = user and user.is_admin if user else False
     submitted_by = (user.email if user else email.strip()) or "anonymous"
 
@@ -4531,7 +4544,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
                         f'This person has been named "{name.strip()}" and moved to People. ',
                         A(
                             "View in People \u2192",
-                            href=f"/person/{person_id}",
+                            href=f"{nav_prefix}/person/{person_id}",
                             cls="text-indigo-400 hover:text-indigo-300 underline",
                         ),
                         cls="text-slate-300 text-sm",
@@ -4616,7 +4629,9 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
             P("An admin will review your suggestion shortly.", cls="text-slate-500 text-xs mt-2"),
             cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
         ),
-        Script(f"history.replaceState(null, '', '/identify/{person_id}?submitted=true&name={_encoded_name}');"),
+        Script(
+            f"history.replaceState(null, '', '{nav_prefix}/identify/{person_id}?submitted=true&name={_encoded_name}');"
+        ),
     )
 
 
@@ -9002,8 +9017,9 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
         except KeyError:
             pass
 
+    community_prefix = _main_mod.community_url_prefix(community_slug)
     title_text = f"{person_name}'s Family Tree" if person_name else "Family Tree"
-    share_url = f"/tree?person={person}" if person else "/tree"
+    share_url = f"{community_prefix}/tree?person={person}" if person else f"{community_prefix}/tree"
     nav_links = _main_mod._public_nav_links(active="tree", user=user, community_slug=community_slug)
 
     page_style = Style("""
@@ -9152,7 +9168,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
             Script(src="/static/js/family-tree.js?v=83a"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
-                    window.initRhodesliTree('{person}', '{show_theory}', {json.dumps(people_list)});
+                    window.initRhodesliTree('{person}', '{show_theory}', {json.dumps(people_list)}, '{community_prefix}');
                 }});
             """),
         ),
@@ -9212,6 +9228,113 @@ def _build_tree_adjacency(show_theory=True):
     return ptc, ctp, pts
 
 
+def _build_tree_link_maps():
+    """Build GEDCOM xref <-> identity maps for targeted tree resolution."""
+    gedcom_links = _main_mod._load_gedcom_face_links()
+    xref_to_uuid = {}
+    uuid_to_gedcom = {}
+    for identity_id, link_data in gedcom_links.items():
+        gid = link_data.get("gedcom_id")
+        if gid:
+            xref_to_uuid[gid] = identity_id
+            uuid_to_gedcom.setdefault(identity_id, set()).add(gid)
+
+    try:
+        gm = _main_mod._load_gedcom_matches()
+        for match in gm.get("matches", []):
+            xref = match.get("gedcom_xref")
+            uid = match.get("identity_id")
+            if xref and uid:
+                xref_to_uuid.setdefault(xref, uid)
+                uuid_to_gedcom.setdefault(uid, set()).add(xref)
+    except Exception:
+        pass
+
+    return xref_to_uuid, uuid_to_gedcom
+
+
+def _merge_tree_relationships(rels, ptc, ctp, pts, resolve, show_theory=True):
+    """Merge normalized relationship edges into adjacency maps."""
+    for rel in rels:
+        if rel.get("removed") or (not show_theory and rel.get("confidence") == "theory"):
+            continue
+        a = resolve(rel["person_a"])
+        b = resolve(rel["person_b"])
+        if a == b:
+            continue
+        if rel["type"] == "parent_child":
+            ptc.setdefault(a, set()).add(b)
+            ctp.setdefault(b, set()).add(a)
+        elif rel["type"] == "spouse":
+            pts.setdefault(a, set()).add(b)
+            pts.setdefault(b, set()).add(a)
+
+
+def _tree_query_ids_for_person(pid, uuid_to_gedcom):
+    """Return the raw GEDCOM IDs needed to expand a unified tree person."""
+    if pid in uuid_to_gedcom:
+        return set(uuid_to_gedcom[pid])
+    if isinstance(pid, str) and pid.startswith("@"):
+        return {pid}
+    return set()
+
+
+def _build_targeted_tree_adjacency(seed_ids, depth=1, show_theory=True):
+    """Build a local tree slice without loading the full GEDCOM mirror."""
+    xref_to_uuid, uuid_to_gedcom = _build_tree_link_maps()
+
+    def resolve(pid):
+        return xref_to_uuid.get(pid, pid)
+
+    ptc, ctp, pts = {}, {}, {}
+    rel_graph = _main_mod._load_relationship_graph()
+    manual_rels = [r for r in rel_graph.get("relationships", []) if r.get("source") != "gedcom"]
+    _merge_tree_relationships(manual_rels, ptc, ctp, pts, resolve, show_theory=show_theory)
+
+    included = {pid for pid in seed_ids if pid}
+    frontier = set(included)
+    queried_raw_ids = set()
+
+    for _ in range(max(depth, 0)):
+        next_frontier = set()
+        for pid in frontier:
+            next_frontier.update(ctp.get(pid, set()))
+            next_frontier.update(ptc.get(pid, set()))
+            next_frontier.update(pts.get(pid, set()))
+
+        frontier_raw_ids = set()
+        for pid in frontier:
+            frontier_raw_ids.update(_tree_query_ids_for_person(pid, uuid_to_gedcom))
+        frontier_raw_ids -= queried_raw_ids
+
+        if frontier_raw_ids:
+            targeted_rels = _main_mod._load_gedcom_relationship_edges_for_ids(frontier_raw_ids)
+            _merge_tree_relationships(targeted_rels, ptc, ctp, pts, resolve, show_theory=show_theory)
+            queried_raw_ids.update(frontier_raw_ids)
+            for pid in frontier:
+                next_frontier.update(ctp.get(pid, set()))
+                next_frontier.update(ptc.get(pid, set()))
+                next_frontier.update(pts.get(pid, set()))
+
+        next_frontier -= included
+        if not next_frontier:
+            frontier = set()
+            break
+        included.update(next_frontier)
+        frontier = next_frontier
+
+    # Probe one hop beyond the included set so expand controls know if more exists.
+    probe_raw_ids = set()
+    for pid in included:
+        probe_raw_ids.update(_tree_query_ids_for_person(pid, uuid_to_gedcom))
+    probe_raw_ids -= queried_raw_ids
+    if probe_raw_ids:
+        targeted_rels = _main_mod._load_gedcom_relationship_edges_for_ids(probe_raw_ids)
+        _merge_tree_relationships(targeted_rels, ptc, ctp, pts, resolve, show_theory=show_theory)
+
+    return ptc, ctp, pts, included, xref_to_uuid
+
+
 def _build_tree_person_lookup():
     """Build lookup of all people (identities + GEDCOM) for tree rendering."""
     from rhodesli_ml.graph.relationship_graph import parse_gedcom_year
@@ -9246,6 +9369,42 @@ def _build_tree_person_lookup():
                 "death_year": parse_gedcom_year(g.get("death_date")) or "",
             },
         }
+    return lookup
+
+
+def _build_tree_person_lookup_for_ids(person_ids, xref_to_uuid=None):
+    """Build lookup only for the tree people being rendered."""
+    from rhodesli_ml.graph.relationship_graph import parse_gedcom_year
+
+    registry = _main_mod.load_registry()
+    lookup = {}
+    unresolved_gedcom_ids = []
+    xref_to_uuid = xref_to_uuid or {}
+
+    for pid in person_ids:
+        try:
+            ident = registry.get_identity(pid)
+        except KeyError:
+            ident = None
+        if ident and not ident.get("merged_into"):
+            lookup[pid] = ident
+        elif isinstance(pid, str) and pid.startswith("@") and pid not in xref_to_uuid:
+            unresolved_gedcom_ids.append(pid)
+
+    if unresolved_gedcom_ids:
+        for g in _main_mod._load_gedcom_individuals_by_ids(unresolved_gedcom_ids):
+            gid = g.get("gedcom_id")
+            if not gid:
+                continue
+            lookup[gid] = {
+                "name": g.get("name") or "Unknown",
+                "metadata": {
+                    "gender": g.get("gender", "U"),
+                    "birth_year": parse_gedcom_year(g.get("birth_date")) or "",
+                    "death_year": parse_gedcom_year(g.get("death_date")) or "",
+                },
+            }
+
     return lookup
 
 
@@ -9535,14 +9694,14 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
     uses smart subtree computation to show the best family context for the
     group of people in the photo.
     """
-    ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
-    lookup = _build_tree_person_lookup()
+    people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
 
     # Smart subtree for multiple people (from photo navigation)
-    people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
     if people_list and len(people_list) > 1:
+        ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
+        lookup = _build_tree_person_lookup()
         # Use smart subtree computation
         included = _main_mod.compute_subtree_for_photo(people_list, ptc, ctp, pts)
         focal = person_id or people_list[0]
@@ -9560,6 +9719,25 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
                     "photo_people": people_list,
                 }
             )
+
+    if people_list and len(people_list) == 1 and not person_id:
+        person_id = people_list[0]
+
+    _, uuid_to_gedcom = _build_tree_link_maps()
+    if person_id and _tree_query_ids_for_person(person_id, uuid_to_gedcom):
+        ptc, ctp, pts, included, xref_to_uuid = _build_targeted_tree_adjacency(
+            [person_id], depth=depth, show_theory=(show_theory == "true")
+        )
+        lookup = _build_tree_person_lookup_for_ids(included, xref_to_uuid)
+        shared_photos_map = _main_mod._compute_shared_photos(included, registry)
+        nodes = [
+            _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map)
+            for pid in included
+        ]
+        return JSONResponse({"focal_person": person_id, "nodes": nodes})
+
+    ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
+    lookup = _build_tree_person_lookup()
 
     # Default to most-connected person
     if not person_id:
@@ -9605,10 +9783,17 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
 @rt("/api/tree/expand")
 def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
     """Return additional tree nodes for expansion in a given direction."""
-    ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
-    lookup = _build_tree_person_lookup()
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
+    _, uuid_to_gedcom = _build_tree_link_maps()
+    if _tree_query_ids_for_person(person_id, uuid_to_gedcom):
+        ptc, ctp, pts, _, xref_to_uuid = _build_targeted_tree_adjacency(
+            [person_id], depth=1, show_theory=(show_theory == "true")
+        )
+        lookup_builder = lambda ids: _build_tree_person_lookup_for_ids(ids, xref_to_uuid)
+    else:
+        ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
+        lookup_builder = _build_tree_person_lookup
 
     new_ids = set()
     if direction == "parents":
@@ -9631,6 +9816,7 @@ def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
     # the requesting person's updated node so the client can merge
     # its rels (e.g., new children appear in parent's rels.children)
     all_ids = new_ids | {person_id}
+    lookup = lookup_builder(all_ids) if lookup_builder is not _build_tree_person_lookup else lookup_builder()
 
     shared_photos_map = _main_mod._compute_shared_photos(all_ids, registry)
 
@@ -10024,6 +10210,8 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
 def public_photo_page(
     photo_id: str,
     selected_face_id: str = None,
+    identity_id: str = None,
+    sort_by: str = "date_asc",
     user=None,
     is_admin: bool = False,
     community_slug: str = "rhodes",
@@ -10077,15 +10265,97 @@ def public_photo_page(
     width, height = _main_mod.get_photo_dimensions(filename)
     has_dimensions = width > 0 and height > 0
     registry = _main_mod.load_registry()
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     from urllib.parse import quote as _url_quote
 
-    # --- Photo carousel: prev/next within same collection ---
+    if sort_by not in {"date_asc", "date_desc", "uploaded_desc", "uploaded_asc"}:
+        sort_by = "date_asc"
+
+    # --- Photo carousel: person-context first, else within same collection ---
     collection_name = photo.get("collection", "")
     prev_photo_id = None
     next_photo_id = None
     nav_position = 0
     nav_total = 0
-    if collection_name and _main_mod._photo_cache:
+    context_person_name = ""
+    date_labels = _main_mod._load_date_labels()
+
+    def _parse_year(value):
+        try:
+            return int(str(value)[:4])
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_uploaded_timestamp(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        except (TypeError, ValueError):
+            return None
+
+    def _build_sort_meta(photo_id_value, photo_meta):
+        photo_meta = photo_meta or {}
+        year = _parse_year((date_labels.get(photo_id_value) or {}).get("best_year_estimate"))
+        if year is None:
+            year = _parse_year(photo_meta.get("date_taken"))
+        uploaded_ts = _parse_uploaded_timestamp(photo_meta.get("created_at") or photo_meta.get("updated_at"))
+        return {
+            "year": year,
+            "has_year": year is not None,
+            "uploaded_ts": uploaded_ts,
+            "has_uploaded_ts": uploaded_ts is not None,
+        }
+
+    def _gallery_sort_key(sort_meta, stable):
+        year = sort_meta["year"] if sort_meta["has_year"] else 0
+        uploaded_ts = sort_meta["uploaded_ts"] if sort_meta["has_uploaded_ts"] else 0.0
+        if sort_by == "date_desc":
+            return (0 if sort_meta["has_year"] else 1, -year, -uploaded_ts, stable)
+        if sort_by == "uploaded_desc":
+            return (
+                0 if sort_meta["has_uploaded_ts"] else 1,
+                -uploaded_ts,
+                year if sort_meta["has_year"] else 9999,
+                stable,
+            )
+        if sort_by == "uploaded_asc":
+            return (
+                0 if sort_meta["has_uploaded_ts"] else 1,
+                uploaded_ts,
+                year if sort_meta["has_year"] else 9999,
+                stable,
+            )
+        return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
+
+    if identity_id:
+        try:
+            identity_nav = registry.get_identity(identity_id)
+        except KeyError:
+            identity_nav = None
+        if identity_nav:
+            context_person_name = ensure_utf8_display(identity_nav.get("name", "")) or "Person"
+            all_faces = identity_nav.get("anchor_ids", []) + identity_nav.get("candidate_ids", [])
+            face_id_strings = []
+            for face_entry in all_faces:
+                fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+                if fid:
+                    face_id_strings.append(fid)
+            photo_registry = _main_mod.load_photo_registry()
+            identity_photo_ids = sorted(
+                photo_registry.get_photos_for_faces(face_id_strings),
+                key=lambda pid: _gallery_sort_key(_build_sort_meta(pid, _main_mod.get_photo_metadata(pid)), pid),
+            )
+            if photo_id in identity_photo_ids:
+                idx = identity_photo_ids.index(photo_id)
+                nav_position = idx + 1
+                nav_total = len(identity_photo_ids)
+                if idx > 0:
+                    prev_photo_id = identity_photo_ids[idx - 1]
+                if idx < len(identity_photo_ids) - 1:
+                    next_photo_id = identity_photo_ids[idx + 1]
+
+    if nav_total == 0 and collection_name and _main_mod._photo_cache:
         collection_photos = sorted(
             [pid for pid, pdata in _main_mod._photo_cache.items() if pdata.get("collection", "") == collection_name],
             key=lambda pid: _main_mod._photo_cache[pid].get("filename", ""),
@@ -10189,9 +10459,9 @@ def public_photo_page(
 
             # Click navigates to person page (identified) or identify page (unidentified)
             if fi["is_identified"] and fi["identity_id"]:
-                click_href = f"/person/{fi['identity_id']}"
+                click_href = f"{nav_prefix}/person/{fi['identity_id']}"
             elif fi["identity_id"]:
-                click_href = f"/identify/{fi['identity_id']}"
+                click_href = f"{nav_prefix}/identify/{fi['identity_id']}"
             else:
                 click_href = None
 
@@ -10255,21 +10525,21 @@ def public_photo_page(
         if fi["is_identified"] and fi["identity_id"]:
             name_el = A(
                 fi["display_name"],
-                href=f"/person/{fi['identity_id']}",
+                href=f"{nav_prefix}/person/{fi['identity_id']}",
                 cls="text-white hover:text-emerald-300 transition-colors",
             )
             see_all_link = A(
                 "See all photos \u2192",
-                href=f"/person/{fi['identity_id']}",
+                href=f"{nav_prefix}/person/{fi['identity_id']}",
                 cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 transition-colors",
             )
 
         # Card links to person page (identified) or identify page (unidentified)
         if fi["is_identified"] and fi["identity_id"]:
-            card_href = f"/person/{fi['identity_id']}"
+            card_href = f"{nav_prefix}/person/{fi['identity_id']}"
             card_title = f"View {fi['display_name']}'s page"
         elif fi["identity_id"]:
-            card_href = f"/identify/{fi['identity_id']}"
+            card_href = f"{nav_prefix}/identify/{fi['identity_id']}"
             card_title = "Help identify this person"
         else:
             card_href = None
@@ -10345,7 +10615,7 @@ def public_photo_page(
         meta_elements.append(
             A(
                 collection_name,
-                href=f"/collection/{collection_slug}",
+                href=f"{nav_prefix}/collection/{collection_slug}",
                 cls="text-indigo-400 hover:text-indigo-300 transition-colors",
             )
         )
@@ -10385,7 +10655,7 @@ def public_photo_page(
     og_image_url = photo_url(filename)
     if not og_image_url.startswith("http"):
         og_image_url = f"{_main_mod.SITE_URL}{og_image_url}"
-    og_page_url = f"{_main_mod.SITE_URL}/photo/{photo_id}"
+    og_page_url = f"{_main_mod.SITE_URL}{nav_prefix}/photo/{photo_id}"
 
     og_meta_tags = (
         Meta(property="og:title", content=og_title),
@@ -10595,8 +10865,9 @@ def public_photo_page(
     # Keyboard navigation script for carousel
     keyboard_nav_script = None
     if prev_photo_id or next_photo_id:
-        prev_url = f"/photo/{prev_photo_id}" if prev_photo_id else ""
-        next_url = f"/photo/{next_photo_id}" if next_photo_id else ""
+        identity_qs = f"?identity_id={identity_id}&sort_by={sort_by}" if identity_id else ""
+        prev_url = f"{nav_prefix}/photo/{prev_photo_id}{identity_qs}" if prev_photo_id else ""
+        next_url = f"{nav_prefix}/photo/{next_photo_id}{identity_qs}" if next_photo_id else ""
         keyboard_nav_script = Script(f"""
             document.addEventListener('keydown', function(e) {{
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -10612,7 +10883,7 @@ def public_photo_page(
         Main(
             # Top navigation bar — uses _public_page_nav for mobile hamburger (UX-103)
             _main_mod._public_page_nav(nav_links, active="photos", user=user, include_admin_bar=False),
-            _main_mod._admin_bar(user),
+            _main_mod._admin_bar(user, community_slug=community_slug),
             # Breadcrumb bar — back navigation (UX-103: eliminates dead-end)
             Div(
                 Div(
@@ -10620,15 +10891,19 @@ def public_photo_page(
                         NotStr(
                             '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
                         ),
-                        "Back to Photos",
-                        href="/photos",
+                        f"Back to {context_person_name}" if identity_id and context_person_name else "Back to Photos",
+                        href=(
+                            f"{nav_prefix}/person/{identity_id}?view=photos&sort_by={sort_by}"
+                            if identity_id and context_person_name
+                            else f"{nav_prefix}/photos"
+                        ),
                         cls="text-slate-400 hover:text-white text-sm transition-colors",
                         data_testid="back-to-photos",
                     ),
                     Span(" / ", cls="text-slate-600 mx-2") if collection_name else None,
                     A(
                         collection_name,
-                        href=f"/collection/{_main_mod._collection_slug(collection_name)}",
+                            href=f"{nav_prefix}/collection/{_main_mod._collection_slug(collection_name)}",
                         cls="text-slate-400 hover:text-indigo-300 text-sm transition-colors",
                     )
                     if collection_name
@@ -10725,7 +11000,11 @@ def public_photo_page(
                             NotStr(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
                             ),
-                            href=f"/photo/{prev_photo_id}",
+                            href=(
+                                f"{nav_prefix}/photo/{prev_photo_id}?identity_id={identity_id}&sort_by={sort_by}"
+                                if identity_id
+                                else f"{nav_prefix}/photo/{prev_photo_id}"
+                            ),
                             cls="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-colors",
                             title="Previous photo",
                         )
@@ -10741,7 +11020,11 @@ def public_photo_page(
                             NotStr(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>'
                             ),
-                            href=f"/photo/{next_photo_id}",
+                            href=(
+                                f"{nav_prefix}/photo/{next_photo_id}?identity_id={identity_id}&sort_by={sort_by}"
+                                if identity_id
+                                else f"{nav_prefix}/photo/{next_photo_id}"
+                            ),
                             cls="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-colors",
                             title="Next photo",
                         )
@@ -10794,7 +11077,7 @@ def public_photo_page(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
                             ),
                             "Back to Workstation",
-                            href="/?section=photos",
+                            href=f"{nav_prefix}/?section=photos",
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="back-to-workstation",
                         )
@@ -10805,7 +11088,7 @@ def public_photo_page(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>'
                             ),
                             "Download",
-                            href=f"/photo/{photo_id}/download",
+                            href=f"{nav_prefix}/photo/{photo_id}/download",
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
                             download=True,
                         ),
@@ -10828,7 +11111,7 @@ def public_photo_page(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>'
                             ),
                             "Family Tree",
-                            href=f"/tree?photo_id={photo_id}&people={','.join(identified_person_ids)}",
+                            href=f"{nav_prefix}/tree?photo_id={photo_id}&people={','.join(identified_person_ids)}",
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="photo-tree-btn",
                         )
@@ -10840,7 +11123,7 @@ def public_photo_page(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
                             ),
                             "See on Map",
-                            href=f"/map?people={','.join(identified_person_ids)}",
+                            href=f"{nav_prefix}/map?people={','.join(identified_person_ids)}",
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="photo-map-btn",
                         )
@@ -11214,7 +11497,7 @@ def public_photo_page(
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None, sess=None, request=None):
+def get(photo_id: str, face: str = None, identity_id: str = None, sort_by: str = "date_asc", sess=None, request=None):
     """
     Public shareable photo page with face overlays and person cards.
 
@@ -11223,12 +11506,20 @@ def get(photo_id: str, face: str = None, sess=None, request=None):
 
     Query params:
     - face: Optional face_id to highlight
+    - identity_id: Optional person context for prev/next photo navigation
+    - sort_by: Optional person-gallery sort mode for prev/next navigation
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     return _main_mod.public_photo_page(
-        photo_id, selected_face_id=face, user=user, is_admin=user_is_admin, community_slug=community_slug
+        photo_id,
+        selected_face_id=face,
+        identity_id=identity_id,
+        sort_by=sort_by,
+        user=user,
+        is_admin=user_is_admin,
+        community_slug=community_slug,
     )
 
 

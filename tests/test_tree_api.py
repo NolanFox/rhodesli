@@ -136,6 +136,58 @@ class TestTreeExpandEndpoint:
         ids = [n["id"] for n in data["nodes"]]
         assert "child-2" in ids
 
+    def test_linked_identity_expand_avoids_full_gedcom_mirror_loads(self, client):
+        mock_registry = MagicMock()
+        mock_registry.get_identity = lambda pid: {
+            "child-1": {
+                "identity_id": "child-1",
+                "name": "Child One",
+                "state": "CONFIRMED",
+                "metadata": {"gender": "M", "birth_year": "1930"},
+                "anchor_ids": [],
+                "candidate_ids": [],
+            }
+        }.get(pid) or (_ for _ in ()).throw(KeyError(pid))
+
+        def mock_targeted_edges(gedcom_ids):
+            ids = set(gedcom_ids)
+            if ids == {"@I1@"}:
+                return [
+                    {"person_a": "@P1@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                    {"person_a": "@P2@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                ]
+            if "@P1@" in ids or "@P2@" in ids:
+                return [
+                    {"person_a": "@P1@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                    {"person_a": "@P2@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                    {"person_a": "@P1@", "person_b": "@S1@", "type": "parent_child", "source": "gedcom_current"},
+                    {"person_a": "@P2@", "person_b": "@S1@", "type": "parent_child", "source": "gedcom_current"},
+                ]
+            return []
+
+        with patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._load_relationship_graph", return_value={"schema_version": 1, "relationships": [], "gedcom_imports": []}), \
+             patch("app.main._load_gedcom_face_links", return_value={"child-1": {"gedcom_id": "@I1@"}}), \
+             patch("app.main._load_gedcom_matches", return_value={"matches": []}), \
+             patch("app.main._load_gedcom_relationship_edges_for_ids", side_effect=mock_targeted_edges), \
+             patch(
+                 "app.main._load_gedcom_individuals_by_ids",
+                 return_value=[
+                     {"gedcom_id": "@P1@", "name": "Parent One", "gender": "M", "birth_date": "1900", "death_date": ""},
+                     {"gedcom_id": "@P2@", "name": "Parent Two", "gender": "F", "birth_date": "1905", "death_date": ""},
+                     {"gedcom_id": "@S1@", "name": "Sibling One", "gender": "F", "birth_date": "1932", "death_date": ""},
+                 ],
+             ), \
+             patch("app.main._load_current_gedcom_relationship_edges", side_effect=AssertionError("full tree edge load should not run")), \
+             patch("app.main._load_gedcom_individuals", side_effect=AssertionError("full GEDCOM individual load should not run")):
+            resp = client.get("/api/tree/expand?person_id=child-1&direction=siblings")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        ids = {n["id"] for n in data["nodes"]}
+        assert ids == {"child-1", "@S1@"}
+
 
 class TestTreeSearchEndpoint:
     def test_search_by_name(self, client, mock_tree_data):
@@ -163,6 +215,60 @@ class TestTreeSearchEndpoint:
         assert "id" in result
         assert "name" in result
         assert "has_photo" in result
+
+
+class TestTargetedTreeLoading:
+    def test_linked_identity_data_avoids_full_gedcom_mirror_loads(self, client):
+        identities = {
+            "child-1": {
+                "identity_id": "child-1",
+                "name": "Child One",
+                "state": "CONFIRMED",
+                "metadata": {"gender": "M", "birth_year": "1930"},
+                "anchor_ids": [],
+                "candidate_ids": [],
+            }
+        }
+
+        mock_registry = MagicMock()
+
+        def mock_get_identity(pid):
+            ident = identities.get(pid)
+            if not ident:
+                raise KeyError(pid)
+            return ident
+
+        mock_registry.get_identity = mock_get_identity
+
+        def mock_targeted_edges(gedcom_ids):
+            if set(gedcom_ids) == {"@I1@"}:
+                return [
+                    {"person_a": "@P1@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                    {"person_a": "@P2@", "person_b": "@I1@", "type": "parent_child", "source": "gedcom_current"},
+                ]
+            return []
+
+        with patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._load_relationship_graph", return_value={"schema_version": 1, "relationships": [], "gedcom_imports": []}), \
+             patch("app.main._load_gedcom_face_links", return_value={"child-1": {"gedcom_id": "@I1@"}}), \
+             patch("app.main._load_gedcom_matches", return_value={"matches": []}), \
+             patch("app.main._load_gedcom_relationship_edges_for_ids", side_effect=mock_targeted_edges), \
+             patch(
+                 "app.main._load_gedcom_individuals_by_ids",
+                 return_value=[
+                     {"gedcom_id": "@P1@", "name": "Parent One", "gender": "M", "birth_date": "1900", "death_date": ""},
+                     {"gedcom_id": "@P2@", "name": "Parent Two", "gender": "F", "birth_date": "1905", "death_date": ""},
+                 ],
+             ), \
+             patch("app.main._load_current_gedcom_relationship_edges", side_effect=AssertionError("full tree edge load should not run")), \
+             patch("app.main._load_gedcom_individuals", side_effect=AssertionError("full GEDCOM individual load should not run")):
+            resp = client.get("/api/tree/data?person_id=child-1&depth=1")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        ids = {n["id"] for n in data["nodes"]}
+        assert ids == {"child-1", "@P1@", "@P2@"}
 
 
 class TestSharedPhotosInTree:

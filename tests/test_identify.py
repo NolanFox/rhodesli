@@ -155,6 +155,22 @@ class TestIdentifyPage:
         assert "share-photo" in resp.text
         assert "Share to help identify" in resp.text
 
+    def test_community_identify_page_preserves_prefix_and_copy(self, client):
+        """Community-scoped identify pages keep community prefix in form actions and copy."""
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(
+                patch(
+                    "app.supabase_data.get_community_by_slug",
+                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+                )
+            )
+            resp = client.get("/c/fox-family/identify/unknown-1")
+        assert resp.status_code == 200
+        assert 'hx-post="/c/fox-family/api/identify/unknown-1/respond"' in resp.text
+        assert "Fox Family Archive" in resp.text
+
 
 class TestIdentifyResponse:
 
@@ -246,6 +262,53 @@ class TestIdentifyResponse:
             )
         assert resp.status_code == 200
         assert "Something went wrong" in resp.text
+
+    def test_community_submit_persists_prefixed_history_url(self, client):
+        """Community-scoped submissions keep the identify URL inside the same archive."""
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main._load_annotations", return_value={"schema_version": 1, "annotations": {}}))
+            stack.enter_context(patch("app.main._save_annotations"))
+            stack.enter_context(
+                patch(
+                    "app.supabase_data.get_community_by_slug",
+                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+                )
+            )
+            resp = client.post(
+                "/c/fox-family/api/identify/unknown-1/respond",
+                data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
+            )
+        assert resp.status_code == 200
+        assert "/c/fox-family/identify/unknown-1?submitted=true" in resp.text
+
+    def test_community_admin_apply_links_back_to_same_archive(self, client):
+        """Admin apply flow keeps the person link inside the current community."""
+        from app.auth import User
+
+        admin_user = User(id="admin-1", email="admin@test.com", is_admin=True)
+        mock_reg = MagicMock()
+        mock_reg.get_identity = MagicMock(return_value={"state": "INBOX"})
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=admin_user))
+            stack.enter_context(patch("app.main.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.main.save_registry"))
+            stack.enter_context(
+                patch(
+                    "app.supabase_data.get_community_by_slug",
+                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+                )
+            )
+            resp = client.post(
+                "/c/fox-family/api/identify/unknown-1/respond",
+                data={"name": "Isaac Cohen"},
+            )
+        assert resp.status_code == 200
+        assert '/c/fox-family/person/unknown-1' in resp.text
 
 
 class TestMatchConfirmation:
