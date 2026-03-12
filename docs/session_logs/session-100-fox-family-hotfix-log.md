@@ -248,3 +248,43 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
 - User: live-usage bug reports, sharper completion bar, demand for no-drop execution
 - Antigravity: earlier critique/mockup signal that helped identify workflow gaps
 - Codex: continuation implementation, regression tests, PRD execution checklist, design-method research, identities audit
+
+## Session 100 Community Shell Follow-Up (Codex)
+
+- **Trigger:** live Fox Family usage still exposed community-shell leaks and weak
+  shareability:
+  - public/community links could still fall back into Rhodes/root routes
+  - collection share links had no `og:image`, so iMessage/Texts rendered a weak
+    text-only preview
+  - workstation identity cards still used root-linked actions in community
+    archives
+  - Upload Review / clustering remained too hidden from the real admin workflow
+- **Files touched:**
+  - [app/main.py](/Users/nolanfox/rhodesli/app/main.py)
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [app/browse_routes.py](/Users/nolanfox/rhodesli/app/browse_routes.py)
+  - [app/identity_routes.py](/Users/nolanfox/rhodesli/app/identity_routes.py)
+  - [app/notification_routes.py](/Users/nolanfox/rhodesli/app/notification_routes.py)
+  - [app/event_routes.py](/Users/nolanfox/rhodesli/app/event_routes.py)
+  - [tests/test_sidebar_community.py](/Users/nolanfox/rhodesli/tests/test_sidebar_community.py)
+  - [tests/test_collections.py](/Users/nolanfox/rhodesli/tests/test_collections.py)
+  - [docs/assessments/session-100-community-shell-followup.md](/Users/nolanfox/rhodesli/docs/assessments/session-100-community-shell-followup.md)
+- **What landed in this slice:**
+  - shared public shell now respects the active community for brand/admin links
+  - collection pages now emit `og:image` and share durable preview cards
+  - people/collection/public links stay inside the active archive
+  - workstation `identity_card()` actions now keep community context
+  - `identity_card()` now exposes `Proposals (N)` to bridge directly into
+    Upload Review from the real admin path
+  - HTMX card re-renders preserve `nav_prefix` after confirm/reject/skip/merge/detach
+- **Verification:**
+  - `ruff check app/main.py app/page_routes.py app/browse_routes.py app/person_routes.py app/identity_routes.py app/notification_routes.py app/event_routes.py tests/test_sidebar_community.py tests/test_collections.py tests/test_find_similar_page.py tests/test_public_person_page.py tests/test_public_photo_viewer.py tests/test_admin_dashboard.py tests/test_cluster_review_routes.py`
+  - `pytest tests/test_sidebar_community.py tests/test_collections.py tests/test_find_similar_page.py tests/test_public_person_page.py tests/test_public_photo_viewer.py tests/test_admin_dashboard.py tests/test_cluster_review_routes.py tests/test_photo_navigation.py tests/test_internal_photo_links.py -x -q`
+    - `176 passed, 2 skipped`
+  - `pytest tests/test_notifications.py tests/test_life_events.py tests/test_ux_fixes_session92.py -x -q`
+    - `95 passed`
+- **Still open after this slice:**
+  - neutral `/` platform entry
+  - full multi-community bootstrap polish
+  - true batch cluster review queue
+  - broader face-card harmonization beyond the touched surfaces

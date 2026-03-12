@@ -600,7 +600,7 @@ def get(
         Title("Life Events — Rhodesli Heritage Archive"),
         Style("html, body { margin: 0; } body { background-color: #0f172a; }"),
         Main(
-            _main_mod._public_page_nav(nav_links, active="events", user=user),
+            _main_mod._public_page_nav(nav_links, active="events", user=user, community_slug=community_slug),
             Section(
                 Div(
                     H1("Life Events", cls="text-2xl font-serif font-bold text-white mb-2"),
@@ -652,7 +652,7 @@ def get(event_id: str, sess=None, request=None):
             Div(
                 A(
                     name,
-                    href=f"/person/{identity_id}",
+                    href=f"{_main_mod.community_url_prefix(community_slug)}/person/{identity_id}",
                     cls="text-indigo-400 hover:text-indigo-300 text-sm",
                 ),
                 Span(f" ({p.get('role', 'attendee')})", cls="text-slate-500 text-xs")
@@ -687,7 +687,7 @@ def get(event_id: str, sess=None, request=None):
                             alt="Event photo",
                             cls="w-24 h-24 object-cover rounded-lg",
                         ),
-                        href=f"/photo/{pid}",
+                        href=f"{_main_mod.community_url_prefix(community_slug)}/photo/{pid}",
                     ),
                     # Admin: unlink button
                     Button(
@@ -766,13 +766,13 @@ def get(event_id: str, sess=None, request=None):
         Title(f"{event.get('title', 'Event')} — Rhodesli Heritage Archive"),
         Style("html, body { margin: 0; } body { background-color: #0f172a; }"),
         Main(
-            _main_mod._public_page_nav(nav_links, active="events", user=user),
+            _main_mod._public_page_nav(nav_links, active="events", user=user, community_slug=community_slug),
             Section(
                 Div(
                     # Back link
                     A(
                         "Back to Events",
-                        href="/events",
+                        href=f"{_main_mod.community_url_prefix(community_slug)}/events",
                         cls="text-slate-400 hover:text-white text-sm mb-4 block",
                     ),
                     # Event header

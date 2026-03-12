@@ -196,6 +196,8 @@ def public_person_page(
     display_name = raw_name or f"Person {person_id[:8]}"
     state = identity.get("state", "INBOX")
     is_confirmed = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+    target_proposals = _main_mod._get_proposal_targets_for_identity(person_id) if is_admin else []
+
     def _person_photo_href(photo_id: str) -> str:
         if not photo_id:
             return "#"
@@ -1108,6 +1110,14 @@ def public_person_page(
                                 href=f"{nav_prefix}/people/{person_id}/similar",
                                 cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
                             ),
+                            A(
+                                f"Review Proposals ({len(target_proposals)})",
+                                href=f"{nav_prefix}/admin/upload-review#identity-group-{person_id}",
+                                cls="text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors",
+                                data_testid="review-proposals-link",
+                            )
+                            if target_proposals
+                            else None,
                             cls="flex items-center justify-center gap-3 mb-3",
                         ),
                         # Inline rename

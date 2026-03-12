@@ -209,3 +209,23 @@ class TestCollectionDetail:
         resp = client.get("/collection/vida-nyc")
         for p in patches: p.stop()
         assert "help-identify-banner" in resp.text
+
+    def test_community_collection_keeps_prefix_and_og_image(self, client):
+        patches = _patch_collections()
+        for p in patches:
+            p.start()
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            resp = client.get("/c/fox-family/collection/vida-nyc")
+        for p in patches:
+            p.stop()
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert '/c/fox-family/photo/photo-1' in html
+        assert '/c/fox-family/person/id-a' in html
+        assert 'href="/c/fox-family/collections"' in html
+        assert 'property="og:image"' in html
+        assert 'content="https://rhodesli.nolanandrewfox.com/photos/image001.jpg"' in html

@@ -239,6 +239,50 @@ class TestWorkspaceSwitcher(unittest.TestCase):
         assert community_url_prefix("rhodes") == ""
         assert community_url_prefix("fox-family") == "/c/fox-family"
 
+
+class TestPublicPageNavCommunity(unittest.TestCase):
+    """Public shell should preserve active community context."""
+
+    def test_public_page_nav_brand_and_admin_bar_use_community_prefix(self):
+        from app.main import _public_nav_links, _public_page_nav
+
+        user = FakeUser(is_admin=True)
+        nav_links = _public_nav_links(active="people", user=user, community_slug="fox-family")
+        result = _public_page_nav(nav_links, active="people", user=user, community_slug="fox-family")
+        html = repr(result)
+
+        assert 'href="/c/fox-family/"' in html
+        assert "/c/fox-family/?section=to_review" in html
+        assert "/c/fox-family/upload" in html
+
+
+class TestIdentityCardCommunity(unittest.TestCase):
+    """Shared workstation identity cards should preserve community context."""
+
+    @patch("app.main.resolve_face_image_url", return_value="/static/crops/test.jpg")
+    @patch("app.main.get_best_face_id", return_value="face-a")
+    @patch("app.main._load_gedcom_face_links", return_value={"id-roland": "@I1@"})
+    @patch("app.main._get_proposal_target_count", return_value=3)
+    def test_identity_card_uses_nav_prefix(self, *_mocks):
+        from app.main import identity_card
+
+        identity = {
+            "identity_id": "id-roland",
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-a"],
+            "candidate_ids": ["face-b"],
+        }
+
+        card = identity_card(identity, {"face-a.jpg", "face-b.jpg"}, is_admin=True, nav_prefix="/c/fox-family")
+        html = repr(card)
+
+        assert "/c/fox-family/person/id-roland" in html
+        assert "/c/fox-family/tree?person=id-roland" in html
+        assert "/c/fox-family/api/identity/id-roland/photos?index=0" in html
+        assert "/c/fox-family/api/identity/id-roland/neighbors?container_id=" in html
+        assert "/c/fox-family/admin/upload-review#identity-group-id-roland" in html
+
     @patch("app.supabase_data.load_communities")
     def test_switcher_endpoint_empty_for_non_admin(self, mock_load):
         """Non-admin users get empty response from switcher endpoint."""

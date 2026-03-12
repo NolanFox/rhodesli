@@ -119,9 +119,13 @@ class TestFindSimilarPage:
         with patch(
             "app.supabase_data.get_community_by_slug",
             return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ), patch(
+            "app.main._get_proposal_targets_for_identity",
+            return_value=[{"face_id": "inbox-1"}, {"face_id": "inbox-2"}],
         ):
             resp = client.get("/c/fox-family/people/id-leon/similar")
         html = resp.text
         assert '/c/fox-family/person/id-leon' in html
         assert '/c/fox-family/person/id-nace' in html
         assert '/c/fox-family/api/identity/id-leon/merge/id-nace?source=similar_page' in html
+        assert '/c/fox-family/admin/upload-review#identity-group-id-leon' in html

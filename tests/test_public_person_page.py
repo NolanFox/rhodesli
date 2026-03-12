@@ -742,6 +742,7 @@ class TestAdminControlsOnPersonPage:
         monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
         monkeypatch.setattr("app.main.get_photo_id_for_face", lambda _fid: "photo-1")
         monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+        monkeypatch.setattr("app.main._get_proposal_targets_for_identity", lambda _iid: [{"face_id": "inbox-1"}])
 
         with patch(
             "app.supabase_data.get_community_by_slug",
@@ -750,3 +751,4 @@ class TestAdminControlsOnPersonPage:
             response = client.get("/c/fox-family/person/test-person")
 
         assert '/c/fox-family/people/test-person/similar' in response.text
+        assert '/c/fox-family/admin/upload-review#identity-group-test-person' in response.text

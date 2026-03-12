@@ -1906,7 +1906,14 @@ def get(
     elif section == "skipped":
         skipped_view = view if view in ("focus", "browse") else "focus"
         main_content = _main_mod.render_skipped_section(
-            skipped_list, crop_files, counts, is_admin=user_is_admin, view_mode=skipped_view, current_id=current, variant="session99"
+            skipped_list,
+            crop_files,
+            counts,
+            is_admin=user_is_admin,
+            view_mode=skipped_view,
+            current_id=current,
+            nav_prefix=nav_prefix,
+            variant="session99",
         )
     elif section == "photos":
         main_content = _main_mod.render_photos_section(
@@ -1921,7 +1928,9 @@ def get(
             variant="session99",
         )
     else:  # rejected
-        main_content = _main_mod.render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin, variant="session99")
+        main_content = _main_mod.render_rejected_section(
+            dismissed, crop_files, counts, is_admin=user_is_admin, nav_prefix=nav_prefix, variant="session99"
+        )
 
     # Prepend discovery banner to main content if present
     if discovery_banner:
@@ -4157,6 +4166,7 @@ def get(sess=None, request=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -4272,7 +4282,9 @@ def get(sess=None, request=None):
         ),
         page_style,
         Main(
-            _main_mod._public_page_nav(nav_links, active="help", user=user, max_w="max-w-6xl"),
+            _main_mod._public_page_nav(
+                nav_links, active="help", user=user, community_slug=community_slug, max_w="max-w-6xl"
+            ),
             Section(
                 Div(
                     H1("Help Us Identify", cls="text-3xl font-serif font-bold text-white mb-2"),
@@ -6465,7 +6477,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                 avatar,
                 P(name, cls="text-sm font-medium text-white mt-3 text-center"),
                 P(f"{face_count} {'photo' if face_count == 1 else 'photos'}", cls="text-[10px] text-slate-500 mt-1"),
-                href=f"/person/{identity_id}",
+                href=f"{nav_prefix}/person/{identity_id}",
                 cls="flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-emerald-500/30 transition-colors group block",
             )
         )
@@ -6485,13 +6497,13 @@ def get(sort_by: str = "name", sess=None, request=None):
         *_main_mod.og_tags(
             "People — Rhodesli Heritage Archive",
             f"{len(confirmed)} identified people in the Rhodes heritage archive.",
-            canonical_url="/people",
+            canonical_url=f"{nav_prefix}/people",
         ),
         page_style,
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -6502,7 +6514,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                     Div(
                         H1("People", cls="text-3xl font-serif font-bold text-white mb-2"),
                         _main_mod.share_button(
-                            url="/people",
+                            url=f"{nav_prefix}/people",
                             style="link",
                             label="Share",
                             title="People — Rhodesli",
@@ -6524,7 +6536,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                         Select(
                             *sort_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
-                            onchange="window.location.href='/people?sort_by=' + this.value",
+                            onchange=f"window.location.href='{nav_prefix}/people?sort_by=' + this.value",
                         ),
                         cls="flex items-center gap-2 mb-6",
                     ),
@@ -6549,7 +6561,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                     P("Browse the photos and let us know if you recognize anyone.", cls="text-slate-400 text-sm mb-4"),
                     A(
                         "Browse Photos",
-                        href="/photos",
+                        href=f"{nav_prefix}/photos",
                         cls="inline-block px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
                     ),
                     cls="text-center",
@@ -6591,6 +6603,7 @@ def get(identity_id: str, sess=None, request=None):
     state = identity.get("state", "INBOX")
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     total_faces = len(all_face_ids)
+    target_proposals = _main_mod._get_proposal_targets_for_identity(identity_id) if is_admin else []
 
     # Get best face for hero
     crop_files = _main_mod.get_crop_files()
@@ -6764,6 +6777,14 @@ def get(identity_id: str, sess=None, request=None):
                                     href=f"{nav_prefix}/person/{identity_id}",
                                     cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors",
                                 ),
+                                A(
+                                    f"Review Proposals ({len(target_proposals)})",
+                                    href=f"{nav_prefix}/admin/upload-review#identity-group-{identity_id}",
+                                    cls="inline-block px-4 py-2 bg-amber-600/90 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
+                                    data_testid="similar-review-proposals-link",
+                                )
+                                if target_proposals
+                                else None,
                                 A(
                                     "Edit in Admin",
                                     href=f"{nav_prefix}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{identity_id}",
@@ -6986,6 +7007,7 @@ def get(sess=None, request=None):
     """Collection directory — list all collections with preview thumbnails."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     collections = _main_mod._get_collections_data()
 
@@ -7025,7 +7047,7 @@ def get(sess=None, request=None):
                 H3(col_name, cls="text-white font-semibold text-sm mb-1 line-clamp-2"),
                 P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-xs text-slate-400"),
                 P(face_line, cls="text-xs text-slate-500 mt-0.5"),
-                href=f"/collection/{slug}",
+                href=f"{nav_prefix}/collection/{slug}",
                 cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                 data_testid="collection-card",
             )
@@ -7040,13 +7062,13 @@ def get(sess=None, request=None):
         *_main_mod.og_tags(
             "Collections — Rhodesli Heritage Archive",
             "Browse photo collections from the Rhodes-Capeluto family archive.",
-            canonical_url="/collections",
+            canonical_url=f"{nav_prefix}/collections",
         ),
         page_style,
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -7056,7 +7078,7 @@ def get(sess=None, request=None):
                 Div(
                     H1("Collections", cls="text-2xl md:text-3xl font-bold text-white mb-2"),
                     _main_mod.share_button(
-                        url="/collections",
+                        url=f"{nav_prefix}/collections",
                         style="link",
                         label="Share",
                         title="Collections — Rhodesli",
@@ -7081,6 +7103,7 @@ def get(slug: str, sess=None, request=None):
     """Collection detail page — shareable view of all photos in a collection."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     collections = _main_mod._get_collections_data()
     col_name = _main_mod._collection_from_slug(slug, collections)
@@ -7096,7 +7119,7 @@ def get(slug: str, sess=None, request=None):
                     P("This collection doesn't exist.", cls="text-slate-400"),
                     A(
                         "Browse all collections →",
-                        href="/collections",
+                        href=f"{nav_prefix}/collections",
                         cls="text-indigo-400 hover:text-indigo-300 mt-4 inline-block",
                     ),
                     cls="max-w-4xl mx-auto px-6 pt-24",
@@ -7152,7 +7175,7 @@ def get(slug: str, sess=None, request=None):
                     face_badge if face_badge else None,
                     cls="relative rounded-lg overflow-hidden",
                 ),
-                href=f"/photo/{photo_id}" if photo_id else "#",
+                href=f"{nav_prefix}/photo/{photo_id}" if photo_id else "#",
                 cls="block hover:opacity-90 transition-opacity",
                 data_testid="collection-photo",
             )
@@ -7177,7 +7200,7 @@ def get(slug: str, sess=None, request=None):
             people_items.append(
                 A(
                     p_name,
-                    href=f"/person/{pid}",
+                    href=f"{nav_prefix}/person/{pid}",
                     cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                 )
             )
@@ -7192,20 +7215,30 @@ def get(slug: str, sess=None, request=None):
 
     nav_links = _main_mod._public_nav_links(active="collections", user=user, community_slug=community_slug)
 
-    share_url = f"/collection/{slug}"
+    share_url = f"{nav_prefix}/collection/{slug}"
+    og_image_url = ""
+    for photo in photos:
+        photo_path = photo.get("path", "")
+        if photo_path:
+            og_image_url = _main_mod.storage.get_photo_url(photo_path)
+            if og_image_url:
+                break
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
     return (
         Title(f"{col_name} — Rhodesli"),
-        Meta(property="og:title", content=f"{col_name} — Rhodesli Heritage Archive"),
-        Meta(property="og:description", content=f"Browse {len(photos)} photos from the {col_name}."),
-        Meta(property="og:url", content=f"{_main_mod.SITE_URL}{share_url}"),
+        *_main_mod.og_tags(
+            f"{col_name} — Rhodesli Heritage Archive",
+            f"Browse {len(photos)} photos from the {col_name}.",
+            image_url=og_image_url,
+            canonical_url=share_url,
+        ),
         page_style,
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -7214,7 +7247,7 @@ def get(slug: str, sess=None, request=None):
             Div(
                 # Breadcrumb
                 Div(
-                    A("Collections", href="/collections", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                    A("Collections", href=f"{nav_prefix}/collections", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
                     Span(" / ", cls="text-slate-600 mx-2"),
                     Span(col_name, cls="text-slate-300 text-sm"),
                     cls="mb-6",
@@ -7240,12 +7273,12 @@ def get(slug: str, sess=None, request=None):
                         ),
                         A(
                             "View on Timeline →",
-                            href=f"/timeline?collection={quote(col_name)}",
+                            href=f"{nav_prefix}/timeline?collection={quote(col_name)}",
                             cls="text-sm text-indigo-400 hover:text-indigo-300 ml-4",
                         ),
                         A(
                             "+ Add Photos",
-                            href="/upload",
+                            href=f"{nav_prefix}/upload",
                             cls="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3",
                         )
                         if (user and user.is_admin if _main_mod.is_auth_enabled() else False)
@@ -7262,7 +7295,7 @@ def get(slug: str, sess=None, request=None):
                     ),
                     A(
                         "Help Identify →",
-                        href="/tools/compare",
+                        href=f"{nav_prefix}/help",
                         cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4",
                     ),
                     cls="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",
@@ -11255,7 +11288,13 @@ def public_photo_page(
         page_style,
         Main(
             # Top navigation bar — uses _public_page_nav for mobile hamburger (UX-103)
-            _main_mod._public_page_nav(nav_links, active="photos", user=user, include_admin_bar=False),
+            _main_mod._public_page_nav(
+                nav_links,
+                active="photos",
+                user=user,
+                community_slug=community_slug,
+                include_admin_bar=False,
+            ),
             _main_mod._admin_bar(user, community_slug=community_slug),
             # Breadcrumb bar — back navigation (UX-103: eliminates dead-end)
             Div(

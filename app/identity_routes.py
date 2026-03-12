@@ -23,8 +23,14 @@ import app.main as _main_mod
 logger = logging.getLogger(__name__)
 
 
+def _nav_prefix_from_request(request) -> str:
+    """Return the active community URL prefix for HTMX/admin responses."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    return _main_mod.community_url_prefix(community_slug)
+
+
 @rt("/confirm/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
     Requires admin.
@@ -98,6 +104,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     # Return updated card (now CONFIRMED, no action buttons)
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
     identity_name = ensure_utf8_display(updated_identity.get("name", "Unknown"))
 
     # Check if already linked to GEDCOM — if not, show link panel (AD-160)
@@ -108,7 +115,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # Return the card plus a success toast (+ GEDCOM link panel if applicable)
     parts = [
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Identity confirmed.", "success"),
     ]
     if gedcom_panel:
@@ -117,7 +126,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 @rt("/reject/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
     """Contest/reject an identity (move to CONTESTED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -159,9 +168,10 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="red", show_actions=False),
+        _main_mod.identity_card(updated_identity, crop_files, lane_color="red", show_actions=False, nav_prefix=nav_prefix),
         _main_mod.toast("Identity contested.", "warning"),
     )
 
@@ -1445,6 +1455,7 @@ def post(
     filter: str = "",
     focus_section: str = "",
     sess=None,
+    request=None,
 ):
     """
     Merge source identity into target identity. Requires admin.
@@ -1634,11 +1645,14 @@ def post(
             merge_toast,
         )
 
+    nav_prefix = _nav_prefix_from_request(request)
     if source == "similar_page":
-        return HttpHeader("HX-Redirect", return_to or f"/person/{actual_target_id}")
+        return HttpHeader("HX-Redirect", return_to or f"{nav_prefix}/person/{actual_target_id}")
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
+        ),
         merge_guidance,
         *oob_elements,
         merge_toast,
@@ -2854,7 +2868,7 @@ def post(photo_ids: str = "[]", collection: str = "", source: str = "", source_u
 
 
 @rt("/api/face/{face_id:path}/detach")
-def post(face_id: str, sess=None):
+def post(face_id: str, sess=None, request=None):
     """Detach a face from its identity into a new identity. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2912,6 +2926,7 @@ def post(face_id: str, sess=None):
 
     # 1. Get crop files for rendering
     crop_files = _main_mod.get_crop_files()
+    nav_prefix = _nav_prefix_from_request(request)
 
     # 2. Render the NEW identity card (detached face's new home)
     new_identity = registry.get_identity(result["to_identity_id"])
@@ -2920,6 +2935,7 @@ def post(face_id: str, sess=None):
         crop_files,
         lane_color="amber",  # New identities are PROPOSED
         show_actions=True,
+        nav_prefix=nav_prefix,
     )
 
     # 3. Render the UPDATED old identity card (with correct face count)
@@ -2936,6 +2952,7 @@ def post(face_id: str, sess=None):
         crop_files,
         lane_color=old_lane_color,
         show_actions=old_identity["state"] in ("INBOX", "PROPOSED"),
+        nav_prefix=nav_prefix,
     )
 
     return (
@@ -2992,7 +3009,7 @@ def post(id: str, sess=None):
 
 
 @rt("/inbox/{identity_id}/review")
-def post(identity_id: str, sess=None):
+def post(identity_id: str, sess=None, request=None):
     """Move identity from INBOX to PROPOSED state. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3027,16 +3044,19 @@ def post(identity_id: str, sess=None):
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     # Return updated card (now PROPOSED, with full action buttons)
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="amber", show_actions=True),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="amber", show_actions=True, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Moved to Proposed for review.", "success"),
     )
 
 
 @rt("/inbox/{identity_id}/confirm")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
     """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3092,16 +3112,19 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     # Return updated card (now CONFIRMED)
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Identity confirmed.", "success"),
     )
 
 
 @rt("/inbox/{identity_id}/reject")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
     """Reject identity from INBOX state (INBOX -> REJECTED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3147,16 +3170,17 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     # Return updated card (now REJECTED)
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="rose", show_actions=False),
+        _main_mod.identity_card(updated_identity, crop_files, lane_color="rose", show_actions=False, nav_prefix=nav_prefix),
         _main_mod.toast("Identity rejected.", "success"),
     )
 
 
 @rt("/identity/{identity_id}/skip")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
     """
     Skip identity (defer for later review). Requires admin.
 
@@ -3206,9 +3230,12 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="stone", show_actions=False),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="stone", show_actions=False, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Skipped for later.", "info"),
     )
 
@@ -3219,7 +3246,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 @rt("/api/admin/force-state/{identity_id}/{new_state}")
-def post(identity_id: str, new_state: str, sess=None):
+def post(identity_id: str, new_state: str, sess=None, request=None):
     """Force an identity to a specific state. Admin only.
 
     Used for data integrity fixes when normal state transitions are blocked
@@ -3417,8 +3444,9 @@ def post(identity_id: str, sess=None):
 
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
+    nav_prefix = _nav_prefix_from_request(request)
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="blue", show_actions=True),
+        _main_mod.identity_card(updated_identity, crop_files, lane_color="blue", show_actions=True, nav_prefix=nav_prefix),
         _main_mod.toast("Returned to Inbox.", "info"),
     )

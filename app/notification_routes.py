@@ -575,7 +575,7 @@ def get(sess, offset: int = 0, partial: int = 0, request=None):
     unread_count = _get_unread_count(user.id)
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_links = _main_mod._public_nav_links(active="notifications", user=user, community_slug=community_slug)
-    nav = _main_mod._public_page_nav(nav_links, active="notifications", user=user)
+    nav = _main_mod._public_page_nav(nav_links, active="notifications", user=user, community_slug=community_slug)
 
     mark_all_btn = None
     if unread_count > 0:
