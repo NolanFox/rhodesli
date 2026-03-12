@@ -207,6 +207,9 @@
   first bootstrapping the project root for `core/` imports. Session 98 fixed
   that bootstrap path and added regression coverage in
   `tests/test_deploy_safety_gate.py`.
+- The final closeout pass also fixed an unrelated fast-suite flake in
+  `tests/test_session_82e_features.py`: the test now selects a routeable photo
+  page instead of assuming the first cache id is renderable under xdist.
 
 ## User Q&A Captured
 

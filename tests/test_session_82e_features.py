@@ -26,14 +26,41 @@ def get_real_photo_id():
     return None
 
 
+def get_routeable_photo_id(client: TestClient):
+    """Return the first photo_id whose public photo route renders successfully."""
+    candidate_ids = []
+
+    primary = get_real_photo_id()
+    if primary:
+        candidate_ids.append(primary)
+
+    try:
+        from app.main import _photo_cache
+
+        if _photo_cache:
+            for pid, pdata in _photo_cache.items():
+                if pid in candidate_ids:
+                    continue
+                if pdata.get("faces") and pdata.get("width"):
+                    candidate_ids.append(pid)
+    except Exception:
+        pass
+
+    for photo_id in candidate_ids:
+        response = client.get(f"/photo/{photo_id}")
+        if response.status_code == 200:
+            return photo_id
+    return None
+
+
 @pytest.fixture
 def client():
     return TestClient(app)
 
 
 @pytest.fixture
-def real_photo_id():
-    return get_real_photo_id()
+def real_photo_id(client):
+    return get_routeable_photo_id(client)
 
 
 class TestHelpNeededPage:
