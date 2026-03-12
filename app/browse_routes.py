@@ -244,6 +244,7 @@ def get(
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     community = getattr(request.state, "community", None) if request else None
     community_photo_ids = _main_mod._get_community_photo_ids(community)
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -353,7 +354,7 @@ def get(
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
-                hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
+                hx_get=f"{nav_prefix}/api/photos/more?{_ue(_lazy_params)}",
                 hx_trigger="revealed",
                 hx_swap="outerHTML",
             )
@@ -377,7 +378,8 @@ def get(
         # Remove empty/None params
         params = {k: v for k, v in params.items() if v}
         qs = _url_encode(params)
-        return f"/photos?{qs}" if qs else "/photos"
+        photos_path = f"{nav_prefix}/photos" if nav_prefix else "/photos"
+        return f"{photos_path}?{qs}" if qs else photos_path
 
     # Collection + sort dropdowns
     collection_options = [Option("All Collections", value="")]
@@ -476,13 +478,17 @@ def get(
         *_main_mod.og_tags(
             "Photos — Rhodesli Heritage Archive",
             f"{len(photos)} historical photographs from the Jewish community of Rhodes.",
-            canonical_url="/photos",
+            canonical_url=f"{nav_prefix}/photos" if nav_prefix else "/photos",
         ),
         page_style,
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/" if nav_prefix else "/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -493,7 +499,7 @@ def get(
                     Div(
                         H1("Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
                         _main_mod.share_button(
-                            url="/photos",
+                            url=f"{nav_prefix}/photos" if nav_prefix else "/photos",
                             style="link",
                             label="Share",
                             title="Photos — Rhodesli",

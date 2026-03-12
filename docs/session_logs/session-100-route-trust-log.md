@@ -132,3 +132,21 @@
 - verification:
   - `pytest tests/e2e/test_critical_paths.py::test_landing_page_hero -x -q`
     - `1 passed`
+
+## Public Photos Route Prefix Follow-Up
+- `/photos` was still trying to use `nav_prefix` without defining it, which
+  made the discovery-layer browser suite fail and left archive-scoped photo
+  browsing brittle
+- the route now computes `nav_prefix` from `community_url_prefix()` and uses it
+  consistently for:
+  - photo-card detail links
+  - lazy-load sentinel API URLs
+  - filter-pill/search URLs
+  - the page brand link
+  - share/canonical URLs
+- files:
+  - [app/browse_routes.py](/Users/nolanfox/rhodesli/app/browse_routes.py)
+  - [tests/test_public_browsing.py](/Users/nolanfox/rhodesli/tests/test_public_browsing.py)
+- verification:
+  - `pytest tests/test_public_browsing.py tests/e2e/test_discovery_layer.py::test_photo_card_shows_date_badge tests/e2e/test_discovery_layer.py::test_date_badge_confidence_styling -x -q`
+    - `24 passed`

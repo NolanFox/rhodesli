@@ -13,6 +13,7 @@ Tests cover:
 
 import pytest
 from starlette.testclient import TestClient
+from unittest.mock import patch
 
 from app.main import app
 
@@ -79,6 +80,47 @@ class TestPublicPhotosPage:
         """OG meta tags present."""
         response = client.get("/photos")
         assert "og:title" in response.text
+
+    def test_community_photos_preserve_prefixed_photo_links(self, client, monkeypatch):
+        """Community-scoped /photos must keep photo/detail links inside that archive."""
+        import app.main as main_mod
+
+        monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+        monkeypatch.setattr(
+            main_mod,
+            "_photo_cache",
+            {
+                "photo-1": {
+                    "photo_id": "photo-1",
+                    "filename": "photo-1.jpg",
+                    "collection": "Fox Family Collection",
+                    "faces": [{"face_id": "face-1"}],
+                    "width": 800,
+                    "height": 600,
+                    "media_role": "front",
+                }
+            },
+        )
+        monkeypatch.setattr(main_mod, "_get_community_photo_ids", lambda _community: None)
+        monkeypatch.setattr(main_mod, "_get_decade_counts", lambda: {})
+        monkeypatch.setattr(main_mod, "_get_tag_counts", lambda: {})
+        monkeypatch.setattr(main_mod, "_get_date_badge", lambda _photo_id: ("c. 1930s", "high", "Estimated: 1930s"))
+
+        class FakeRegistry:
+            pass
+
+        monkeypatch.setattr(main_mod, "load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr(main_mod, "get_identity_for_face", lambda *_args, **_kwargs: None)
+
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            response = client.get("/c/fox-family/photos")
+
+        assert response.status_code == 200
+        assert 'href="/c/fox-family/photo/photo-1"' in response.text
+        assert 'href="/c/fox-family/"' in response.text
 
 
 class TestPublicPeoplePage:
