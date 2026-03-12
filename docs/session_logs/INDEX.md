@@ -74,13 +74,14 @@
 | 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
 | 98 | 2026-03-11 | [log](session-98-log.md) | [assess](../assessments/session-98-gedcom-audit.md) | [prompt](../prompts/session-98-prompt.md) | [ctx](../session_context/session-98-context.md) | Complete |
 | 98B | 2026-03-12 | [log](session-98b-log.md) | [assess](../assessments/session-98b-assessment.md) | - | - | Complete (hotfix branch) |
-| 99 | 2026-03-11 | [log](session-99-log.md) | [assess](../assessments/session-99-assessment.md) | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | In progress (PR #8 open) |
+| 99 | 2026-03-11 | [log](session-99-log.md) | [assess](../assessments/session-99-assessment.md) | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | Complete |
+| 100 | 2026-03-11 | [plan](session-100-planning-log.md), [hotfix](session-100-fox-family-hotfix-log.md) | [codex](../assessments/session-100-codex-research.md), [antigravity](../assessments/session-100-antigravity-plan-review.md), [fox-family](../assessments/session-100-face-tagging-and-fox-family-audit.md), [screens](../assessments/session-100-fox-family-screenshot-audit.md) | [review-1](../prompts/session-100-antigravity-plan-review-prompt.md), [review-2](../prompts/session-100-antigravity-workflow-review-prompt.md), [mockups](../prompts/session-100-antigravity-mockup-prompt.md) | [ctx](../session_context/session-100-context.md) | Planning + hotfix in progress |
 
 ## PR-Linked Audit Trail
 
 | PR | Date | Branch | Log | Assessment | Context | Prompt | Status |
 |----|------|--------|-----|------------|---------|--------|--------|
-| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt-1](../prompts/pr-7-antigravity-follow-up-prompt.md), [prompt-2](../prompts/pr-7-antigravity-final-correction-prompt.md), [prompt-3](../prompts/pr-7-antigravity-precision-prompt.md) | Ready for Session 99 prompt writing |
+| 7 | 2026-03-11 | `modern-ui-research` | [log](pr-7-modern-ui-codex-log.md) | [assess](../assessments/pr-7-modern-ui-codex-audit.md) | [ctx](../session_context/pr-7-modern-ui-codex-context.md) | [prompt-1](../prompts/pr-7-antigravity-follow-up-prompt.md), [prompt-2](../prompts/pr-7-antigravity-final-correction-prompt.md), [prompt-3](../prompts/pr-7-antigravity-precision-prompt.md) | Merged; source plan for Session 99 |
 
 ## B-Path Analysis
 
