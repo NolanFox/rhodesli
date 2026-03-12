@@ -1,0 +1,84 @@
+{
+  "date": "2026-03-11",
+  "community_id": "rhodesli",
+  "applied_version": {
+    "id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+    "version_number": 7,
+    "status": "applied",
+    "notes": "Session 98 rich GEDCOM mirror bootstrap retry after direct-db finalize batching fix",
+    "summary": {
+      "added": 147,
+      "modified": 1428,
+      "removed": 12,
+      "unchanged": 20369,
+      "total_changes": 370366,
+      "baseline_mode": "legacy_bootstrap",
+      "schema_ready": true,
+      "missing_tables": []
+    }
+  },
+  "current_counts": {
+    "gedcom_individuals": 21944,
+    "gedcom_events": 41526,
+    "gedcom_relationships": 146592,
+    "gedcom_families": 6722,
+    "gedcom_sources": 803,
+    "gedcom_media_objects": 668,
+    "gedcom_records": 30154,
+    "gedcom_change_log": 960188,
+    "gedcom_enrichment_queue": 10
+  },
+  "face_link_resolution": {
+    "gedcom_face_links_with_id": 67,
+    "unresolved_against_current_individuals": 0
+  },
+  "redirect_state": {
+    "gedcom_entity_redirects": 0,
+    "note": "No live linked GEDCOM id required redirect repair after the bootstrap import. Session 98 still patched bootstrap imports to emit redirect lineage in future first-version imports when conservative matching finds a high-confidence rekey/merge."
+  },
+  "failed_history_kept_for_audit": [
+    {
+      "version_number": 1,
+      "id": "f008b3d1-6060-472c-9265-bf599b09132f",
+      "status": "failed",
+      "notes": "FAILED: {'message': \"Could not find the 'root_json' column of 'gedcom_records' in the schema cache\", 'code': 'PGRST204', 'hint': None, 'details': None}"
+    },
+    {
+      "version_number": 2,
+      "id": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+      "status": "failed",
+      "notes": "FAILED: invalid input syntax for type uuid"
+    },
+    {
+      "version_number": 3,
+      "id": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+      "status": "failed",
+      "notes": "FAILED: can't adapt type 'UUID'"
+    },
+    {
+      "version_number": 4,
+      "id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+      "status": "failed",
+      "notes": "FAILED: The read operation timed out; interrupted during partial apply; rolled back to pre-import current rows"
+    },
+    {
+      "version_number": 5,
+      "id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+      "status": "failed",
+      "notes": "FAILED: Server disconnected"
+    },
+    {
+      "version_number": 6,
+      "id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+      "status": "failed",
+      "notes": "FAILED: connection already closed"
+    }
+  ],
+  "verification": {
+    "targeted_gedcom_versioning": "34 passed",
+    "targeted_gedcom_routes": "44 passed",
+    "fast_ci_target": "2680 passed, 7 skipped",
+    "app_suite": "4130 passed, 21 skipped",
+    "ml_suite": "588 passed, 2 skipped"
+  }
+}

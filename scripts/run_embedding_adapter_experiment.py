@@ -12,10 +12,18 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 from core.embeddings_io import load_face_data  # noqa: E402
-from rhodesli_ml.embedding_adapter_experiment import (  # noqa: E402
-    run_embedding_adapter_experiment,
-    save_adapter_artifact,
-)
+
+
+def run_embedding_adapter_experiment(*args, **kwargs):
+    from rhodesli_ml.embedding_adapter_experiment import run_embedding_adapter_experiment as _run
+
+    return _run(*args, **kwargs)
+
+
+def save_adapter_artifact(*args, **kwargs):
+    from rhodesli_ml.embedding_adapter_experiment import save_adapter_artifact as _save
+
+    return _save(*args, **kwargs)
 
 
 def _load_identities(data_path: Path) -> dict:

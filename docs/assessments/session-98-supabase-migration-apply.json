@@ -1,0 +1,60 @@
+{
+  "applied_at": "2026-03-11T20:31:16.420546+00:00",
+  "connection": {
+    "database": "postgres",
+    "host": "aws-0-us-west-2.pooler.supabase.com",
+    "mode": "shared_pooler_session",
+    "port": 5432,
+    "user": "postgres.fvynibivlphxwfowzkjl"
+  },
+  "created_tables": [
+    "gedcom_entity_redirects",
+    "gedcom_families",
+    "gedcom_media_objects",
+    "gedcom_records",
+    "gedcom_sources"
+  ],
+  "migration_file": "scripts/supabase_migration_003_gedcom_rich_mirror.sql",
+  "verified_columns": {
+    "gedcom_events": [
+      "citations_json",
+      "event_key",
+      "media_refs_json",
+      "notes_json",
+      "payload_hash",
+      "raw_node_json",
+      "raw_tag",
+      "superseded_by",
+      "type_label",
+      "value"
+    ],
+    "gedcom_individuals": [
+      "birth_event_json",
+      "citations_json",
+      "custom_tags_json",
+      "death_event_json",
+      "events_json",
+      "family_as_child_json",
+      "family_as_spouse_json",
+      "media_refs_json",
+      "names_json",
+      "notes_json",
+      "payload_hash",
+      "raw_record_json",
+      "raw_record_key",
+      "record_hash",
+      "superseded_by"
+    ],
+    "gedcom_relationships": [
+      "payload_hash",
+      "relationship_payload",
+      "superseded_by"
+    ],
+    "gedcom_versions": [
+      "media_count",
+      "record_count",
+      "source_count",
+      "source_manifest"
+    ]
+  }
+}

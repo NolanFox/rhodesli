@@ -1,0 +1,16 @@
+{
+  "notes": "Session 98 rich GEDCOM mirror bootstrap\nFAILED: Could not find the 'root' column of 'gedcom_records' in the schema cache",
+  "recorded_at": "2026-03-11T21:01:20.386989+00:00",
+  "rollback_state": {
+    "gedcom_events_current": 40140,
+    "gedcom_families_current": 0,
+    "gedcom_individuals_current": 21809,
+    "gedcom_media_objects_current": 0,
+    "gedcom_records_current": 0,
+    "gedcom_relationships_current": 145574,
+    "gedcom_sources_current": 0
+  },
+  "status": "failed",
+  "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+  "version_number": 1
+}

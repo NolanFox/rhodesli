@@ -4,6 +4,19 @@ Pruned from 61 tests to ~20. Removed: duplicate nav link checks (covered by
 test_smoke.py), CSS grid class assertions, redundant stat label tests.
 """
 
+def _mock_featured_photos(count=4):
+    return [
+        {
+            "id": f"photo-{i}",
+            "url": f"/photos/mock-{i}.jpg",
+            "width": 1200,
+            "height": 800,
+            "face_count": i + 1,
+            "face_boxes": [],
+        }
+        for i in range(count)
+    ]
+
 
 
 class TestLandingPageBasics:
@@ -62,18 +75,21 @@ class TestLandingPageStats:
 class TestLandingPagePhotos:
     """Hero section should feature actual photos from the archive."""
 
-    def test_hero_has_images(self, client):
+    def test_hero_has_images(self, client, monkeypatch):
         """Landing page hero section contains img tags."""
+        monkeypatch.setattr("app.main._get_featured_photos", lambda limit=8: _mock_featured_photos())
         response = client.get("/")
         assert "<img" in response.text
 
-    def test_images_have_lazy_loading(self, client):
+    def test_images_have_lazy_loading(self, client, monkeypatch):
         """Featured images use lazy loading for performance."""
+        monkeypatch.setattr("app.main._get_featured_photos", lambda limit=8: _mock_featured_photos())
         response = client.get("/")
         assert 'loading="lazy"' in response.text
 
-    def test_hero_has_multiple_photos(self, client):
+    def test_hero_has_multiple_photos(self, client, monkeypatch):
         """Hero section shows multiple featured photos in mosaic."""
+        monkeypatch.setattr("app.main._get_featured_photos", lambda limit=8: _mock_featured_photos())
         response = client.get("/")
         hero_card_count = response.text.count("hero-card")
         assert hero_card_count >= 4, f"Expected at least 4 hero photos, found {hero_card_count}"

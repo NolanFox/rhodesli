@@ -354,14 +354,18 @@ class TestSeqPropagation:
 class TestPartialRouteSeqParam:
     """The /photo/{id}/partial route accepts and passes seq parameter."""
 
-    def test_partial_route_accepts_seq(self, client, auth_disabled):
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.get_identity_for_face")
+    def test_partial_route_accepts_seq(self, mock_get_id, mock_reg, mock_dim, mock_meta, client, auth_disabled):
         """GET /photo/{id}/partial?seq=1 returns 200."""
-        from app.main import load_embeddings_for_photos
-        photos = load_embeddings_for_photos()
-        if not photos:
-            pytest.skip("No embeddings available for testing")
-        photo_id = next(iter(photos.keys()))
-        response = client.get(f"/photo/{photo_id}/partial?seq=1")
+        del mock_dim
+        mock_meta.return_value = _make_photo_meta(face_count=3)
+        mock_get_id.side_effect = _identity_for_face(set())
+        mock_reg.return_value = MagicMock()
+
+        response = client.get("/photo/p1/partial?seq=1")
         assert response.status_code == 200
         # Should include sequential mode elements
         html = response.text

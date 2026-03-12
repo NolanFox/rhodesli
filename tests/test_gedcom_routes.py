@@ -728,3 +728,40 @@ class TestGedcomLoaderResilience:
             rel_mod._gedcom_face_links_cache = None
             rel_mod._gedcom_face_links_cache_loaded_at = 0.0
             rel_mod._gedcom_face_links_cache_failed_at = 0.0
+
+    def test_face_links_include_redirect_metadata_only_for_rekeyed_ids(self):
+        import app.main as main
+        import app.relationship_routes as rel_mod
+
+        main._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+        rel_mod._gedcom_face_links_cache_failed_at = 0.0
+
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.select.return_value.execute.return_value = MagicMock(
+            data=[{"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}]
+        )
+
+        try:
+            with (
+                patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+                patch("app.relationship_routes._load_gedcom_entity_redirects", return_value={"@I1@": "@I2@"}),
+            ):
+                result = main._load_gedcom_face_links()
+
+            assert result == {
+                "id-1": {
+                    "identity_id": "id-1",
+                    "gedcom_id": "@I2@",
+                    "confidence": 1.0,
+                    "linked_by": "admin",
+                    "original_gedcom_id": "@I1@",
+                    "redirected_from": "@I1@",
+                }
+            }
+        finally:
+            main._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+            rel_mod._gedcom_face_links_cache_failed_at = 0.0

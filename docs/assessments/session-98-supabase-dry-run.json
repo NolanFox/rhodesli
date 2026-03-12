@@ -1,0 +1,146 @@
+{
+  "added": 147,
+  "baseline_mode": "legacy_bootstrap",
+  "counts": {
+    "events": 41526,
+    "families": 6722,
+    "individuals": 21944,
+    "media_objects": 668,
+    "records": 30154,
+    "relationships": 146592,
+    "sources": 803
+  },
+  "dry_run": true,
+  "entity_summaries": {
+    "events": {
+      "added": 41526,
+      "modified": 0,
+      "removed": 0,
+      "unchanged": 0
+    },
+    "families": {
+      "added": 6722,
+      "modified": 0,
+      "removed": 0,
+      "unchanged": 0
+    },
+    "individuals": {
+      "added": 147,
+      "modified": 1428,
+      "removed": 12,
+      "unchanged": 20369
+    },
+    "media_objects": {
+      "added": 668,
+      "modified": 0,
+      "removed": 0,
+      "unchanged": 0
+    },
+    "records": {
+      "added": 30154,
+      "modified": 0,
+      "removed": 0,
+      "unchanged": 0
+    },
+    "relationships": {
+      "added": 144962,
+      "modified": 0,
+      "removed": 143944,
+      "unchanged": 1630
+    },
+    "sources": {
+      "added": 803,
+      "modified": 0,
+      "removed": 0,
+      "unchanged": 0
+    }
+  },
+  "missing_tables": [],
+  "modified": 1428,
+  "redirects": {
+    "detected": 0,
+    "sample": []
+  },
+  "removed": 12,
+  "sample_changes": [
+    {
+      "changes": [
+        {
+          "new_value": null,
+          "old_value": "Henrico, Virginia, USA",
+          "path": "death_place"
+        }
+      ],
+      "entity_id": "@I132126987783@",
+      "entity_type": "individuals"
+    },
+    {
+      "changes": [
+        {
+          "new_value": "10 May 1970",
+          "old_value": " 10 May 1970",
+          "path": "death_date"
+        }
+      ],
+      "entity_id": "@I132127274579@",
+      "entity_type": "individuals"
+    },
+    {
+      "changes": [
+        {
+          "new_value": "Abt. 1840",
+          "old_value": null,
+          "path": "birth_date"
+        }
+      ],
+      "entity_id": "@I132127387491@",
+      "entity_type": "individuals"
+    },
+    {
+      "changes": [
+        {
+          "new_value": "Abt. 1835",
+          "old_value": null,
+          "path": "birth_date"
+        }
+      ],
+      "entity_id": "@I132127393939@",
+      "entity_type": "individuals"
+    },
+    {
+      "changes": [
+        {
+          "new_value": "Rhodes, Turkey",
+          "old_value": "Island of Rhodes, Italy",
+          "path": "birth_place"
+        },
+        {
+          "new_value": "23 MAY 1982",
+          "old_value": null,
+          "path": "death_date"
+        },
+        {
+          "new_value": "Los Angeles County, California, United States of America",
+          "old_value": null,
+          "path": "death_place"
+        },
+        {
+          "new_value": "Abraham (Avraam)",
+          "old_value": "Abraham",
+          "path": "given_name"
+        },
+        {
+          "new_value": "Abraham (Avraam) Almaleh",
+          "old_value": "Abraham Almaleh",
+          "path": "name"
+        }
+      ],
+      "entity_id": "@I132127396296@",
+      "entity_type": "individuals"
+    }
+  ],
+  "schema_ready": true,
+  "total_changes": 370366,
+  "unchanged": 20369,
+  "version_number": 2
+}

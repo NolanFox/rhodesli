@@ -1,7 +1,9 @@
 """GEDCOM file parser for Rhodesli.
 
 Parses GEDCOM 5.5.1 files and extracts structured individual/family data.
-Uses python-gedcom library for file parsing, with custom date handling.
+Uses python-gedcom for core relationship extraction, then enriches that
+structure from a raw GEDCOM line parser so the full source export is
+preserved instead of flattened away.
 
 AD-073: GEDCOM parsing strategy
 """
@@ -9,7 +11,7 @@ AD-073: GEDCOM parsing strategy
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 
 # --- Date Parsing ---
@@ -40,6 +42,101 @@ class ParsedDate:
         if self.modifier:
             return f"ParsedDate({self.modifier} {self.year}, confidence={self.confidence})"
         return f"ParsedDate({self.year}, confidence={self.confidence})"
+
+
+@dataclass
+class GedcomNode:
+    """A raw GEDCOM tree node with children preserved."""
+
+    level: int
+    tag: str
+    value: str = ""
+    xref_id: Optional[str] = None
+    line_number: int = 0
+    children: list["GedcomNode"] = field(default_factory=list)
+
+
+@dataclass
+class GedcomRecord:
+    """A top-level GEDCOM record with exact raw text preserved."""
+
+    record_key: str
+    record_type: str
+    root: GedcomNode
+    raw_text: str
+    record_hash: str
+    xref_id: Optional[str] = None
+
+
+@dataclass
+class GedcomCitation:
+    """Structured source citation attached to a record or fact."""
+
+    source_xref: Optional[str] = None
+    page: Optional[str] = None
+    data_text: Optional[str] = None
+    data_date: Optional[str] = None
+    url: Optional[str] = None
+    apid: Optional[str] = None
+    note: Optional[str] = None
+    raw_node: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class GedcomMediaRef:
+    """Structured multimedia reference attached to a record or fact."""
+
+    object_xref: Optional[str] = None
+    title: Optional[str] = None
+    is_primary: bool = False
+    crop: dict[str, Any] = field(default_factory=dict)
+    raw_node: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class GedcomName:
+    """A preferred or alternate name entry from the GEDCOM."""
+
+    full_name: str = ""
+    given_name: str = ""
+    surname: str = ""
+    prefix: Optional[str] = None
+    suffix: Optional[str] = None
+    nickname: Optional[str] = None
+    is_primary: bool = False
+    notes: list[str] = field(default_factory=list)
+    citations: list[GedcomCitation] = field(default_factory=list)
+    media_refs: list[GedcomMediaRef] = field(default_factory=list)
+    raw_value: str = ""
+    raw_node: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class GedcomSourceRecord:
+    """A top-level source record."""
+
+    xref_id: str
+    title: Optional[str] = None
+    author: Optional[str] = None
+    publication: Optional[str] = None
+    repository_xref: Optional[str] = None
+    notes: list[str] = field(default_factory=list)
+    urls: list[str] = field(default_factory=list)
+    raw_record: Optional[GedcomRecord] = None
+
+
+@dataclass
+class GedcomMediaObject:
+    """A top-level multimedia record."""
+
+    xref_id: str
+    file: Optional[str] = None
+    form: Optional[str] = None
+    title: Optional[str] = None
+    media_type: Optional[str] = None
+    notes: list[str] = field(default_factory=list)
+    urls: list[str] = field(default_factory=list)
+    raw_record: Optional[GedcomRecord] = None
 
 
 def parse_gedcom_date(date_str: str) -> Optional[ParsedDate]:
@@ -176,6 +273,13 @@ class GedcomEvent:
     date: Optional[ParsedDate] = None
     place: Optional[str] = None
     raw_date: str = ""
+    value: Optional[str] = None
+    type_label: Optional[str] = None
+    notes: list[str] = field(default_factory=list)
+    citations: list[GedcomCitation] = field(default_factory=list)
+    media_refs: list[GedcomMediaRef] = field(default_factory=list)
+    raw_tag: Optional[str] = None
+    raw_node: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -191,6 +295,12 @@ class GedcomIndividual:
     events: list = field(default_factory=list)  # Other life events
     family_as_spouse: list = field(default_factory=list)  # FAM xref_ids where this person is HUSB/WIFE
     family_as_child: list = field(default_factory=list)  # FAM xref_ids where this person is CHIL
+    names: list[GedcomName] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    citations: list[GedcomCitation] = field(default_factory=list)
+    media_refs: list[GedcomMediaRef] = field(default_factory=list)
+    custom_tags: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    raw_record: Optional[GedcomRecord] = None
 
     @property
     def birth_year(self) -> Optional[int]:
@@ -225,6 +335,12 @@ class GedcomFamily:
     wife_xref: Optional[str] = None
     children_xrefs: list = field(default_factory=list)
     marriage: Optional[GedcomEvent] = None
+    events: list[GedcomEvent] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    citations: list[GedcomCitation] = field(default_factory=list)
+    media_refs: list[GedcomMediaRef] = field(default_factory=list)
+    custom_tags: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    raw_record: Optional[GedcomRecord] = None
 
 
 @dataclass
@@ -232,6 +348,9 @@ class ParsedGedcom:
     """Complete parsed GEDCOM file."""
     individuals: dict = field(default_factory=dict)  # xref_id -> GedcomIndividual
     families: dict = field(default_factory=dict)  # xref_id -> GedcomFamily
+    records: dict[str, GedcomRecord] = field(default_factory=dict)
+    sources: dict[str, GedcomSourceRecord] = field(default_factory=dict)
+    media_objects: dict[str, GedcomMediaObject] = field(default_factory=dict)
     source_file: str = ""
 
     @property
@@ -241,6 +360,14 @@ class ParsedGedcom:
     @property
     def family_count(self) -> int:
         return len(self.families)
+
+    @property
+    def source_count(self) -> int:
+        return len(self.sources)
+
+    @property
+    def media_count(self) -> int:
+        return len(self.media_objects)
 
     def get_parents(self, individual: GedcomIndividual) -> list:
         """Get parent individuals for a given person."""
@@ -344,6 +471,11 @@ def parse_gedcom(filepath: str) -> ParsedGedcom:
                 indi = result.individuals[child_xref]
                 if fam_xref not in indi.family_as_child:
                     indi.family_as_child.append(fam_xref)
+
+    # Third pass: enrich with raw-record preservation and richer extracted data.
+    from rhodesli_ml.importers.gedcom_rich import enrich_parsed_gedcom_from_raw
+
+    enrich_parsed_gedcom_from_raw(result, filepath, parse_gedcom_date)
 
     return result
 

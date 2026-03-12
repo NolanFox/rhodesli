@@ -1,0 +1,69 @@
+{
+  "captured_at": "2026-03-11T18:19:07.751727+00:00",
+  "live_counts": {
+    "gedcom_versions": 0,
+    "gedcom_individuals": 21809,
+    "gedcom_events": 40140,
+    "gedcom_relationships": 145574,
+    "gedcom_face_links": 67
+  },
+  "dry_run_summary": {
+    "version_number": 1,
+    "schema_ready": false,
+    "missing_tables": [
+      "gedcom_families",
+      "gedcom_media_objects",
+      "gedcom_records",
+      "gedcom_sources"
+    ],
+    "entity_summaries": {
+      "individuals": {
+        "added": 147,
+        "removed": 12,
+        "modified": 1428,
+        "unchanged": 20369
+      },
+      "events": {
+        "added": 41526,
+        "removed": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "families": {
+        "added": 6722,
+        "removed": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "sources": {
+        "added": 803,
+        "removed": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "media_objects": {
+        "added": 668,
+        "removed": 0,
+        "modified": 0,
+        "unchanged": 0
+      },
+      "relationships": {
+        "added": 144962,
+        "removed": 143944,
+        "modified": 0,
+        "unchanged": 1630
+      },
+      "records": {
+        "added": 30154,
+        "removed": 0,
+        "modified": 0,
+        "unchanged": 0
+      }
+    },
+    "redirects": {
+      "detected": 0,
+      "sample": []
+    }
+  },
+  "schema_mutation_blocker": "Direct Postgres access from this environment failed DNS resolution for the configured Supabase host, and public.exec_sql RPC is not available on the project."
+}

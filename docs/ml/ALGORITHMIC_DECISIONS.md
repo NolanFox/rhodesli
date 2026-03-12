@@ -2593,3 +2593,24 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - **Jump straight to backbone LoRA** — wrong sequencing given AD-035 and the current measurement needs.
   - **Skip Phase 4 entirely because Phase 2 failed rollout** — leaves no experiment path for the next plateau.
 - **Execution artifacts**: `rhodesli_ml/embedding_adapter_experiment.py`, `scripts/run_embedding_adapter_experiment.py`, `docs/assessments/session-97-phase4-adapter-report.json`, `docs/assessments/session-97-phase4-adapter-assessment.md`, `docs/session_logs/session-97-log.md`
+
+### AD-223: GEDCOM Rich Mirror With Redirect Lineage
+- **Date**: 2026-03-11 | **Session**: 98
+- **Context**: The thin GEDCOM versioning path from AD-163 tracked only a small subset of the export and implicitly treated GEDCOM xrefs as stable identities. Session 98's raw export audit showed that the March 11 Ancestry GEDCOM includes rich sources, notes, media refs, repeated names, custom tags, and xref churn across families, media objects, and a small set of removed/rekeyed people.
+- **Decision**: Treat the GEDCOM as a mirror source, not a lossy flattening step. Preserve top-level `INDI`, `FAM`, `SOUR`, and `OBJE` records plus exact raw record text. Store rich structured payloads for names, notes, citations, media refs, events, family structure, and raw nodes. Add append-only `gedcom_entity_redirects` so removed GEDCOM ids can resolve to current ids without mutating the original `gedcom_face_links`.
+- **Import semantics**:
+  1. Snapshot and diff all mirrored entity classes, not only individuals.
+  2. Stage replacement rows as `is_current = false`, supersede prior current rows, then activate the new rows so unique current-row indexes remain valid.
+  3. On the first versioned bootstrap, supersede all legacy current GEDCOM rows, not only modified ones.
+  4. Record high-confidence removed-to-current redirects as lineage artifacts, not destructive rewrites, including first-time bootstrap imports when conservative matching can safely link a retired legacy id to the new current id.
+- **Why this shape**:
+  - preserves everything the export actually contains
+  - keeps rollback/audit possible through append-only rows and redirect artifacts
+  - gives the app and Gemini pipeline access to richer current GEDCOM context
+  - stays compatible with Session 97's requirement that future AI/ML lineage reference explicit versioned input artifacts
+- **Rejected**:
+  - overwrite-in-place GEDCOM sync (breaks audit and rollback)
+  - keeping xrefs as de facto permanent identities (breaks on rekeys/merges)
+  - flattening rich GEDCOM structures into only birth/death/name columns (silent data loss)
+- **Affects**: `rhodesli_ml/importers/gedcom_parser.py`, `rhodesli_ml/importers/gedcom_rich.py`, `rhodesli_ml/importers/gedcom_snapshot.py`, `rhodesli_ml/importers/gedcom_matching.py`, `scripts/import_gedcom_version.py`, `scripts/run_combined_pipeline.py`, `app/admin_routes.py`, `app/relationship_routes.py`, `app/page_routes.py`, `scripts/supabase_migration_003_gedcom_rich_mirror.sql`
+- **Artifacts**: `docs/assessments/session-98-gedcom-audit.md`, `docs/analysis/session-98-gedcom-research.md`, `docs/assessments/session-98-gedcom-diff-report.json`
