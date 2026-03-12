@@ -74,7 +74,7 @@
 | 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
 | 98 | 2026-03-11 | [log](session-98-log.md) | [assess](../assessments/session-98-gedcom-audit.md) | [prompt](../prompts/session-98-prompt.md) | [ctx](../session_context/session-98-context.md) | Complete |
 | 98B | 2026-03-12 | [log](session-98b-log.md) | [assess](../assessments/session-98b-assessment.md) | - | - | Complete (hotfix branch) |
-| 99 | 2026-03-11 | - | - | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | Planned |
+| 99 | 2026-03-11 | [log](session-99-log.md) | [assess](../assessments/session-99-assessment.md) | [prompt](../prompts/session-99-prompt.md) | [ctx](../session_context/session-99-context.md) | In progress (PR #8 open) |
 
 ## PR-Linked Audit Trail
 

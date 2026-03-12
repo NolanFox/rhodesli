@@ -4389,7 +4389,7 @@ def toast_with_undo(
     )
 
 
-def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
+def _admin_dashboard_banner(counts: dict, current_section: str, variant: str = None) -> Div:
     """Admin-only dashboard summary banner at the top of the workstation.
 
     Shows inbox count, skipped count, and quick links.
@@ -4402,6 +4402,35 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     proposals = counts.get("proposals", 0)
     photo_count = counts.get("photo_count", 0)
 
+    if variant == "session99":
+        stat_items = [
+            ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-500"),
+            ("People", confirmed, "/?section=confirmed", "text-emerald-500"),
+            ("Help Identify", skipped, "/?section=skipped", "text-amber-300"),
+        ]
+        if proposals > 0:
+            stat_items.append(("Proposals", proposals, "/admin/proposals", "text-blue-400"))
+
+        stats_row = [
+            A(
+                Span(str(count), cls=f"font-display font-semibold text-lg {color}"),
+                Span(f" {label}", cls="text-slate-400 text-xs font-medium uppercase tracking-wider ml-1"),
+                href=link,
+                cls="hover:bg-slate-800 px-3 py-1.5 rounded-md transition-colors flex items-baseline line-height-none border border-transparent hover:border-slate-700",
+            )
+            for label, count, link, color in stat_items
+        ]
+
+        return Div(
+            Div(
+                Div(*stats_row, cls="flex items-center gap-2"),
+                cls="max-w-7xl mx-auto px-6 flex items-center justify-between",
+            ),
+            id="admin-dashboard-banner",
+            cls="py-2 bg-slate-900 border-b border-amber-900/40 sticky top-0 z-40 shadow-sm ui99-workstation-banner",
+        )
+
+    # Legacy branch
     stat_items = [
         ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-400"),
         ("People", confirmed, "/?section=confirmed", "text-emerald-400"),
@@ -4452,10 +4481,15 @@ def mobile_header() -> Div:
     )
 
 
-def _public_nav_links(active: str = "", user=None, community_slug: str | None = None) -> list:
+def _public_nav_links(active: str = "", user=None, community_slug: str | None = None, variant: str = None) -> list:
     """Build standard navigation links for public pages."""
-    _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
-    _active = "text-white text-sm font-medium border-b-2 border-amber-500 pb-1"
+    if variant == "session99":
+        _inactive = "text-amber-900/60 hover:text-amber-900 font-serif tracking-wide text-sm transition-colors duration-300"
+        _active = "text-amber-950 font-serif tracking-wide text-sm border-b border-amber-900 pb-0.5"
+    else:
+        _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
+        _active = "text-white text-sm font-medium border-b-2 border-amber-500 pb-1"
+
     p = community_url_prefix(community_slug)
 
     links = [
@@ -4693,6 +4727,7 @@ def sidebar(
     user: "User | None" = None,
     community_slug: str = "rhodes",
     community: dict | None = None,
+    variant: str = None,
 ) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
@@ -4720,13 +4755,20 @@ def sidebar(
         """Single navigation item with badge. Adapts to collapsed state."""
         is_active = current_section == section_key
 
-        # Dark theme: Active vs inactive styling
-        if is_active:
-            container_cls = "bg-slate-700 text-white"
-            badge_cls = f"bg-{color}-500 text-white"
+        if variant == "session99":
+            if is_active:
+                container_cls = "bg-amber-900/40 text-amber-100 shadow-inner border border-amber-700/50 ui99-nav-active"
+                badge_cls = "bg-amber-500 text-amber-950 shadow-sm"
+            else:
+                container_cls = "text-slate-400 hover:bg-[#1a1714] hover:text-slate-200 border border-transparent ui99-nav-inactive"
+                badge_cls = f"bg-{color}-500/20 text-{color}-400"
         else:
-            container_cls = "text-slate-300 hover:bg-slate-700/50"
-            badge_cls = f"bg-{color}-500/20 text-{color}-400"
+            if is_active:
+                container_cls = "bg-slate-700 text-white"
+                badge_cls = f"bg-{color}-500 text-white"
+            else:
+                container_cls = "text-slate-300 hover:bg-slate-700/50"
+                badge_cls = f"bg-{color}-500/20 text-{color}-400"
 
         return A(
             # Icon always visible
@@ -4897,12 +4939,23 @@ def sidebar(
         else None
     )
 
+    if variant == "session99":
+        header_name_cls = "sidebar-label text-xl font-bold text-amber-50 leading-tight font-display tracking-wide uppercase ui99-sidebar-title"
+        header_subtitle_cls = "sidebar-label text-[10px] text-amber-500/60 mt-1 tracking-[0.2em] font-medium uppercase"
+        sidebar_cls = "flex flex-col h-full bg-[#110e0c] border-r border-[#2a241e] text-slate-300 w-60 ui99-sidebar transition-all duration-300 z-50 fixed lg:static"
+        header_border_cls = "border-b border-[#2a241e]"
+    else:
+        header_name_cls = "sidebar-label text-lg font-bold text-white leading-tight font-display"
+        header_subtitle_cls = "sidebar-label text-xs text-amber-500/80 mt-0.5 tracking-wide uppercase"
+        sidebar_cls = "flex flex-col h-full bg-slate-900 border-r border-slate-700 text-slate-300 w-60 sidebar-container transition-all duration-300 z-50 fixed lg:static"
+        header_border_cls = "border-b border-slate-700/50"
+
     return Aside(
         # Header with collapse toggle
         Div(
             A(
-                H1(header_name, cls="sidebar-label text-lg font-bold text-white leading-tight font-display"),
-                P(header_subtitle, cls="sidebar-label text-xs text-amber-500/80 mt-0.5 tracking-wide uppercase"),
+                H1(header_name, cls=header_name_cls),
+                P(header_subtitle, cls=header_subtitle_cls),
                 href=f"{prefix}/",
                 cls="flex-1 min-w-0 no-underline hover:opacity-80 transition-opacity",
             ),
@@ -4918,7 +4971,7 @@ def sidebar(
                 cls="sidebar-collapse-btn hidden lg:flex items-center justify-center p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors",
                 title="Toggle sidebar",
             ),
-            cls="flex items-center px-3 py-3 border-b border-slate-700/50",
+            cls=f"flex items-center px-3 py-3 {header_border_cls}",
         ),
         # Workspace switcher (admin or non-Rhodes communities)
         workspace_switcher,
@@ -5044,26 +5097,37 @@ def sidebar(
             cls="absolute top-3 right-3 lg:hidden",
         ),
         id="sidebar",
-        cls="sidebar-container fixed left-0 top-0 h-screen bg-slate-800 border-r border-slate-700/50 flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-all duration-200",
+        cls=("sidebar-container fixed left-0 top-0 h-screen flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-all duration-200 "
+             + ("bg-slate-900 border-r border-amber-900/30 font-serif ui99-workstation-sidebar ui99-surface" if variant == "session99" else "bg-slate-800 border-r border-slate-700/50")
+            ),
     )
 
 
-def section_header(title: str, subtitle: str, view_mode: str = None, section: str = None) -> Div:
+def section_header(title: str, subtitle: str, view_mode: str = None, section: str = None, variant: str = None) -> Div:
     """
     Section header with optional Focus/Browse toggle.
     """
-    header_content = [
-        Div(
-            H2(title, cls="text-2xl font-bold text-white font-display"),
-            P(subtitle, cls="text-sm text-slate-400 mt-1"),
-        )
-    ]
-
-    # Add view toggle for sections that support it
-    # Active tab styling: high-contrast white bg + shadow for dark theme visibility (UX fix #4)
-    _tab_active = "bg-white text-slate-900 shadow-md shadow-white/10 font-semibold"
-    _tab_inactive = "bg-slate-700/60 text-slate-400 hover:bg-slate-600 hover:text-slate-200"
-    _tab_match_active = "bg-amber-500 text-white shadow-md shadow-amber-500/20 font-semibold"
+    if variant == "session99":
+        header_content = [
+            Div(
+                H2(title, cls="text-3xl font-bold text-slate-100 font-display tracking-tight ui99-title"),
+                P(subtitle, cls="text-sm text-slate-400 font-serif italic mt-1"),
+            )
+        ]
+        _tab_active = "bg-amber-900/40 text-amber-100 shadow-inner shadow-black/50 font-medium border border-amber-700/50"
+        _tab_inactive = "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-transparent"
+        _tab_match_active = "bg-amber-600 text-white shadow-md shadow-amber-900/50 font-semibold border border-amber-500"
+    else:
+        header_content = [
+            Div(
+                H2(title, cls="text-2xl font-bold text-white font-display"),
+                P(subtitle, cls="text-sm text-slate-400 mt-1"),
+            )
+        ]
+        # Active tab styling: high-contrast white bg + shadow for dark theme visibility (UX fix #4)
+        _tab_active = "bg-white text-slate-900 shadow-md shadow-white/10 font-semibold"
+        _tab_inactive = "bg-slate-700/60 text-slate-400 hover:bg-slate-600 hover:text-slate-200"
+        _tab_match_active = "bg-amber-500 text-white shadow-md shadow-amber-500/20 font-semibold"
 
     if section == "to_review" and view_mode is not None:
         toggle = Div(
@@ -5101,7 +5165,8 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
         )
         header_content.append(toggle)
 
-    return Div(*header_content, cls="section-header flex items-center justify-between mb-6")
+    container_cls = "section-header flex items-center justify-between mb-8" if variant == "session99" else "section-header flex items-center justify-between mb-6"
+    return Div(*header_content, cls=container_cls)
 
 
 def _proposal_banner(identity_id: str):
@@ -5504,6 +5569,7 @@ def render_to_review_section(
     sort_by: str = "newest",
     triage_filter: str = "",
     nav_prefix: str = "",
+    variant: str = "",
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
@@ -5714,9 +5780,10 @@ def render_to_review_section(
     # Build header with optional sort controls (browse mode only)
     header = section_header(
         "New Matches",
-        f"{counts['to_review']} faces the AI matched \u2014 confirm or correct",
+        f"{counts['to_review']} faces the AI matched — confirm or correct",
         view_mode=view_mode,
         section="to_review",
+        variant=variant,
     )
     if view_mode == "browse":
         # Client-side search filter for admin browse grid (Session 83a)
@@ -5788,7 +5855,7 @@ def _sort_control(section: str, current_sort: str, view_mode: str = None, nav_pr
 
 
 def render_confirmed_section(
-    confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name", nav_prefix: str = ""
+    confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name", nav_prefix: str = "", variant: str = ""
 ) -> Div:
     """Render the Confirmed section with optional sorting."""
     # Apply sorting
@@ -5819,7 +5886,7 @@ def render_confirmed_section(
 
     return Div(
         Div(
-            section_header("People", f"{counts['confirmed']} identified \u2014 click anyone to see all their photos"),
+            section_header("People", f"{counts['confirmed']} identified — click anyone to see all their photos", variant=variant),
             _sort_control("confirmed", sort_by, view_mode="browse", nav_prefix=nav_prefix),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6",
         ),
@@ -5835,6 +5902,7 @@ def render_skipped_section(
     is_admin: bool = True,
     view_mode: str = "focus",
     current_id: str = None,
+    variant: str = "",
 ) -> Div:
     """Render the Skipped section with Focus or Browse mode.
 
@@ -5846,6 +5914,7 @@ def render_skipped_section(
         f"{counts['skipped']} face{'s' if counts['skipped'] != 1 else ''} we need your help with \u2014 your family knowledge could be the key",
         view_mode=view_mode,
         section="skipped",
+        variant=variant,
     )
 
     if view_mode == "focus":
@@ -7063,7 +7132,7 @@ def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
         )
 
 
-def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
+def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_admin: bool = True, variant: str = "") -> Div:
     """Render the Rejected/Dismissed section."""
     grid_items = []
     for identity in dismissed:
@@ -7078,7 +7147,7 @@ def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_a
     else:
         content = Div("No dismissed items. Rejected matches will appear here.", cls="text-center py-12 text-slate-400")
 
-    return Div(section_header("Dismissed", f"{counts['rejected']} items dismissed"), content, cls="space-y-6")
+    return Div(section_header("Dismissed", f"{counts['rejected']} items dismissed", variant=variant), content, cls="space-y-6")
 
 
 def _photo_nav_url(photo_id: str, index: int, photos: list, total: int) -> str:
@@ -7102,6 +7171,7 @@ def render_photos_section(
     filter_collection: str = "",
     media_filter: str = "all",
     community: dict | None = None,
+    variant: str = "",
 ) -> Div:
     """
     Render the Photos section - a grid view of all photos.
@@ -7121,7 +7191,7 @@ def render_photos_section(
     _build_caches()
     if not _photo_cache:
         return Div(
-            section_header("Photos", "0 photos"),
+            section_header("Photos", "0 photos", variant=variant),
             Div("No photos uploaded yet.", cls="text-center py-12 text-slate-400"),
             cls="space-y-6",
         )
@@ -7673,7 +7743,7 @@ def render_photos_section(
     """)
 
     return Div(
-        section_header("Photos", subtitle),
+        section_header("Photos", subtitle, variant=variant),
         filter_bar,
         Div(
             f"Showing first {photo_display_limit} of {total_matching_photos} photos in workstation mode. "
