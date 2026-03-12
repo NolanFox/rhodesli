@@ -197,11 +197,11 @@ def test_timeline_share_button(app_server, page):
 # ---- TEST 11: Timeline link in navigation ----
 
 def test_timeline_in_navigation(app_server, page):
-    """Sidebar navigation contains a Timeline link pointing to /timeline."""
-    _goto(page, f"{app_server}/")
+    """Archive surfaces should expose a Timeline link into the public timeline page."""
+    _goto(page, f"{app_server}/photos")
 
-    # Look for timeline link in sidebar
-    timeline_link = page.locator("a[href='/timeline']")
+    # Root "/" is now the neutral platform shell; verify Timeline from a stable public archive surface.
+    timeline_link = page.locator("a:has-text('Timeline')")
     assert timeline_link.count() > 0, "Expected Timeline link in navigation"
 
     # Click it and verify we land on timeline

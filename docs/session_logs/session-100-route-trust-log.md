@@ -127,11 +127,20 @@
   landing CTA even though PRD-040 moved `/` to the neutral platform entry shell
 - updated the e2e contract to assert the platform-root archive entry actions
   instead of the old `Start Exploring` expectation on `/`
+- updated a timeline browser test that was also checking archive navigation on
+  `/`; it now verifies the timeline link from the Rhodes archive surface where
+  that navigation actually lives
+- the e2e app-server fixture now sets `NO_ALBUMENTATIONS_UPDATE=1` so browser
+  startup time is not inflated by Albumentations' external version check
+- the same fixture now waits up to 30 seconds for a cold app start, matching
+  the real startup envelope we observed during clean-worktree browser gates
 - files:
   - [tests/e2e/test_critical_paths.py](/Users/nolanfox/rhodesli/tests/e2e/test_critical_paths.py)
+  - [tests/e2e/test_timeline.py](/Users/nolanfox/rhodesli/tests/e2e/test_timeline.py)
+  - [tests/e2e/conftest.py](/Users/nolanfox/rhodesli/tests/e2e/conftest.py)
 - verification:
-  - `pytest tests/e2e/test_critical_paths.py::test_landing_page_hero -x -q`
-    - `1 passed`
+  - `pytest tests/e2e/test_critical_paths.py::test_landing_page_hero tests/e2e/test_critical_paths.py::test_landing_page_stats tests/e2e/test_critical_paths.py::test_landing_page_navigation tests/e2e/test_timeline.py::test_timeline_in_navigation -x -q`
+    - re-run after fixture update pending
 
 ## Public Photos Route Prefix Follow-Up
 - `/photos` was still trying to use `nav_prefix` without defining it, which

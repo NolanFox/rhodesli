@@ -17,7 +17,7 @@ def _find_free_port() -> int:
         return s.getsockname()[1]
 
 
-def _wait_for_server(url: str, timeout: float = 15) -> None:
+def _wait_for_server(url: str, timeout: float = 30) -> None:
     """Poll a URL until it responds or timeout expires."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -49,6 +49,7 @@ def app_server():
         # Auth disabled — no Supabase env vars set, so is_auth_enabled() returns False
         "STORAGE_MODE": "local",
         "RHODESLI_SKIP_DOTENV": "1",
+        "NO_ALBUMENTATIONS_UPDATE": "1",
     }
     # Remove any existing auth env vars so auth is truly disabled
     env.pop("SUPABASE_URL", None)
@@ -64,7 +65,7 @@ def app_server():
 
     base_url = f"http://127.0.0.1:{port}"
     try:
-        _wait_for_server(base_url, timeout=15)
+        _wait_for_server(base_url, timeout=30)
     except TimeoutError:
         proc.terminate()
         proc.wait(timeout=5)
