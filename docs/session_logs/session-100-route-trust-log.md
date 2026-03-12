@@ -203,3 +203,32 @@
   - [tests/e2e/test_discovery_layer.py](/Users/nolanfox/rhodesli/tests/e2e/test_discovery_layer.py)
 - verification:
   - targeted re-run pending after timeout alignment
+
+## Clean-Suite Gate Follow-Through
+- the clean worktree regression gate uncovered three remaining stale/isolated
+  contracts after the Session 100 route work:
+  - synthetic photo-source tests were leaking `_photo_registry_cache`
+  - a timeline unit test still expected archive navigation on the neutral `/`
+    platform root
+  - the suggestion-lifecycle browser suite still used a 15 second admin-page
+    `goto` timeout even after the broader browser hardening
+- fixes:
+  - [tests/test_photo_id_consistency.py](/Users/nolanfox/rhodesli/tests/test_photo_id_consistency.py)
+    now clears/restores `_photo_registry_cache` in its synthetic cache fixture
+  - [tests/test_photo_sort_controls.py](/Users/nolanfox/rhodesli/tests/test_photo_sort_controls.py)
+    now resets `_photo_registry_cache` in the inbox-metadata fallback tests
+  - [tests/test_timeline.py](/Users/nolanfox/rhodesli/tests/test_timeline.py)
+    now asserts that `/` omits archive-only Timeline nav, matching PRD-040
+  - [tests/e2e/test_suggestion_lifecycle.py](/Users/nolanfox/rhodesli/tests/e2e/test_suggestion_lifecycle.py)
+    now uses a 30 second Playwright navigation timeout
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+    now gives the neutral platform root the same overflow-safe CSS baseline as
+    the archive landing shell (`overflow-x: hidden`, `max-width: 100vw`,
+    `box-sizing: border-box`, responsive images)
+- verification:
+  - clean worktree app suite:
+    - `pytest tests/ -x -q`
+    - `4167 passed, 21 skipped`
+  - clean worktree ML suite:
+    - `pytest rhodesli_ml/tests/ -x -q`
+    - `588 passed, 2 skipped`

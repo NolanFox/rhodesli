@@ -342,10 +342,10 @@ class TestTimelineNavigation:
         from app.main import app
         self.client = TestClient(app)
 
-    def test_landing_page_has_timeline_link(self):
-        """Landing page navigation includes Timeline link."""
+    def test_root_landing_omits_archive_timeline_link(self):
+        """Neutral root should not expose archive-only Timeline navigation."""
         resp = self.client.get("/")
-        assert "/timeline" in resp.text
+        assert "/timeline" not in resp.text
 
     def test_photos_page_has_timeline_link(self):
         """/photos page navigation includes Timeline link."""

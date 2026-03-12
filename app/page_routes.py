@@ -694,7 +694,10 @@ def _platform_root_page(auth_enabled: bool = False):
         Style(
             """
             html, body { margin: 0; min-height: 100%; }
-            body { background: linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%); }
+            body { background: linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%); overflow-x: hidden; }
+            .landing-container { overflow-x: hidden; max-width: 100vw; }
+            .landing-container * { box-sizing: border-box; }
+            .landing-container img { max-width: 100%; }
             .platform-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
             .platform-mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             @media (max-width: 900px) { .platform-mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -788,6 +791,7 @@ def _platform_root_page(auth_enabled: bool = False):
                     cls="mx-auto max-w-6xl px-6 pb-16",
                 ),
             ),
+            cls="landing-container",
         ),
     )
 

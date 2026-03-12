@@ -124,10 +124,12 @@ def _build_synthetic_photo_index():
 def reset_caches():
     """Reset app.main caches before and after each test."""
     import app.main as main
+    main._photo_registry_cache = None
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_id_aliases = None
     yield
+    main._photo_registry_cache = None
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_id_aliases = None

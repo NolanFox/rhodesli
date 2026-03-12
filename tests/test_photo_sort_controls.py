@@ -327,6 +327,7 @@ class TestBuildCachesMetadataFallback:
         orig_cache = main_mod._photo_cache
         orig_f2p = main_mod._face_to_photo_cache
         orig_aliases = main_mod._photo_id_aliases
+        orig_registry = main_mod._photo_registry_cache
 
         try:
             # Set _photo_cache to our fake (non-None so _build_caches skips load_embeddings)
@@ -335,6 +336,7 @@ class TestBuildCachesMetadataFallback:
             main_mod._photo_cache = None
             main_mod._face_to_photo_cache = None
             main_mod._photo_id_aliases = None
+            main_mod._photo_registry_cache = None
 
             with (
                 patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
@@ -352,6 +354,7 @@ class TestBuildCachesMetadataFallback:
             main_mod._photo_cache = orig_cache
             main_mod._face_to_photo_cache = orig_f2p
             main_mod._photo_id_aliases = orig_aliases
+            main_mod._photo_registry_cache = orig_registry
 
     def test_upload_date_propagated_for_matching_ids(self, tmp_path):
         """upload_date works when photo_index and cache use the same ID."""
@@ -391,11 +394,13 @@ class TestBuildCachesMetadataFallback:
         orig_cache = main_mod._photo_cache
         orig_f2p = main_mod._face_to_photo_cache
         orig_aliases = main_mod._photo_id_aliases
+        orig_registry = main_mod._photo_registry_cache
 
         try:
             main_mod._photo_cache = None
             main_mod._face_to_photo_cache = None
             main_mod._photo_id_aliases = None
+            main_mod._photo_registry_cache = None
 
             with (
                 patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
@@ -409,6 +414,7 @@ class TestBuildCachesMetadataFallback:
             main_mod._photo_cache = orig_cache
             main_mod._face_to_photo_cache = orig_f2p
             main_mod._photo_id_aliases = orig_aliases
+            main_mod._photo_registry_cache = orig_registry
 
     def test_duplicate_basename_prefers_richer_inbox_metadata(self, tmp_path):
         """When SHA and inbox IDs share a basename, keep the richer upload metadata."""
@@ -455,11 +461,13 @@ class TestBuildCachesMetadataFallback:
         orig_cache = main_mod._photo_cache
         orig_f2p = main_mod._face_to_photo_cache
         orig_aliases = main_mod._photo_id_aliases
+        orig_registry = main_mod._photo_registry_cache
 
         try:
             main_mod._photo_cache = None
             main_mod._face_to_photo_cache = None
             main_mod._photo_id_aliases = None
+            main_mod._photo_registry_cache = None
 
             with (
                 patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
@@ -475,3 +483,4 @@ class TestBuildCachesMetadataFallback:
             main_mod._photo_cache = orig_cache
             main_mod._face_to_photo_cache = orig_f2p
             main_mod._photo_id_aliases = orig_aliases
+            main_mod._photo_registry_cache = orig_registry

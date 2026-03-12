@@ -15,7 +15,10 @@ import pytest
 
 pytestmark = pytest.mark.e2e
 
-GOTO_OPTS = {"wait_until": "domcontentloaded", "timeout": 15000}
+# Browser startup and auth-disabled admin pages can take longer in the clean full suite
+# even when the underlying route is fast, so keep this file aligned with the broader
+# Session 100 browser timeout hardening.
+GOTO_OPTS = {"wait_until": "domcontentloaded", "timeout": 30000}
 SETTLE_MS = 600
 ANNOTATION_TEXT = "A mi querida Estrella de tu hermano Samuel"
 
