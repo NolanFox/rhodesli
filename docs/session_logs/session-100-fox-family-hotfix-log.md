@@ -168,6 +168,12 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
   - `pytest tests/ -x -q`
     - first cold run hit an e2e app-server startup timeout
     - second warm run passed: `4146 passed, 21 skipped`
+- Final clean-worktree verification from commit `5e88a87`:
+  - `pytest rhodesli_ml/tests/ -x -q`
+    - `588 passed, 2 skipped`
+  - `pytest tests/ -x -q`
+    - `4146 passed, 21 skipped`
+- PR #10 GitHub `test` check passed for commit `5e88a87`.
 
 ### Important Working-Tree Note
 - `data/identities.json` is dirty from live archive work and must stay out of the Session 100 commit.

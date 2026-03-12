@@ -72,12 +72,17 @@ Full suites:
     delta during live app usage, not by the code changes
 
 Clean-worktree verification:
-- clean worktree at commit `0605f95`
-- `pytest rhodesli_ml/tests/ -x -q`
-  - `590 passed`
-- `pytest tests/ -x -q`
-  - first cold run hit an e2e app-server startup timeout
-  - second warm run passed: `4146 passed, 21 skipped`
+- initial clean worktree at commit `0605f95`
+  - `pytest rhodesli_ml/tests/ -x -q`
+    - `590 passed`
+  - `pytest tests/ -x -q`
+    - first cold run hit an e2e app-server startup timeout
+    - second warm run passed: `4146 passed, 21 skipped`
+- final clean worktree at commit `5e88a87`
+  - `pytest rhodesli_ml/tests/ -x -q`
+    - `588 passed, 2 skipped`
+  - `pytest tests/ -x -q`
+    - `4146 passed, 21 skipped`
 
 Follow-up CI stabilization:
 - GitHub CI later exposed one additional fast-test failure in
@@ -90,6 +95,7 @@ Follow-up CI stabilization:
   - `ruff check app/main.py`
   - `pytest tests/test_photo_sorting.py tests/test_sequential_identify.py tests/test_public_photo_viewer.py -x -q`
     - `45 passed`
+- GitHub Actions `test` check passed on PR #10 for commit `5e88a87`.
 
 ## Important Verification Note
 
