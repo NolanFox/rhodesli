@@ -471,6 +471,7 @@ _COMMUNITY_SKIP_PREFIXES = ("/static/", "/api/", "/_")
 class CommunityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         path = request.url.path
+        request.state.community_prefixed = False
 
         # Skip static/API routes entirely
         for prefix in _COMMUNITY_SKIP_PREFIXES:
@@ -485,6 +486,7 @@ class CommunityMiddleware(BaseHTTPMiddleware):
             slug = match.group(1)
             remaining_path = match.group(2) or "/"
             request.state.community_slug = slug
+            request.state.community_prefixed = True
             # Rewrite the path to remove the /c/{slug} prefix
             request.scope["path"] = remaining_path
         else:

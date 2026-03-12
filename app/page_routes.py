@@ -371,16 +371,26 @@ def _community_landing_page(community: dict, slug: str):
     """
     title = community.get("landing_title") or community.get("name", slug.replace("-", " ").title())
     subtitle = community.get("landing_subtitle", "A heritage photo archive")
+    nav_prefix = _main_mod.community_url_prefix(slug)
 
     # Get community-specific stats using photo-derived identity set (AD-216)
     photo_count = 0
     identity_count = 0
+    help_count = 0
     community_photo_ids = _main_mod._get_community_photo_ids(community)
     community_identity_ids = _main_mod._get_community_identity_ids(community)
     if community_photo_ids is not None:
         photo_count = len(community_photo_ids)
     if community_identity_ids is not None:
         identity_count = len(community_identity_ids)
+        registry = _main_mod.load_registry()
+        help_count = sum(
+            1
+            for ident in registry.list_identities()
+            if ident.get("identity_id") in community_identity_ids
+            and not ident.get("merged_into")
+            and ident.get("state") in ("INBOX", "PROPOSED", "SKIPPED")
+        )
 
     has_content = photo_count > 0
 
@@ -478,10 +488,46 @@ def _community_landing_page(community: dict, slug: str):
 
     content_section = (
         Div(
-            A(
-                "Browse Photos",
-                href=f"/c/{slug}/photos" if slug != "rhodes" else "/photos",
-                cls="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+            Div(
+                P("How you can help", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70 mb-3"),
+                H3(
+                    "Start with the archive, not a dead end",
+                    cls="text-2xl md:text-3xl font-display text-white mb-3",
+                ),
+                P(
+                    (
+                        f"{help_count} people still need names in this archive. "
+                        "Browse the photos, identify faces, or contribute more family history."
+                    )
+                    if help_count
+                    else "Browse the photos, explore the people already identified, or contribute more family history.",
+                    cls="text-slate-300 max-w-2xl mx-auto mb-6",
+                ),
+                Div(
+                    A(
+                        "Help Identify Faces",
+                        href=f"{nav_prefix}/help",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
+                    ),
+                    A(
+                        "Browse Photos",
+                        href=f"{nav_prefix}/photos",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+                    ),
+                    A(
+                        "People",
+                        href=f"{nav_prefix}/people",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg font-medium transition-colors border border-slate-700",
+                    ),
+                    A(
+                        "Share or Upload Photos",
+                        href=f"{nav_prefix}/upload",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-transparent hover:bg-slate-800/60 text-slate-200 rounded-lg font-medium transition-colors border border-slate-700",
+                    ),
+                    cls="flex flex-wrap justify-center gap-3",
+                ),
+                cls="bg-slate-800/50 rounded-xl border border-slate-700/50 p-8 mt-8",
+                data_testid="community-contribution-widget",
             ),
             cls="text-center mt-6",
         )
@@ -505,6 +551,243 @@ def _community_landing_page(community: dict, slug: str):
             cls="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900",
             data_testid="community-landing",
             data_community=slug,
+        ),
+    )
+
+
+def _platform_root_page(auth_enabled: bool = False):
+    """Render a neutral platform root with explicit archive choices."""
+    from app.supabase_data import get_community_by_slug, load_communities
+
+    communities = load_communities() or []
+    by_slug = {c.get("slug"): c for c in communities if c.get("slug")}
+    if "rhodes" not in by_slug:
+        rhodes = get_community_by_slug("rhodes")
+        if rhodes:
+            by_slug["rhodes"] = rhodes
+
+    ordered = sorted(
+        by_slug.values(),
+        key=lambda c: (0 if c.get("slug") == "rhodes" else 1, c.get("name", c.get("slug", "")).lower()),
+    )
+
+    archive_cards = []
+    total_photos = 0
+    total_identities = 0
+    featured_image = ""
+    for community in ordered:
+        slug = community.get("slug", "")
+        if not slug:
+            continue
+        archive_href = f"/c/{slug}/"
+        browse_href = f"/c/{slug}/photos"
+        help_href = f"/c/{slug}/help"
+        photo_ids = _main_mod._get_community_photo_ids(community)
+        identity_ids = _main_mod._get_community_identity_ids(community)
+        photo_count = len(photo_ids) if photo_ids is not None else 0
+        identity_count = len(identity_ids) if identity_ids is not None else 0
+        total_photos += photo_count
+        total_identities += identity_count
+        if not featured_image and photo_ids:
+            first_photo_id = next(iter(photo_ids), "")
+            first_photo = _main_mod.get_photo_metadata(first_photo_id)
+            if first_photo:
+                featured_image = _main_mod.storage.get_photo_url(first_photo.get("filename", ""))
+
+        archive_cards.append(
+            Div(
+                Div(
+                    Span("Featured public archive", cls="text-[11px] uppercase tracking-[0.24em] text-amber-300/70")
+                    if slug == "rhodes"
+                    else Span("Community archive", cls="text-[11px] uppercase tracking-[0.24em] text-slate-400"),
+                    H3(
+                        community.get("landing_title") or community.get("name", slug.replace("-", " ").title()),
+                        cls="text-2xl font-display text-white mt-3",
+                    ),
+                    P(
+                        community.get("landing_subtitle") or "A heritage photo archive on Rhodesli.",
+                        cls="text-slate-300 mt-2",
+                    ),
+                    cls="mb-6",
+                ),
+                Div(
+                    Div(
+                        Span(str(photo_count), cls="block text-2xl font-semibold text-amber-200"),
+                        Span("photos", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                        cls="rounded-lg border border-slate-700/70 bg-slate-900/50 px-4 py-3",
+                    ),
+                    Div(
+                        Span(str(identity_count), cls="block text-2xl font-semibold text-amber-200"),
+                        Span("people", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                        cls="rounded-lg border border-slate-700/70 bg-slate-900/50 px-4 py-3",
+                    ),
+                    cls="grid grid-cols-2 gap-3 mb-6",
+                ),
+                Div(
+                    A(
+                        "Enter Archive",
+                        href=archive_href,
+                        cls="inline-flex items-center justify-center px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
+                    ),
+                    A(
+                        "Help Identify",
+                        href=help_href,
+                        cls="inline-flex items-center justify-center px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg border border-slate-700 font-medium transition-colors",
+                    ),
+                    A(
+                        "Browse Photos",
+                        href=browse_href,
+                        cls="inline-flex items-center justify-center px-5 py-3 bg-transparent hover:bg-slate-800/60 text-slate-200 rounded-lg border border-slate-700 font-medium transition-colors",
+                    ),
+                    cls="flex flex-wrap gap-3",
+                ),
+                cls="rounded-2xl border border-slate-700/70 bg-slate-900/55 p-6",
+                data_testid="archive-card",
+                data_archive_slug=slug,
+            )
+        )
+
+    featured_photos = _main_mod._get_featured_photos(4)
+    if not featured_image and featured_photos:
+        featured_image = featured_photos[0].get("url", "")
+    showcase_cards = []
+    for photo in featured_photos:
+        showcase_cards.append(
+            Div(
+                Img(
+                    src=photo["url"],
+                    alt="Featured archive photograph",
+                    loading="lazy",
+                    cls="h-full w-full object-cover",
+                ),
+                cls="hero-card aspect-[4/5] overflow-hidden rounded-2xl border border-amber-900/30 bg-slate-900/40",
+            )
+        )
+
+    description = (
+        "Rhodesli is the platform shell for archive-specific heritage photographs and family photo collections. "
+        "Choose an archive explicitly, then browse, identify faces, and contribute history without losing context."
+    )
+
+    nav_items = [
+        A("Compare", href="/tools/compare", cls="text-slate-200 hover:text-white transition-colors"),
+        A("Estimate", href="/tools/estimate", cls="text-slate-200 hover:text-white transition-colors"),
+        A("About", href="/about", cls="text-slate-200 hover:text-white transition-colors"),
+    ]
+    if auth_enabled:
+        nav_items.append(
+            A(
+                "Sign In",
+                href="/login",
+                cls="inline-flex items-center px-4 py-2 border border-amber-700/60 text-amber-200 hover:text-amber-100 hover:bg-amber-900/20 rounded-lg transition-colors",
+            )
+        )
+
+    return (
+        Title("Rhodesli — Community Archives"),
+        *_main_mod.og_tags(
+            "Rhodesli — Community Archives",
+            description,
+            image_url=featured_image,
+            canonical_url="/",
+        ),
+        Style(
+            """
+            html, body { margin: 0; min-height: 100%; }
+            body { background: linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%); }
+            .platform-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+            .platform-mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            @media (max-width: 900px) { .platform-mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            @media (max-width: 640px) { .platform-mosaic { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+            """
+        ),
+        Main(
+            Div(
+                Div(
+                    A("Rhodesli", href="/", cls="text-xl font-bold text-white tracking-tight"),
+                    Div(*nav_items, cls="flex items-center gap-6 text-sm"),
+                    cls="mx-auto flex max-w-6xl items-center justify-between px-6 py-5",
+                ),
+                cls="border-b border-slate-800/80",
+            ),
+            Section(
+                Div(
+                    Div(
+                        Span("Platform", cls="text-xs uppercase tracking-[0.32em] text-amber-300/80"),
+                        H1(
+                            "Choose an archive, then help preserve it.",
+                            cls="mt-4 text-4xl md:text-6xl font-display text-white leading-tight",
+                        ),
+                        P(
+                            "Rhodesli keeps platform, archive, and contribution contexts distinct. "
+                            "Pick the archive you mean to explore so browsing, identifying, and sharing stay coherent.",
+                            cls="mt-5 max-w-3xl text-lg text-slate-300",
+                        ),
+                        Div(
+                            A(
+                                "Browse the Rhodes demo archive",
+                                href="/c/rhodes/",
+                                cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
+                            ),
+                            A(
+                                "Jump to the archive directory",
+                                href="#archive-directory",
+                                cls="inline-flex items-center justify-center px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg border border-slate-700 font-medium transition-colors",
+                            ),
+                            cls="mt-8 flex flex-wrap gap-3",
+                        ),
+                        Div(
+                            Div(
+                                Span(str(len(archive_cards)), cls="block text-3xl font-semibold text-amber-200"),
+                                Span("archives", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                            ),
+                            Div(
+                                Span(str(total_photos), cls="block text-3xl font-semibold text-amber-200"),
+                                Span("photos", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                            ),
+                            Div(
+                                Span(str(total_identities), cls="block text-3xl font-semibold text-amber-200"),
+                                Span("people", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                            ),
+                            cls="mt-10 grid grid-cols-3 gap-4 max-w-2xl",
+                            id="stats",
+                        ),
+                        cls="max-w-3xl",
+                    ),
+                    Div(
+                        Div(*showcase_cards, cls="grid platform-mosaic gap-4") if showcase_cards else None,
+                        Div(
+                            P("Featured public archive", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                            H2("Jewish Community of Rhodes", cls="mt-3 text-2xl font-display text-white"),
+                            P(
+                                "The Rhodes archive remains the clearest public example of the platform. "
+                                "It stays available as an explicit demo path, not the silent default.",
+                                cls="mt-3 text-slate-300",
+                            ),
+                            cls="mt-6",
+                        ),
+                        cls="mt-12 lg:mt-0",
+                    ),
+                    cls="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.95fr)]",
+                    id="hero",
+                    data_testid="platform-root",
+                ),
+            ),
+            Section(
+                Div(
+                    Div(
+                        Span("Archive directory", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                        H2("Enter the archive you actually mean to use.", cls="mt-3 text-3xl font-display text-white"),
+                        P(
+                            "This removes the old Rhodes-by-default ambiguity. Each archive keeps its own landing page, help flow, and share context.",
+                            cls="mt-3 max-w-3xl text-slate-300",
+                        ),
+                        cls="mb-8",
+                    ),
+                    Div(*archive_cards, cls="grid platform-grid gap-5", id="archive-directory"),
+                    cls="mx-auto max-w-6xl px-6 pb-16",
+                ),
+            ),
         ),
     )
 
@@ -1810,12 +2093,18 @@ def get(
     # Community-aware landing page (PRD-035)
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     community = getattr(request.state, "community", None) if request else None
+    community_prefixed = getattr(request.state, "community_prefixed", False) if request else False
 
     if section is None:
-        # Non-Rhodes community: show landing page for anonymous users, admin view for admins
-        if community_slug != "rhodes" and community is not None:
+        # Explicit archive entry: show that archive's landing for anonymous users.
+        # Root "/" stays neutral and does not silently default to Rhodes.
+        if community_prefixed and community is not None:
             user_is_admin_check = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
             if not user_is_admin_check:
+                if community_slug == "rhodes":
+                    stats = _main_mod._compute_landing_stats()
+                    featured_photos = _main_mod._get_featured_photos(8)
+                    return _main_mod.landing_page(stats, featured_photos)
                 return _community_landing_page(community, community_slug)
 
         if user is not None:
@@ -1828,9 +2117,7 @@ def get(
             else:
                 section = "skipped"  # Needs Help — always has items to review
         else:
-            stats = _main_mod._compute_landing_stats()
-            featured_photos = _main_mod._get_featured_photos(8)
-            return _main_mod.landing_page(stats, featured_photos)
+            return _platform_root_page(auth_enabled=_main_mod.is_auth_enabled())
 
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
 
@@ -4265,7 +4552,7 @@ def get(sess=None, request=None):
             P("Thank you to everyone who contributed their knowledge.", cls="text-slate-400 text-sm"),
             A(
                 "Browse the archive",
-                href="/photos",
+                href=f"{nav_prefix}/photos",
                 cls="text-indigo-400 hover:text-indigo-300 text-sm mt-4 inline-block",
             ),
             cls="text-center",
@@ -4278,7 +4565,7 @@ def get(sess=None, request=None):
         *_main_mod.og_tags(
             "Help Identify People \u2014 Rhodesli",
             f"{len(unid_identities)} faces from the Rhodes Jewish community need your help.",
-            canonical_url="/help",
+            canonical_url=f"{nav_prefix}/help",
         ),
         page_style,
         Main(

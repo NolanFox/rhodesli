@@ -238,6 +238,14 @@ Preserve the active performance/context audit and hotfix work for the Fox Family
 - make the person-page `Find Similar` entry more visible and community-correct
 - document the mixed `identities.json` state instead of committing or discarding it blindly
 - attach a no-drop execution checklist and a documented design-review method to Session 100
+## Latest Live Feedback Queue
+- iPhone Chrome collection swipe now works again, but it still feels too
+  accidental and not first-class enough to trust as a primary gesture.
+- Fox clustering quality still looks suspiciously weak:
+  - Albert/Roland-style young-face matches are surfacing as long similar lists
+    instead of obvious cluster/proposal candidates.
+  - User is deferring Fox archive work until clustering quality is actually
+    fixed in this session.
 
 ### Continuation Verification
 - `ruff check app/page_routes.py app/browse_routes.py app/person_routes.py app/identity_routes.py tests/test_find_similar_page.py tests/test_public_person_page.py tests/test_public_photo_viewer.py`
