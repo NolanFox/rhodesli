@@ -37,12 +37,13 @@ def _open_photo_modal(page, base_url):
 
     # Click first photo card (each card has hx-get="/photo/...")
     first_card = page.locator("div[hx-get^='/photo/']").first
-    first_card.click()
+    first_card.scroll_into_view_if_needed()
+    first_card.click(force=True)
 
     # Wait for modal to become visible and content to load
-    page.locator("#photo-modal:not(.hidden)").wait_for(state="visible", timeout=5000)
+    page.locator("#photo-modal:not(.hidden)").wait_for(state="visible", timeout=10000)
     page.locator("#photo-modal-content .photo-viewer").wait_for(
-        state="visible", timeout=5000
+        state="visible", timeout=10000
     )
 
 

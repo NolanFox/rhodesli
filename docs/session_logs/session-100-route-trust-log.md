@@ -159,3 +159,13 @@
 - verification:
   - `pytest tests/test_public_browsing.py tests/e2e/test_discovery_layer.py::test_photo_card_shows_date_badge tests/e2e/test_discovery_layer.py::test_date_badge_confidence_styling -x -q`
     - `24 passed`
+
+## Photo Modal Browser-Helper Stability
+- the critical-path browser helper was timing out on the workstation photo modal
+  path even though the page still emitted the expected HTMX + modal markup
+- hardened the helper to scroll the first photo card into view, click it
+  forcefully, and allow more time for the HTMX swap/unhide sequence
+- files:
+  - [tests/e2e/test_critical_paths.py](/Users/nolanfox/rhodesli/tests/e2e/test_critical_paths.py)
+- verification:
+  - targeted re-run pending after helper update
