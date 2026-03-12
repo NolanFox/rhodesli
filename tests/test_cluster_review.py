@@ -115,6 +115,13 @@ def _mock_photo_registry():
     return patch("app.cluster_review_routes._main_mod.load_photo_registry", return_value=mock_pr)
 
 
+def _mock_face_data(face_data=None):
+    """Mock face embedding payload."""
+    if face_data is None:
+        face_data = {}
+    return patch("app.cluster_review_routes._main_mod.get_face_data", return_value=face_data)
+
+
 def _mock_no_community_filter():
     """Disable community filtering so proposals aren't scoped by Supabase data."""
     return patch("app.cluster_review_routes._main_mod._get_community_identity_ids", return_value=None)
@@ -192,6 +199,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         assert resp.status_code == 200
@@ -204,6 +212,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
@@ -218,6 +227,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
@@ -232,6 +242,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
@@ -262,12 +273,92 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             stack.enter_context(_mock_active_learning_queue())
             stack.enter_context(_mock_recent_active_learning_labels())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "GEDCOM Triage" in html
+
+    def test_page_shows_potential_review_groups(self):
+        client = _get_test_client()
+        unresolved_groups = [
+            {
+                "primary": {
+                    "identity_id": "src-001",
+                    "display_name": "Person 100",
+                    "preview_crop_url": "/static/crops/mock_face.jpg",
+                    "state": "INBOX",
+                    "face_count": 3,
+                },
+                "members": [
+                    {
+                        "identity_id": "src-001",
+                        "display_name": "Person 100",
+                        "preview_crop_url": "/static/crops/mock_face.jpg",
+                        "state": "INBOX",
+                        "face_count": 3,
+                        "best_match_distance": 0.64,
+                        "is_primary": True,
+                    },
+                    {
+                        "identity_id": "src-002",
+                        "display_name": "Person 200",
+                        "preview_crop_url": "/static/crops/mock_face.jpg",
+                        "state": "SKIPPED",
+                        "face_count": 1,
+                        "best_match_distance": 0.79,
+                        "is_primary": False,
+                    },
+                ],
+                "hidden_member_count": 0,
+                "size": 2,
+                "best_distance": 0.64,
+                "distance_range": (0.64, 0.79),
+            }
+        ]
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_proposals())
+            stack.enter_context(_mock_registry())
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
+            stack.enter_context(_mock_no_community_filter())
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._build_unresolved_review_groups",
+                    return_value=unresolved_groups,
+                )
+            )
+            resp = client.get("/admin/upload-review")
+        html = resp.text
+        assert "Potential Review Groups" in html
+        assert "Review Similar" in html
+        assert "Open Queue" in html
+        assert "Person 200" in html
+        assert "Dismissed" in html
+
+    def test_page_shows_empty_potential_review_groups_message(self):
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_proposals())
+            stack.enter_context(_mock_registry())
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
+            stack.enter_context(_mock_no_community_filter())
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._build_unresolved_review_groups",
+                    return_value=[],
+                )
+            )
+            resp = client.get("/admin/upload-review")
+        html = resp.text
+        assert "No unresolved review groups surfaced right now." in html
 
     def test_page_shows_active_learning_section(self):
         client = _get_test_client()
@@ -277,6 +368,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             stack.enter_context(_mock_active_learning_queue())
             stack.enter_context(_mock_recent_active_learning_labels())
@@ -303,6 +395,9 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_proposals([]))
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
+            stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text
         assert "No high-confidence proposal matches to review" in html
@@ -316,6 +411,7 @@ class TestUploadReviewPage:
             stack.enter_context(_mock_registry())
             stack.enter_context(_mock_crop_url())
             stack.enter_context(_mock_photo_registry())
+            stack.enter_context(_mock_face_data())
             stack.enter_context(_mock_no_community_filter())
             resp = client.get("/admin/upload-review")
         html = resp.text

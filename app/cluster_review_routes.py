@@ -16,6 +16,8 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from fasthtml.common import *
+import numpy as np
+from scipy.spatial.distance import cdist
 
 from app.main import rt
 import app.main as _main_mod
@@ -30,6 +32,10 @@ from rhodesli_ml.active_learning import (
     record_active_learning_label,
     revert_active_learning_label,
 )
+
+UNRESOLVED_REVIEW_THRESHOLD = 0.85
+UNRESOLVED_REVIEW_GROUP_LIMIT = 18
+UNRESOLVED_REVIEW_MEMBER_LIMIT = 6
 
 
 def _load_proposals():
@@ -451,6 +457,323 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
     )
 
 
+def _display_identity_name(name: str) -> str:
+    """Shorten placeholder labels for dense review surfaces."""
+    if name.startswith("Unidentified Person "):
+        return "Person " + name[len("Unidentified Person ") :]
+    return name or "Unknown"
+
+
+def _identity_face_ids(identity: dict) -> list[str]:
+    """Return all face ids for an identity across anchors and candidates."""
+    face_ids = []
+    for entry in (identity.get("anchor_ids", []) + identity.get("candidate_ids", [])):
+        if isinstance(entry, str):
+            face_ids.append(entry)
+        elif isinstance(entry, dict) and entry.get("face_id"):
+            face_ids.append(entry["face_id"])
+    return face_ids
+
+
+def _best_face_id(face_ids: list[str]) -> str:
+    """Return the best available face id for preview rendering."""
+    if not face_ids:
+        return ""
+    best = _main_mod.get_best_face_id(face_ids)
+    if isinstance(best, str):
+        return best
+    if isinstance(best, dict):
+        return best.get("face_id", "")
+    return ""
+
+
+def _build_unresolved_review_groups(filtered_ids, face_data, photo_registry):
+    """Build lightweight unresolved review groups for identities not yet clustered.
+
+    Uses one representative face per unresolved identity to surface reviewable
+    neighbor components safely. This does not mutate canonical identity state.
+    """
+    unresolved_states = {"INBOX", "PROPOSED", "SKIPPED"}
+    items = []
+    for identity_id, identity in filtered_ids.items():
+        if identity.get("merged_into"):
+            continue
+        if identity.get("state") not in unresolved_states:
+            continue
+
+        face_ids = _identity_face_ids(identity)
+        if not face_ids:
+            continue
+
+        preview_face_id = _best_face_id(face_ids)
+        if not preview_face_id or preview_face_id not in face_data:
+            preview_face_id = next((fid for fid in face_ids if fid in face_data), "")
+        if not preview_face_id:
+            continue
+
+        preview_crop_url = _get_crop_url_for_face(preview_face_id)
+        photos = photo_registry.get_photos_for_faces(face_ids)
+
+        items.append(
+            {
+                "identity_id": identity_id,
+                "name": identity.get("name", "Unknown"),
+                "display_name": _display_identity_name(identity.get("name", "Unknown")),
+                "state": identity.get("state", "INBOX"),
+                "face_ids": face_ids,
+                "face_count": len(face_ids),
+                "preview_face_id": preview_face_id,
+                "preview_crop_url": preview_crop_url,
+                "embedding": face_data[preview_face_id]["mu"],
+                "negative_ids": set(identity.get("negative_ids", [])),
+                "photos": photos,
+            }
+        )
+
+    if len(items) < 2:
+        return []
+
+    embeddings = np.vstack([item["embedding"] for item in items])
+    distance_matrix = cdist(embeddings, embeddings, metric="euclidean")
+
+    direct_neighbors: dict[int, list[tuple[int, float]]] = {i: [] for i in range(len(items))}
+
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            distance = float(distance_matrix[i][j])
+            if distance >= UNRESOLVED_REVIEW_THRESHOLD:
+                continue
+
+            left = items[i]
+            right = items[j]
+            if f"identity:{right['identity_id']}" in left["negative_ids"]:
+                continue
+            if f"identity:{left['identity_id']}" in right["negative_ids"]:
+                continue
+            if not left["photos"].isdisjoint(right["photos"]):
+                continue
+
+            direct_neighbors[i].append((j, distance))
+            direct_neighbors[j].append((i, distance))
+
+    candidate_groups = []
+    for start, neighbors in direct_neighbors.items():
+        if len(neighbors) < 2:
+            continue
+
+        sorted_neighbors = sorted(
+            neighbors,
+            key=lambda entry: (
+                entry[1],
+                -items[entry[0]]["face_count"],
+                items[entry[0]]["display_name"],
+            ),
+        )
+
+        members = []
+        primary = items[start]
+        members.append(
+            {
+                "identity_id": primary["identity_id"],
+                "name": primary["name"],
+                "display_name": primary["display_name"],
+                "state": primary["state"],
+                "face_count": primary["face_count"],
+                "preview_crop_url": primary["preview_crop_url"],
+                "best_match_distance": 999.0,
+                "is_primary": True,
+            }
+        )
+        for neighbor_idx, distance in sorted_neighbors[: UNRESOLVED_REVIEW_MEMBER_LIMIT - 1]:
+            neighbor = items[neighbor_idx]
+            members.append(
+                {
+                    "identity_id": neighbor["identity_id"],
+                    "name": neighbor["name"],
+                    "display_name": neighbor["display_name"],
+                    "state": neighbor["state"],
+                    "face_count": neighbor["face_count"],
+                    "preview_crop_url": neighbor["preview_crop_url"],
+                    "best_match_distance": distance,
+                    "is_primary": False,
+                }
+            )
+
+        display_primary = min(
+            members,
+            key=lambda member: (
+                -member["face_count"],
+                member["best_match_distance"],
+                member["display_name"],
+            ),
+        )
+        display_members = [display_primary] + sorted(
+            [member for member in members if member["identity_id"] != display_primary["identity_id"]],
+            key=lambda member: (
+                member["best_match_distance"],
+                -member["face_count"],
+                member["display_name"],
+            ),
+        )
+        display_members[0]["is_primary"] = True
+        for member in display_members[1:]:
+            member["is_primary"] = False
+
+        candidate_groups.append(
+            {
+                "primary": display_members[0],
+                "members": display_members,
+                "hidden_member_count": max(0, len(sorted_neighbors) - (UNRESOLVED_REVIEW_MEMBER_LIMIT - 1)),
+                "size": 1 + len(sorted_neighbors),
+                "best_distance": sorted_neighbors[0][1],
+                "distance_range": (sorted_neighbors[0][1], sorted_neighbors[-1][1]),
+                "member_ids": {primary["identity_id"], *[items[idx]["identity_id"] for idx, _ in sorted_neighbors]},
+            }
+        )
+
+    candidate_groups.sort(
+        key=lambda group: (
+            -group["primary"]["face_count"],
+            group["best_distance"],
+            -group["size"],
+            group["primary"]["display_name"],
+        )
+    )
+
+    groups = []
+    for group in candidate_groups:
+        if len(groups) >= UNRESOLVED_REVIEW_GROUP_LIMIT:
+            break
+        overlap_ratio = 0.0
+        for existing in groups:
+            overlap = len(group["member_ids"] & existing["member_ids"])
+            overlap_ratio = max(
+                overlap_ratio,
+                overlap / min(len(group["member_ids"]), len(existing["member_ids"])),
+            )
+        if overlap_ratio >= 0.75:
+            continue
+        groups.append(group)
+
+    for group in groups:
+        group.pop("member_ids", None)
+    return groups
+
+
+def _unresolved_review_group_card(group, nav_prefix=""):
+    """Render one unresolved review group card."""
+    primary = group["primary"]
+    min_dist, max_dist = group["distance_range"]
+
+    def _state_badge(state: str):
+        if state == "SKIPPED":
+            return Span("Dismissed", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-600/80 text-black")
+        if state == "PROPOSED":
+            return Span("Proposed", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-700 text-white")
+        return Span("Inbox", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-700 text-slate-200")
+
+    member_tiles = []
+    for member in group["members"]:
+        badge = (
+            Span("Primary", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-600 text-white")
+            if member["is_primary"]
+            else None
+        )
+        distance_label = (
+            P(f"Best match {member['best_match_distance']:.2f}", cls="text-[11px] text-emerald-300 mt-1")
+            if member["best_match_distance"] < 999.0 and not member["is_primary"]
+            else None
+        )
+        member_tiles.append(
+            A(
+                Div(
+                    Img(
+                        src=member["preview_crop_url"],
+                        alt=member["display_name"],
+                        cls="w-full aspect-[3/4] object-cover rounded-lg",
+                        loading="lazy",
+                    )
+                    if member["preview_crop_url"]
+                    else Div(cls="w-full aspect-[3/4] rounded-lg bg-slate-700"),
+                    Div(
+                        Div(
+                            Span(member["display_name"], cls="text-xs font-medium text-white truncate block"),
+                            Div(
+                                badge,
+                                _state_badge(member.get("state", "INBOX")),
+                                cls="flex items-center gap-1 justify-end flex-wrap",
+                            ),
+                            cls="flex items-center justify-between gap-2",
+                        ),
+                        P(
+                            f"{member['face_count']} face{'s' if member['face_count'] != 1 else ''}",
+                            cls="text-[11px] text-slate-400 mt-1",
+                        ),
+                        distance_label,
+                        cls="mt-2",
+                    ),
+                    cls="p-2 bg-slate-800/70 border border-slate-700 rounded-xl hover:border-slate-500 transition-colors",
+                ),
+                href=f"{nav_prefix}/person/{member['identity_id']}",
+                cls="block",
+            )
+        )
+
+    range_text = (
+        f"{min_dist:.2f}–{max_dist:.2f} preview distance"
+        if min_dist < 999.0 and max_dist < 999.0
+        else "Review manually before merging"
+    )
+
+    return Div(
+        Div(
+            Div(
+                Img(
+                    src=primary["preview_crop_url"],
+                    alt=primary["display_name"],
+                    cls="w-16 h-16 object-cover rounded-xl border border-slate-600",
+                    loading="lazy",
+                )
+                if primary["preview_crop_url"]
+                else Div(cls="w-16 h-16 rounded-xl bg-slate-700"),
+                Div(
+                    H3(primary["display_name"], cls="text-base font-semibold text-white"),
+                    P(
+                        f"{group['size']} unresolved identities • {range_text}",
+                        cls="text-xs text-slate-400 mt-1",
+                    ),
+                    cls="ml-3 flex-1 min-w-0",
+                ),
+                Div(
+                    A(
+                        "Review Similar",
+                        href=f"{nav_prefix}/people/{primary['identity_id']}/similar",
+                        cls="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors",
+                    ),
+                    A(
+                        "Open Queue",
+                        href=f"{nav_prefix}/?section=to_review&view=browse#identity-{primary['identity_id']}",
+                        cls="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors ml-2",
+                    ),
+                    cls="flex-shrink-0",
+                ),
+                cls="flex items-center mb-4",
+            ),
+            Div(*member_tiles, cls="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"),
+            P(
+                f"+{group['hidden_member_count']} more likely match{'es' if group['hidden_member_count'] != 1 else ''}"
+                if group["hidden_member_count"]
+                else "",
+                cls="text-xs text-slate-500 mt-3",
+            )
+            if group["hidden_member_count"]
+            else None,
+            cls="p-4 bg-slate-900/50 border border-slate-700/50 rounded-xl",
+        ),
+        cls="mb-6",
+    )
+
+
 @rt("/admin/upload-review")
 def get(sess=None, request=None):
     """Upload Review Dashboard — cluster review + GEDCOM triage.
@@ -576,7 +899,31 @@ def get(sess=None, request=None):
             cls="mb-12",
         )
 
-    # --- Section 2: Proposal Matches (to confirmed identities) ---
+    # --- Section 2: Potential Review Groups (unresolved but strongly similar) ---
+    photo_registry = _main_mod.load_photo_registry()
+    face_data = _main_mod.get_face_data()
+    unresolved_review_groups = _build_unresolved_review_groups(filtered_ids, face_data, photo_registry)
+
+    if unresolved_review_groups:
+        unresolved_review_section = Div(
+            H2("Potential Review Groups", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P(
+                "These unresolved identities were not auto-grouped, but their best face previews are close enough "
+                "that they deserve a manual review pass. Start from Review Similar, then merge or reject there.",
+                cls="text-sm text-slate-400 mb-6",
+            ),
+            *[_unresolved_review_group_card(group, nav_prefix=nav_prefix) for group in unresolved_review_groups],
+            cls="mb-12",
+            data_testid="potential-review-groups",
+        )
+    else:
+        unresolved_review_section = Div(
+            H2("Potential Review Groups", cls="text-xl font-serif font-semibold text-white mb-2"),
+            P("No unresolved review groups surfaced right now.", cls="text-slate-400"),
+            cls="mb-12",
+        )
+
+    # --- Section 3: Proposal Matches (to confirmed identities) ---
     # Group proposals by target identity
     groups = {}
     for p in proposals:
@@ -609,7 +956,7 @@ def get(sess=None, request=None):
             cls="mb-12",
         )
 
-    # --- Section 3: Active-Learning Queue (offline-built, review-only labels) ---
+    # --- Section 4: Active-Learning Queue (offline-built, review-only labels) ---
     queue_payload = _active_learning_queue_payload()
     queue_items = queue_payload.get("items", [])
     if community and community_identity_ids is not None:
@@ -740,6 +1087,7 @@ def get(sess=None, request=None):
                 cls="mb-8",
             ),
             grouped_section,
+            unresolved_review_section,
             cluster_section,
             active_learning_section,
             gedcom_section,
