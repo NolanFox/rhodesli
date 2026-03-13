@@ -1365,11 +1365,7 @@ def log_user_action(action: str, **kwargs) -> None:
         else:
             target_type = "user_action"
         actor = (
-            kwargs.get("admin")
-            or kwargs.get("user")
-            or kwargs.get("actor")
-            or kwargs.get("uploaded_by")
-            or "system"
+            kwargs.get("admin") or kwargs.get("user") or kwargs.get("actor") or kwargs.get("uploaded_by") or "system"
         )
         sync_audit_log_entry(
             action=action,
@@ -2146,6 +2142,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     Each subsection has provenance styling (AI = indigo, human = emerald).
     Returns None if no AI data available for this photo.
     """
+
     def _build_reanalyze_controls(label: dict | None = None, button_label: str = "Re-analyze Photo"):
         if not is_admin:
             return None
@@ -3827,7 +3824,9 @@ def _build_caches():
                     registered_ids = sorted(filename_to_face_ids.get(fname, []))
                 if registered_ids:
                     existing_faces = {
-                        face["face_id"]: face for face in _photo_cache[photo_id]["faces"] if face["face_id"] in registered_ids
+                        face["face_id"]: face
+                        for face in _photo_cache[photo_id]["faces"]
+                        if face["face_id"] in registered_ids
                     }
                     merged_faces = []
                     missing_artifacts = 0
@@ -4538,7 +4537,9 @@ def mobile_header() -> Div:
 def _public_nav_links(active: str = "", user=None, community_slug: str | None = None, variant: str = None) -> list:
     """Build standard navigation links for public pages."""
     if variant == "session99":
-        _inactive = "text-amber-900/60 hover:text-amber-900 font-serif tracking-wide text-sm transition-colors duration-300"
+        _inactive = (
+            "text-amber-900/60 hover:text-amber-900 font-serif tracking-wide text-sm transition-colors duration-300"
+        )
         _active = "text-amber-950 font-serif tracking-wide text-sm border-b border-amber-900 pb-0.5"
     else:
         _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
@@ -4694,7 +4695,9 @@ def _public_page_nav(
 
     pos_cls = "sticky top-0" if sticky else ("fixed top-0 left-0 right-0" if fixed else "")
 
-    home_href = f"{community_url_prefix(community_slug)}/" if community_slug and community_url_prefix(community_slug) else "/"
+    home_href = (
+        f"{community_url_prefix(community_slug)}/" if community_slug and community_url_prefix(community_slug) else "/"
+    )
 
     nav = Nav(
         Div(
@@ -4817,7 +4820,9 @@ def sidebar(
                 container_cls = "bg-amber-900/40 text-amber-100 shadow-inner border border-amber-700/50 ui99-nav-active"
                 badge_cls = "bg-amber-500 text-amber-950 shadow-sm"
             else:
-                container_cls = "text-slate-400 hover:bg-[#1a1714] hover:text-slate-200 border border-transparent ui99-nav-inactive"
+                container_cls = (
+                    "text-slate-400 hover:bg-[#1a1714] hover:text-slate-200 border border-transparent ui99-nav-inactive"
+                )
                 badge_cls = f"bg-{color}-500/20 text-{color}-400"
         else:
             if is_active:
@@ -5154,9 +5159,14 @@ def sidebar(
             cls="absolute top-3 right-3 lg:hidden",
         ),
         id="sidebar",
-        cls=("sidebar-container fixed left-0 top-0 h-screen flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-all duration-200 "
-             + ("bg-slate-900 border-r border-amber-900/30 font-serif ui99-workstation-sidebar ui99-surface" if variant == "session99" else "bg-slate-800 border-r border-slate-700/50")
-            ),
+        cls=(
+            "sidebar-container fixed left-0 top-0 h-screen flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-all duration-200 "
+            + (
+                "bg-slate-900 border-r border-amber-900/30 font-serif ui99-workstation-sidebar ui99-surface"
+                if variant == "session99"
+                else "bg-slate-800 border-r border-slate-700/50"
+            )
+        ),
     )
 
 
@@ -5178,9 +5188,13 @@ def section_header(
                 P(subtitle, cls="text-sm text-slate-400 font-serif italic mt-1"),
             )
         ]
-        _tab_active = "bg-amber-900/40 text-amber-100 shadow-inner shadow-black/50 font-medium border border-amber-700/50"
+        _tab_active = (
+            "bg-amber-900/40 text-amber-100 shadow-inner shadow-black/50 font-medium border border-amber-700/50"
+        )
         _tab_inactive = "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-transparent"
-        _tab_match_active = "bg-amber-600 text-white shadow-md shadow-amber-900/50 font-semibold border border-amber-500"
+        _tab_match_active = (
+            "bg-amber-600 text-white shadow-md shadow-amber-900/50 font-semibold border border-amber-500"
+        )
     else:
         header_content = [
             Div(
@@ -5229,7 +5243,11 @@ def section_header(
         )
         header_content.append(toggle)
 
-    container_cls = "section-header flex items-center justify-between mb-8" if variant == "session99" else "section-header flex items-center justify-between mb-6"
+    container_cls = (
+        "section-header flex items-center justify-between mb-8"
+        if variant == "session99"
+        else "section-header flex items-center justify-between mb-6"
+    )
     return Div(*header_content, cls=container_cls)
 
 
@@ -5752,7 +5770,11 @@ def render_to_review_section(
             content = Div(
                 banner,
                 identity_card_expanded(
-                    high_confidence[0], crop_files, is_admin=is_admin, triage_filter=triage_filter, nav_prefix=nav_prefix
+                    high_confidence[0],
+                    crop_files,
+                    is_admin=is_admin,
+                    triage_filter=triage_filter,
+                    nav_prefix=nav_prefix,
                 ),
                 up_next,
                 id="focus-container",
@@ -5939,7 +5961,9 @@ def _sort_control(
             cls += "bg-slate-600 text-white"
         else:
             cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-        buttons.append(A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}{extra_query}", cls=cls))
+        buttons.append(
+            A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}{extra_query}", cls=cls)
+        )
     return Div(Span("Sort:", cls="text-xs text-slate-500 mr-1"), *buttons, cls="flex items-center gap-1")
 
 
@@ -7331,7 +7355,9 @@ def render_rejected_section(
     else:
         content = Div("No dismissed items. Rejected matches will appear here.", cls="text-center py-12 text-slate-400")
 
-    return Div(section_header("Dismissed", f"{counts['rejected']} items dismissed", variant=variant), content, cls="space-y-6")
+    return Div(
+        section_header("Dismissed", f"{counts['rejected']} items dismissed", variant=variant), content, cls="space-y-6"
+    )
 
 
 def _photo_nav_url(photo_id: str, index: int, photos: list, total: int, nav_prefix: str = "") -> str:
@@ -7677,13 +7703,13 @@ def render_photos_section(
                     P(f"\U0001f4c1 {photo['source']}", cls="text-xs text-slate-500 leading-snug")
                     if photo["source"]
                     else None,
-                        Span(
-                            share_button(url=f"{nav_prefix}/photo/{photo['photo_id']}", style="icon"),
-                            A(
-                                "Public Page",
-                                href=f"{nav_prefix}/photo/{photo['photo_id']}",
-                                cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
-                                target="_blank",
+                    Span(
+                        share_button(url=f"{nav_prefix}/photo/{photo['photo_id']}", style="icon"),
+                        A(
+                            "Public Page",
+                            href=f"{nav_prefix}/photo/{photo['photo_id']}",
+                            cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
+                            target="_blank",
                         ),
                         cls="flex items-center gap-0.5 flex-shrink-0",
                         **{"_": "on click halt the event's bubbling"},
@@ -8050,7 +8076,11 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
         return Div(
             banner,
             identity_card_expanded(
-                high_confidence[0], crop_files, is_admin=user_is_admin, triage_filter=triage_filter, nav_prefix=nav_prefix
+                high_confidence[0],
+                crop_files,
+                is_admin=user_is_admin,
+                triage_filter=triage_filter,
+                nav_prefix=nav_prefix,
             ),
             up_next,
             id="focus-container",
@@ -9420,7 +9450,25 @@ def identity_card(
     # Hero face: use the BEST QUALITY face, not just first
     best_face = best_face_id or (all_face_ids[0] if all_face_ids else None)
     hero_crop_url = resolve_face_image_url(best_face, crop_files) if best_face else None
-    person_href = f"{nav_prefix}/person/{identity_id}" if state == "CONFIRMED" else f"{nav_prefix}/identify/{identity_id}"
+    person_href = (
+        f"{nav_prefix}/person/{identity_id}" if state == "CONFIRMED" else f"{nav_prefix}/identify/{identity_id}"
+    )
+
+    # Build cycle URLs for face cycling carousel (up to 5 faces)
+    cycle_urls = []
+    if hero_crop_url:
+        cycle_urls.append(hero_crop_url)
+    best_face_str = best_face if isinstance(best_face, str) else ""
+    for fid_entry in all_face_ids:
+        fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id", "")
+        if fid == best_face_str:
+            continue  # already added as hero
+        url = resolve_face_image_url(fid, crop_files)
+        if url:
+            cycle_urls.append(url)
+        if len(cycle_urls) >= 5:
+            break
+    has_cycling = len(cycle_urls) > 1
 
     # Share button for this person — show for any named identity
     person_share_btn = (
@@ -9441,7 +9489,7 @@ def identity_card(
         extra_faces = []
         for fid_entry in all_face_ids:
             fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id", "")
-            if fid == (best_face if isinstance(best_face, str) else ""):
+            if fid == best_face_str:
                 continue  # skip the hero face
             extra_url = resolve_face_image_url(fid, crop_files)
             if extra_url:
@@ -9477,16 +9525,53 @@ def identity_card(
                 title=f"View all {total_faces} faces",
             )
 
+    # Face cycling arrows (prev/next) — only for multi-face identities
+    cycle_prev_btn = None
+    cycle_next_btn = None
+    cycle_dots = None
+    if has_cycling:
+        _arrow_cls = (
+            "absolute top-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center"
+            " bg-black/60 hover:bg-black/80 text-white rounded-full text-sm font-bold"
+            " opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+            " backdrop-blur-sm select-none"
+        )
+        cycle_prev_btn = Button(
+            NotStr("&#8249;"),
+            cls=f"{_arrow_cls} left-1.5",
+            data_action="face-cycle-prev",
+            type="button",
+            aria_label="Previous face",
+        )
+        cycle_next_btn = Button(
+            NotStr("&#8250;"),
+            cls=f"{_arrow_cls} right-1.5",
+            data_action="face-cycle-next",
+            type="button",
+            aria_label="Next face",
+        )
+        dots = []
+        for i in range(len(cycle_urls)):
+            dot_cls = "w-1.5 h-1.5 rounded-full transition-all duration-200 " + (
+                "bg-white" if i == 0 else "bg-white/40"
+            )
+            dots.append(Span(cls=dot_cls, data_dot_index=str(i)))
+        cycle_dots = Div(
+            *dots,
+            cls="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10"
+            " opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            data_cycle_dots="true",
+        )
+
     hero_section = Div(
         # Face image — THE STAR of the card
         A(
             Img(
                 src=hero_crop_url,
                 alt=name,
-                cls="w-full aspect-square object-cover rounded-xl"
-                " transition-all duration-300 hover:scale-[1.03]"
-                " hover:shadow-[0_8px_30px_rgba(212,165,116,0.3)]",
+                cls="w-full aspect-square object-cover rounded-xl transition-all duration-300",
                 loading="lazy",
+                data_cycle_img="true",
             )
             if hero_crop_url
             else Div(
@@ -9496,6 +9581,11 @@ def identity_card(
             href=person_href,
             cls="block overflow-hidden rounded-xl",
         ),
+        # Face cycling arrows
+        cycle_prev_btn,
+        cycle_next_btn,
+        # Face cycling dot indicators
+        cycle_dots,
         # Face count badge (top-right overlay)
         Span(
             f"{total_faces}",
@@ -9520,6 +9610,8 @@ def identity_card(
         if multi_face_gallery
         else None,
         cls="relative group",
+        data_cycle_urls="|".join(cycle_urls) if has_cycling else None,
+        data_cycle_index="0" if has_cycling else None,
     )
 
     # Name + state row

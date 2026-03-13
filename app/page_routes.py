@@ -11561,7 +11561,7 @@ def public_photo_page(
     photo_metadata_overlay = (
         Div(
             *_interleaved_meta,
-            cls="photo-info-overlay absolute bottom-3 left-3 bg-black/50 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] transition-opacity duration-300 pointer-events-none",
+            cls="photo-info-overlay absolute top-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity pointer-events-none",
             data_testid="photo-metadata-overlay",
         )
         if overlay_meta_parts
@@ -11922,7 +11922,7 @@ def public_photo_page(
                                         cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"
                                     ),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="photo-info-overlay absolute bottom-3 right-3 bg-black/50 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none transition-opacity duration-300",
+                                    cls="photo-info-overlay absolute top-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
                                     id="face-overlay-legend-public",
                                     style=""
                                     if (is_admin or any(fi["is_identified"] for fi in face_info_list))
