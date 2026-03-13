@@ -1099,8 +1099,7 @@ def load_identity_history_from_supabase() -> list[dict] | None:
                 if not _is_missing_column_error(e, "audit_log.target_type"):
                     raise
                 logger.info(
-                    "Supabase audit_log.target_type missing; "
-                    "falling back to shape-filtered identity history sync"
+                    "Supabase audit_log.target_type missing; falling back to shape-filtered identity history sync"
                 )
                 use_shape_filter = True
                 all_rows = []
@@ -1117,12 +1116,7 @@ def load_identity_history_from_supabase() -> list[dict] | None:
 
         if use_shape_filter:
             while True:
-                result = (
-                    sb.table("audit_log")
-                    .select("*")
-                    .range(offset, offset + page_size - 1)
-                    .execute()
-                )
+                result = sb.table("audit_log").select("*").range(offset, offset + page_size - 1).execute()
                 batch = result.data or []
                 if not batch:
                     break
@@ -1178,19 +1172,47 @@ def load_identity_overrides_from_supabase() -> dict[str, dict] | None:
 
 
 def sync_pending_upload(job_id: str, upload_data: dict) -> None:
-    """Upsert a pending upload to Supabase. Fire-and-forget."""
+    """Upsert a pending upload to Supabase. Fire-and-forget.
+
+    Resilient to schema mismatches: if the 'data' jsonb column doesn't exist,
+    retries without it (Lesson 105 — mock tests don't catch column mismatches).
+    """
     try:
         client = get_supabase_client()
         if not client:
             return
+
+        # Derive uploader email from multiple possible keys
+        uploader = (
+            upload_data.get("uploader_email")
+            or upload_data.get("user_id")
+            or upload_data.get("uploaded_by")
+            or upload_data.get("submitted_by")
+        )
+        # Derive filename from multiple possible keys
+        filename = (
+            upload_data.get("filename")
+            or upload_data.get("original_filename")
+            or (upload_data.get("files", [None])[0] if upload_data.get("files") else None)
+        )
+
         row = {
             "job_id": job_id,
-            "user_id": upload_data.get("user_id") or upload_data.get("uploaded_by"),
+            "user_id": uploader,
             "status": upload_data.get("status", "pending"),
-            "filename": upload_data.get("filename") or upload_data.get("original_filename"),
+            "filename": filename,
             "data": upload_data,
         }
-        client.table("pending_uploads").upsert(row).execute()
+        try:
+            client.table("pending_uploads").upsert(row).execute()
+        except _SUPABASE_ERRORS as e:
+            # Retry without 'data' column if it doesn't exist in the schema
+            if "data" in str(e).lower() and "column" in str(e).lower():
+                logger.info(f"Retrying pending upload sync without 'data' column for {job_id}")
+                row_without_data = {k: v for k, v in row.items() if k != "data"}
+                client.table("pending_uploads").upsert(row_without_data).execute()
+            else:
+                raise
         logger.debug(f"Synced pending upload {job_id}")
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase pending upload sync failed for {job_id}: {e}")

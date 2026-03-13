@@ -35,6 +35,8 @@ from app.main import rt, app
 # so that test patches on app.main.X work correctly
 import app.main as _main_mod
 
+logger = logging.getLogger(__name__)
+
 # Module-level state for GEDCOM upload preview
 _gedcom_upload_preview = None
 
@@ -380,8 +382,13 @@ def get(request, sess=None):
     reviewed_items.sort(key=lambda x: x.get("reviewed_at", x.get("submitted_at", "")), reverse=True)
     reviewed_items = reviewed_items[:10]  # Show last 10
 
+    # Separate contributor-pending items (eligible for batch approve) from staged
+    contributor_pending_ids = [item["job_id"] for item in pending_items if item.get("status") == "pending"]
+
     # Build pending cards
     if pending_items:
+        from urllib.parse import quote
+
         pending_cards = []
         for item in pending_items:
             job_id = item["job_id"]
@@ -396,6 +403,20 @@ def get(request, sess=None):
             if source_label and source_label != "Unknown":
                 detail_parts.append(f"Source: {source_label}")
             detail_line = " · ".join(detail_parts)
+
+            # Checkbox for batch selection (contributor uploads only)
+            batch_checkbox = (
+                Input(
+                    type="checkbox",
+                    name="job_ids",
+                    value=job_id,
+                    form="batch-approve-form",
+                    cls="batch-select-checkbox mt-0.5 accent-green-500",
+                    data_testid=f"batch-checkbox-{job_id}",
+                )
+                if not is_staged
+                else None
+            )
 
             # Staged items (admin uploads) show status badge, no approve/reject
             # Pending items (contributor uploads) show approve/reject buttons
@@ -418,7 +439,13 @@ def get(request, sess=None):
                         hx_post=f"/admin/pending/{job_id}/approve",
                         hx_target=f"#pending-card-{job_id}",
                         hx_swap="outerHTML",
+                        hx_indicator=f"#approve-spinner-{job_id}",
                         cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors",
+                    ),
+                    Span(
+                        "…",
+                        id=f"approve-spinner-{job_id}",
+                        cls="htmx-indicator text-green-400 text-xs",
                     ),
                     Button(
                         "Reject",
@@ -427,13 +454,12 @@ def get(request, sess=None):
                         hx_swap="outerHTML",
                         cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors",
                     ),
-                    cls="flex gap-2 items-start",
+                    cls="flex gap-2 items-center",
                 )
 
             # Photo preview thumbnails (served via admin-authenticated endpoint)
             preview_thumbs = []
             upload_files = item.get("files", [])
-            from urllib.parse import quote
 
             for fname in upload_files[:6]:
                 if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
@@ -441,13 +467,19 @@ def get(request, sess=None):
                     # Graceful fallback: show filename label if image fails to load
                     preview_thumbs.append(
                         Div(
-                            Img(
-                                src=thumb_url,
-                                alt=fname,
-                                loading="lazy",
-                                cls="w-16 h-16 object-cover rounded border border-slate-600",
-                                title=fname,
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
+                            A(
+                                Img(
+                                    src=thumb_url,
+                                    alt=fname,
+                                    loading="lazy",
+                                    cls="w-16 h-16 object-cover rounded border border-slate-600 cursor-pointer hover:border-indigo-400 transition-colors",
+                                    title=fname,
+                                    onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='flex'",
+                                ),
+                                href=thumb_url,
+                                target="_blank",
+                                rel="noopener",
+                                data_testid=f"pending-thumb-{job_id}",
                             ),
                             Div(
                                 fname[:12],
@@ -466,28 +498,76 @@ def get(request, sess=None):
                 )
             preview_row = Div(*preview_thumbs, cls="flex gap-2 mt-3 flex-wrap") if preview_thumbs else None
 
+            card_row = Div(
+                batch_checkbox if batch_checkbox else Div(cls="w-4"),
+                Div(
+                    P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
+                    P(detail_line, cls="text-slate-400 text-xs"),
+                    P(
+                        f"Submitted: {item.get('submitted_at', 'Unknown')[:19].replace('T', ' ')}",
+                        cls="text-slate-500 text-xs mt-0.5",
+                    ),
+                    P(f"Job ID: {job_id}", cls="text-slate-600 text-xs font-mono"),
+                    cls="flex-1",
+                ),
+                actions,
+                cls="flex items-start gap-3 justify-between",
+            )
+
             pending_cards.append(
                 Div(
-                    Div(
-                        Div(
-                            P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
-                            P(detail_line, cls="text-slate-400 text-xs"),
-                            P(
-                                f"Submitted: {item.get('submitted_at', 'Unknown')[:19].replace('T', ' ')}",
-                                cls="text-slate-500 text-xs mt-0.5",
-                            ),
-                            P(f"Job ID: {job_id}", cls="text-slate-600 text-xs font-mono"),
-                            cls="flex-1",
-                        ),
-                        actions,
-                        cls="flex items-start justify-between gap-4",
-                    ),
+                    card_row,
                     preview_row,
                     id=f"pending-card-{job_id}",
                     cls="p-4 bg-slate-800 border border-slate-700 rounded-lg",
                 )
             )
-        pending_section = Div(*pending_cards, cls="space-y-3")
+
+        # Batch approve toolbar (only shown when there are contributor-pending items)
+        batch_toolbar = ""
+        if contributor_pending_ids:
+            batch_toolbar = Div(
+                Form(
+                    Div(
+                        Label(
+                            Input(
+                                type="checkbox",
+                                id="select-all-pending",
+                                cls="accent-green-500",
+                                data_testid="select-all-pending",
+                            ),
+                            " Select All",
+                            cls="text-slate-300 text-xs flex items-center gap-1.5 cursor-pointer",
+                        ),
+                        Button(
+                            "Approve Selected",
+                            type="submit",
+                            cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors disabled:opacity-50",
+                            data_testid="batch-approve-btn",
+                        ),
+                        cls="flex items-center gap-4",
+                    ),
+                    id="batch-approve-form",
+                    hx_post="/admin/pending/batch-approve",
+                    hx_target="#batch-approve-result",
+                    hx_swap="outerHTML",
+                    cls="flex items-center gap-4",
+                ),
+                Div(id="batch-approve-result"),
+                Script("""
+                    (function() {
+                        var selectAll = document.getElementById('select-all-pending');
+                        if (!selectAll) return;
+                        selectAll.addEventListener('change', function() {
+                            var boxes = document.querySelectorAll('.batch-select-checkbox');
+                            boxes.forEach(function(b) { b.checked = selectAll.checked; });
+                        });
+                    })();
+                """),
+                cls="mb-3 p-3 bg-slate-800/60 border border-slate-700/50 rounded-lg",
+            )
+
+        pending_section = Div(batch_toolbar, *pending_cards, cls="space-y-3")
     else:
         pending_section = Div(
             P("No pending uploads.", cls="text-slate-500 text-sm"),
@@ -818,6 +898,43 @@ def get(request, sess=None):
     )
 
 
+def _auto_confirm_job_identities(data_path: Path, job_id: str, user_source: str) -> int:
+    """Auto-confirm INBOX identities that have a real name, created for this job.
+
+    INBOX identities without a real name (still "Unidentified Person NNN") cannot be
+    confirmed — they stay in INBOX for admin review.  Only identities that have been
+    assigned a human-readable name during ingest (e.g. matched to a named cluster) are
+    eligible for auto-confirm.
+
+    Returns the number of identities confirmed.
+    """
+    try:
+        from core.registry import IdentityRegistry, IdentityState
+
+        identity_path = data_path / "identities.json"
+        registry = IdentityRegistry.load(identity_path)
+        confirmed_count = 0
+        # list_identities_by_job uses provenance.job_id to find all identities for this job
+        for identity in registry.list_identities_by_job(job_id):
+            if identity.get("state") != IdentityState.INBOX.value:
+                continue
+            # Only auto-confirm if the identity has a real (non-placeholder) name
+            if not IdentityRegistry._is_real_name(identity.get("name")):
+                continue
+            try:
+                registry.confirm_identity(identity["identity_id"], user_source=user_source)
+                confirmed_count += 1
+            except Exception as e:
+                logger.warning(f"Could not auto-confirm identity {identity['identity_id']}: {e}")
+        if confirmed_count:
+            registry.save(identity_path)
+            logger.info(f"Auto-confirmed {confirmed_count} named identities for job {job_id}")
+        return confirmed_count
+    except Exception as e:
+        logger.warning(f"Auto-confirm failed for job {job_id}: {e}")
+        return 0
+
+
 @rt("/admin/pending/{job_id}/approve")
 def post(job_id: str, sess=None):
     """Approve a pending upload. Requires admin."""
@@ -830,13 +947,17 @@ def post(job_id: str, sess=None):
         return Div(
             P("Upload not found.", cls="text-red-400 text-sm"),
             cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg",
+            id=f"pending-card-{job_id}",
         )
 
     upload = pending["uploads"][job_id]
-    if upload["status"] != "pending":
+    # Allow approving both "pending" (contributor) and "staged" (admin) uploads.
+    # Already-approved/rejected/processed uploads cannot be re-approved.
+    if upload["status"] in ("approved", "rejected", "processed"):
         return Div(
             P(f"Upload already {upload['status']}.", cls="text-slate-400 text-sm"),
             cls="p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg",
+            id=f"pending-card-{job_id}",
         )
 
     # Update status to approved
@@ -853,6 +974,7 @@ def post(job_id: str, sess=None):
         admin=user.email if user else "unknown",
     )
 
+    will_process = False
     # If PROCESSING_ENABLED, move files from staging to uploads and spawn processing
     if PROCESSING_ENABLED:
         import shutil
@@ -860,6 +982,7 @@ def post(job_id: str, sess=None):
         staging_dir = _main_mod.data_path / "staging" / job_id
         uploads_dir = _main_mod.data_path / "uploads" / job_id
         if staging_dir.exists():
+            will_process = True
             uploads_dir.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
 
@@ -870,6 +993,7 @@ def post(job_id: str, sess=None):
             upload_collection = upload.get("collection", "")
             uploader_email = upload.get("uploader_email", "")
             submitted_at = upload.get("submitted_at", "")
+            admin_email = user.email if user else "admin"
 
             def _bg_approve_ingest():
                 import logging as _bg_logging
@@ -893,6 +1017,12 @@ def post(job_id: str, sess=None):
                         upload_date=submitted_at,
                     )
 
+                    # Auto-confirm all INBOX identities created for this job so
+                    # detected faces appear in the main photo browse immediately.
+                    _auto_confirm_job_identities(
+                        _main_mod.data_path, job_id, user_source=f"admin_approve:{admin_email}"
+                    )
+
                     # Upload new raw photos + crops to R2 (if R2 is configured)
                     try:
                         _main_mod._upload_new_files_to_r2(_main_mod.data_path, job_id)
@@ -901,7 +1031,7 @@ def post(job_id: str, sess=None):
                             f"R2 upload failed for job {job_id}: {r2_err}"
                         )
 
-                    # Invalidate caches so new photo appears immediately
+                    # Invalidate caches so new photo appears immediately in browse/landing
                     _main_mod._invalidate_all_caches()
                 except Exception:
                     import traceback
@@ -915,6 +1045,14 @@ def post(job_id: str, sess=None):
             threading.Thread(target=_bg_approve_ingest, daemon=True, name=f"approve-{job_id}").start()
 
     file_count = upload.get("file_count", len(upload.get("files", [])))
+    processing_note = (
+        P(
+            "Processing in background — photos will appear in browse shortly.",
+            cls="text-green-300/70 text-[10px] mt-1",
+        )
+        if will_process
+        else None
+    )
     return Div(
         Div(
             Span("Approved", cls="text-green-400 text-xs font-bold uppercase"),
@@ -923,7 +1061,9 @@ def post(job_id: str, sess=None):
             Span(f" | {file_count} file{'s' if file_count != 1 else ''}", cls="text-slate-500 text-xs"),
             cls="flex items-center gap-1",
         ),
+        processing_note if processing_note else "",
         cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg",
+        id=f"pending-card-{job_id}",
     )
 
 
@@ -939,13 +1079,16 @@ def post(job_id: str, sess=None):
         return Div(
             P("Upload not found.", cls="text-red-400 text-sm"),
             cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg",
+            id=f"pending-card-{job_id}",
         )
 
     upload = pending["uploads"][job_id]
-    if upload["status"] != "pending":
+    # Allow rejecting both "pending" and "staged" uploads.
+    if upload["status"] in ("approved", "rejected", "processed"):
         return Div(
             P(f"Upload already {upload['status']}.", cls="text-slate-400 text-sm"),
             cls="p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg",
+            id=f"pending-card-{job_id}",
         )
 
     # Update status to rejected
@@ -961,7 +1104,15 @@ def post(job_id: str, sess=None):
         admin=user.email if user else "unknown",
     )
 
-    # Optionally clean up staging files
+    # Sync rejection metadata to Supabase BEFORE deleting staging files
+    try:
+        from app.supabase_data import sync_pending_upload
+
+        sync_pending_upload(job_id, upload)
+    except Exception as e:
+        logger.warning(f"Supabase sync failed for rejected upload {job_id}: {e}")
+
+    # Clean up staging files (metadata preserved in JSON + Supabase)
     import shutil
 
     staging_dir = _main_mod.data_path / "staging" / job_id
@@ -978,6 +1129,7 @@ def post(job_id: str, sess=None):
             cls="flex items-center gap-1",
         ),
         cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg",
+        id=f"pending-card-{job_id}",
     )
 
 
@@ -1018,6 +1170,147 @@ def post(job_id: str, sess=None):
             cls="flex items-center gap-1",
         ),
         cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg",
+    )
+
+
+@rt("/admin/pending/batch-approve")
+async def post(request, sess=None):
+    """Approve multiple pending uploads at once. Requires admin.
+
+    Accepts form data with one or more ``job_ids`` fields.  Returns an
+    HTMX-compatible response that replaces the pending-list container.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    form = await request.form()
+    # ``getlist`` returns all values for a repeated form field.
+    job_ids = form.getlist("job_ids")
+
+    if not job_ids:
+        return Div(
+            P("No uploads selected.", cls="text-yellow-400 text-sm"),
+            cls="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg mb-3",
+        )
+
+    pending = _main_mod._load_pending_uploads()
+    user = get_current_user(sess or {})
+    approved_ids = []
+    skipped_ids = []
+
+    for job_id in job_ids:
+        if job_id not in pending["uploads"]:
+            skipped_ids.append(job_id)
+            continue
+        upload = pending["uploads"][job_id]
+        if upload["status"] in ("approved", "rejected", "processed"):
+            skipped_ids.append(job_id)
+            continue
+        upload["status"] = "approved"
+        upload["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+        upload["reviewed_by"] = user.email if user else "unknown"
+        approved_ids.append(job_id)
+
+    if approved_ids:
+        _main_mod._save_pending_uploads(pending)
+        _main_mod.log_user_action(
+            "BATCH_APPROVE_UPLOADS",
+            job_ids=approved_ids,
+            count=len(approved_ids),
+            admin=user.email if user else "unknown",
+        )
+
+        # Spawn background processing for each approved upload
+        if PROCESSING_ENABLED:
+            import shutil
+            import threading
+
+            admin_email = user.email if user else "admin"
+            for job_id in approved_ids:
+                upload = pending["uploads"][job_id]
+                staging_dir = _main_mod.data_path / "staging" / job_id
+                uploads_dir = _main_mod.data_path / "uploads" / job_id
+                if not staging_dir.exists():
+                    continue
+                uploads_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
+
+                source = upload.get("source", "")
+                upload_collection = upload.get("collection", "")
+                uploader_email = upload.get("uploader_email", "")
+                submitted_at = upload.get("submitted_at", "")
+
+                def _make_bg(jid, udir, src, coll, email, ts):
+                    def _bg():
+                        import logging as _bg_logging
+
+                        log_path = udir / f"{jid}.log"
+                        try:
+                            file_handler = _bg_logging.FileHandler(str(log_path))
+                            file_handler.setLevel(_bg_logging.INFO)
+                            _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
+
+                            from core.ingest_inbox import process_directory
+
+                            process_directory(
+                                directory=udir,
+                                job_id=jid,
+                                data_dir=_main_mod.data_path,
+                                source=src,
+                                collection=coll,
+                                prefer_hybrid=True,
+                                uploaded_by=email,
+                                upload_date=ts,
+                            )
+
+                            _auto_confirm_job_identities(
+                                _main_mod.data_path, jid, user_source=f"admin_approve:{admin_email}"
+                            )
+
+                            try:
+                                _main_mod._upload_new_files_to_r2(_main_mod.data_path, jid)
+                            except Exception as r2_err:
+                                _bg_logging.getLogger("core.ingest_inbox").warning(
+                                    f"R2 upload failed for job {jid}: {r2_err}"
+                                )
+
+                            _main_mod._invalidate_all_caches()
+                        except Exception:
+                            import traceback
+
+                            try:
+                                with open(log_path, "a") as _lf:
+                                    traceback.print_exc(file=_lf)
+                            except Exception:
+                                pass
+
+                    return _bg
+
+                threading.Thread(
+                    target=_make_bg(job_id, uploads_dir, source, upload_collection, uploader_email, submitted_at),
+                    daemon=True,
+                    name=f"approve-{job_id}",
+                ).start()
+
+    # Build summary response — redirect to /admin/pending to refresh the full list
+    msg_parts = [f"Approved {len(approved_ids)} upload{'s' if len(approved_ids) != 1 else ''}"]
+    if skipped_ids:
+        msg_parts.append(f"{len(skipped_ids)} skipped (already reviewed)")
+    summary = " | ".join(msg_parts)
+
+    return Div(
+        P(summary, cls="text-green-400 text-sm font-medium"),
+        P(
+            A(
+                "Refresh page",
+                href="/admin/pending",
+                cls="text-indigo-400 hover:text-indigo-300 underline text-xs",
+            ),
+            cls="mt-1",
+        ),
+        cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg mb-3",
+        id="batch-approve-result",
     )
 
 
@@ -2823,11 +3116,26 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
                 )
 
             parsed_counts = Div(
-                Div(P(f"{parsed.individual_count:,}", cls="text-xl font-semibold text-white"), P("Individuals", cls="text-xs text-slate-400")),
-                Div(P(f"{parsed.family_count:,}", cls="text-xl font-semibold text-white"), P("Families", cls="text-xs text-slate-400")),
-                Div(P(f"{parsed.source_count:,}", cls="text-xl font-semibold text-white"), P("Sources", cls="text-xs text-slate-400")),
-                Div(P(f"{parsed.media_count:,}", cls="text-xl font-semibold text-white"), P("Media", cls="text-xs text-slate-400")),
-                Div(P(f"{len(parsed.records):,}", cls="text-xl font-semibold text-white"), P("Raw Records", cls="text-xs text-slate-400")),
+                Div(
+                    P(f"{parsed.individual_count:,}", cls="text-xl font-semibold text-white"),
+                    P("Individuals", cls="text-xs text-slate-400"),
+                ),
+                Div(
+                    P(f"{parsed.family_count:,}", cls="text-xl font-semibold text-white"),
+                    P("Families", cls="text-xs text-slate-400"),
+                ),
+                Div(
+                    P(f"{parsed.source_count:,}", cls="text-xl font-semibold text-white"),
+                    P("Sources", cls="text-xs text-slate-400"),
+                ),
+                Div(
+                    P(f"{parsed.media_count:,}", cls="text-xl font-semibold text-white"),
+                    P("Media", cls="text-xs text-slate-400"),
+                ),
+                Div(
+                    P(f"{len(parsed.records):,}", cls="text-xl font-semibold text-white"),
+                    P("Raw Records", cls="text-xs text-slate-400"),
+                ),
                 cls="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4",
             )
 
@@ -2859,8 +3167,12 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
                 for change in item.get("changes", [])[:3]:
                     old_value = change.get("old_value")
                     new_value = change.get("new_value")
-                    old_text = json.dumps(old_value)[:40] if isinstance(old_value, (dict, list)) else str(old_value)[:40]
-                    new_text = json.dumps(new_value)[:40] if isinstance(new_value, (dict, list)) else str(new_value)[:40]
+                    old_text = (
+                        json.dumps(old_value)[:40] if isinstance(old_value, (dict, list)) else str(old_value)[:40]
+                    )
+                    new_text = (
+                        json.dumps(new_value)[:40] if isinstance(new_value, (dict, list)) else str(new_value)[:40]
+                    )
                     change_preview.append(f"{change.get('path')}: {old_text} → {new_text}")
                 sample_items.append(
                     Div(

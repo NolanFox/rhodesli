@@ -3231,6 +3231,7 @@ def post(upload_id: str = "", sess=None):
             "status": "pending",
             "submitted_at": datetime.now().isoformat(),
             "submitted_by": user.email if user else "anonymous",
+            "uploader_email": user.email if user else "anonymous",
             "source": "compare_upload",
             "collection": "",
             "file_count": 1,
@@ -4173,6 +4174,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                         )
                     )
             return hits
+
         archive_a = find_similar_faces(mu_a.tolist(), face_data, registry=registry, limit=5)
         archive_b = find_similar_faces(mu_b.tolist(), face_data, registry=registry, limit=5)
 
