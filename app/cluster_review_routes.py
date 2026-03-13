@@ -467,7 +467,7 @@ def _display_identity_name(name: str) -> str:
 def _identity_face_ids(identity: dict) -> list[str]:
     """Return all face ids for an identity across anchors and candidates."""
     face_ids = []
-    for entry in (identity.get("anchor_ids", []) + identity.get("candidate_ids", [])):
+    for entry in identity.get("anchor_ids", []) + identity.get("candidate_ids", []):
         if isinstance(entry, str):
             face_ids.append(entry)
         elif isinstance(entry, dict) and entry.get("face_id"):
@@ -775,15 +775,85 @@ def _unresolved_review_group_card(group, nav_prefix=""):
 
 
 @rt("/admin/upload-review")
-def get(sess=None, request=None):
+def get(sess=None, request=None, mode: str = ""):
     """Upload Review Dashboard — cluster review + GEDCOM triage.
 
     AD-215: Error correction must be effortless.
     PRD-037 Phase 2: GEDCOM triage for post-upload identity linking.
+    PRD-039: Speed-run mode (?mode=speed) for rapid batch review.
     """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    # Speed-run mode: minimal layout with single-card queue
+    if mode == "speed":
+        community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+        clusters = _get_speed_run_clusters(community_slug, request)
+        total = len(clusters)
+
+        if total == 0:
+            first_card = Div(
+                H3("No clusters to review", cls="text-xl font-semibold text-white mb-2"),
+                P("All multi-face clusters have been reviewed.", cls="text-slate-400"),
+                A(
+                    "Back to Dashboard",
+                    href="upload-review",
+                    cls="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors inline-block",
+                ),
+                id="speed-run-card",
+                cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl text-center",
+            )
+        else:
+            iid, idata = clusters[0]
+            first_card = _speed_run_cluster_card(iid, idata, 0, total, community_slug)
+
+        keyboard_js = Script("""
+            document.addEventListener('keydown', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+                var key = e.key.toLowerCase();
+                var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss'};
+                var action = actionMap[key];
+                if (!action) return;
+                var btn = document.querySelector('[data-action="' + action + '"]');
+                if (btn) { e.preventDefault(); btn.click(); }
+            });
+        """)
+
+        return Title("Speed Run Review — Rhodesli Admin"), Main(
+            Div(
+                Div(
+                    Div(
+                        H1("Speed Run Review", cls="text-2xl font-serif font-bold text-white"),
+                        A(
+                            "← Dashboard",
+                            href="upload-review",
+                            cls="text-sm text-purple-400 hover:text-purple-300 transition-colors",
+                        ),
+                        cls="flex items-center gap-4",
+                    ),
+                    P("Y = Confirm · N = Reject · S = Skip · D = Dismiss", cls="text-slate-500 text-sm mt-1"),
+                    cls="mb-6",
+                ),
+                # Progress bar placeholder
+                Div(
+                    Div(
+                        Span(f"0 of {total} reviewed", cls="text-sm text-slate-300"),
+                        cls="flex justify-between items-center mb-2",
+                    ),
+                    Div(
+                        Div(cls="h-2 bg-purple-500 rounded-full", style="width: 0%"),
+                        cls="w-full h-2 bg-slate-700 rounded-full overflow-hidden",
+                    ),
+                    id="speed-run-progress",
+                ),
+                # First card
+                first_card,
+                keyboard_js,
+                cls="max-w-3xl mx-auto px-4 py-8",
+            ),
+            cls="min-h-screen bg-slate-950",
+        )
 
     proposals = _load_proposals()
 
@@ -1004,7 +1074,10 @@ def get(sess=None, request=None):
             if queue_items
             else None,
             Div(
-                *[_active_learning_card(item, queue_payload.get("queue_run_id", "unknown")) for item in queue_items[:10]],
+                *[
+                    _active_learning_card(item, queue_payload.get("queue_run_id", "unknown"))
+                    for item in queue_items[:10]
+                ],
                 cls="space-y-3",
             )
             if queue_items
@@ -1082,7 +1155,17 @@ def get(sess=None, request=None):
         Div(
             # Header
             Div(
-                H1("Upload Review", cls="text-2xl font-serif font-bold text-white"),
+                Div(
+                    H1("Upload Review", cls="text-2xl font-serif font-bold text-white"),
+                    A(
+                        "Start Speed Run →",
+                        href="upload-review?mode=speed",
+                        cls="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors",
+                    )
+                    if clusters
+                    else None,
+                    cls="flex items-center justify-between",
+                ),
                 P("Review auto-clustered matches and link GEDCOM records.", cls="text-slate-400 mt-1"),
                 cls="mb-8",
             ),
@@ -1177,14 +1260,15 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
 
 
 @rt("/api/cluster-review/confirm-all")
-def post(identity_id: str = "", sess=None):
+def post(
+    identity_id: str = "", speed_run: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None
+):
     """Confirm all candidate faces for an identity."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
-    data_path = Path(os.getenv("DATA_DIR", "data"))
-    registry = IdentityRegistry.load(data_path / "identities.json")
+    registry = _main_mod.load_registry()
 
     try:
         identity = registry._identities.get(identity_id)
@@ -1201,13 +1285,15 @@ def post(identity_id: str = "", sess=None):
             except ValueError:
                 pass  # Skip faces that were already promoted
 
-        registry.save(data_path / "identities.json")
-        _main_mod._invalidate_all_caches()
+        _main_mod.save_registry(registry)
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
             cls="p-4",
         )
+
+    if speed_run == "true":
+        return _speed_run_next_card(offset + 1, community_slug, request)
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if confirmed_count == 1 else "faces"
@@ -1222,14 +1308,15 @@ def post(identity_id: str = "", sess=None):
 
 
 @rt("/api/cluster-review/reject-all")
-def post(identity_id: str = "", sess=None):
+def post(
+    identity_id: str = "", speed_run: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None
+):
     """Reject all candidate faces for an identity."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
-    data_path = Path(os.getenv("DATA_DIR", "data"))
-    registry = IdentityRegistry.load(data_path / "identities.json")
+    registry = _main_mod.load_registry()
 
     try:
         identity = registry._identities.get(identity_id)
@@ -1245,13 +1332,15 @@ def post(identity_id: str = "", sess=None):
             except ValueError:
                 pass
 
-        registry.save(data_path / "identities.json")
-        _main_mod._invalidate_all_caches()
+        _main_mod.save_registry(registry)
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
             cls="p-4",
         )
+
+    if speed_run == "true":
+        return _speed_run_next_card(offset + 1, community_slug, request)
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if rejected_count == 1 else "faces"
@@ -1263,6 +1352,239 @@ def post(identity_id: str = "", sess=None):
         ),
         cls="p-4 bg-red-900/30 border border-red-700/50 rounded-xl mb-6",
     )
+
+
+# =========================================================================
+# SPEED-RUN CLUSTER REVIEW (PRD-039)
+# =========================================================================
+
+
+def _get_speed_run_clusters(community_slug: str = "", request=None):
+    """Get the ordered list of clusters for speed-run review.
+
+    Returns list of (identity_id, identity_data) tuples, sorted by face count descending.
+    Filters to multi-face INBOX identities, community-scoped if applicable.
+    """
+    registry = _main_mod.load_registry()
+    identities = registry._identities if hasattr(registry, "_identities") else {}
+
+    # Community filtering
+    community = getattr(request.state, "community", None) if request else None
+    community_identity_ids = None
+    if community:
+        community_identity_ids = _main_mod._get_community_identity_ids(community)
+
+    if community_identity_ids is not None:
+        filtered_ids = {iid: idata for iid, idata in identities.items() if iid in community_identity_ids}
+    else:
+        filtered_ids = identities
+
+    clusters = []
+    for iid, idata in filtered_ids.items():
+        if idata.get("merged_into"):
+            continue
+        state = idata.get("state", "")
+        if state not in ("INBOX", "PROPOSED"):
+            continue
+        all_faces = idata.get("anchor_ids", []) + idata.get("candidate_ids", [])
+        if len(all_faces) >= 2:
+            clusters.append((iid, idata, len(all_faces)))
+
+    clusters.sort(key=lambda x: -x[2])  # Most faces first
+    return [(iid, idata) for iid, idata, _ in clusters]
+
+
+def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug=""):
+    """Render a single cluster card for speed-run mode."""
+    name = identity_data.get("name", "Unknown")
+    display_name = name
+    if name.startswith("Unidentified Person "):
+        display_name = "Person " + name[len("Unidentified Person ") :]
+    all_faces = _identity_face_ids(identity_data)
+    face_count = len(all_faces)
+
+    # Face thumbnails (up to 8)
+    face_thumbs = []
+    for fid in all_faces[:8]:
+        crop_url = _get_crop_url_for_face(fid)
+        if crop_url:
+            face_thumbs.append(
+                Img(
+                    src=crop_url,
+                    alt=f"Face {fid[:12]}",
+                    cls="w-20 h-20 object-cover rounded-lg border border-slate-600",
+                    loading="lazy",
+                )
+            )
+        else:
+            face_thumbs.append(Div(cls="w-20 h-20 rounded-lg bg-slate-700"))
+
+    remaining = face_count - 8
+    if remaining > 0:
+        face_thumbs.append(
+            Div(
+                Span(f"+{remaining}", cls="text-slate-400 text-sm font-medium"),
+                cls="w-20 h-20 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center",
+            )
+        )
+
+    # Common params for action buttons
+    common_params = urlencode(
+        {
+            "identity_id": identity_id,
+            "speed_run": "true",
+            "offset": offset,
+            "community_slug": community_slug,
+        }
+    )
+
+    # Progress bar
+    progress_pct = round((offset / max(total, 1)) * 100, 1)
+
+    return Div(
+        # Progress bar (hx-swap-oob)
+        Div(
+            Div(
+                Span(f"{offset} of {total} reviewed", cls="text-sm text-slate-300"),
+                cls="flex justify-between items-center mb-2",
+            ),
+            Div(
+                Div(cls="h-2 bg-purple-500 rounded-full", style=f"width: {progress_pct}%"),
+                cls="w-full h-2 bg-slate-700 rounded-full overflow-hidden",
+            ),
+            id="speed-run-progress",
+            hx_swap_oob="true",
+        ),
+        # Cluster card
+        Div(
+            # Face grid
+            Div(
+                *face_thumbs,
+                cls="flex flex-wrap gap-3 justify-center mb-6",
+            ),
+            # Identity info
+            Div(
+                H3(display_name, cls="text-lg font-semibold text-white", title=name),
+                P(
+                    f"{face_count} face{'s' if face_count != 1 else ''} · {identity_data.get('state', 'INBOX')}",
+                    cls="text-sm text-slate-400 mt-1",
+                ),
+                cls="text-center mb-6",
+            ),
+            # Action buttons
+            Div(
+                Button(
+                    "Confirm All (Y)",
+                    cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors",
+                    hx_post=f"/api/cluster-review/confirm-all?{common_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                    data_action="speed-confirm",
+                ),
+                Button(
+                    "Reject All (N)",
+                    cls="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors",
+                    hx_post=f"/api/cluster-review/reject-all?{common_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                    data_action="speed-reject",
+                ),
+                Button(
+                    "Skip (S)",
+                    cls="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-medium rounded-lg transition-colors",
+                    hx_get=f"/admin/cluster-review/next?offset={offset + 1}&community_slug={community_slug}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                    data_action="speed-skip",
+                ),
+                Button(
+                    "Dismiss (D)",
+                    cls="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-medium rounded-lg transition-colors border border-slate-600",
+                    hx_post=f"/api/cluster-review/dismiss?{common_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                    data_action="speed-dismiss",
+                ),
+                cls="flex flex-wrap gap-3 justify-center",
+            ),
+            cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
+        ),
+        id="speed-run-card",
+    )
+
+
+def _speed_run_done_card(offset, total):
+    """Render the completion card when all clusters have been reviewed."""
+    return Div(
+        Div(
+            Div(
+                Span(f"{total} of {total} reviewed", cls="text-sm text-slate-300"),
+                cls="flex justify-between items-center mb-2",
+            ),
+            Div(
+                Div(cls="h-2 bg-emerald-500 rounded-full", style="width: 100%"),
+                cls="w-full h-2 bg-slate-700 rounded-full overflow-hidden",
+            ),
+            id="speed-run-progress",
+            hx_swap_oob="true",
+        ),
+        Div(
+            Div(
+                Span("✓", cls="text-4xl text-emerald-400"),
+                cls="mb-4",
+            ),
+            H3("All Done!", cls="text-xl font-semibold text-white mb-2"),
+            P(
+                f"Reviewed all {total} cluster{'s' if total != 1 else ''}.",
+                cls="text-slate-400 mb-6",
+            ),
+            A(
+                "Back to Dashboard",
+                href="upload-review",
+                cls="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors inline-block",
+            ),
+            cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl text-center",
+        ),
+        id="speed-run-card",
+    )
+
+
+def _speed_run_next_card(offset, community_slug, request):
+    """Get the next cluster card for speed-run auto-advance."""
+    clusters = _get_speed_run_clusters(community_slug, request)
+    total = len(clusters)
+
+    if offset >= total:
+        return _speed_run_done_card(offset, total)
+
+    iid, idata = clusters[offset]
+    return _speed_run_cluster_card(iid, idata, offset, total, community_slug)
+
+
+@rt("/admin/cluster-review/next")
+def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """Return the next cluster card for speed-run mode (HTMX partial)."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    return _speed_run_next_card(offset, community_slug, request)
+
+
+@rt("/api/cluster-review/dismiss")
+def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """Dismiss a cluster (set to SKIPPED) and auto-advance."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    registry = _main_mod.load_registry()
+    identity = registry._identities.get(identity_id)
+    if identity:
+        identity["state"] = "SKIPPED"
+        _main_mod.save_registry(registry)
+
+    return _speed_run_next_card(offset + 1, community_slug, request)
 
 
 def _active_learning_actor(sess) -> str:

@@ -468,8 +468,8 @@ class TestClusterReviewActions:
                     "candidate_ids": ["inbox_abc123", "inbox_def456"],
                 }
             }
-            stack.enter_context(patch("app.cluster_review_routes.IdentityRegistry.load", return_value=mock_registry))
-            stack.enter_context(patch("app.cluster_review_routes._main_mod._invalidate_all_caches"))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_registry))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
             resp = client.post("/api/cluster-review/confirm-all?identity_id=tgt-001")
         assert resp.status_code == 200
         assert "confirmed for Roland Fox" in resp.text
@@ -487,8 +487,8 @@ class TestClusterReviewActions:
                     "candidate_ids": ["inbox_abc123", "inbox_def456"],
                 }
             }
-            stack.enter_context(patch("app.cluster_review_routes.IdentityRegistry.load", return_value=mock_registry))
-            stack.enter_context(patch("app.cluster_review_routes._main_mod._invalidate_all_caches"))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_registry))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
             resp = client.post("/api/cluster-review/reject-all?identity_id=tgt-001")
         assert resp.status_code == 200
         assert "rejected for Roland Fox" in resp.text
@@ -526,9 +526,7 @@ class TestClusterReviewActions:
         }
         with ExitStack() as stack:
             stack.enter_context(_admin_session())
-            stack.enter_context(
-                patch("app.cluster_review_routes.revert_active_learning_label", return_value=reverted)
-            )
+            stack.enter_context(patch("app.cluster_review_routes.revert_active_learning_label", return_value=reverted))
             stack.enter_context(patch("app.cluster_review_routes.get_supabase_client", return_value=None))
             resp = client.post("/api/cluster-review/learn-revert?face_id_a=inbox_abc123&face_id_b=anchor_roland_1")
         assert resp.status_code == 200

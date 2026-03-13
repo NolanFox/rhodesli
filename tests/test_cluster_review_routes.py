@@ -290,3 +290,253 @@ class TestGedcomTriageSorting:
         many_pos = html.index("Many Faces")
         few_pos = html.index("Few Faces")
         assert many_pos < few_pos, "Higher face count should appear first among unlinked"
+
+
+# ---------------------------------------------------------------------------
+# Tests: Speed-Run Mode (PRD-039)
+# ---------------------------------------------------------------------------
+
+
+def _make_inbox_cluster(name, face_count=3):
+    """Create an INBOX identity with multiple faces for cluster review."""
+    return {
+        "name": name,
+        "state": "INBOX",
+        "anchor_ids": [f"inbox_{name.lower().replace(' ', '_')}_{i}" for i in range(face_count)],
+        "candidate_ids": [],
+        "negative_ids": [],
+        "version_id": 1,
+    }
+
+
+class TestSpeedRunMode:
+    """PRD-039: Speed-run batch cluster review mode."""
+
+    def test_speed_run_page_loads(self):
+        """Speed-run mode renders with keyboard shortcuts and progress bar."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            stack.enter_context(_mock_community_lookup(None))
+            resp = client.get("/admin/upload-review?mode=speed")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "Speed Run Review" in html
+        assert "speed-run-card" in html
+        assert "speed-confirm" in html
+        assert "speed-reject" in html
+        assert "speed-skip" in html
+        assert "speed-dismiss" in html
+        # Keyboard shortcut JS
+        assert "keydown" in html
+        assert "actionMap" in html
+        # Progress bar
+        assert "0 of 2 reviewed" in html
+
+    def test_speed_run_next_returns_cluster_card(self):
+        """GET /admin/cluster-review/next returns an HTMX partial."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.get("/admin/cluster-review/next?offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-card" in html
+        assert "Confirm All" in html
+
+    def test_speed_run_next_at_end_shows_done(self):
+        """When offset exceeds clusters, show the done card."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.get("/admin/cluster-review/next?offset=10")
+
+        assert resp.status_code == 200
+        assert "All Done" in resp.text
+
+    def test_speed_run_confirm_all_auto_advances(self):
+        """Confirm-all with speed_run=true returns next card instead of message."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "INBOX",
+                "anchor_ids": ["inbox_a1"],
+                "candidate_ids": ["inbox_a2", "inbox_a3"],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/confirm-all?identity_id=cluster-1&speed_run=true&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        # Should contain next card, not "confirmed for" message
+        assert "speed-run-card" in html
+        assert mock_reg.promote_candidate.call_count == 2
+
+    def test_speed_run_reject_all_auto_advances(self):
+        """Reject-all with speed_run=true returns next card."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "INBOX",
+                "anchor_ids": ["inbox_a1"],
+                "candidate_ids": ["inbox_a2"],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/reject-all?identity_id=cluster-1&speed_run=true&offset=0")
+
+        assert resp.status_code == 200
+        assert "speed-run-card" in resp.text
+        assert mock_reg.reject_candidate.call_count == 1
+
+    def test_speed_run_dismiss_returns_next(self):
+        """Dismiss endpoint sets SKIPPED and returns next card."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 3),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = dict(identities)
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            mock_save = stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/dismiss?identity_id=cluster-1&offset=0")
+
+        assert resp.status_code == 200
+        assert "speed-run-card" in resp.text
+        # Verify save was called (state changed to SKIPPED)
+        mock_save.assert_called_once()
+
+    def test_speed_run_community_scoped(self):
+        """Speed-run only shows clusters from the current community."""
+        identities = {
+            "fox-cluster": _make_inbox_cluster("Fox Person", 4),
+            "rhodes-cluster": _make_inbox_cluster("Rhodes Person", 3),
+        }
+        fox_community = {"id": "fox-uuid", "slug": "fox-family", "name": "Fox Family"}
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids({"fox-cluster"}))
+            stack.enter_context(_mock_community_lookup(fox_community))
+            resp = client.get("/c/fox-family/admin/upload-review?mode=speed")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "1 of 1 reviewed" in html or "0 of 1 reviewed" in html
+        # Only fox cluster should appear
+        assert "Fox Person" in html or "Person fox" in html
+
+    def test_speed_run_keyboard_shortcuts_in_page(self):
+        """Speed-run page includes keyboard shortcut JS with input guard."""
+        identities = {"c1": _make_inbox_cluster("Test Person", 2)}
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.get("/admin/upload-review?mode=speed")
+
+        html = resp.text
+        assert "e.target.tagName" in html  # Input guard
+        assert "'y': 'speed-confirm'" in html
+
+    def test_speed_run_progress_counter(self):
+        """Progress counter updates with each card."""
+        identities = {
+            "c1": _make_inbox_cluster("Person A", 3),
+            "c2": _make_inbox_cluster("Person B", 2),
+            "c3": _make_inbox_cluster("Person C", 2),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.get("/admin/cluster-review/next?offset=2")
+
+        assert resp.status_code == 200
+        assert "2 of 3 reviewed" in resp.text
+
+    def test_dashboard_has_speed_run_link(self):
+        """Existing dashboard shows 'Start Speed Run' button when clusters exist."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_no_proposals())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            stack.enter_context(_mock_community_lookup(None))
+            stack.enter_context(_mock_community_url_prefix())
+            resp = client.get("/admin/upload-review")
+
+        assert resp.status_code == 200
+        assert "Start Speed Run" in resp.text
+        assert "mode=speed" in resp.text
