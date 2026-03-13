@@ -476,7 +476,14 @@ def get(request, sess=None):
 
             for fname in upload_files[:6]:
                 if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
-                    thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
+                    # Try staging preview first; fall back to R2 public URL if staging is gone
+                    staging_path = _main_mod.data_path / "staging" / job_id / fname
+                    if staging_path.exists():
+                        thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
+                    elif os.environ.get("R2_PUBLIC_URL"):
+                        thumb_url = f"{os.environ['R2_PUBLIC_URL']}/raw_photos/{quote(fname)}"
+                    else:
+                        thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
                     # Graceful fallback: show filename label if image fails to load
                     preview_thumbs.append(
                         Div(
@@ -2048,12 +2055,84 @@ def get(request, sess=None):
     if not rows:
         rows = [Div(P("No pending annotations to review.", cls="text-slate-400"), cls="text-center py-12")]
 
+    # Bulk approve controls
+    bulk_controls = (
+        Div(
+            Button(
+                "Approve All Pending",
+                hx_post="/admin/approvals/batch-approve",
+                hx_target="#annotations-list",
+                hx_swap="innerHTML",
+                hx_confirm=f"Approve all {len([a for a in pending if a.get('status') in ('pending', 'pending_unverified')])} pending annotations?",
+                cls="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors",
+            ),
+            cls="mb-4",
+        )
+        if pending
+        else None
+    )
+
     return Title(f"Annotation Approvals — {community_name}"), Div(
         _admin_nav_bar("approvals"),
         Div(H1("Pending Approvals", cls="text-2xl font-bold text-white"), cls="mb-6"),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
-        Div(*rows, cls="space-y-3"),
+        bulk_controls if bulk_controls else "",
+        Div(*rows, cls="space-y-3", id="annotations-list"),
         cls="max-w-3xl mx-auto p-6",
+    )
+
+
+@rt("/admin/approvals/batch-approve")
+def post(sess=None):
+    """Bulk approve all pending annotations."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    from datetime import datetime, timezone
+
+    user = get_current_user(sess)
+    annotations = _main_mod._load_annotations()
+    approved_count = 0
+    results = []
+
+    for ann_id, ann in list(annotations["annotations"].items()):
+        if ann.get("status") not in ("pending", "pending_unverified"):
+            continue
+
+        ann["status"] = "approved"
+        ann["reviewed_by"] = user.email if user else "admin"
+        ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Apply the annotation to the target
+        try:
+            if ann["type"] == "name_suggestion":
+                registry = _main_mod.load_registry()
+                identity = registry.get_identity(ann["target_id"])
+                if identity and identity.get("state") != "CONFIRMED":
+                    registry.rename_identity(ann["target_id"], ann["value"])
+                    registry.save(_main_mod.data_path / "identities.json")
+                    _main_mod._invalidate_all_caches()
+        except Exception as e:
+            logger.warning(f"Failed to apply annotation {ann_id}: {e}")
+
+        approved_count += 1
+        results.append(
+            Div(
+                Span("Approved", cls="text-sm font-bold text-emerald-400"),
+                Span(f" — {ann.get('value', '')} for {ann.get('target_id', '')[:8]}", cls="text-sm text-slate-400"),
+                cls="bg-emerald-900/20 rounded-lg p-3 border border-emerald-700",
+                id=f"annotation-{ann_id}",
+            )
+        )
+
+    _main_mod._save_annotations(annotations)
+    _main_mod.log_user_action("BATCH_APPROVE_ANNOTATIONS", count=approved_count, admin=user.email if user else "admin")
+
+    return Div(
+        Div(f"Approved {approved_count} annotations", cls="text-emerald-400 font-bold mb-3"),
+        *results,
+        cls="space-y-2",
     )
 
 
