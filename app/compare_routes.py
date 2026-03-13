@@ -1749,6 +1749,15 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             _main_mod._photo_registry_cache = None
             print(f"[compare-upload] Caches invalidated for job {job_id}")
 
+            # Only delete staging dir on success — preserve on error for recovery
+            import shutil as _shutil_cleanup
+
+            try:
+                if job_dir.exists():
+                    _shutil_cleanup.rmtree(job_dir, ignore_errors=True)
+            except Exception:
+                pass
+
         except Exception as e:
             error_status = {
                 "job_id": job_id,
@@ -1771,14 +1780,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
                     traceback.print_exc(file=_lf)
             except Exception:
                 pass
-        finally:
-            import shutil as _shutil_cleanup
-
-            try:
-                if job_dir.exists():
-                    _shutil_cleanup.rmtree(job_dir, ignore_errors=True)
-            except Exception:
-                pass
+            # Do NOT delete job_dir on error — preserves files for recovery
 
     thread = threading.Thread(target=_background_compare_ingest, daemon=True, name=f"compare-ingest-{job_id}")
     thread.start()
