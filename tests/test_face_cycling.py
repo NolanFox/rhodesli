@@ -99,3 +99,27 @@ class TestFaceCyclingOnIdentityCard:
         crop_files = self._crop_files_for(3)
         html = to_xml(identity_card(identity, crop_files))
         assert "data-cycle-img" in html
+
+    def test_arrows_visible_by_default(self):
+        """Arrows must NOT be opacity-0 — they need a visible base opacity so users discover them."""
+        import re
+
+        identity = self._make_identity(3)
+        crop_files = self._crop_files_for(3)
+        html = to_xml(identity_card(identity, crop_files))
+        # Extract the class of the prev button specifically
+        match = re.search(r'<button[^>]*data-action="face-cycle-prev"[^>]*class="([^"]*)"', html)
+        assert match, "face-cycle-prev button not found"
+        btn_classes = match.group(1)
+        # Button must NOT have opacity-0 as base (invisible until hover)
+        assert "opacity-0" not in btn_classes, f"Arrow button is invisible by default: {btn_classes}"
+        # Should have a visible base opacity
+        assert "opacity-60" in btn_classes
+
+    def test_dots_visible_by_default(self):
+        """Dot indicators must be visible without hover so users know cycling exists."""
+        identity = self._make_identity(3)
+        crop_files = self._crop_files_for(3)
+        html = to_xml(identity_card(identity, crop_files))
+        # Dots container should have non-zero base opacity
+        assert "opacity-70" in html

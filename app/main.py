@@ -9458,7 +9458,7 @@ def identity_card(
         _arrow_cls = (
             "absolute top-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center"
             " bg-black/60 hover:bg-black/80 text-white rounded-full text-sm font-bold"
-            " opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+            " opacity-60 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
             " backdrop-blur-sm select-none"
         )
         cycle_prev_btn = Button(
@@ -9484,7 +9484,7 @@ def identity_card(
         cycle_dots = Div(
             *dots,
             cls="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10"
-            " opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            " opacity-70 group-hover:opacity-100 transition-opacity duration-200",
             data_cycle_dots="true",
         )
 
