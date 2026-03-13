@@ -41,9 +41,9 @@ class TestPublicNavLinks:
                 if not href or href in ("/?section=skipped", "/help"):
                     continue
                 if href == "/map":
-                    assert "text-white" in cls
+                    assert "text-amber-950" in cls
                 else:
-                    assert "text-slate-300" in cls
+                    assert "text-amber-900/60" in cls
 
     def test_sign_in_when_auth_enabled_no_user(self):
         with patch("app.main.is_auth_enabled", return_value=True):
