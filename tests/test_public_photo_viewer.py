@@ -691,3 +691,67 @@ class TestSession100PhotoWorkflow:
         assert 'data-testid="photo-context-banner"' in html
         assert "Jacob Cohen is not currently tagged on this photo." in html
         assert "Review before trusting this link." in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(1200, 900))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    @patch("app.main.get_crop_files", return_value={"crop-set"})
+    @patch("app.main.resolve_face_image_url", return_value=None)
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_people_cards_use_bbox_fallback_thumbnail_when_crop_missing(
+        self,
+        mock_date_badge,
+        mock_photo_badge,
+        mock_alignment,
+        mock_ai,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_crop_url,
+        mock_crop_files,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        del (
+            mock_date_badge,
+            mock_photo_badge,
+            mock_alignment,
+            mock_ai,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_crop_url,
+            mock_crop_files,
+            mock_photo_reg,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "dense.jpg",
+            "faces": [{"face_id": "face-0", "bbox": [100, 120, 220, 300]}],
+            "collection": "Rhodes Collection",
+            "source": "Rhodes Collection",
+        }
+        mock_get_id.return_value = {"identity_id": "person-0", "name": "Known Person", "state": "CONFIRMED"}
+        mock_reg.return_value = MagicMock()
+
+        html = to_xml(public_photo_page("photo-1", user=None, is_admin=True, community_slug="rhodes"))
+
+        assert 'data-testid="photo-face-fallback-thumb"' in html
+        assert "translate(" in html

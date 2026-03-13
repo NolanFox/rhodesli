@@ -283,5 +283,25 @@
     - `23 passed`
   - `pytest tests/test_public_person_page.py tests/test_photo_navigation.py tests/test_identify.py -x -q`
     - `104 passed, 2 skipped`
+
+## Missing-Crop Fallback Thumbnails
+- some Rhodes photo pages were still rendering `?` placeholders in the
+  `People in this photo` section even though the app had the original photo and
+  the face bounding boxes
+- improvements:
+  - photo-person cards now synthesize a bounded thumbnail from the original
+    photo whenever a stored crop image is missing
+  - the fallback keeps the existing circular face-card presentation, so the
+    `People in this photo` section remains scannable instead of dropping to
+    generic placeholders
+  - contested/dismissed labels still render on top of the new fallback thumb
+- files:
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+- verification:
+  - `pytest tests/test_public_photo_viewer.py -x -q`
+    - `24 passed`
+  - `pytest tests/test_public_person_page.py tests/test_photo_navigation.py tests/test_collections.py -x -q`
+    - `79 passed, 2 skipped`
   - `pytest tests/test_gedcom_routes.py tests/test_public_person_page.py::TestAdminControlsOnPersonPage -x -q`
     - `54 passed`

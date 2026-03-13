@@ -11231,6 +11231,50 @@ def public_photo_page(
             face_overlays.append(overlay)
 
     # --- Build person cards strip / dense grid ---
+    def _face_card_thumb(fi: dict):
+        if fi["crop_url"]:
+            return Img(
+                src=fi["crop_url"],
+                alt=fi["display_name"],
+                cls="w-20 h-20 rounded-full object-cover border-2 "
+                + ("border-emerald-500/50" if fi["is_identified"] else "border-slate-600"),
+                onerror="this.style.display='none'",
+            )
+
+        if has_dimensions and fi["bbox"] and len(fi["bbox"]) >= 4:
+            x1, y1, x2, y2 = fi["bbox"][:4]
+            face_w = max(1.0, x2 - x1)
+            face_h = max(1.0, y2 - y1)
+            crop_span = max(face_w, face_h) * 1.8
+            thumb_size = 80.0
+            scale = min(2.5, thumb_size / crop_span)
+            scaled_w = width * scale
+            scaled_h = height * scale
+            center_x = (x1 + x2) / 2.0
+            center_y = (y1 + y2) / 2.0
+            offset_x = (thumb_size / 2.0) - (center_x * scale)
+            offset_y = (thumb_size / 2.0) - (center_y * scale)
+            return Div(
+                Img(
+                    src=photo_url(filename),
+                    alt=fi["display_name"],
+                    cls="absolute max-w-none select-none pointer-events-none",
+                    style=(
+                        f"width:{scaled_w:.2f}px;height:{scaled_h:.2f}px;"
+                        f"transform:translate({offset_x:.2f}px,{offset_y:.2f}px);"
+                    ),
+                    loading="lazy",
+                ),
+                cls="relative w-20 h-20 rounded-full overflow-hidden border-2 "
+                + ("border-emerald-500/50 bg-slate-900" if fi["is_identified"] else "border-slate-600 bg-slate-900"),
+                data_testid="photo-face-fallback-thumb",
+            )
+
+        return Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center",
+        )
+
     display_face_info_list = sorted(
         face_info_list,
         key=lambda fi: (0 if fi["is_context_identity"] else 1, fi["source_index"]),
@@ -11257,20 +11301,7 @@ def public_photo_page(
         else:
             badge = Span("Unidentified", cls="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded-full")
 
-        crop_el = (
-            Img(
-                src=fi["crop_url"],
-                alt=fi["display_name"],
-                cls="w-20 h-20 rounded-full object-cover border-2 "
-                + ("border-emerald-500/50" if fi["is_identified"] else "border-slate-600"),
-                onerror="this.style.display='none'",
-            )
-            if fi["crop_url"]
-            else Div(
-                Span("?", cls="text-2xl text-slate-500"),
-                cls="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center",
-            )
-        )
+        crop_el = _face_card_thumb(fi)
 
         # Link to person page for identified people
         name_el = fi["display_name"]
