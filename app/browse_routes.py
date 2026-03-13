@@ -587,7 +587,7 @@ def get(
                             P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
                             A(
                                 "Clear filters",
-                                href="/photos",
+                                href=f"{_main_mod.community_url_prefix(community_slug)}/photos",
                                 cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2",
                             ),
                         )

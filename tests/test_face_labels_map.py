@@ -483,6 +483,43 @@ class TestMapPeopleParam:
         response = client.get(f"/map?people={CONFIRMED_ID},{UNIDENTIFIED_ID}")
         assert response.status_code == 200
 
+    def test_community_map_popup_links_keep_archive_prefix(self, client, monkeypatch):
+        """Community map popups should link to archive-scoped photo and photo-search routes."""
+        locations = {
+            PHOTO_ID: {
+                "lat": 36.4417,
+                "lng": 28.2225,
+                "location_name": "Rhodes, Greece",
+                "location_key": "rhodes",
+                "region": "Eastern Mediterranean",
+            }
+        }
+        registry = _make_fake_registry(IDENTITIES)
+        photo_reg = _make_fake_photo_registry(PHOTO_META, FACE_TO_PHOTO)
+
+        monkeypatch.setattr("app.main._build_caches", lambda: None)
+        monkeypatch.setattr("app.main._photo_cache", PHOTO_META)
+        monkeypatch.setattr("app.main._photo_locations_cache", locations)
+        monkeypatch.setattr("app.main._load_photo_locations", lambda: locations)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+        monkeypatch.setattr("app.main.load_registry", lambda: registry)
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: photo_reg)
+        monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: next(
+            (i for i in IDENTITIES if fid in (i.get("anchor_ids", []) + i.get("candidate_ids", []))),
+            None,
+        ))
+
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            response = client.get("/c/fox-family/map")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "/c/fox-family/photo/" in html
+        assert "/c/fox-family/photos?q=" in html
+
 
 # ===========================================================================
 # 4. Person → Map link

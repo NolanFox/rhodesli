@@ -250,6 +250,18 @@ class TestTimelineRoute:
         assert "Photos" in resp.text
         assert "People" in resp.text
 
+    def test_community_timeline_keeps_archive_prefixes(self):
+        """Community timeline should keep photo links and lazy loading inside the archive."""
+        with patch(
+            "app.supabase_data.get_community_by_slug",
+            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+        ):
+            resp = self.client.get("/c/fox-family/timeline")
+        assert resp.status_code == 200
+        assert "/c/fox-family/timeline" in resp.text
+        assert "/c/fox-family/api/timeline/more" in resp.text or "View full timeline" in resp.text
+        assert "/c/fox-family/photo/" in resp.text or "/c/fox-family/photos?q=" in resp.text
+
 
 class TestTimelineHelpers:
     """Tests for timeline helper functions."""

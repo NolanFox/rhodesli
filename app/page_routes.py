@@ -110,9 +110,7 @@ def _build_timeline_person_filter_items(
             f if isinstance(f, str) else f.get("face_id", "")
             for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
         ]
-        timeline_photo_ids = {
-            pid for pid in photo_reg.get_photos_for_faces(face_ids) if pid in eligible_photo_ids
-        }
+        timeline_photo_ids = {pid for pid in photo_reg.get_photos_for_faces(face_ids) if pid in eligible_photo_ids}
         if not timeline_photo_ids:
             continue
         items.append(
@@ -1297,7 +1295,10 @@ def landing_page(stats, featured_photos):
             Nav(
                 Div(
                     Div(
-                        Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-50 tracking-wide font-display ui99-title"),
+                        Span(
+                            "Rhodesli",
+                            cls="text-xl md:text-2xl font-bold text-amber-50 tracking-wide font-display ui99-title",
+                        ),
                         Span(
                             "Heritage Archive",
                             cls="text-xs text-amber-500/80 ml-2 hidden md:inline tracking-[0.2em] uppercase font-mono",
@@ -2097,6 +2098,7 @@ def get(
     # - Anonymous users see the public landing page
     # Community-aware landing page (PRD-035)
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     community = getattr(request.state, "community", None) if request else None
     community_prefixed = getattr(request.state, "community_prefixed", False) if request else False
 
@@ -2637,7 +2639,9 @@ def get(
             # Sidebar overlay (mobile backdrop)
             sidebar_overlay,
             # Sidebar (fixed)
-            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community, variant="session99"),
+            _main_mod.sidebar(
+                counts, section, user=user, community_slug=community_slug, community=community, variant="session99"
+            ),
             # Main content (offset for sidebar, bottom padding for mobile tabs)
             Main(
                 # First-time welcome banner (non-blocking, dismissible)
@@ -3620,7 +3624,9 @@ def photo_view_content(
         context_query["sort_by"] = sort_by
     context_query_suffix = f"&{_url_encode(context_query)}" if context_query else ""
     seq_query_suffix = f"&seq=1{context_query_suffix}" if seq_mode else context_query_suffix
-    action_context_suffix = f"&context_identity_id={context_identity_id}&sort_by={sort_by}" if context_identity_id else ""
+    action_context_suffix = (
+        f"&context_identity_id={context_identity_id}&sort_by={sort_by}" if context_identity_id else ""
+    )
 
     def _partial_photo_url(
         target_photo_id: str,
@@ -3649,7 +3655,11 @@ def photo_view_content(
         if seq_active:
             params["seq"] = "1"
         query_string = _url_encode(params)
-        return f"{nav_prefix}/photo/{target_photo_id}/partial?{query_string}" if query_string else f"{nav_prefix}/photo/{target_photo_id}/partial"
+        return (
+            f"{nav_prefix}/photo/{target_photo_id}/partial?{query_string}"
+            if query_string
+            else f"{nav_prefix}/photo/{target_photo_id}/partial"
+        )
 
     next_seq_photo_id = None
     next_seq_unidentified_count = 0
@@ -3674,7 +3684,7 @@ def photo_view_content(
             f" · {unresolved_photo_count} photo{'s' if unresolved_photo_count != 1 else ''} still need review"
         )
         if not unidentified_face_ids:
-            for queued_photo_id in context_photo_ids[current_queue_index + 1:]:
+            for queued_photo_id in context_photo_ids[current_queue_index + 1 :]:
                 queued_unresolved = unresolved_counts.get(queued_photo_id, 0)
                 if queued_unresolved > 0:
                     next_seq_photo_id = queued_photo_id
@@ -3823,8 +3833,7 @@ def photo_view_content(
                 cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                 "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                 hx_get=(
-                    f"{nav_prefix}/api/face/tag-search?face_id={face_id_encoded}"
-                    f"{seq_param}{action_context_suffix}"
+                    f"{nav_prefix}/api/face/tag-search?face_id={face_id_encoded}{seq_param}{action_context_suffix}"
                 ),
                 hx_trigger="keyup changed delay:180ms, keydown[key=='Enter']",
                 hx_target=f"#{tag_results_id}",
@@ -4111,10 +4120,10 @@ def photo_view_content(
         if remaining > 0:
             seq_banner = Div(
                 Div(
-                    Span(f"Naming faces: {identified_count} of {total_face_count} identified", cls="text-sm text-white"),
-                    Span(seq_queue_summary, cls="text-[11px] text-indigo-200/80")
-                    if seq_queue_summary
-                    else None,
+                    Span(
+                        f"Naming faces: {identified_count} of {total_face_count} identified", cls="text-sm text-white"
+                    ),
+                    Span(seq_queue_summary, cls="text-[11px] text-indigo-200/80") if seq_queue_summary else None,
                     Span(
                         "Enter picks the top name. Ignore Stranger marks background noise as skipped.",
                         cls="text-[11px] text-slate-300/80",
@@ -4148,9 +4157,7 @@ def photo_view_content(
                         f"face{'s' if next_seq_unidentified_count != 1 else ''}.",
                         cls="text-[11px] text-slate-300/80",
                     ),
-                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80")
-                    if seq_queue_summary
-                    else None,
+                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80") if seq_queue_summary else None,
                     cls="flex flex-col gap-0.5",
                 ),
                 Button(
@@ -4175,9 +4182,7 @@ def photo_view_content(
             seq_banner = Div(
                 Div(
                     Span("All faces identified!", cls="text-sm text-emerald-300 font-medium"),
-                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80")
-                    if seq_queue_summary
-                    else None,
+                    Span(seq_queue_summary, cls="text-[11px] text-emerald-200/80") if seq_queue_summary else None,
                     cls="flex flex-col gap-0.5",
                 ),
                 Button(
@@ -4334,7 +4339,9 @@ def photo_view_content(
         if context_identity_id and context_person_name
         else f"{nav_prefix}/?section=to_review"
     )
-    back_label = f"Back to {context_person_name}" if context_identity_id and context_person_name else "Back to Review Queue"
+    back_label = (
+        f"Back to {context_person_name}" if context_identity_id and context_person_name else "Back to Review Queue"
+    )
     heading = "Speed Loop" if seq_mode else "Photo Context"
     subtitle = (
         "Stay in flow while naming faces. Enter accepts the top suggestion and ignored faces stay reversible."
@@ -4649,7 +4656,9 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     community_name = (
         community.get("name")
         if isinstance(community, dict) and community.get("name")
-        else ("Rhodes Jewish Heritage Archive" if community_slug == "rhodes" else community_slug.replace("-", " ").title())
+        else (
+            "Rhodes Jewish Heritage Archive" if community_slug == "rhodes" else community_slug.replace("-", " ").title()
+        )
     )
 
     registry = _main_mod.load_registry()
@@ -6287,9 +6296,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                     P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
                     if photo["collection"]
                     else None,
-                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight")
-                    if provenance
-                    else None,
+                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight") if provenance else None,
                     P(provenance["subline"], cls="text-[10px] text-slate-500 leading-tight")
                     if provenance and provenance.get("subline")
                     else None,
@@ -6810,7 +6817,11 @@ def get(sort_by: str = "name", sess=None, request=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -7377,7 +7388,11 @@ def get(sess=None, request=None):
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -7547,7 +7562,11 @@ def get(slug: str, sess=None, request=None):
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -7556,7 +7575,11 @@ def get(slug: str, sess=None, request=None):
             Div(
                 # Breadcrumb
                 Div(
-                    A("Collections", href=f"{nav_prefix}/collections", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                    A(
+                        "Collections",
+                        href=f"{nav_prefix}/collections",
+                        cls="text-indigo-400 hover:text-indigo-300 text-sm",
+                    ),
                     Span(" / ", cls="text-slate-600 mx-2"),
                     Span(col_name, cls="text-slate-300 text-sm"),
                     cls="mb-6",
@@ -7692,6 +7715,7 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     # If people param provided (from photo page), use the first as the person filter
     if people and not person:
@@ -7860,7 +7884,8 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
     )
     marker_cluster_js = Script(src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js")
 
-    map_script = Script(f"""
+    map_script = Script(
+        f"""
     document.addEventListener('DOMContentLoaded', function() {{
         var markers = {markers_json};
 
@@ -7891,11 +7916,11 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
             if (m.photos && m.photos.length > 0) {{
                 photosHtml = '<div class="photo-preview-grid">';
                 m.photos.forEach(function(p) {{
-                    photosHtml += '<img src="' + p.url + '" alt="" onclick="window.location.href=\\'/photo/' + p.photo_id + '\\'" onerror="this.style.display=\\'none\\'">';
+                    photosHtml += '<img src="' + p.url + '" alt="" onclick="window.location.href=\\'__NAV_PREFIX__/photo/' + p.photo_id + '\\'" onerror="this.style.display=\\'none\\'">';
                 }});
                 photosHtml += '</div>';
             }}
-            var moreText = m.total > 8 ? '<div style="text-align:center;margin-top:6px;"><a href="/photos?q=' + encodeURIComponent(m.name) + '" style="color:#818cf8;font-size:12px;">See all ' + m.total + ' photos &rarr;</a></div>' : '';
+            var moreText = m.total > 8 ? '<div style="text-align:center;margin-top:6px;"><a href="__NAV_PREFIX__/photos?q=' + encodeURIComponent(m.name) + '" style="color:#818cf8;font-size:12px;">See all ' + m.total + ' photos &rarr;</a></div>' : '';
 
             var popupContent = '<div>' +
                 '<strong style="font-size:14px;">' + m.name + '</strong>' +
@@ -7924,7 +7949,8 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
             map.fitBounds(bounds, {{ padding: [50, 50], maxZoom: 6 }});
         }}
     }});
-    """)
+    """.replace("__NAV_PREFIX__", nav_prefix or "")
+    )
 
     return (
         Title("Map — Rhodesli"),
@@ -8038,6 +8064,7 @@ def get(
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -8477,7 +8504,7 @@ def get(
                         ),
                         cls="bg-slate-800/70 rounded-lg border border-slate-700/50 hover:border-amber-700/30 transition-colors w-full",
                     ),
-                    href=f"/photo/{entry['photo_id']}",
+                    href=f"{nav_prefix}/photo/{entry['photo_id']}",
                     cls="block",
                     data_testid="timeline-photo-card",
                 )
@@ -8678,7 +8705,7 @@ def get(
                             P("Loading more decades...", cls="text-slate-500 text-xs mt-2"),
                             id="timeline-lazy-sentinel",
                             cls="flex flex-col items-center py-8",
-                            hx_get=f"/api/timeline/more?offset={len(_tl_initial)}&person={_url_quote(person or '')}&people={_url_quote(people or '')}&start={start or ''}&end={end or ''}&context={context}&collection={_url_quote(collection or '')}",
+                            hx_get=f"{nav_prefix}/api/timeline/more?offset={len(_tl_initial)}&person={_url_quote(person or '')}&people={_url_quote(people or '')}&start={start or ''}&end={end or ''}&context={context}&collection={_url_quote(collection or '')}",
                             hx_trigger="revealed",
                             hx_swap="outerHTML",
                         )
@@ -8690,7 +8717,7 @@ def get(
                         P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
                         A(
                             "View full timeline",
-                            href="/timeline",
+                            href=f"{nav_prefix}/timeline",
                             cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2",
                         ),
                     )
@@ -8740,8 +8767,11 @@ def get(
     end: int = None,
     context: str = "on",
     collection: str = "",
+    request=None,
 ):
     """HTMX endpoint for timeline lazy loading — returns remaining decade sections."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -8935,7 +8965,7 @@ def get(
                                     cls="w-full h-40 sm:h-48 object-cover rounded-t-lg",
                                     loading="lazy",
                                 ),
-                                href=f"/photo/{entry['photo_id']}",
+                                href=f"{nav_prefix}/photo/{entry['photo_id']}",
                             ),
                             Div(
                                 Div(Span(year_label, cls=year_cls), age_badge, cls="flex items-baseline"),
@@ -9557,7 +9587,7 @@ def _load_social_graph():
     return build_social_graph(rel_graph, cooccur)
 
 
-def _connection_path_html(path_steps, registry):
+def _connection_path_html(path_steps, registry, nav_prefix: str = ""):
     """Render a connection path as styled HTML steps."""
     if path_steps is None:
         return Div(
@@ -9595,7 +9625,7 @@ def _connection_path_html(path_steps, registry):
                 Div(
                     A(
                         from_name,
-                        href=f"/person/{from_id}",
+                        href=f"{nav_prefix}/person/{from_id}",
                         cls="text-white font-semibold hover:text-indigo-300 transition-colors",
                     ),
                     cls="px-4 py-2 bg-slate-800 rounded-lg border border-slate-700",
@@ -9620,7 +9650,7 @@ def _connection_path_html(path_steps, registry):
             Div(
                 A(
                     to_name,
-                    href=f"/person/{to_id}",
+                    href=f"{nav_prefix}/person/{to_id}",
                     cls="text-white font-semibold hover:text-indigo-300 transition-colors",
                 ),
                 cls="px-4 py-2 bg-slate-800 rounded-lg border border-slate-700",
@@ -10510,6 +10540,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
     """Six Degrees Connection Finder — find how two people are connected."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
 
@@ -10560,7 +10591,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
             Div(
                 H3(f"{name_a} & {name_b}", cls="text-lg font-bold text-white mb-1"),
                 P(degrees_text, cls="text-sm text-indigo-400 mb-4"),
-                _connection_path_html(paths["any"], registry),
+                _connection_path_html(paths["any"], registry, nav_prefix=nav_prefix),
                 cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
                 data_testid="connection-result",
             )
@@ -10575,7 +10606,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                         f"{len(paths['family'])} step{'s' if len(paths['family']) != 1 else ''} through family",
                         cls="text-xs text-slate-500 mb-2",
                     ),
-                    _connection_path_html(paths["family"], registry),
+                    _connection_path_html(paths["family"], registry, nav_prefix=nav_prefix),
                     cls="bg-slate-800/30 rounded-lg p-4 border border-amber-900/30",
                 )
             )
@@ -10589,7 +10620,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                         f"{len(paths['photo'])} step{'s' if len(paths['photo']) != 1 else ''} through photos",
                         cls="text-xs text-slate-500 mb-2",
                     ),
-                    _connection_path_html(paths["photo"], registry),
+                    _connection_path_html(paths["photo"], registry, nav_prefix=nav_prefix),
                     cls="bg-slate-800/30 rounded-lg p-4 border border-blue-900/30",
                 )
             )
@@ -10600,7 +10631,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                 Div(
                     A(
                         "View in Family Tree →",
-                        href=f"/tree?person={person_a}",
+                        href=f"{nav_prefix}/tree?person={person_a}",
                         cls="text-sm text-indigo-400 hover:text-indigo-300",
                         data_testid="tree-link",
                     ),
@@ -11127,7 +11158,8 @@ def public_photo_page(
     context_face_info = next((fi for fi in face_info_list if fi["is_context_identity"]), None)
     context_identity_present = context_face_info is not None
     context_identity_conflict = bool(
-        context_face_info and (context_face_info["bbox_conflict"] or context_face_info["state"] in {"REJECTED", "CONTESTED"})
+        context_face_info
+        and (context_face_info["bbox_conflict"] or context_face_info["state"] in {"REJECTED", "CONTESTED"})
     )
     context_identity_missing = bool(identity_id and context_person_name and not context_face_info)
 
@@ -11395,7 +11427,9 @@ def public_photo_page(
                 A(
                     card_inner,
                     href=card_href,
-                    cls="no-underline cursor-pointer block h-full w-full" if dense_faces_layout else "no-underline cursor-pointer block",
+                    cls="no-underline cursor-pointer block h-full w-full"
+                    if dense_faces_layout
+                    else "no-underline cursor-pointer block",
                     title=card_title,
                 )
             )
@@ -11745,7 +11779,7 @@ def public_photo_page(
                     Span(" / ", cls="text-slate-600 mx-2") if collection_name else None,
                     A(
                         collection_name,
-                            href=f"{nav_prefix}/collection/{_main_mod._collection_slug(collection_name)}",
+                        href=f"{nav_prefix}/collection/{_main_mod._collection_slug(collection_name)}",
                         cls="text-slate-400 hover:text-indigo-300 text-sm transition-colors",
                     )
                     if collection_name
@@ -11758,9 +11792,7 @@ def public_photo_page(
             Div(
                 Div(
                     Span(
-                        "Needs review"
-                        if (context_identity_conflict or context_identity_missing)
-                        else "Viewing",
+                        "Needs review" if (context_identity_conflict or context_identity_missing) else "Viewing",
                         cls=(
                             "text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
                             + (
@@ -12003,7 +12035,9 @@ def public_photo_page(
                             NotStr(
                                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
                             ),
-                            f"Back to {context_person_name}" if identity_id and context_person_name else "Back to Workstation",
+                            f"Back to {context_person_name}"
+                            if identity_id and context_person_name
+                            else "Back to Workstation",
                             href=(
                                 f"{nav_prefix}/person/{identity_id}?view=photos&sort_by={sort_by}"
                                 if identity_id and context_person_name
@@ -12065,11 +12099,7 @@ def public_photo_page(
                             f"Start Speed Loop ({unidentified_count} unidentified)",
                             href=(
                                 f"{nav_prefix}/photo/{photo_id}?seq=1"
-                                + (
-                                    f"&identity_id={identity_id}&sort_by={sort_by}"
-                                    if identity_id
-                                    else ""
-                                )
+                                + (f"&identity_id={identity_id}&sort_by={sort_by}" if identity_id else "")
                             ),
                             cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
                             data_testid="name-these-faces-public",

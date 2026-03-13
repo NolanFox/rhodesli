@@ -191,6 +191,39 @@ class TestConnectPage:
         assert 'href="/timeline"' in resp.text
         assert 'href="/tools/compare"' in resp.text
 
+    def test_community_connect_keeps_archive_prefixes(self, client):
+        """Community-scoped connect paths should stay inside the archive."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+
+        import pathlib
+        orig_exists = pathlib.Path.exists
+        orig_read_text = pathlib.Path.read_text
+
+        def mock_exists(self):
+            if "co_occurrence" in str(self):
+                return True
+            return orig_exists(self)
+
+        def mock_read_text(self, **kwargs):
+            if "co_occurrence" in str(self):
+                return json.dumps(_MOCK_COOCCUR)
+            return orig_read_text(self, **kwargs)
+
+        with patch("app.supabase_data.get_community_by_slug", return_value={"slug": "fox-family", "name": "Fox Family Archive"}):
+            with patch.object(pathlib.Path, 'exists', mock_exists):
+                with patch.object(pathlib.Path, 'read_text', mock_read_text):
+                    resp = client.get("/c/fox-family/connect?person_a=id-a&person_b=id-b")
+
+        for p in patches:
+            p.stop()
+
+        assert resp.status_code == 200
+        assert '/c/fox-family/person/id-a' in resp.text
+        assert '/c/fox-family/person/id-b' in resp.text
+        assert '/c/fox-family/tree?person=id-a' in resp.text or '/c/fox-family/tree?person=id-b' in resp.text
+
     def test_connect_og_tags(self, client):
         """Page has Open Graph tags for sharing."""
         patches = _patch_data()
