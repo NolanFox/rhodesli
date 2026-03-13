@@ -11147,7 +11147,7 @@ def public_photo_page(
 
     for i, face_info in enumerate(face_info_list):
         for other_face in face_info_list[i + 1 :]:
-            if _bbox_iou(face_info["bbox"], other_face["bbox"]) < 0.8:
+            if _bbox_iou(face_info["bbox"], other_face["bbox"]) < 0.85:
                 continue
             face_info["bbox_conflict"] = True
             other_face["bbox_conflict"] = True
@@ -11187,7 +11187,8 @@ def public_photo_page(
             name_above = top_pct > 15  # Face is below top 15% — put name above
             name_pos_cls = "-top-6" if name_above else "-bottom-6"
 
-            if fi["bbox_conflict"]:
+            if fi["bbox_conflict"] and not fi["is_identified"]:
+                # Only show "Needs review" for unidentified/unconfirmed faces with bbox conflicts
                 overlay_cls = (
                     "face-overlay-box absolute border-2 border-rose-400/80 bg-rose-500/10 "
                     "hover:bg-rose-500/20 transition-all cursor-pointer group"
@@ -11219,7 +11220,7 @@ def public_photo_page(
                 )
 
             # Click navigates to person page (identified) or identify page (unidentified)
-            if fi["bbox_conflict"]:
+            if fi["bbox_conflict"] and not fi["is_identified"]:
                 click_href = None
             elif fi["is_identified"] and fi["identity_id"]:
                 click_href = f"{nav_prefix}/person/{fi['identity_id']}"
@@ -11315,7 +11316,7 @@ def public_photo_page(
     person_cards = []
     for fi in display_face_info_list:
         card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
-        if fi["bbox_conflict"]:
+        if fi["bbox_conflict"] and not fi["is_identified"]:
             badge = Span("Conflict", cls="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-full")
         elif fi["is_context_identity"]:
             badge = Span(
@@ -11403,7 +11404,7 @@ def public_photo_page(
                     "Overlaps another face assignment on this photo.",
                     cls="text-[10px] text-rose-300/80 mt-1 text-center leading-snug",
                 )
-                if fi["bbox_conflict"]
+                if fi["bbox_conflict"] and not fi["is_identified"]
                 else None,
                 see_all_link,
                 cls="flex flex-col items-center",

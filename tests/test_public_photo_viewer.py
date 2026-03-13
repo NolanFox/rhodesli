@@ -489,7 +489,7 @@ class TestSession100PhotoWorkflow:
             "filename": "dense.jpg",
             "faces": [
                 {"face_id": "face-0", "bbox": [100, 100, 200, 240]},
-                {"face_id": "face-1", "bbox": [108, 108, 198, 235]},
+                {"face_id": "face-1", "bbox": [104, 104, 202, 238]},
             ],
             "collection": "Rhodes Collection",
             "source": "Rhodes Collection",
@@ -505,8 +505,166 @@ class TestSession100PhotoWorkflow:
         html = to_xml(public_photo_page("photo-1", user=None, is_admin=True, community_slug="rhodes"))
 
         assert "Potential tag conflicts detected" in html
-        assert "Conflict" in html
+        # Confirmed/identified faces with bbox conflicts should show their names, not "Needs review"
+        assert "Jacob Cohen" in html
+        assert "Caden Franco Sadis" in html
+        assert "Needs review" not in html
+        # Overlays should link to person pages (clickable)
+        assert "/person/person-0" in html
+        assert "/person/person-1" in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    @patch("app.main.get_crop_files", return_value={"crop-set"})
+    @patch("app.main.resolve_face_image_url", side_effect=lambda fid, _crops=None: f"/crops/{fid}.jpg")
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_unidentified_faces_with_bbox_conflict_show_needs_review(
+        self,
+        mock_date_badge,
+        mock_photo_badge,
+        mock_alignment,
+        mock_ai,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_crop_url,
+        mock_crop_files,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        """Unidentified faces with overlapping bboxes should show 'Needs review' and have no click href."""
+        del (
+            mock_date_badge,
+            mock_photo_badge,
+            mock_alignment,
+            mock_ai,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_crop_url,
+            mock_crop_files,
+            mock_photo_reg,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        # Two INBOX faces with nearly identical bboxes (IoU > 0.85)
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "dense.jpg",
+            "faces": [
+                {"face_id": "face-0", "bbox": [100, 100, 200, 240]},
+                {"face_id": "face-1", "bbox": [104, 104, 202, 238]},
+            ],
+            "collection": "Rhodes Collection",
+            "source": "Rhodes Collection",
+        }
+
+        def _identity_for_face(_registry, face_id):
+            if face_id == "face-0":
+                return {"identity_id": "person-0", "name": "Unidentified Person 100", "state": "INBOX"}
+            return {"identity_id": "person-1", "name": "Unidentified Person 101", "state": "INBOX"}
+
+        mock_get_id.side_effect = _identity_for_face
+
+        html = to_xml(public_photo_page("photo-1", user=None, is_admin=True, community_slug="rhodes"))
+
         assert "Needs review" in html
+        # Unidentified conflict faces should NOT link to person pages
+        assert "/person/person-0" not in html
+        assert "/person/person-1" not in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    @patch("app.main.get_crop_files", return_value={"crop-set"})
+    @patch("app.main.resolve_face_image_url", side_effect=lambda fid, _crops=None: f"/crops/{fid}.jpg")
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_mixed_identified_unidentified_bbox_conflict(
+        self,
+        mock_date_badge,
+        mock_photo_badge,
+        mock_alignment,
+        mock_ai,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_crop_url,
+        mock_crop_files,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        """When an identified and unidentified face overlap, identified shows name+link, unidentified shows 'Needs review'."""
+        del (
+            mock_date_badge,
+            mock_photo_badge,
+            mock_alignment,
+            mock_ai,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_crop_url,
+            mock_crop_files,
+            mock_photo_reg,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "dense.jpg",
+            "faces": [
+                {"face_id": "face-0", "bbox": [100, 100, 200, 240]},
+                {"face_id": "face-1", "bbox": [104, 104, 202, 238]},
+            ],
+            "collection": "Rhodes Collection",
+            "source": "Rhodes Collection",
+        }
+
+        def _identity_for_face(_registry, face_id):
+            if face_id == "face-0":
+                return {"identity_id": "person-0", "name": "Jacob Cohen", "state": "CONFIRMED"}
+            return {"identity_id": "person-1", "name": "Unidentified Person 200", "state": "INBOX"}
+
+        mock_get_id.side_effect = _identity_for_face
+
+        html = to_xml(public_photo_page("photo-1", user=None, is_admin=True, community_slug="rhodes"))
+
+        # Identified face with conflict: shows name and links to person page
+        assert "Jacob Cohen" in html
+        assert "/person/person-0" in html
+        # Unidentified face with conflict: shows "Needs review", no person link
+        assert "Needs review" in html
+        assert "/person/person-1" not in html
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
@@ -562,7 +720,7 @@ class TestSession100PhotoWorkflow:
             "filename": "dense.jpg",
             "faces": [
                 {"face_id": "face-0", "bbox": [100, 100, 200, 240]},
-                {"face_id": "face-1", "bbox": [108, 108, 198, 235]},
+                {"face_id": "face-1", "bbox": [104, 104, 202, 238]},
             ],
             "collection": "Rhodes Collection",
             "source": "Rhodes Collection",
