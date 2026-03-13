@@ -2830,6 +2830,32 @@ def get(
 
                 // Identity photo lightbox prev/next — HTMX handles these via
                 // hx-get. data-action is for keyboard delegation below.
+
+                // Face cycling on identity cards (prev/next arrows)
+                if (action === 'face-cycle-prev' || action === 'face-cycle-next') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var card = btn.closest('[data-cycle-urls]');
+                    if (!card) return;
+                    var urls = card.getAttribute('data-cycle-urls').split('|');
+                    var idx = parseInt(card.getAttribute('data-cycle-index') || '0', 10);
+                    if (action === 'face-cycle-prev') {
+                        idx = (idx - 1 + urls.length) % urls.length;
+                    } else {
+                        idx = (idx + 1) % urls.length;
+                    }
+                    card.setAttribute('data-cycle-index', idx);
+                    var img = card.querySelector('[data-cycle-img]');
+                    if (img) img.src = urls[idx];
+                    // Update dot indicators
+                    var dots = card.querySelectorAll('[data-dot-index]');
+                    dots.forEach(function(dot) {
+                        var di = parseInt(dot.getAttribute('data-dot-index'), 10);
+                        dot.className = 'w-1.5 h-1.5 rounded-full transition-all duration-200 '
+                            + (di === idx ? 'bg-white' : 'bg-white/40');
+                    });
+                    return;
+                }
             });
 
             // Keyboard delegation: one global listener, reads DOM for current state.
@@ -11212,6 +11238,12 @@ def public_photo_page(
                     fi["display_name"],
                     cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate",
                 )
+            elif fi["state"] == "SKIPPED":
+                overlay_cls = "face-overlay-box absolute border-2 border-dashed border-slate-500/40 bg-slate-500/5 hover:bg-slate-500/10 transition-all cursor-pointer group"
+                name_el = Span(
+                    "Dismissed",
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-slate-400 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
+                )
             else:
                 overlay_cls = "face-overlay-box absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
                 name_el = Span(
@@ -11414,11 +11446,7 @@ def public_photo_page(
             data_testid="photo-current-person-card" if fi["is_context_identity"] else None,
             cls=(
                 f"photo-face-card photo-card-frame flex flex-col items-center rounded-xl border {card_border} "
-                + (
-                    "p-3 hover:bg-amber-900/10 transition-colors min-w-0 w-full"
-                    if dense_faces_layout
-                    else "p-4 min-w-[140px] flex-shrink-0 hover:bg-amber-900/10 transition-colors"
-                )
+                "p-3 hover:bg-amber-900/10 transition-colors min-w-0 w-full"
                 + (" ring-2 ring-amber-400/50 bg-amber-950/10" if fi["is_context_identity"] else "")
             ),
         )
@@ -11428,9 +11456,7 @@ def public_photo_page(
                 A(
                     card_inner,
                     href=card_href,
-                    cls="no-underline cursor-pointer block h-full w-full"
-                    if dense_faces_layout
-                    else "no-underline cursor-pointer block",
+                    cls="no-underline cursor-pointer block h-full w-full",
                     title=card_title,
                 )
             )
@@ -11535,7 +11561,7 @@ def public_photo_page(
     photo_metadata_overlay = (
         Div(
             *_interleaved_meta,
-            cls="absolute top-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
+            cls="photo-info-overlay absolute bottom-3 left-3 bg-black/50 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] transition-opacity duration-300 pointer-events-none",
             data_testid="photo-metadata-overlay",
         )
         if overlay_meta_parts
@@ -11565,34 +11591,30 @@ def public_photo_page(
         .photo-hero-container .face-overlay-public:hover {
             z-index: 10;
         }
-        .person-strip {
-            display: flex;
-            gap: 1rem;
-            overflow-x: auto;
-            padding: 0.5rem 0;
-            scrollbar-width: thin;
-            scrollbar-color: #475569 transparent;
+        /* Photo info overlays: semi-transparent by default, fade when hovering photo */
+        .photo-info-overlay {
+            opacity: 0.75;
         }
-        .person-strip::-webkit-scrollbar {
-            height: 6px;
+        .group:hover .photo-info-overlay {
+            opacity: 0.35;
         }
-        .person-strip::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 3px;
+        .photo-info-overlay:hover {
+            opacity: 0.9 !important;
         }
-        .person-grid {
+        .person-strip, .person-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.75rem;
+            padding: 0.5rem 0;
         }
         @media (min-width: 640px) {
-            .person-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+            .person-strip, .person-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
         @media (min-width: 1024px) {
-            .person-grid {
-                grid-template-columns: repeat(6, minmax(0, 1fr));
+            .person-strip, .person-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
         /* CSS 3D Flip Animation — Premium "turning over a real photo" feel */
@@ -11900,7 +11922,7 @@ def public_photo_page(
                                         cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"
                                     ),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="absolute top-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public",
+                                    cls="photo-info-overlay absolute bottom-3 right-3 bg-black/50 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none transition-opacity duration-300",
                                     id="face-overlay-legend-public",
                                     style=""
                                     if (is_admin or any(fi["is_identified"] for fi in face_info_list))
@@ -12010,8 +12032,14 @@ def public_photo_page(
                             data_share_url=og_page_url,
                         ),
                         Button(
-                            "Show Faces" if not is_admin else "Hide Faces",
-                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
+                            NotStr(
+                                '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
+                            ),
+                            Span(
+                                "Show Faces" if not is_admin else "Hide Faces",
+                                id="face-overlay-toggle-text",
+                            ),
+                            cls="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center",
                             type="button",
                             data_action="toggle-face-overlays-public",
                             id="face-overlay-toggle-public",
@@ -12452,7 +12480,8 @@ def public_photo_page(
                         });
                         if (legend) legend.style.display = isHidden ? '' : 'none';
                         toggleBtn.setAttribute('data-overlays-hidden', isHidden ? 'false' : 'true');
-                        toggleBtn.textContent = isHidden ? 'Hide Faces' : 'Show Faces';
+                        var toggleText = document.getElementById('face-overlay-toggle-text');
+                        if (toggleText) toggleText.textContent = isHidden ? 'Hide Faces' : 'Show Faces';
                         return;
                     }
                     var idModeBtn = e.target.closest('[data-action="toggle-identify-mode"]');
