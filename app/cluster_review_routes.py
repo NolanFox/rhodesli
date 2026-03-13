@@ -806,7 +806,7 @@ def get(sess=None, request=None, mode: str = ""):
             )
         else:
             iid, idata = clusters[0]
-            first_card = _speed_run_cluster_card(iid, idata, 0, total, community_slug)
+            first_card = _speed_run_cluster_card(iid, idata, 0, total, community_slug, include_progress=False)
 
         keyboard_js = Script("""
             document.addEventListener('keydown', function(e) {
@@ -835,7 +835,7 @@ def get(sess=None, request=None, mode: str = ""):
                     P("Y = Confirm · N = Reject · S = Skip · D = Dismiss", cls="text-slate-500 text-sm mt-1"),
                     cls="mb-6",
                 ),
-                # Progress bar placeholder
+                # Progress bar
                 Div(
                     Div(
                         Span(f"0 of {total} reviewed", cls="text-sm text-slate-300"),
@@ -1394,7 +1394,7 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
     return [(iid, idata) for iid, idata, _ in clusters]
 
 
-def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug=""):
+def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug="", include_progress=True):
     """Render a single cluster card for speed-run mode."""
     name = identity_data.get("name", "Unknown")
     display_name = name
@@ -1441,8 +1441,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     # Progress bar
     progress_pct = round((offset / max(total, 1)) * 100, 1)
 
-    return Div(
-        # Progress bar (hx-swap-oob)
+    progress_div = (
         Div(
             Div(
                 Span(f"{offset} of {total} reviewed", cls="text-sm text-slate-300"),
@@ -1454,7 +1453,13 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             ),
             id="speed-run-progress",
             hx_swap_oob="true",
-        ),
+        )
+        if include_progress
+        else None
+    )
+
+    return Div(
+        progress_div,
         # Cluster card
         Div(
             # Face grid
