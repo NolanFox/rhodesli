@@ -1202,15 +1202,25 @@ def sync_pending_upload(job_id: str, upload_data: dict) -> None:
             "status": upload_data.get("status", "pending"),
             "filename": filename,
             "data": upload_data,
+            # Rejection metadata — included when status=="rejected"
+            "reviewed_at": upload_data.get("reviewed_at"),
+            "reviewed_by": upload_data.get("reviewed_by"),
+            "rejection_reason": upload_data.get("rejection_reason"),
         }
+        # Drop None values to avoid schema errors on columns that may not exist
+        row = {k: v for k, v in row.items() if v is not None}
         try:
             client.table("pending_uploads").upsert(row).execute()
         except _SUPABASE_ERRORS as e:
-            # Retry without 'data' column if it doesn't exist in the schema
-            if "data" in str(e).lower() and "column" in str(e).lower():
-                logger.info(f"Retrying pending upload sync without 'data' column for {job_id}")
-                row_without_data = {k: v for k, v in row.items() if k != "data"}
-                client.table("pending_uploads").upsert(row_without_data).execute()
+            # Retry without optional columns that may not exist in the schema
+            err_lower = str(e).lower()
+            if "column" in err_lower:
+                optional_cols = {"data", "reviewed_at", "reviewed_by", "rejection_reason"}
+                # Remove optional cols one by one until it succeeds
+                pruned = {k: v for k, v in row.items() if k not in optional_cols}
+                if "data" in err_lower:
+                    logger.info(f"Retrying pending upload sync without optional columns for {job_id}")
+                client.table("pending_uploads").upsert(pruned).execute()
             else:
                 raise
         logger.debug(f"Synced pending upload {job_id}")

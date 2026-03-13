@@ -447,12 +447,25 @@ def get(request, sess=None):
                         id=f"approve-spinner-{job_id}",
                         cls="htmx-indicator text-green-400 text-xs",
                     ),
-                    Button(
-                        "Reject",
+                    Form(
+                        Select(
+                            Option("Reason…", value="", selected=True),
+                            Option("Duplicate", value="Duplicate"),
+                            Option("Not relevant", value="Not relevant"),
+                            Option("Poor quality", value="Poor quality"),
+                            Option("Wrong archive", value="Wrong archive"),
+                            name="rejection_reason",
+                            cls="text-xs bg-slate-800 border border-slate-600 rounded px-1 py-1 text-slate-300",
+                        ),
+                        Button(
+                            "Reject",
+                            type="submit",
+                            cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors",
+                        ),
                         hx_post=f"/admin/pending/{job_id}/reject",
                         hx_target=f"#pending-card-{job_id}",
                         hx_swap="outerHTML",
-                        cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors",
+                        cls="flex gap-1 items-center",
                     ),
                     cls="flex gap-2 items-center",
                 )
@@ -1068,8 +1081,12 @@ def post(job_id: str, sess=None):
 
 
 @rt("/admin/pending/{job_id}/reject")
-def post(job_id: str, sess=None):
-    """Reject a pending upload. Requires admin."""
+def post(job_id: str, rejection_reason: str = "", sess=None):
+    """Reject a pending upload. Requires admin.
+
+    Accepts an optional ``rejection_reason`` form field with a short label
+    (e.g. "Duplicate", "Not relevant", "Poor quality", "Wrong archive").
+    """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -1091,18 +1108,28 @@ def post(job_id: str, sess=None):
             id=f"pending-card-{job_id}",
         )
 
-    # Update status to rejected
+    # Update status to rejected with full audit metadata
     upload["status"] = "rejected"
     upload["reviewed_at"] = datetime.now(timezone.utc).isoformat()
     user = get_current_user(sess or {})
     upload["reviewed_by"] = user.email if user else "unknown"
+    if rejection_reason:
+        upload["rejection_reason"] = rejection_reason.strip()
     _main_mod._save_pending_uploads(pending)
     _main_mod.log_user_action(
         "REJECT_UPLOAD",
         job_id=job_id,
         uploader=upload.get("uploaded_by", "unknown"),
         admin=user.email if user else "unknown",
+        reason=upload.get("rejection_reason", ""),
     )
+
+    # Clean up orphaned identities created during processing of this upload
+    orphaned_identity_ids = _cleanup_orphaned_identities_for_upload(upload)
+    if orphaned_identity_ids:
+        logger.info(
+            f"Rejection cleanup: marked {len(orphaned_identity_ids)} orphaned identities as REJECTED for job {job_id}"
+        )
 
     # Sync rejection metadata to Supabase BEFORE deleting staging files
     try:
@@ -1120,17 +1147,91 @@ def post(job_id: str, sess=None):
         shutil.rmtree(staging_dir, ignore_errors=True)
 
     file_count = upload.get("file_count", len(upload.get("files", [])))
+    reason_label = upload.get("rejection_reason", "")
     return Div(
         Div(
             Span("Rejected", cls="text-red-400 text-xs font-bold uppercase"),
             Span(" | ", cls="text-slate-600"),
             Span(upload.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
             Span(f" | {file_count} file{'s' if file_count != 1 else ''}", cls="text-slate-500 text-xs"),
-            cls="flex items-center gap-1",
+            *(
+                [
+                    Span(" | ", cls="text-slate-600"),
+                    Span(reason_label, cls="text-red-400/70 text-xs italic"),
+                ]
+                if reason_label
+                else []
+            ),
+            cls="flex items-center gap-1 flex-wrap",
         ),
         cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg",
         id=f"pending-card-{job_id}",
     )
+
+
+def _cleanup_orphaned_identities_for_upload(upload: dict) -> list[str]:
+    """Mark as REJECTED any identities whose only faces came from this upload.
+
+    An identity is considered orphaned if every face_id in its anchor_ids and
+    candidate_ids belongs exclusively to photos that were part of this upload
+    batch.  Identities with at least one face from another source are left
+    untouched.  CONFIRMED identities are never touched (Gatekeeper invariant).
+
+    Returns the list of identity_ids that were marked REJECTED.
+    """
+    # Collect the filenames / face-id prefixes tied to this upload
+    upload_files: list[str] = upload.get("files", [])
+    if not upload_files:
+        return []
+
+    try:
+        registry = _main_mod.load_registry()
+        photo_registry = _main_mod.load_photo_registry()
+    except Exception as exc:
+        logger.warning(f"Could not load registries for orphan cleanup: {exc}")
+        return []
+
+    # Build the set of face_ids from photos associated with this upload.
+    # We match by filename: the photo_registry stores paths, and upload.files
+    # contains bare filenames (e.g. "photo.jpg").
+    upload_basenames = {Path(f).name for f in upload_files}
+    upload_face_ids: set[str] = set()
+    for photo_id in list(photo_registry._photos):
+        photo_path = photo_registry.get_photo_path(photo_id)
+        if photo_path and Path(photo_path).name in upload_basenames:
+            upload_face_ids.update(photo_registry.get_faces_in_photo(photo_id))
+
+    if not upload_face_ids:
+        return []
+
+    orphaned_ids: list[str] = []
+    changed = False
+    for iid, identity in list(registry._identities.items()):
+        if not identity:
+            continue
+        state = identity.get("state", "")
+        # Never touch confirmed identities
+        if state == IdentityState.CONFIRMED.value:
+            continue
+        all_faces = set(identity.get("anchor_ids", [])) | set(identity.get("candidate_ids", []))
+        if not all_faces:
+            continue
+        # Orphaned: every face belongs to this upload batch
+        if all_faces.issubset(upload_face_ids):
+            identity["state"] = IdentityState.REJECTED.value
+            identity["rejection_source"] = "upload_rejected"
+            registry._identities[iid] = identity
+            orphaned_ids.append(iid)
+            changed = True
+
+    if changed:
+        try:
+            _main_mod.save_registry(registry)
+        except Exception as exc:
+            logger.warning(f"Failed to save registry after orphan cleanup: {exc}")
+            return []
+
+    return orphaned_ids
 
 
 @rt("/admin/pending/{job_id}/mark-processed")
