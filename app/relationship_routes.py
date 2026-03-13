@@ -266,12 +266,20 @@ def _load_gedcom_individual(gedcom_id: str, include_rich: bool = False) -> dict 
             if not sb:
                 return None
             try:
-                resp = sb.table("current_gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
+                resp = (
+                    sb.table("current_gedcom_individuals")
+                    .select(select_fields)
+                    .eq("gedcom_id", gedcom_id)
+                    .limit(1)
+                    .execute()
+                )
             except Exception as exc:
                 msg = str(exc)
                 if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
                     raise
-                resp = sb.table("gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
+                resp = (
+                    sb.table("gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
+                )
             rows = resp.data if resp and resp.data else []
             return rows[0] if rows else None
 
@@ -310,7 +318,9 @@ def _load_gedcom_face_links():
             if resp and resp.data:
                 for row in resp.data:
                     original_gedcom_id = row.get("gedcom_id")
-                    resolved_gedcom_id = resolve_redirect_chain(original_gedcom_id or "", redirects) if original_gedcom_id else ""
+                    resolved_gedcom_id = (
+                        resolve_redirect_chain(original_gedcom_id or "", redirects) if original_gedcom_id else ""
+                    )
                     link_row = {
                         **row,
                         "gedcom_id": resolved_gedcom_id or original_gedcom_id,
@@ -527,27 +537,15 @@ def _load_gedcom_relationship_edges_for_ids(gedcom_ids: list[str] | set[str] | t
             for i in range(0, len(ids), 25):
                 chunk = ids[i : i + 25]
                 filter_expr = ",".join(
-                    f"{column}.eq.{gid}"
-                    for gid in chunk
-                    for column in ("individual_gedcom_id", "related_gedcom_id")
+                    f"{column}.eq.{gid}" for gid in chunk for column in ("individual_gedcom_id", "related_gedcom_id")
                 )
                 try:
-                    resp = (
-                        sb.table("current_gedcom_relationships")
-                        .select(select_fields)
-                        .or_(filter_expr)
-                        .execute()
-                    )
+                    resp = sb.table("current_gedcom_relationships").select(select_fields).or_(filter_expr).execute()
                 except Exception as exc:
                     msg = str(exc)
                     if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
                         raise
-                    resp = (
-                        sb.table("gedcom_relationships")
-                        .select(select_fields)
-                        .or_(filter_expr)
-                        .execute()
-                    )
+                    resp = sb.table("gedcom_relationships").select(select_fields).or_(filter_expr).execute()
                 if resp and resp.data:
                     rows.extend(resp.data)
             return _normalize_gedcom_tree_edges(rows)
@@ -584,10 +582,7 @@ def _load_gedcom_individuals_by_ids(
                 chunk = ids[i : i + 100]
                 try:
                     resp = (
-                        sb.table("current_gedcom_individuals")
-                        .select(select_fields)
-                        .in_("gedcom_id", chunk)
-                        .execute()
+                        sb.table("current_gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
                     )
                 except Exception as exc:
                     msg = str(exc)
@@ -931,7 +926,7 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
                 cls="p-3 bg-emerald-900/20 border border-emerald-700/30 rounded-lg",
             ),
             id="gedcom",
-            cls="mt-10 pt-8 border-t border-slate-800",
+            cls="mt-10 pt-8 border-t border-slate-800 scroll-mt-20",
             data_testid="gedcom-link-section",
         )
     else:
@@ -940,7 +935,7 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
             H3("Family Tree Link", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
             _main_mod._gedcom_link_panel(person_id, display_name),
             id="gedcom",
-            cls="mt-10 pt-8 border-t border-slate-800",
+            cls="mt-10 pt-8 border-t border-slate-800 scroll-mt-20",
             data_testid="gedcom-link-section",
         )
 

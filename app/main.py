@@ -9292,13 +9292,25 @@ def identity_card(
                 cls=f"{_pill} text-emerald-300 hover:bg-emerald-500/15",
             )
         else:
+            # Tree icon (inline SVG, 12x12)
+            _tree_icon = NotStr(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" '
+                'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+                'stroke-linejoin="round" style="display:inline;vertical-align:-1px;margin-right:3px">'
+                '<path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/>'
+                '<rect width="18" height="18" x="3" y="3" rx="2"/>'
+                '<circle cx="12" cy="10" r="3"/>'
+                "</svg>"
+            )
             gedcom_tree_btn = Button(
+                _tree_icon,
                 "Link Tree",
                 hx_get=f"{nav_prefix}/api/cluster-review/gedcom-panel?identity_id={identity_id}",
                 hx_target=f"#expand-{_id_css}",
                 hx_swap="innerHTML",
                 type="button",
-                cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
+                title="Connect this person to their family tree record",
+                cls=f"{_pill} text-amber-300 bg-amber-500/10 hover:bg-amber-500/20",
             )
 
     # Find Similar — admin: inline expansion with full neighbors_sidebar, public: full-page link

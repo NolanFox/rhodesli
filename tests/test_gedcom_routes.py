@@ -674,6 +674,65 @@ class TestGedcomTreeButtonOnIdentityCard:
             html = to_xml(identity_card(identity, crop_files, is_admin=False))
         assert "Link to Tree" not in html
 
+    def test_unlinked_confirmed_link_tree_has_amber_styling(self):
+        """Link Tree button should use visible amber styling, not dim slate-500."""
+        from app.main import identity_card, to_xml
+
+        identity = {
+            "identity_id": "test-id-gedcom-amber",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-amber"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-amber_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "text-amber-300" in html
+        assert "bg-amber-500/10" in html
+        # The Link Tree button specifically should NOT use text-slate-500
+        # Find the button element containing "Link Tree" and check it uses amber
+        link_tree_idx = html.index("Link Tree")
+        # Look backwards for the nearest class attribute
+        button_start = html.rfind("<button", 0, link_tree_idx)
+        button_snippet = html[button_start : link_tree_idx + 20]
+        assert "text-amber-300" in button_snippet
+        assert "text-slate-500" not in button_snippet
+
+    def test_unlinked_confirmed_link_tree_has_icon(self):
+        """Link Tree button should have an inline SVG tree icon."""
+        from app.main import identity_card, to_xml
+
+        identity = {
+            "identity_id": "test-id-gedcom-icon",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-icon"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-icon_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "<svg" in html
+        assert "Link Tree" in html
+
+    def test_unlinked_confirmed_link_tree_has_title(self):
+        """Link Tree button should have a descriptive title attribute."""
+        from app.main import identity_card, to_xml
+
+        identity = {
+            "identity_id": "test-id-gedcom-title",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-title"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-title_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "title=" in html
+        assert "family tree" in html.lower()
+
 
 class TestGedcomPersonSectionAnchor:
     """GEDCOM person section should support direct anchors and inline fallback."""
@@ -686,6 +745,16 @@ class TestGedcomPersonSectionAnchor:
             html = to_xml(_person_gedcom_link_section("person-1", "Leon Capeluto", is_admin=True))
 
         assert 'id="gedcom"' in html
+
+    def test_person_gedcom_section_has_scroll_margin(self):
+        """Gedcom anchor should have scroll-mt so it doesn't hide behind fixed headers."""
+        from app.relationship_routes import _person_gedcom_link_section
+        from app.main import to_xml
+
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(_person_gedcom_link_section("person-1", "Leon Capeluto", is_admin=True))
+
+        assert "scroll-mt-" in html
 
 
 class TestGedcomLoaderResilience:
