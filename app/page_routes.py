@@ -2194,7 +2194,6 @@ def get(
             sort_by=sort_by,
             triage_filter=filter,
             nav_prefix=nav_prefix,
-            variant="session99",
         )
     elif section == "confirmed":
         main_content = _main_mod.render_confirmed_section(
@@ -2204,7 +2203,6 @@ def get(
             is_admin=user_is_admin,
             sort_by=sort_by,
             nav_prefix=nav_prefix,
-            variant="session99",
             confirmed_filter=confirmed_filter,
         )
     elif section == "skipped":
@@ -2217,7 +2215,6 @@ def get(
             view_mode=skipped_view,
             current_id=current,
             nav_prefix=nav_prefix,
-            variant="session99",
         )
     elif section == "photos":
         main_content = _main_mod.render_photos_section(
@@ -2230,11 +2227,10 @@ def get(
             media_filter,
             community=community,
             nav_prefix=nav_prefix,
-            variant="session99",
         )
     else:  # rejected
         main_content = _main_mod.render_rejected_section(
-            dismissed, crop_files, counts, is_admin=user_is_admin, nav_prefix=nav_prefix, variant="session99"
+            dismissed, crop_files, counts, is_admin=user_is_admin, nav_prefix=nav_prefix
         )
 
     # Prepend discovery banner to main content if present
@@ -2639,15 +2635,13 @@ def get(
             # Sidebar overlay (mobile backdrop)
             sidebar_overlay,
             # Sidebar (fixed)
-            _main_mod.sidebar(
-                counts, section, user=user, community_slug=community_slug, community=community, variant="session99"
-            ),
+            _main_mod.sidebar(counts, section, user=user, community_slug=community_slug, community=community),
             # Main content (offset for sidebar, bottom padding for mobile tabs)
             Main(
                 # First-time welcome banner (non-blocking, dismissible)
                 _main_mod._welcome_banner() if not user else None,
                 # Admin dashboard banner (only for admins)
-                _main_mod._admin_dashboard_banner(counts, section, variant="session99") if user_is_admin else None,
+                _main_mod._admin_dashboard_banner(counts, section) if user_is_admin else None,
                 Div(main_content, cls="max-w-6xl mx-auto px-4 sm:px-8 py-6 pb-20 lg:pb-6"),
                 cls="main-content min-h-screen overflow-x-hidden ui99-workstation",
             ),
@@ -5046,7 +5040,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         cls="mt-10 pt-6 border-t border-slate-700/30",
     )
 
-    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug, variant="session99")
+    nav_links = _main_mod._public_nav_links(user=user, community_slug=community_slug)
     page_style = Style("html, body { margin: 0; } body { background-color: #16120e; }")
 
     return (
