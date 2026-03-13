@@ -1,146 +1,258 @@
-# Session 100c: Platform Reliability + Fox Family Cluster Review
+# Session 100c: Fox Family Speed-Run Review + Platform Reliability
 
-**Context:** docs/session_context/session-100c-context.md
+**Context:** `docs/session_context/session-100c-context.md`
 **Predecessor:** Session 100b-cont3
 
-## Phase 0: Orient (3 min)
+---
+
+## Pre-Requisites
+- Read `tasks/lessons.md` + `tasks/todo.md`
+- Read `docs/session_context/session-100c-context.md` (full gap analysis + architecture)
+- Read `docs/assessments/session-100-face-tagging-and-fox-family-audit.md` (competing software patterns)
+- Set `.claude/current_session.txt` to `100c`
+
+---
+
+## Act 0: Orient (3 min)
 
 1. Set `.claude/current_session.txt` to `100c`
-2. Read `tasks/lessons.md` + `tasks/todo.md`
-3. Read `docs/session_context/session-100c-context.md`
-4. `git log --oneline -10` to confirm clean state
-5. Confirm tests pass: `source venv/bin/activate && pytest tests/ -x -q --ignore=tests/e2e/ --timeout=120`
+2. `git log --oneline -10` to confirm clean state on main
+3. Confirm tests pass: `source venv/bin/activate && pytest tests/ -x -q --ignore=tests/e2e/ --timeout=120`
+4. Log starting state in session log
 
-## Phase 1: Platform Reliability — Fix Supabase Production Connection (P0)
+**Commit:** `chore: session 100c orient`
+**/clear**
 
-**Goal:** Production app must read from Supabase, not JSON fallback.
+---
 
-### Investigation
-1. Check Railway deploy logs: `mcp__railway-mcp-server__get-logs` — filter for "supabase", "postgres", "DATA_SOURCE", "connection", "error"
-2. Read app/main.py startup path for `DATA_SOURCE == "postgres"` — trace the exact code path
-3. Check what "Supabase connection skipped" means in the health endpoint
-4. Check Dockerfile for supabase-py installation
-5. Check if `load_registry_from_postgres()` exists and what it does
+## Act 1: Fix Supabase Production Connection (P0, 15 min max)
+
+**Goal:** Production app reads from Supabase, not JSON fallback. Hard time-box: 15 min. If not fixed, use fallback and move on.
+
+### Investigation (these can be done in parallel)
+1. **Railway logs:** `mcp__railway-mcp-server__get-logs` — filter for "supabase", "postgres", "DATA_SOURCE", "Postgres identity load failed"
+2. **Health endpoint:** Read `app/page_routes.py:127` — find the exact condition that produces "Supabase connection skipped"
+3. **Client init:** Read `app/supabase_data.py:37` — `get_supabase_client()` — what makes it return None?
+4. **Registry load:** Find `IdentityRegistry.load_from_postgres()` classmethod — grep for it. Check what exception it catches at `app/main.py:1065-1075`
 
 ### Fix
-- If import error: add missing dependency to Dockerfile/requirements.txt
-- If env var issue: fix the env var name/format
-- If connection error: fix the connection string
-- If logic bug: fix the conditional
+- If `get_supabase_client()` returns None: check env var names match (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
+- If `load_from_postgres()` throws: check the exception in Railway logs, fix import/connection
+- If health endpoint logic is wrong: fix the conditional
 
 ### Verify
-- Deploy to Railway
+- Deploy: `railway deploy` (preferred) or `git push origin main`
 - `curl https://rhodesli.nolanandrewfox.com/health` — should NOT say "connection skipped"
-- Verify Yaacov Jacob Franco shows correct face (inbox_b6d2995b52da, not inbox_65f110834b6e)
-- Verify face cycling arrows visible on identity cards
+- Verify Yaacov Jacob Franco at `/person/e88d6698-46af-478c-8106-45a1bd8cf747` shows correct face
 
-### Fallback (if Supabase fix is complex)
-- Push corrected identities.json to Railway volume via sync API
-- Document Supabase fix needed in BACKLOG
-- Continue to Phase 2
+### Fallback (if 15 min exceeded)
+- Push corrected `identities.json` to Railway volume: `POST /api/sync/push` with `RHODESLI_SYNC_TOKEN`
+- Add BACKLOG entry: "INFRA-001: Supabase production connection debugging"
+- Continue to Act 2
 
-**Commit after Phase 1. /clear.**
+**Commit:** `fix(infra): fix Supabase production connection` (or `docs: BACKLOG Supabase fix deferred`)
+**/clear**
 
-## Phase 2: Cluster Review UX — Batch-First Design (PRD)
+---
 
-**Goal:** Write a focused PRD for the batch cluster review UX.
+## Act 2: Write PRD for Batch Cluster Review (10 min)
 
-Create `docs/prds/039_batch_cluster_review.md`:
+**Goal:** Create `docs/prds/039_batch_cluster_review.md` — the spec for speed-run review UX.
 
-### User Flow (the "speed run")
-1. Admin opens `/c/fox-family/admin/upload-review`
-2. Page shows clusters sorted by size (biggest groups first)
-3. Each cluster card shows: face thumbnails (up to 6), match confidence, suggested name
-4. Admin can:
-   - **Confirm cluster** → all faces merge into the suggested identity (or new identity)
-   - **Split cluster** → separate wrongly grouped faces
-   - **Dismiss cluster** → mark as noise/unresolvable (hides from queue)
-   - **Skip** → move to next without action
-5. After each action, next cluster auto-loads (no page reload)
-6. Progress bar shows "47 of 312 clusters reviewed"
-7. Keyboard shortcuts: Y=confirm, N=skip, D=dismiss, S=split
+### PRD must cover:
+1. **Problem:** 1600 INBOX identities across 635 photos. One-at-a-time review is unusable.
+2. **User flow (speed run):**
+   - Admin navigates to `/c/fox-family/admin/upload-review?mode=speed`
+   - Page shows first cluster: large face thumbnails (up to 8), match confidence, suggested name, face count
+   - Action buttons: **Confirm All** (green), **Reject All** (red), **Skip** (grey), **Dismiss** (muted)
+   - After action: HTMX swaps next cluster (no page reload). `hx-target="#speed-run-card"` `hx-swap="outerHTML"`
+   - Progress bar at top: "47 of 312 clusters reviewed"
+   - Keyboard shortcuts: `Y`=confirm, `N`=reject, `S`=skip, `D`=dismiss
+3. **Existing infrastructure to reuse:**
+   - `POST /api/cluster-review/confirm-all` (`cluster_review_routes.py:1179`)
+   - `POST /api/cluster-review/reject-all` (`cluster_review_routes.py:1224`)
+   - Community scoping (`cluster_review_routes.py:790-801`)
+   - Grouped identities logic (`cluster_review_routes.py:810-894`)
+4. **New endpoints needed:**
+   - `GET /admin/cluster-review/next?offset=N` — returns next unreviewed cluster as HTMX partial
+   - `POST /admin/cluster-review/dismiss` — marks cluster as dismissed (skip from queue)
+   - `GET /admin/cluster-review/progress` — returns progress counter partial
+5. **Data model:** No new tables. Dismissed state tracked in `localStorage` (client-side, simple, no schema change).
+6. **Acceptance criteria:**
+   - Speed-run page loads in <2s for Fox Family
+   - Confirm-all merges all cluster faces into target identity
+   - Dismiss hides cluster from queue without data change
+   - Auto-advance works without page reload
+   - Progress counter accurate
+   - Community-scoped
+   - Keyboard shortcuts work
+   - Existing dashboard view unchanged (speed-run is additive)
+7. **Out of scope:** Split clusters, manual face drawing, cross-community merge from within speed-run
 
-### Data Model
-- No new tables needed — uses existing proposals.json + identities registry
-- Add `reviewed_at` timestamp to proposals for progress tracking
-- Add `cluster_action` field: confirmed|dismissed|split|skipped
+**Commit:** `docs: PRD-039 batch cluster review — speed-run mode`
+**/clear**
 
-### Acceptance Criteria
-1. Cluster review page loads in <2s for Fox Family (1122 proposals)
-2. Confirm action merges all cluster faces into target identity
-3. Dismiss action hides cluster from review queue
-4. Auto-advance works without page reload
-5. Progress counter accurate
-6. Community-scoped (Fox Family sees only Fox proposals)
-7. Keyboard shortcuts work
+---
 
-**Commit PRD. /clear.**
+## Act 3: Implement Speed-Run Cluster Review (30 min)
 
-## Phase 3: Implement Batch Cluster Review
+**Goal:** Build the speed-run review mode per PRD-039.
 
-**Goal:** Build the batch-first cluster review UX from the Phase 2 PRD.
+### 3a. New endpoint: next cluster partial
 
-### Implementation Plan
-1. Modify `cluster_review_routes.py`:
-   - Add batch confirm endpoint: `POST /admin/cluster/{cluster_id}/confirm-all`
-   - Add dismiss endpoint: `POST /admin/cluster/{cluster_id}/dismiss`
-   - Add progress endpoint: `GET /admin/cluster-review/progress`
-2. Update the Upload Review page template:
-   - Cluster cards with confirm/dismiss/skip buttons
-   - HTMX auto-advance (hx-swap on action → loads next cluster)
-   - Progress bar component
-   - Keyboard shortcut JS
-3. Add tests:
-   - Batch confirm merges all faces correctly
-   - Dismiss hides from future review
-   - Progress counter accuracy
-   - Community scoping preserved
+File: `app/cluster_review_routes.py` (append after line ~1265)
 
-### Test
+```
+GET /admin/cluster-review/next?offset=N&community_slug=X
+```
+
+Returns a single cluster card (HTMX partial) with:
+- Large face thumbnails (up to 8, using `_get_crop_url_for_face()`)
+- Identity name + face count
+- Match confidence (if proposal-based)
+- Confirm All / Reject All / Skip / Dismiss buttons with `hx-post` + `hx-target="#speed-run-card"`
+- Each button POSTs to respective endpoint, includes `offset` param so response loads next card
+
+### 3b. Dismiss endpoint
+
+File: `app/cluster_review_routes.py` (append)
+
+```
+POST /api/cluster-review/dismiss
+```
+
+Parameters: `identity_id`. Action: returns the next cluster card (same as auto-advance). Client tracks dismissed IDs in localStorage.
+
+### 3c. Modify confirm-all and reject-all responses
+
+File: `app/cluster_review_routes.py:1179` and `1224`
+
+Current: returns a success message Div.
+Change: when `speed_run=true` param is present, return the **next cluster card** instead of the success message (HTMX auto-advance).
+
+### 3d. Speed-run page mode
+
+File: `app/cluster_review_routes.py:777`
+
+When `?mode=speed` query param:
+- Render speed-run layout: progress bar + single cluster card container
+- First cluster loaded via `/admin/cluster-review/next?offset=0`
+- Keyboard shortcut JS: `document.addEventListener('keydown', ...)` mapping Y/N/S/D to button clicks
+- Link from existing dashboard to speed-run mode: "Start Speed Run →" button
+
+### 3e. Progress component
+
+Inline in cluster card response:
+- Total = count of clusters (filtered by community)
+- Reviewed = offset position
+- Render: `<div class="...">47 of 312 reviewed</div>` updated with each card swap
+
+### Tests (append to `tests/test_cluster_review.py`)
+- `test_speed_run_next_returns_cluster_card` — GET next returns valid HTMX partial
+- `test_speed_run_confirm_all_auto_advances` — confirm-all with speed_run=true returns next card
+- `test_speed_run_reject_all_auto_advances` — same for reject
+- `test_speed_run_dismiss_returns_next` — dismiss returns next card
+- `test_speed_run_community_scoped` — Fox Family only sees Fox clusters
+- `test_speed_run_progress_counter` — offset increments correctly
+- `test_speed_run_keyboard_shortcuts_in_page` — speed mode page includes keyboard JS
+
+### Test gate
 ```bash
+source venv/bin/activate && pytest tests/test_cluster_review.py tests/test_cluster_review_routes.py -x -q
 source venv/bin/activate && pytest tests/ -x -q --ignore=tests/e2e/ --timeout=120
 ```
 
-**Commit after Phase 3. /clear.**
+**Commit:** `feat(ux): speed-run cluster review mode with auto-advance and keyboard shortcuts`
+**/clear**
 
-## Phase 4: Browser Verify + Production Deploy
+---
 
-1. Deploy: `git push origin main` (or `railway deploy` if GitHub deploys broken)
-2. Wait for deploy completion
-3. Open Chrome browser:
-   - Navigate to `https://rhodesli.nolanandrewfox.com/c/fox-family/admin/upload-review`
-   - Verify cluster review loads with Fox Family proposals
-   - Test confirm/dismiss/skip actions
-   - Verify auto-advance works
-   - Check progress counter
-   - Screenshot evidence
-4. Also verify Rhodes platform:
-   - Navigate to `https://rhodesli.nolanandrewfox.com/`
-   - Verify landing page loads
-   - Check a person page loads correctly
-   - Verify Yaacov Franco face (if Supabase fixed)
+## Act 4: Deploy + Browser Verify (15 min)
 
-**Commit screenshots + session log update. /clear.**
+### Deploy
+- `railway deploy` (preferred) or `git push origin main`
+- Wait for deploy: `mcp__railway-mcp-server__list-deployments` — confirm status=SUCCESS, builder=DOCKERFILE
 
-## Phase 5: Assessment + Docs
+### Browser verification (Chrome — admin is logged in)
 
-1. Write `docs/assessments/session-100c-assessment.md`
-2. Update `docs/session_logs/session-100c-log.md`
-3. Update ROADMAP.md:
-   - Mark PRD037-004 as complete (if wired)
-   - Add session 100c to Recently Completed
-4. Update BACKLOG.md with any new items discovered
-5. Update CHANGELOG.md
-6. Final commit and push
+| # | URL | Check | Expected |
+|---|-----|-------|----------|
+| 1 | `/c/fox-family/admin/upload-review` | Dashboard loads | Three sections with Fox Family clusters |
+| 2 | `/c/fox-family/admin/upload-review?mode=speed` | Speed-run loads | First cluster card with action buttons |
+| 3 | Speed-run: click Confirm All | Auto-advance | Next cluster loads without page reload |
+| 4 | Speed-run: press `S` key | Skip works | Next cluster loads |
+| 5 | Speed-run: press `D` key | Dismiss works | Next cluster loads, dismissed hidden |
+| 6 | Progress bar | Counter updates | Shows "N of M reviewed" |
+| 7 | `/` (Rhodes landing) | Rhodes unbroken | Landing page loads, photos visible |
+| 8 | `/person/e88d6698-...` | Yaacov Franco | Correct face (if Supabase fixed) |
+| 9 | Identity cards | Face cycling arrows | Visible at opacity-60 (Session 100b fix) |
+
+Save screenshots to `docs/screenshots/session-100c/`
+
+**Commit:** `docs: session 100c browser verification screenshots`
+**/clear**
+
+---
+
+## Act 5: Assessment + Docs (10 min)
+
+1. Re-read THIS PROMPT from disk: `cat docs/prompts/session-100c-prompt.md`
+2. For each act, verify completion with evidence
+3. Write `docs/assessments/session-100c-assessment.md`
+4. Update `docs/session_logs/session-100c-log.md`
+5. Update:
+   - `CHANGELOG.md` — new version entry
+   - `ROADMAP.md` — mark PRD037-004 complete, check UX-202, add session 100c to Recently Completed
+   - `docs/BACKLOG.md` — update UX-202 status, any new items
+6. Run BOTH test suites:
+   ```bash
+   source venv/bin/activate && pytest tests/ -x -q --ignore=tests/e2e/ --timeout=120
+   source venv/bin/activate && pytest rhodesli_ml/tests/ -x -q
+   ```
+
+**Commit:** `docs: session 100c assessment — speed-run cluster review shipped`
+
+---
 
 ## Verification Gate
-- [ ] Supabase connection working OR fallback deployed with BACKLOG entry
-- [ ] Cluster review page loads for Fox Family
-- [ ] Batch confirm works (at least 1 cluster confirmed in production)
-- [ ] Dismiss works
-- [ ] Auto-advance works
-- [ ] All tests pass (app + ML)
-- [ ] Assessment file exists
-- [ ] Session log exists
-- [ ] ROADMAP updated
-- [ ] Screenshots saved
+
+| Check | Method | Expected |
+|-------|--------|----------|
+| Supabase working OR fallback + BACKLOG | Railway logs + curl /health | No "connection skipped" OR BACKLOG entry |
+| Speed-run page loads for Fox Family | Browser screenshot #2 | Cluster card renders with action buttons |
+| Confirm-all auto-advances | Browser screenshot #3 | Next cluster swaps in |
+| Keyboard shortcuts work | Browser test #4 | S/D keys trigger actions |
+| Progress counter | Browser screenshot #6 | Shows accurate "N of M" |
+| Existing dashboard unchanged | Browser screenshot #1 | Three sections still render |
+| Rhodes platform unbroken | Browser screenshot #7 | Landing page loads |
+| App tests pass | pytest output | 4150+ passed |
+| ML tests pass | pytest output | 578+ passed |
+| Assessment file exists | ls | `docs/assessments/session-100c-assessment.md` |
+| Session log exists | ls | `docs/session_logs/session-100c-log.md` |
+| ROADMAP updated | grep | PRD037-004 checked, UX-202 checked |
+| Screenshots saved | ls | `docs/screenshots/session-100c/` |
+
+## Non-Negotiables
+
+- No data loss — confirm-all and reject-all must use existing registry save paths (`registry.save()` + `_invalidate_all_caches()`)
+- No breaking existing dashboard — speed-run is additive (`?mode=speed`)
+- No heavy ML on request path (AD-110)
+- Community scoping preserved — Fox Family speed-run shows only Fox clusters
+- Keyboard shortcuts must not fire inside input fields (guard with `event.target.tagName` check)
+- Every HTMX swap must include `hx-swap-oob` for the progress counter update
+- Tests before every commit, /clear after every act
+
+## Key Files Reference
+
+| File | Line | What to change |
+|------|------|---------------|
+| `app/cluster_review_routes.py` | 777 | Add `?mode=speed` branch to upload-review |
+| `app/cluster_review_routes.py` | 1179 | Modify confirm-all to auto-advance when speed_run=true |
+| `app/cluster_review_routes.py` | 1224 | Modify reject-all to auto-advance when speed_run=true |
+| `app/cluster_review_routes.py` | NEW (~1265) | `GET /admin/cluster-review/next` endpoint |
+| `app/cluster_review_routes.py` | NEW | `POST /api/cluster-review/dismiss` endpoint |
+| `tests/test_cluster_review.py` | append | 7+ speed-run tests |
+| `app/page_routes.py` | 127 | Health endpoint (Act 1 investigation) |
+| `app/supabase_data.py` | 37 | `get_supabase_client()` (Act 1 investigation) |
+| `app/main.py` | 151 | `DATA_SOURCE` definition (Act 1 investigation) |
+| `app/main.py` | 1065-1075 | Postgres load + fallback (Act 1 investigation) |
