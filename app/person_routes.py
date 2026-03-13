@@ -744,6 +744,7 @@ def public_person_page(
     # --- Navigation ---
     nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
     workstation_prefix = _main_mod.community_url_prefix(community_slug)
+    has_tree_link = bool(_main_mod._load_gedcom_face_links().get(person_id) or identity.get("gedcom_xref")) if is_admin else False
 
     # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
@@ -1211,6 +1212,18 @@ def public_person_page(
                                 href=f"{nav_prefix}/people/{person_id}/similar",
                                 cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
                             ),
+                            A(
+                                "Tree Linked" if has_tree_link else "Needs Tree Link",
+                                href="#gedcom",
+                                cls=(
+                                    "text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-colors"
+                                    if has_tree_link
+                                    else "text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors"
+                                ),
+                                data_testid="jump-to-gedcom-link",
+                            )
+                            if is_confirmed
+                            else None,
                             A(
                                 f"Review Proposals ({len(target_proposals)})",
                                 href=f"{nav_prefix}/admin/upload-review#identity-group-{person_id}",

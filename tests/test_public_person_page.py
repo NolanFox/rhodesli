@@ -759,6 +759,27 @@ class TestAdminControlsOnPersonPage:
         assert "Find Similar" in response.text
         assert 'data-testid="person-similar-container"' in response.text
 
+    def test_admin_confirmed_person_has_gedcom_shortcut(self, client, confirmed_identity, auth_disabled):
+        """Confirmed admin person page exposes a direct shortcut to the GEDCOM section."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="jump-to-gedcom-link"' in response.text
+        assert "Needs Tree Link" in response.text
+        assert 'href="#gedcom"' in response.text
+
+    def test_admin_linked_person_shows_tree_linked_shortcut(self, client, confirmed_identity, auth_disabled):
+        """Linked confirmed admin person page surfaces the linked-state shortcut."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        linked = {confirmed_identity["identity_id"]: {"gedcom_id": "@I1@"}}
+        with patch("app.main._load_gedcom_face_links", return_value=linked):
+            response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert "Tree Linked" in response.text
+
     def test_anonymous_no_admin_controls(self, client, confirmed_identity, auth_enabled, no_user):
         """Anonymous users do NOT see admin controls."""
         if not confirmed_identity:

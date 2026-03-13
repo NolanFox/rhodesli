@@ -5955,10 +5955,14 @@ def render_confirmed_section(
 ) -> Div:
     """Render the Confirmed section with optional sorting."""
     linked_identities = _load_gedcom_face_links()
+    total_confirmed = len(confirmed)
 
     def _has_tree_link(identity: dict) -> bool:
         identity_id = identity.get("identity_id", "")
         return bool(linked_identities.get(identity_id) or identity.get("gedcom_xref"))
+
+    linked_total = sum(1 for identity in confirmed if _has_tree_link(identity))
+    unlinked_total = max(total_confirmed - linked_total, 0)
 
     if confirmed_filter == "tree_unlinked":
         confirmed = [identity for identity in confirmed if not _has_tree_link(identity)]
@@ -5998,12 +6002,16 @@ def render_confirmed_section(
     elif confirmed_filter == "tree_linked":
         subtitle = f"{len(confirmed)} of {counts['confirmed']} identified already have family tree links"
     else:
-        subtitle = f"{counts['confirmed']} identified — click anyone to see all their photos"
+        subtitle = (
+            f"{counts['confirmed']} identified — {unlinked_total} still need family tree links"
+            if is_admin
+            else f"{counts['confirmed']} identified — click anyone to see all their photos"
+        )
 
     filter_options = [
-        ("all", "All"),
-        ("tree_unlinked", "Needs Tree"),
-        ("tree_linked", "Linked"),
+        ("all", f"All ({counts['confirmed']})"),
+        ("tree_unlinked", f"Needs Tree ({unlinked_total})"),
+        ("tree_linked", f"Linked ({linked_total})"),
     ]
     filter_buttons = []
     for value, label in filter_options:
@@ -6041,6 +6049,13 @@ def render_confirmed_section(
             ),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6",
         ),
+        P(
+            "Use Needs Tree to sweep confirmed people who still need a family-tree link.",
+            cls="text-xs text-slate-500",
+            data_testid="confirmed-tree-helper",
+        )
+        if is_admin
+        else None,
         content,
         cls="space-y-4",
     )

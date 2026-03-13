@@ -232,3 +232,31 @@
   - clean worktree ML suite:
     - `pytest rhodesli_ml/tests/ -x -q`
     - `588 passed, 2 skipped`
+
+## Confirmed-People GEDCOM Sweep Pass
+- the confirmed-people GEDCOM workflow already had a `tree_unlinked` filter, but
+  the controls were easy to miss and did not explain the sweep well enough for
+  real admin use
+- improvements:
+  - the confirmed filter pills now show counts:
+    - `All (N)`
+    - `Needs Tree (N)`
+    - `Linked (N)`
+  - the confirmed section subtitle now surfaces how many identified people still
+    need family-tree links
+  - admins now see a helper line explaining that `Needs Tree` is the fast GEDCOM
+    sweep mode
+  - confirmed person pages now expose a top-of-page shortcut to the GEDCOM
+    section:
+    - `Needs Tree Link` when unlinked
+    - `Tree Linked` when already linked
+- files:
+  - [app/main.py](/Users/nolanfox/rhodesli/app/main.py)
+  - [app/person_routes.py](/Users/nolanfox/rhodesli/app/person_routes.py)
+  - [tests/test_ui_clarity.py](/Users/nolanfox/rhodesli/tests/test_ui_clarity.py)
+  - [tests/test_public_person_page.py](/Users/nolanfox/rhodesli/tests/test_public_person_page.py)
+- verification:
+  - `pytest tests/test_ui_clarity.py tests/test_public_person_page.py -x -q`
+    - `50 passed, 2 skipped`
+  - `pytest tests/test_gedcom_routes.py tests/test_public_person_page.py::TestAdminControlsOnPersonPage -x -q`
+    - `54 passed`

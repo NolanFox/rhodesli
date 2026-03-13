@@ -30,8 +30,9 @@ class TestSectionDescriptions:
             assert response.status_code == 200
             assert "People" in response.text
             assert "identified" in response.text
-            assert "Needs Tree" in response.text
-            assert "Linked" in response.text
+            assert "Needs Tree (" in response.text
+            assert "Linked (" in response.text
+            assert 'data-testid="confirmed-tree-helper"' in response.text
 
     def test_skipped_displayed_as_help_identify(self, client):
         """UI shows 'Help Identify' instead of 'Skipped' in section header."""
@@ -129,6 +130,8 @@ class TestEmptyStates:
         assert "Needs Tree Person" in html
         assert "Linked Person" not in html
         assert "still need family tree links" in html
+        assert "Needs Tree (1)" in html
+        assert "Linked (1)" in html
 
     def test_skipped_empty_state_helpful(self):
         """Empty skipped section shows helpful guidance."""
