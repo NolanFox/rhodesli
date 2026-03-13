@@ -254,15 +254,26 @@
             var groups = [];
             people.forEach(function(p) {
                 if (placed[p.id]) return;
-                var group = [p];
                 placed[p.id] = true;
+                var spouseList = [];
                 (p.rels.spouses || []).forEach(function(sid) {
                     var sp = nodeMap[sid];
                     if (sp && !placed[sid] && genOf[sid] === gk) {
-                        group.push(sp);
+                        spouseList.push(sp);
                         placed[sid] = true;
                     }
                 });
+                // Put person in center of their spouses so couple lines
+                // connect correct pairs and child drop lines land correctly
+                var group;
+                if (spouseList.length >= 2) {
+                    var half = Math.floor(spouseList.length / 2);
+                    group = spouseList.slice(0, half).concat([p]).concat(spouseList.slice(half));
+                } else if (spouseList.length === 1) {
+                    group = [p, spouseList[0]];
+                } else {
+                    group = [p];
+                }
                 groups.push(group);
             });
 
