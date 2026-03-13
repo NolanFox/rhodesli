@@ -253,6 +253,17 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 ### Face Card Consolidation (Session 82b gap, deferred 82f)
 - [ ] **UX-204: Unify face card rendering** — 14+ inline face card rendering locations in app/main.py use bespoke code. Consolidate into reusable `face_card()` component. Major refactor. Source: 82b Phase 2, 82d assessment.
 
+### Magnifying Glass Inspect Mode (PRD-041)
+- [ ] **UX-205: Magnifying glass / lens inspect mode** — Heritage photos contain small faces in group shots (30-person weddings, classroom photos). Current zoom is binary click-to-scale(2) on compare crops only (`app/compare_routes.py:5450`). The photo lightbox has scroll-wheel and pinch-to-zoom (`app/page_routes.py:5595`) but no lens cursor — users must zoom the whole image and lose spatial context. Community members identifying faces in crowded photos cannot inspect detail without losing their place.
+  - **Surfaces (priority order):** (1) Compare modal face crops — replace click-to-zoom with lens. (2) Photo lightbox — full-photo inspection with face bbox context. (3) Speed-run cluster review — 80x80px thumbs need inspect (`app/cluster_review_routes.py:1406`). (4) Identity card face gallery — browse grid, person page (`app/main.py:face_card()` line 8331).
+  - **Implementation:** Pure CSS `background-image` + `background-position` lens with Hyperscript pointer tracking. A circular `<div>` follows the cursor showing 2-3x magnified region. Same image URL as `<img>` src (browser-cached, no extra fetch). Reusable `lens_image(src, alt, cls, zoom_factor=3, lens_size=150)` FastHTML component replaces raw `Img()` on lens-enabled surfaces. No React, no external library.
+  - **Interaction:** Desktop: hover shows lens, click toggles sticky mode, `L` key toggles lens in compare/speed-run. Mobile: long-press (300ms) activates, drag to inspect, release dismisses. Pinch-to-zoom (existing) remains as fallback. Progressive enhancement: `@media (hover: hover)` gates desktop lens; images render normally without JS.
+  - **Phases:** (1) `lens_image()` component + compare modal — 1-2h. (2) Photo lightbox integration — 2-3h. (3) Speed-run thumbnail inspect — 1h. (4) Identity card gallery — 1h. Total: ~1 session.
+  - **Risks:** Large R2 photos (3000x4000px) may jank on mobile — mitigated by using browser-cached src. HTMX swap may destroy lens state — mitigated by event delegation (Lesson 39). Touch conflict with scroll — mitigated by 300ms long-press threshold.
+  - **Dependencies:** Benefits from UX-204 (face card unification) but can proceed independently.
+  - **PRD:** `docs/prds/041_magnifying_glass_inspect.md`
+  - **Source:** Session 100 Codex research item #6, Antigravity plan review ("lens is primary workflow requirement, not polish"), Magic UI Lens pattern reference.
+
 ### 82c Gemini Branch Merge (Session 82c, stranded)
 - [ ] **ML-100: Merge session-82c/gemini-rerun to main** — Branch has 14 commits of Gemini enrichment pipeline work (Asheville litmus test, batch pipeline, Gatekeeper integration). Blocked by: AD numbering conflict (branch AD-194 vs main AD-194), 82a artifacts on branch need removal. Requires deliberate merge session with conflict resolution. Source: Session 82c.
 
