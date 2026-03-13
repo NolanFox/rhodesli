@@ -10,8 +10,8 @@
 - Data: identities.json modified (uncommitted)
 
 ## Phase Checklist
-- [ ] Act 0: Orient
-- [ ] Act 1: Fix Supabase Production Connection
+- [x] Act 0: Orient — 4153 passed, clean state
+- [x] Act 1: Supabase Connection — ALREADY WORKING. Synced 3 data fixes to Supabase (Yaacov Franco face swap, Unidentified Person swap, Solomon orphan removal). Health "skipped" is just ping throttle.
 - [ ] Act 2: Write PRD for Batch Cluster Review
 - [ ] Act 3: Implement Speed-Run Cluster Review
 - [ ] Act 4: Deploy + Browser Verify
