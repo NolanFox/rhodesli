@@ -14,6 +14,108 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 100b: Dogfood Fix Sprint (2026-03-13) — v0.99.0
+- Comprehensive audit of sessions 97-100 (docs/assessments/session-100b-audit.md)
+- Fixed confirmed faces showing "Needs review" on bbox overlap (Jacob Cohen, Caden Franco Sadis)
+- IoU conflict threshold raised 0.80 → 0.85
+- Removed 3 duplicate photo metadata routes (photo_routes.py → page_routes.py with logging)
+- Fixed timeline route NameError, stop hook infinite loop, merge chain regressions
+- Cherry-picked 4 user naming actions from production
+- Cleaned 12 orphaned worktrees
+- Agent: Claude Code (Opus 4.6)
+
+## Session 100: Multi-Community UX + Speed Tagging (2026-03-12) — v0.98.1
+- Speed tagging loop for Fox Family workflow
+- Community context preservation across HTMX flows
+- Neutral root entry point, GEDCOM triage hardening
+- Face thumbnail restoration, 16 targeted bug fixes
+- Shipped via PRs #10 and #11 (29 commits)
+- Agent: Codex CLI + Antigravity design review
+
+## Session 99: Modern UI Phase 1 (2026-03-12) — v0.97.13
+- Landing page redesign, public identify page modernization
+- Workstation root updates, variant="session99" zero-regression scoping
+- Shipped via PR #8
+- Agent: Antigravity (implementation) + Codex (review)
+
+## Session 98/98B: GEDCOM Mirror + Diff + Performance Hotfix (2026-03-12) — v0.98.0
+- GEDCOM versioning and diff tracking with field-level diffs
+- 98B hotfix: Supabase candidate prefilter replaces full 21,944-individual mirror scan
+- Thin-field bulk loads for targeted GEDCOM data
+- Agent: Codex CLI
+
+## Session 97: PRD-038 Longitudinal ML Foundation (2026-03-11) — v0.98.0
+- Phase 0: Mixed-schema eval repair, scorer-path unification
+- Phase 1: Local recalibration hygiene + label taxonomy
+- Phase 2: Prototype-bank longitudinal reranker (shadow mode)
+- Phase 3: Active learning in review UX
+- Phase 4: Adapter experiment harness
+- 4116 app + 578 ML tests passed, rollout gates remain closed
+- Agent: Codex CLI
+
+## Session 96f-cont1: Provenance Visibility + Browse-Safe Admin Return (2026-03-11) — v0.97.12
+- Workstation/public photo cards surface uploader/archive-entry provenance
+- Public `/photos` metadata parity with workstation
+- Upload-date tie-break uses archival insertion order
+- Admin return links from public pages are community-aware
+- 4110 app + 566 ML tests passed
+
+## Session 96f: Live UX Closeout (2026-03-11) — v0.97.11
+- Upload success destination fix, first-run AI Analysis entry point
+- Archive provenance with timestamps, upload-date tie ordering
+- Public/workstation navigation clarified, dual-write attribution
+- 4102 app + 566 ML tests passed
+
+## Session 96e-cont12: Production Reconciliation (2026-03-11) — v0.97.10
+- Closed remaining structural drift (157 orphans, 122 merge chains, 1 duplicate)
+- Embedding repair (10 missing → 0), reconciled 3412-identity / 938-photo snapshot
+- Pruned 112 stale Supabase rows with JSON backup artifact
+- 4098 app + 566 ML tests passed
+
+## Session 96e-cont11: Stability Closeout (2026-03-11) — v0.97.9
+- Structured-anchor merge safety, append-only history bypasses
+- Embeddings-first photo cache hiding fix, ML early-stopping flake
+- Holocaust collage verified: 11 people, 10 identified, Caden Franco Sadis preserved
+- 4091 app + 566 ML tests passed
+
+## Session 96e-cont10: Data Integrity Audit (2026-03-10) — v0.97.8
+- Comprehensive audit: 1 duplicate face, 3 CONFIRMED placeholders, 121+ merge chains
+- 157+ orphan faces, 637 missing upload_dates, 2 ghost faces
+- CLI --upload-date/--uploaded-by, merge cross-list dedup, admin force-state API
+- Data integrity audit script with --fix
+
+## Session 96e-cont7: PRD-038 Research (2026-03-10) — v0.97.7
+- 960-line PRD across 5 files, recalibration architecture analysis
+- Upload date sort fix (backfill in resync)
+
+## Session 96e-cont4: Upload UX + Deploy Verify (2026-03-10) — v0.97.6
+- Two-step upload flow (select → preview → upload), upload 500 crash fix
+- Supabase 1149 orphans deleted, community scoping for proposals/discoveries
+- 6 new tests, browser verified 5/6
+
+## Session 96e: Fox Family Stabilization (2026-03-10) — v0.97.4
+- Face grouping (813 merges, 2009→1196 INBOX), 2115 proposals regenerated
+- Proposals.json path fix (STORAGE_DIR on Railway)
+- GEDCOM triage includes INBOX identities, registry TTL cache (30s)
+- 3908 tests pass
+
+## Session 96d: Fix Fox Family to Usable State (2026-03-10) — v0.97.3
+- 7 COMMUNITY bugs fixed (007-014), nav links use community prefix
+- Proposals surfaced in sidebar, cluster review community-scoped
+- Cross-community badges, proposal match info, face crop responsive sizing
+- 6 pre-existing test failures fixed
+
+## Session 96c: Community Identity Pipeline (2026-03-09) — v0.97.2
+- Photo-derived identity sets (AD-216), admin sections ungated
+- ML feature counts restored, community-aware discoveries
+- Supabase backfill (2533 identities), data integrity validator
+- 81 new tests, browser verified 10/10
+
+## Session 96: Community Data Scoping Hotfix (2026-03-09) — v0.97.1
+- Photos section, upload sidebar counts, admin bar community-scoped
+- Fox Family pages no longer show Rhodes data
+- Bulk upload workflow documented (636 Charlie Fox photos)
+
 ## Session 95: Fox MVP + Standalone Tool Suite (2026-03-09) — v0.97.0
 - Multi-community platform: CommunityMiddleware, `/c/{slug}/` routing, Fox Family Archive live at `/c/fox-family`
 - Standalone tools hub at `/tools` with Date Estimator (`/tools/estimate`) and Face Compare (`/tools/compare`)

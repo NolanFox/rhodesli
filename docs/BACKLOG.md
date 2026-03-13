@@ -57,6 +57,17 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Proposals API Incomplete
 - **COMMUNITY-016**: `/api/proposed-matches` only reads `registry.list_proposed_matches()`, not `proposals.json`. Sidebar counts include both sources (via `_compute_sidebar_counts`), so Fox Family shows "17 Proposals" in sidebar but "No pending proposals" in content. Fix: API endpoint must also read proposals.json, same as sidebar does. Source: Session 96e-cont4 browser verification.
 
+### P1 — Session 100b Dogfood (2026-03-13)
+- ~~**DOGFOOD-001**: Confirmed faces show "Needs review" on bbox overlap~~ FIXED (Session 100b) — show identity name for confirmed faces
+- ~~**DOGFOOD-002**: Photo metadata save silently loses data~~ FIXED (Session 100b) — duplicate routes removed, page_routes.py with logging now active
+- **DOGFOOD-003**: Person → photo flow can land on wrong photo — Examples: Rica Revah, Jacob Cohen. Needs investigation of photo_id resolution in person gallery. Source: Session 100 dogfood feedback.
+- **DOGFOOD-004**: Photo overlays obscure caption/provenance text — Lower-left overlay covers inscriptions. Need below-image placement or dismissability. Source: Session 100 dogfood feedback.
+- **DOGFOOD-005**: Confirmed-people filtering missing — Can't filter by GEDCOM link status, linked vs unlinked. Source: Session 100 dogfood feedback.
+- **DOGFOOD-006**: Link Tree affordance awkward — Button easy to miss, #gedcom anchor unreliable. Source: Session 100 dogfood feedback.
+- **DOGFOOD-007**: Dismissed/declined faces lack explicit state — UI doesn't communicate dismissed state clearly. Source: Session 100 dogfood feedback.
+- **DOGFOOD-008**: Source provenance capture at upload too weak — Bulk Facebook imports need lower-friction URL attachment. Source: Session 100 dogfood feedback.
+- **DOGFOOD-009**: Session 99 variant="session99" creates code duplication — Decision needed: keep or discard legacy. Source: Session 100b audit.
+
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
 - ~~**UX-070-072**: Name These Faces broken on /photo/ pages~~ FIXED (Session 49D)

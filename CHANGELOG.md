@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.0] — 2026-03-13 (Session 100b: Dogfood Fix Sprint)
+
+### Fixed
+- **Confirmed faces show names on bbox overlap** — CONFIRMED identities with overlapping bounding boxes now display their identity names instead of "Needs review". Jacob Cohen and Caden Franco Sadis on Holocaust collage photo now correctly labeled and clickable.
+- **IoU conflict threshold raised** — 0.80 → 0.85 to reduce false positive conflict flags. Only 1 genuine conflict remains (duplicate detection on wedding photo).
+- **Duplicate photo metadata routes removed** — collection/source/source_url save routes existed in both photo_routes.py and page_routes.py. Removed duplicates from photo_routes.py; page_routes.py versions with audit logging are now active.
+- **Timeline route NameError** — fixed missing `nav_prefix` in uncommitted page_routes.py from Session 100.
+- **Stop hook infinite loop** — exit 2 → exit 1 for uncommitted files warning.
+- **Merge chain regressions** — cherry-picked 4 user naming actions, rejected 9 merge chain regressions in identities.json.
+
+### Added
+- 6 new bbox conflict tests in test_public_photo_viewer.py
+- CHANGELOG entries for sessions 98-100
+- SESSION_HISTORY entries for sessions 96-100
+
+### Verification
+- App tests: 4138 passed (excluding 2 pre-existing failures)
+- Bbox scan: only 2 overlapping face pairs across all 939 photos
+
+## [v0.98.1] — 2026-03-12 (Session 100: Multi-Community UX + Speed Tagging)
+
+### Added
+- **Speed tagging loop** — rapid Fox Family identity workflow
+- **Community context preservation** — HTMX flows maintain community scope
+- **Neutral root entry point** — root URL serves community selector
+- **GEDCOM triage hardening** — improved matching and display
+
+### Fixed
+- **Face thumbnail restoration** — face crops render correctly on cards
+- **16 targeted bug fixes** — community routing, sidebar, overlays, navigation
+
+### Verification
+- Shipped via PRs #10 and #11 (29 commits)
+- Agent: Codex CLI + Antigravity design review
+
+## [v0.98.0] — 2026-03-12 (Session 98/98B: GEDCOM Mirror + Diff + Performance Hotfix)
+
+### Added
+- **GEDCOM versioning and diff tracking** — version management with field-level diffs
+- **GEDCOM search performance fix (98B)** — Supabase candidate prefilter replaces full 21,944-individual mirror scan
+- **Thin-field bulk loads** — targeted GEDCOM data loading instead of full mirror
+
+### Verification
+- App tests: 4137 passed
+- Agent: Codex CLI
+
+## [v0.97.13] — 2026-03-12 (Session 99: Modern UI Phase 1)
+
+### Added
+- **Landing page redesign** — modern editorial layout
+- **Public identify page modernization** — improved identification UX
+- **Workstation root updates** — cleaner admin dashboard
+- Uses `variant="session99"` for zero-regression scoping (legacy retained as fallback)
+
+### Verification
+- Shipped via PR #8
+- Agent: Antigravity (implementation) + Codex (review)
+
 ## [v0.98.0] — 2026-03-11 (Session 97: PRD-038 Longitudinal ML Foundation)
 
 ### Added
