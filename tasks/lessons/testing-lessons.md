@@ -75,6 +75,11 @@ See also: `docs/CODING_RULES.md` (Testing & TDD section)
 - **Rule**: Always use `contextlib.ExitStack` for multiple patches, or `with patch(...):` for single patches. Never use manual start/stop without try/finally.
 - **Prevention**: `grep -rn "\.start()" tests/ | grep -v "ExitStack\|try:"` — flag any manual patch.start() calls.
 
+### Lesson 134: Data integrity CI test needed for CONFIRMED identity face references
+- **Mistake**: No automated check that CONFIRMED identities have valid face references.
+- **Rule**: Data integrity CI test needed for every CONFIRMED identity's face references.
+- **Prevention**: Add test that iterates all CONFIRMED identities, checks anchor_ids exist in embeddings + photo_index.
+
 ### Lesson 80: Always run tests in venv — `source venv/bin/activate && pytest`
 - **Mistake**: Running `pytest` without activating venv used system Python, which lacks fasthtml/torch. This caused 28 collection errors and reported only 1293 tests instead of 2909.
 - **Rule**: Always prefix pytest commands with `source venv/bin/activate &&`.

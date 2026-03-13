@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-130 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+134 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -42,6 +42,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 58 | Test assertions must match CORRECT behavior, not historical behavior |
 | 79 | NEVER use manual patch.start()/patch.stop() without try/finally — use ExitStack |
 | 80 | Always run tests in venv — `source venv/bin/activate && pytest` |
+| 134 | Data integrity CI test needed for CONFIRMED identity face references |
 
 ## Deployment & Infrastructure — `tasks/lessons/deployment-lessons.md`
 
@@ -69,6 +70,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 85 | **Deploy data safety gate — 5th occurrence, triple protection (AD-134)** |
 | 94 | **Wait for deploy completion before Chrome verification — 502 corrupts JS state** |
 | 117 | **Railway region deprecation silently breaks GitHub deploys — use CLI deploy workaround** |
+| 133 | **Supabase/Postgres DATA_SOURCE fallback masks real connection failures** |
 | 71 | has_insightface check must probe actual deferred imports |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
@@ -128,6 +130,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 128 | **`user_source` is provenance class, not actor identity** |
 | 129 | **Mirrored list builders must share the same metadata contract** |
 | 130 | **Request-path GEDCOM search must never full-scan a versioned rich mirror** |
+| 131 | **Never claim fixed without production browser verification** |
+| 132 | **Confirmed identity workflow needs visual verification gate** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

@@ -124,6 +124,11 @@ See also: `docs/DEPLOYMENT_GUIDE.md`, `docs/ops/OPS_DECISIONS.md`
   5. **Stuck QUEUED deploys**: Remove via three-dot menu in Railway dashboard. They will never build.
 - **See also**: OD-010 in docs/ops/OPS_DECISIONS.md
 
+### Lesson 133: Supabase/Postgres DATA_SOURCE fallback masks real connection failures
+- **Mistake**: DATA_SOURCE=postgres was set but health endpoint showed "Supabase connection skipped" — unclear if actually using Postgres.
+- **Rule**: Supabase/Postgres DATA_SOURCE fallback masks real connection failures — health endpoint must clearly show which data source is active.
+- **Prevention**: Health endpoint should report DATA_SOURCE value and whether Postgres load succeeded or fell back to JSON.
+
 ### Lesson 71: has_insightface check must probe actual deferred imports, not just function references
 - **Mistake**: `/api/compare/upload` checked `from core.ingest_inbox import extract_faces` and set `has_insightface = True`. But `core.ingest_inbox` has only stdlib top-level imports — cv2 and insightface are deferred inside `extract_faces()`. So the import always succeeds, even when cv2/insightface aren't installed. The graceful degradation path (save without face detection) was never reached on production.
 - **Rule**: When checking whether optional ML dependencies are available, import the actual packages (cv2, insightface), not just the function that defers them. A function reference import tells you nothing about whether the function's internal imports will succeed.

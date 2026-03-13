@@ -111,6 +111,16 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: Request-path search/link flows must prefilter candidates in the database and use exact-record lookups for selected rows. Full mirrored datasets are for offline analysis, background hydration, or explicitly cached browse surfaces, not on-demand admin search requests.
 - **Prevention**: (1) For GEDCOM search, fetch thin candidate rows from Supabase, then fuzzy-score in Python. (2) For link rendering and POST routes, fetch exactly one GEDCOM row by `gedcom_id`. (3) Add regression tests that fail if a link route falls back to the bulk mirror loader.
 
+### Lesson 131: Never claim fixed without production browser verification
+- **Mistake**: Claimed data fixes were applied without verifying production was actually serving the corrected data.
+- **Rule**: Never claim fixed without production browser verification — always curl/screenshot the live page.
+- **Prevention**: After any data fix, verify the production page shows the corrected data before declaring done.
+
+### Lesson 132: Confirmed identity workflow needs visual verification gate
+- **Mistake**: Confirmed identity workflow allowed confirming a face that didn't exist in embeddings.
+- **Rule**: Confirmed identity workflow needs visual verification gate — admin must see the face before confirming.
+- **Prevention**: Add a data integrity CI check: every CONFIRMED identity's anchor_ids must exist in embeddings AND photo_index.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

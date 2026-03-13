@@ -68,6 +68,15 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **DOGFOOD-008**: Source provenance capture at upload too weak — Bulk Facebook imports need lower-friction URL attachment. Source: Session 100 dogfood feedback.
 - **DOGFOOD-009**: Session 99 variant="session99" creates code duplication — Decision needed: keep or discard legacy. Source: Session 100b audit.
 
+### P1 — Visual Confirmation Gate (DATA-011)
+- **DATA-011**: Admin must see the actual face crop before confirming an identity. Currently possible to confirm orphan/wrong faces without visual verification. Fix: add a visual gate in the admin confirm workflow that renders the face crop and requires explicit approval. Source: Session 100b dogfood. Priority: P1.
+
+### P1 — Data Integrity CI for CONFIRMED Identities (DATA-012)
+- **DATA-012**: Automated test that every CONFIRMED identity's anchor_ids exist in both embeddings.npy and photo_index.json face_to_photo. Run in CI and pre-deploy. Prevents orphan face references from reaching CONFIRMED state. Source: Session 100b dogfood. Priority: P1.
+
+### P2 — Date Ordering Transparency (UX-060)
+- **UX-060**: Users should understand why photos are ordered the way they are. Add sort indicator or explanation (e.g., "Sorted by upload date" label, or sort toggle). Source: Session 100 dogfood issue #16. Priority: P2.
+
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
 - ~~**UX-070-072**: Name These Faces broken on /photo/ pages~~ FIXED (Session 49D)
