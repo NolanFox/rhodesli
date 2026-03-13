@@ -11099,6 +11099,7 @@ def public_photo_page(
 
         face_info_list.append(
             {
+                "source_index": len(face_info_list),
                 "face_id": face_id,
                 "bbox": bbox,
                 "display_name": display_name,
@@ -11123,10 +11124,12 @@ def public_photo_page(
             other_face["conflict_names"].add(face_info["raw_name"])
 
     has_bbox_conflicts = any(fi["bbox_conflict"] for fi in face_info_list)
-    context_identity_conflict = any(
-        fi["is_context_identity"] and (fi["bbox_conflict"] or fi["state"] in {"REJECTED", "CONTESTED"})
-        for fi in face_info_list
+    context_face_info = next((fi for fi in face_info_list if fi["is_context_identity"]), None)
+    context_identity_present = context_face_info is not None
+    context_identity_conflict = bool(
+        context_face_info and (context_face_info["bbox_conflict"] or context_face_info["state"] in {"REJECTED", "CONTESTED"})
     )
+    context_identity_missing = bool(identity_id and context_person_name and not context_face_info)
 
     # First unidentified face from this photo — for contextual "Help Identify" CTA
     first_unidentified_id = next(
@@ -11228,14 +11231,19 @@ def public_photo_page(
             face_overlays.append(overlay)
 
     # --- Build person cards strip / dense grid ---
+    display_face_info_list = sorted(
+        face_info_list,
+        key=lambda fi: (0 if fi["is_context_identity"] else 1, fi["source_index"]),
+    )
+
     person_cards = []
-    for fi in face_info_list:
+    for fi in display_face_info_list:
         card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
         if fi["bbox_conflict"]:
             badge = Span("Conflict", cls="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-full")
         elif fi["is_context_identity"]:
             badge = Span(
-                "Viewing",
+                "Current person",
                 cls="text-[10px] text-amber-200 bg-amber-500/15 px-1.5 py-0.5 rounded-full border border-amber-400/30",
             )
         elif fi["is_identified"]:
@@ -11339,6 +11347,7 @@ def public_photo_page(
             ),
             quick_id_area,
             id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
+            data_testid="photo-current-person-card" if fi["is_context_identity"] else None,
             cls=(
                 f"photo-face-card photo-card-frame flex flex-col items-center rounded-xl border {card_border} "
                 + (
@@ -11718,19 +11727,87 @@ def public_photo_page(
             Div(
                 Div(
                     Span(
-                        "Needs review",
-                        cls="text-[11px] font-semibold uppercase tracking-wide text-rose-200 bg-rose-500/15 border border-rose-500/30 px-2 py-1 rounded-full",
+                        "Needs review"
+                        if (context_identity_conflict or context_identity_missing)
+                        else "Viewing",
+                        cls=(
+                            "text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
+                            + (
+                                " text-rose-200 bg-rose-500/15 border border-rose-500/30"
+                                if (context_identity_conflict or context_identity_missing)
+                                else " text-amber-200 bg-amber-500/15 border border-amber-500/30"
+                            )
+                        ),
                     ),
-                    P(
-                        f"The current assignment for {context_person_name} overlaps another face on this photo. Treat this as disputed until it is reviewed.",
-                        cls="text-sm text-rose-100/90 leading-relaxed",
+                    Div(
+                        P(
+                            (
+                                f"Viewing {context_person_name} in this photo."
+                                if context_identity_present and not context_identity_conflict
+                                else (
+                                    f"{context_person_name} is tagged on this photo, but the current assignment needs review."
+                                    if context_identity_conflict
+                                    else f"{context_person_name} is not currently tagged on this photo."
+                                )
+                            ),
+                            cls=(
+                                "text-sm leading-relaxed font-medium "
+                                + (
+                                    "text-rose-100"
+                                    if (context_identity_conflict or context_identity_missing)
+                                    else "text-amber-100"
+                                )
+                            ),
+                        ),
+                        P(
+                            (
+                                "The highlighted face card below matches the person context you came from."
+                                if context_identity_present and not context_identity_conflict
+                                else (
+                                    "The highlighted face overlaps another assignment on this photo. Treat it as disputed until it is reviewed."
+                                    if context_identity_conflict
+                                    else "You reached this photo from that person's gallery, but no current face assignment matches them here. Review before trusting this link."
+                                )
+                            ),
+                            cls=(
+                                "text-xs leading-relaxed "
+                                + (
+                                    "text-rose-100/80"
+                                    if (context_identity_conflict or context_identity_missing)
+                                    else "text-amber-100/80"
+                                )
+                            ),
+                        ),
+                        cls="flex-1 min-w-0",
                     ),
-                    cls="max-w-[900px] mx-auto flex flex-col sm:flex-row sm:items-center gap-3 bg-rose-950/40 border border-rose-500/20 rounded-xl px-4 py-3",
-                    data_testid="photo-context-conflict-banner",
+                    A(
+                        "Jump to current face",
+                        href=f"#person-{identity_id}",
+                        cls=(
+                            "text-xs rounded-lg px-3 py-2 inline-flex items-center justify-center transition-colors "
+                            + (
+                                "bg-rose-500/15 text-rose-100 hover:bg-rose-500/25 border border-rose-500/25"
+                                if context_identity_conflict
+                                else "bg-amber-500/15 text-amber-100 hover:bg-amber-500/25 border border-amber-500/25"
+                            )
+                        ),
+                        data_testid="photo-context-jump-link",
+                    )
+                    if context_identity_present and identity_id
+                    else None,
+                    cls=(
+                        "max-w-[900px] mx-auto flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl px-4 py-3 "
+                        + (
+                            "bg-rose-950/40 border border-rose-500/20"
+                            if (context_identity_conflict or context_identity_missing)
+                            else "bg-amber-950/30 border border-amber-500/20"
+                        )
+                    ),
+                    data_testid="photo-context-banner",
                 ),
                 cls="px-4 sm:px-6 pt-2",
             )
-            if context_identity_conflict and context_person_name
+            if identity_id and context_person_name
             else None,
             # Hero photo section
             Section(

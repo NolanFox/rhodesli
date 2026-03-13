@@ -358,7 +358,11 @@ class TestSession100PhotoWorkflow:
         assert "/c/fox-family/identify/unknown-3" in html
         assert 'href="/c/fox-family/photos"' in html
         assert 'href="/c/fox-family/people"' in html
-        assert "Viewing" in html
+        assert 'data-testid="photo-context-banner"' in html
+        assert "Viewing Roland Fox in this photo." in html
+        assert 'data-testid="photo-current-person-card"' in html
+        assert 'data-testid="photo-context-jump-link"' in html
+        assert html.index('id="person-context-1"') < html.index('id="person-person-1"')
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
@@ -592,5 +596,98 @@ class TestSession100PhotoWorkflow:
             )
         )
 
-        assert 'data-testid="photo-context-conflict-banner"' in html
-        assert "The current assignment for Jacob Cohen overlaps another face on this photo." in html
+        assert 'data-testid="photo-context-banner"' in html
+        assert "Jacob Cohen is tagged on this photo, but the current assignment needs review." in html
+        assert "Treat it as disputed until it is reviewed." in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.load_photo_registry")
+    @patch("app.main.get_identity_for_face")
+    @patch("app.main.get_crop_files", return_value={"crop-set"})
+    @patch("app.main.resolve_face_image_url", side_effect=lambda fid, _crops=None: f"/crops/{fid}.jpg")
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    def test_context_identity_missing_surfaces_review_banner(
+        self,
+        mock_date_badge,
+        mock_photo_badge,
+        mock_alignment,
+        mock_ai,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_crop_url,
+        mock_crop_files,
+        mock_get_id,
+        mock_photo_reg,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        del (
+            mock_date_badge,
+            mock_photo_badge,
+            mock_alignment,
+            mock_ai,
+            mock_upload_line,
+            mock_admin_bar,
+            mock_public_nav,
+            mock_nav_links,
+            mock_crop_url,
+            mock_crop_files,
+            mock_photo_reg,
+            mock_dim,
+        )
+        from app.main import public_photo_page, to_xml
+
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "dense.jpg",
+            "faces": [
+                {"face_id": "face-0", "bbox": [100, 100, 200, 240]},
+                {"face_id": "face-1", "bbox": [260, 100, 360, 240]},
+            ],
+            "collection": "Rhodes Collection",
+            "source": "Rhodes Collection",
+        }
+
+        def _identity_for_face(_registry, face_id):
+            if face_id == "face-0":
+                return {"identity_id": "person-0", "name": "Known Person", "state": "CONFIRMED"}
+            return {"identity_id": "person-1", "name": "Other Person", "state": "CONFIRMED"}
+
+        mock_get_id.side_effect = _identity_for_face
+
+        registry = MagicMock()
+        registry.get_identity.return_value = {
+            "identity_id": "context-1",
+            "name": "Jacob Cohen",
+            "state": "CONFIRMED",
+            "anchor_ids": ["missing-face"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = registry
+
+        html = to_xml(
+            public_photo_page(
+                "photo-1",
+                identity_id="context-1",
+                sort_by="date_asc",
+                user=None,
+                is_admin=True,
+                community_slug="rhodes",
+            )
+        )
+
+        assert 'data-testid="photo-context-banner"' in html
+        assert "Jacob Cohen is not currently tagged on this photo." in html
+        assert "Review before trusting this link." in html

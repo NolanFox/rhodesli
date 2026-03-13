@@ -258,5 +258,30 @@
 - verification:
   - `pytest tests/test_ui_clarity.py tests/test_public_person_page.py -x -q`
     - `50 passed, 2 skipped`
+
+## Person-to-Photo Trust Pass
+- the Rhodes dogfooding examples showed that the photo page could technically be
+  correct while still feeling wrong: users arriving from a person gallery had to
+  infer whether the selected person was actually present, disputed, or missing
+  by scanning overlays and face cards
+- improvements:
+  - context-linked photo pages now render an explicit person-context banner for
+    all `identity_id` flows, not only conflict cases
+  - the banner now distinguishes between:
+    - person present and trusted
+    - person present but disputed
+    - person missing from the current face assignments
+  - the current person's face card is promoted to the front of the people strip
+    / grid and receives a dedicated `photo-current-person-card` marker
+  - the banner includes a jump link back to the current person's face card when
+    the person is present on the photo
+- files:
+  - [app/page_routes.py](/Users/nolanfox/rhodesli/app/page_routes.py)
+  - [tests/test_public_photo_viewer.py](/Users/nolanfox/rhodesli/tests/test_public_photo_viewer.py)
+- verification:
+  - `pytest tests/test_public_photo_viewer.py -x -q`
+    - `23 passed`
+  - `pytest tests/test_public_person_page.py tests/test_photo_navigation.py tests/test_identify.py -x -q`
+    - `104 passed, 2 skipped`
   - `pytest tests/test_gedcom_routes.py tests/test_public_person_page.py::TestAdminControlsOnPersonPage -x -q`
     - `54 passed`
