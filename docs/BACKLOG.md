@@ -258,7 +258,7 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ### UX Features (Session 82a ideation, deferred 82f)
 - [ ] **UX-201: Missing Info Table View** — Admin view listing identities with missing metadata (no birth year, no GEDCOM link, no photos). ~30-45 min. Needs PRD. Source: 82a #21.
-- [ ] **UX-202: One-Click Bulk Tag Confirmation** — Confirm all faces in a high-confidence cluster at once. ~30-60 min. Risk: data writes. Source: 82a #30.
+- [x] **UX-202: One-Click Bulk Tag Confirmation** — DONE (Session 100c). Speed-run cluster review with confirm-all/reject-all. PRD-039.
 - [ ] **UX-203: Relational Context Labels** — Show GEDCOM relationships ("mother of X") on face cards. Requires Supabase GEDCOM query per identity. ~45-60 min. Source: 82a #19.
 
 ### Standalone Tool Suite (PRD-034) — Session 94

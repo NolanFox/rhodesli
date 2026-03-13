@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.98.0 · ~4694 tests · 939 photos · 3412 identities · 84 confirmed
+Current: v0.99.1 · ~4694 tests · 939 photos · 3412 identities · 84 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -72,7 +72,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-09: UPLOAD-001: Charlie Fox collection ingest — 636 photos via local pipeline (Session 96b)
 - [x] 2026-03-09: PRD037-001: Auto-cluster after upload — wire clustering into `_background_ingest()` (Session 96b)
 - [x] 2026-03-09: PRD037-002: GEDCOM triage page — surface top identities by face count for linking (Session 96b)
-- [-] 2026-03-09: PRD037-004: Wire cluster review into community sidebar (Session 96c)
+- [x] 2026-03-13: PRD037-004: Wire cluster review into community sidebar — speed-run mode with keyboard shortcuts (Session 100c)
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
@@ -165,6 +165,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-13: **v0.99.1 — Session 100c**: Speed-run cluster review mode shipped (PRD-039). Keyboard shortcuts Y/N/S/D, auto-advance, progress bar, community-scoped filtering. confirm-all/reject-all Postgres-compatible. Yaacov Franco + Solomon Galante data fixes synced. 10 new tests, 4163 app tests pass. Browser verified 6/6 PASS. 2 deploys SUCCESS.
 
 - [x] 2026-03-11: **v0.98.0 — Session 97**: PRD-038 longitudinal ML foundation shipped. Repaired mixed-schema evals, rebuilt the longitudinal baseline, unified scorer paths, added prompt-manifest lineage, hardened local recalibration with reversible labels, shipped a prototype-bank reranker in shadow mode, added active learning in review UX, and built a frozen-embedding adapter experiment harness. Final merged-branch verification: `pytest tests/ -x -q` (`4116 passed, 21 skipped`) and `pytest rhodesli_ml/tests/ -x -q` (`578 passed, 2 skipped`). Rollout gates remain closed for matcher changes pending stronger age-gap evidence.
 - [x] 2026-03-11: **v0.97.12 — Session 96f-cont1**: Follow-up provenance visibility + browse-safe admin return cleanup. Workstation and public photo cards now surface uploader/archive-entry provenance directly, public `/photos` now carries the same tie-break metadata as workstation photo lists, photo detail provenance moved higher in the metadata stack, and admin return links from public identify/person pages now land in community-aware browse-mode queues. Verified with targeted slices (`43 passed`, `133 passed`), full gates (`4110 passed, 7 skipped`; `566 passed`), and live `/health` (`200`, `1932` active identities, `939` photos).

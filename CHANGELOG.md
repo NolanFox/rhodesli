@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.1] — 2026-03-13 (Session 100c: Speed-Run Cluster Review)
+
+### Added
+- **Speed-run cluster review mode** — `/admin/upload-review?mode=speed` with keyboard shortcuts (Y/N/S/D), auto-advance, progress bar, community-scoped filtering (PRD-039)
+- 10 new tests for speed-run review flow
+- Duplicate progress bar fix on initial speed-run load
+
+### Fixed
+- **confirm-all/reject-all Postgres compatibility** — now use `load_registry()`/`save_registry()` instead of direct JSON access
+- **Yaacov Franco + Solomon Galante data fixes** synced to Supabase
+
+### Verification
+- App tests: 4163 passed
+- Browser verified: dashboard, speed-run, skip, dismiss, Rhodes landing, Yaacov Franco page — all PASS
+- 2 deploys SUCCESS
+
 ## [v0.99.0] — 2026-03-13 (Session 100b: Dogfood Fix Sprint)
 
 ### Fixed

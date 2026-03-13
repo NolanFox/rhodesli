@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 100c: Speed-Run Cluster Review (2026-03-13) — v0.99.1
+- PRD-039: Batch cluster review — speed-run mode
+- `/admin/upload-review?mode=speed` with keyboard shortcuts (Y/N/S/D), auto-advance, progress bar
+- Community-scoped filtering, confirm-all/reject-all Postgres-compatible
+- Yaacov Franco + Solomon Galante data fixes synced to Supabase
+- Duplicate progress bar fix on initial load
+- 10 new tests, 4163 app tests pass
+- Browser verified: dashboard, speed-run, skip, dismiss, Rhodes landing, Yaacov Franco — all PASS
+- Agent: Claude Code (Opus 4.6)
+
 ## Session 100b: Dogfood Fix Sprint (2026-03-13) — v0.99.0
 - Comprehensive audit of sessions 97-100 (docs/assessments/session-100b-audit.md)
 - Fixed confirmed faces showing "Needs review" on bbox overlap (Jacob Cohen, Caden Franco Sadis)
