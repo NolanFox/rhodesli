@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S}\" >&2; exit 2; fi; if [ ! -f \"docs/session_logs/session-${S}-log.md\" ]; then echo \"BLOCKED: Session log missing: docs/session_logs/session-${S}-log.md\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"BLOCKED: Uncommitted files\" >&2; git status --porcelain >&2; exit 2; fi; exit 0'",
+            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S}\" >&2; exit 2; fi; if [ ! -f \"docs/session_logs/session-${S}-log.md\" ]; then echo \"BLOCKED: Session log missing: docs/session_logs/session-${S}-log.md\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"WARNING: Uncommitted files (commit before ending session)\" >&2; git status --porcelain >&2; exit 1; fi; exit 0'",
             "timeout": 30
           }
         ]
