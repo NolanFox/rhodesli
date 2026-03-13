@@ -113,6 +113,9 @@ class TestFindSimilarPage:
         assert "Merge" in resp.text
         assert "Not Same" in resp.text
         assert "/api/identity/id-leon/merge/id-nace?source=similar_page" in resp.text
+        assert 'data-testid="similar-admin-summary"' in resp.text
+        assert "Review in Queue" in resp.text
+        assert 'data-testid="similar-result-state"' in resp.text
 
     def test_community_route_preserves_prefixed_links(self, client, mock_similar_data):
         """Community-scoped similar page should keep person and API links inside the community."""

@@ -919,6 +919,7 @@ def get(identity_id: str, sess=None, request=None):
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    current_community = getattr(request.state, "community", None) if request else None
     nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     registry = _main_mod.load_registry()
@@ -971,6 +972,10 @@ def get(identity_id: str, sess=None, request=None):
     # Confidence tier for distance — color-coded labels
     from core.confidence import confidence_tier_from_distance
 
+    mergeable_count = sum(1 for n in neighbors if n.get("can_merge"))
+    blocked_count = sum(1 for n in neighbors if not n.get("can_merge"))
+    dismissed_count = sum(1 for n in neighbors if n.get("state") in {"SKIPPED", "REJECTED", "CONTESTED"})
+
     # Build result grid cards
     result_cards = []
     for n in neighbors:
@@ -978,6 +983,22 @@ def get(identity_id: str, sess=None, request=None):
             continue
         nid = n["identity_id"]
         tier_label, tier_cls = confidence_tier_from_distance(n.get("distance", 99))
+        neighbor_section = _main_mod._section_for_state(n.get("state", "INBOX"))
+        state_label = {
+            "CONFIRMED": "Identified",
+            "SKIPPED": "Dismissed",
+            "REJECTED": "Rejected",
+            "CONTESTED": "Contested",
+            "PROPOSED": "Proposed",
+        }.get(n.get("state"), "In Queue")
+        state_cls = {
+            "CONFIRMED": "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+            "SKIPPED": "bg-amber-500/10 text-amber-300 border border-amber-500/20",
+            "REJECTED": "bg-rose-500/10 text-rose-300 border border-rose-500/20",
+            "CONTESTED": "bg-rose-500/10 text-rose-300 border border-rose-500/20",
+            "PROPOSED": "bg-sky-500/10 text-sky-300 border border-sky-500/20",
+        }.get(n.get("state"), "bg-slate-700 text-slate-300 border border-slate-600")
+        blocked_reason = n.get("merge_blocked_reason_display") or n.get("merge_blocked_reason")
         admin_actions = []
         if is_admin:
             admin_actions.append(
@@ -1004,6 +1025,14 @@ def get(identity_id: str, sess=None, request=None):
                     type="button",
                 )
             )
+            admin_actions.append(
+                A(
+                    "Review in Queue",
+                    href=f"{nav_prefix}/?section={neighbor_section}&view=browse#identity-{nid}",
+                    cls="text-xs px-2 py-1 border border-slate-600 text-slate-300 rounded hover:border-slate-500 hover:text-white transition-colors",
+                    data_testid="similar-review-queue-link",
+                )
+            )
         card = Div(
             A(
                 Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full h-full object-cover", loading="lazy"),
@@ -1013,10 +1042,31 @@ def get(identity_id: str, sess=None, request=None):
             Div(
                 Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
                 Div(
+                    Span(state_label, cls=f"text-[10px] px-2 py-0.5 rounded-full {state_cls}", data_testid="similar-result-state"),
+                    _main_mod._cross_community_badge(nid, current_community),
+                    cls="flex items-center gap-1 flex-wrap mt-1",
+                ),
+                Div(
                     Span(tier_label, cls=f"text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
                     Span(f"{n.get('distance', 0):.2f}", cls="text-xs text-slate-500 ml-2") if is_admin else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
+                P(
+                    "This match is blocked because the faces already appear in the same photo."
+                    if blocked_reason == "co_occurrence"
+                    else f"Merge blocked: {blocked_reason}"
+                    if blocked_reason
+                    else "",
+                    cls="text-[11px] text-amber-300/80 mt-2 leading-snug",
+                )
+                if blocked_reason and is_admin
+                else None,
+                P(
+                    "Previously dismissed or contested matches stay visible here so they can be reviewed deliberately.",
+                    cls="text-[11px] text-slate-400 mt-2 leading-snug",
+                )
+                if n.get("state") in {"SKIPPED", "REJECTED", "CONTESTED"}
+                else None,
                 Span(
                     f"{n.get('face_count', 0)} face{'s' if n.get('face_count', 0) != 1 else ''}",
                     cls="text-xs text-slate-400 mt-0.5 block",
@@ -1099,6 +1149,32 @@ def get(identity_id: str, sess=None, request=None):
                         Div(
                             H1(name, cls="text-3xl font-serif font-bold text-white mb-2"),
                             P(f"{total_faces} photo{'s' if total_faces != 1 else ''}", cls="text-slate-400 mb-4"),
+                            Div(
+                                Span(
+                                    f"{mergeable_count} mergeable",
+                                    cls="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20",
+                                ),
+                                Span(
+                                    f"{blocked_count} blocked",
+                                    cls="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20",
+                                ),
+                                Span(
+                                    f"{dismissed_count} dismissed/contested",
+                                    cls="text-xs px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600",
+                                ),
+                                cls="flex flex-wrap gap-2 mb-4",
+                                data_testid="similar-admin-summary",
+                            )
+                            if is_admin and neighbors
+                            else None,
+                            P(
+                                "Use this page to review candidates, then jump straight back into the queue when you need more surrounding context."
+                                if is_admin
+                                else "",
+                                cls="text-xs text-slate-500 mb-4 max-w-xl",
+                            )
+                            if is_admin
+                            else None,
                             Div(
                                 A(
                                     "View Profile",
