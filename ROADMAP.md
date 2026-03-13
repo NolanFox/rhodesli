@@ -140,13 +140,20 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
 - Prompt: docs/prompts/session-93-prompt.md
 
-### Session 96c: Community-Scoped Review + Cross-Community Identity Pipeline — PLANNED
-- Photo-derived community identity sets (AD-216) — fix "0 identities" for Fox Family
-- Enable sidebar Review + Admin sections for all communities
+### Session 100b: Dogfood Fix Sprint — IN PROGRESS
+- Fix all 26 user-reported dogfood issues from Session 100
+- BUG 1: Jacob Cohen/Jacob Franco bbox overlap — FIXED
+- BUG 2: Photo metadata save duplicate routes — FIXED
+- Dismissed faces visual treatment — FIXED
+- CHANGELOG/SESSION_HISTORY/BACKLOG updates — DONE
+- Remaining: photo overlay layout, face card cycling, browser verify
+
+### Session 96c: Community-Scoped Review + Cross-Community Identity Pipeline — COMPLETE
+- Photo-derived community identity sets (AD-216)
+- Admin sections ungated for all communities
 - Community-aware discoveries pipeline
-- Cross-community search verification + manual merge path for Type 2 errors
-- Backfill identity_communities for Fox Family
-- Wire add_identity_to_community() into clustering pipeline
+- Supabase backfill (2533 identities)
+- 81 new tests, browser verified 10/10
 - Prompt: docs/prompts/session-96c-prompt.md
 
 ### Session 95: Fox MVP + Standalone Tool Suite — COMPLETE
