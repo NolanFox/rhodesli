@@ -83,15 +83,65 @@ The intended flow after speed-run triage:
 
 This requires the speed-run enrichment panel to support the full workflow: merge → name → GEDCOM link, all without leaving the speed-run page.
 
+## Additional UX Issues from Screenshot Review
+
+### FB-113: "Under Review" badge contradicts CONFIRMED state
+- **Severity:** P1
+- **Screenshots:** Person 2986 page, Person 3086 page
+- **What:** Public person page shows "Under Review" badge and "This person hasn't been identified yet" CTA even when the identity is CONFIRMED. The admin section below correctly shows CONFIRMED.
+- **Root cause:** The public page status badge uses a different logic path than the admin badge. CONFIRMED identities without a name still show "Under Review" instead of "Confirmed."
+- **Impact:** Confusing and contradictory — makes it look like the system is broken.
+
+### FB-114: "Grouped (N faces)" badge meaning unclear
+- **Severity:** P2
+- **Screenshots:** People page cards
+- **What:** Some identity cards show "Grouped (14 faces)" next to CONFIRMED. What does "Grouped" mean? Is it different from non-grouped CONFIRMED? Roland Fox shows CONFIRMED without "Grouped" while Person 3594 shows CONFIRMED + "Grouped (14 faces)".
+- **Root cause:** "Grouped" likely means the identity came from the clustering pipeline rather than manual creation. This is an implementation detail, not meaningful to the admin.
+- **Recommendation:** Remove "Grouped" badge or replace with something meaningful like "From clustering" in a tooltip.
+
+### FB-115: Face count mismatch / stale cache on people cards
+- **Severity:** P2
+- **Screenshots:** People page showing Person 2986 at 44 faces, then later Charles Fox at 68 faces
+- **What:** After merging, the people page sometimes shows stale face counts until a hard refresh. Person 2986 showed 44 faces even after a merge that should have updated to 58.
+- **Root cause:** Registry cache staleness — the in-memory cache wasn't invalidated between the merge action and the page reload.
+
+### FB-116: Person page title doesn't update after rename
+- **Severity:** P2
+- **Screenshots:** Person 2988 page after rename to "Esther Burd Fox"
+- **What:** The page heading still shows "Unidentified Person 2988" after successful rename. The admin section shows "Esther Burd Fox" correctly, and a "Renamed to 'Esther Burd Fox'" confirmation appears.
+- **Root cause:** The HTMX partial swap for rename updates the admin section but doesn't update the main page heading (`<h1>`). Requires a full page refresh to see the new name in the header.
+
+### FB-117: Missing face crop on similar matches (CROP-001 recurrence)
+- **Severity:** P2
+- **Screenshots:** Similar identities panel for Person 3086
+- **What:** Person d768a992 in the similar matches shows a grey/missing crop placeholder. This is the CROP-001 issue (Fox crops not on R2) appearing in the similar matches context.
+
+### FB-118: "Merge → Charles Fox" button label — good pattern, apply everywhere
+- **Severity:** Positive feedback
+- **Screenshots:** Similar identities after merge
+- **What:** After a merge establishes Charles Fox, the merge buttons for other similar identities update to "Merge → Charles Fox" instead of just "Merge". This is clear and helpful — should be the pattern everywhere.
+
+### FB-119: Two unnamed confirmed people remain (Person 3086, Person 2941)
+- **Severity:** Observation
+- **Screenshots:** Final people page
+- **What:** Person 3086 (10 faces) and Person 2941 (8 faces) are CONFIRMED but unnamed and unmerged. They might be additional Charles Fox clusters at different ages, or different people. The similar panel showed Person 3086 at 72% match to Charles Fox — likely the same person.
+- **Action:** Nolan should decide whether to merge these or keep separate.
+
 ## Screenshots
-16 screenshots captured and viewable in Chrome tabs. Chronological order shows:
+16 screenshots captured. Chronological order:
 1. Speed-run confirm of Person 3594 (Charles Fox, 14 faces)
 2. Enrichment panel with suggested matches
-3. People page progression through merges (6→5→3 people)
-4. Person 2986 page (Charles Fox, 58 faces after merge)
-5. GEDCOM linking (Charles Borris Fox, b. 1931)
-6. Person 3086 similar identities panel (Charles Fox 72% match)
-7. Merge complete (68 faces confirmed as Charles Fox)
-8. Person 2988 page (renamed to Esther Burd Fox)
-9. GEDCOM linking for Esther (Esther Burd, b. 1900, d. 1966)
-10. Final state: 3 confirmed people (Roland Fox, Esther Burd Fox, Person 2986)
+3. People page — 6 confirmed people
+4. People page — 5 after first merge (Person 3594 → Person 2986 = 58 faces)
+5. Person 2986 public page — "Unidentified Person 2986", CONFIRMED, 58 faces
+6. Person 2986 renamed to Charles Fox — confirmation shown
+7. People page — GEDCOM linking for Charles Fox → Charles Borris Fox (b. 1931)
+8. People page — GEDCOM linked, "Linked to Family Tree" green banner
+9. Person 3086 Similar panel — Charles Fox 72%, 5 other matches at 69%
+10. Similar panel after merge — "Merge → Charles Fox" buttons, 3 new cross-community matches
+11. Merge complete — "68 faces now confirmed as Charles Fox"
+12. People page — 3 people after all Charles Fox merges
+13. Person 2988 public page — "Unidentified Person 2988", CONFIRMED
+14. Person 2988 renamed to Esther Burd Fox
+15. People page — Esther Burd Fox GEDCOM search (55 results for "Esther Burd")
+16. Final state — Linked to GEDCOM "Esther Burd (b. 1900 — d. 1966)"
