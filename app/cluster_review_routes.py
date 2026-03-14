@@ -1282,7 +1282,7 @@ def post(
 
         # Capture state before modification for undo
         prev_state = identity.get("state", "INBOX")
-        # Promote all candidates
+        # Promote all candidates to anchors
         candidates = list(identity.get("candidate_ids", []))
         confirmed_count = 0
         for fid in candidates:
@@ -1291,6 +1291,15 @@ def post(
                 confirmed_count += 1
             except ValueError:
                 pass  # Skip faces that were already promoted
+
+        # For INBOX identities where faces are already in anchor_ids,
+        # candidate_ids may be empty — still need to set state to CONFIRMED
+        all_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        confirmed_count = max(confirmed_count, len(all_faces))
+
+        # Always set state to CONFIRMED on confirm-all
+        identity["state"] = "CONFIRMED"
+        identity["updated_at"] = _main_mod.datetime.now(_main_mod.timezone.utc).isoformat()
 
         _main_mod.save_registry(registry)
     except (ValueError, KeyError) as e:
