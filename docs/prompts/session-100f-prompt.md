@@ -27,6 +27,14 @@ This keeps the orchestrator context lean. Each subagent gets fresh context with 
 
 **If you notice context is above 50%, STOP. Commit, log, /clear. No exceptions.**
 
+## Rate Limit Safety
+If you hit rate limits:
+1. **DO NOT retry in a loop.** This has caused endless loops that lose all progress.
+2. Commit whatever is done so far.
+3. Write progress to `docs/session_logs/session-100f-log.md` with exactly where you stopped.
+4. Wait 60 seconds, then try ONE more time. If still rate-limited, STOP and leave the log for Nolan.
+5. Never let a hook or retry mechanism run more than 3 times without human input.
+
 ## Phase 0: Orient (5 min)
 - Read `tasks/lessons.md`
 - Read `docs/session_context/session-100-master-status.md`
@@ -150,7 +158,17 @@ After pressing Y (confirm), instead of immediately advancing:
 - Pre-fetch: When a card renders, also fetch the NEXT card via hidden HTMX request so it's ready instantly
 - Visual lock during processing: disable keyboard for 300ms after any action to prevent double-fire
 
-## Phase 5: Testing & Session Closeout (15 min)
+## Phase 5: Session Review — MANDATORY (20 min)
+**Run `/session-review` skill.** This is non-negotiable. It:
+1. Re-reads THIS prompt file
+2. Verifies every phase was completed with evidence
+3. Flags gaps, superficial work, silent deferrals
+4. Spawns an auto-fix subagent for anything fixable
+5. Writes `docs/assessments/session-100f-assessment.md`
+
+The stop hook blocks session end until the assessment exists. Do NOT skip this.
+
+## Phase 6: Testing & Session Closeout (15 min)
 
 ### Tests:
 - All new routes have tests (batch confirm, enriched speed-run panels)
