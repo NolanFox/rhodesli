@@ -540,3 +540,286 @@ class TestSpeedRunMode:
         assert resp.status_code == 200
         assert "Start Speed Run" in resp.text
         assert "mode=speed" in resp.text
+
+    def test_speed_run_confirm_returns_undo_button(self):
+        """Confirm-all in speed-run returns OOB undo button."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "INBOX",
+                "anchor_ids": ["inbox_a1"],
+                "candidate_ids": ["inbox_a2", "inbox_a3"],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/confirm-all?identity_id=cluster-1&speed_run=true&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-undo" in html
+        assert "Undo Last (Z)" in html
+        assert "speed-undo" in html
+
+    def test_speed_run_reject_returns_undo_button(self):
+        """Reject-all in speed-run returns OOB undo button."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "INBOX",
+                "anchor_ids": ["inbox_a1"],
+                "candidate_ids": ["inbox_a2"],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/reject-all?identity_id=cluster-1&speed_run=true&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-undo" in html
+        assert "Undo Last (Z)" in html
+
+    def test_speed_run_skip_returns_undo_button(self):
+        """Skip in speed-run returns OOB undo button."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/skip?identity_id=cluster-1&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-undo" in html
+        assert "Undo Last (Z)" in html
+
+    def test_speed_run_dismiss_returns_undo_button(self):
+        """Dismiss in speed-run returns OOB undo button."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 3),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = dict(identities)
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/dismiss?identity_id=cluster-1&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-undo" in html
+        assert "Undo Last (Z)" in html
+
+    def test_speed_run_undo_confirm_restores_candidates(self):
+        """Undo of confirm-all moves faces back to candidate_ids."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "CONFIRMED",
+                "anchor_ids": ["inbox_a1", "inbox_a2", "inbox_a3"],
+                "candidate_ids": [],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        face_data = json.dumps({"candidates": ["inbox_a2", "inbox_a3"], "prev_state": "INBOX"})
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            mock_save = stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post(
+                f"/api/cluster-review/undo?identity_id=cluster-1&action=confirm-all&offset=0&face_data={face_data}"
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "speed-run-card" in html
+        mock_save.assert_called_once()
+        # Verify state was restored
+        identity = identities["cluster-1"]
+        assert identity["state"] == "INBOX"
+        # Faces should be back in candidate_ids
+        assert "inbox_a2" in identity["candidate_ids"]
+        assert "inbox_a3" in identity["candidate_ids"]
+
+    def test_speed_run_undo_reject_restores_candidates(self):
+        """Undo of reject-all removes faces from negative_ids, restores to candidates."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "INBOX",
+                "anchor_ids": ["inbox_a1"],
+                "candidate_ids": [],
+                "negative_ids": ["inbox_a2", "inbox_a3"],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        face_data = json.dumps({"candidates": ["inbox_a2", "inbox_a3"], "prev_state": "INBOX"})
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            mock_save = stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post(
+                f"/api/cluster-review/undo?identity_id=cluster-1&action=reject-all&offset=0&face_data={face_data}"
+            )
+
+        assert resp.status_code == 200
+        mock_save.assert_called_once()
+        identity = identities["cluster-1"]
+        assert identity["state"] == "INBOX"
+        assert "inbox_a2" in identity["candidate_ids"]
+        assert "inbox_a3" in identity["candidate_ids"]
+        assert "inbox_a2" not in identity["negative_ids"]
+        assert "inbox_a3" not in identity["negative_ids"]
+
+    def test_speed_run_undo_dismiss_restores_state(self):
+        """Undo of dismiss restores identity state from SKIPPED."""
+        identities = {
+            "cluster-1": {
+                "name": "Person Alpha",
+                "state": "SKIPPED",
+                "anchor_ids": ["inbox_a1", "inbox_a2", "inbox_a3"],
+                "candidate_ids": [],
+                "negative_ids": [],
+                "version_id": 1,
+            },
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        face_data = json.dumps({"prev_state": "INBOX"})
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            mock_save = stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post(
+                f"/api/cluster-review/undo?identity_id=cluster-1&action=dismiss&offset=0&face_data={face_data}"
+            )
+
+        assert resp.status_code == 200
+        mock_save.assert_called_once()
+        assert identities["cluster-1"]["state"] == "INBOX"
+
+    def test_speed_run_undo_skip_no_save(self):
+        """Undo of skip doesn't call save (skip doesn't modify data)."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            mock_save = stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/undo?identity_id=cluster-1&action=skip&offset=0")
+
+        assert resp.status_code == 200
+        assert "speed-run-card" in resp.text
+        mock_save.assert_not_called()
+
+    def test_speed_run_undo_hides_undo_button(self):
+        """After undo, the undo button should be hidden."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+            "cluster-2": _make_inbox_cluster("Person Beta", 3),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            resp = client.post("/api/cluster-review/undo?identity_id=cluster-1&action=skip&offset=0")
+
+        assert resp.status_code == 200
+        html = resp.text
+        # Undo button div should exist but be empty (no button content)
+        assert "speed-run-undo" in html
+        assert "Undo Last (Z)" not in html
+
+    def test_speed_run_keyboard_z_shortcut_in_page(self):
+        """Speed-run page includes Z keyboard shortcut for undo."""
+        identities = {
+            "cluster-1": _make_inbox_cluster("Person Alpha", 4),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(_mock_no_proposals())
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            stack.enter_context(_mock_community_lookup(None))
+            stack.enter_context(_mock_community_url_prefix())
+            resp = client.get("/admin/upload-review?mode=speed")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "'z': 'speed-undo'" in html
+        assert "Z = Undo" in html
