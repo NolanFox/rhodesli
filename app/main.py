@@ -605,17 +605,17 @@ def _identity_home_community_slug(identity_id: str, current_community: dict | No
     return None
 
 
-# Cached community photo/identity ID sets (60s TTL)
+# Cached community photo/identity ID sets (120s TTL)
 _community_photo_ids_cache: dict = {}  # community_id -> set[str]
 _community_identity_ids_cache: dict = {}  # community_id -> set[str]
 _community_ids_cache_ts: float = 0.0
-_COMMUNITY_IDS_CACHE_TTL: float = 60.0
+_COMMUNITY_IDS_CACHE_TTL: float = 120.0
 
 
 def _get_community_photo_ids(community: dict | None) -> set[str] | None:
     """Return photo IDs for a community, or None when scoping cannot be computed.
 
-    Results cached for 60s. Returning None means "fall back to no filtering"
+    Results cached for 120s. Returning None means "fall back to no filtering"
     because there is no reliable community-photo scope available.
     ALL communities including Rhodes get photo-derived scoping to prevent
     cross-community leakage when the community mapping is available.
@@ -676,7 +676,7 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
     in photos belonging to this community. This is the source of truth — if a person
     has faces in a community's photos, they belong to that community.
 
-    Results cached for 60s. Returning None means "fall back to no filtering"
+    Results cached for 120s. Returning None means "fall back to no filtering"
     because a reliable photo-derived scope is unavailable. ALL communities
     including Rhodes get photo-derived scoping to prevent cross-community
     leakage when the mapping is available.
@@ -1050,7 +1050,7 @@ REGISTRY_PATH = data_path / "identities.json"
 _registry_cache = None
 _registry_cache_ts: float = 0.0
 _registry_cache_key: tuple[str, str] | None = None
-_REGISTRY_CACHE_TTL: float = 30.0
+_REGISTRY_CACHE_TTL: float = 120.0
 
 
 def load_registry():
@@ -1059,7 +1059,7 @@ def load_registry():
     When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
     When DATA_SOURCE=json (default), loads from JSON file.
 
-    Uses a 30-second TTL cache to avoid repeated Supabase queries.
+    Uses a 120-second TTL cache to avoid repeated Supabase queries.
 
     Returns an empty registry if the source is missing or corrupted,
     so the server never crashes on bad data.

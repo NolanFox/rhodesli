@@ -500,6 +500,9 @@ PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 - [ ] **ENV-001**: Dev/staging/prod environment separation — Separate Sentry DSNs, Railway projects, Supabase instances for each environment. Immediate: add `SENTRY_ENVIRONMENT=development` to local `.env`. Medium-term: disable Sentry in local dev (only init when `RAILWAY_ENVIRONMENT` set). Long-term: full environment split. Source: Session 95b Sentry error discussion. See OD-008.
 - [ ] **OBS-001**: Observability data retention strategy — Sentry free tier retains events 90 days, PostHog free tier 1 year. If longer retention needed: export to Supabase `error_log` table via API, or upgrade tiers. Not urgent at current scale. Source: Session 95b discussion. See OD-009.
 - [ ] **OBS-002**: Error classification (dev vs production) — Tag errors with source context. Dev errors should be filterable/excludable from production dashboards. Immediate fix: `SENTRY_ENVIRONMENT` tag. Source: Session 95b Nolan feedback.
+- [ ] **EGRESS-001**: ETag/conditional fetch for Supabase cache reloads — Only download tables when data has changed. Requires custom Supabase RPC function (e.g., `SELECT md5(string_agg(updated_at::text, ','))`) to compare hashes. Would reduce egress by ~95% for read-heavy patterns. Trigger: when sustained concurrent users > 5 or egress approaches 80% of plan limit. Source: OD-011.
+- [ ] **EGRESS-002**: Incremental sync for large tables — Fetch only rows with `updated_at > last_fetch_timestamp` instead of full table reload. Most impactful for identities (3413 rows) and photo_faces (2638 rows). Trigger: when any cached table exceeds 1MB. Source: OD-011.
+- [ ] **EGRESS-003**: Selective column fetch — Replace `select("*")` with `select("col1,col2,...")` in cache reload queries. Quick win that doesn't require architectural changes. Source: OD-011.
 
 ---
 

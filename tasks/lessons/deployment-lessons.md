@@ -129,6 +129,13 @@ See also: `docs/DEPLOYMENT_GUIDE.md`, `docs/ops/OPS_DECISIONS.md`
 - **Rule**: Supabase/Postgres DATA_SOURCE fallback masks real connection failures — health endpoint must clearly show which data source is active.
 - **Prevention**: Health endpoint should report DATA_SOURCE value and whether Postgres load succeeded or fell back to JSON.
 
+### Lesson 139: Supabase free-tier egress is dominated by TTL cache reloads, not user traffic
+- **Mistake**: Set registry TTL to 30s without considering egress cost. A 380KB table reloaded every
+  30s = 31 GB/month under constant traffic — 6x the free tier limit.
+- **Rule**: Every TTL cache on a Supabase table is an egress multiplier. Calculate worst-case monthly
+  cost before choosing TTL: `table_size_KB × (3600/TTL_seconds) × 24 × 30 / 1024 / 1024 = GB/month`.
+- **Prevention**: OD-011 documents thresholds. `.claude/rules/egress-budget.md` triggers on new table reads.
+
 ### Lesson 71: has_insightface check must probe actual deferred imports, not just function references
 - **Mistake**: `/api/compare/upload` checked `from core.ingest_inbox import extract_faces` and set `has_insightface = True`. But `core.ingest_inbox` has only stdlib top-level imports — cv2 and insightface are deferred inside `extract_faces()`. So the import always succeeds, even when cv2/insightface aren't installed. The graceful degradation path (save without face detection) was never reached on production.
 - **Rule**: When checking whether optional ML dependencies are available, import the actual packages (cv2, insightface), not just the function that defers them. A function reference import tells you nothing about whether the function's internal imports will succeed.

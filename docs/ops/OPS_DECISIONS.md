@@ -115,6 +115,55 @@ This document records deployment, infrastructure, and operational decisions for 
   4. Workaround: `railway deploy` from project root
 - **Breadcrumbs**: Lesson 117 in tasks/lessons/deployment-lessons.md
 
+## OD-011: Supabase Egress Budget — TTL Tuning + Monitoring Thresholds
+- **Date**: 2026-03-14
+- **Session**: 100e (ad-hoc)
+- **Context**: Supabase free plan (5GB egress/month) exceeded at 5.5GB. Root cause: 30s TTL on
+  registry cache reloads 380KB per cycle. Combined with 60s community cache and heavy dev sessions
+  (Sessions 96-100), egress spiked. Supabase granted one-time grace period until April 13, 2026.
+- **Decision**: Bump registry TTL from 30s to 120s, community IDs TTL from 60s to 120s. This
+  reduces egress from these caches by 4x and 2x respectively. Other caches (face alignment,
+  GEDCOM, community lookup) already at 300s — left unchanged.
+- **Tradeoffs**:
+  - Admin changes now take up to 2 minutes to propagate to other browser sessions (was 30s)
+  - Single-admin app — admin sees their own changes immediately (local cache invalidated on write)
+  - Community users are read-only browsers — 2-minute staleness is invisible
+  - Under constant traffic, 120s TTL = ~7.8 GB/month for identities alone — still over free tier
+    but normal traffic is bursty, not constant. Dev sessions are the primary driver.
+- **Egress budget analysis** (per full table fetch):
+  | Table | Size | TTL | Fetches/hr | GB/month (24/7) |
+  |-------|------|-----|------------|-----------------|
+  | identities | 380 KB | 120s (was 30s) | 30 | 7.8 |
+  | community_ids | ~50 KB | 120s (was 60s) | 30 | 1.1 |
+  | photos | 436 KB | 120s | 30 | 9.0 |
+  | photo_faces | 293 KB | 120s | 30 | 6.0 |
+  | face_alignment | varies | 300s | 12 | ~1.0 |
+  | gemini_api_calls | 1.49 MB | on-demand | varies | varies |
+  Note: These are WORST CASE (constant traffic). Real traffic is bursty — dev sessions only.
+- **Monitoring thresholds** (revisit this decision when ANY of these trigger):
+  1. **Multi-admin**: When more than 1 admin user exists, 120s staleness becomes visible. Revisit TTL
+     or implement write-through cache invalidation.
+  2. **Table growth**: When identities table exceeds 1MB per fetch (~9000 rows), consider incremental
+     sync (fetch only rows with updated_at > last_fetch) or ETag-based conditional requests.
+  3. **Concurrent users**: When sustained concurrent users exceed 10, constant-traffic egress model
+     applies. At 10 users x 120s TTL x ~1.1MB total per cycle = ~24 GB/month -> Pro plan required.
+  4. **gemini_api_calls growth**: At 1.49MB and growing, this table will become the largest. If the
+     estimate tool gets traffic, add TTL caching or paginated/filtered fetches.
+  5. **Supabase egress alert**: If Supabase sends another quota warning, upgrade to Pro ($25/mo,
+     250GB egress) — the ROI of further optimization drops below $25/mo of engineering time.
+- **Future optimizations** (BACKLOG items):
+  - EGRESS-001: ETag/conditional fetch — only download when data actually changed
+  - EGRESS-002: Incremental sync — fetch only rows newer than last fetch timestamp
+  - EGRESS-003: Selective column fetch — don't load full rows when only IDs needed
+- **Alternatives rejected**:
+  - 300s TTL: Too stale for admin UX when managing identities
+  - ETag caching: Supabase REST API doesn't natively support ETags on table queries; would need
+    custom RPC function. Over-engineered for current traffic.
+  - Pro plan upgrade: Would solve it but doesn't fix the inefficiency. Worth doing when concurrent
+    users reach 10+.
+- **Breadcrumbs**: Lesson 139 (tasks/lessons/deployment-lessons.md), BACKLOG.md EGRESS-001/002/003,
+  `.claude/rules/egress-budget.md`
+
 ## OD-008: Dev vs Production Environment Separation
 - **Date**: 2026-03-09
 - **Session**: 95b
