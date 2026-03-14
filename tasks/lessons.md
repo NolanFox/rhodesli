@@ -71,6 +71,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 94 | **Wait for deploy completion before Chrome verification — 502 corrupts JS state** |
 | 117 | **Railway region deprecation silently breaks GitHub deploys — use CLI deploy workaround** |
 | 133 | **Supabase/Postgres DATA_SOURCE fallback masks real connection failures** |
+| 139 | Supabase free-tier egress is dominated by TTL cache reloads, not user traffic |
 | 71 | has_insightface check must probe actual deferred imports |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
