@@ -427,8 +427,32 @@ class TestSidebarDiscoveries:
         # The count 7 should appear in the sidebar
         assert ">7<" in html or 'title="Discoveries (7)"' in html
 
-    def test_sidebar_discovery_zero_still_shows(self):
-        """Sidebar shows Discoveries link even when count is 0."""
+    def test_sidebar_discovery_shows_for_admin(self):
+        """Sidebar shows Discoveries link for admin users (ML review concept)."""
+        from app.main import sidebar
+        from fastcore.xml import to_xml
+
+        user = MagicMock()
+        user.is_admin = True
+        user.email = "admin@test.com"
+
+        counts = {
+            "to_review": 5,
+            "confirmed": 10,
+            "skipped": 3,
+            "rejected": 1,
+            "photos": 20,
+            "pending_uploads": 0,
+            "proposals": 2,
+            "pending_annotations": 0,
+            "discoveries": 0,
+        }
+
+        html = to_xml(sidebar(counts=counts, current_section="to_review", user=user))
+        assert 'href="/discoveries"' in html
+
+    def test_sidebar_contributor_sees_my_contributions(self):
+        """Non-admin contributors see 'My Contributions' instead of ML review items."""
         from app.main import sidebar
         from fastcore.xml import to_xml
 
@@ -449,7 +473,8 @@ class TestSidebarDiscoveries:
         }
 
         html = to_xml(sidebar(counts=counts, current_section="to_review", user=user))
-        assert 'href="/discoveries"' in html
+        assert "My Contributions" in html
+        assert "Contribute" in html
 
     def test_sidebar_counts_includes_discoveries_key(self):
         """_compute_sidebar_counts returns a 'discoveries' key."""

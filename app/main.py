@@ -4841,18 +4841,8 @@ def sidebar(
             cls="border-b border-slate-700/50",
         )
 
-    # Build review section (all communities need ML review features)
-    review_section = Div(
-        P(
-            "Review",
-            cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
-        ),
-        nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
-        nav_item(
-            f"{prefix}/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"
-        ),
-        nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
-        # Notifications bell with live unread count (PRD-028)
+    # Notifications bell (shared by admin and contributor)
+    notifications_item = (
         A(
             Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
             Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
@@ -4870,9 +4860,46 @@ def sidebar(
             cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
         )
         if user
-        else None,
-        cls="mb-3",
+        else None
     )
+
+    # Build review section — admins see full ML review, contributors see simplified view
+    if user and user.is_admin:
+        review_section = Div(
+            P(
+                "Review",
+                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+            ),
+            nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
+            nav_item(
+                f"{prefix}/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"
+            ),
+            nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
+            notifications_item,
+            cls="mb-3",
+        )
+    elif user:
+        # Contributor sidebar — focused on what THEY can do
+        review_section = Div(
+            P(
+                "Contribute",
+                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+            ),
+            nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
+            A(
+                Span("📝", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
+                Span("My Contributions", cls="sidebar-label ml-2 whitespace-nowrap"),
+                href="/my-contributions",
+                title="View your submissions",
+                onclick="closeSidebar()",
+                cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'my-contributions' else 'text-slate-300 hover:bg-slate-700/50'}",
+            ),
+            notifications_item,
+            cls="mb-3",
+        )
+    else:
+        # Anonymous — no review section
+        review_section = None
 
     # Build browse section items — advanced items only for Rhodes
     browse_items = [

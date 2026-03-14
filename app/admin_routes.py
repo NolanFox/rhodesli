@@ -2122,6 +2122,20 @@ def post(sess=None):
         except Exception as e:
             logger.warning(f"Failed to apply annotation {ann_id}: {e}")
 
+        # Notify the contributor (BROKEN-2 fix)
+        if ann.get("submitted_by") and ann["submitted_by"] not in ("anonymous", "admin"):
+            try:
+                from app.notification_routes import create_annotation_approved_notification
+
+                create_annotation_approved_notification(
+                    identity_id=ann.get("target_id", ""),
+                    identity_name=ann.get("value", "Unknown"),
+                    annotator_name=ann["submitted_by"].split("@")[0],
+                    user_email=ann["submitted_by"],
+                )
+            except Exception:
+                pass  # Don't block batch on notification failure
+
         approved_count += 1
         results.append(
             Div(
@@ -2258,6 +2272,21 @@ def post(ann_id: str, sess=None):
             merge_label = "Merge executed"
 
     _log_audit("approved", ann_id, user.email if user else "admin", merge_label or ann["value"])
+
+    # Notify the contributor that their suggestion was approved (BROKEN-2 fix)
+    if ann.get("submitted_by") and ann["submitted_by"] not in ("anonymous", "admin"):
+        try:
+            from app.notification_routes import create_annotation_approved_notification
+
+            identity_name = ann.get("value", "Unknown")
+            create_annotation_approved_notification(
+                identity_id=ann.get("target_id", ""),
+                identity_name=identity_name,
+                annotator_name=ann["submitted_by"].split("@")[0],
+                user_email=ann["submitted_by"],
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send approval notification for {ann_id}: {e}")
 
     status_label = "Approved" if ann["type"] != "merge_suggestion" else "Merged"
     return Div(

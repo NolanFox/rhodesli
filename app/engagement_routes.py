@@ -1067,7 +1067,7 @@ async def post(email: str, password: str, sess):
 
 @rt("/my-contributions")
 def get(sess=None):
-    """User's annotation history."""
+    """User's contribution history — annotations AND uploads."""
     denied = _main_mod._check_login(sess)
     if denied:
         return RedirectResponse("/login", status_code=303)
@@ -1076,50 +1076,152 @@ def get(sess=None):
     if not user:
         return RedirectResponse("/login", status_code=303)
 
+    # --- Annotation contributions ---
     annotations = _main_mod._load_annotations()
     my_anns = [a for a in annotations["annotations"].values() if a.get("submitted_by") == user.email]
     my_anns.sort(key=lambda a: a.get("submitted_at", ""), reverse=True)
 
-    rows = []
+    ann_rows = []
+    ann_stats = {"pending": 0, "approved": 0, "rejected": 0}
     for a in my_anns:
+        status = a.get("status", "pending")
+        if status in ann_stats:
+            ann_stats[status] += 1
         status_cls = {
             "pending": "text-amber-400 bg-amber-900/30",
+            "pending_unverified": "text-amber-400 bg-amber-900/30",
             "approved": "text-emerald-400 bg-emerald-900/30",
             "rejected": "text-red-400 bg-red-900/30",
-        }.get(a["status"], "text-slate-400")
+        }.get(status, "text-slate-400 bg-slate-800")
 
-        rows.append(
+        ann_rows.append(
             Div(
                 Div(
                     Span(a["type"].replace("_", " ").title(), cls="text-sm font-medium text-white"),
-                    Span(a["status"].upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
+                    Span(status.upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
                     cls="flex items-center",
                 ),
                 P(f'"{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
-                P(f"Submitted {a['submitted_at'][:10]}", cls="text-xs text-slate-500"),
+                P(f"Submitted {a.get('submitted_at', '')[:10]}", cls="text-xs text-slate-500"),
                 cls="bg-slate-800 rounded-lg p-4 border border-slate-700",
             )
         )
 
-    if not rows:
-        rows = [
+    # --- Upload contributions ---
+    pending = _main_mod._load_pending_uploads()
+    my_uploads = [
+        u
+        for u in pending.get("uploads", {}).values()
+        if u.get("uploader_email") == user.email or u.get("uploaded_by") == user.email
+    ]
+    my_uploads.sort(key=lambda u: u.get("submitted_at", ""), reverse=True)
+
+    upload_rows = []
+    upload_stats = {"pending": 0, "approved": 0, "rejected": 0, "staged": 0, "processed": 0}
+    for u in my_uploads:
+        status = u.get("status", "pending")
+        if status in upload_stats:
+            upload_stats[status] += 1
+        status_cls = {
+            "pending": "text-amber-400 bg-amber-900/30",
+            "staged": "text-amber-400 bg-amber-900/30",
+            "approved": "text-emerald-400 bg-emerald-900/30",
+            "processed": "text-emerald-400 bg-emerald-900/30",
+            "rejected": "text-red-400 bg-red-900/30",
+        }.get(status, "text-slate-400 bg-slate-800")
+
+        file_count = u.get("file_count", len(u.get("files", [])))
+        source = u.get("source", "Upload")
+        upload_rows.append(
             Div(
-                P("No contributions yet.", cls="text-slate-400"),
+                Div(
+                    Span(f"{file_count} photo{'s' if file_count != 1 else ''}", cls="text-sm font-medium text-white"),
+                    Span(status.upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
+                    cls="flex items-center",
+                ),
+                P(f"Source: {source}", cls="text-sm text-slate-300 mt-1") if source else None,
+                P(f"Submitted {u.get('submitted_at', '')[:19].replace('T', ' ')}", cls="text-xs text-slate-500"),
+                cls="bg-slate-800 rounded-lg p-4 border border-slate-700",
+            )
+        )
+
+    # --- Summary stats ---
+    total_anns = len(my_anns)
+    total_uploads = len(my_uploads)
+    summary = Div(
+        Div(
+            Div(
+                P(str(total_anns), cls="text-2xl font-bold text-white"),
+                P("Name Suggestions", cls="text-xs text-slate-400"),
+                cls="text-center",
+            ),
+            Div(
+                P(str(ann_stats["approved"]), cls="text-2xl font-bold text-emerald-400"),
+                P("Approved", cls="text-xs text-slate-400"),
+                cls="text-center",
+            ),
+            Div(
+                P(str(ann_stats["pending"]), cls="text-2xl font-bold text-amber-400"),
+                P("Pending", cls="text-xs text-slate-400"),
+                cls="text-center",
+            ),
+            Div(
+                P(str(total_uploads), cls="text-2xl font-bold text-white"),
+                P("Photos Uploaded", cls="text-xs text-slate-400"),
+                cls="text-center",
+            ),
+            cls="grid grid-cols-4 gap-4 mb-6",
+        ),
+        cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mb-6",
+    )
+
+    # --- Sections ---
+    sections = [summary]
+
+    if ann_rows:
+        sections.append(H2("Name Suggestions", cls="text-lg font-semibold text-white mb-3"))
+        sections.append(Div(*ann_rows, cls="space-y-3 mb-6"))
+
+    if upload_rows:
+        sections.append(H2("Photo Uploads", cls="text-lg font-semibold text-white mb-3"))
+        sections.append(Div(*upload_rows, cls="space-y-3 mb-6"))
+
+    if not ann_rows and not upload_rows:
+        sections.append(
+            Div(
+                P("No contributions yet.", cls="text-slate-400 text-lg"),
                 P(
-                    "Visit a photo or identity page to suggest names, dates, or stories.",
-                    cls="text-sm text-slate-500 mt-2",
+                    "Here's how to get started:",
+                    cls="text-sm text-slate-500 mt-2 mb-4",
+                ),
+                Div(
+                    A(
+                        "Browse Photos",
+                        href="/?section=photos",
+                        cls="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 text-sm",
+                    ),
+                    A(
+                        "Compare Faces",
+                        href="/tools/compare",
+                        cls="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 text-sm",
+                    ),
+                    A(
+                        "Help Identify",
+                        href="/?section=skipped",
+                        cls="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-600 text-sm",
+                    ),
+                    cls="flex gap-3 justify-center",
                 ),
                 cls="text-center py-12",
             )
-        ]
+        )
 
     return Title("My Contributions — Rhodesli"), Div(
         Div(
             H1("My Contributions", cls="text-2xl font-bold text-white"),
-            A("Back to Dashboard", href="/?section=to_review", cls="text-sm text-indigo-400 hover:text-indigo-300"),
-            cls="flex items-center justify-between mb-6",
+            cls="mb-6",
         ),
-        Div(*rows, cls="space-y-3"),
+        *sections,
         cls="max-w-3xl mx-auto p-6",
     )
 
