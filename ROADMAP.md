@@ -140,13 +140,23 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
 - Prompt: docs/prompts/session-93-prompt.md
 
-### Session 100b: Dogfood Fix Sprint — IN PROGRESS
-- Fix all 26 user-reported dogfood issues from Session 100
+### Session 100d: Contributor Experience + Upload Fixes — COMPLETE
+- 6 pending approval workflow fixes (HTMX swap, batch approve, auto-confirm)
+- Compare upload data loss prevention (3 safety fixes)
+- Staging thumbnails preserved for pending uploads
+- Email notifications wired into annotation approval
+- My Contributions page enhanced with uploads + stats
+- Contributor sidebar simplified (Help Identify + My Contributions)
+- Quickstart guide for Claude Benatar
+- Data flow audit (docs/architecture/DATA_FLOW.md)
+- 5 new BACKLOG items (UX-061, DATA-013-016), Lessons 135-138
+- 4216 app tests pass, production verified
+
+### Session 100b: Dogfood Fix Sprint — COMPLETE
+- Fixed 26 user-reported dogfood issues from Session 100
 - BUG 1: Jacob Cohen/Jacob Franco bbox overlap — FIXED
 - BUG 2: Photo metadata save duplicate routes — FIXED
 - Dismissed faces visual treatment — FIXED
-- CHANGELOG/SESSION_HISTORY/BACKLOG updates — DONE
-- Remaining: photo overlay layout, face card cycling, browser verify
 
 ### Session 96c: Community-Scoped Review + Cross-Community Identity Pipeline — COMPLETE
 - Photo-derived community identity sets (AD-216)
@@ -165,6 +175,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-13: **v0.99.2 — Session 100d**: Contributor experience overhaul + upload pipeline fixes. Email notifications wired into annotation approval. My Contributions page enhanced with stats + uploads. Contributor sidebar simplified (Help Identify + My Contributions replaces admin Review section). 6 pending approval workflow fixes, 3 compare upload safety fixes, staging thumbnail preservation. Data flow audit (docs/architecture/DATA_FLOW.md). 5 new BACKLOG items, 4 new lessons. Quickstart guide for Claude Benatar. 4216 app tests pass. Production verified.
 
 - [x] 2026-03-13: **v0.99.1 — Session 100c**: Speed-run cluster review mode shipped (PRD-039). Keyboard shortcuts Y/N/S/D, auto-advance, progress bar, community-scoped filtering. confirm-all/reject-all Postgres-compatible. Yaacov Franco + Solomon Galante data fixes synced. 10 new tests, 4163 app tests pass. Browser verified 6/6 PASS. 2 deploys SUCCESS.
 
