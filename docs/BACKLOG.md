@@ -74,6 +74,21 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Data Integrity CI for CONFIRMED Identities (DATA-012)
 - **DATA-012**: Automated test that every CONFIRMED identity's anchor_ids exist in both embeddings.npy and photo_index.json face_to_photo. Run in CI and pre-deploy. Prevents orphan face references from reaching CONFIRMED state. Source: Session 100b dogfood. Priority: P1.
 
+### P1 — Contributor Activity View by Email (UX-061)
+- **UX-061**: Admin needs to see all submissions from a specific contributor in one place. Currently no way to filter annotations/uploads by contributor email. Needed for follow-up conversations with testers. Fix: add contributor filter on /admin/approvals and /admin/audit, or dedicated /admin/contributors page. Source: Session 100d — Nolan couldn't find what lil_lover_52388@yahoo.com had submitted.
+
+### P1 — Proposals Supabase Sync (DATA-013)
+- **DATA-013**: Proposals are JSON-only (not in Supabase). No backup if Railway volume is lost. proposals.json was last generated 2026-03-10 with only 17 proposals. Fix: (1) Add proposals table to Supabase, (2) sync on generation, (3) add staleness warning in UI when proposals are >24h old. Source: Session 100d data integrity audit.
+
+### P1 — Silent Supabase Sync Failures (DATA-014)
+- **DATA-014**: Identity shadow writes, photo shadow writes, identity history events, and user action logging all use `except Exception: pass` — completely silent failure. If Supabase is down, no indication in logs. Fix: change `pass` to `logger.warning()` in 4 locations (main.py:1156, main.py:3350, registry.py:1919, main.py:1339). Source: Session 100d data integrity audit.
+
+### P1 — Dead Sync Functions (DATA-015)
+- **DATA-015**: `sync_birth_year_estimate()` and `sync_person_comment()` in supabase_data.py are defined but never called from any app route. Birth year estimates and person comments are not being persisted to Supabase. Fix: wire into save paths or remove dead code. Source: Session 100d data integrity audit.
+
+### P1 — Proposal Regeneration After Upload (DATA-016)
+- **DATA-016**: After new photos are uploaded and processed, proposals.json is NOT automatically regenerated. Admin must manually run `cluster_new_faces.py`. This means new uploads don't produce ML match suggestions until a manual step happens. Fix: auto-regenerate proposals after upload processing completes, or add a "Regenerate Proposals" button in admin UI. Source: Session 100d — proposals stale since March 10.
+
 ### P2 — Date Ordering Transparency (UX-060)
 - **UX-060**: Users should understand why photos are ordered the way they are. Add sort indicator or explanation (e.g., "Sorted by upload date" label, or sort toggle). Source: Session 100 dogfood issue #16. Priority: P2.
 

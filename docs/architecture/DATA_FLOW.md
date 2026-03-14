@@ -1,0 +1,151 @@
+# Rhodesli Data Flow — Where Everything Lives
+
+**Last updated:** 2026-03-13 (Session 100d)
+
+This document answers: "Where does my data go? Can I lose it? How do I find it?"
+
+---
+
+## The Two Data Stores
+
+| Store | What's There | Authoritative? | Backup? |
+|-------|-------------|----------------|---------|
+| **JSON files on Railway volume** | identities.json, photo_index.json, embeddings.npy, proposals.json, annotations.json, pending_uploads.json | YES for most data | Auto-backup (5 copies) on deploy |
+| **Supabase Postgres** | Shadow copies of identities, photos, annotations, uploads, audit log, GEDCOM, date labels, locations | YES for user data (annotations, uploads) | Supabase managed backups |
+
+**Key principle:** JSON is written first, then fire-and-forget synced to Supabase. If Supabase is down, the JSON file is still the source of truth.
+
+---
+
+## Data Flow Per Feature
+
+### 1. Photo Upload (contributor uploads a photo)
+
+```
+Contributor → POST /upload → staging/{job_id}/ (Railway volume)
+                           → pending_uploads.json (status: "pending")
+                           → Supabase pending_uploads table (fire-and-forget)
+
+Admin approves → staging/ copied to uploads/ → process_directory() runs
+              → identities.json (new INBOX identities)
+              → photo_index.json (new photo entry)
+              → embeddings.npy (new face embeddings)
+              → R2 (photo + face crops uploaded)
+              → Supabase shadow writes (identities, photos)
+```
+
+**Can you lose it?** Staging files are preserved while upload is pending. After approval and processing, the photo is in 3 places: Railway volume, R2, and Supabase.
+
+### 2. Name Suggestion (contributor identifies a face)
+
+```
+Contributor → POST /api/annotate → annotations.json (status: "pending")
+                                  → Supabase annotations table (fire-and-forget)
+
+Admin approves → annotations.json (status: "approved")
+              → identities.json (name updated via rename_identity)
+              → Supabase (synced via save_registry + _save_annotations)
+              → Notification created for contributor (Supabase + Resend email)
+```
+
+**Can you lose it?** No — annotations are in both JSON and Supabase. Even if JSON is lost, Supabase has the record.
+
+### 3. Proposals (ML suggests face matches)
+
+```
+Local machine → scripts/cluster_new_faces.py → data/proposals.json
+             → git commit + push → Railway Docker image → Railway volume
+```
+
+**Can you lose it?** YES — proposals are JSON-only, not in Supabase. They are in git, so they survive if the volume is wiped. But they can become stale if not regenerated after new uploads.
+
+**Current state:** proposals.json was generated 2026-03-10 with 17 proposals. Only matches Betty Capeluto Fox and Roland Fox.
+
+### 4. Cluster Review (admin reviews ML groupings)
+
+```
+Admin → /admin/upload-review → reads identities.json (INBOX clusters)
+                              → reads proposals.json (ML matches)
+
+Confirm All → identities.json (state: CONFIRMED, faces move to anchor_ids)
+           → Supabase (via save_registry shadow write)
+           → Audit log (Supabase + local file)
+
+Reject All → identities.json (faces added to negative_ids)
+```
+
+**Important:** Cluster review actions modify identities.json, NOT proposals.json. Proposals remain stale until regenerated.
+
+### 5. Admin Actions (confirm, merge, rename, skip)
+
+```
+Admin → POST /confirm/{id} → identities.json (state change)
+                            → Supabase identity_overrides (explicit sync)
+                            → Supabase identities shadow (background thread)
+                            → Supabase audit_log (via log_user_action)
+                            → Local user_actions.log (append)
+```
+
+---
+
+## What's NOT in Supabase (Risk Areas)
+
+| Data | Location | Risk |
+|------|----------|------|
+| **proposals.json** | JSON + git only | Stale after new uploads; no Supabase backup |
+| **embeddings.npy** | Railway volume + git | Large binary; not in Supabase |
+| **Birth year estimates** | JSON only | sync function exists but never called |
+| **Person comments** | Read from Supabase, but write sync never called | Inconsistent |
+| **Photo faces** | Supabase table exists but no ongoing sync | One-time backfill only |
+
+---
+
+## How to Find a Contributor's Data
+
+### "What did lil_lover_52388@yahoo.com submit?"
+```
+Annotations: data/annotations.json → search "submitted_by" field
+UI: /admin/approvals → shows all pending annotations with submitter email
+UI: /admin/audit → shows all approve/reject actions with details
+```
+
+### "What did poisson1957@hotmail.com upload?"
+```
+Uploads: data/pending_uploads.json → search "uploader_email" field
+UI: /admin/pending → shows pending uploads with uploader info
+UI: /admin/pending → "Recently Reviewed" section shows approved/rejected
+```
+
+### "Where are my proposals?"
+```
+Proposals: data/proposals.json → generated by scripts/cluster_new_faces.py
+UI: /admin/upload-review → "Proposal Matches" section
+UI: Sidebar → "Proposals" count (admin only)
+Regenerate: python scripts/cluster_new_faces.py --dry-run
+```
+
+---
+
+## Silent Failure Points (Logged But Not Visible)
+
+These sync paths use `except Exception: pass` — if they fail, you won't know:
+
+1. **Identity shadow writes** (background thread) — `app/main.py:1156`
+2. **Photo shadow writes** (background thread) — `app/main.py:3350`
+3. **Identity history events** — `core/registry.py:1919`
+4. **User action logging to Supabase** — `app/main.py:1339`
+
+**Recommendation:** Change `pass` to `logger.warning()` so failures are visible in logs.
+
+---
+
+## Deployment Safety
+
+| File | Protected? | How |
+|------|-----------|-----|
+| identities.json | YES | Refuses overwrite if volume has more confirmed identities |
+| photo_index.json | YES | Same safety gate |
+| proposals.json | PARTIAL | In OPTIONAL_SYNC_FILES, has backup but no content check |
+| annotations.json | NO | Not in sync files — production-origin only |
+| pending_uploads.json | NO | Not in sync files — production-origin only |
+| embeddings.npy | YES | Synced with content hash check |

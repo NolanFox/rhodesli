@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-134 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+138 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -132,6 +132,10 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 130 | **Request-path GEDCOM search must never full-scan a versioned rich mirror** |
 | 131 | **Never claim fixed without production browser verification** |
 | 132 | **Confirmed identity workflow needs visual verification gate** |
+| 135 | **Notification infrastructure that's never called is the same as no notifications** |
+| 136 | **Fire-and-forget Supabase syncs with `except: pass` create invisible data loss** |
+| 137 | **Proposals must be regenerated after every upload — stale proposals = invisible new faces** |
+| 138 | **Features built but never linked from navigation are invisible to users** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

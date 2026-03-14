@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.2] — 2026-03-13 (Session 100d: Contributor Experience + Upload Fixes)
+
+### Added
+- **Contributor sidebar** — non-admin users see simplified "Contribute" section with Help Identify + My Contributions (replaces admin-focused Review section)
+- **My Contributions page enhanced** — now shows annotation stats (pending/approved count), photo upload history, and action buttons for empty state
+- **Email notifications on annotation approval** — wired `create_annotation_approved_notification()` into both single and batch approval handlers (BROKEN-2 fix)
+- **Data flow documentation** — `docs/architecture/DATA_FLOW.md` mapping every data path and failure mode
+- **Claude Benatar quickstart guide** — `docs/guides/claude-benatar-quickstart.md` with 4 concrete use cases
+
+### Fixed
+- **6 pending approval workflow fixes** — HTMX swap ID, staged approve, batch approve, auto-confirm, logger (08089d9)
+- **Compare upload data loss prevention** — 3 safety fixes preventing lost uploads (befd978)
+- **Staging thumbnails preserved for pending uploads** — cleanup no longer deletes staging dirs that have pending/staged uploads (af1ae9b)
+- **Compare upload R2 thumbnail fallback** — uses correct `uploads/compare/` R2 path instead of `raw_photos/`
+- **Rejection metadata preserved** — keeps reason + reviewer on reject
+- **Orphaned identity cleanup** — identities with no face references
+
+### Verification
+- App tests: 4216 passed
+- Production health: 200 OK, 1932 identities, 941 photos
+- Deploy: 2 DOCKERFILE deploys SUCCESS
+
 ## [v0.99.1] — 2026-03-13 (Session 100c: Speed-Run Cluster Review)
 
 ### Added
