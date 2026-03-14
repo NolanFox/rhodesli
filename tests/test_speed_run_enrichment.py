@@ -214,7 +214,7 @@ class TestEnrichmentPanel:
             # Enrichment panel markers
             assert "Confirmed!" in html
             assert "enrichment-name-input" in html
-            assert "Save &amp; Next" in html or "Save & Next" in html
+            assert "Done" in html and "Next Cluster" in html
             assert "Skip" in html
 
     def test_enrichment_panel_has_data_enrichment_attribute(self):

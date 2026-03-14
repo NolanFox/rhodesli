@@ -1206,8 +1206,19 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
             on_conflict="identity_id,gedcom_id",
         ).execute()
 
-        # Also enrich the identity with birth/death data from GEDCOM
+        # Also enrich the identity with birth/death data and name from GEDCOM
         registry = _main_mod.load_registry()
+        identity = registry.get_identity(identity_id) if identity_id else None
+        current_name = identity.get("name", "") if identity else ""
+        auto_named = current_name.startswith("Unidentified Person") or not current_name.strip()
+
+        # Auto-rename to GEDCOM name if identity still has auto-generated name
+        if auto_named and gedcom_name and gedcom_name != "Unknown":
+            try:
+                registry.rename_identity(identity_id, gedcom_name, user_source="gedcom-link")
+            except (KeyError, ValueError):
+                pass
+
         updates = {}
         if birth_year:
             updates["birth_year"] = birth_year
@@ -1215,6 +1226,7 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
             updates["death_year"] = death_year
         if updates:
             registry.set_metadata(identity_id, updates, user_source="gedcom-link")
+        if auto_named or updates:
             _main_mod.save_registry(registry)
 
         _main_mod._invalidate_gedcom_cache()
@@ -1230,9 +1242,13 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
         life_parts.append(f"d. {death_year}")
     life_str = f" ({' — '.join(life_parts)})" if life_parts else ""
 
-    return Div(
+    # Determine final display name (GEDCOM name if auto-renamed, else current name)
+    final_name = gedcom_name if (auto_named and gedcom_name and gedcom_name != "Unknown") else current_name
+    name_saved_note = f" — Named: {final_name}" if auto_named and gedcom_name and gedcom_name != "Unknown" else ""
+
+    link_panel = Div(
         Div(
-            Span("Linked to Family Tree", cls="text-emerald-400 font-medium text-sm"),
+            Span(f"Linked to Family Tree{name_saved_note}", cls="text-emerald-400 font-medium text-sm"),
             cls="mb-1",
         ),
         Div(
@@ -1252,6 +1268,21 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
         id=f"gedcom-link-panel-{identity_id}",
         cls="mt-4 p-4 bg-emerald-900/20 border border-emerald-700/30 rounded-lg",
     )
+
+    # OOB swap: update name input with GEDCOM name if auto-renamed
+    if auto_named and gedcom_name and gedcom_name != "Unknown":
+        name_oob = Input(
+            type="text",
+            name="new_name",
+            value=final_name,
+            cls="flex-1 px-4 py-2 bg-slate-800 border border-emerald-600 rounded-lg text-white "
+            "placeholder-slate-400 focus:outline-none focus:border-purple-500",
+            id="enrichment-name-input",
+            hx_swap_oob="true",
+        )
+        return link_panel, name_oob
+
+    return link_panel
 
 
 @rt("/api/gedcom/unlink")
