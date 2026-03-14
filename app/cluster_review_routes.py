@@ -1302,6 +1302,16 @@ def post(
         identity["updated_at"] = _main_mod.datetime.now(_main_mod.timezone.utc).isoformat()
 
         _main_mod.save_registry(registry)
+
+        _main_mod.log_user_action(
+            "SPEED_RUN_CONFIRM",
+            identity_id=identity_id,
+            face_count=len(identity.get("anchor_ids", []) + identity.get("candidate_ids", [])),
+            state_before=prev_state,
+            state_after="CONFIRMED",
+            mode="speed-run",
+            admin=_speed_run_admin_email(sess),
+        )
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
@@ -1359,6 +1369,14 @@ def post(
                 pass
 
         _main_mod.save_registry(registry)
+
+        _main_mod.log_user_action(
+            "SPEED_RUN_REJECT",
+            identity_id=identity_id,
+            face_count=len(candidates),
+            mode="speed-run",
+            admin=_speed_run_admin_email(sess),
+        )
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
@@ -1674,6 +1692,13 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
     if denied:
         return denied
 
+    _main_mod.log_user_action(
+        "SPEED_RUN_SKIP",
+        identity_id=identity_id,
+        mode="speed-run",
+        admin=_speed_run_admin_email(sess),
+    )
+
     undo_state = _build_undo_state(
         identity_id,
         "skip",
@@ -1700,6 +1725,13 @@ def post(
     if identity:
         identity["state"] = "SKIPPED"
         _main_mod.save_registry(registry)
+
+    _main_mod.log_user_action(
+        "SPEED_RUN_DISMISS",
+        identity_id=identity_id,
+        mode="speed-run",
+        admin=_speed_run_admin_email(sess),
+    )
 
     undo_state = _build_undo_state(
         identity_id,
@@ -1771,6 +1803,14 @@ def post(
         if action != "skip":
             _main_mod.save_registry(registry)
 
+        _main_mod.log_user_action(
+            "SPEED_RUN_UNDO",
+            identity_id=identity_id,
+            original_action=action,
+            mode="speed-run",
+            admin=_speed_run_admin_email(sess),
+        )
+
     # Show the card at the original offset (go back)
     clusters = _get_speed_run_clusters(community_slug, request)
     total = len(clusters)
@@ -1784,6 +1824,15 @@ def post(
     # Hide the undo button after undoing
     undo_btn = _speed_run_undo_button(None, oob=True)
     return card, undo_btn
+
+
+def _speed_run_admin_email(sess) -> str:
+    """Return the admin email from the session, or 'admin' as fallback."""
+    if _main_mod.is_auth_enabled():
+        user = _main_mod.get_current_user(sess or {})
+        if user and getattr(user, "email", None):
+            return user.email
+    return "admin"
 
 
 def _active_learning_actor(sess) -> str:
