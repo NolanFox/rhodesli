@@ -1022,3 +1022,34 @@ class TestCrossCommunityBadgesAndAdminLinks:
         assert resp.status_code == 200
         html = resp.text
         assert "from=admin" in html
+
+
+# ---------------------------------------------------------------------------
+# Tests: Phase 4 — Performance (FB-105)
+# ---------------------------------------------------------------------------
+
+
+class TestPerformanceCacheRepopulation:
+    """save_registry should repopulate cache to avoid redundant reloads."""
+
+    def test_save_registry_repopulates_cache(self):
+        """After save_registry(), next load_registry() should return cached registry."""
+        import app.main as main_module
+
+        mock_reg = MagicMock()
+        mock_reg._identities = {"id-1": {"name": "Test", "state": "CONFIRMED"}}
+
+        # Clear cache first
+        main_module._registry_cache = None
+        main_module._registry_cache_ts = 0.0
+
+        # Save should repopulate cache
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(mock_reg, "save"))
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(patch("threading.Thread"))
+            main_module.save_registry(mock_reg)
+
+        # Cache should now be the saved registry
+        assert main_module._registry_cache is mock_reg
+        assert main_module._registry_cache_ts > 0

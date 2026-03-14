@@ -1115,9 +1115,11 @@ def save_registry(registry, confirmed_identity_info=None):
             - user_id: str (Supabase auth user ID of the admin)
             - user_email: str (email for Resend notification delivery)
     """
-    global _registry_cache, _registry_cache_key
-    _registry_cache = None  # Invalidate cache on save
-    _registry_cache_key = None
+    global _registry_cache, _registry_cache_key, _registry_cache_ts
+    # Repopulate cache with the registry we just saved (avoid redundant reload)
+    _registry_cache = registry
+    _registry_cache_ts = time.time()
+    # Keep cache_key — it will match on next load
 
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase

@@ -1762,7 +1762,12 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
             anchor_crop_url = _get_crop_url_for_face(best_fid)
 
     # Top 3 suggested matches from confirmed identities (name-based, quick)
+    import time as _time
+    import logging
+
+    _t_sug = _time.time()
     suggestions = _get_confirmed_identity_suggestions(identity_id, limit=3)
+    logging.info(f"PERF enrichment suggestions: {_time.time() - _t_sug:.3f}s ({len(suggestions)} results)")
     suggestion_els = []
     for sug in suggestions:
         sug_crop = _get_crop_url_for_face(sug["best_face_id"]) if sug.get("best_face_id") else None
@@ -2261,12 +2266,18 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
 @rt("/api/cluster-review/merge")
 def post(source_id: str = "", target_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
     """Merge source identity into target during speed-run enrichment."""
+    import time as _time
+    import logging
+
+    t0 = _time.time()
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
+    t1 = _time.time()
     registry = _main_mod.load_registry()
     photo_registry = _main_mod.load_photo_registry()
+    t2 = _time.time()
 
     try:
         result = registry.merge_identities(
@@ -2275,11 +2286,14 @@ def post(source_id: str = "", target_id: str = "", offset: int = 0, community_sl
             user_source="admin/speed-run-merge",
             photo_registry=photo_registry,
         )
+        t3 = _time.time()
         if not result.get("success"):
             reason = result.get("reason", "unknown")
             return Div(P(f"Merge failed: {reason}", cls="text-red-400 text-sm"), cls="p-4")
 
         _main_mod.save_registry(registry)
+        t4 = _time.time()
+        logging.info(f"PERF merge: load={t2 - t1:.3f}s merge={t3 - t2:.3f}s save={t4 - t3:.3f}s total={t4 - t0:.3f}s")
         _main_mod.log_user_action(
             "SPEED_RUN_MERGE",
             source_id=source_id,
