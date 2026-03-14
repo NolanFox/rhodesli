@@ -824,3 +824,124 @@ class TestSpeedRunMode:
         html = resp.text
         assert "'z': 'speed-undo'" in html
         assert "Z = Undo" in html
+
+
+# ---------------------------------------------------------------------------
+# Tests: Phase 2 — Enrichment Panel Overhaul (FB-103, FB-104, FB-110)
+# ---------------------------------------------------------------------------
+
+
+class TestEnrichmentPanelOverhaul:
+    """Enrichment panel: merge-first order, GEDCOM link, merge confirmation."""
+
+    def test_enrichment_panel_merge_before_name(self):
+        """Merge search should appear BEFORE name input in enrichment panel."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity_data = _make_identity("Person 123", state="CONFIRMED", anchor_ids=["face_a"])
+        with ExitStack() as stack:
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_registry({"test-id": identity_data}))
+            panel = _speed_run_enrichment_panel("test-id", identity_data, 0, "fox-family")
+
+        html = repr(panel)
+        # Merge search ("Is this an existing person?") should appear before name input
+        merge_pos = html.find("Is this an existing person?")
+        name_pos = html.find("Or name this new person:")
+        assert merge_pos != -1, "Merge search section not found"
+        assert name_pos != -1, "Name input section not found"
+        assert merge_pos < name_pos, "Merge search should appear before name input"
+
+    def test_enrichment_panel_includes_gedcom(self):
+        """Enrichment panel should include GEDCOM link section."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity_data = _make_identity("Person 123", state="CONFIRMED", anchor_ids=["face_a"])
+        with ExitStack() as stack:
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_registry({"test-id": identity_data}))
+            panel = _speed_run_enrichment_panel("test-id", identity_data, 0, "fox-family")
+
+        html = repr(panel)
+        assert "Link to Family Tree" in html
+        assert "gedcom-results-test-id" in html
+
+    def test_merge_no_auto_advance(self):
+        """Merge response should NOT have auto-advance trigger, should have explicit next button."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity_data = _make_identity("Charlie Fox", state="CONFIRMED", anchor_ids=["face_a", "face_b"])
+        mock_reg = MagicMock()
+        mock_reg._identities = {
+            "source-id": _make_identity("New Person", state="INBOX"),
+            "target-id": identity_data,
+        }
+        mock_reg.get = lambda iid: mock_reg._identities.get(iid)
+        mock_reg.merge_identities = MagicMock(
+            return_value={
+                "success": True,
+                "target_id": "target-id",
+                "faces_merged": 3,
+            }
+        )
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(
+                patch("app.cluster_review_routes._main_mod.load_photo_registry", return_value=MagicMock())
+            )
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.log_user_action"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_lookup(None))
+            resp = client.post(
+                "/api/cluster-review/merge?source_id=source-id&target_id=target-id&offset=0&community_slug=fox-family"
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        # Should NOT have auto-advance trigger
+        assert "load delay" not in html
+        # Should have explicit next button
+        assert "Next Cluster" in html or "Done" in html
+        # Should show merge confirmation with face count
+        assert "Merged!" in html
+
+    def test_merge_shows_face_count(self):
+        """Merge response should show the number of faces merged and total."""
+        mock_reg = MagicMock()
+        target_data = _make_identity("Charlie Fox", state="CONFIRMED", anchor_ids=["f1", "f2", "f3", "f4", "f5"])
+        mock_reg._identities = {
+            "source-id": _make_identity("New Person", state="INBOX"),
+            "target-id": target_data,
+        }
+        mock_reg.get = lambda iid: mock_reg._identities.get(iid)
+        mock_reg.merge_identities = MagicMock(
+            return_value={
+                "success": True,
+                "target_id": "target-id",
+                "faces_merged": 2,
+            }
+        )
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(
+                patch("app.cluster_review_routes._main_mod.load_photo_registry", return_value=MagicMock())
+            )
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.save_registry"))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.log_user_action"))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_lookup(None))
+            resp = client.post(
+                "/api/cluster-review/merge?source_id=source-id&target_id=target-id&offset=0&community_slug=fox-family"
+            )
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "Merged 2 faces" in html
+        assert "total faces" in html

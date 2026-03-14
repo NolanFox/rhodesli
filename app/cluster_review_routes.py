@@ -1814,48 +1814,33 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
         }
     )
 
+    # GEDCOM link panel (reuse from relationship_routes)
+    from app.relationship_routes import _gedcom_link_panel
+
+    gedcom_panel = _gedcom_link_panel(identity_id, display_name)
+
     return Div(
-        # Confirmed banner
+        # 1. Confirmed banner + preview crop
         Div(
-            Span("Confirmed!", cls="text-emerald-400 text-lg font-semibold mr-2"),
-            Span(f"{display_name} — {len(face_ids)} faces", cls="text-slate-300 text-sm"),
+            Div(
+                Img(
+                    src=anchor_crop_url,
+                    alt=display_name,
+                    cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
+                )
+                if anchor_crop_url
+                else None,
+            ),
+            Div(
+                Span("Confirmed!", cls="text-emerald-400 text-lg font-semibold"),
+                Span(f"{display_name} — {len(face_ids)} faces", cls="text-slate-300 text-sm block mt-1"),
+                cls="ml-4",
+            ),
             cls="flex items-center mb-4 p-3 bg-emerald-900/30 border border-emerald-700/50 rounded-lg",
         ),
-        # Preview crop
+        # 2. Merge search — "Is this an existing person?" (moved UP)
         Div(
-            Img(
-                src=anchor_crop_url,
-                alt=display_name,
-                cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
-            )
-            if anchor_crop_url
-            else None,
-            cls="flex justify-center mb-4",
-        ),
-        # Name input + Save
-        Div(
-            Input(
-                type="text",
-                name="new_name",
-                placeholder="Enter name for this person...",
-                cls="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
-                "placeholder-slate-400 focus:outline-none focus:border-purple-500",
-                id="enrichment-name-input",
-                autofocus=True,
-            ),
-            Button(
-                "Save & Next",
-                cls="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors ml-2",
-                hx_post=f"/api/cluster-review/save-name?{save_params}",
-                hx_target="#speed-run-card",
-                hx_swap="outerHTML",
-                hx_include="#enrichment-name-input",
-                data_action="speed-save-name",
-            ),
-            cls="flex items-center mb-4",
-        ),
-        # Search & Merge
-        Div(
+            H4("Is this an existing person?", cls="text-sm font-semibold text-slate-300 mb-2"),
             Input(
                 type="text",
                 name="q",
@@ -1866,11 +1851,12 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
                 hx_target="#enrichment-search-results",
                 hx_swap="innerHTML",
                 hx_trigger="keyup changed delay:300ms",
+                autofocus=True,
             ),
             Div(id="enrichment-search-results", cls="mt-2 space-y-2"),
             cls="mb-4",
         ),
-        # Suggested matches
+        # 3. Suggested matches with merge buttons (moved UP)
         Div(
             H4("Suggested Matches", cls="text-sm font-semibold text-slate-300 mb-2"),
             *suggestion_els,
@@ -1878,10 +1864,37 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
         )
         if suggestion_els
         else None,
-        # Skip button
+        # 4. Name input — "Or name this new person:" (moved DOWN)
+        Div(
+            H4("Or name this new person:", cls="text-sm font-semibold text-slate-300 mb-2"),
+            Div(
+                Input(
+                    type="text",
+                    name="new_name",
+                    placeholder="Enter name for this person...",
+                    cls="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
+                    "placeholder-slate-400 focus:outline-none focus:border-purple-500",
+                    id="enrichment-name-input",
+                ),
+                Button(
+                    "Save Name",
+                    cls="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors ml-2",
+                    hx_post=f"/api/cluster-review/save-name?{save_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                    hx_include="#enrichment-name-input",
+                    data_action="speed-save-name",
+                ),
+                cls="flex items-center",
+            ),
+            cls="mb-4",
+        ),
+        # 5. GEDCOM link (NEW — inline)
+        gedcom_panel,
+        # 6. Done / Skip button
         Div(
             Button(
-                "Skip — Next Cluster",
+                "Done — Next Cluster",
                 cls="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium rounded-lg transition-colors",
                 hx_get=f"/admin/cluster-review/next?{skip_next_params}",
                 hx_target="#speed-run-card",
@@ -2261,21 +2274,29 @@ def post(source_id: str = "", target_id: str = "", offset: int = 0, community_sl
     except (KeyError, ValueError) as e:
         return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-4")
 
-    target_name = registry._identities.get(result.get("target_id", target_id), {}).get("name", "Unknown")
-    merged_card = Div(
-        Div(
-            Span("Merged!", cls="text-indigo-400 text-lg font-semibold mr-2"),
-            Span(f"into {target_name}", cls="text-slate-300 text-sm"),
-            cls="flex items-center mb-4 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg",
+    target_data = registry._identities.get(result.get("target_id", target_id), {})
+    target_name = target_data.get("name", "Unknown")
+    target_face_count = len(_identity_face_ids(target_data))
+    faces_merged = result.get("faces_merged", 0)
+
+    next_params = urlencode({"offset": offset + 1, "community_slug": community_slug})
+
+    # Build merge confirmation banner
+    merge_banner = Div(
+        Span("Merged!", cls="text-indigo-400 text-lg font-semibold mr-2"),
+        Span(
+            f"Merged {faces_merged} face{'s' if faces_merged != 1 else ''} into {target_name} "
+            f"(now {target_face_count} total faces)",
+            cls="text-slate-300 text-sm",
         ),
-        id="speed-run-card",
-        cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
-        hx_get=f"/admin/cluster-review/next?offset={offset + 1}&community_slug={community_slug}",
-        hx_target="#speed-run-card",
-        hx_swap="outerHTML",
-        hx_trigger="load delay:1s",
+        cls="flex items-center mb-4 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg",
     )
-    return merged_card
+
+    # Return enrichment panel for the merged-into identity with merge banner prepended
+    enrichment = _speed_run_enrichment_panel(result.get("target_id", target_id), target_data, offset, community_slug)
+    # Prepend merge banner — enrichment panel already has id="speed-run-card"
+    enrichment.children = (merge_banner, *enrichment.children)
+    return enrichment
 
 
 @rt("/api/cluster-review/undo")
