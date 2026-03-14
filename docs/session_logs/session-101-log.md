@@ -3,13 +3,13 @@ Started: 2026-03-14
 Prompt: docs/prompts/session-101-prompt.md
 
 ## Phase Checklist
-- [x] Phase 0: Orient — session set, health verified, log created
+- [x] Phase 0: Orient — session set, health verified, log created (6107aa2)
 - [x] Phase 1: FB-113 Under Review Badge — worktree branch, cherry-picked (fead87c)
 - [x] Phase 2: Enrichment Panel Overhaul (FB-104 + FB-110 + FB-103) — commit 2ac5b31
 - [x] Phase 3: Cross-Community Badge + Admin Links (FB-100 + FB-106) — commit cb01fd6
 - [x] Phase 4: Performance (FB-105) — commit 6161eb3, then ba8443f (non-blocking save)
-- [x] Phase 5: Deploy + Browser Verify — 2 deploys SUCCESS, 7/7 browser verified
-- [ ] Phase 6: Triage Sprint with Nolan
+- [x] Phase 5: Deploy + Browser Verify — 2 deploys SUCCESS, 7/7 browser verified (b122bb0)
+- [ ] Phase 6: Triage Sprint with Nolan — NEXT
 - [ ] Phase 7: Session Closeout
 
 ## Browser Verification Results
@@ -26,6 +26,14 @@ Prompt: docs/prompts/session-101-prompt.md
 - Merge (before fix): load=0.000s merge=0.078s save=3.988s total=4.067s
 - Save bottleneck: Supabase sync was blocking (4s). Now in background thread.
 - After fix: confirm-all returns near-instantly
+
+## Phase 6 Instructions
+Navigate to: https://rhodesli.nolanandrewfox.com/c/fox-family/admin/upload-review?mode=speed
+Nolan drives triage. Claude fixes issues in real-time. For each piece of feedback:
+1. Can it be fixed in <10 min? → Fix, commit, push, deploy
+2. Cannot be fixed quickly? → Create BACKLOG entry with specifics
+Also try batch cluster validation: /c/fox-family/admin/upload-review (dashboard mode)
+Document all feedback in docs/feedback/2026-03-14-fox-triage-round2.md
 
 ## Verification Gate
 - [x] All phases re-checked against original prompt
