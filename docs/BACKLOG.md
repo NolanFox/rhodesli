@@ -161,6 +161,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P2 — Face Cards Tiny Click Targets on Dense Photos (UX-075)
 - **UX-075**: Face cards on photos with many detected faces have very small click targets, making identification difficult on mobile and imprecise on desktop. Need minimum touch target size (44x44px per WCAG) or zoom-on-hover. Source: Face tagging audit. Priority: P2.
 
+### P2 — Speed-Run Reject Doesn't Visibly Advance (UX-076)
+- **UX-076**: Speed-run reject fires undo banner correctly ("Rejected") but the card doesn't visibly advance to the next cluster — appears unchanged to the user. Confirm (Y) and Skip (S) advance correctly. Source: Session 100g browser verification. Priority: P2.
+
 ### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
 - **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
 

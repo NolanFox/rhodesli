@@ -178,6 +178,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Recently Completed
 
+- [x] 2026-03-14: **Session 100g**: Session 100 closeout. 5 BACKLOG entries created (PERF-003/004, UX-073-075). Browser verified: speed-run enrichment panel, batch cluster validation grid, Yaacov Franco person page. 1 new issue found (UX-076 reject advance). Session 100 officially complete.
+
 - [x] 2026-03-14: **v0.99.3 — Session 100f**: Cluster validation & enrichment overhaul. Batch cluster validation page shipped (PRD-040) with Select All, face count filters, community scoping. Enriched speed-run: all faces visible (no overflow cap), post-confirm name input + merge search + suggested matches, recent actions sidebar with undo. Audit trail: `log_user_action()` on all 5 speed-run actions with identity_id, face_count, mode=speed-run. UX polish: 112px crops, cumulative progress counter, undo banner with context, workflow guides, Y key 300ms debounce, next-card pre-fetch. 46 new tests, 4276 app tests pass. 13/21 FB items from Session 100e fixed, 8 deferred with BACKLOG entries.
 
 - [x] 2026-03-13: **v0.99.2 — Session 100d**: Contributor experience overhaul + upload pipeline fixes. Email notifications wired into annotation approval. My Contributions page enhanced with stats + uploads. Contributor sidebar simplified (Help Identify + My Contributions replaces admin Review section). 6 pending approval workflow fixes, 3 compare upload safety fixes, staging thumbnail preservation. Data flow audit (docs/architecture/DATA_FLOW.md). 5 new BACKLOG items, 4 new lessons. Quickstart guide for Claude Benatar. 4216 app tests pass. Production verified.
