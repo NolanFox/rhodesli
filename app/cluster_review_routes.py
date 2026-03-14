@@ -811,7 +811,24 @@ def get(sess=None, request=None, mode: str = ""):
         keyboard_js = Script("""
             document.addEventListener('keydown', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+                var card = document.getElementById('speed-run-card');
+                var isEnrichment = card && card.getAttribute('data-enrichment') === 'true';
                 var key = e.key.toLowerCase();
+                if (isEnrichment) {
+                    // In enrichment mode: Y/S/D advance to next card
+                    if (key === 'y' || key === 's' || key === 'd') {
+                        var skipBtn = document.querySelector('[data-action="speed-enrich-skip"]');
+                        if (skipBtn) { e.preventDefault(); skipBtn.click(); }
+                        return;
+                    }
+                    // Enter submits the name
+                    if (e.key === 'Enter') {
+                        var saveBtn = document.querySelector('[data-action="speed-save-name"]');
+                        if (saveBtn) { e.preventDefault(); saveBtn.click(); }
+                        return;
+                    }
+                    return;
+                }
                 var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss', 'z': 'speed-undo'};
                 var action = actionMap[key];
                 if (!action) return;
@@ -820,20 +837,79 @@ def get(sess=None, request=None, mode: str = ""):
             });
         """)
 
+        recent_actions_js = Script("""
+            (function() {
+                window._speedRunActions = [];
+                function renderActions() {
+                    var container = document.getElementById('speed-run-recent-actions');
+                    if (!container) return;
+                    var actions = window._speedRunActions;
+                    if (actions.length === 0) {
+                        container.style.display = 'none';
+                        return;
+                    }
+                    container.style.display = 'block';
+                    var listEl = document.getElementById('speed-run-action-list');
+                    if (!listEl) return;
+                    var html = '';
+                    var icons = {'confirm-all': '\\u2713', 'reject-all': '\\u2717', 'skip': '\\u2192', 'dismiss': '\\u2298'};
+                    var colors = {'confirm-all': 'text-emerald-400', 'reject-all': 'text-red-400', 'skip': 'text-slate-400', 'dismiss': 'text-amber-400'};
+                    for (var i = actions.length - 1; i >= Math.max(0, actions.length - 10); i--) {
+                        var a = actions[i];
+                        var icon = icons[a.action] || '?';
+                        var color = colors[a.action] || 'text-slate-400';
+                        html += '<div class="flex items-center gap-2 py-1.5 border-b border-slate-800">';
+                        html += '<span class="' + color + ' text-lg w-6 text-center">' + icon + '</span>';
+                        if (a.cropUrl) {
+                            html += '<img src="' + a.cropUrl + '" class="w-8 h-8 object-cover rounded" loading="lazy">';
+                        }
+                        html += '<span class="text-xs text-slate-300 flex-1 truncate">' + (a.name || a.identityId.substring(0, 12)) + '</span>';
+                        html += '</div>';
+                    }
+                    listEl.innerHTML = html;
+                }
+                document.body.addEventListener('htmx:afterRequest', function(evt) {
+                    var trigger = evt.detail.elt;
+                    if (!trigger) return;
+                    var action = trigger.getAttribute('data-action');
+                    if (!action) return;
+                    var actionMap = {'speed-confirm': 'confirm-all', 'speed-reject': 'reject-all', 'speed-skip': 'skip', 'speed-dismiss': 'dismiss'};
+                    var mapped = actionMap[action];
+                    if (!mapped) return;
+                    var card = document.getElementById('speed-run-card');
+                    var name = '';
+                    var cropUrl = '';
+                    var identityId = '';
+                    if (trigger.getAttribute('hx-post') || trigger.getAttribute('hx_post')) {
+                        var url = trigger.getAttribute('hx-post') || trigger.getAttribute('hx_post') || '';
+                        var match = url.match(/identity_id=([^&]*)/);
+                        if (match) identityId = decodeURIComponent(match[1]);
+                    }
+                    // Extract name from the card before it gets swapped
+                    var nameEl = card ? card.querySelector('h3') : null;
+                    if (nameEl) name = nameEl.textContent || '';
+                    var cropEl = card ? card.querySelector('img') : null;
+                    if (cropEl) cropUrl = cropEl.getAttribute('src') || '';
+                    window._speedRunActions.push({action: mapped, name: name, identityId: identityId, cropUrl: cropUrl});
+                    setTimeout(renderActions, 100);
+                });
+            })();
+        """)
+
         return Title("Speed Run Review — Rhodesli Admin"), Main(
             Div(
                 Div(
                     Div(
                         H1("Speed Run Review", cls="text-2xl font-serif font-bold text-white"),
                         A(
-                            "← Dashboard",
+                            "\u2190 Dashboard",
                             href="upload-review",
                             cls="text-sm text-purple-400 hover:text-purple-300 transition-colors",
                         ),
                         cls="flex items-center gap-4",
                     ),
                     P(
-                        "Y = Confirm · N = Reject · S = Skip · D = Dismiss · Z = Undo",
+                        "Y = Confirm \u00b7 N = Reject \u00b7 S = Skip \u00b7 D = Dismiss \u00b7 Z = Undo",
                         cls="text-slate-500 text-sm mt-1",
                     ),
                     cls="mb-6",
@@ -854,7 +930,16 @@ def get(sess=None, request=None, mode: str = ""):
                 first_card,
                 # Undo state (hidden, updated via OOB swaps)
                 _speed_run_undo_button(None),
+                # Recent actions sidebar (3C)
+                Div(
+                    H4("Recent Actions", cls="text-sm font-semibold text-slate-300 mb-2"),
+                    Div(id="speed-run-action-list"),
+                    id="speed-run-recent-actions",
+                    cls="mt-6 p-4 bg-slate-900/40 border border-slate-700/50 rounded-xl",
+                    style="display:none",
+                ),
                 keyboard_js,
+                recent_actions_js,
                 cls="max-w-3xl mx-auto px-4 py-8",
             ),
             cls="min-h-screen bg-slate-950",
@@ -1326,9 +1411,9 @@ def post(
             community_slug,
             {"candidates": candidates, "prev_state": prev_state},
         )
-        next_card = _speed_run_next_card(offset + 1, community_slug, request)
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
-        return next_card, undo_btn
+        enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug)
+        return enrichment, undo_btn
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if confirmed_count == 1 else "faces"
@@ -1447,6 +1532,15 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
     return [(iid, idata) for iid, idata, _ in clusters]
 
 
+def _get_photo_url_for_face(face_id):
+    """Get the source photo page URL for a face_id."""
+    photo_registry = _main_mod.load_photo_registry()
+    photo_id = photo_registry.get_photo_for_face(face_id)
+    if photo_id:
+        return f"/photo/{photo_id}"
+    return None
+
+
 def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug="", include_progress=True):
     """Render a single cluster card for speed-run mode."""
     name = identity_data.get("name", "Unknown")
@@ -1456,45 +1550,40 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     all_faces = _identity_face_ids(identity_data)
     face_count = len(all_faces)
 
-    # Face thumbnails (up to 8)
+    # Face thumbnails — show ALL faces (no cap), scrollable grid
     face_thumbs = []
-    for fid in all_faces[:8]:
+    for fid in all_faces:
         crop_url = _get_crop_url_for_face(fid)
+        photo_url = _get_photo_url_for_face(fid)
         if crop_url:
-            face_thumbs.append(
-                Img(
-                    src=crop_url,
-                    alt=f"Face {fid[:12]}",
-                    cls="w-20 h-20 object-cover rounded-lg border border-slate-600",
-                    loading="lazy",
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
-                ),
+            img_el = Img(
+                src=crop_url,
+                alt=f"Face {fid[:12]}",
+                cls="w-24 h-24 object-cover rounded-lg border border-slate-600",
+                loading="lazy",
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
             )
-            # Hidden fallback shown if image fails to load (missing R2 crop)
-            face_thumbs.append(
-                Div(
-                    Span("?", cls="text-slate-500 text-lg"),
-                    cls="w-20 h-20 rounded-lg bg-slate-700 border border-slate-600 items-center justify-center hidden",
-                    title=f"Face crop unavailable: {fid[:16]}",
+            fallback_el = Div(
+                Span("?", cls="text-slate-500 text-lg"),
+                cls="w-24 h-24 rounded-lg bg-slate-700 border border-slate-600 items-center justify-center hidden",
+                title=f"Face crop unavailable: {fid[:16]}",
+            )
+            if photo_url:
+                face_thumbs.append(
+                    A(img_el, href=photo_url, target="_blank", cls="block", title=f"View source photo for {fid[:16]}")
                 )
-            )
+                face_thumbs.append(fallback_el)
+            else:
+                face_thumbs.append(img_el)
+                face_thumbs.append(fallback_el)
         else:
             face_thumbs.append(
                 Div(
                     Span("?", cls="text-slate-500 text-lg"),
-                    cls="w-20 h-20 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center",
+                    cls="w-24 h-24 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center",
                     title="No crop available",
                 )
             )
-
-    remaining = face_count - 8
-    if remaining > 0:
-        face_thumbs.append(
-            Div(
-                Span(f"+{remaining}", cls="text-slate-400 text-sm font-medium"),
-                cls="w-20 h-20 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center",
-            )
-        )
 
     # Common params for action buttons
     common_params = urlencode(
@@ -1530,10 +1619,10 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
         progress_div,
         # Cluster card
         Div(
-            # Face grid
+            # Face grid — scrollable, all faces shown
             Div(
                 *face_thumbs,
-                cls="flex flex-wrap gap-3 justify-center mb-6",
+                cls="flex flex-wrap gap-3 justify-center mb-6 max-h-80 overflow-y-auto",
             ),
             # Identity info
             Div(
@@ -1584,6 +1673,185 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
         ),
         id="speed-run-card",
     )
+
+
+def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_slug):
+    """Render the post-confirm enrichment panel for naming/merging."""
+    display_name = identity_data.get("name", "Unknown")
+    if display_name.startswith("Unidentified Person "):
+        display_name = "Person " + display_name[len("Unidentified Person ") :]
+
+    # Get anchor crop for preview
+    anchor_crop_url = None
+    face_ids = _identity_face_ids(identity_data)
+    if face_ids:
+        best_fid = _best_face_id(face_ids)
+        if best_fid:
+            anchor_crop_url = _get_crop_url_for_face(best_fid)
+
+    # Top 3 suggested matches from confirmed identities (name-based, quick)
+    suggestions = _get_confirmed_identity_suggestions(identity_id, limit=3)
+    suggestion_els = []
+    for sug in suggestions:
+        sug_crop = _get_crop_url_for_face(sug["best_face_id"]) if sug.get("best_face_id") else None
+        merge_params = urlencode(
+            {
+                "source_id": identity_id,
+                "target_id": sug["identity_id"],
+                "offset": offset,
+                "community_slug": community_slug,
+            }
+        )
+        suggestion_els.append(
+            Div(
+                Img(
+                    src=sug_crop,
+                    alt=sug["name"],
+                    cls="w-12 h-12 object-cover rounded-lg border border-slate-600",
+                    loading="lazy",
+                )
+                if sug_crop
+                else Div(cls="w-12 h-12 rounded-lg bg-slate-700"),
+                Div(
+                    Span(sug["name"], cls="text-sm font-medium text-white"),
+                    P(f"{sug['face_count']} faces", cls="text-xs text-slate-400"),
+                    cls="ml-3 flex-1 min-w-0",
+                ),
+                Button(
+                    "Merge",
+                    cls="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors",
+                    hx_post=f"/api/cluster-review/merge?{merge_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                ),
+                cls="flex items-center p-2 bg-slate-800/60 border border-slate-700 rounded-lg",
+            )
+        )
+
+    save_params = urlencode(
+        {
+            "identity_id": identity_id,
+            "offset": offset,
+            "community_slug": community_slug,
+        }
+    )
+
+    skip_next_params = urlencode(
+        {
+            "offset": offset + 1,
+            "community_slug": community_slug,
+        }
+    )
+
+    return Div(
+        # Confirmed banner
+        Div(
+            Span("Confirmed!", cls="text-emerald-400 text-lg font-semibold mr-2"),
+            Span(f"{display_name} — {len(face_ids)} faces", cls="text-slate-300 text-sm"),
+            cls="flex items-center mb-4 p-3 bg-emerald-900/30 border border-emerald-700/50 rounded-lg",
+        ),
+        # Preview crop
+        Div(
+            Img(
+                src=anchor_crop_url,
+                alt=display_name,
+                cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
+            )
+            if anchor_crop_url
+            else None,
+            cls="flex justify-center mb-4",
+        ),
+        # Name input + Save
+        Div(
+            Input(
+                type="text",
+                name="new_name",
+                placeholder="Enter name for this person...",
+                cls="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
+                "placeholder-slate-400 focus:outline-none focus:border-purple-500",
+                id="enrichment-name-input",
+                autofocus=True,
+            ),
+            Button(
+                "Save & Next",
+                cls="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors ml-2",
+                hx_post=f"/api/cluster-review/save-name?{save_params}",
+                hx_target="#speed-run-card",
+                hx_swap="outerHTML",
+                hx_include="#enrichment-name-input",
+                data_action="speed-save-name",
+            ),
+            cls="flex items-center mb-4",
+        ),
+        # Search & Merge
+        Div(
+            Input(
+                type="text",
+                name="q",
+                placeholder="Search confirmed identities to merge...",
+                cls="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
+                "placeholder-slate-400 focus:outline-none focus:border-blue-500",
+                hx_get=f"/api/cluster-review/search-identities?source_id={identity_id}&offset={offset}&community_slug={community_slug}",
+                hx_target="#enrichment-search-results",
+                hx_swap="innerHTML",
+                hx_trigger="keyup changed delay:300ms",
+            ),
+            Div(id="enrichment-search-results", cls="mt-2 space-y-2"),
+            cls="mb-4",
+        ),
+        # Suggested matches
+        Div(
+            H4("Suggested Matches", cls="text-sm font-semibold text-slate-300 mb-2"),
+            *suggestion_els,
+            cls="mb-4 space-y-2",
+        )
+        if suggestion_els
+        else None,
+        # Skip button
+        Div(
+            Button(
+                "Skip — Next Cluster",
+                cls="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium rounded-lg transition-colors",
+                hx_get=f"/admin/cluster-review/next?{skip_next_params}",
+                hx_target="#speed-run-card",
+                hx_swap="outerHTML",
+                data_action="speed-enrich-skip",
+            ),
+            cls="flex justify-center",
+        ),
+        id="speed-run-card",
+        cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
+        data_enrichment="true",
+    )
+
+
+def _get_confirmed_identity_suggestions(identity_id, limit=3):
+    """Get top confirmed identities as merge suggestions (by face count)."""
+    registry = _main_mod.load_registry()
+    identities = registry._identities if hasattr(registry, "_identities") else {}
+    suggestions = []
+    for iid, idata in identities.items():
+        if iid == identity_id:
+            continue
+        if idata.get("merged_into"):
+            continue
+        if idata.get("state") != "CONFIRMED":
+            continue
+        face_ids = _identity_face_ids(idata)
+        if not face_ids:
+            continue
+        best_fid = _best_face_id(face_ids)
+        suggestions.append(
+            {
+                "identity_id": iid,
+                "name": idata.get("name", "Unknown"),
+                "face_count": len(face_ids),
+                "best_face_id": best_fid,
+            }
+        )
+    # Sort by face count descending — most prominent first
+    suggestions.sort(key=lambda s: -s["face_count"])
+    return suggestions[:limit]
 
 
 def _speed_run_done_card(offset, total):
@@ -1743,6 +2011,162 @@ def post(
     next_card = _speed_run_next_card(offset + 1, community_slug, request)
     undo_btn = _speed_run_undo_button(undo_state, oob=True)
     return next_card, undo_btn
+
+
+@rt("/api/cluster-review/save-name")
+def post(identity_id: str = "", new_name: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """Save a name for an identity during speed-run enrichment, then advance."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if new_name and new_name.strip():
+        registry = _main_mod.load_registry()
+        try:
+            registry.rename_identity(identity_id, new_name.strip(), user_source="admin/speed-run-enrichment")
+            _main_mod.save_registry(registry)
+            _main_mod.log_user_action(
+                "SPEED_RUN_NAME",
+                identity_id=identity_id,
+                new_name=new_name.strip(),
+                mode="speed-run",
+                admin=_speed_run_admin_email(sess),
+            )
+        except (KeyError, ValueError) as e:
+            return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-2")
+
+    return _speed_run_next_card(offset + 1, community_slug, request)
+
+
+@rt("/api/cluster-review/search-identities")
+def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str = "", sess=None):
+    """Search confirmed identities by name substring for merge typeahead."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not q or len(q.strip()) < 2:
+        return Div()
+
+    query = q.strip().lower()
+    registry = _main_mod.load_registry()
+    identities = registry._identities if hasattr(registry, "_identities") else {}
+
+    results = []
+    for iid, idata in identities.items():
+        if iid == source_id:
+            continue
+        if idata.get("merged_into"):
+            continue
+        if idata.get("state") != "CONFIRMED":
+            continue
+        name = idata.get("name", "")
+        if query in name.lower():
+            face_ids = _identity_face_ids(idata)
+            best_fid = _best_face_id(face_ids)
+            results.append(
+                {
+                    "identity_id": iid,
+                    "name": name,
+                    "face_count": len(face_ids),
+                    "best_face_id": best_fid,
+                }
+            )
+
+    results.sort(key=lambda r: (-r["face_count"], r["name"]))
+    results = results[:10]
+
+    if not results:
+        return Div(P("No matches found.", cls="text-xs text-slate-500"), cls="p-2")
+
+    els = []
+    for r in results:
+        crop_url = _get_crop_url_for_face(r["best_face_id"]) if r.get("best_face_id") else None
+        merge_params = urlencode(
+            {
+                "source_id": source_id,
+                "target_id": r["identity_id"],
+                "offset": offset,
+                "community_slug": community_slug,
+            }
+        )
+        els.append(
+            Div(
+                Img(
+                    src=crop_url,
+                    alt=r["name"],
+                    cls="w-10 h-10 object-cover rounded-lg border border-slate-600",
+                    loading="lazy",
+                )
+                if crop_url
+                else Div(cls="w-10 h-10 rounded-lg bg-slate-700"),
+                Div(
+                    Span(r["name"], cls="text-sm font-medium text-white"),
+                    P(f"{r['face_count']} faces", cls="text-xs text-slate-400"),
+                    cls="ml-3 flex-1 min-w-0",
+                ),
+                Button(
+                    "Merge",
+                    cls="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors",
+                    hx_post=f"/api/cluster-review/merge?{merge_params}",
+                    hx_target="#speed-run-card",
+                    hx_swap="outerHTML",
+                ),
+                cls="flex items-center p-2 bg-slate-800/60 border border-slate-700 rounded-lg",
+            )
+        )
+
+    return Div(*els, cls="space-y-2")
+
+
+@rt("/api/cluster-review/merge")
+def post(source_id: str = "", target_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """Merge source identity into target during speed-run enrichment."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    registry = _main_mod.load_registry()
+    photo_registry = _main_mod.load_photo_registry()
+
+    try:
+        result = registry.merge_identities(
+            source_id,
+            target_id,
+            user_source="admin/speed-run-merge",
+            photo_registry=photo_registry,
+        )
+        if not result.get("success"):
+            reason = result.get("reason", "unknown")
+            return Div(P(f"Merge failed: {reason}", cls="text-red-400 text-sm"), cls="p-4")
+
+        _main_mod.save_registry(registry)
+        _main_mod.log_user_action(
+            "SPEED_RUN_MERGE",
+            source_id=source_id,
+            target_id=target_id,
+            faces_merged=result.get("faces_merged", 0),
+            mode="speed-run",
+            admin=_speed_run_admin_email(sess),
+        )
+    except (KeyError, ValueError) as e:
+        return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-4")
+
+    target_name = registry._identities.get(result.get("target_id", target_id), {}).get("name", "Unknown")
+    merged_card = Div(
+        Div(
+            Span("Merged!", cls="text-indigo-400 text-lg font-semibold mr-2"),
+            Span(f"into {target_name}", cls="text-slate-300 text-sm"),
+            cls="flex items-center mb-4 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg",
+        ),
+        id="speed-run-card",
+        cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
+        hx_get=f"/admin/cluster-review/next?offset={offset + 1}&community_slug={community_slug}",
+        hx_target="#speed-run-card",
+        hx_swap="outerHTML",
+        hx_trigger="load delay:1s",
+    )
+    return merged_card
 
 
 @rt("/api/cluster-review/undo")
