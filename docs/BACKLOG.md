@@ -164,6 +164,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P2 — Speed-Run Reject Doesn't Visibly Advance (UX-076)
 - **UX-076**: Speed-run reject fires undo banner correctly ("Rejected") but the card doesn't visibly advance to the next cluster — appears unchanged to the user. Confirm (Y) and Skip (S) advance correctly. Source: Session 100g browser verification. Priority: P2.
 
+- **UX-077**: Speed-run progress counter format — 100f assessment documents cumulative format ("5 confirmed / 2 skipped / 1 rejected / 214 remaining") but production shows simple "29 clusters reviewed" count. Verify whether detailed format activates only during active session or if implementation doesn't match spec. Source: Session 100g browser verification. Priority: P2.
+
 ### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
 - **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
 
