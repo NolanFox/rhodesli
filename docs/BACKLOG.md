@@ -131,6 +131,18 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **FB-20**: Optimistic UI for instant feedback — pre-fetch implemented, full optimistic pattern (slide animation, server confirmation) deferred. Source: Session 100e triage. BACKLOG: UX-071.
 - **FB-21**: Design for real users (Claude Benatar, community power users) — workflow guides added (FB-4/7/16). Full Benatar-oriented UX audit deferred. Source: Session 100e triage. BACKLOG: UX-072.
 
+### P1 — Fox Triage Feedback (FB-100 through FB-119) — 2026-03-14
+See `docs/feedback/2026-03-14-fox-triage-feedback.md` for full details. P1 items:
+- **FB-100**: No cross-community badge on speed-run suggestions (extends COMMUNITY-014)
+- **FB-103**: Merge from speed-run silently fails / no confirmation
+- **FB-104**: Enrichment flow order wrong — should be merge → name → GEDCOM, not name → merge
+- **FB-105**: Performance very slow on merge/similar/rename (related to PERF-002)
+- **FB-106**: Speed-run person links go to public page instead of admin
+- **FB-110**: No GEDCOM linking from speed-run enrichment panel
+- **FB-113**: "Under Review" badge contradicts CONFIRMED state on public person page
+
+P2 items: FB-101, 102, 107, 108, 109, 111, 114, 115, 116, 117. See feedback doc for details.
+
 ### P2 — Speed-Run Source Photo Preview (UX-069)
 - **UX-069**: Full source photo preview panel in speed-run for verifying false positives. Clickable crops (FB-2) partially addresses but hover-to-preview or inline source photo would be better. Source: Session 100e FB-15.
 

@@ -97,6 +97,16 @@ Session 100 is done when:
 5. Nolan has started Fox Family triage and given initial feedback
 6. Master status artifact is updated with final state
 
+## Fox Family Triage Results (2026-03-14, this session)
+
+Nolan triaged Fox Family clusters for ~20 minutes. Results:
+- **Charles Fox**: 68 faces confirmed + merged from multiple clusters, GEDCOM linked (Charles Borris Fox, b. 1931)
+- **Esther Burd Fox**: 12 faces confirmed + named, GEDCOM linked (Esther Burd, b. 1900, d. 1966)
+- **Roland Fox**: 31 faces (previously confirmed)
+- **19 new feedback items** (FB-100 through FB-119): 7 P1, 10 P2, 1 positive, 1 observation
+- See: `docs/feedback/2026-03-14-fox-triage-feedback.md`
+- All P1 items added to BACKLOG
+
 ## Breadcrumbs
 
 - Session 100d tracker: `docs/session_context/session-100d-cont-tracker.md`
@@ -106,6 +116,7 @@ Session 100 is done when:
 - Dogfood rollup: `docs/assessments/session-100-rhodes-dogfood-feedback-rollup.md`
 - Fox Family audit: `docs/assessments/session-100-fox-family-screenshot-audit.md`
 - Workflow gap audit: `docs/assessments/session-100-rhodes-workflow-gap-audit.md`
+- **Fox triage feedback: `docs/feedback/2026-03-14-fox-triage-feedback.md`**
 - Data flow: `docs/architecture/DATA_FLOW.md`
 - BACKLOG: `docs/BACKLOG.md`
 - Lessons 131-138: `tasks/lessons.md`
