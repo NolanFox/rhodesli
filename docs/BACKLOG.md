@@ -89,8 +89,32 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Proposal Regeneration After Upload (DATA-016)
 - **DATA-016**: After new photos are uploaded and processed, proposals.json is NOT automatically regenerated. Admin must manually run `cluster_new_faces.py`. This means new uploads don't produce ML match suggestions until a manual step happens. Fix: auto-regenerate proposals after upload processing completes, or add a "Regenerate Proposals" button in admin UI. Source: Session 100d — proposals stale since March 10.
 
+### P1 — Tree First-Load Performance (PERF-002)
+- **PERF-002**: Family tree cold load is ~6.4s. Needs to feel instant. Profile D3 rendering, GEDCOM data fetch, and node count. Consider lazy loading branches or caching the initial render. Source: Session 100 Fox Family audit.
+
+### P1 — Multi-Face Batch Tagging UX (UX-062)
+- **UX-062**: Dense photos with 10+ faces require too many tiny clicks. No per-photo batch confirmation flow exists — each face must be tagged individually. Need: batch select faces on a photo, assign all to one identity, or confirm all detected groupings at once. Source: Session 100 Fox Family face tagging audit.
+
 ### P2 — Date Ordering Transparency (UX-060)
 - **UX-060**: Users should understand why photos are ordered the way they are. Add sort indicator or explanation (e.g., "Sorted by upload date" label, or sort toggle). Source: Session 100 dogfood issue #16. Priority: P2.
+
+### P2 — Fox Family Missing R2 Crops (CROP-001)
+- **CROP-001**: Some Fox Family face crops show as grey boxes / "?" because the crop file was never uploaded to R2 during ingest. Root cause: R2 upload in background ingest may have failed silently, or crops were generated with a naming mismatch. Fix: audit missing crops, regenerate from raw photos, upload to R2. onerror fallback added in Session 100d-cont. Source: Session 100c assessment.
+
+### P2 — Speed-Run Progress Count Instability (UX-063)
+- **UX-063**: Speed-run progress bar shows different totals (222, 30, 251) as state changes shift the cluster pool. The count changes because confirming/rejecting removes items from the INBOX pool. Fix: show "X reviewed" as an absolute counter, not "X of Y" where Y changes. Source: Session 100c assessment.
+
+### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
+- **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
+
+### P2 — Admin vs Share Mode Distinction (UX-064)
+- **UX-064**: No deliberate product distinction between admin workstation mode and public share/contributor mode. The same sidebar shows different items per role, but the overall mode is not communicated clearly. Non-admin users may not understand they're in a limited view. Source: Session 100 Fox Family audit.
+
+### P2 — Upload to Tree Workflow Fragmentation (UX-065)
+- **UX-065**: No fluid navigation between upload review → identify → person → tree → back. Admin workflow requires jumping between disconnected pages. Need: breadcrumb trail or "next step" prompts that guide through the review pipeline. Source: Session 100 Fox Family audit.
+
+### P2 — Date/Enrichment Transparency (UX-066)
+- **UX-066**: Users can't tell if Gemini date estimation or GEDCOM enrichment has been run on a photo. "Earliest" sort feels untrustworthy without knowing the data source. Fix: show enrichment status badges on photo cards. Source: Session 100 Fox Family audit.
 
 ### P0 — Blocks Core Workflow
 - ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)

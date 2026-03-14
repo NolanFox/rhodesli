@@ -812,7 +812,7 @@ def get(sess=None, request=None, mode: str = ""):
             document.addEventListener('keydown', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
                 var key = e.key.toLowerCase();
-                var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss'};
+                var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss', 'z': 'speed-undo'};
                 var action = actionMap[key];
                 if (!action) return;
                 var btn = document.querySelector('[data-action="' + action + '"]');
@@ -832,7 +832,10 @@ def get(sess=None, request=None, mode: str = ""):
                         ),
                         cls="flex items-center gap-4",
                     ),
-                    P("Y = Confirm · N = Reject · S = Skip · D = Dismiss", cls="text-slate-500 text-sm mt-1"),
+                    P(
+                        "Y = Confirm · N = Reject · S = Skip · D = Dismiss · Z = Undo",
+                        cls="text-slate-500 text-sm mt-1",
+                    ),
                     cls="mb-6",
                 ),
                 # Progress bar
@@ -849,6 +852,8 @@ def get(sess=None, request=None, mode: str = ""):
                 ),
                 # First card
                 first_card,
+                # Undo state (hidden, updated via OOB swaps)
+                _speed_run_undo_button(None),
                 keyboard_js,
                 cls="max-w-3xl mx-auto px-4 py-8",
             ),
@@ -1275,6 +1280,8 @@ def post(
         if not identity:
             raise ValueError(f"Identity {identity_id} not found")
 
+        # Capture state before modification for undo
+        prev_state = identity.get("state", "INBOX")
         # Promote all candidates
         candidates = list(identity.get("candidate_ids", []))
         confirmed_count = 0
@@ -1293,7 +1300,16 @@ def post(
         )
 
     if speed_run == "true":
-        return _speed_run_next_card(offset + 1, community_slug, request)
+        undo_state = _build_undo_state(
+            identity_id,
+            "confirm-all",
+            offset,
+            community_slug,
+            {"candidates": candidates, "prev_state": prev_state},
+        )
+        next_card = _speed_run_next_card(offset + 1, community_slug, request)
+        undo_btn = _speed_run_undo_button(undo_state, oob=True)
+        return next_card, undo_btn
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if confirmed_count == 1 else "faces"
@@ -1323,6 +1339,7 @@ def post(
         if not identity:
             raise ValueError(f"Identity {identity_id} not found")
 
+        prev_state = identity.get("state", "INBOX")
         candidates = list(identity.get("candidate_ids", []))
         rejected_count = 0
         for fid in candidates:
@@ -1340,7 +1357,16 @@ def post(
         )
 
     if speed_run == "true":
-        return _speed_run_next_card(offset + 1, community_slug, request)
+        undo_state = _build_undo_state(
+            identity_id,
+            "reject-all",
+            offset,
+            community_slug,
+            {"candidates": candidates, "prev_state": prev_state},
+        )
+        next_card = _speed_run_next_card(offset + 1, community_slug, request)
+        undo_btn = _speed_run_undo_button(undo_state, oob=True)
+        return next_card, undo_btn
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if rejected_count == 1 else "faces"
@@ -1414,10 +1440,25 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
                     alt=f"Face {fid[:12]}",
                     cls="w-20 h-20 object-cover rounded-lg border border-slate-600",
                     loading="lazy",
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
+                ),
+            )
+            # Hidden fallback shown if image fails to load (missing R2 crop)
+            face_thumbs.append(
+                Div(
+                    Span("?", cls="text-slate-500 text-lg"),
+                    cls="w-20 h-20 rounded-lg bg-slate-700 border border-slate-600 items-center justify-center hidden",
+                    title=f"Face crop unavailable: {fid[:16]}",
                 )
             )
         else:
-            face_thumbs.append(Div(cls="w-20 h-20 rounded-lg bg-slate-700"))
+            face_thumbs.append(
+                Div(
+                    Span("?", cls="text-slate-500 text-lg"),
+                    cls="w-20 h-20 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center",
+                    title="No crop available",
+                )
+            )
 
     remaining = face_count - 8
     if remaining > 0:
@@ -1497,7 +1538,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
                 Button(
                     "Skip (S)",
                     cls="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-medium rounded-lg transition-colors",
-                    hx_get=f"/admin/cluster-review/next?offset={offset + 1}&community_slug={community_slug}",
+                    hx_post=f"/api/cluster-review/skip?{common_params}",
                     hx_target="#speed-run-card",
                     hx_swap="outerHTML",
                     data_action="speed-skip",
@@ -1566,6 +1607,47 @@ def _speed_run_next_card(offset, community_slug, request):
     return _speed_run_cluster_card(iid, idata, offset, total, community_slug)
 
 
+def _speed_run_undo_button(undo_state, oob=False):
+    """Render the undo button. Hidden when undo_state is None."""
+    if undo_state:
+        params = urlencode(
+            {
+                "identity_id": undo_state["identity_id"],
+                "action": undo_state["action"],
+                "offset": undo_state["offset"],
+                "community_slug": undo_state.get("community_slug", ""),
+                "face_data": json.dumps(undo_state.get("face_data", {})),
+            }
+        )
+        btn = Button(
+            "Undo Last (Z)",
+            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors",
+            hx_post=f"/api/cluster-review/undo?{params}",
+            hx_target="#speed-run-card",
+            hx_swap="outerHTML",
+            data_action="speed-undo",
+        )
+    else:
+        btn = None
+    return Div(
+        btn,
+        id="speed-run-undo",
+        cls="flex justify-center mt-4" if undo_state else "",
+        **({"hx_swap_oob": "true"} if oob else {}),
+    )
+
+
+def _build_undo_state(identity_id, action, offset, community_slug, face_data=None):
+    """Build an undo state dict for the last speed-run action."""
+    return {
+        "identity_id": identity_id,
+        "action": action,
+        "offset": offset,
+        "community_slug": community_slug,
+        "face_data": face_data or {},
+    }
+
+
 @rt("/admin/cluster-review/next")
 def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
     """Return the next cluster card for speed-run mode (HTMX partial)."""
@@ -1576,8 +1658,28 @@ def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
     return _speed_run_next_card(offset, community_slug, request)
 
 
-@rt("/api/cluster-review/dismiss")
+@rt("/api/cluster-review/skip")
 def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """Skip a cluster (no data change) and auto-advance with undo support."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    undo_state = _build_undo_state(
+        identity_id,
+        "skip",
+        offset,
+        community_slug,
+    )
+    next_card = _speed_run_next_card(offset + 1, community_slug, request)
+    undo_btn = _speed_run_undo_button(undo_state, oob=True)
+    return next_card, undo_btn
+
+
+@rt("/api/cluster-review/dismiss")
+def post(
+    identity_id: str = "", offset: int = 0, community_slug: str = "", speed_run: str = "", sess=None, request=None
+):
     """Dismiss a cluster (set to SKIPPED) and auto-advance."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -1585,11 +1687,94 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
 
     registry = _main_mod.load_registry()
     identity = registry._identities.get(identity_id)
+    prev_state = identity.get("state", "INBOX") if identity else "INBOX"
     if identity:
         identity["state"] = "SKIPPED"
         _main_mod.save_registry(registry)
 
-    return _speed_run_next_card(offset + 1, community_slug, request)
+    undo_state = _build_undo_state(
+        identity_id,
+        "dismiss",
+        offset,
+        community_slug,
+        {"prev_state": prev_state},
+    )
+    next_card = _speed_run_next_card(offset + 1, community_slug, request)
+    undo_btn = _speed_run_undo_button(undo_state, oob=True)
+    return next_card, undo_btn
+
+
+@rt("/api/cluster-review/undo")
+def post(
+    identity_id: str = "",
+    action: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    face_data: str = "{}",
+    sess=None,
+    request=None,
+):
+    """Undo the last speed-run action and show the previous cluster card."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        fd = json.loads(face_data)
+    except (json.JSONDecodeError, TypeError):
+        fd = {}
+
+    registry = _main_mod.load_registry()
+    identity = registry._identities.get(identity_id)
+
+    if identity:
+        prev_state = fd.get("prev_state", "INBOX")
+
+        if action == "confirm-all":
+            # Move faces from anchor_ids back to candidate_ids
+            candidates = fd.get("candidates", [])
+            anchors = identity.get("anchor_ids", [])
+            for fid in candidates:
+                # Remove from anchors
+                identity["anchor_ids"] = [a for a in identity.get("anchor_ids", []) if a != fid]
+                # Add back to candidates
+                if fid not in identity.get("candidate_ids", []):
+                    identity.setdefault("candidate_ids", []).append(fid)
+            identity["state"] = prev_state
+
+        elif action == "reject-all":
+            # Remove faces from negative_ids, restore to candidate_ids
+            candidates = fd.get("candidates", [])
+            for fid in candidates:
+                identity["negative_ids"] = [n for n in identity.get("negative_ids", []) if n != fid]
+                if fid not in identity.get("candidate_ids", []):
+                    identity.setdefault("candidate_ids", []).append(fid)
+            identity["state"] = prev_state
+
+        elif action == "dismiss":
+            # Restore state from SKIPPED
+            identity["state"] = prev_state
+
+        elif action == "skip":
+            # Skip doesn't modify data — just go back to the card
+            pass
+
+        if action != "skip":
+            _main_mod.save_registry(registry)
+
+    # Show the card at the original offset (go back)
+    clusters = _get_speed_run_clusters(community_slug, request)
+    total = len(clusters)
+
+    if offset < total:
+        iid, idata = clusters[offset]
+        card = _speed_run_cluster_card(iid, idata, offset, total, community_slug)
+    else:
+        card = _speed_run_next_card(offset, community_slug, request)
+
+    # Hide the undo button after undoing
+    undo_btn = _speed_run_undo_button(None, oob=True)
+    return card, undo_btn
 
 
 def _active_learning_actor(sess) -> str:
