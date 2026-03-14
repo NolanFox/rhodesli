@@ -146,6 +146,21 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P2 — Real User Design Audit (UX-072)
 - **UX-072**: Full UX audit from the perspective of non-technical users (Claude Benatar, community power users starting new archives). Self-evident workflows, not just keyboard shortcuts. Source: Session 100e FB-21.
 
+### P1 — Data Integrity CI Test for CONFIRMED Faces (PERF-003)
+- **PERF-003**: anchor_ids on CONFIRMED identities must reference valid face_ids in both embeddings.npy and photo_index.json. Add a CI test that validates this invariant on every commit — broken anchors cause silent face display failures. Source: Lesson 134, Session 100 audit. Priority: P1.
+
+### P1 — Tree First-Load Profiling (PERF-004)
+- **PERF-004**: Tree page first-load is ~6.4s — need to profile and identify the bottleneck (Railway cold start? DOM size? Supabase GEDCOM query? D3 rendering?). Related to PERF-002 but focused on diagnosis rather than solution. Source: Session 100 audit. Priority: P1.
+
+### P1 — Per-Photo Multi-Face Batch Tagging (UX-073)
+- **UX-073**: Holocaust collage and similar dense photos have 11+ faces requiring individual tagging. Need a per-photo batch confirm flow where admin can see all detected faces on a single photo and confirm/name them in one pass. Complements UX-062 (general batch tagging) with photo-centric workflow. Source: Session 100 audit. Priority: P1.
+
+### P2 — Correct-Date Route Duplication (UX-074)
+- **UX-074**: Two routes handle the same date correction POST, creating ambiguity about which is canonical. Consolidate into a single route. Source: Session 100b-cont. Priority: P2.
+
+### P2 — Face Cards Tiny Click Targets on Dense Photos (UX-075)
+- **UX-075**: Face cards on photos with many detected faces have very small click targets, making identification difficult on mobile and imprecise on desktop. Need minimum touch target size (44x44px per WCAG) or zoom-on-hover. Source: Face tagging audit. Priority: P2.
+
 ### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
 - **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
 

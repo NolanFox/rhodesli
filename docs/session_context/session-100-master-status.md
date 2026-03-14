@@ -1,7 +1,7 @@
 # Session 100 Master Status — Is It Done?
 
-**Last updated:** 2026-03-13 (Session 100d continuation)
-**Answer:** NOT YET — see checklist below.
+**Last updated:** 2026-03-14 (Session 100g)
+**Answer:** CLOSING — verification gaps remaining (V-1, V-3), V-2 deferred
 
 This is the canonical artifact for tracking whether Session 100 (all sub-sessions) is complete. Every item must be DONE, have a BACKLOG entry, or be explicitly descoped with rationale.
 
@@ -21,6 +21,7 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 | 100d-cont | Confidence fixes + P1 audit | IN PROGRESS |
 | 100e | Fox Family triage sprint (7 clusters, 21 FB items) | COMPLETE |
 | 100f | Cluster validation & enrichment overhaul (PRD-040) | COMPLETE |
+| 100g | Session 100 closeout + browser triage | IN PROGRESS |
 
 ---
 
@@ -28,8 +29,8 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 
 | # | Issue | Status | Evidence |
 |---|-------|--------|----------|
-| CB-1 | Silent Supabase sync failures — `except: pass` in 4 locations | FIXING | Background agent working, DATA-014 |
-| CB-2 | No undo in speed-run mode | FIXING | Background agent working |
+| CB-1 | Silent Supabase sync failures — `except: pass` in 4 locations | FIXED | DATA-014, logging added |
+| CB-2 | No undo in speed-run mode | FIXED | Undo banner shipped in 100f |
 | CB-3 | Grey face crops in Fox Family — missing R2 crops show blank | FIXED | onerror fallback added, shows "?" instead of invisible |
 
 ## P1 Items from Session 100 Audit
@@ -38,9 +39,9 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 |---|-------|--------|---------|--------|
 | P1-1 | Proposals stale / no auto-regen | BACKLOGGED | DATA-016 | Operational: regen after confirming anchors. Auto-regen is a future feature. |
 | P1-2 | GEDCOM filter on confirmed people | BACKLOGGED | DOGFOOD-005 | Filter dropdown on confirmed people page |
-| P1-3 | Data integrity CI test for CONFIRMED faces | BACKLOGGED | Lesson 134, needs BACKLOG entry | Test that anchor_ids exist in embeddings + photo_index |
-| P1-4 | Tree first-load ~6.4s | BACKLOGGED | Needs BACKLOG entry | Performance profiling needed |
-| P1-5 | Multi-face batch tagging UX | BACKLOGGED | Needs BACKLOG entry | New feature — per-photo batch confirm for dense photos |
+| P1-3 | Data integrity CI test for CONFIRMED faces | BACKLOGGED | PERF-003 | Test that anchor_ids exist in embeddings + photo_index |
+| P1-4 | Tree first-load ~6.4s | BACKLOGGED | PERF-004 | Performance profiling needed |
+| P1-5 | Multi-face batch tagging UX | BACKLOGGED | UX-073 | New feature — per-photo batch confirm for dense photos |
 
 ## P2 Items Needing BACKLOG Entries
 
@@ -48,12 +49,12 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 |---|-------|-----------|--------|
 | P2-1 | Solomon Galante empty anchor_ids | Needs entry | 100b-cont3 |
 | P2-2 | Missing Fox crops on R2 | Needs entry | 100c |
-| P2-3 | Speed-run progress bar count instability | Needs entry | 100c |
-| P2-4 | correct-date route duplication | Needs entry | 100b-cont |
-| P2-5 | Admin vs share mode confusion | Needs entry | Fox audit |
-| P2-6 | Upload→identify→person→tree fragmented | Needs entry | Fox audit |
-| P2-7 | Face cards tiny click targets on dense photos | Needs entry | Face tagging audit |
-| P2-8 | Date/enrichment transparency | Needs entry | Fox audit |
+| P2-3 | Speed-run progress bar count instability | FIXED (100f) | UX-063 | Cumulative progress counter shipped |
+| P2-4 | correct-date route duplication | BACKLOGGED | UX-074 | Consolidate duplicate routes |
+| P2-5 | Admin vs share mode confusion | BACKLOGGED | UX-064 | Mode distinction needed |
+| P2-6 | Upload→identify→person→tree fragmented | BACKLOGGED | UX-065 | Breadcrumb trail needed |
+| P2-7 | Face cards tiny click targets on dense photos | BACKLOGGED | UX-075 | Minimum touch target size |
+| P2-8 | Date/enrichment transparency | BACKLOGGED | UX-066 | Enrichment status badges |
 
 ## Verification Gaps
 
