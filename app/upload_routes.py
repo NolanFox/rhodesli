@@ -680,6 +680,22 @@ async def post(
 
     # Non-admin flow: create pending upload record and notify admin
     if not user_is_admin:
+        # Upload to R2 for durability — staging alone is not safe (Session 100d audit)
+        try:
+            from core.storage import can_write_r2, upload_bytes_to_r2
+
+            if can_write_r2():
+                for fname in saved_files:
+                    fpath = job_dir / fname
+                    if fpath.exists():
+                        upload_bytes_to_r2(
+                            f"uploads/pending/{job_id}/{fname}",
+                            fpath.read_bytes(),
+                            content_type="image/jpeg",
+                        )
+        except Exception as e:
+            logger.warning(f"R2 backup of pending upload {job_id} failed: {e}")
+
         pending = _main_mod._load_pending_uploads()
         pending["uploads"][job_id] = {
             "job_id": job_id,

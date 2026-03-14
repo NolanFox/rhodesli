@@ -89,6 +89,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Proposal Regeneration After Upload (DATA-016)
 - **DATA-016**: After new photos are uploaded and processed, proposals.json is NOT automatically regenerated. Admin must manually run `cluster_new_faces.py`. This means new uploads don't produce ML match suggestions until a manual step happens. Fix: auto-regenerate proposals after upload processing completes, or add a "Regenerate Proposals" button in admin UI. Source: Session 100d — proposals stale since March 10.
 
+### P1 — Recently Confirmed View in Speed-Run (UX-067)
+- **UX-067**: After confirming clusters in speed-run mode, there's no way to see what you just confirmed. Confirmed identities disappear from the queue and are mixed into the general People list. Need: "Recently Confirmed" section on the cluster review page showing the last N confirmations with undo capability. Source: Session 100d — Nolan confirmed proposals but couldn't find them afterward.
+
 ### P1 — Tree First-Load Performance (PERF-002)
 - **PERF-002**: Family tree cold load is ~6.4s. Needs to feel instant. Profile D3 rendering, GEDCOM data fetch, and node count. Consider lazy loading branches or caching the initial render. Source: Session 100 Fox Family audit.
 

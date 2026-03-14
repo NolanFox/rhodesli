@@ -1626,6 +1626,19 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
 
     # Non-admin flow: queue for admin review (same as Upload page)
     if not user_is_admin:
+        # Upload to R2 for durability — staging alone is not safe (Session 100d audit)
+        try:
+            from core.storage import can_write_r2, upload_bytes_to_r2
+
+            if can_write_r2():
+                upload_bytes_to_r2(
+                    f"uploads/pending/{job_id}/{safe_filename}",
+                    content,
+                    content_type="image/jpeg",
+                )
+        except Exception as e:
+            logging.warning(f"R2 backup of pending compare upload {job_id} failed: {e}")
+
         pending = _main_mod._load_pending_uploads()
         pending["uploads"][job_id] = {
             "job_id": job_id,
@@ -1654,8 +1667,23 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             data_testid="upload-saved-pending",
         )
 
-    # Admin + processing disabled: stage for local pipeline
+    # Admin + processing disabled: stage for local pipeline + create pending entry
     if not PROCESSING_ENABLED:
+        # BUG FIX: create pending entry so staging cleanup doesn't delete (Session 100d audit)
+        pending = _main_mod._load_pending_uploads()
+        pending["uploads"][job_id] = {
+            "job_id": job_id,
+            "uploader_email": uploader_email,
+            "source": "Compare Upload",
+            "collection": "",
+            "source_url": "",
+            "files": [safe_filename],
+            "file_count": 1,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": "staged",
+            "compare_mode": True,
+        }
+        _main_mod._save_pending_uploads(pending)
         return Div(
             P("Photo staged for processing.", cls="text-slate-300 text-center py-4"),
             P("Run the local pipeline to detect faces.", cls="text-slate-400 text-center text-sm mt-2"),
