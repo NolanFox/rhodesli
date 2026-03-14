@@ -19,6 +19,8 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 | 100c | Speed-run cluster review (PRD-039) | COMPLETE |
 | 100d | Contributor experience + upload fixes | COMPLETE |
 | 100d-cont | Confidence fixes + P1 audit | IN PROGRESS |
+| 100e | Fox Family triage sprint (7 clusters, 21 FB items) | COMPLETE |
+| 100f | Cluster validation & enrichment overhaul (PRD-040) | COMPLETE |
 
 ---
 
@@ -78,6 +80,11 @@ This is the canonical artifact for tracking whether Session 100 (all sub-session
 - [x] Silent sync failure logging (100d-cont, in progress)
 - [x] Speed-run undo button (100d-cont, in progress)
 - [x] Grey crop fallback (100d-cont)
+- [x] Audit trail for all speed-run actions (100f)
+- [x] Batch cluster validation page — PRD-040 (100f)
+- [x] Enriched speed-run: all faces, name input, merge search, recent actions (100f)
+- [x] UX polish: cumulative progress, undo banner, debounce, workflow guides, pre-fetch (100f)
+- [x] 13/21 FB items from 100e fixed, 8 deferred with BACKLOG entries (100f)
 
 ## What "Session 100 Done" Means
 

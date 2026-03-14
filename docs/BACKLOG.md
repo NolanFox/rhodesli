@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 47.0 — March 11, 2026
-**Status**: ~4676 tests passing, v0.97.12, 939 photos, 3412 identities, 84 confirmed
+**Version**: 48.0 — March 14, 2026
+**Status**: ~4276 tests passing, v0.99.3, 941 photos, 3412 identities, 84 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -105,7 +105,46 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **CROP-001**: Some Fox Family face crops show as grey boxes / "?" because the crop file was never uploaded to R2 during ingest. Root cause: R2 upload in background ingest may have failed silently, or crops were generated with a naming mismatch. Fix: audit missing crops, regenerate from raw photos, upload to R2. onerror fallback added in Session 100d-cont. Source: Session 100c assessment.
 
 ### P2 — Speed-Run Progress Count Instability (UX-063)
-- **UX-063**: Speed-run progress bar shows different totals (222, 30, 251) as state changes shift the cluster pool. The count changes because confirming/rejecting removes items from the INBOX pool. Fix: show "X reviewed" as an absolute counter, not "X of Y" where Y changes. Source: Session 100c assessment.
+- ~~**UX-063**: Speed-run progress bar shows different totals (222, 30, 251) as state changes shift the cluster pool.~~ FIXED (Session 100f) — replaced with cumulative progress counter ("5 confirmed / 2 skipped / 1 rejected / 214 remaining"). Total snapshotted on page load.
+
+### Session 100e Fox Family Triage Feedback (FB-1 through FB-21)
+
+- ~~**FB-1**: Can't see all faces in cluster — "+36 more" overflow hides most faces~~ FIXED (Session 100f) — all faces shown in scrollable grid, no cap
+- ~~**FB-2**: Crops not clickable to source photo~~ FIXED (Session 100f) — each crop links to source photo in new tab
+- ~~**FB-3**: No way to name or GEDCOM-link from speed-run~~ FIXED (Session 100f) — post-confirm enrichment panel with name input and GEDCOM link button
+- ~~**FB-4**: Workflow unclear — no guidance for new users~~ FIXED (Session 100f) — instructional text added at top of speed-run and batch pages
+- ~~**FB-5**: No merge capability in speed-run~~ FIXED (Session 100f) — merge search typeahead in post-confirm enrichment panel
+- **FB-6**: Age-based cluster splitting — clusters with mixed ages need splitting before confirm. ML problem, requires PRD-038 Phase 5 (more Fox-family labels + slice gate data). Source: Session 100e triage.
+- ~~**FB-7**: Speed-run workflow unclear~~ FIXED (Session 100f) — same as FB-4, workflow guide added
+- **FB-8**: Keyboard accessibility beyond Y/N/S/D — Tab navigation, screen reader labels needed for non-keyboard-native users. Source: Session 100e triage. BACKLOG: UX-068.
+- ~~**FB-9**: Confirm (Y) very slow response — possible double-accept~~ FIXED (Session 100f) — 300ms Y key debounce + next-card pre-fetch
+- ~~**FB-10**: No history of previous actions in speed-run~~ FIXED (Session 100f) — recent actions sidebar showing last 10 actions with undo
+- **FB-11**: PRD-038 longitudinal reranker not wired into clustering — rollout gates closed pending more labeled data. Not actionable until Phase 5 evidence collected. Source: Session 100e triage.
+- ~~**FB-12**: Face crops too small, too much wasted space~~ FIXED (Session 100f) — crops sized to 112px in speed-run, 80px minimum in batch grid
+- ~~**FB-13**: Speed-run confirm-only flow is low value — batch select is faster~~ FIXED (Session 100f) — batch cluster validation page shipped (PRD-040)
+- ~~**FB-14**: Counter going DOWN is confusing — no sense of progress~~ FIXED (Session 100f) — cumulative progress counter with snapshot total
+- **FB-15**: Can't verify potential false positive without source photo context — clickable crops (FB-2) partially addresses. Full source photo preview panel deferred. Source: Session 100e triage. BACKLOG: UX-069.
+- ~~**FB-16**: Unknown person — unclear what to do~~ FIXED (Session 100f) — workflow guide text explains confirm/reject/skip/dismiss
+- ~~**FB-17**: Still way too slow — needs to feel instantaneous~~ FIXED (Session 100f) — next-card pre-fetch via hidden HTMX request + 300ms debounce
+- **FB-18**: No visual feedback on action — did it work? — optimistic UI pre-fetch helps but full loading skeleton deferred. Source: Session 100e triage. BACKLOG: UX-070.
+- ~~**FB-19**: Undo not discoverable — Z exists but unclear~~ FIXED (Session 100f) — undo banner with full context ("Undo: Confirmed Person X — N faces (Z)")
+- **FB-20**: Optimistic UI for instant feedback — pre-fetch implemented, full optimistic pattern (slide animation, server confirmation) deferred. Source: Session 100e triage. BACKLOG: UX-071.
+- **FB-21**: Design for real users (Claude Benatar, community power users) — workflow guides added (FB-4/7/16). Full Benatar-oriented UX audit deferred. Source: Session 100e triage. BACKLOG: UX-072.
+
+### P2 — Speed-Run Source Photo Preview (UX-069)
+- **UX-069**: Full source photo preview panel in speed-run for verifying false positives. Clickable crops (FB-2) partially addresses but hover-to-preview or inline source photo would be better. Source: Session 100e FB-15.
+
+### P2 — Speed-Run Processing Indicator (UX-070)
+- **UX-070**: Full loading skeleton / processing indicator for speed-run actions. Pre-fetch helps but visual feedback that an action was processed is still weak. Source: Session 100e FB-18.
+
+### P2 — Speed-Run Optimistic UI (UX-071)
+- **UX-071**: Full optimistic UI pattern — slide current card out immediately on action, show pre-fetched next card, confirm server-side in background, revert on failure. Source: Session 100e FB-20.
+
+### P2 — Speed-Run Accessibility (UX-068)
+- **UX-068**: Keyboard accessibility beyond Y/N/S/D — Tab navigation between cards, screen reader labels, focus management. Source: Session 100e FB-8.
+
+### P2 — Real User Design Audit (UX-072)
+- **UX-072**: Full UX audit from the perspective of non-technical users (Claude Benatar, community power users starting new archives). Self-evident workflows, not just keyboard shortcuts. Source: Session 100e FB-21.
 
 ### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
 - **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
