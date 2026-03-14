@@ -15,12 +15,17 @@ Session 100e was the Fox Family triage sprint. Nolan triaged ~7 clusters in spee
 
 **Predecessor:** `docs/session_logs/session-100e-log.md`, `docs/session_context/session-100-master-status.md`
 
-## CRITICAL: Context Management
-- **/clear between EVERY phase.** No exceptions. This is the #1 recurring failure (Sessions 80, 89, 90, 90b).
-- After each phase: commit, update session log, then /clear IMMEDIATELY.
-- Re-read THIS prompt file at the start of each phase (context will be fresh after /clear).
-- If context drops below 30%, STOP, commit what you have, write a handoff note to the session log, and /clear.
-- Use subagents for heavy implementation to keep the orchestrator context lean.
+## CRITICAL: Context Management — Subagent Architecture
+The orchestrator (you) MUST NOT write code directly. For every implementation phase:
+1. Read only the phase section from this prompt
+2. Delegate ALL implementation to a subagent (Agent tool) with a focused brief
+3. The subagent does: code changes, tests, commit
+4. Orchestrator verifies: reads the commit, checks test output, updates session log
+5. /clear IMMEDIATELY after each phase before reading the next one
+
+This keeps the orchestrator context lean. Each subagent gets fresh context with only what it needs. The orchestrator is a coordinator, not a builder.
+
+**If you notice context is above 50%, STOP. Commit, log, /clear. No exceptions.**
 
 ## Phase 0: Orient (5 min)
 - Read `tasks/lessons.md`

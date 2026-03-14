@@ -36,6 +36,7 @@ After triage session:
 - Should we regenerate proposals now that we have more confirmed anchors?
 
 ## Phase 4: Session Closeout
+- **Merge egress fix branch**: `./scripts/merge.sh worktree-agent-a93855ab` — bumps Supabase cache TTLs (30s→120s) to fix free-tier egress overage. Branch is tested (4222 pass) and pushed. See OD-011, `.claude/rules/egress-budget.md`. Do NOT skip this — Supabase grace period ends 2026-04-13.
 - Update `docs/session_context/session-100-master-status.md`
 - CHANGELOG, ROADMAP, BACKLOG updates
 - Assessment with evidence
