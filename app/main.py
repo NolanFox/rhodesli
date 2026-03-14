@@ -1122,17 +1122,26 @@ def save_registry(registry, confirmed_identity_info=None):
     # Keep cache_key — it will match on next load
 
     if DATA_SOURCE == "postgres":
-        # Postgres-only write path: write directly to Supabase
-        try:
-            from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
+        # Postgres write path: sync overrides inline (fast), batch write in background
+        import threading
 
-            sync_identity_overrides(registry._identities)
-            items = [dict(v, identity_id=k) for k, v in registry._identities.items()]
-            shadow_write_identities_batch(items)
-        except Exception as e:
-            logging.error(f"Postgres save_registry failed: {e}")
-            # Emergency fallback: write JSON so data isn't lost
-            registry.save(REGISTRY_PATH)
+        identities_copy = dict(registry._identities)
+
+        def _background_postgres_save(identities_dict):
+            try:
+                from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
+
+                sync_identity_overrides(identities_dict)
+                items = [dict(v, identity_id=k) for k, v in identities_dict.items()]
+                shadow_write_identities_batch(items)
+            except Exception as e:
+                logging.error(f"Postgres save_registry failed: {e}")
+                # Emergency fallback: write JSON so data isn't lost
+                registry.save(REGISTRY_PATH)
+
+        threading.Thread(target=_background_postgres_save, args=(identities_copy,), daemon=True).start()
+        # Also save JSON as backup
+        registry.save(REGISTRY_PATH)
         return
 
     # JSON write path (default)

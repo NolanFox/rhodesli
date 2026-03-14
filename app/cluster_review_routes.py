@@ -1749,6 +1749,12 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
 
 def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_slug, community=None):
     """Render the post-confirm enrichment panel for naming/merging."""
+    # Resolve community from slug if not provided (API paths skip CommunityMiddleware)
+    if community is None and community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(community_slug)
+
     display_name = identity_data.get("name", "Unknown")
     if display_name.startswith("Unidentified Person "):
         display_name = "Person " + display_name[len("Unidentified Person ") :]
@@ -2216,6 +2222,10 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
         return Div(P("No matches found.", cls="text-xs text-slate-500"), cls="p-2")
 
     community = getattr(request.state, "community", None) if request else None
+    if community is None and community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(community_slug)
     els = []
     for r in results:
         crop_url = _get_crop_url_for_face(r["best_face_id"]) if r.get("best_face_id") else None
