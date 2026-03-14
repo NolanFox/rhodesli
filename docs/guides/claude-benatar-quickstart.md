@@ -1,93 +1,73 @@
-# How to Use Rhodesli — Quick Guide for Claude Benatar
+# Claude Benatar Onboarding — Message Script + Screenshots
 
-**Site:** https://rhodesli.nolanandrewfox.com
-
-Hey Claude — here are the 3 main things you can do with the app right now, step by step.
+**Purpose:** Nolan sends these messages to Claude Benatar on Facebook Messenger, with screenshots showing each step. Each section is one message + one or two screenshots.
 
 ---
 
-## 1. "Is this person in the archive?"
+## Message 1: Compare Tool (the hook)
 
-You have an old photo and want to know if we already have that person identified somewhere.
+**Screenshot to take:** Go to https://rhodesli.nolanandrewfox.com/tools/compare. Upload a photo of someone from the archive (pick a good match — maybe a Capeluto family member). Screenshot the results page showing the match with the green confidence bar.
 
-**Steps:**
-1. Go to https://rhodesli.nolanandrewfox.com/tools/compare
-2. Click **"Upload a Photo"** on the left side
-3. Select your photo from your phone or computer
-4. The AI will detect faces in your photo automatically
-5. Click **"Find Matches"**
-6. You'll see the top matches from the archive — ranked by how confident the AI is
-7. If you see a match that looks right, click on it to see that person's full page with all their photos
-
-**What this is good for:** You found a photo in a drawer and want to know "is this person already in our family tree?"
+**Text to send:**
+> hey so here's the easiest thing you can do with the app — go to rhodesli.nolanandrewfox.com/tools/compare and upload any old family photo. the AI will scan the face and show you if that person is already in the archive. here's what it looks like when it finds a match [screenshot]. you don't even need to be logged in to try it
 
 ---
 
-## 2. "Are these two people the same person?"
+## Message 2: Help Identify (the contribution)
 
-You're looking at two different photos and you think it might be the same person at different ages.
+**Screenshot to take:** Go to https://rhodesli.nolanandrewfox.com/?section=photos. Click on a photo that has an unidentified face. Screenshot the photo page showing the face boxes. Then click on an unidentified face and screenshot the "Help Identify" button/form.
 
-**Steps:**
-1. Go to https://rhodesli.nolanandrewfox.com/tools/compare
-2. On the **left side**, upload or search for the first person
-3. On the **right side**, upload the second photo
-4. Click **"Compare"**
-5. The AI will show you a confidence score — green means likely match, red means probably not
-
-**What this is good for:** "Is the young woman in this 1935 photo the same person as the older woman in this 1960 photo?"
+**Text to send:**
+> if you're browsing the photos and you recognize someone, here's how to tag them — click on the photo, then click on the face [screenshot 1]. you'll see a "Help Identify" button. type their name and hit submit [screenshot 2]. I'll get a notification and approve it, then their name shows up for everyone
 
 ---
 
-## 3. "I know who this is — how do I tell you?"
+## Message 3: Upload (contributing photos)
 
-You're browsing the archive and you recognize someone who isn't identified yet.
+**Screenshot to take:** Go to https://rhodesli.nolanandrewfox.com/upload (logged in as admin). Screenshot the upload page with the file picker visible. Then screenshot the confirmation after uploading a test photo.
 
-**Steps:**
-1. Browse photos at https://rhodesli.nolanandrewfox.com/photos
-2. Click on any photo to see it full-size with face boxes
-3. Click on the **face** of the person you recognize
-4. Click the **"Help Identify"** button
-5. Type their name (and any details you know — maiden name, nickname, etc.)
-6. Hit **Submit**
-7. I'll review it and approve it — then their name shows up for everyone
-
-**What this is good for:** You're scrolling through and you go "wait, that's Aunt Stella!" — now you can tell us.
+**Text to send:**
+> and if you have family photos to add to the archive — click Upload in the sidebar [screenshot 1]. pick your photos, and the AI automatically detects the faces. I review them and they go live. you uploaded one already and I approved it — the system found faces and is looking for matches now
 
 ---
 
-## 4. "I have photos to contribute"
+## Message 4: My Contributions (seeing your status)
 
-You have family photos that should be in the archive.
+**Screenshot to take:** Go to https://rhodesli.nolanandrewfox.com/my-contributions (logged in as the contributor — or simulate by showing the page layout). Screenshot showing the stats (X suggestions, Y approved, Z pending, N photos uploaded).
 
-**Steps:**
-1. Go to the site and make sure you're logged in
-2. Click **"Upload"** in the top menu
-3. Select your photos (you can pick multiple at once)
-4. Preview them, add any notes about where they came from
-5. Click **Upload**
-6. The AI automatically detects faces and starts looking for matches
-7. I review and approve them, then they're live in the archive
-
-**What this is good for:** You have a box of old family photos and want them preserved and searchable.
+**Text to send:**
+> also I just added a "My Contributions" page so you can see the status of everything you've submitted [screenshot]. it shows how many names you've suggested, how many I've approved, and your photo uploads. you'll also get an email now when I approve one of your suggestions
 
 ---
 
-## Tips
+## Message 5: What to try next
 
-- **You don't need an account to browse** — just go to the site and look around
-- **The AI isn't perfect** — it suggests matches but humans confirm them. Your knowledge is what makes this work.
-- **Start with Compare** — it's the most fun. Upload a photo and see who the AI finds.
-- **Every name you submit helps** — even partial names or "I think this is..." are useful
+**Text to send (no screenshot needed):**
+> so the three things to try are: (1) go to /tools/compare and upload a photo to see if the AI can match it to someone in the archive, (2) browse the photos and if you recognize someone click their face and submit a name, (3) upload any family photos you have. let me know if anything is confusing and I'll fix it. screenshots of what's not working are super helpful
 
 ---
 
-## What's Coming Next
+## Screenshot Checklist for Nolan
 
-- Email notifications when your suggestions get reviewed
-- Better mobile experience
-- Photo enhancement for faded/damaged photos
-- More family collections being added
+Before sending these messages, take these screenshots:
+
+- [ ] `/tools/compare` — with a successful match result showing green confidence bar
+- [ ] `/photos` — a photo page with face boxes visible (some identified, some not)
+- [ ] The "Help Identify" form after clicking an unidentified face
+- [ ] `/upload` — the upload page with file picker
+- [ ] `/my-contributions` — showing the stats dashboard (may need to log in as a contributor to see their data, or show the empty state with action buttons)
+- [ ] The contributor sidebar — showing the simplified "Contribute" section with Help Identify + My Contributions
+
+Save all screenshots to `docs/screenshots/session-100d/benatar-onboarding/`
 
 ---
 
-*Questions? Just message me on Facebook. Screenshots of what's confusing you are super helpful.*
+## Tone Notes
+
+Nolan's texting style (from the Messenger conversation):
+- Lowercase, casual, no punctuation fuss
+- Short sentences
+- Acknowledges confusion directly ("totally get it")
+- Offers specific actions ("if you give me your use case I can refine the UX")
+- Uses "the AI" not "our ML pipeline"
+- Links directly to specific pages, not "go to the app"
