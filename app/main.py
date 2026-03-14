@@ -1138,16 +1138,15 @@ def save_registry(registry, confirmed_identity_info=None):
     registry_dict = getattr(registry, "__dict__", None)
     if registry_dict is not None:
         registry_dict.pop("_face_identity_lookup_cache", None)
-    # Sync user-modified identities to Supabase (non-blocking on failure)
-    try:
-        from app.supabase_data import sync_identity_overrides
 
-        sync_identity_overrides(registry._identities)
-    except Exception as e:
-        logging.warning(f"Supabase identity sync failed (degraded mode): {e}")
+    # Sync identities to Supabase in background thread (non-blocking)
+    def _background_supabase_sync(identities_dict):
+        try:
+            from app.supabase_data import sync_identity_overrides
 
-    # Shadow-write all identities to Supabase (fire-and-forget background thread)
-    def _shadow_sync_identities(identities_dict):
+            sync_identity_overrides(identities_dict)
+        except Exception as e:
+            logging.warning(f"Supabase identity sync failed (degraded mode): {e}")
         try:
             from app.supabase_data import shadow_write_identities_batch
 
@@ -1159,7 +1158,7 @@ def save_registry(registry, confirmed_identity_info=None):
     import threading
 
     threading.Thread(
-        target=_shadow_sync_identities,
+        target=_background_supabase_sync,
         args=(dict(registry._identities),),
         daemon=True,
     ).start()
