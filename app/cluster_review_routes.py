@@ -1947,3 +1947,367 @@ def get(identity_id: str = "", name: str = "", sess=None):
 
     # Reuse the existing GEDCOM link panel component
     return _main_mod._gedcom_link_panel(identity_id, name)
+
+
+# ---------------------------------------------------------------------------
+# PRD-040: Batch Cluster Validation
+# ---------------------------------------------------------------------------
+
+
+def _get_batch_clusters(community_slug: str = "", request=None, min_faces: int = 1):
+    """Get all INBOX identities for batch validation.
+
+    Returns list of (identity_id, identity_data, face_count) tuples,
+    sorted by face count descending.
+    """
+    registry = _main_mod.load_registry()
+    identities = registry._identities if hasattr(registry, "_identities") else {}
+
+    # Community filtering
+    community = getattr(request.state, "community", None) if request else None
+    community_identity_ids = None
+    if community:
+        community_identity_ids = _main_mod._get_community_identity_ids(community)
+
+    if community_identity_ids is not None:
+        filtered_ids = {iid: idata for iid, idata in identities.items() if iid in community_identity_ids}
+    else:
+        filtered_ids = identities
+
+    clusters = []
+    for iid, idata in filtered_ids.items():
+        if idata.get("merged_into"):
+            continue
+        state = idata.get("state", "")
+        if state != "INBOX":
+            continue
+        all_faces = _identity_face_ids(idata)
+        face_count = len(all_faces)
+        if face_count >= min_faces:
+            clusters.append((iid, idata, face_count))
+
+    clusters.sort(key=lambda x: -x[2])
+    return clusters
+
+
+def _batch_card(identity_id, identity_data, face_count):
+    """Render a single card for batch cluster validation grid."""
+    all_faces = _identity_face_ids(identity_data)
+    crop_url = None
+    for fid in all_faces[:1]:
+        crop_url = _get_crop_url_for_face(fid)
+
+    name = identity_data.get("name", "Unknown")
+    display_name = name
+    if name.startswith("Unidentified Person "):
+        display_name = "Person " + name[len("Unidentified Person ") :]
+
+    return Div(
+        # Checkbox overlay
+        Input(
+            type="checkbox",
+            checked=True,
+            cls="absolute top-2 left-2 w-5 h-5 accent-emerald-500 z-10 cursor-pointer",
+            data_identity_id=identity_id,
+            data_action="batch-toggle",
+        ),
+        # Face crop
+        Img(
+            src=crop_url or "",
+            alt=display_name,
+            cls="w-full aspect-square object-cover rounded-t-lg",
+            loading="lazy",
+            style="min-height:80px;min-width:80px;",
+        )
+        if crop_url
+        else Div(
+            Span("No crop", cls="text-slate-500 text-xs"),
+            cls="w-full aspect-square bg-slate-800 rounded-t-lg flex items-center justify-center",
+        ),
+        # Info bar
+        Div(
+            Span(
+                f"{face_count} face{'s' if face_count != 1 else ''}",
+                cls="text-xs font-medium text-white bg-slate-700 px-2 py-0.5 rounded-full",
+            ),
+            P(display_name, cls="text-xs text-slate-400 mt-1 truncate"),
+            P(identity_id[:12] + "...", cls="text-[10px] text-slate-600 mt-0.5 truncate"),
+            cls="p-2",
+        ),
+        cls="relative bg-slate-900/60 border border-slate-700/50 rounded-lg cursor-pointer hover:border-emerald-500/50 transition-colors batch-card",
+        data_identity_id=identity_id,
+    )
+
+
+@rt("/admin/cluster-batch")
+def get(min_faces: int = 1, sess=None, request=None):
+    """Batch Cluster Validation — PRD-040.
+
+    Google Photos-style grid with checkboxes for bulk INBOX cluster confirmation.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    clusters = _get_batch_clusters(community_slug, request, min_faces=min_faces)
+    total = len(clusters)
+
+    # Filter bar
+    filter_buttons = []
+    for label, min_val in [("All", 1), ("2+", 2), ("5+", 5), ("10+", 10)]:
+        active = min_faces == min_val
+        btn_cls = "px-3 py-1.5 text-xs font-medium rounded-lg transition-colors "
+        btn_cls += "bg-emerald-600 text-white" if active else "bg-slate-700 hover:bg-slate-600 text-slate-200"
+        filter_buttons.append(
+            A(
+                label,
+                href=f"cluster-batch?min_faces={min_val}",
+                cls=btn_cls,
+            )
+        )
+
+    filter_bar = Div(
+        Span("Filter by face count:", cls="text-sm text-slate-400 mr-3"),
+        *filter_buttons,
+        cls="flex items-center gap-2 mb-4",
+    )
+
+    # Stats + select all bar
+    stats_bar = Div(
+        Span(
+            f"{total} selected of {total} total",
+            id="batch-stats",
+            cls="text-sm text-slate-300",
+        ),
+        Button(
+            "Deselect All",
+            cls="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors",
+            data_action="batch-toggle-all",
+        ),
+        cls="flex items-center justify-between mb-4",
+    )
+
+    # Grid of cards
+    cards = []
+    for iid, idata, fcount in clusters:
+        cards.append(_batch_card(iid, idata, fcount))
+
+    grid = (
+        Div(
+            *cards,
+            cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3",
+            id="batch-grid",
+        )
+        if cards
+        else Div(
+            H3("No INBOX clusters to validate", cls="text-xl font-semibold text-white mb-2"),
+            P("All clusters have been reviewed.", cls="text-slate-400"),
+            cls="p-8 text-center",
+        )
+    )
+
+    # Sticky footer with confirm button
+    footer = (
+        Div(
+            Button(
+                f"Confirm Selected ({total})",
+                id="batch-confirm-btn",
+                cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50",
+                data_action="batch-confirm",
+                data_total=str(total),
+            ),
+            cls="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 p-4 flex justify-center z-50",
+        )
+        if cards
+        else ""
+    )
+
+    # Summary container (hidden initially, shown after confirm)
+    summary = Div(id="batch-summary", cls="mb-4")
+
+    # JavaScript for batch interactions
+    batch_js = Script("""
+        (function() {
+            var grid = document.getElementById('batch-grid');
+            if (!grid) return;
+
+            function updateCount() {
+                var checked = grid.querySelectorAll('input[data-action="batch-toggle"]:checked');
+                var total = grid.querySelectorAll('input[data-action="batch-toggle"]');
+                var statsEl = document.getElementById('batch-stats');
+                var btnEl = document.getElementById('batch-confirm-btn');
+                if (statsEl) statsEl.textContent = checked.length + ' selected of ' + total.length + ' total';
+                if (btnEl) {
+                    btnEl.textContent = 'Confirm Selected (' + checked.length + ')';
+                    btnEl.disabled = checked.length === 0;
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                var action = e.target.getAttribute('data-action');
+                if (!action) {
+                    // Check if clicked on a card (not the checkbox itself)
+                    var card = e.target.closest('.batch-card');
+                    if (card && e.target.tagName !== 'INPUT') {
+                        var cb = card.querySelector('input[data-action="batch-toggle"]');
+                        if (cb) { cb.checked = !cb.checked; updateCount(); }
+                    }
+                    return;
+                }
+
+                if (action === 'batch-toggle') {
+                    updateCount();
+                    return;
+                }
+
+                if (action === 'batch-toggle-all') {
+                    e.preventDefault();
+                    var boxes = grid.querySelectorAll('input[data-action="batch-toggle"]');
+                    var anyChecked = Array.from(boxes).some(function(b) { return b.checked; });
+                    boxes.forEach(function(b) { b.checked = !anyChecked; });
+                    e.target.textContent = anyChecked ? 'Select All' : 'Deselect All';
+                    updateCount();
+                    return;
+                }
+
+                if (action === 'batch-confirm') {
+                    e.preventDefault();
+                    var checked = grid.querySelectorAll('input[data-action="batch-toggle"]:checked');
+                    if (checked.length === 0) return;
+                    var ids = Array.from(checked).map(function(cb) { return cb.getAttribute('data-identity-id'); });
+
+                    var btn = e.target;
+                    btn.disabled = true;
+                    btn.textContent = 'Confirming...';
+
+                    fetch('/api/cluster-review/batch-confirm', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'identity_ids=' + ids.join(',')
+                    }).then(function(resp) { return resp.text(); })
+                    .then(function(html) {
+                        var summary = document.getElementById('batch-summary');
+                        if (summary) { summary.innerHTML = html; }
+                        // Remove confirmed cards from grid
+                        ids.forEach(function(id) {
+                            var card = grid.querySelector('[data-identity-id="' + id + '"].batch-card');
+                            if (card) card.remove();
+                        });
+                        updateCount();
+                    });
+                    return;
+                }
+            });
+        })();
+    """)
+
+    return Title("Batch Cluster Validation — Rhodesli Admin"), Main(
+        Div(
+            Div(
+                H1("Batch Cluster Validation", cls="text-2xl font-serif font-bold text-white"),
+                A(
+                    "← Dashboard",
+                    href="upload-review",
+                    cls="text-sm text-purple-400 hover:text-purple-300 transition-colors",
+                ),
+                cls="flex items-center gap-4",
+            ),
+            P(
+                "Select valid clusters and confirm them in bulk. Deselect any clusters with mixed faces.",
+                cls="text-slate-400 mb-6",
+            ),
+            summary,
+            filter_bar,
+            stats_bar,
+            grid,
+            footer,
+            batch_js,
+            cls="max-w-7xl mx-auto px-4 py-8",
+        ),
+        cls="min-h-screen bg-slate-950",
+    )
+
+
+@rt("/api/cluster-review/batch-confirm")
+def post(identity_ids: str = "", sess=None, request=None):
+    """Confirm selected INBOX identities in batch — PRD-040."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not identity_ids:
+        return Div(P("No identities selected.", cls="text-red-400 text-sm"), cls="p-4")
+
+    ids = [iid.strip() for iid in identity_ids.split(",") if iid.strip()]
+    if not ids:
+        return Div(P("No identities selected.", cls="text-red-400 text-sm"), cls="p-4")
+
+    registry = _main_mod.load_registry()
+    admin_email = _active_learning_actor(sess)
+
+    confirmed_count = 0
+    total_faces = 0
+    errors = []
+
+    for identity_id in ids:
+        try:
+            identity = registry._identities.get(identity_id)
+            if not identity:
+                errors.append(f"Identity {identity_id[:12]} not found")
+                continue
+
+            # Promote all candidates to anchors
+            candidates = list(identity.get("candidate_ids", []))
+            for fid in candidates:
+                try:
+                    registry.promote_candidate(identity_id, fid, user_source="admin/batch-cluster-validation")
+                except ValueError:
+                    pass
+
+            # Count all faces
+            all_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            face_count = len(all_faces)
+            total_faces += face_count
+
+            # Set state to CONFIRMED
+            prev_state = identity.get("state", "INBOX")
+            identity["state"] = "CONFIRMED"
+            identity["updated_at"] = _main_mod.datetime.now(_main_mod.timezone.utc).isoformat()
+
+            confirmed_count += 1
+
+            _main_mod.log_user_action(
+                "BATCH_CONFIRM",
+                identity_id=identity_id,
+                face_count=face_count,
+                state_before=prev_state,
+                state_after="CONFIRMED",
+                mode="batch",
+                admin=admin_email,
+            )
+        except (ValueError, KeyError) as e:
+            errors.append(f"Error with {identity_id[:12]}: {e}")
+
+    _main_mod.save_registry(registry)
+
+    # Build summary response
+    error_html = ""
+    if errors:
+        error_html = Div(
+            *[P(err, cls="text-red-400 text-xs") for err in errors],
+            cls="mt-2",
+        )
+
+    return Div(
+        Div(
+            Span("Batch confirmed", cls="text-emerald-400 font-semibold text-lg"),
+            P(
+                f"{confirmed_count} cluster{'s' if confirmed_count != 1 else ''} confirmed, "
+                f"{total_faces} total face{'s' if total_faces != 1 else ''}",
+                cls="text-slate-300 text-sm mt-1",
+            ),
+            error_html if errors else "",
+            cls="p-4 bg-emerald-900/20 border border-emerald-700/50 rounded-lg",
+        ),
+    )
