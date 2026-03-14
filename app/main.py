@@ -832,10 +832,24 @@ def _startup_disk_cleanup(base_path: Path):
     cleaned = 0
 
     # Clean stale staging directories (older than 1 hour)
+    # BUT preserve staging dirs for uploads still in "pending" or "staged" status
     staging_dir = base_path / "staging"
     if staging_dir.exists():
+        # Build set of job_ids that still need their staging files
+        pending_job_ids = set()
+        try:
+            pending = _load_pending_uploads()
+            for jid, upload in pending.get("uploads", {}).items():
+                if upload.get("status") in ("pending", "staged"):
+                    pending_job_ids.add(jid)
+        except Exception:
+            pass
+
         for item in list(staging_dir.iterdir()):
             try:
+                # Skip directories that still have pending uploads
+                if item.is_dir() and item.name in pending_job_ids:
+                    continue
                 age = now - item.stat().st_mtime
                 if age > 3600:  # 1 hour
                     if item.is_dir():

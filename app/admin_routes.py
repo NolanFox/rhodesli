@@ -474,6 +474,7 @@ def get(request, sess=None):
             preview_thumbs = []
             upload_files = item.get("files", [])
 
+            is_compare = item.get("compare_mode", False)
             for fname in upload_files[:6]:
                 if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                     # Try staging preview first; fall back to R2 public URL if staging is gone
@@ -481,7 +482,12 @@ def get(request, sess=None):
                     if staging_path.exists():
                         thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
                     elif os.environ.get("R2_PUBLIC_URL"):
-                        thumb_url = f"{os.environ['R2_PUBLIC_URL']}/raw_photos/{quote(fname)}"
+                        r2_base = os.environ["R2_PUBLIC_URL"]
+                        if is_compare:
+                            # Compare uploads stored under uploads/compare/{job_id}.jpg on R2
+                            thumb_url = f"{r2_base}/uploads/compare/{quote(job_id)}.jpg"
+                        else:
+                            thumb_url = f"{r2_base}/raw_photos/{quote(fname)}"
                     else:
                         thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
                     # Graceful fallback: show filename label if image fails to load

@@ -13,7 +13,7 @@ class TestStartupDiskCleanup:
     """Test _startup_disk_cleanup removes stale temp files."""
 
     def test_removes_stale_staging_dirs(self, tmp_path):
-        """Staging directories older than 1 hour are removed at startup."""
+        """Staging directories older than 1 hour are removed at startup (if no pending upload)."""
         from app.main import _startup_disk_cleanup
 
         staging = tmp_path / "staging"
@@ -25,9 +25,30 @@ class TestStartupDiskCleanup:
         old_time = time.time() - 7200
         os.utime(old_job, (old_time, old_time))
 
-        _startup_disk_cleanup(tmp_path)
+        # No pending uploads → safe to clean
+        with patch("app.main._load_pending_uploads", return_value={"uploads": {}}):
+            _startup_disk_cleanup(tmp_path)
 
         assert not old_job.exists()
+
+    def test_preserves_stale_staging_dirs_with_pending_upload(self, tmp_path):
+        """Staging directories for pending uploads are preserved even if old."""
+        from app.main import _startup_disk_cleanup
+
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        old_job = staging / "pending-job-789"
+        old_job.mkdir()
+        (old_job / "photo.jpg").write_bytes(b"fake")
+        old_time = time.time() - 7200
+        os.utime(old_job, (old_time, old_time))
+
+        # This job is still pending → must NOT be cleaned
+        pending = {"uploads": {"pending-job-789": {"status": "pending", "files": ["photo.jpg"]}}}
+        with patch("app.main._load_pending_uploads", return_value=pending):
+            _startup_disk_cleanup(tmp_path)
+
+        assert old_job.exists(), "Staging dir for pending upload should be preserved"
 
     def test_preserves_recent_staging_dirs(self, tmp_path):
         """Staging directories less than 1 hour old are preserved."""
@@ -39,7 +60,8 @@ class TestStartupDiskCleanup:
         new_job.mkdir()
         (new_job / "photo.jpg").write_bytes(b"fake")
 
-        _startup_disk_cleanup(tmp_path)
+        with patch("app.main._load_pending_uploads", return_value={"uploads": {}}):
+            _startup_disk_cleanup(tmp_path)
 
         assert new_job.exists()
 
