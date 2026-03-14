@@ -1153,8 +1153,8 @@ def save_registry(registry, confirmed_identity_info=None):
 
             items = [dict(v, identity_id=k) for k, v in identities_dict.items()]
             shadow_write_identities_batch(items)
-        except Exception:
-            pass  # Shadow writes are best-effort
+        except Exception as e:
+            logging.warning(f"Supabase identity shadow sync failed: {e}")
 
     import threading
 
@@ -1388,9 +1388,9 @@ def log_user_action(action: str, **kwargs) -> None:
             entry_data={"timestamp": timestamp, **kwargs},
             target_type=target_type,
         )
-    except Exception:
+    except Exception as e:
         # Structured Supabase audit is best-effort and must never block local writes.
-        pass
+        logging.warning(f"Supabase audit log sync failed: {e}")
 
 
 # =============================================================================
@@ -3346,8 +3346,8 @@ def save_photo_registry(registry):
 
             items = [dict(v, photo_id=k) for k, v in photos_dict.items()]
             shadow_write_photos_batch(items)
-        except Exception:
-            pass  # Shadow writes are best-effort
+        except Exception as e:
+            logging.warning(f"Supabase photo shadow sync failed: {e}")
 
     import threading
 

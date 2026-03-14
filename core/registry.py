@@ -1916,9 +1916,9 @@ class IdentityRegistry:
             from app.supabase_data import sync_identity_history_event
 
             sync_identity_history_event(event)
-        except Exception:
+        except Exception as e:
             # Supabase audit sync is best-effort and must not block canonical writes.
-            pass
+            logger.warning(f"Supabase identity history sync failed: {e}")
 
     def get_all_face_ids(self, identity_id: str) -> list[str]:
         """
