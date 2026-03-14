@@ -339,8 +339,9 @@ class TestSpeedRunMode:
         # Keyboard shortcut JS
         assert "keydown" in html
         assert "actionMap" in html
-        # Progress bar
-        assert "0 of 2 reviewed" in html
+        # Progress bar with cumulative stats
+        assert "0 confirmed" in html
+        assert "remaining" in html
 
     def test_speed_run_next_returns_cluster_card(self):
         """GET /admin/cluster-review/next returns an HTMX partial."""
@@ -481,7 +482,7 @@ class TestSpeedRunMode:
 
         assert resp.status_code == 200
         html = resp.text
-        assert "1 of 1 reviewed" in html or "0 of 1 reviewed" in html
+        assert "remaining" in html
         # Only fox cluster should appear
         assert "Fox Person" in html or "Person fox" in html
 
@@ -518,7 +519,7 @@ class TestSpeedRunMode:
             resp = client.get("/admin/cluster-review/next?offset=2")
 
         assert resp.status_code == 200
-        assert "2 of 3 reviewed" in resp.text
+        assert "speed-run-progress" in resp.text
 
     def test_dashboard_has_speed_run_link(self):
         """Existing dashboard shows 'Start Speed Run' button when clusters exist."""
@@ -569,7 +570,7 @@ class TestSpeedRunMode:
         assert resp.status_code == 200
         html = resp.text
         assert "speed-run-undo" in html
-        assert "Undo Last (Z)" in html
+        assert "Undo (Z)" in html
         assert "speed-undo" in html
 
     def test_speed_run_reject_returns_undo_button(self):
@@ -600,7 +601,7 @@ class TestSpeedRunMode:
         assert resp.status_code == 200
         html = resp.text
         assert "speed-run-undo" in html
-        assert "Undo Last (Z)" in html
+        assert "Undo (Z)" in html
 
     def test_speed_run_skip_returns_undo_button(self):
         """Skip in speed-run returns OOB undo button."""
@@ -620,7 +621,7 @@ class TestSpeedRunMode:
         assert resp.status_code == 200
         html = resp.text
         assert "speed-run-undo" in html
-        assert "Undo Last (Z)" in html
+        assert "Undo (Z)" in html
 
     def test_speed_run_dismiss_returns_undo_button(self):
         """Dismiss in speed-run returns OOB undo button."""
@@ -643,7 +644,7 @@ class TestSpeedRunMode:
         assert resp.status_code == 200
         html = resp.text
         assert "speed-run-undo" in html
-        assert "Undo Last (Z)" in html
+        assert "Undo (Z)" in html
 
     def test_speed_run_undo_confirm_restores_candidates(self):
         """Undo of confirm-all moves faces back to candidate_ids."""
@@ -800,7 +801,7 @@ class TestSpeedRunMode:
         html = resp.text
         # Undo button div should exist but be empty (no button content)
         assert "speed-run-undo" in html
-        assert "Undo Last (Z)" not in html
+        assert "Undo (Z)" not in html
 
     def test_speed_run_keyboard_z_shortcut_in_page(self):
         """Speed-run page includes Z keyboard shortcut for undo."""

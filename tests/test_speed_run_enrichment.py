@@ -146,8 +146,8 @@ class TestAllFacesRendered:
             assert "max-h-80" in html
             assert "overflow-y-auto" in html
 
-    def test_face_crops_96px_minimum(self):
-        """Face crops should use w-24 h-24 (96px)."""
+    def test_face_crops_112px_minimum(self):
+        """Face crops should use w-28 h-28 (112px) — upgraded from 96px."""
         from app.cluster_review_routes import _speed_run_cluster_card
 
         identity = _make_identity(num_faces=2)
@@ -168,8 +168,8 @@ class TestAllFacesRendered:
             card = _speed_run_cluster_card("test-id", identity, 0, 5, "rhodes")
             html = repr(card)
 
-            assert "w-24" in html
-            assert "h-24" in html
+            assert "w-28" in html
+            assert "h-28" in html
 
 
 class TestEnrichmentPanel:

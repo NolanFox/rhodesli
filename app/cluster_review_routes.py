@@ -809,37 +809,70 @@ def get(sess=None, request=None, mode: str = ""):
             first_card = _speed_run_cluster_card(iid, idata, 0, total, community_slug, include_progress=False)
 
         keyboard_js = Script("""
-            document.addEventListener('keydown', function(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-                var card = document.getElementById('speed-run-card');
-                var isEnrichment = card && card.getAttribute('data-enrichment') === 'true';
-                var key = e.key.toLowerCase();
-                if (isEnrichment) {
-                    // In enrichment mode: Y/S/D advance to next card
-                    if (key === 'y' || key === 's' || key === 'd') {
-                        var skipBtn = document.querySelector('[data-action="speed-enrich-skip"]');
-                        if (skipBtn) { e.preventDefault(); skipBtn.click(); }
+            (function() {
+                var _speedRunLocked = false;
+                document.addEventListener('keydown', function(e) {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+                    var card = document.getElementById('speed-run-card');
+                    var isEnrichment = card && card.getAttribute('data-enrichment') === 'true';
+                    var key = e.key.toLowerCase();
+                    if (isEnrichment) {
+                        if (key === 'y' || key === 's' || key === 'd') {
+                            var skipBtn = document.querySelector('[data-action="speed-enrich-skip"]');
+                            if (skipBtn) { e.preventDefault(); skipBtn.click(); }
+                            return;
+                        }
+                        if (e.key === 'Enter') {
+                            var saveBtn = document.querySelector('[data-action="speed-save-name"]');
+                            if (saveBtn) { e.preventDefault(); saveBtn.click(); }
+                            return;
+                        }
                         return;
                     }
-                    // Enter submits the name
-                    if (e.key === 'Enter') {
-                        var saveBtn = document.querySelector('[data-action="speed-save-name"]');
-                        if (saveBtn) { e.preventDefault(); saveBtn.click(); }
-                        return;
+                    if (_speedRunLocked) { e.preventDefault(); return; }
+                    var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss', 'z': 'speed-undo'};
+                    var action = actionMap[key];
+                    if (!action) return;
+                    var btn = document.querySelector('[data-action="' + action + '"]');
+                    if (btn) {
+                        e.preventDefault();
+                        _speedRunLocked = true;
+                        btn.click();
+                        setTimeout(function() { _speedRunLocked = false; }, 300);
                     }
-                    return;
-                }
-                var actionMap = {'y': 'speed-confirm', 'n': 'speed-reject', 's': 'speed-skip', 'd': 'speed-dismiss', 'z': 'speed-undo'};
-                var action = actionMap[key];
-                if (!action) return;
-                var btn = document.querySelector('[data-action="' + action + '"]');
-                if (btn) { e.preventDefault(); btn.click(); }
-            });
+                });
+            })();
         """)
 
         recent_actions_js = Script("""
             (function() {
                 window._speedRunActions = [];
+                function updateStats(action) {
+                    var progress = document.getElementById('speed-run-progress');
+                    if (!progress) return;
+                    var total = parseInt(progress.getAttribute('data-total') || '0', 10);
+                    var confirmed = parseInt(progress.getAttribute('data-confirmed') || '0', 10);
+                    var skipped = parseInt(progress.getAttribute('data-skipped') || '0', 10);
+                    var rejected = parseInt(progress.getAttribute('data-rejected') || '0', 10);
+                    var dismissed = parseInt(progress.getAttribute('data-dismissed') || '0', 10);
+                    if (action === 'confirm-all') confirmed++;
+                    else if (action === 'reject-all') rejected++;
+                    else if (action === 'skip') skipped++;
+                    else if (action === 'dismiss') dismissed++;
+                    progress.setAttribute('data-confirmed', String(confirmed));
+                    progress.setAttribute('data-skipped', String(skipped));
+                    progress.setAttribute('data-rejected', String(rejected));
+                    progress.setAttribute('data-dismissed', String(dismissed));
+                    var reviewed = confirmed + skipped + rejected + dismissed;
+                    var remaining = Math.max(0, total - reviewed);
+                    var textEl = document.getElementById('speed-run-stats-text');
+                    if (textEl) textEl.textContent = confirmed + ' confirmed \\u00b7 ' + skipped + ' skipped \\u00b7 ' + rejected + ' rejected \\u00b7 ' + remaining + ' remaining';
+                    var bar = progress.querySelector('.bg-purple-500, .bg-emerald-500');
+                    if (bar) {
+                        var pct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+                        bar.style.width = pct + '%';
+                    }
+                }
                 function renderActions() {
                     var container = document.getElementById('speed-run-recent-actions');
                     if (!container) return;
@@ -885,12 +918,12 @@ def get(sess=None, request=None, mode: str = ""):
                         var match = url.match(/identity_id=([^&]*)/);
                         if (match) identityId = decodeURIComponent(match[1]);
                     }
-                    // Extract name from the card before it gets swapped
                     var nameEl = card ? card.querySelector('h3') : null;
                     if (nameEl) name = nameEl.textContent || '';
                     var cropEl = card ? card.querySelector('img') : null;
                     if (cropEl) cropUrl = cropEl.getAttribute('src') || '';
                     window._speedRunActions.push({action: mapped, name: name, identityId: identityId, cropUrl: cropUrl});
+                    updateStats(mapped);
                     setTimeout(renderActions, 100);
                 });
             })();
@@ -909,15 +942,24 @@ def get(sess=None, request=None, mode: str = ""):
                         cls="flex items-center gap-4",
                     ),
                     P(
+                        "Review each cluster. Press Y to confirm (same person), N to reject (mixed faces), "
+                        "S to skip, D to dismiss. After confirming, you can name the person and link to GEDCOM records.",
+                        cls="text-slate-400 text-sm mt-2",
+                    ),
+                    P(
                         "Y = Confirm \u00b7 N = Reject \u00b7 S = Skip \u00b7 D = Dismiss \u00b7 Z = Undo",
-                        cls="text-slate-500 text-sm mt-1",
+                        cls="text-slate-500 text-xs mt-1",
                     ),
                     cls="mb-6",
                 ),
-                # Progress bar
+                # Progress bar with cumulative stats
                 Div(
                     Div(
-                        Span(f"0 of {total} reviewed", cls="text-sm text-slate-300"),
+                        Span(
+                            f"0 confirmed \u00b7 0 skipped \u00b7 0 rejected \u00b7 {total} remaining",
+                            id="speed-run-stats-text",
+                            cls="text-sm text-slate-300",
+                        ),
                         cls="flex justify-between items-center mb-2",
                     ),
                     Div(
@@ -925,6 +967,11 @@ def get(sess=None, request=None, mode: str = ""):
                         cls="w-full h-2 bg-slate-700 rounded-full overflow-hidden",
                     ),
                     id="speed-run-progress",
+                    data_total=str(total),
+                    data_confirmed="0",
+                    data_skipped="0",
+                    data_rejected="0",
+                    data_dismissed="0",
                 ),
                 # First card
                 first_card,
@@ -1404,12 +1451,16 @@ def post(
         )
 
     if speed_run == "true":
+        iname = identity.get("name", "Unknown")
+        all_faces = _identity_face_ids(identity)
         undo_state = _build_undo_state(
             identity_id,
             "confirm-all",
             offset,
             community_slug,
             {"candidates": candidates, "prev_state": prev_state},
+            identity_name=iname,
+            face_count=len(all_faces),
         )
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
         enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug)
@@ -1469,12 +1520,16 @@ def post(
         )
 
     if speed_run == "true":
+        iname = identity.get("name", "Unknown")
+        all_faces = _identity_face_ids(identity)
         undo_state = _build_undo_state(
             identity_id,
             "reject-all",
             offset,
             community_slug,
             {"candidates": candidates, "prev_state": prev_state},
+            identity_name=iname,
+            face_count=len(all_faces),
         )
         next_card = _speed_run_next_card(offset + 1, community_slug, request)
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
@@ -1559,13 +1614,13 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             img_el = Img(
                 src=crop_url,
                 alt=f"Face {fid[:12]}",
-                cls="w-24 h-24 object-cover rounded-lg border border-slate-600",
+                cls="w-28 h-28 object-cover rounded-lg border border-slate-600",
                 loading="lazy",
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
             )
             fallback_el = Div(
                 Span("?", cls="text-slate-500 text-lg"),
-                cls="w-24 h-24 rounded-lg bg-slate-700 border border-slate-600 items-center justify-center hidden",
+                cls="w-28 h-28 rounded-lg bg-slate-700 border border-slate-600 items-center justify-center hidden",
                 title=f"Face crop unavailable: {fid[:16]}",
             )
             if photo_url:
@@ -1580,7 +1635,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             face_thumbs.append(
                 Div(
                     Span("?", cls="text-slate-500 text-lg"),
-                    cls="w-24 h-24 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center",
+                    cls="w-28 h-28 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center",
                     title="No crop available",
                 )
             )
@@ -1601,7 +1656,11 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     progress_div = (
         Div(
             Div(
-                Span(f"{offset} of {total} reviewed", cls="text-sm text-slate-300"),
+                Span(
+                    "",
+                    id="speed-run-stats-text",
+                    cls="text-sm text-slate-300",
+                ),
                 cls="flex justify-between items-center mb-2",
             ),
             Div(
@@ -1614,6 +1673,10 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
         if include_progress
         else None
     )
+
+    # Pre-fetch next card params
+    prefetch_offset = offset + 1
+    prefetch_params = urlencode({"offset": prefetch_offset, "community_slug": community_slug})
 
     return Div(
         progress_div,
@@ -1628,7 +1691,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             Div(
                 H3(display_name, cls="text-lg font-semibold text-white", title=name),
                 P(
-                    f"{face_count} face{'s' if face_count != 1 else ''} · {identity_data.get('state', 'INBOX')}",
+                    f"{face_count} face{'s' if face_count != 1 else ''} \u00b7 {identity_data.get('state', 'INBOX')}",
                     cls="text-sm text-slate-400 mt-1",
                 ),
                 cls="text-center mb-6",
@@ -1670,6 +1733,14 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
                 cls="flex flex-wrap gap-3 justify-center",
             ),
             cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
+        ),
+        # Hidden pre-fetch container for next card
+        Div(
+            id="speed-run-prefetch",
+            cls="hidden",
+            hx_get=f"/admin/cluster-review/next?{prefetch_params}",
+            hx_trigger="load",
+            hx_swap="innerHTML",
         ),
         id="speed-run-card",
     )
@@ -1859,7 +1930,11 @@ def _speed_run_done_card(offset, total):
     return Div(
         Div(
             Div(
-                Span(f"{total} of {total} reviewed", cls="text-sm text-slate-300"),
+                Span(
+                    f"{total} clusters reviewed",
+                    id="speed-run-stats-text",
+                    cls="text-sm text-emerald-300",
+                ),
                 cls="flex justify-between items-center mb-2",
             ),
             Div(
@@ -1903,7 +1978,7 @@ def _speed_run_next_card(offset, community_slug, request):
 
 
 def _speed_run_undo_button(undo_state, oob=False):
-    """Render the undo button. Hidden when undo_state is None."""
+    """Render the undo banner. Hidden when undo_state is None."""
     if undo_state:
         params = urlencode(
             {
@@ -1914,25 +1989,45 @@ def _speed_run_undo_button(undo_state, oob=False):
                 "face_data": json.dumps(undo_state.get("face_data", {})),
             }
         )
-        btn = Button(
-            "Undo Last (Z)",
-            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors",
-            hx_post=f"/api/cluster-review/undo?{params}",
-            hx_target="#speed-run-card",
-            hx_swap="outerHTML",
-            data_action="speed-undo",
+        action_labels = {
+            "confirm-all": "Confirmed",
+            "reject-all": "Rejected",
+            "skip": "Skipped",
+            "dismiss": "Dismissed",
+        }
+        action_label = action_labels.get(undo_state["action"], undo_state["action"].title())
+        identity_name = undo_state.get("identity_name", "")
+        face_count = undo_state.get("face_count", 0)
+        context_parts = [f"{action_label}"]
+        if identity_name:
+            context_parts.append(identity_name)
+        if face_count:
+            context_parts.append(f"{face_count} face{'s' if face_count != 1 else ''}")
+        context_text = " \u2014 ".join(context_parts)
+
+        banner = Div(
+            Span(f"Undo: {context_text}", cls="text-sm text-amber-200 flex-1"),
+            Button(
+                "Undo (Z)",
+                cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors ml-3",
+                hx_post=f"/api/cluster-review/undo?{params}",
+                hx_target="#speed-run-card",
+                hx_swap="outerHTML",
+                data_action="speed-undo",
+            ),
+            cls="flex items-center p-3 bg-amber-900/40 border border-amber-700/50 rounded-lg",
         )
     else:
-        btn = None
+        banner = None
     return Div(
-        btn,
+        banner,
         id="speed-run-undo",
-        cls="flex justify-center mt-4" if undo_state else "",
+        cls="mt-4" if undo_state else "",
         **({"hx_swap_oob": "true"} if oob else {}),
     )
 
 
-def _build_undo_state(identity_id, action, offset, community_slug, face_data=None):
+def _build_undo_state(identity_id, action, offset, community_slug, face_data=None, identity_name="", face_count=0):
     """Build an undo state dict for the last speed-run action."""
     return {
         "identity_id": identity_id,
@@ -1940,6 +2035,8 @@ def _build_undo_state(identity_id, action, offset, community_slug, face_data=Non
         "offset": offset,
         "community_slug": community_slug,
         "face_data": face_data or {},
+        "identity_name": identity_name,
+        "face_count": face_count,
     }
 
 
@@ -1960,6 +2057,12 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
     if denied:
         return denied
 
+    # Get identity info for undo context
+    registry = _main_mod.load_registry()
+    identity = registry._identities.get(identity_id, {})
+    iname = identity.get("name", "Unknown")
+    all_faces = _identity_face_ids(identity)
+
     _main_mod.log_user_action(
         "SPEED_RUN_SKIP",
         identity_id=identity_id,
@@ -1972,6 +2075,8 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
         "skip",
         offset,
         community_slug,
+        identity_name=iname,
+        face_count=len(all_faces),
     )
     next_card = _speed_run_next_card(offset + 1, community_slug, request)
     undo_btn = _speed_run_undo_button(undo_state, oob=True)
@@ -1990,6 +2095,8 @@ def post(
     registry = _main_mod.load_registry()
     identity = registry._identities.get(identity_id)
     prev_state = identity.get("state", "INBOX") if identity else "INBOX"
+    iname = identity.get("name", "Unknown") if identity else "Unknown"
+    all_faces = _identity_face_ids(identity) if identity else []
     if identity:
         identity["state"] = "SKIPPED"
         _main_mod.save_registry(registry)
@@ -2007,6 +2114,8 @@ def post(
         offset,
         community_slug,
         {"prev_state": prev_state},
+        identity_name=iname,
+        face_count=len(all_faces),
     )
     next_card = _speed_run_next_card(offset + 1, community_slug, request)
     undo_btn = _speed_run_undo_button(undo_state, oob=True)
@@ -2687,7 +2796,8 @@ def get(min_faces: int = 1, sess=None, request=None):
                 cls="flex items-center gap-4",
             ),
             P(
-                "Select valid clusters and confirm them in bulk. Deselect any clusters with mixed faces.",
+                "Select valid clusters and confirm them in bulk. Deselect any clusters with mixed faces. "
+                "Use face count filters to focus on high-confidence clusters first.",
                 cls="text-slate-400 mb-6",
             ),
             summary,
