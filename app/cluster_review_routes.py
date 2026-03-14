@@ -351,7 +351,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
                 H3(
                     A(
                         identity_name,
-                        href=f"{nav_prefix}/person/{identity_id}",
+                        href=f"{nav_prefix}/person/{identity_id}?from=admin",
                         cls="text-white hover:text-blue-400 transition-colors",
                     ),
                     cls="text-base font-semibold",
@@ -427,7 +427,7 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
                 H4(
                     A(
                         identity_name,
-                        href=f"{nav_prefix}/person/{identity_id}",
+                        href=f"{nav_prefix}/person/{identity_id}?from=admin",
                         cls="text-white hover:text-blue-400 transition-colors",
                     ),
                     cls="text-sm font-semibold",
@@ -714,7 +714,7 @@ def _unresolved_review_group_card(group, nav_prefix=""):
                     ),
                     cls="p-2 bg-slate-800/70 border border-slate-700 rounded-xl hover:border-slate-500 transition-colors",
                 ),
-                href=f"{nav_prefix}/person/{member['identity_id']}",
+                href=f"{nav_prefix}/person/{member['identity_id']}?from=admin",
                 cls="block",
             )
         )
@@ -1463,7 +1463,8 @@ def post(
             face_count=len(all_faces),
         )
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
-        enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug)
+        community = getattr(request.state, "community", None) if request else None
+        enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug, community=community)
         return enrichment, undo_btn
 
     identity_name = identity.get("name", "Unknown")
@@ -1746,7 +1747,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     )
 
 
-def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_slug):
+def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_slug, community=None):
     """Render the post-confirm enrichment panel for naming/merging."""
     display_name = identity_data.get("name", "Unknown")
     if display_name.startswith("Unidentified Person "):
@@ -1773,6 +1774,8 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
                 "community_slug": community_slug,
             }
         )
+        # Cross-community badge (FB-100)
+        cross_badge = _main_mod._cross_community_badge(sug["identity_id"], community) if community else None
         suggestion_els.append(
             Div(
                 Img(
@@ -1784,7 +1787,13 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
                 if sug_crop
                 else Div(cls="w-12 h-12 rounded-lg bg-slate-700"),
                 Div(
-                    Span(sug["name"], cls="text-sm font-medium text-white"),
+                    Div(
+                        Span(sug["name"], cls="text-sm font-medium text-white"),
+                        cross_badge,
+                        cls="flex items-center gap-2",
+                    )
+                    if cross_badge
+                    else Span(sug["name"], cls="text-sm font-medium text-white"),
                     P(f"{sug['face_count']} faces", cls="text-xs text-slate-400"),
                     cls="ml-3 flex-1 min-w-0",
                 ),
@@ -2161,7 +2170,7 @@ def post(identity_id: str = "", new_name: str = "", offset: int = 0, community_s
 
 
 @rt("/api/cluster-review/search-identities")
-def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str = "", sess=None):
+def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
     """Search confirmed identities by name substring for merge typeahead."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2201,6 +2210,7 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
     if not results:
         return Div(P("No matches found.", cls="text-xs text-slate-500"), cls="p-2")
 
+    community = getattr(request.state, "community", None) if request else None
     els = []
     for r in results:
         crop_url = _get_crop_url_for_face(r["best_face_id"]) if r.get("best_face_id") else None
@@ -2212,6 +2222,7 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
                 "community_slug": community_slug,
             }
         )
+        cross_badge = _main_mod._cross_community_badge(r["identity_id"], community) if community else None
         els.append(
             Div(
                 Img(
@@ -2223,7 +2234,13 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
                 if crop_url
                 else Div(cls="w-10 h-10 rounded-lg bg-slate-700"),
                 Div(
-                    Span(r["name"], cls="text-sm font-medium text-white"),
+                    Div(
+                        Span(r["name"], cls="text-sm font-medium text-white"),
+                        cross_badge,
+                        cls="flex items-center gap-2",
+                    )
+                    if cross_badge
+                    else Span(r["name"], cls="text-sm font-medium text-white"),
                     P(f"{r['face_count']} faces", cls="text-xs text-slate-400"),
                     cls="ml-3 flex-1 min-w-0",
                 ),
@@ -2293,7 +2310,10 @@ def post(source_id: str = "", target_id: str = "", offset: int = 0, community_sl
     )
 
     # Return enrichment panel for the merged-into identity with merge banner prepended
-    enrichment = _speed_run_enrichment_panel(result.get("target_id", target_id), target_data, offset, community_slug)
+    community = getattr(request.state, "community", None) if request else None
+    enrichment = _speed_run_enrichment_panel(
+        result.get("target_id", target_id), target_data, offset, community_slug, community=community
+    )
     # Prepend merge banner — enrichment panel already has id="speed-run-card"
     enrichment.children = (merge_banner, *enrichment.children)
     return enrichment

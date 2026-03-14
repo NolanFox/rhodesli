@@ -10,6 +10,7 @@ from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fasthtml.common import Span
 
 os.environ.setdefault("STORAGE_MODE", "local")
 
@@ -945,3 +946,79 @@ class TestEnrichmentPanelOverhaul:
         html = resp.text
         assert "Merged 2 faces" in html
         assert "total faces" in html
+
+
+# ---------------------------------------------------------------------------
+# Tests: Phase 3 — Cross-Community Badges + Admin Links (FB-100, FB-106)
+# ---------------------------------------------------------------------------
+
+
+class TestCrossCommunityBadgesAndAdminLinks:
+    """Cross-community badge on suggestions and admin-context person links."""
+
+    def test_suggestions_have_community_badge(self):
+        """Suggested matches from another community should show cross-community badge."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity_data = _make_identity("New Person", state="CONFIRMED", anchor_ids=["face_a"])
+        # Rhodes identity as suggestion
+        rhodes_identity = _make_identity(
+            "Big Leon Capeluto", state="CONFIRMED", anchor_ids=["face_r1", "face_r2", "face_r3", "face_r4", "face_r5"]
+        )
+
+        fox_community = {"id": "fox-uuid", "slug": "fox-family", "name": "Fox Family"}
+
+        with ExitStack() as stack:
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(
+                _mock_registry(
+                    {
+                        "test-id": identity_data,
+                        "rhodes-id": rhodes_identity,
+                    }
+                )
+            )
+            # Mock _cross_community_badge to return a badge for rhodes-id
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._main_mod._cross_community_badge",
+                    side_effect=lambda iid, comm: Span("From Rhodes", cls="badge") if iid == "rhodes-id" else None,
+                )
+            )
+            panel = _speed_run_enrichment_panel("test-id", identity_data, 0, "fox-family", community=fox_community)
+
+        html = repr(panel)
+        assert "From Rhodes" in html
+
+    def test_person_links_admin_context(self):
+        """Person links from cluster review should include ?from=admin."""
+        identities = {
+            "id-1": _make_identity("Charlie Fox", state="INBOX", n_candidates=5),
+        }
+
+        client = _get_test_client()
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._load_proposals",
+                    return_value=[
+                        {
+                            "face_id": "face_c0",
+                            "target_identity_id": "id-1",
+                            "target_identity_name": "Charlie Fox",
+                            "distance": 0.5,
+                        },
+                    ],
+                )
+            )
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(_mock_crop_url())
+            stack.enter_context(_mock_community_ids(None))
+            stack.enter_context(_mock_community_lookup(None))
+            stack.enter_context(_mock_community_url_prefix())
+            resp = client.get("/admin/upload-review")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "from=admin" in html
