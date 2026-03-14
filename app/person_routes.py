@@ -253,7 +253,8 @@ def public_person_page(
     raw_name = ensure_utf8_display(identity.get("name"))
     display_name = raw_name or f"Person {person_id[:8]}"
     state = identity.get("state", "INBOX")
-    is_confirmed = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+    is_state_confirmed = state == "CONFIRMED"
+    is_confirmed = is_state_confirmed and not display_name.startswith("Unidentified")
     target_proposals = _main_mod._get_proposal_targets_for_identity(person_id) if is_admin else []
     similar_container_id = f"person-similar-{person_id}"
 
@@ -744,7 +745,9 @@ def public_person_page(
     # --- Navigation ---
     nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
     workstation_prefix = _main_mod.community_url_prefix(community_slug)
-    has_tree_link = bool(_main_mod._load_gedcom_face_links().get(person_id) or identity.get("gedcom_xref")) if is_admin else False
+    has_tree_link = (
+        bool(_main_mod._load_gedcom_face_links().get(person_id) or identity.get("gedcom_xref")) if is_admin else False
+    )
 
     # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
@@ -806,11 +809,11 @@ def public_person_page(
         )
 
     # --- Status badge ---
-    if is_confirmed:
+    if is_state_confirmed:
         badge = Span(
-            "Identified",
+            "Confirmed",
             cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20",
-            title="This person has been identified by an admin",
+            title="This person has been confirmed by an admin",
         )
     else:
         badge = Span(
@@ -1026,7 +1029,11 @@ def public_person_page(
             # Top navigation bar
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(
                         *nav_links,
                         A(
@@ -1170,7 +1177,7 @@ def public_person_page(
                         cls="mt-3 mb-4 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-left",
                         data_testid="person-metadata-edit",
                     )
-                    if is_admin and is_confirmed
+                    if is_admin and is_state_confirmed
                     else None,
                     # Action buttons
                     Div(
@@ -1319,7 +1326,7 @@ def public_person_page(
                     Div(
                         A(
                             "Timeline",
-                        href=f"{nav_prefix}/timeline?person={person_id}",
+                            href=f"{nav_prefix}/timeline?person={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
@@ -1387,7 +1394,7 @@ def public_person_page(
                     family_section if family_section else None,
                     # GEDCOM link management (admin only, AD-160)
                     _main_mod._person_gedcom_link_section(person_id, display_name, is_admin)
-                    if is_admin and is_confirmed
+                    if is_admin and is_state_confirmed
                     else None,
                     # Closest connections (social graph)
                     connections_section if connections_section else None,
@@ -1604,7 +1611,9 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
     speed_loop_photo_count = 0
     if is_admin:
         for entry in ordered_photo_entries:
-            unresolved_here = any(_is_unresolved_face(face.get("face_id", "")) for face in entry["photo_meta"].get("faces", []))
+            unresolved_here = any(
+                _is_unresolved_face(face.get("face_id", "")) for face in entry["photo_meta"].get("faces", [])
+            )
             if unresolved_here:
                 speed_loop_photo_count += 1
                 if not speed_loop_photo_id:

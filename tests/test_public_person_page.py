@@ -100,12 +100,12 @@ class TestPublicPersonPageContent:
         # Name should appear in the page (in heading and title)
         assert name in response.text or name.replace("'", "&#x27;") in response.text
 
-    def test_displays_identified_badge(self, client, confirmed_identity):
-        """Confirmed person shows 'Identified' badge."""
+    def test_displays_confirmed_badge(self, client, confirmed_identity):
+        """Confirmed person shows 'Confirmed' badge."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert "Identified" in response.text
+        assert "Confirmed" in response.text
 
     def test_displays_share_button(self, client, confirmed_identity):
         """Page has a share button with correct data attributes."""
@@ -238,7 +238,7 @@ class TestPersonPageOrdering:
         ):
             response = client.get("/c/fox-family/person/test-person?view=photos&sort_by=date_asc")
         html = response.text
-        assert '/c/fox-family/photo/photo-1?identity_id=test-person&amp;sort_by=date_asc' in html
+        assert "/c/fox-family/photo/photo-1?identity_id=test-person&amp;sort_by=date_asc" in html
 
     def test_person_gallery_exposes_speed_loop_entry(self, client, monkeypatch, auth_disabled):
         del auth_disabled
@@ -824,6 +824,62 @@ class TestAdminControlsOnPersonPage:
         ):
             response = client.get("/c/fox-family/person/test-person")
 
-        assert '/c/fox-family/api/identity/test-person/neighbors?container_id=person-similar-test-person' in response.text
+        assert (
+            "/c/fox-family/api/identity/test-person/neighbors?container_id=person-similar-test-person" in response.text
+        )
         assert 'id="person-similar-test-person"' in response.text
-        assert '/c/fox-family/admin/upload-review#identity-group-test-person' in response.text
+        assert "/c/fox-family/admin/upload-review#identity-group-test-person" in response.text
+
+
+class TestConfirmedBadgeRegardlessOfName:
+    """FB-113: CONFIRMED identities should show Confirmed badge regardless of name."""
+
+    def _mock_person(self, monkeypatch, name, state):
+        class FakeRegistry:
+            def get_identity(self, person_id):
+                return {
+                    "identity_id": person_id,
+                    "name": name,
+                    "state": state,
+                    "anchor_ids": ["face-a"],
+                    "candidate_ids": [],
+                }
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-1"]
+
+        photo_meta = {
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "photo-1.jpg",
+                "collection": "C1",
+                "created_at": "2025-01-01T00:00:00+00:00",
+            },
+        }
+        face_to_photo = {"face-a": "photo-1"}
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda pid: photo_meta.get(pid))
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: face_to_photo.get(fid))
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+
+    def test_confirmed_unnamed_shows_confirmed_badge(self, client, monkeypatch):
+        """CONFIRMED identity with 'Unidentified Person' name shows Confirmed badge, not Under Review."""
+        self._mock_person(monkeypatch, "Unidentified Person 2986", "CONFIRMED")
+        response = client.get("/person/test-person-unnamed")
+        html = response.text
+        assert "Confirmed" in html
+        assert "Under Review" not in html
+
+    def test_confirmed_named_shows_confirmed_badge(self, client, monkeypatch):
+        """CONFIRMED identity with a real name shows Confirmed badge (regression test)."""
+        self._mock_person(monkeypatch, "Leon Capeluto", "CONFIRMED")
+        response = client.get("/person/test-person-named")
+        html = response.text
+        assert "Confirmed" in html
+        assert "Under Review" not in html
