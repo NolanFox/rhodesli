@@ -1,3 +1,6 @@
+# Test artifacts (leaked MagicMock paths)
+MagicMock/
+
 # Python
 __pycache__/
 *.py[cod]
