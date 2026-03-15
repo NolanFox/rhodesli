@@ -974,6 +974,14 @@ def post(
 
         # Find the photo this face is in to re-render the photo view
         photo_id = _main_mod.get_photo_id_for_face(face_id)
+
+        # Fallback: check photo_registry directly (face may not be in embeddings cache)
+        if not photo_id:
+            try:
+                photo_id = photo_registry.get_photo_for_face(face_id)
+            except Exception:
+                pass
+
         if photo_id:
             # Re-render the photo view to reflect the merge
             # If seq=1, stay in sequential mode for the next unidentified face
@@ -995,7 +1003,14 @@ def post(
             )
             return (*photo_content, oob_toast)
         else:
-            return _main_mod.toast(f"Tagged as {target_name}!", "success")
+            # FB-168: Must retarget to toast container, not photo-modal-content.
+            # Without retarget, the bare toast replaces the entire photo viewer
+            # with a fading message — appears as "nothing happens."
+            return Response(
+                to_xml(_main_mod.toast(f"Tagged as {target_name}!", "success")),
+                status_code=200,
+                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+            )
     else:
         return Response(
             to_xml(_main_mod.toast(f"Cannot tag: {result['reason']}", "warning")),

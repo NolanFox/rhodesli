@@ -8,7 +8,7 @@ Started: 2026-03-15
 - [x] Phase 3: Run reranker comparison
 - [x] Phase 4: Community-scoped suggestions
 - [x] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
-- [ ] Phase 6: P0 triage fixes (FB-168, FB-150)
+- [x] Phase 6: P0 triage fixes (FB-168, FB-150, FB-169)
 - [ ] Phase 7: P1 triage fixes
 - [ ] Phase 8: Deploy + browser verify
 - [ ] Phase 9: Session closeout
@@ -62,6 +62,13 @@ Started: 2026-03-15
 - 4 tests for input_method logging: records keyboard/button, omits when empty, source code verification
 - 9 new tests total in `tests/test_session102_gaps.py`
 - 4340 app tests pass (3 pre-existing failures unchanged)
+
+## Phase 6: P0 Triage Fixes
+- **FB-168 (P0)**: Tag search click did nothing — root cause: when `get_photo_id_for_face()` returned None (Fox Family faces not in embeddings cache), handler returned bare toast that replaced entire photo viewer via innerHTML swap. Fix: (1) fallback to `photo_registry.get_photo_for_face()`, (2) retarget bare toast to `#toast-container` instead of replacing photo viewer.
+- **FB-150 (P0 regression)**: Speed Loop suggestion thumbnails not clickable — suggestion images and names were plain elements with no links. Fix: wrapped thumbnail and name in `A` tags linking to `/person/{id}` (opens in new tab for inspection before merge decision).
+- **FB-169**: Esther Burd Fox label shows "Unidentified" — consequence of FB-168 (tag never completed). Resolved by FB-168 fix.
+- 7 new tests in `tests/test_p0_triage_fixes.py` — all pass
+- 4344+ app tests pass (3 pre-existing failures unchanged)
 
 ## Phase 0: Orient
 - Set current_session.txt to 103

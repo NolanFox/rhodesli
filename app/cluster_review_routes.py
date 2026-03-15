@@ -1808,26 +1808,42 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
         )
         # Cross-community badge (FB-100)
         cross_badge = _main_mod._cross_community_badge(sug["identity_id"], community) if community else None
+        nav_prefix = _main_mod.community_url_prefix(community_slug)
+        sug_person_url = f"{nav_prefix}/person/{sug['identity_id']}"
+        sug_thumb = (
+            Img(
+                src=sug_crop,
+                alt=sug["name"],
+                cls="w-12 h-12 object-cover rounded-lg border border-slate-600",
+                loading="lazy",
+            )
+            if sug_crop
+            else Div(cls="w-12 h-12 rounded-lg bg-slate-700")
+        )
+        sug_name_row = (
+            Div(
+                Span(sug["name"], cls="text-sm font-medium text-white"),
+                cross_badge,
+                cls="flex items-center gap-2",
+            )
+            if cross_badge
+            else Span(sug["name"], cls="text-sm font-medium text-white")
+        )
         suggestion_els.append(
             Div(
-                Img(
-                    src=sug_crop,
-                    alt=sug["name"],
-                    cls="w-12 h-12 object-cover rounded-lg border border-slate-600",
-                    loading="lazy",
-                )
-                if sug_crop
-                else Div(cls="w-12 h-12 rounded-lg bg-slate-700"),
-                Div(
-                    Div(
-                        Span(sug["name"], cls="text-sm font-medium text-white"),
-                        cross_badge,
-                        cls="flex items-center gap-2",
-                    )
-                    if cross_badge
-                    else Span(sug["name"], cls="text-sm font-medium text-white"),
+                A(
+                    sug_thumb,
+                    href=sug_person_url,
+                    target="_blank",
+                    title=f"View {sug['name']}'s face card",
+                    cls="flex-shrink-0",
+                ),
+                A(
+                    sug_name_row,
                     P(f"{sug['face_count']} faces", cls="text-xs text-slate-400"),
-                    cls="ml-3 flex-1 min-w-0",
+                    href=sug_person_url,
+                    target="_blank",
+                    cls="ml-3 flex-1 min-w-0 hover:text-indigo-300 transition-colors",
                 ),
                 Button(
                     "Merge",
