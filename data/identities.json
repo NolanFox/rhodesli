@@ -45347,8 +45347,8 @@
     },
     "b9f41a3b-445b-4df5-9bea-c4bacc5e75f8": {
       "identity_id": "b9f41a3b-445b-4df5-9bea-c4bacc5e75f8",
-      "name": "Unidentified Person 82863513",
-      "state": "INBOX",
+      "name": "Robert Mattatia",
+      "state": "PROPOSED",
       "anchor_ids": [
         "inbox_e8b9205ffaa7"
       ],
@@ -58994,8 +58994,8 @@
     },
     "142a164e-a94e-441b-a7de-ed08b37ff282": {
       "identity_id": "142a164e-a94e-441b-a7de-ed08b37ff282",
-      "name": "Unidentified Person 82863519",
-      "state": "INBOX",
+      "name": "Robert Mattatia",
+      "state": "PROPOSED",
       "anchor_ids": [
         "inbox_97287f9a8014"
       ],
@@ -64461,5 +64461,6 @@
       },
       "metadata": {}
     }
-  }
+  },
+  "history": []
 }
