@@ -743,38 +743,81 @@ def shadow_write_photos_batch(photos_list: list[dict]) -> int:
 
 
 def shadow_write_identities_batch(identities_list: list[dict]) -> int:
-    """Shadow-write a batch of identities to Supabase. Returns count written."""
+    """Shadow-write a batch of identities to Supabase. Returns count written.
+
+    DATA-020: Never overwrite a meaningful Postgres name with an auto-generated
+    local name (e.g. "Unidentified Person NNN"). When the local name is
+    auto-generated but Postgres has a real name, the name field is skipped.
+    """
     client = get_supabase_client()
     if not client:
         return 0
 
+    # DATA-020: Pre-fetch existing Postgres names for protection check
+    all_ids = [ident.get("identity_id", "") for ident in identities_list if ident.get("identity_id")]
+    postgres_names = {}
+    if all_ids:
+        try:
+            # Fetch in batches of 200 to stay within URL limits
+            for batch_start in range(0, len(all_ids), 200):
+                id_batch = all_ids[batch_start : batch_start + 200]
+                result = client.table("identities").select("identity_id,name").in_("identity_id", id_batch).execute()
+                if result.data:
+                    for row in result.data:
+                        postgres_names[row["identity_id"]] = row.get("name", "")
+        except Exception as e:
+            logger.warning(f"DATA-020 name prefetch failed (proceeding without protection): {e}")
+
     written = 0
+    name_protected = 0
     batch_size = 100
     for i in range(0, len(identities_list), batch_size):
         batch = identities_list[i : i + batch_size]
         rows = []
         for ident in batch:
-            rows.append(
-                {
-                    "identity_id": ident.get("identity_id", ""),
-                    "name": ident.get("name") or f"Unidentified Person {ident.get('identity_id', '')[:8]}",
-                    "display_name": ident.get("display_name"),
-                    "state": ident.get("state", "INBOX"),
-                    "anchor_ids": ident.get("anchor_ids", []),
-                    "candidate_ids": ident.get("candidate_ids", []),
-                    "negative_ids": ident.get("negative_ids", []),
-                    "metadata": ident.get("metadata", {}),
-                    "version_id": ident.get("version_id", 1),
-                    "merged_into": ident.get("merged_into"),
-                    "created_at": ident.get("created_at"),
-                    "updated_at": ident.get("updated_at"),
-                }
-            )
+            identity_id = ident.get("identity_id", "")
+            local_name = ident.get("name") or f"Unidentified Person {identity_id[:8]}"
+
+            # DATA-020: Never overwrite a real Postgres name with an auto-generated local name
+            pg_name = postgres_names.get(identity_id, "")
+            skip_name = False
+            if local_name.startswith("Unidentified Person") and pg_name and not pg_name.startswith("Unidentified"):
+                skip_name = True
+                name_protected += 1
+                logger.warning(
+                    "name_protection_fired",
+                    extra={
+                        "identity_id": identity_id,
+                        "local_name": local_name,
+                        "postgres_name": pg_name,
+                    },
+                )
+
+            row = {
+                "identity_id": identity_id,
+                "display_name": ident.get("display_name"),
+                "state": ident.get("state", "INBOX"),
+                "anchor_ids": ident.get("anchor_ids", []),
+                "candidate_ids": ident.get("candidate_ids", []),
+                "negative_ids": ident.get("negative_ids", []),
+                "metadata": ident.get("metadata", {}),
+                "version_id": ident.get("version_id", 1),
+                "merged_into": ident.get("merged_into"),
+                "created_at": ident.get("created_at"),
+                "updated_at": ident.get("updated_at"),
+            }
+            if not skip_name:
+                row["name"] = local_name
+
+            rows.append(row)
         try:
             client.table("identities").upsert(rows).execute()
             written += len(rows)
         except Exception as e:
             logger.warning(f"Shadow write identities batch failed: {e}")
+
+    if name_protected:
+        logger.info(f"DATA-020: Protected {name_protected} Postgres names from auto-generated overwrite")
     return written
 
 
