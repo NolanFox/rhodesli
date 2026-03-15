@@ -112,3 +112,4 @@ docs/ux_audit/session_findings/screenshots/
 notebookllm/
 scripts/extract_routes.py
 .claude/commits_since_clear.txt
+.claude/projects/
