@@ -6,10 +6,11 @@ Prompt: docs/prompts/session-104-prompt.md
 - [x] Phase 0: Orient + Reproduce
 - [x] Phase 1: Diagnose Upload Pipeline
 - [x] Phase 2: Fix Upload Pipeline
-- [ ] Phase 3: Ingest Robert Mattatia Photos + Full ML Analysis
-- [ ] Phase 4: Generate Compare Result + Shareable Link
+- [x] Phase 3: Ingest Robert Mattatia Photos + Full ML Analysis
+- [x] Phase 4: Generate Compare Result + Shareable Link (links to photo pages)
+- [x] Phase 4b: Gemini Deep Comparison (Nolan's idea — TOOLS-007)
 - [ ] Phase 5: Compare UX Audit + Community Scoping Design
-- [ ] Phase 6: Deploy + Browser Verify
+- [x] Phase 6: Deploy + Browser Verify (photos live on production)
 - [ ] Phase 7: Session Closeout
 
 ## Verification Gate
