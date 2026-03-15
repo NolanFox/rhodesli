@@ -341,7 +341,39 @@ Default to Option A unless Nolan overrides.
 
 ---
 
-## Phase 7: Triage Sprint with Nolan (30 min)
+## Phase 7: ML Active Learning Research + PRD (30 min)
+
+**Re-read this phase from `docs/prompts/session-102-prompt.md` after /clear.**
+
+### Background
+Nolan's insight (FB-145): after confirming several Fox Family clusters, can we re-run ML with that feedback to improve matching and reduce manual triage? This is the core value proposition of PRD-038 (Session 97) which built infrastructure but never activated it.
+
+### Research context (from web search, 2026-03-14)
+The academic literature strongly supports this approach:
+- **Constrained clustering** (Wagstaff et al. 2001, comprehensive review Springer 2025): must-link/cannot-link constraints from user feedback dramatically improve clustering. Confirmed faces = must-links, "Not Same" = cannot-links.
+- **Semi-supervised deep embedded clustering** (ScienceDirect 2023): pairwise constraints guide clustering in embedding space — exactly our setup with frozen PFE embeddings.
+- **Continuous learning for face clustering** (ResearchGate 2021): combines active learning + self-paced learning for automatic annotation under weak expert re-certification.
+- **DC-SSDEC** (PMC 2025): dual-constraint semi-supervised deep clustering using soft "should-link"/"shouldNot-link" — applicable to our similarity scores.
+
+### What PRD-038 already built (Session 97)
+1. **Prototype-bank reranker** (Phase 2) — confirmed faces as reference centroids, shadow mode
+2. **Active learning** (Phase 3) — selects most informative face to review, wired to review UX
+3. **Adapter experiment harness** (Phase 4) — frozen-embedding fine-tuning track
+4. All rollout gates closed — not enough labels at the time
+
+### Tasks for this phase
+1. **Audit PRD-038 state**: Read `rhodesli_ml/` modules, check what's working in shadow mode, what data we have
+2. **Count confirmed Fox labels**: How many confirmed identities × faces do we have? Minimum viable for constrained re-clustering?
+3. **Design retroactive experiment**: Take current confirmed anchors, re-run clustering with must-link constraints, compare cluster quality vs. blind clustering
+4. **Write PRD-045**: "Active Learning Feedback Loop" — scope: (a) activate prototype-bank reranker, (b) re-cluster with confirmed anchors as seeds, (c) measure improvement, (d) if positive, wire into post-triage pipeline (after confirming N clusters, auto-improve remaining matches)
+5. **Document research**: Save findings to `docs/ml/ACTIVE_LEARNING_RESEARCH.md` with paper references and breadcrumbs to PRD-038
+
+**Commit:** `docs: PRD-045 active learning feedback loop + research`
+**/clear after commit**
+
+---
+
+## Phase 8: Triage Sprint with Nolan (30 min)
 
 **Re-read this phase from `docs/prompts/session-102-prompt.md` after /clear.**
 
@@ -363,7 +395,7 @@ Nolan drives. For each issue:
 
 ---
 
-## Phase 8: Session Closeout (15 min)
+## Phase 9: Session Closeout (15 min)
 
 **Re-read this phase from `docs/prompts/session-102-prompt.md` after /clear.**
 
