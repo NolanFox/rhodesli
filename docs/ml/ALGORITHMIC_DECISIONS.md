@@ -2614,3 +2614,14 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - flattening rich GEDCOM structures into only birth/death/name columns (silent data loss)
 - **Affects**: `rhodesli_ml/importers/gedcom_parser.py`, `rhodesli_ml/importers/gedcom_rich.py`, `rhodesli_ml/importers/gedcom_snapshot.py`, `rhodesli_ml/importers/gedcom_matching.py`, `scripts/import_gedcom_version.py`, `scripts/run_combined_pipeline.py`, `app/admin_routes.py`, `app/relationship_routes.py`, `app/page_routes.py`, `scripts/supabase_migration_003_gedcom_rich_mirror.sql`
 - **Artifacts**: `docs/assessments/session-98-gedcom-audit.md`, `docs/analysis/session-98-gedcom-research.md`, `docs/assessments/session-98-gedcom-diff-report.json`
+
+### AD-224: Reranker Shadow Evaluation — Zero Improvement at Current Scale
+- **Date**: 2026-03-15 | **Session**: 103
+- **Context**: Session 103 ran the PRD-038 longitudinal reranker in shadow mode against baseline clustering (470 proposals). The reranker produced IDENTICAL proposals — 0 target changes, 0 tier changes, 0 score changes.
+- **Decision**: Do NOT activate the reranker. Keep in shadow mode. The result is expected, not a bug.
+- **Why identical**: (1) Best training variant was `distance_only` — temporal/kinship features added noise with only ~95 confirmed identities. (2) `distance_only` features are deterministic transforms of baseline distance, so the model learned a monotonic mapping that preserves ordering. (3) Baseline top-1 recall is already 99.17% — no room for improvement. (4) Phase 2 gate FAILED (age-gap improvement = 0.0%, needs ≥5%).
+- **Key insight**: The reranker only reranks top-5 candidates from baseline retrieval. It cannot discover new matches. Cross-community false positives (FB-147 Big Leon) are a data-scoping problem, not a scoring problem — fixed by community filtering in Session 103 Phase 4.
+- **Revisit triggers**: (1) Fox triage reaches 50+ confirmed Fox identities. (2) 200+ confirmed identities total. (3) Consider retrieval-augmented approach if reranking continues to show no improvement.
+- **Rejected**: Activating reranker with current data (no measurable improvement, adds complexity).
+- **Affects**: `scripts/cluster_new_faces.py`, `rhodesli_ml/longitudinal_reranker.py`, `scripts/compare_ml_runs.py`
+- **Full review**: `docs/ml/RERANKER_REVIEW_103.md`

@@ -1,28 +1,29 @@
-# Session 103 Checkpoint — Phase 6 Complete
+# Session 103 Checkpoint — Phase 9 Complete (FINAL)
 
 ## What was done
-- **FB-168 (P0)**: Tag search click didn't assign identity — root cause identified and fixed:
-  - When `get_photo_id_for_face()` returned None (Fox Family faces not in embeddings cache), the handler returned a bare toast. HTMX swapped this into `#photo-modal-content` as innerHTML, replacing the entire photo viewer with a temporary toast that faded away — appearing as "nothing happens."
-  - Fix 1: Added fallback to `photo_registry.get_photo_for_face()` when the embeddings-based cache misses.
-  - Fix 2: When neither cache has the photo, the toast response now uses HX-Retarget/HX-Reswap headers to target `#toast-container` instead of replacing the photo viewer.
-
-- **FB-150 (P0 regression)**: Speed Loop suggestion thumbnails not clickable:
-  - Suggestion thumbnails and names in the enrichment panel were plain elements (Img/Span) with no links.
-  - Fix: Wrapped thumbnail and name in `A` tags linking to `/person/{identity_id}` with `target="_blank"`, allowing admins to inspect the match in a new tab before deciding to merge.
-
-- **FB-169**: Esther Burd Fox face label shows "Unidentified" — consequence of FB-168 (the tag merge never completed because the toast replaced the photo viewer). Resolved by the FB-168 fix.
+- **Assessment**: `docs/assessments/session-103-assessment.md` — all 9 phases PASS with evidence
+- **CHANGELOG**: v0.99.6 entry with Added/Fixed/ML Results/Verification sections
+- **ROADMAP**: version bumped to v0.99.6, ~4357 tests. Session 103 added to Recently Completed.
+- **BACKLOG**: version 49.0. PERF-007, TEST-003, TEST-004, OBS-003 marked FIXED.
+- **SESSION_HISTORY**: Session 103 entry added with full summary
+- **Session log**: All 9 phases marked complete
 
 ## Key files changed
-- `app/identity_routes.py` — Tag endpoint: photo_registry fallback + toast retarget
-- `app/cluster_review_routes.py` — Enrichment panel: clickable suggestion thumbnails and names
-- `tests/test_p0_triage_fixes.py` — 7 new tests (3 FB-168, 2 FB-150, 2 FB-169)
+- `docs/assessments/session-103-assessment.md` (NEW)
+- `CHANGELOG.md` — v0.99.6 entry
+- `ROADMAP.md` — version + recently completed
+- `docs/BACKLOG.md` — version + 4 items marked FIXED
+- `docs/roadmap/SESSION_HISTORY.md` — Session 103 entry
+- `docs/session_logs/session-103-log.md` — Phase 9 logged
 
-## Issues found
-- 3 pre-existing test failures (same as all previous phases): `test_browse_cards_use_unified_card`, `test_browse_cards_have_profile_link`, `test_identified_badge_has_title_attribute`
-- e2e test `test_sidebar_navigation` fails (Playwright/chromium, pre-existing)
+## Session 103 Summary
+- **61 new tests** across 7 test files, 4357 app tests pass
+- **ML**: Baseline 470 proposals, reranker neutral (not activated)
+- **P0 fixes**: FB-168 (tag search), FB-150 (clickable thumbnails), FB-169
+- **P1 fixes**: FB-153, FB-159/160, FB-162
+- **14 P2 BACKLOG entries** created
+- **5/5 browser verified**, deploy SUCCESS
 
-## Test results
-- 4347 passed, 26 skipped, 3 deselected (pre-existing failures)
-
-## Next phase
-- Phase 7: P1 triage fixes
+## Issues
+- 1 pre-existing test failure (`test_identified_badge_has_title_attribute` from Session 92)
+- Reranker not activated — needs more labeled data (PRD-038 Phase 5)
