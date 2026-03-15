@@ -49,8 +49,8 @@ Nolan drives triage. Claude fixes or logs.
 - **Fix:** BACKLOG — add to admin sidebar, consider renaming route
 - **BACKLOG:** UX-080
 
-### FB-129: Rhodes community photos appear in Fox Family speed-run
-- **Severity:** P1 (data quality)
+### FB-129: Rhodes community photos appear in Fox Family speed-run (RECURRING — MULTIPLE instances)
+- **Severity:** P0 (data quality — blocks triage)
 - **Context:** Photo `community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano` has collection="Jews of Rhodes: Family Memories & Heritage" but was ingested as part of community-batch-20260214 which is mapped to Fox Family. The naturalization document keeps appearing in Fox Family triage.
 - **Root cause:** Original community-batch ingest included Rhodes photos alongside Fox photos. The `identity_communities` table maps identities to communities based on which photos their faces come from, so Rhodes identities got Fox Family membership.
 - **Fix:** BACKLOG — need community re-assignment script to move community-batch photos to correct community based on collection field. Or allow admin to reassign photos between communities.
