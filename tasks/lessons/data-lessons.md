@@ -128,6 +128,14 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Prevention:** (1) Trust .gitignore. (2) Production-origin files need API/UI creation, not git push. (3) The `data/*` allowlist in .gitignore is the canonical list of git-safe data files.
 - **See also:** Lessons 56, 69, 78, 85, 133; AD-134 (safety gate), AD-135 (structural fix)
 
+### Lesson 142: Supabase JSONB columns can silently store string-encoded arrays — always guard reads AND writes
+- **Mistake (Session 104b):** 20 Robert Mattatia identity rows had `anchor_ids` stored as the string `'["inbox_e8b9205ffaa7"]'` instead of the JSONB array `["inbox_e8b9205ffaa7"]`. When `load_from_postgres()` read these, Python got a `str`, and iterating it yielded individual characters (`[`, `"`, `i`, `n`, ...) instead of face IDs. `get_identity_for_face()` returned None → all faces showed "Unidentified" on production.
+- **Root cause:** The Supabase Python client can accept both lists and strings for JSONB columns. If the caller passes a string (e.g., from JSON that was double-serialized), Supabase stores it as-is. The `shadow_write_identities_batch` path didn't validate types before write.
+- **Compounding factor:** Production uses `DATA_SOURCE=postgres` but local dev uses `DATA_SOURCE=json`. The bug was invisible locally because JSON files always have proper lists.
+- **Rule:** (1) Always coerce JSONB fields on READ with `_ensure_list()` — never trust the column type. (2) Always coerce on WRITE with `_ensure_list_for_supabase()` — prevent corruption at source. (3) When a feature works locally but fails on production, check if `DATA_SOURCE` differs.
+- **Prevention:** `_ensure_list()` in `core/registry.py:load_from_postgres()` and `_ensure_list_for_supabase()` in `app/supabase_data.py`. 3 regression tests.
+- **See also:** Lesson 105 (mock tests don't catch column mismatches), Lesson 133 (DATA_SOURCE fallback masks failures)
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

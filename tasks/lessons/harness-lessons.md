@@ -111,6 +111,11 @@
 - **Rule:** Hooks that should enforce behavior MUST exit 2 (block) when the condition is violated. Exit 0 with a warning is worse than no hook — it creates the illusion of enforcement while providing none. Advisory hooks are only useful if Claude reliably acts on warnings, which history shows it does not (Lessons 89, 102, 103).
 - **Prevention:** (1) Audit all hooks: if the hook is meant to ENFORCE, verify it exits 2 on violation. (2) UserPromptSubmit hooks cannot effectively block because the user needs to be able to type commands like "/clear" — enforcement must happen at PreToolUse instead. (3) Lower pre-work-clear-gate threshold from 2 to 1 commit. (4) Test hooks by triggering the violation condition and confirming the tool call is actually blocked.
 
+## Lesson 143: Hook audit must be exhaustive — partial fixes create false confidence
+- **Mistake (Session 104b):** Session 104 fixed 1 hook (UserPromptSubmit threshold). Session 104b found 3 MORE broken hooks (Stop exit 1, PreToolUse Bash swallowed test exit code, PostToolUse Bash exit 0). Each session only fixed the hook that was visibly failing, leaving others broken. The user had to explicitly demand "review each and every hook."
+- **Rule:** When ANY hook is found broken, audit ALL hooks in the same pass. Partial fixes create false confidence — "I fixed the hooks" when only 1 of 4 was actually fixed.
+- **Prevention:** (1) Hook changes require a full audit table (hook name, event, expected exit, actual exit, verdict). (2) Test each hook by triggering its condition. (3) The audit table goes in the commit message or session log as evidence.
+
 ## Lesson 110: Existing Data Not Surfaced Is Worse Than Missing Data
 - **Mistake:** Session 96c-cont4 — auto-clustering ran correctly, producing 35 proposals (30 Roland Fox, 4 Betty Capeluto Fox, 1 Ray Franco). But the UI showed "0 Proposals" and user concluded "clustering is completely missing." Hours of debugging ensued for what was purely a UI surfacing gap.
 - **Rule:** When a data pipeline produces results, the SAME session must verify they appear in the UI. A pipeline that produces results nobody can see is functionally broken. "Data exists in file X" is not shipped — "user sees data in the app" is shipped.

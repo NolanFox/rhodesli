@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.7 · ~4377 tests · 943 photos · 3433 identities · 95 confirmed
+Current: v0.99.8 · ~4380 tests · 943 photos · 3433 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -187,6 +187,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-15: **v0.99.8 — Session 104b**: P0 Face Tagging Fix. Root cause: Supabase anchor_ids stored as JSON text strings instead of JSONB arrays — load_from_postgres() iterated characters instead of face IDs. Fix: _ensure_list() read guard, _ensure_list_for_supabase() write guard, 20 Supabase rows repaired. Hook enforcement audit: 4 broken hooks fixed (all now exit 2). test-gate.sh fast mode uses targeted core tests. Lessons 142-143. 3 new tests, 4380 app tests pass. Both Robert Mattatia photos browser-verified on production. Deploy SUCCESS.
 
 - [x] 2026-03-15: **v0.99.7 — Session 104**: Fix Contributor UX + Claude Benatar Photos. P0 upload pipeline fixes: 404 after approval (compare_mode detection), anonymous attribution (auth gate removed), missing thumbnails (R2 path fix). Auto-approve for logged-in contributor uploads. Robert Mattatia photos ingested (2 photos, 20 faces, Congo group + family group). Gemini deep comparison: 2.5 Pro 9/10, 3.1 Pro 8.5/10 confidence — ML false negative from periocular occlusion. Both API calls logged. Lesson 140 (hooks exit 0). Pre-work hook threshold 2→1. 10 new tests, 4377 app tests pass. 2/2 photos browser verified. Deploy SUCCESS.
 

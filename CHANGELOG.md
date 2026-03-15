@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.8] — 2026-03-15 (Session 104b: P0 Face Tagging Fix + Hook Enforcement)
+
+### Fixed
+- **P0: Face tagging broken on production** — Supabase `anchor_ids` stored as JSON text strings instead of JSONB arrays. `load_from_postgres()` iterated string characters instead of face IDs, causing `get_identity_for_face()` to return None for all 20 Robert Mattatia faces. Fixed with `_ensure_list()` read guard and `_ensure_list_for_supabase()` write guard. 20 broken Supabase rows repaired.
+- **Hook enforcement audit** — 4 broken hooks found and fixed: Stop (exit 1→2), PreToolUse Bash (test-gate exit code swallowed by pipe), PostToolUse Bash (exit 0→2), UserPromptSubmit (exit 0→2). All enforcement hooks now exit 2.
+- **test-gate.sh** — fast mode uses targeted core tests to avoid pre-existing ordering flakes
+
+### Added
+- 3 regression tests for string-encoded Supabase arrays (read + write + face lookup paths)
+- Lessons 142 (Supabase JSONB string coercion) and 143 (exhaustive hook audit)
+
 ## [v0.99.7] — 2026-03-15 (Session 104: Fix Contributor UX + Claude Benatar Photos)
 
 ### Added

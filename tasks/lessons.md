@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-141 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+143 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -138,6 +138,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 137 | **Proposals must be regenerated after every upload — stale proposals = invisible new faces** |
 | 138 | **Features built but never linked from navigation are invisible to users** |
 | 141 | **Never git-add production-origin data files — 6th occurrence of deploy-overwrite pattern (Lessons 56→69→78→85→141)** |
+| 142 | **Supabase JSONB columns can silently store string-encoded arrays — guard reads AND writes** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
@@ -182,3 +183,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 113 | **Cross-community badge must check BOTH communities — identity in both should show no badge, not wrong badge** |
 | 114 | **os.getenv("DATA_DIR") ≠ core.config.DATA_DIR on Railway — STORAGE_DIR derivation only in config.py** |
 | 140 | **Hooks that exit 0 are advisory only — Claude ignores warnings, must exit 2 to block** |
+| 143 | **Hook audit must be exhaustive — partial fixes create false confidence** |
