@@ -57,6 +57,42 @@ def get(request):
     }
 
 
+@rt("/api/sync/debug-cache")
+def get(request, photo_id: str = ""):
+    """Temporary debug endpoint — check photo cache state for a given photo_id."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    _main_mod._build_caches()
+    cache_entry = (_main_mod._photo_cache or {}).get(photo_id)
+    aliases = _main_mod._photo_id_aliases or {}
+    alias_target = aliases.get(photo_id)
+
+    # Check filename_to_source map
+    from pathlib import Path as _P
+
+    photo_index_path = _main_mod.data_path / "photo_index.json"
+    pi_entry = None
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            pi_data = json.load(f)
+        pi_entry = pi_data.get("photos", {}).get(photo_id)
+
+    return {
+        "photo_id": photo_id,
+        "in_photo_cache": cache_entry is not None,
+        "cache_filename": cache_entry.get("filename") if cache_entry else None,
+        "cache_source": cache_entry.get("source") if cache_entry else None,
+        "cache_collection": cache_entry.get("collection") if cache_entry else None,
+        "cache_upload_date": cache_entry.get("upload_date") if cache_entry else None,
+        "cache_face_count": len(cache_entry.get("faces", [])) if cache_entry else 0,
+        "alias_target": alias_target,
+        "in_photo_index": pi_entry is not None,
+        "pi_source": pi_entry.get("source") if pi_entry else None,
+    }
+
+
 @rt("/api/sync/identities")
 def get(request):
     """Download identities.json via sync token. For scripts/sync_from_production.py."""
