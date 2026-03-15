@@ -5,7 +5,7 @@ Started: 2026-03-15
 - [x] Phase 0: Orient
 - [x] Phase 1: Create ML Supabase tables
 - [x] Phase 2: Run baseline clustering with tracking
-- [ ] Phase 3: Run reranker comparison
+- [x] Phase 3: Run reranker comparison
 - [ ] Phase 4: Community-scoped suggestions
 - [ ] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
 - [ ] Phase 6: P0 triage fixes (FB-168, FB-150)
@@ -34,6 +34,18 @@ Started: 2026-03-15
 - Fox family dominates: Charles Fox 165, Esther Burd Fox 101, Albert Fox 95, Roland Fox 66
 - 11 new tests in `tests/test_cluster_ml_run_tracking.py` — all pass
 - Results saved to `docs/ml/run_results/baseline_run_103.md`
+
+## Phase 3: Reranker Shadow Comparison
+- Trained longitudinal shadow reranker: best variant = `distance_only`
+- Phase 2 gate FAILED: baseline top-1 recall already 99.17%, no room for improvement
+- Ran clustering with `--scorer longitudinal-shadow`: 470 proposals (identical to baseline)
+- Created `scripts/compare_ml_runs.py`: diff tool for proposals files or Supabase run_ids
+- Comparison result: **Neutral** — reranker agrees with baseline on all 470 proposals
+- 0 target changes, 0 tier changes, 0 score changes
+- FB-147 (Big Leon false positives): 1 Leon proposal exists at distance 0.9455, not suppressed by reranker — needs community-scoped filtering instead
+- Recommendation: Do NOT activate reranker until more age-gap labels exist
+- 8 new tests in `tests/test_compare_ml_runs.py`
+- Results: `docs/ml/run_results/reranker_comparison_103.md`
 
 ## Phase 0: Orient
 - Set current_session.txt to 103

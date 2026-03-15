@@ -1,0 +1,2185 @@
+{
+  "dataset_rows": 1975,
+  "train_rows": 1370,
+  "test_rows": 605,
+  "top_k": 5,
+  "max_prototypes": 5,
+  "dominant_identity_ids": [
+    "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+    "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+    "b6d9ea5b-bf90-463a-bab3-682acac7753d"
+  ],
+  "tail_identity_ids": [
+    "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+    "0ea528ac-01c0-451e-8089-24cae46c8e6a",
+    "10aef910-9632-4a6c-a644-4551b6e91981",
+    "35f38086-bc81-412e-9470-93a3d04b40d5",
+    "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+    "475b2111-2928-4dab-880b-b6d227a3e353",
+    "52966904-f1e5-4025-bcf3-b249ca673be3",
+    "5490d7a8-04b4-4460-852c-72fb68ee7e5d",
+    "553cb710-eb89-4fce-8169-8eb25dde285a",
+    "64096284-ace8-4790-aebb-a82ff1f288a5",
+    "640c7838-5b53-40c1-8050-7f511f0c556b",
+    "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33",
+    "7d6d0435-0dfa-48e0-b288-7d28f66fae52",
+    "96c749bb-621f-4299-ae97-2f436d3ca67a",
+    "9a07b490-34fc-4f41-8111-e68a27dc782a",
+    "a772360a-64f6-4daf-8312-fcc7586304a7",
+    "abc00217-19fd-460f-85aa-f57ced7a2b7f",
+    "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda",
+    "e24d3f7f-8930-479a-b525-8a36bba9fda0",
+    "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
+    "ec55b4e8-ac3c-4209-a273-e96f7f85659c"
+  ],
+  "prototype_bank": {
+    "e955bef9-8456-4870-8642-9ff68554f707": {
+      "prototype_face_ids": [
+        "Image 962_compress:face1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 962_compress:face1": 1936
+      }
+    },
+    "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa": {
+      "prototype_face_ids": [
+        "inbox_cd8b7399da8b"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1928,
+      "year_max": 1928,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_cd8b7399da8b": 1928
+      }
+    },
+    "8b98cc1a-026c-4663-b335-87b462a5d646": {
+      "prototype_face_ids": [
+        "Image 962_compress:face0"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 962_compress:face0": 1936
+      }
+    },
+    "553cb710-eb89-4fce-8169-8eb25dde285a": {
+      "prototype_face_ids": [
+        "Image 912_compress:face0",
+        "Image 948_compress:face2"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0093,
+      "year_min": 1943,
+      "year_max": 1968,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 912_compress:face0": 1943,
+        "Image 948_compress:face2": 1968
+      }
+    },
+    "d85b2279-caac-4e56-b572-5431c4be48e5": {
+      "prototype_face_ids": [
+        "Image 968_compress:face10"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face10": 1974
+      }
+    },
+    "5a72fba6-6a9f-4be5-bc2d-688a38de0555": {
+      "prototype_face_ids": [
+        "Image 037_compress:face1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1924,
+      "year_max": 1924,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 037_compress:face1": 1924
+      }
+    },
+    "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e": {
+      "prototype_face_ids": [
+        "inbox_dd1b02478cbf"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1952,
+      "year_max": 1952,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_dd1b02478cbf": 1952
+      }
+    },
+    "6a97c774-f66d-4edc-9e55-699d958336fd": {
+      "prototype_face_ids": [
+        "inbox_53d1c16e5ed9"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1941,
+      "year_max": 1941,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_53d1c16e5ed9": 1941
+      }
+    },
+    "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60": {
+      "prototype_face_ids": [
+        "inbox_8d1c3d11476c"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1963,
+      "year_max": 1963,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_8d1c3d11476c": 1963
+      }
+    },
+    "fd43c9dd-8558-4305-8bda-90c3f320daac": {
+      "prototype_face_ids": [
+        "Image 003_compress:face1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1924,
+      "year_max": 1924,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 003_compress:face1": 1924
+      }
+    },
+    "2cf08b25-075c-41a8-a20d-d03686aafd06": {
+      "prototype_face_ids": [
+        "inbox_41be72d02213",
+        "Image 928_compress:face2",
+        "Image 922_compress:face0",
+        "inbox_f8f9e756c2f1",
+        "inbox_9e1bd5920f3a"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 17,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0959,
+      "year_min": 1951,
+      "year_max": 1966,
+      "collections": [
+        "Betty Capeluto Miami Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_41be72d02213": 1955,
+        "Image 928_compress:face2": 1966,
+        "Image 922_compress:face0": 1960,
+        "inbox_f8f9e756c2f1": 1951,
+        "inbox_9e1bd5920f3a": 1964
+      }
+    },
+    "35b997f8-7b9c-46a3-8070-78f0c57e48be": {
+      "prototype_face_ids": [
+        "inbox_edd3cd27dff2",
+        "Image 028_compress:face2",
+        "Image 969_compress:face1",
+        "Image 984_compress:face8",
+        "Image 972_compress:face11"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 5,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.9223,
+      "year_min": 1945,
+      "year_max": 1981,
+      "collections": [
+        "Family Tree",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_edd3cd27dff2": 1945,
+        "Image 028_compress:face2": 1981,
+        "Image 969_compress:face1": 1964,
+        "Image 984_compress:face8": 1948,
+        "Image 972_compress:face11": 1961
+      }
+    },
+    "e31718ca-2f73-4976-9181-e92a7c58ca37": {
+      "prototype_face_ids": [
+        "inbox_d7e5b9adb5b3"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1947,
+      "year_max": 1947,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_d7e5b9adb5b3": 1947
+      }
+    },
+    "475abda0-e3e7-4db8-8f62-61f6c0e05367": {
+      "prototype_face_ids": [
+        "inbox_3f047afeb6e4",
+        "Image 951_compress:face0"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0085,
+      "year_min": 1927,
+      "year_max": 1928,
+      "collections": [
+        "Family Tree",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_3f047afeb6e4": 1928,
+        "Image 951_compress:face0": 1927
+      }
+    },
+    "bc7f747d-c3a1-4df4-971e-5046a4192853": {
+      "prototype_face_ids": [
+        "inbox_88ecd8c22c6d"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1948,
+      "year_max": 1948,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_88ecd8c22c6d": 1948
+      }
+    },
+    "67e830ac-7ebb-4d66-9ab2-72204610bef9": {
+      "prototype_face_ids": [
+        "inbox_7a6bee77eb84"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1960,
+      "year_max": 1960,
+      "collections": [
+        "Nace Capeluto Tampa Collection"
+      ],
+      "prototype_years": {
+        "inbox_7a6bee77eb84": 1960
+      }
+    },
+    "609d7e34-38a3-4bdd-9879-35560b624bae": {
+      "prototype_face_ids": [
+        "inbox_22d81a2ed078",
+        "Image 983_compress:face2",
+        "Image 978_compress:face0"
+      ],
+      "prototype_count": 3,
+      "candidate_face_count": 3,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8891,
+      "year_min": 1950,
+      "year_max": 1960,
+      "collections": [
+        "Nace Capeluto Tampa Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_22d81a2ed078": 1960,
+        "Image 983_compress:face2": 1950,
+        "Image 978_compress:face0": 1954
+      }
+    },
+    "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a": {
+      "prototype_face_ids": [
+        "Image 983_compress:face0",
+        "Image 961_compress:face1",
+        "Image 984_compress:face6"
+      ],
+      "prototype_count": 3,
+      "candidate_face_count": 3,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.2454,
+      "year_min": 1934,
+      "year_max": 1950,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 983_compress:face0": 1950,
+        "Image 961_compress:face1": 1934,
+        "Image 984_compress:face6": 1948
+      }
+    },
+    "35963375-7f31-482f-89da-908cf115aa61": {
+      "prototype_face_ids": [
+        "Image 024_compress:face0"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1916,
+      "year_max": 1916,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 024_compress:face0": 1916
+      }
+    },
+    "5d9ba7e2-f3dd-430d-8576-552962c42d6f": {
+      "prototype_face_ids": [
+        "Image 003_compress:face2"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1924,
+      "year_max": 1924,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 003_compress:face2": 1924
+      }
+    },
+    "0b9cb708-9b13-4a42-a25d-ad36f3e08547": {
+      "prototype_face_ids": [
+        "inbox_67d39ad2f197",
+        "inbox_138d977cbce9"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8863,
+      "year_min": 1936,
+      "year_max": 1937,
+      "collections": [
+        "Newspapers.com"
+      ],
+      "prototype_years": {
+        "inbox_67d39ad2f197": 1937,
+        "inbox_138d977cbce9": 1936
+      }
+    },
+    "94a13283-4154-4afc-bb29-99eaa094f7be": {
+      "prototype_face_ids": [
+        "inbox_0b5fd3625bbe"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1910,
+      "year_max": 1910,
+      "collections": [
+        "Nace Capeluto Tampa Collection"
+      ],
+      "prototype_years": {
+        "inbox_0b5fd3625bbe": 1910
+      }
+    },
+    "1549d2b4-5d1f-4b0d-8ef2-430087a76d67": {
+      "prototype_face_ids": [
+        "Image 968_compress:face2"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face2": 1974
+      }
+    },
+    "964f4c07-e9e5-43e2-933c-7fd8bfd234b8": {
+      "prototype_face_ids": [
+        "inbox_209af5bffddc",
+        "Image 031_compress:face0",
+        "inbox_1f520b11165b",
+        "inbox_aa674bb2d16f",
+        "Image 961_compress:face0"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 15,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.2438,
+      "year_min": 1910,
+      "year_max": 1955,
+      "collections": [
+        "Betty Capeluto Miami Collection",
+        "Jews of Rhodes: Family Memories & Heritage",
+        "Nace Capeluto Tampa Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_209af5bffddc": 1955,
+        "Image 031_compress:face0": 1926,
+        "inbox_1f520b11165b": 1910,
+        "inbox_aa674bb2d16f": 1944,
+        "Image 961_compress:face0": 1934
+      }
+    },
+    "ae0b181b-db55-4c3e-853d-0fdc904a1000": {
+      "prototype_face_ids": [
+        "inbox_39b7e2ec53bb",
+        "Image 978_compress:face1",
+        "inbox_3f4521ac544f",
+        "inbox_cbc1e06c137d",
+        "inbox_fbcf030d4f44"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 60,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.2953,
+      "year_min": 1954,
+      "year_max": 1954,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_39b7e2ec53bb": null,
+        "Image 978_compress:face1": 1954,
+        "inbox_3f4521ac544f": null,
+        "inbox_cbc1e06c137d": null,
+        "inbox_fbcf030d4f44": null
+      }
+    },
+    "35f38086-bc81-412e-9470-93a3d04b40d5": {
+      "prototype_face_ids": [
+        "Image 037_compress:face0",
+        "Image 956_compress:face0"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8801,
+      "year_min": 1924,
+      "year_max": 1928,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 037_compress:face0": 1924,
+        "Image 956_compress:face0": 1928
+      }
+    },
+    "7cba61d1-4aec-401a-b2ff-5142fb68ac36": {
+      "prototype_face_ids": [
+        "inbox_6e7b13515ac3",
+        "Image 001_compress:face1",
+        "Image 003_compress:face0",
+        "Image 972_compress:face2",
+        "Image 941_compress:face4"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 8,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.118,
+      "year_min": 1924,
+      "year_max": 1978,
+      "collections": [
+        "Nace Capeluto Tampa Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_6e7b13515ac3": 1944,
+        "Image 001_compress:face1": 1978,
+        "Image 003_compress:face0": 1924,
+        "Image 972_compress:face2": 1961,
+        "Image 941_compress:face4": 1938
+      }
+    },
+    "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a": {
+      "prototype_face_ids": [
+        "inbox_08cde0472d2f"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1910,
+      "year_max": 1910,
+      "collections": [
+        "Nace Capeluto Tampa Collection"
+      ],
+      "prototype_years": {
+        "inbox_08cde0472d2f": 1910
+      }
+    },
+    "b6d9ea5b-bf90-463a-bab3-682acac7753d": {
+      "prototype_face_ids": [
+        "inbox_acff04fd8c48",
+        "Image 031_compress:face1",
+        "inbox_37feea05cf40",
+        "Brass_Rail_Restaurant_with_Leon_Capeluto_Picture:face0",
+        "Image 984_compress:face7"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 25,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.1749,
+      "year_min": 1926,
+      "year_max": 1974,
+      "collections": [
+        "Betty Capeluto Miami Collection",
+        "Nace Capeluto Tampa Collection",
+        "Newspapers.com",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_acff04fd8c48": 1955,
+        "Image 031_compress:face1": 1926,
+        "inbox_37feea05cf40": 1974,
+        "Brass_Rail_Restaurant_with_Leon_Capeluto_Picture:face0": 1935,
+        "Image 984_compress:face7": 1948
+      }
+    },
+    "b359fe11-62e8-4a4f-94ef-f4f7657deb2e": {
+      "prototype_face_ids": [
+        "Image 917_compress:face0",
+        "Image 920_compress:face1",
+        "Image 986_compress:face0",
+        "Image 921_compress:face0"
+      ],
+      "prototype_count": 4,
+      "candidate_face_count": 4,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0718,
+      "year_min": 1974,
+      "year_max": 1977,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 917_compress:face0": 1974,
+        "Image 920_compress:face1": 1977,
+        "Image 986_compress:face0": 1975,
+        "Image 921_compress:face0": 1975
+      }
+    },
+    "4a993942-2ed7-4cba-bb78-ada588853642": {
+      "prototype_face_ids": [
+        "Image 968_compress:face9"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face9": 1974
+      }
+    },
+    "acefd033-e25a-4b1b-b66d-9f2c6b5731f3": {
+      "prototype_face_ids": [
+        "inbox_0eb1cb24b038"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1938,
+      "year_max": 1938,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_0eb1cb24b038": 1938
+      }
+    },
+    "e1d3d662-ae1d-4bef-83d5-3076d53fd70e": {
+      "prototype_face_ids": [
+        "Image 976_compress:face0"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1957,
+      "year_max": 1957,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 976_compress:face0": 1957
+      }
+    },
+    "5ad32dd1-673e-4ae7-8437-6e1fe615cda2": {
+      "prototype_face_ids": [
+        "Image 936_compress:face0",
+        "Image 975_compress:face0",
+        "Image 972_compress:face3",
+        "Image 932_compress:face0",
+        "Image 969_compress:face0"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 7,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8547,
+      "year_min": 1961,
+      "year_max": 1975,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 936_compress:face0": 1968,
+        "Image 975_compress:face0": 1975,
+        "Image 972_compress:face3": 1961,
+        "Image 932_compress:face0": 1973,
+        "Image 969_compress:face0": 1964
+      }
+    },
+    "c9bd1c83-ed11-4b55-8608-9aec1e51f446": {
+      "prototype_face_ids": [
+        "inbox_b8349a40998b",
+        "Image 001_compress:face0",
+        "Image 930_compress:face5",
+        "inbox_691f8bc05a58",
+        "Image 026_compress:face0"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 12,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.213,
+      "year_min": 1952,
+      "year_max": 1978,
+      "collections": [
+        "Betty Capeluto Miami Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_b8349a40998b": 1955,
+        "Image 001_compress:face0": 1978,
+        "Image 930_compress:face5": 1966,
+        "inbox_691f8bc05a58": 1958,
+        "Image 026_compress:face0": 1952
+      }
+    },
+    "9dfc300a-1c86-460a-85df-e62c6781eb6d": {
+      "prototype_face_ids": [
+        "Image 968_compress:face7"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face7": 1974
+      }
+    },
+    "4f005632-a4e3-45d0-b60b-50a1adc99cb8": {
+      "prototype_face_ids": [
+        "inbox_db0e5c2aa97b"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1963,
+      "year_max": 1963,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_db0e5c2aa97b": 1963
+      }
+    },
+    "c9e959bf-a75e-4f5a-bc31-bd95bfe09314": {
+      "prototype_face_ids": [
+        "inbox_90ceb891cfb9"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1963,
+      "year_max": 1963,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_90ceb891cfb9": 1963
+      }
+    },
+    "be977acc-e56a-48a9-a9a3-200f302e330b": {
+      "prototype_face_ids": [
+        "Image 976_compress:face1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1957,
+      "year_max": 1957,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 976_compress:face1": 1957
+      }
+    },
+    "bac7731a-a1d2-4350-b528-c11f1b947b3a": {
+      "prototype_face_ids": [
+        "Image 968_compress:face8"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face8": 1974
+      }
+    },
+    "c93e5c13-791d-4c1c-84f3-07b5d616ed31": {
+      "prototype_face_ids": [
+        "inbox_52cbbbe7f308"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1943,
+      "year_max": 1943,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_52cbbbe7f308": 1943
+      }
+    },
+    "a5c9d5d1-5739-413a-a18e-cdd3111ad26e": {
+      "prototype_face_ids": [
+        "inbox_0082df7f4531"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1910,
+      "year_max": 1910,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_0082df7f4531": 1910
+      }
+    },
+    "9b41ba49-7cde-4f76-bc43-341e320db6a9": {
+      "prototype_face_ids": [
+        "inbox_39f3db6c1325"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1955,
+      "year_max": 1955,
+      "collections": [
+        "Find A Grave"
+      ],
+      "prototype_years": {
+        "inbox_39f3db6c1325": 1955
+      }
+    },
+    "6f044a38-810e-4034-9a15-bc51fdc13d9b": {
+      "prototype_face_ids": [
+        "inbox_d6b5cab6c51f"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1910,
+      "year_max": 1910,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_d6b5cab6c51f": 1910
+      }
+    },
+    "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18": {
+      "prototype_face_ids": [
+        "inbox_efa182f997c9",
+        "Image 961_compress:face3",
+        "Image 984_compress:face9",
+        "inbox_e8842bcd8c1a",
+        "inbox_441f60c145fb"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 9,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0981,
+      "year_min": 1934,
+      "year_max": 1956,
+      "collections": [
+        "Nace Capeluto Tampa Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_efa182f997c9": 1954,
+        "Image 961_compress:face3": 1934,
+        "Image 984_compress:face9": 1948,
+        "inbox_e8842bcd8c1a": 1951,
+        "inbox_441f60c145fb": 1956
+      }
+    },
+    "1547d786-4349-41ed-abb4-02e63b2ba313": {
+      "prototype_face_ids": [
+        "Image 983_compress:face1",
+        "Image 961_compress:face2",
+        "Image 984_compress:face2"
+      ],
+      "prototype_count": 3,
+      "candidate_face_count": 3,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.1377,
+      "year_min": 1934,
+      "year_max": 1950,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 983_compress:face1": 1950,
+        "Image 961_compress:face2": 1934,
+        "Image 984_compress:face2": 1948
+      }
+    },
+    "843aaa8e-6212-4a1b-93e7-753dc1262453": {
+      "prototype_face_ids": [
+        "Image 922_compress:face1",
+        "Image 001_compress:face2",
+        "Image 984_compress:face1",
+        "Image 948_compress:face8",
+        "Image 932_compress:face7"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 15,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0576,
+      "year_min": 1948,
+      "year_max": 1978,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 922_compress:face1": 1960,
+        "Image 001_compress:face2": 1978,
+        "Image 984_compress:face1": 1948,
+        "Image 948_compress:face8": 1968,
+        "Image 932_compress:face7": 1973
+      }
+    },
+    "ec55b4e8-ac3c-4209-a273-e96f7f85659c": {
+      "prototype_face_ids": [
+        "inbox_7ef78fea1635",
+        "inbox_4c646b9ae7c3"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.2112,
+      "year_min": 1938,
+      "year_max": 1938,
+      "collections": [
+        "Family Tree",
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_7ef78fea1635": 1938,
+        "inbox_4c646b9ae7c3": 1938
+      }
+    },
+    "58565113-b749-4f0f-a75b-994b725a1248": {
+      "prototype_face_ids": [
+        "Image 007_compress:face0"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1946,
+      "year_max": 1946,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 007_compress:face0": 1946
+      }
+    },
+    "925904af-af2c-49af-a721-e4b74a312182": {
+      "prototype_face_ids": [
+        "inbox_847f0c97be49",
+        "Image 928_compress:face0",
+        "Image 984_compress:face0",
+        "Image 927_compress:face1",
+        "inbox_ed0f53e3087c"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 18,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8446,
+      "year_min": 1948,
+      "year_max": 1966,
+      "collections": [
+        "Betty Capeluto Miami Collection",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_847f0c97be49": 1955,
+        "Image 928_compress:face0": 1966,
+        "Image 984_compress:face0": 1948,
+        "Image 927_compress:face1": 1962,
+        "inbox_ed0f53e3087c": 1951
+      }
+    },
+    "fa0152dd-a2eb-4044-b70b-fdb10a61d18b": {
+      "prototype_face_ids": [
+        "Image 917_compress:face1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1974,
+      "year_max": 1974,
+      "collections": [
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 917_compress:face1": 1974
+      }
+    },
+    "a2889099-2d75-42ee-93b4-81232b9f4e16": {
+      "prototype_face_ids": [
+        "inbox_5c6363fd8f94"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1942,
+      "year_max": 1942,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_5c6363fd8f94": 1942
+      }
+    },
+    "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5": {
+      "prototype_face_ids": [
+        "Image 968_compress:face6",
+        "inbox_46f784dc0db5"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0187,
+      "year_min": 1946,
+      "year_max": 1974,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "Image 968_compress:face6": 1974,
+        "inbox_46f784dc0db5": 1946
+      }
+    },
+    "2333130a-adca-4d30-8a98-e02619bcd96b": {
+      "prototype_face_ids": [
+        "inbox_d0d407a46932"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1946,
+      "year_max": 1946,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_d0d407a46932": 1946
+      }
+    },
+    "23de1618-512a-4e82-90c4-74b28dedb934": {
+      "prototype_face_ids": [
+        "inbox_ef31017b0210"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1946,
+      "year_max": 1946,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_ef31017b0210": 1946
+      }
+    },
+    "4e51cdf1-bb08-453d-8cac-18d898f22865": {
+      "prototype_face_ids": [
+        "inbox_aa093e7dba12"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1946,
+      "year_max": 1946,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_aa093e7dba12": 1946
+      }
+    },
+    "a772360a-64f6-4daf-8312-fcc7586304a7": {
+      "prototype_face_ids": [
+        "inbox_988e0e8b70d2",
+        "Image 968_compress:face5"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8651,
+      "year_min": 1946,
+      "year_max": 1974,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_988e0e8b70d2": 1946,
+        "Image 968_compress:face5": 1974
+      }
+    },
+    "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda": {
+      "prototype_face_ids": [
+        "inbox_3d0078a63002",
+        "Image 968_compress:face4"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.9661,
+      "year_min": 1946,
+      "year_max": 1974,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage",
+        "Vida Capeluto NYC Collection"
+      ],
+      "prototype_years": {
+        "inbox_3d0078a63002": 1946,
+        "Image 968_compress:face4": 1974
+      }
+    },
+    "38fce6ca-d309-477f-9b23-f7faeb47c6a7": {
+      "prototype_face_ids": [
+        "inbox_4eb02c7e058e"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1946,
+      "year_max": 1946,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_4eb02c7e058e": 1946
+      }
+    },
+    "7a7effee-4372-4da4-af08-1feaa1a3beca": {
+      "prototype_face_ids": [
+        "inbox_b20959df07eb"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1934,
+      "year_max": 1934,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_b20959df07eb": 1934
+      }
+    },
+    "52966904-f1e5-4025-bcf3-b249ca673be3": {
+      "prototype_face_ids": [
+        "inbox_b724bee71b58",
+        "inbox_f1d38909a5f1"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8915,
+      "year_min": 1968,
+      "year_max": 1970,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_b724bee71b58": 1968,
+        "inbox_f1d38909a5f1": 1970
+      }
+    },
+    "64096284-ace8-4790-aebb-a82ff1f288a5": {
+      "prototype_face_ids": [
+        "inbox_04a426269905",
+        "inbox_44254017d2da"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 1.3084,
+      "identity_dispersion": 1.3822,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_04a426269905": 1936,
+        "inbox_44254017d2da": null
+      }
+    },
+    "10e6bb34-cff6-4697-8a01-03571d15beb7": {
+      "prototype_face_ids": [
+        "inbox_797c4dc7f1f2"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_797c4dc7f1f2": 1936
+      }
+    },
+    "3cb17d23-10a2-4410-9e14-30da4487a80c": {
+      "prototype_face_ids": [
+        "inbox_881c37479192"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_881c37479192": 1936
+      }
+    },
+    "b1525892-5608-4033-bc8c-28db79b50875": {
+      "prototype_face_ids": [
+        "inbox_1c95d96e1452"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": 1936,
+      "year_max": 1936,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_1c95d96e1452": 1936
+      }
+    },
+    "7d6d0435-0dfa-48e0-b288-7d28f66fae52": {
+      "prototype_face_ids": [
+        "inbox_52b8a897c040",
+        "inbox_c918d3e31317"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 1.2972,
+      "identity_dispersion": 1.3046,
+      "year_min": 1954,
+      "year_max": 1954,
+      "collections": [
+        "Compare Upload",
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_52b8a897c040": 1954,
+        "inbox_c918d3e31317": null
+      }
+    },
+    "bd3a8685-e144-4240-9c83-144892f1d61e": {
+      "prototype_face_ids": [
+        "inbox_525e6b6315b6"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5544,
+      "quality_mean": 0.5544,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_525e6b6315b6": null
+      }
+    },
+    "a68bb689-345e-4f32-8d9f-8820e5233030": {
+      "prototype_face_ids": [
+        "inbox_0764ae9241e1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6006,
+      "quality_mean": 0.6006,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_0764ae9241e1": null
+      }
+    },
+    "96c749bb-621f-4299-ae97-2f436d3ca67a": {
+      "prototype_face_ids": [
+        "inbox_bc55a20f3bae",
+        "inbox_b757eea93e01"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 1.307,
+      "identity_dispersion": 1.4088,
+      "year_min": 1954,
+      "year_max": 1954,
+      "collections": [
+        "Compare Upload",
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_bc55a20f3bae": 1954,
+        "inbox_b757eea93e01": null
+      }
+    },
+    "9a69c74b-e154-414e-8404-d16f0edbf1ba": {
+      "prototype_face_ids": [
+        "inbox_10c102941239"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6275,
+      "quality_mean": 0.6275,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_10c102941239": null
+      }
+    },
+    "58eefdb3-7408-479e-898a-41e6276a070d": {
+      "prototype_face_ids": [
+        "inbox_38943505c1fc"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6157,
+      "quality_mean": 0.6157,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_38943505c1fc": null
+      }
+    },
+    "167c0251-3941-4f9c-9c08-4c8a9cd5aaa6": {
+      "prototype_face_ids": [
+        "inbox_805664720c8a"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5841,
+      "quality_mean": 0.5841,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_805664720c8a": null
+      }
+    },
+    "19b27503-3999-479d-8357-67b102ab427d": {
+      "prototype_face_ids": [
+        "inbox_550ea8022f92"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5842,
+      "quality_mean": 0.5842,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_550ea8022f92": null
+      }
+    },
+    "ca17e826-5286-484a-ad87-a92b190d5ee6": {
+      "prototype_face_ids": [
+        "inbox_93f5c5f852f6"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6111,
+      "quality_mean": 0.6111,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_93f5c5f852f6": null
+      }
+    },
+    "a13d0337-5e37-410b-83c8-df88cca1e159": {
+      "prototype_face_ids": [
+        "inbox_4f288e7defdf"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5872,
+      "quality_mean": 0.5872,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_4f288e7defdf": null
+      }
+    },
+    "41531191-8970-454d-b436-134ddd638e48": {
+      "prototype_face_ids": [
+        "inbox_a7e8083ad389"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6009,
+      "quality_mean": 0.6009,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_a7e8083ad389": null
+      }
+    },
+    "e88d6698-46af-478c-8106-45a1bd8cf747": {
+      "prototype_face_ids": [
+        "inbox_b6d2995b52da"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5915,
+      "quality_mean": 0.5915,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_b6d2995b52da": null
+      }
+    },
+    "a852c6ba-d3e0-49e4-9050-e69abed6cb86": {
+      "prototype_face_ids": [
+        "inbox_3534e1cc659d"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6187,
+      "quality_mean": 0.6187,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Family Tree"
+      ],
+      "prototype_years": {
+        "inbox_3534e1cc659d": null
+      }
+    },
+    "928e5bb4-aafe-456f-991b-ba1856070bb1": {
+      "prototype_face_ids": [
+        "inbox_3d3c1bbe9595"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6019,
+      "quality_mean": 0.6019,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_3d3c1bbe9595": null
+      }
+    },
+    "7a568700-d483-4930-aea4-eafb21f94d82": {
+      "prototype_face_ids": [
+        "inbox_c7029544a1b1"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.6094,
+      "quality_mean": 0.6094,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_c7029544a1b1": null
+      }
+    },
+    "4369c2f0-5c5e-43ff-9e47-1b6806a46531": {
+      "prototype_face_ids": [
+        "inbox_a56c556100a9"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_a56c556100a9": null
+      }
+    },
+    "8431131f-02aa-4fd2-be40-6a76e12a9bf3": {
+      "prototype_face_ids": [
+        "inbox_7185f4b78dbb"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 0.5971,
+      "quality_mean": 0.5971,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_7185f4b78dbb": null
+      }
+    },
+    "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33": {
+      "prototype_face_ids": [
+        "inbox_0c9e2c0e03f2",
+        "inbox_4d14675987dd"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 0.612,
+      "quality_mean": 0.5858,
+      "identity_dispersion": 1.3957,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Jews of Rhodes: Family Memories & Heritage"
+      ],
+      "prototype_years": {
+        "inbox_0c9e2c0e03f2": null,
+        "inbox_4d14675987dd": null
+      }
+    },
+    "e9ee215c-75fc-4306-af6d-e40853dee45e": {
+      "prototype_face_ids": [
+        "inbox_aca56b9475f5"
+      ],
+      "prototype_count": 1,
+      "candidate_face_count": 1,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.0,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Immigration Records"
+      ],
+      "prototype_years": {
+        "inbox_aca56b9475f5": null
+      }
+    },
+    "640c7838-5b53-40c1-8050-7f511f0c556b": {
+      "prototype_face_ids": [
+        "inbox_69e48d0c8d9d",
+        "inbox_dc4dcb87b9e7"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.4407,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_69e48d0c8d9d": null,
+        "inbox_dc4dcb87b9e7": null
+      }
+    },
+    "9a07b490-34fc-4f41-8111-e68a27dc782a": {
+      "prototype_face_ids": [
+        "inbox_b26f70e6461c",
+        "inbox_cecbad2c562c"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.4185,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_b26f70e6461c": null,
+        "inbox_cecbad2c562c": null
+      }
+    },
+    "abc00217-19fd-460f-85aa-f57ced7a2b7f": {
+      "prototype_face_ids": [
+        "inbox_d66279364a96",
+        "inbox_f430b3943b22"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.2688,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_d66279364a96": null,
+        "inbox_f430b3943b22": null
+      }
+    },
+    "429cf1b6-04be-475d-9a9d-a3f37dd2f1db": {
+      "prototype_face_ids": [
+        "inbox_876593de92a9",
+        "inbox_9ce4cb8f7bb6",
+        "inbox_f192c697729a",
+        "inbox_0941e1ca2961",
+        "inbox_e3cbb2666a7f"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 101,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.2509,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_876593de92a9": null,
+        "inbox_9ce4cb8f7bb6": null,
+        "inbox_f192c697729a": null,
+        "inbox_0941e1ca2961": null,
+        "inbox_e3cbb2666a7f": null
+      }
+    },
+    "65207728-9ee6-48c1-be68-a2da23354caf": {
+      "prototype_face_ids": [
+        "inbox_8453b5c302be",
+        "inbox_bc202fddb2b1",
+        "inbox_3be8d6d616d9",
+        "inbox_ba61c8577d53",
+        "inbox_58bbeccbc2a5"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 24,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 1.0567,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_8453b5c302be": null,
+        "inbox_bc202fddb2b1": null,
+        "inbox_3be8d6d616d9": null,
+        "inbox_ba61c8577d53": null,
+        "inbox_58bbeccbc2a5": null
+      }
+    },
+    "6a1657f4-0df4-4fd4-83ea-860732482421": {
+      "prototype_face_ids": [
+        "inbox_11285eee2e37",
+        "inbox_528b79282c72",
+        "inbox_95a99451997a",
+        "inbox_f10e42c52b89",
+        "inbox_8d3084346ecb"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 12,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.9152,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_11285eee2e37": null,
+        "inbox_528b79282c72": null,
+        "inbox_95a99451997a": null,
+        "inbox_f10e42c52b89": null,
+        "inbox_8d3084346ecb": null
+      }
+    },
+    "75ceaa7b-0edb-4fcb-8040-6a3a5993fd29": {
+      "prototype_face_ids": [
+        "inbox_6d9a46b7a5af",
+        "inbox_7c5498cbe1f4",
+        "inbox_64e05bfdfa99",
+        "inbox_32a2f7af6e05",
+        "inbox_5c6c5c588060"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 7,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.8293,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_6d9a46b7a5af": null,
+        "inbox_7c5498cbe1f4": null,
+        "inbox_64e05bfdfa99": null,
+        "inbox_32a2f7af6e05": null,
+        "inbox_5c6c5c588060": null
+      }
+    },
+    "85546ebf-75b9-4971-a9d4-b2ce2271bc19": {
+      "prototype_face_ids": [
+        "inbox_db308ac8b52f",
+        "inbox_32437a512faf",
+        "inbox_6b0b045a3e2e",
+        "inbox_5ffc128fb3e5",
+        "inbox_f5d1838652ec"
+      ],
+      "prototype_count": 5,
+      "candidate_face_count": 12,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.9872,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_db308ac8b52f": null,
+        "inbox_32437a512faf": null,
+        "inbox_6b0b045a3e2e": null,
+        "inbox_5ffc128fb3e5": null,
+        "inbox_f5d1838652ec": null
+      }
+    },
+    "475b2111-2928-4dab-880b-b6d227a3e353": {
+      "prototype_face_ids": [
+        "inbox_1aaefa955cfe",
+        "inbox_ca05252f7b8b"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.365,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_1aaefa955cfe": null,
+        "inbox_ca05252f7b8b": null
+      }
+    },
+    "5490d7a8-04b4-4460-852c-72fb68ee7e5d": {
+      "prototype_face_ids": [
+        "inbox_86f908dcc64f",
+        "inbox_4d967e0604bd"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.3114,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_86f908dcc64f": null,
+        "inbox_4d967e0604bd": null
+      }
+    },
+    "e24d3f7f-8930-479a-b525-8a36bba9fda0": {
+      "prototype_face_ids": [
+        "inbox_950e3ab67071",
+        "inbox_a08fadc9c08d"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.5012,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_950e3ab67071": null,
+        "inbox_a08fadc9c08d": null
+      }
+    },
+    "10aef910-9632-4a6c-a644-4551b6e91981": {
+      "prototype_face_ids": [
+        "inbox_9e2c3fd1f167",
+        "inbox_bb4ebf382d40"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.339,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_9e2c3fd1f167": null,
+        "inbox_bb4ebf382d40": null
+      }
+    },
+    "0ea528ac-01c0-451e-8089-24cae46c8e6a": {
+      "prototype_face_ids": [
+        "inbox_a1c2aea2c06f",
+        "inbox_3b7631da32ee"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.3937,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_a1c2aea2c06f": null,
+        "inbox_3b7631da32ee": null
+      }
+    },
+    "df2860e6-8038-4ae8-9359-9c6acc52ea8e": {
+      "prototype_face_ids": [
+        "inbox_f93096b46cb7",
+        "inbox_50a27898f074"
+      ],
+      "prototype_count": 2,
+      "candidate_face_count": 2,
+      "quality_max": 2.0,
+      "quality_mean": 2.0,
+      "identity_dispersion": 0.3694,
+      "year_min": null,
+      "year_max": null,
+      "collections": [
+        "Charles Fox Dayton Ohio Collection"
+      ],
+      "prototype_years": {
+        "inbox_f93096b46cb7": null,
+        "inbox_50a27898f074": null
+      }
+    }
+  },
+  "variants": {
+    "distance_only": {
+      "feature_names": [
+        "baseline_distance",
+        "baseline_rank",
+        "distance_gap_to_best",
+        "distance_gap_to_competitor"
+      ],
+      "metrics": {
+        "query_count": 121,
+        "baseline_top1_recall": 0.9917,
+        "reranker_top1_recall": 0.9917,
+        "baseline_top3_recall": 1.0,
+        "reranker_top3_recall": 1.0,
+        "baseline_auc": 0.9841,
+        "reranker_auc": 0.9992,
+        "year_gap_ge_20": {
+          "baseline_top1_recall": 1.0,
+          "reranker_top1_recall": 1.0
+        },
+        "year_gap_ge_30": {
+          "baseline_top1_recall": null,
+          "reranker_top1_recall": null
+        },
+        "dominant_lift_ratio": 2.0944,
+        "tail_recall_delta": 0.0,
+        "same_family_false_positive_rate": {
+          "baseline": 0.0,
+          "reranker": 0.0
+        }
+      }
+    },
+    "temporal": {
+      "feature_names": [
+        "baseline_distance",
+        "baseline_rank",
+        "distance_gap_to_best",
+        "distance_gap_to_competitor",
+        "query_quality",
+        "candidate_quality_max",
+        "candidate_quality_mean",
+        "candidate_face_count",
+        "prototype_count",
+        "identity_dispersion",
+        "nearest_year_gap",
+        "year_span_gap",
+        "age_at_query_year",
+        "age_out_of_bounds",
+        "same_collection",
+        "cross_collection"
+      ],
+      "metrics": {
+        "query_count": 121,
+        "baseline_top1_recall": 0.9917,
+        "reranker_top1_recall": 0.9917,
+        "baseline_top3_recall": 1.0,
+        "reranker_top3_recall": 1.0,
+        "baseline_auc": 0.9841,
+        "reranker_auc": 0.9989,
+        "year_gap_ge_20": {
+          "baseline_top1_recall": 1.0,
+          "reranker_top1_recall": 1.0
+        },
+        "year_gap_ge_30": {
+          "baseline_top1_recall": null,
+          "reranker_top1_recall": null
+        },
+        "dominant_lift_ratio": 2.0954,
+        "tail_recall_delta": 0.0,
+        "same_family_false_positive_rate": {
+          "baseline": 0.0,
+          "reranker": 0.0
+        }
+      }
+    },
+    "full": {
+      "feature_names": [
+        "baseline_distance",
+        "baseline_rank",
+        "distance_gap_to_best",
+        "distance_gap_to_competitor",
+        "query_quality",
+        "candidate_quality_max",
+        "candidate_quality_mean",
+        "candidate_face_count",
+        "prototype_count",
+        "identity_dispersion",
+        "nearest_year_gap",
+        "year_span_gap",
+        "age_at_query_year",
+        "age_out_of_bounds",
+        "same_collection",
+        "cross_collection",
+        "kinship_is_parent_child",
+        "kinship_is_sibling",
+        "kinship_is_skip_generation",
+        "kinship_temporal_overlap",
+        "kinship_age_delta"
+      ],
+      "metrics": {
+        "query_count": 121,
+        "baseline_top1_recall": 0.9917,
+        "reranker_top1_recall": 0.9917,
+        "baseline_top3_recall": 1.0,
+        "reranker_top3_recall": 1.0,
+        "baseline_auc": 0.9841,
+        "reranker_auc": 0.9987,
+        "year_gap_ge_20": {
+          "baseline_top1_recall": 1.0,
+          "reranker_top1_recall": 1.0
+        },
+        "year_gap_ge_30": {
+          "baseline_top1_recall": null,
+          "reranker_top1_recall": null
+        },
+        "dominant_lift_ratio": 2.3491,
+        "tail_recall_delta": 0.0,
+        "same_family_false_positive_rate": {
+          "baseline": 0.0,
+          "reranker": 0.0
+        }
+      }
+    }
+  },
+  "best_variant": "distance_only",
+  "trained_at": "2026-03-15T05:33:03.795720+00:00",
+  "git_commit": "7d961f674a7ee00a244e22224648c3757bf1a660",
+  "phase2_gate": {
+    "passes": false,
+    "age20_improvement": 0.0,
+    "same_family_ok": true,
+    "dominant_bias_ok": true,
+    "tail_recall_ok": true,
+    "age20_ok": false
+  },
+  "artifact_manifest": {
+    "artifact_version": 1,
+    "trained_at": "2026-03-15T05:33:03.795720+00:00",
+    "git_commit": "7d961f674a7ee00a244e22224648c3757bf1a660",
+    "best_variant": "distance_only",
+    "feature_names": [
+      "baseline_distance",
+      "baseline_rank",
+      "distance_gap_to_best",
+      "distance_gap_to_competitor"
+    ],
+    "metrics": {
+      "query_count": 121,
+      "baseline_top1_recall": 0.9917,
+      "reranker_top1_recall": 0.9917,
+      "baseline_top3_recall": 1.0,
+      "reranker_top3_recall": 1.0,
+      "baseline_auc": 0.9841,
+      "reranker_auc": 0.9992,
+      "year_gap_ge_20": {
+        "baseline_top1_recall": 1.0,
+        "reranker_top1_recall": 1.0
+      },
+      "year_gap_ge_30": {
+        "baseline_top1_recall": null,
+        "reranker_top1_recall": null
+      },
+      "dominant_lift_ratio": 2.0944,
+      "tail_recall_delta": 0.0,
+      "same_family_false_positive_rate": {
+        "baseline": 0.0,
+        "reranker": 0.0
+      }
+    },
+    "top_k": 5,
+    "max_prototypes": 5,
+    "model_path": "model.joblib"
+  }
+}

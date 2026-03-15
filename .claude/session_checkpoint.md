@@ -1,32 +1,39 @@
-# Session 103 Checkpoint — Phase 2 Complete
+# Session 103 Checkpoint — Phase 3 Complete
 
 ## What was done
-- Added ML run tracking to `scripts/cluster_new_faces.py`:
-  - `create_ml_run()` — inserts ml_runs row at pipeline start
-  - `write_proposals_to_supabase()` — batch-writes proposals to ml_proposals (100/chunk)
-  - `complete_ml_run()` — updates status=completed with result_summary + duration_ms
-  - `_get_supabase_client()` — safe import wrapper, returns None if not configured
-- All tracking is fire-and-forget: silently skips when Supabase unavailable
-- Ran baseline clustering dry-run: 470 proposals (86 VERY HIGH, 384 HIGH)
-- Saved results to `docs/ml/run_results/baseline_run_103.md`
-- 11 new tests in `tests/test_cluster_ml_run_tracking.py`
+- Trained longitudinal shadow reranker via `scripts/evaluate_longitudinal_shadow.py --force-save`
+  - Best variant: `distance_only` — temporal/kinship features added noise
+  - Phase 2 gate FAILED: baseline already at 99.17% top-1, no age-gap improvement
+  - Artifact saved to `rhodesli_ml/artifacts/longitudinal_shadow/` (model.joblib + manifest.json)
+- Ran clustering with `--scorer longitudinal-shadow --dry-run`: 470 proposals, identical to baseline
+- Created `scripts/compare_ml_runs.py`:
+  - Compares two proposals files or two Supabase run_ids
+  - Outputs: target changes, added/removed proposals, tier changes, score deltas
+  - Markdown formatted output with assessment
+- Comparison result: **Neutral** — 0 changes across all 470 proposals
+- FB-147 analysis: 1 Big Leon proposal at distance 0.9455, not affected by reranker
+  - Cross-community false positives need community-aware filtering, not reranking
+- 8 new tests in `tests/test_compare_ml_runs.py` — all pass
+- Report: `docs/ml/run_results/reranker_comparison_103.md`
 
 ## Key files changed
-- `scripts/cluster_new_faces.py` — ML run tracking wired into main()
-- `tests/test_cluster_ml_run_tracking.py` — new test file (11 tests)
-- `docs/ml/run_results/baseline_run_103.md` — baseline run report
-- `docs/session_logs/session-103-log.md` — phase 2 marked done
+- `scripts/compare_ml_runs.py` — new comparison script
+- `tests/test_compare_ml_runs.py` — 8 tests
+- `docs/ml/run_results/reranker_comparison_103.md` — comparison report
+- `rhodesli_ml/artifacts/longitudinal_shadow/` — trained model artifact
+- `evaluation/baselines/longitudinal_shadow_report.json` — training metrics
+- `docs/session_logs/session-103-log.md` — phase 3 marked done
 
-## Baseline run stats
-- 470 proposals total, 42 zero-distance (pre-grouped), 428 real
-- Tier1 (VERY HIGH): 86, Tier2 (HIGH): 384
-- Top targets: Charles Fox (165), Esther Burd Fox (101), Albert Fox (95), Roland Fox (66)
-- 0 cross-community matches flagged
-- 3413 identities, 2852 embeddings, 99 confirmed
+## Key findings
+- Reranker gate does NOT pass — baseline is too strong for improvement
+- `distance_only` variant won (temporal features don't help at 99 confirmed identities)
+- FB-147 requires community-scoped filtering in Phase 4, not reranking
+- All reranker scores >0.91 (high confidence agreeing with baseline)
 
-## Issues found
-- Supabase client returns None locally (expected — no credentials in .env)
-- Tracking will activate on Railway where SUPABASE_URL is set
+## Pre-existing test failures (not introduced by this phase)
+- `test_browse_cards_use_unified_card` — noted in Phase 1
+- `test_browse_cards_have_profile_link` — same class
+- `test_identified_badge_has_title_attribute` — unrelated UX test
 
 ## Next phase
-- Phase 3: Run reranker comparison
+- Phase 4: Community-scoped suggestions

@@ -1,0 +1,38 @@
+{
+  "artifact_version": 1,
+  "trained_at": "2026-03-15T05:33:03.795720+00:00",
+  "git_commit": "7d961f674a7ee00a244e22224648c3757bf1a660",
+  "best_variant": "distance_only",
+  "feature_names": [
+    "baseline_distance",
+    "baseline_rank",
+    "distance_gap_to_best",
+    "distance_gap_to_competitor"
+  ],
+  "metrics": {
+    "query_count": 121,
+    "baseline_top1_recall": 0.9917,
+    "reranker_top1_recall": 0.9917,
+    "baseline_top3_recall": 1.0,
+    "reranker_top3_recall": 1.0,
+    "baseline_auc": 0.9841,
+    "reranker_auc": 0.9992,
+    "year_gap_ge_20": {
+      "baseline_top1_recall": 1.0,
+      "reranker_top1_recall": 1.0
+    },
+    "year_gap_ge_30": {
+      "baseline_top1_recall": null,
+      "reranker_top1_recall": null
+    },
+    "dominant_lift_ratio": 2.0944,
+    "tail_recall_delta": 0.0,
+    "same_family_false_positive_rate": {
+      "baseline": 0.0,
+      "reranker": 0.0
+    }
+  },
+  "top_k": 5,
+  "max_prototypes": 5,
+  "model_path": "model.joblib"
+}
