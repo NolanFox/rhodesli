@@ -171,6 +171,12 @@ Nolan drives triage. Claude fixes or logs.
 - Wire to nav or remove — invisible features are worse than missing features
 - **BACKLOG:** UX-081 (rethink or remove), PIPELINE-001 (audit incremental clustering reliability)
 
+### FB-143: Enrichment panel doesn't show existing GEDCOM link after merge
+- **Severity:** P2 (UX confusion)
+- **Context:** After merging 8 faces into Esther Burd Fox (who is already GEDCOM-linked), the enrichment panel still shows "Link to Family Tree" with a search field as if she's not linked. The "Linked" badge only appears if you manually search "Esther Burd" in the GEDCOM search. The panel should detect the existing link and show "Already linked to: Esther Burd (b. 1900 — d. 1966)" immediately, with an option to change/unlink.
+- **Fix:** After merge, reload GEDCOM link status for the target identity and render `_person_gedcom_link_section` (which shows "Linked to Family Tree" with unlink button) instead of `_gedcom_link_panel` (which shows the search).
+- **BACKLOG:** UX-092
+
 ### FB-142: Keyboard shortcuts may cause accidental actions + need usage logging
 - **Severity:** P2 (data safety / analytics)
 - **Context:** Nolan rarely uses keyboard shortcuts (Y/N/S/D/Z) and is more concerned about accidental presses — e.g., pressing Y while typing something else could confirm a cluster unintentionally. Unclear if anyone uses hotkeys vs. clicking buttons.

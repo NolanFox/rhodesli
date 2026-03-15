@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.4] — 2026-03-14 (Session 101: Fox Triage P1 Fixes + Performance + Triage Sprint)
+
+### Added
+- **GEDCOM Link auto-renames** — clicking "Link" in enrichment panel auto-saves GEDCOM name for unnamed identities (FB-121)
+- **Cross-community badges** on speed-run suggestions and search results (FB-100)
+- **GEDCOM link** embedded inline in enrichment panel (FB-110)
+- **Merge confirmation** with face count, no auto-advance (FB-103)
+- **Enrichment panel reorder** — merge search before name input (FB-104)
+- **Admin context links** — person links from speed-run include `?from=admin` (FB-106)
+
+### Fixed
+- **CONFIRMED badge** shown regardless of name for CONFIRMED identities (FB-113)
+- **Performance** — Supabase sync moved to background thread, merge dropped from 4s to near-instant (FB-105)
+- **Charles Fox name restored** — production rename via API after name loss (FB-122)
+- **Test assertion** — enrichment panel test updated for "Done — Next Cluster" button text
+
+### Discovered (22 feedback items from triage sprint)
+- **P0:** Speed Loop tags don't save (FB-141), no connected triage flow (FB-135), performance still too slow (FB-120/127)
+- **P1:** Speed Loop broken (alignment, Identify Mode cosmetic-only), features not wired to nav (Lesson 138 recurring), Rhodes data in Fox Family (FB-129)
+- **Full feedback:** `docs/feedback/2026-03-14-fox-triage-round2.md`
+
+### Verification
+- 7/7 browser verified (Phase 5)
+- 3 deploys SUCCESS
+- 286 targeted tests pass, 205 GEDCOM tests pass
+
 ## [Session 100g] — 2026-03-14 (Session 100g: Session 100 Closeout)
 
 ### Documentation
