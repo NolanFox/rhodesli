@@ -19,10 +19,10 @@
 COUNTER_FILE=".claude/commits_since_clear.txt"
 CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
 
-# Block after 2+ commits without /clear
-# One commit per conversation turn is normal (commit the phase).
-# Two commits means Claude is working across phase boundaries without clearing.
-if [ "$CURRENT" -ge 2 ]; then
+# Block after 1+ commits without /clear
+# Any commit means a phase was completed — /clear before starting the next.
+# Threshold was 2 but that was too lenient (Lesson 140).
+if [ "$CURRENT" -ge 1 ]; then
     echo "BLOCKED: $CURRENT commits since last /clear." >&2
     echo "You MUST /clear before editing any more files." >&2
     echo "After /clear, reset counter: echo 0 > .claude/commits_since_clear.txt" >&2

@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-138 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+139 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -180,3 +180,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 112 | **Community-scoped pages must filter ALL sections — GEDCOM triage showed Rhodes people on Fox Family page** |
 | 113 | **Cross-community badge must check BOTH communities — identity in both should show no badge, not wrong badge** |
 | 114 | **os.getenv("DATA_DIR") ≠ core.config.DATA_DIR on Railway — STORAGE_DIR derivation only in config.py** |
+| 140 | **Hooks that exit 0 are advisory only — Claude ignores warnings, must exit 2 to block** |
