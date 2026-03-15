@@ -1,6 +1,11 @@
--- Session 102: GEDCOM trigram index for fast name search (PERF-006)
--- Run against Supabase SQL editor
--- Requires pg_trgm extension
+-- Migration: Add trigram indexes for GEDCOM name search
+-- Context: FB-120 / PERF-006 — GEDCOM search takes ~1 minute, needs <3s
+-- The pg_trgm extension enables fast fuzzy/ILIKE searches via GIN indexes.
+--
+-- Run against Supabase Postgres:
+--   psql $DATABASE_URL -f scripts/migrations/add_gedcom_trigram_index.sql
+--
+-- CONCURRENTLY avoids table locks on production.
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 

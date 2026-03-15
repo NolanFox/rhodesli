@@ -665,13 +665,17 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
     Returns (results_page, total_count) where results_page is a list of dicts
     with match info, sorted by relevance.
     """
-    if not query or len(query.strip()) < 2:
+    if not query or len(query.strip()) < 3:
         return [], 0
 
+    import time as _time
+
+    _t0 = _time.monotonic()
     individuals = _query_gedcom_search_candidates(query)
     if not individuals:
         individuals = _main_mod._load_gedcom_individuals()
     if not individuals:
+        logger.info("gedcom_search", gedcom_search_ms=0, query=query.strip(), result_count=0, source="empty")
         return [], 0
 
     query_lower = query.strip().lower()
@@ -794,12 +798,20 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
     # Sort by score descending, then by name
     results.sort(key=lambda x: (-x["score"], x["full_name"]))
     total = len(results)
+    _elapsed_ms = round((_time.monotonic() - _t0) * 1000, 1)
+    logger.info(
+        "gedcom_search",
+        gedcom_search_ms=_elapsed_ms,
+        query=query.strip(),
+        result_count=total,
+        candidates_scanned=len(individuals),
+    )
     return results[offset : offset + limit], total
 
 
 def _query_gedcom_search_candidates(query: str, candidate_limit: int = 500) -> list[dict]:
     """Prefilter GEDCOM candidates in Supabase before fuzzy scoring in Python."""
-    if not query or len(query.strip()) < 2:
+    if not query or len(query.strip()) < 3:
         return []
 
     query_lower = query.strip().lower()
@@ -963,7 +975,8 @@ def _gedcom_link_panel(identity_id: str, identity_name: str) -> Div:
                 placeholder="Search by name...",
                 cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm",
                 hx_get=f"/api/gedcom/search?identity_id={identity_id}",
-                hx_trigger="input changed delay:300ms, load",
+                hx_trigger="input changed delay:300ms",
+                minlength="3",
                 hx_target=f"#gedcom-results-{identity_id}",
                 hx_include="this",
             ),

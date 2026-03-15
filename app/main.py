@@ -1074,8 +1074,10 @@ def load_registry():
         and _registry_cache_key == cache_key
         and (now - _registry_cache_ts) < _REGISTRY_CACHE_TTL
     ):
+        logging.debug("registry_cache_hit ttl_remaining=%.1fs", _REGISTRY_CACHE_TTL - (now - _registry_cache_ts))
         return _registry_cache
 
+    logging.debug("registry_cache_miss source=%s", DATA_SOURCE)
     if DATA_SOURCE == "postgres":
         try:
             registry = IdentityRegistry.load_from_postgres()
@@ -1083,6 +1085,7 @@ def load_registry():
                 _registry_cache = registry
                 _registry_cache_ts = now
                 _registry_cache_key = cache_key
+                logging.debug("registry_cache_populated source=postgres count=%d", len(registry._identities))
                 return registry
             logging.warning("Postgres load returned None, falling back to JSON")
         except Exception as e:
@@ -1128,6 +1131,14 @@ def save_registry(registry, confirmed_identity_info=None):
     registry_dict = getattr(registry, "__dict__", None)
     if registry_dict is not None:
         registry_dict.pop("_face_identity_lookup_cache", None)
+
+    # Invalidate neighbors cache — stale after any identity change
+    try:
+        from app.identity_routes import invalidate_neighbors_cache
+
+        invalidate_neighbors_cache()
+    except ImportError:
+        pass
 
     if DATA_SOURCE == "postgres":
         # Postgres write path: sync overrides inline (fast), batch write in background
