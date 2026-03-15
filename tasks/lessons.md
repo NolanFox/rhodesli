@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-143 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+144 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -139,6 +139,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 138 | **Features built but never linked from navigation are invisible to users** |
 | 141 | **Never git-add production-origin data files — 6th occurrence of deploy-overwrite pattern (Lessons 56→69→78→85→141)** |
 | 142 | **Supabase JSONB columns can silently store string-encoded arrays — guard reads AND writes** |
+| 144 | **DATA_SOURCE split-brain — ingest writes JSON, production reads Supabase, photos vanish** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

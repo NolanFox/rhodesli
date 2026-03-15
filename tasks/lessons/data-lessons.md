@@ -128,6 +128,13 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Prevention:** (1) Trust .gitignore. (2) Production-origin files need API/UI creation, not git push. (3) The `data/*` allowlist in .gitignore is the canonical list of git-safe data files.
 - **See also:** Lessons 56, 69, 78, 85, 133; AD-134 (safety gate), AD-135 (structural fix)
 
+### Lesson 144: DATA_SOURCE split-brain — ingest writes JSON, production reads Supabase, photos vanish
+- **Mistake (Session 104b):** Robert Mattatia photos ingested locally → written to photo_index.json → pushed to production via sync API → photo_index.json updated on disk. But production has `DATA_SOURCE=postgres`, so `load_photo_registry()` reads from Supabase `photos` table. Photos weren't in Supabase → invisible in workstation grid, no metadata, no source, no community assignment. Required 4 separate debugging rounds across the session.
+- **The chain:** (1) Ingest pipeline only writes JSON. (2) Shadow-write to Supabase is fire-and-forget, failures invisible. (3) `/api/sync/push` writes JSON only, not Supabase. (4) `_invalidate_all_caches()` missed `_photo_registry_cache`. (5) Community assignment is manual. Each gap individually wouldn't have been fatal; together they created a complete data blackout.
+- **Rule:** When `DATA_SOURCE=postgres`, EVERY write path must reach Supabase or the data doesn't exist on production. "Written to JSON" is NOT "shipped" when the app reads from Postgres.
+- **Prevention:** Session 105 — sync push writes to Supabase, shadow-writes become synchronous when strict=True, auto-community-assignment on ingest, startup parity check.
+- **See also:** Lesson 136 (fire-and-forget data loss), Lesson 142 (JSONB type coercion), AD-135 (data in Supabase)
+
 ### Lesson 142: Supabase JSONB columns can silently store string-encoded arrays — always guard reads AND writes
 - **Mistake (Session 104b):** 20 Robert Mattatia identity rows had `anchor_ids` stored as the string `'["inbox_e8b9205ffaa7"]'` instead of the JSONB array `["inbox_e8b9205ffaa7"]`. When `load_from_postgres()` read these, Python got a `str`, and iterating it yielded individual characters (`[`, `"`, `i`, `n`, ...) instead of face IDs. `get_identity_for_face()` returned None → all faces showed "Unidentified" on production.
 - **Root cause:** The Supabase Python client can accept both lists and strings for JSONB columns. If the caller passes a string (e.g., from JSON that was double-serialized), Supabase stores it as-is. The `shadow_write_identities_batch` path didn't validate types before write.
