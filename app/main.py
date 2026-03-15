@@ -3641,12 +3641,16 @@ def _invalidate_all_caches():
     global _photo_cache, _face_to_photo_cache, _photo_id_aliases
     global _date_labels_cache, _photo_locations_cache
     global _registry_cache
+    global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
     _photo_cache = None
     _face_to_photo_cache = None
     _photo_id_aliases = None
     _date_labels_cache = None
     _photo_locations_cache = None
     _registry_cache = None
+    _community_photo_ids_cache = {}
+    _community_identity_ids_cache = {}
+    _community_ids_cache_ts = 0.0
 
 
 def _upload_new_files_to_r2(data_dir: Path, job_id: str):
