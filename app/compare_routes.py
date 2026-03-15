@@ -3800,6 +3800,133 @@ def post(result_id: str, note: str = "", sess=None):
     )
 
 
+@rt("/api/compare/create-result")
+def post(
+    source_face_id: str = "",
+    target_face_id: str = "",
+    query_name: str = "",
+    source: str = "",
+    sess=None,
+):
+    """Create a shareable comparison result from two face IDs (admin only).
+
+    Returns JSON with the result_id and share_url. Used for programmatic
+    comparison creation (e.g., Deep Comparison, batch analysis).
+
+    Args:
+        source_face_id: Face ID of the source face
+        target_face_id: Face ID of the target face
+        query_name: Human-readable description (e.g., "Robert Mattatia comparison")
+        source: Where this comparison was created from (e.g., "session-104", "deep-comparison")
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not source_face_id or not target_face_id:
+        return JSONResponse({"error": "source_face_id and target_face_id are required"}, status_code=400)
+
+    _main_mod._build_caches()
+
+    # Compute distance between the two faces
+    from core.neighbors import get_neighbors
+
+    source_emb = None
+    target_emb = None
+    embs = np.load(_main_mod.data_path / "embeddings.npy", allow_pickle=True)
+    from app.utils import generate_face_id as _gen_fid
+
+    for e in embs:
+        fid = e.get("face_id", "")
+        if not fid:
+            fid = _gen_fid(e.get("filename", ""), e.get("bbox", ""))
+        mu = e.get("mu")
+        if mu is not None:
+            flat = np.array(mu, dtype=np.float32).flatten()
+            if fid == source_face_id:
+                source_emb = flat
+            elif fid == target_face_id:
+                target_emb = flat
+
+    if source_emb is None or target_emb is None:
+        return JSONResponse({"error": "One or both face IDs not found in embeddings"}, status_code=404)
+
+    distance = float(np.linalg.norm(source_emb - target_emb))
+
+    # Look up identity names
+    source_name = "Unknown"
+    target_name = "Unknown"
+    source_identity_id = ""
+    target_identity_id = ""
+    identities = _main_mod.load_registry()
+    for iid, idata in identities.items():
+        all_faces = idata.get("anchor_ids", []) + idata.get("candidate_ids", [])
+        if source_face_id in all_faces:
+            source_name = idata.get("name", "Unknown")
+            source_identity_id = iid
+        if target_face_id in all_faces:
+            target_name = idata.get("name", "Unknown")
+            target_identity_id = iid
+
+    # Look up photo IDs
+    source_photo_id = _main_mod._face_to_photo_cache.get(source_face_id, "")
+    target_photo_id = _main_mod._face_to_photo_cache.get(target_face_id, "")
+
+    # Compute confidence
+    confidence_pct = max(0, min(100, int((1.5 - distance) / 1.5 * 100)))
+    if distance < 0.85:
+        tier = "VERY_HIGH"
+    elif distance < 1.10:
+        tier = "HIGH"
+    elif distance < 1.30:
+        tier = "LOW"
+    else:
+        tier = "NONE"
+
+    rid = _main_mod._generate_result_id()
+    result_data = {
+        "result_id": rid,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "query_type": "cross_photo_comparison",
+        "query_name": query_name or f"{source_name} vs {target_name}",
+        "query_face_id": source_face_id,
+        "photo_id": source_photo_id,
+        "face_ids": [source_face_id],
+        "reference_person": {
+            "identity_id": target_identity_id,
+            "name": target_name,
+        },
+        "source": source or "api",
+        "matches": [
+            {
+                "face_id": target_face_id,
+                "identity_id": target_identity_id,
+                "identity_name": target_name,
+                "distance": round(distance, 4),
+                "confidence_pct": confidence_pct,
+                "tier": tier,
+            }
+        ],
+        "responses": [],
+    }
+
+    result_id = _main_mod._save_comparison_result(result_data)
+    site_url = getattr(_main_mod, "SITE_URL", "https://rhodesli.nolanandrewfox.com")
+    share_url = f"{site_url}/compare/result/{result_id}"
+
+    return JSONResponse(
+        {
+            "result_id": result_id,
+            "share_url": share_url,
+            "distance": round(distance, 4),
+            "confidence_pct": confidence_pct,
+            "tier": tier,
+            "source_name": source_name,
+            "target_name": target_name,
+        }
+    )
+
+
 @rt("/compare/pair")
 def get(sess=None):
     """Two-photo face comparison — upload two photos, select a face in each,
