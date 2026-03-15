@@ -3637,17 +3637,26 @@ _photo_id_aliases = None  # Maps photo_index.json IDs → SHA256 cache IDs
 
 
 def _invalidate_all_caches():
-    """Reset all in-memory caches so data is reloaded from disk."""
+    """Reset ALL in-memory caches so data is reloaded from disk.
+
+    IMPORTANT: Every cached object that reads from data files MUST be
+    cleared here. Missing a cache causes stale data after sync pushes.
+    Session 104b: _photo_registry_cache and community caches were missed,
+    causing Robert Mattatia photos to show without metadata.
+    """
     global _photo_cache, _face_to_photo_cache, _photo_id_aliases
     global _date_labels_cache, _photo_locations_cache
-    global _registry_cache
+    global _registry_cache, _photo_registry_cache
     global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
+    global _face_data_cache
     _photo_cache = None
     _face_to_photo_cache = None
     _photo_id_aliases = None
     _date_labels_cache = None
     _photo_locations_cache = None
     _registry_cache = None
+    _photo_registry_cache = None
+    _face_data_cache = None
     _community_photo_ids_cache = {}
     _community_identity_ids_cache = {}
     _community_ids_cache_ts = 0.0
