@@ -9,8 +9,8 @@ Prompt: docs/prompts/session-101-prompt.md
 - [x] Phase 3: Cross-Community Badge + Admin Links (FB-100 + FB-106) — commit cb01fd6
 - [x] Phase 4: Performance (FB-105) — commit 6161eb3, then ba8443f (non-blocking save)
 - [x] Phase 5: Deploy + Browser Verify — 2 deploys SUCCESS, 7/7 browser verified (b122bb0)
-- [x] Phase 6: Triage Sprint with Nolan — 5 feedback items (FB-120-124), 2 fixed, 3 BACKLOG
-- [ ] Phase 7: Session Closeout
+- [x] Phase 6: Triage Sprint with Nolan — 24 feedback items (FB-120-143), 2 fixed live, rest BACKLOG. Triage stopped early: 114 Rhodes photos polluting Fox Family queue (DATA-019 P0).
+- [x] Phase 7: Session Closeout — assessment, CHANGELOG, ROADMAP, session 102 prompt+context written
 
 ## Browser Verification Results
 1. [x] FB-104: Merge search "Is this an existing person?" appears BEFORE name input
