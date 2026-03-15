@@ -3,7 +3,7 @@
 ## Predecessor
 - Context: `docs/session_context/session-103-context.md`
 - Prior: `docs/session_context/session-102-context.md`
-- Feedback: FB-147, FB-148 (from Session 102 triage sprint)
+- Feedback: FB-147 through FB-169 (23 items from Session 102/103 triage — see context file Parts 2+4)
 - Current: v0.99.5, ~4296 tests, 941 photos, 1922 active identities, 91 confirmed
 
 ## Goal
@@ -191,13 +191,39 @@ No more PRDs. No more planning docs. Run code, measure results, report numbers.
 
 **Re-read this phase from `docs/prompts/session-103-prompt.md` after /clear.**
 
-**Goal:** Fix any remaining triage feedback from Nolan's Session 102 Phase 8.
+**Goal:** Fix triage feedback from Session 102/103 (FB-147 through FB-169, 23 items).
 
-Check `docs/feedback/2026-03-15-fox-triage-round3.md` for additional items beyond FB-147/148.
+All feedback is in `docs/session_context/session-103-context.md` Parts 2 and 4.
+
+**Priority order for this phase:**
+
+P0 (BROKEN functionality):
+- FB-168: Tag search click doesn't assign identity — blocks all manual tagging from photo page
+- FB-150: Speed Loop lost face card navigation (REGRESSION)
+
+P1 (Wrong data shown):
+- FB-153: /identify/ shows wrong community for Fox Family identity
+- FB-169: Esther Burd Fox label shows "Unidentified" (may be caused by FB-168)
+- FB-159/160: Confirmed identity ranks below unnamed fragments in similar panel
+- FB-162: Tag search doesn't prioritize confirmed/same-community identities
+- FB-161: Dismissed identities re-appear in speed-run queue
+
+P2 (UX improvements):
+- FB-147: Big Leon recurring (also addressed by Phase 4 community scoping)
+- FB-148: Cross-community badge "From" prefix (also Phase 4)
+- FB-149: Post-merge auto-advance
+- FB-151/152: Suggestion name truncation + no inspect link
+- FB-154/156: Finding identity by number too hard / search doesn't match numbers
+- FB-155: Admin queue link missing community prefix (COMMUNITY-015 systemic)
+- FB-157/158: Search results missing links and match scores
+- FB-163/164: No community badge on tag search + "Go to Face Card" wrong target
+- FB-165: Speed-run needs source photo toggle
+- FB-166/167: GEDCOM link context + birth year inconsistency
 
 For each item:
-1. Can it be fixed in <10 min? → Fix immediately, commit
-2. Cannot be fixed quickly? → Create BACKLOG entry with specifics
+1. P0 items: fix immediately
+2. P1 items: fix if <15 min each, otherwise BACKLOG
+3. P2 items: BACKLOG entry with specifics
 
 **Commit:** `fix(ux): triage feedback fixes (FB-NNN)`
 **/clear after commit**
@@ -257,5 +283,8 @@ Session 103 is done when:
 4. Community-scoped suggestions deployed and verified (Big Leon not appearing for Fox clusters)
 5. Cross-community badge text fixed
 6. Session 102 test gaps closed (TEST-003, TEST-004, OBS-003)
-7. All tests pass
-8. Assessment includes ML comparison numbers
+7. **FB-168 FIXED: Tag search click actually assigns identity to face** (P0 — blocks all manual tagging)
+8. **FB-150 FIXED: Speed Loop face card navigation restored** (P0 — regression)
+9. All tests pass
+10. Assessment includes ML comparison numbers
+11. Remaining FB items (FB-147-169) either fixed or in BACKLOG with specifics

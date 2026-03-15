@@ -175,6 +175,21 @@ Additionally, Session 102's triage sprint (Phase 8) produced UX feedback that ne
 - GEDCOM file and Ancestry show different birth years — data quality issue in GEDCOM import
 - Multiple date records may exist; rendering doesn't clarify which is canonical
 
+### FB-168: Tag search click doesn't assign identity to face (BROKEN)
+- On photo page `/c/fox-family/photo/11c16a8e84f29d92`, clicking a face bbox, searching "Esther", clicking "Esther Burd Fox" — nothing happens
+- Tag assignment POST endpoint: `app/identity_routes.py` `/api/face/tag` (line ~908)
+- Search dropdown: `app/identity_routes.py` `/api/face/tag-search` (line ~736)
+- Potential: URL encoding of face_id with special chars (colons, spaces) may cause mismatch
+- Potential: merge succeeds but HTMX swap doesn't update the label
+- This blocks all manual face tagging from the photo page
+
+### FB-169: Esther Burd Fox face label shows "Unidentified" instead of name
+- Face bbox on photo shows "Unidentified" despite being merged into Esther Burd Fox (26 faces, CONFIRMED)
+- Identity lookup: `app/page_routes.py` line ~3734, `get_identity_for_face(registry, face_id)`
+- If face isn't properly in the target identity's anchor/candidate list, lookup falls back to "Unidentified"
+- May indicate FB-168 merge never actually completed, or face exists in a stale/orphan identity
+- Check: does identity record for Esther Burd Fox include this specific face_id in anchor_ids or candidate_ids?
+
 ---
 
 ## Part 5: Execution Strategy
