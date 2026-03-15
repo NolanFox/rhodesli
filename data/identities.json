@@ -1346,7 +1346,7 @@
       "state": "SKIPPED",
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.551294+00:00",
-      "updated_at": "2026-03-13T15:32:19.785018+00:00",
+      "updated_at": "2026-03-15T04:49:07.982746+00:00",
       "version_id": 2,
       "identity_id": "998c9560-9e3b-404a-bd1a-fa0074a20b2a",
       "display_name": null,
@@ -2131,7 +2131,7 @@
         "inbox_88ecd8c22c6d"
       ],
       "created_at": "2026-02-11T00:55:56.189642+00:00",
-      "updated_at": "2026-03-10T20:18:21.635739+00:00",
+      "updated_at": "2026-03-15T05:02:16.572665+00:00",
       "version_id": 4,
       "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
       "display_name": null,
@@ -2416,7 +2416,7 @@
       },
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.549837+00:00",
-      "updated_at": "2026-03-10T20:18:21.635739+00:00",
+      "updated_at": "2026-03-15T04:36:44.290671+00:00",
       "version_id": 5,
       "identity_id": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
       "display_name": null,
@@ -2886,11 +2886,13 @@
         "inbox_0b5fd3625bbe"
       ],
       "created_at": "2026-02-10T23:27:00.080399+00:00",
-      "updated_at": "2026-03-10T20:18:21.635739+00:00",
-      "version_id": 4,
+      "updated_at": "2026-03-15T05:19:34.819198+00:00",
+      "version_id": 5,
       "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
       "display_name": null,
-      "negative_ids": [],
+      "negative_ids": [
+        "identity:89ef6a3d-0b01-409c-8a09-da7e34c3f549"
+      ],
       "candidate_ids": []
     },
     "28451fea-20d8-45f4-be8b-81b14147e5bf": {
@@ -3371,10 +3373,40 @@
         "death_date_full": "26 May 2019",
         "ancestry_person_id": "132123770992"
       },
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_39b7e2ec53bb",
+        "inbox_19418c454275",
+        "inbox_c6291f3fb8cd",
+        "inbox_1f793965c6f6",
+        "inbox_c348237462cc",
+        "inbox_4a18fb7f513e",
+        "inbox_ec86d7e1a72a",
+        "inbox_7f778dae006a",
+        "inbox_bb13893e2fc5",
+        "inbox_f8035b755892",
+        "inbox_060bba7dd566",
+        "inbox_258409e9955a",
+        "inbox_228c45cfe346",
+        "inbox_2ba5501370fa",
+        "inbox_8e90759dfd1f",
+        "inbox_5fc2ab72431e",
+        "inbox_ea73a3842cc6",
+        "inbox_12c13a96494a",
+        "inbox_25c3b006e005",
+        "inbox_9b61c7a47957",
+        "inbox_fbcf030d4f44",
+        "inbox_3f4521ac544f",
+        "inbox_3df48f64c5cb",
+        "inbox_2a8e564af42b",
+        "inbox_ee97e589d1bb",
+        "inbox_72dfdc58147b",
+        "inbox_74f1c121ba57",
+        "inbox_8bf042b28a74",
+        "inbox_cbc1e06c137d"
+      ],
       "created_at": "2026-02-01T21:29:26.550454+00:00",
-      "updated_at": "2026-03-10T20:18:21.744113+00:00",
-      "version_id": 33,
+      "updated_at": "2026-03-15T05:17:00.162584+00:00",
+      "version_id": 39,
       "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
       "display_name": null,
       "negative_ids": [],
@@ -3410,6 +3442,117 @@
         "inbox_5154b2c7b1ce",
         "inbox_00b7e6887b72",
         "inbox_c32e5c51d148"
+      ],
+      "merge_history": [
+        {
+          "merged_by": "face_tag",
+          "source_id": "b534d880-f775-44fd-b36e-d0267c912fb7",
+          "timestamp": "2026-03-15T05:15:42.095742+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_3f4521ac544f",
+              "inbox_3df48f64c5cb",
+              "inbox_2a8e564af42b",
+              "inbox_ee97e589d1bb",
+              "inbox_72dfdc58147b"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3938",
+          "source_state": "INBOX",
+          "merge_event_id": "71410231-5a01-4cfc-b58c-54b3d13e1306",
+          "source_snapshot": {
+            "name": "Unidentified Person 3938",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_3f4521ac544f",
+              "inbox_3df48f64c5cb",
+              "inbox_2a8e564af42b",
+              "inbox_ee97e589d1bb",
+              "inbox_72dfdc58147b"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 21,
+            "candidate_count": 31
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "web",
+          "source_id": "3c9b8aef-db31-4b59-8540-a72b612f24ab",
+          "timestamp": "2026-03-15T05:16:47.429154+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_74f1c121ba57",
+              "inbox_8bf042b28a74"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3500",
+          "source_state": "INBOX",
+          "merge_event_id": "1266b0e2-ec64-40c7-9926-d6be42db6dbe",
+          "source_snapshot": {
+            "name": "Unidentified Person 3500",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_74f1c121ba57",
+              "inbox_8bf042b28a74"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 26,
+            "candidate_count": 31
+          },
+          "direction_auto_corrected": true
+        },
+        {
+          "merged_by": "face_tag",
+          "source_id": "872c4a2e-b696-40cf-bcd4-20c713386d10",
+          "timestamp": "2026-03-15T05:17:00.162584+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_cbc1e06c137d"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3144",
+          "source_state": "INBOX",
+          "merge_event_id": "26492f56-e589-47f1-aeb6-115228a5f922",
+          "source_snapshot": {
+            "name": "Unidentified Person 3144",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_cbc1e06c137d"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Roland Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 28,
+            "candidate_count": 31
+          },
+          "direction_auto_corrected": false
+        }
       ]
     },
     "44fb6ab3-c98b-447a-8a5b-8d652418b337": {
@@ -3978,7 +4121,7 @@
         "inbox_f855c874323d"
       ],
       "created_at": "2026-02-01T21:29:26.550798+00:00",
-      "updated_at": "2026-03-14T05:24:04.404827+00:00",
+      "updated_at": "2026-03-15T04:49:07.095346+00:00",
       "version_id": 21,
       "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "display_name": null,
@@ -4049,7 +4192,7 @@
       },
       "anchor_ids": [],
       "created_at": "2026-02-01T21:29:26.546929+00:00",
-      "updated_at": "2026-03-10T20:18:21.744113+00:00",
+      "updated_at": "2026-03-15T05:02:14.769654+00:00",
       "version_id": 5,
       "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
       "display_name": null,
@@ -5528,7 +5671,7 @@
         "inbox_441f60c145fb"
       ],
       "created_at": "2026-02-01T21:29:26.547569+00:00",
-      "updated_at": "2026-03-10T20:18:21.82543+00:00",
+      "updated_at": "2026-03-15T05:02:16.572665+00:00",
       "version_id": 9,
       "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "display_name": null,
@@ -8642,7 +8785,7 @@
         "inbox_ef6a9854bee8"
       ],
       "created_at": "2026-02-14T14:47:22.659726+00:00",
-      "updated_at": "2026-03-10T18:06:59.493498+00:00",
+      "updated_at": "2026-03-15T05:02:16.332676+00:00",
       "version_id": 1,
       "identity_id": "22166206-7b90-4f37-877b-c7c33b55a565",
       "merged_into": "1c54f3c0-951f-47a6-979d-7aef73d9635b",
@@ -23538,9 +23681,8 @@
       "updated_at": "2026-03-10T06:07:03.103622+00:00"
     },
     "0e210c94-110b-459b-9531-336f7b18b5f2": {
-      "identity_id": "0e210c94-110b-459b-9531-336f7b18b5f2",
       "name": "Unidentified Person 2814",
-      "state": "INBOX",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_bfbc11abe20a",
         "inbox_f192c697729a",
@@ -23548,145 +23690,14 @@
         "inbox_0c840df5b855",
         "inbox_8b9e7cae4a93"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 5,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.121524+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "4e824d57-cdd6-4aee-bef9-90221ed4a795",
-          "timestamp": "2026-03-10T13:20:44.120702+00:00",
-          "source_id": "1a1b182b-5a05-4195-82f4-26dcd77a2c49",
-          "source_name": "Unidentified Person 3555",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_f192c697729a"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3555",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2814",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_f192c697729a"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "58a34fc0-77b4-4a1f-892c-88490c78ee3c",
-          "timestamp": "2026-03-10T13:20:44.120972+00:00",
-          "source_id": "f0e7a52c-ed4c-47f5-b994-4c871b88cf85",
-          "source_name": "Unidentified Person 3972",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_fef8acbfc090"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3972",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 2,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2814",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_fef8acbfc090"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "e474fc99-2ef5-407f-9ef3-09f1f4d04801",
-          "timestamp": "2026-03-10T13:20:44.121227+00:00",
-          "source_id": "f0fd77c7-3d2b-494b-bae9-0af34787198b",
-          "source_name": "Unidentified Person 3847",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_0c840df5b855"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3847",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 3,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2814",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_0c840df5b855"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "9ba7372c-c558-4bd5-a26e-d4b037e0837f",
-          "timestamp": "2026-03-10T13:20:44.121524+00:00",
-          "source_id": "2c869459-db03-4aab-aa97-a5ab71a1bbc0",
-          "source_name": "Unidentified Person 3577",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_8b9e7cae4a93"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3577",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 4,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2814",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_8b9e7cae4a93"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T05:16:07.413470+00:00",
+      "version_id": 5,
+      "identity_id": "0e210c94-110b-459b-9531-336f7b18b5f2",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "e854ba55-79a0-44f1-9a9e-1c55248477cd": {
       "identity_id": "e854ba55-79a0-44f1-9a9e-1c55248477cd",
@@ -25803,67 +25814,36 @@
       "merged_into": "5490d7a8-04b4-4460-852c-72fb68ee7e5d"
     },
     "2e54d75a-5874-48b4-adb3-e20ee4927d1a": {
-      "identity_id": "2e54d75a-5874-48b4-adb3-e20ee4927d1a",
       "name": "Unidentified Person 2929",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_50a27898f074"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.033381+00:00",
-      "merged_into": "df2860e6-8038-4ae8-9359-9c6acc52ea8e"
+      "updated_at": "2026-03-15T05:02:15.581313+00:00",
+      "version_id": 1,
+      "identity_id": "2e54d75a-5874-48b4-adb3-e20ee4927d1a",
+      "merged_into": "df2860e6-8038-4ae8-9359-9c6acc52ea8e",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "640c7838-5b53-40c1-8050-7f511f0c556b": {
-      "identity_id": "640c7838-5b53-40c1-8050-7f511f0c556b",
-      "name": "Unidentified Person 2930",
-      "state": "INBOX",
+      "name": "Carol Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_69e48d0c8d9d",
         "inbox_dc4dcb87b9e7"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.033878+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "bdaf9e05-eb47-4d43-b52d-2a17061aa6a4",
-          "timestamp": "2026-03-10T13:20:44.033878+00:00",
-          "source_id": "248279c1-30c6-438b-850a-10f7da9e4a2c",
-          "source_name": "Unidentified Person 4017",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_dc4dcb87b9e7"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 4017",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2930",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_dc4dcb87b9e7"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Carol",
+      "updated_at": "2026-03-15T04:56:32.754765+00:00",
+      "version_id": 4,
+      "identity_id": "640c7838-5b53-40c1-8050-7f511f0c556b",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "eeb00418-f247-4700-a03e-5185e114ecef": {
       "identity_id": "eeb00418-f247-4700-a03e-5185e114ecef",
@@ -25992,53 +25972,21 @@
       ]
     },
     "9a07b490-34fc-4f41-8111-e68a27dc782a": {
-      "identity_id": "9a07b490-34fc-4f41-8111-e68a27dc782a",
-      "name": "Unidentified Person 2935",
-      "state": "INBOX",
+      "name": "Ralph Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_b26f70e6461c",
         "inbox_cecbad2c562c"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.037704+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "adced41d-ed7a-49dc-b7e3-05b33e2fa76c",
-          "timestamp": "2026-03-10T13:20:44.037704+00:00",
-          "source_id": "49d59274-4337-4a87-a304-fd15bd44d1d3",
-          "source_name": "Unidentified Person 4016",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_cecbad2c562c"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 4016",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 2935",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_cecbad2c562c"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Ralph",
+      "updated_at": "2026-03-15T04:53:32.194831+00:00",
+      "version_id": 4,
+      "identity_id": "9a07b490-34fc-4f41-8111-e68a27dc782a",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "77481285-5084-49c3-90c5-af779d955484": {
       "name": "Unidentified Person 2936",
@@ -26077,10 +26025,12 @@
         "inbox_d66279364a96",
         "inbox_f430b3943b22"
       ],
+      "birth_year": 1891,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
+      "death_year": 1937,
       "first_name": "Morris",
-      "updated_at": "2026-03-15T01:38:47.628986+00:00",
-      "version_id": 4,
+      "updated_at": "2026-03-15T04:52:23.347546+00:00",
+      "version_id": 5,
       "identity_id": "abc00217-19fd-460f-85aa-f57ced7a2b7f",
       "display_name": null,
       "negative_ids": [],
@@ -27236,12 +27186,42 @@
         "inbox_6ece2613f93f",
         "inbox_6b5921e67517",
         "inbox_0eeacbaa314c",
-        "inbox_0aca334673d1"
+        "inbox_0aca334673d1",
+        "inbox_9ce4cb8f7bb6",
+        "inbox_9a363cdc1a55",
+        "inbox_40aaf184e76c",
+        "inbox_81aa9174d958",
+        "inbox_f04f311048c3",
+        "inbox_f4c39c12f839",
+        "inbox_af4883df4736",
+        "inbox_d12abf743646",
+        "inbox_83a1ffc543b9",
+        "inbox_dd5f2b31aff2",
+        "inbox_1a90f3d76afb",
+        "inbox_65978e6debb6",
+        "inbox_58200072d38a",
+        "inbox_66921e76dc3e",
+        "inbox_a34d6eb0596e",
+        "inbox_eb1d1204fdf6",
+        "inbox_e64862970959",
+        "inbox_19060fb39dba",
+        "inbox_4b1359c3e85c",
+        "inbox_4b131879a1df",
+        "inbox_e3cbb2666a7f",
+        "inbox_bfbc11abe20a",
+        "inbox_f192c697729a",
+        "inbox_fef8acbfc090",
+        "inbox_0c840df5b855",
+        "inbox_8b9e7cae4a93",
+        "inbox_2dbdea052ebf",
+        "inbox_2bdfc1fcbc7a",
+        "inbox_aff32e34d082",
+        "inbox_0e0b5e184fce"
       ],
       "created_at": "2026-03-10T06:07:03.103622+00:00",
       "first_name": "Charles",
-      "updated_at": "2026-03-15T01:51:39.815222+00:00",
-      "version_id": 49,
+      "updated_at": "2026-03-15T05:16:21.032734+00:00",
+      "version_id": 56,
       "identity_id": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
       "display_name": null,
       "negative_ids": [],
@@ -27424,6 +27404,283 @@
             "candidate_count": 0
           },
           "direction_auto_corrected": true
+        },
+        {
+          "merged_by": "face_tag",
+          "source_id": "c0c35157-e3fa-485a-ae3d-80452236e782",
+          "timestamp": "2026-03-15T04:32:34.775899+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_9ce4cb8f7bb6",
+              "inbox_9a363cdc1a55",
+              "inbox_40aaf184e76c",
+              "inbox_81aa9174d958",
+              "inbox_f04f311048c3",
+              "inbox_f4c39c12f839"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3289",
+          "source_state": "INBOX",
+          "merge_event_id": "69cdc537-9cda-4e6d-b915-992cbdfb4d46",
+          "source_snapshot": {
+            "name": "Unidentified Person 3289",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_9ce4cb8f7bb6",
+              "inbox_9a363cdc1a55",
+              "inbox_40aaf184e76c",
+              "inbox_81aa9174d958",
+              "inbox_f04f311048c3",
+              "inbox_f4c39c12f839"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 71,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "admin/speed-run-merge",
+          "source_id": "ce239208-98b9-49ca-b04a-c73893df118f",
+          "timestamp": "2026-03-15T04:46:17.789422+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_af4883df4736",
+              "inbox_d12abf743646",
+              "inbox_83a1ffc543b9",
+              "inbox_dd5f2b31aff2",
+              "inbox_1a90f3d76afb"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3227",
+          "source_state": "CONFIRMED",
+          "merge_event_id": "de5e1707-1efc-4ddd-b818-ec43011a2b51",
+          "source_snapshot": {
+            "name": "Unidentified Person 3227",
+            "state": "CONFIRMED",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_af4883df4736",
+              "inbox_d12abf743646",
+              "inbox_83a1ffc543b9",
+              "inbox_dd5f2b31aff2",
+              "inbox_1a90f3d76afb"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 77,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "admin/speed-run-merge",
+          "source_id": "8a57ae41-4365-40f6-9e72-b84d07cd5e1f",
+          "timestamp": "2026-03-15T04:48:51.647488+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_65978e6debb6",
+              "inbox_58200072d38a",
+              "inbox_66921e76dc3e",
+              "inbox_a34d6eb0596e",
+              "inbox_eb1d1204fdf6"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 2586",
+          "source_state": "CONFIRMED",
+          "merge_event_id": "a54a390e-c457-4503-a332-f4991e688e6e",
+          "source_snapshot": {
+            "name": "Unidentified Person 2586",
+            "state": "CONFIRMED",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_65978e6debb6",
+              "inbox_58200072d38a",
+              "inbox_66921e76dc3e",
+              "inbox_a34d6eb0596e",
+              "inbox_eb1d1204fdf6"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 82,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "admin/speed-run-merge",
+          "source_id": "96069b65-43aa-4812-991b-47b28118a45a",
+          "timestamp": "2026-03-15T04:49:04.268127+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_e64862970959",
+              "inbox_19060fb39dba",
+              "inbox_4b1359c3e85c",
+              "inbox_4b131879a1df"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3529",
+          "source_state": "CONFIRMED",
+          "merge_event_id": "31d69cdf-a208-47af-9b01-737b4932d2ab",
+          "source_snapshot": {
+            "name": "Unidentified Person 3529",
+            "state": "CONFIRMED",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_e64862970959",
+              "inbox_19060fb39dba",
+              "inbox_4b1359c3e85c",
+              "inbox_4b131879a1df"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 87,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "face_tag",
+          "source_id": "97b93c16-b57a-4570-b2f2-61433032b1f8",
+          "timestamp": "2026-03-15T05:15:24.511181+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_e3cbb2666a7f"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 97b93c16",
+          "source_state": "INBOX",
+          "merge_event_id": "845f16aa-ffbe-4eb4-b83b-7ce01fe6d123",
+          "source_snapshot": {
+            "name": "Unidentified Person 97b93c16",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_e3cbb2666a7f"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 91,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "admin/speed-run-merge",
+          "source_id": "0e210c94-110b-459b-9531-336f7b18b5f2",
+          "timestamp": "2026-03-15T05:16:07.413470+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_bfbc11abe20a",
+              "inbox_f192c697729a",
+              "inbox_fef8acbfc090",
+              "inbox_0c840df5b855",
+              "inbox_8b9e7cae4a93"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 2814",
+          "source_state": "CONFIRMED",
+          "merge_event_id": "142eb16e-1bbe-443a-9dd8-0144858d058c",
+          "source_snapshot": {
+            "name": "Unidentified Person 2814",
+            "state": "CONFIRMED",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_bfbc11abe20a",
+              "inbox_f192c697729a",
+              "inbox_fef8acbfc090",
+              "inbox_0c840df5b855",
+              "inbox_8b9e7cae4a93"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 92,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "admin/speed-run-merge",
+          "source_id": "567a4a72-a5b5-4b1f-a3c6-54a9559844eb",
+          "timestamp": "2026-03-15T05:16:21.032734+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_2dbdea052ebf",
+              "inbox_2bdfc1fcbc7a",
+              "inbox_aff32e34d082",
+              "inbox_0e0b5e184fce"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 3851",
+          "source_state": "CONFIRMED",
+          "merge_event_id": "e1901284-9b54-4c16-972d-e79943ee3d8f",
+          "source_snapshot": {
+            "name": "Unidentified Person 3851",
+            "state": "CONFIRMED",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_2dbdea052ebf",
+              "inbox_2bdfc1fcbc7a",
+              "inbox_aff32e34d082",
+              "inbox_0e0b5e184fce"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Charles Fox",
+            "state": "CONFIRMED",
+            "anchor_count": 97,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
         }
       ]
     },
@@ -28166,8 +28423,9 @@
       "updated_at": "2026-03-10T06:07:03.103622+00:00"
     },
     "6a1657f4-0df4-4fd4-83ea-860732482421": {
-      "name": "Unidentified Person 3019",
+      "name": "Rose",
       "state": "CONFIRMED",
+      "last_name": "",
       "anchor_ids": [
         "inbox_11285eee2e37",
         "inbox_938aa2799f13",
@@ -28177,15 +28435,58 @@
         "inbox_5ca5184f951c",
         "inbox_95a99451997a",
         "inbox_33bd4ed4ed9e",
-        "inbox_f10e42c52b89"
+        "inbox_f10e42c52b89",
+        "inbox_84063819566f",
+        "inbox_8d3084346ecb",
+        "inbox_528b79282c72"
       ],
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-15T00:47:53.578835+00:00",
-      "version_id": 9,
+      "first_name": "Rose",
+      "updated_at": "2026-03-15T05:17:10.618889+00:00",
+      "version_id": 11,
       "identity_id": "6a1657f4-0df4-4fd4-83ea-860732482421",
       "display_name": null,
       "negative_ids": [],
-      "candidate_ids": []
+      "candidate_ids": [],
+      "merge_history": [
+        {
+          "merged_by": "face_tag",
+          "source_id": "4c7061c2-f448-4824-9c72-303d20bc7764",
+          "timestamp": "2026-03-15T05:17:10.618889+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_84063819566f",
+              "inbox_8d3084346ecb",
+              "inbox_528b79282c72"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 2682",
+          "source_state": "INBOX",
+          "merge_event_id": "0423a4ff-c4fa-4c1a-b626-20a1d3536169",
+          "source_snapshot": {
+            "name": "Unidentified Person 2682",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_84063819566f",
+              "inbox_8d3084346ecb",
+              "inbox_528b79282c72"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Rose",
+            "state": "CONFIRMED",
+            "anchor_count": 9,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        }
+      ]
     },
     "d988c883-0246-40fd-9e75-000a94dcac2f": {
       "name": "Unidentified Person 3020",
@@ -28898,9 +29199,8 @@
       "candidate_ids": []
     },
     "47f37372-8189-4fa1-8d4b-92c100853b0b": {
-      "identity_id": "47f37372-8189-4fa1-8d4b-92c100853b0b",
       "name": "Unidentified Person 3048",
-      "state": "INBOX",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_d90844e17458",
         "inbox_206df47dcd68",
@@ -28911,244 +29211,14 @@
         "inbox_7aa1c5a10262",
         "inbox_a6231e39dac7"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 8,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:43.938122+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "b3a6e666-7884-496d-825b-3d2a580bfcc5",
-          "timestamp": "2026-03-10T13:20:43.936989+00:00",
-          "source_id": "d5991eb7-10b2-4508-9465-83fc061db857",
-          "source_name": "Unidentified Person 3968",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_206df47dcd68"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3968",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_206df47dcd68"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "4f6da27d-8d9e-4103-ba82-c31f5d33e521",
-          "timestamp": "2026-03-10T13:20:43.937183+00:00",
-          "source_id": "0d0a6422-6fb4-49cc-ac4d-7108b1cb19cc",
-          "source_name": "Unidentified Person 2754",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_168b81bd5681"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2754",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 2,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_168b81bd5681"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "c0b2cf73-9860-4481-843a-e318eda6406d",
-          "timestamp": "2026-03-10T13:20:43.937362+00:00",
-          "source_id": "4bee17ae-aa08-40bc-bacc-188925452bb2",
-          "source_name": "Unidentified Person 3939",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_443e56a3875e"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3939",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 3,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_443e56a3875e"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "38473c70-3c78-427f-b29b-a61de580da5e",
-          "timestamp": "2026-03-10T13:20:43.937540+00:00",
-          "source_id": "45c2ada7-a437-4952-af0a-6ceafab1c789",
-          "source_name": "Unidentified Person 3236",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_1bf51cf3b289"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3236",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 4,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_1bf51cf3b289"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "15fa1641-9708-401a-9c48-bd1ffbc2ef57",
-          "timestamp": "2026-03-10T13:20:43.937716+00:00",
-          "source_id": "7d597e0a-c949-4718-9504-7656dedba6dd",
-          "source_name": "Unidentified Person 3701",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_b95da2245ac0"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3701",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 5,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_b95da2245ac0"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "817792e7-5c0c-4e26-8a97-0bbfc0093de8",
-          "timestamp": "2026-03-10T13:20:43.937899+00:00",
-          "source_id": "c4c9eca4-ea8a-404e-8f44-358c19f22248",
-          "source_name": "Unidentified Person 4086",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_7aa1c5a10262"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 4086",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 6,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_7aa1c5a10262"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "5e120ca1-843c-4105-8603-7ea24d4f3a4d",
-          "timestamp": "2026-03-10T13:20:43.938122+00:00",
-          "source_id": "a67990db-ec47-41b9-91cf-ceeb031dcf5d",
-          "source_name": "Unidentified Person 2709",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_a6231e39dac7"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2709",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 7,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3048",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_a6231e39dac7"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T04:28:33.180272+00:00",
+      "version_id": 8,
+      "identity_id": "47f37372-8189-4fa1-8d4b-92c100853b0b",
+      "merged_into": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "8fc66246-5068-43b4-9831-8bc1b1b5bbaf": {
       "name": "Unidentified Person 3049",
@@ -31334,53 +31404,20 @@
       "updated_at": "2026-03-10T06:07:03.103622+00:00"
     },
     "5052e3dd-599e-4ef8-974d-cbf12f2a0e12": {
-      "identity_id": "5052e3dd-599e-4ef8-974d-cbf12f2a0e12",
       "name": "Unidentified Person 3126",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_6b3ceef91b02",
         "inbox_c79abe05987f"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.069610+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "6bf4f089-ffc1-4a08-89cb-cf04d0951898",
-          "timestamp": "2026-03-10T13:20:44.069610+00:00",
-          "source_id": "36680ae1-05ac-4e68-b331-bddd321fc00c",
-          "source_name": "Unidentified Person 4032",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_c79abe05987f"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 4032",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3126",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_c79abe05987f"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T05:19:38.669424+00:00",
+      "version_id": 2,
+      "identity_id": "5052e3dd-599e-4ef8-974d-cbf12f2a0e12",
+      "merged_into": "89ef6a3d-0b01-409c-8a09-da7e34c3f549",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "3cb7a265-70f7-4065-934d-0d812e322eb8": {
       "identity_id": "3cb7a265-70f7-4065-934d-0d812e322eb8",
@@ -31750,30 +31787,34 @@
       "candidate_ids": []
     },
     "636a990e-026f-4d53-87d5-107363a26aae": {
-      "identity_id": "636a990e-026f-4d53-87d5-107363a26aae",
       "name": "Unidentified Person 3143",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_7c79323efac3"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T06:07:03.103622+00:00"
+      "updated_at": "2026-03-15T05:17:05.934936+00:00",
+      "version_id": 1,
+      "identity_id": "636a990e-026f-4d53-87d5-107363a26aae",
+      "merged_into": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "872c4a2e-b696-40cf-bcd4-20c713386d10": {
-      "identity_id": "872c4a2e-b696-40cf-bcd4-20c713386d10",
       "name": "Unidentified Person 3144",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_cbc1e06c137d"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T06:07:03.103622+00:00"
+      "updated_at": "2026-03-15T05:17:00.162584+00:00",
+      "version_id": 1,
+      "identity_id": "872c4a2e-b696-40cf-bcd4-20c713386d10",
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "d4c195c5-ea1f-4516-8963-e42922cb99af": {
       "name": "Unidentified Person 3145",
@@ -33529,9 +33570,8 @@
       ]
     },
     "ce239208-98b9-49ca-b04a-c73893df118f": {
-      "identity_id": "ce239208-98b9-49ca-b04a-c73893df118f",
       "name": "Unidentified Person 3227",
-      "state": "INBOX",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_af4883df4736",
         "inbox_d12abf743646",
@@ -33539,145 +33579,14 @@
         "inbox_dd5f2b31aff2",
         "inbox_1a90f3d76afb"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 5,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.054790+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "146dfa44-1cc7-407c-9182-372e721da04a",
-          "timestamp": "2026-03-10T13:20:44.053820+00:00",
-          "source_id": "dac463b4-527e-4117-9ff0-77baa92533fa",
-          "source_name": "Unidentified Person 2630",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_d12abf743646"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2630",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3227",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_d12abf743646"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "fb309b49-9f6a-4daf-b401-b2d83982de85",
-          "timestamp": "2026-03-10T13:20:44.054137+00:00",
-          "source_id": "761797cc-1d5c-40e8-8780-6e60eb73dcb4",
-          "source_name": "Unidentified Person 3924",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_83a1ffc543b9"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3924",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 2,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3227",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_83a1ffc543b9"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "2ce0655a-3a37-4336-ac7c-34de242db568",
-          "timestamp": "2026-03-10T13:20:44.054466+00:00",
-          "source_id": "7d25e630-0e8b-44a5-b1e4-54994b7d6a5d",
-          "source_name": "Unidentified Person 3030",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_dd5f2b31aff2"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3030",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 3,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3227",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_dd5f2b31aff2"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "4cb0b860-b62f-48b3-9404-fdcb967967bf",
-          "timestamp": "2026-03-10T13:20:44.054790+00:00",
-          "source_id": "0acff91e-5cd1-497c-ae0c-9bcf6fae2d9b",
-          "source_name": "Unidentified Person 2999",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_1a90f3d76afb"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2999",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 4,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3227",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_1a90f3d76afb"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T04:46:17.789422+00:00",
+      "version_id": 5,
+      "identity_id": "ce239208-98b9-49ca-b04a-c73893df118f",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "f423fbcc-385a-48c0-86bc-29ad6bbb7571": {
       "identity_id": "f423fbcc-385a-48c0-86bc-29ad6bbb7571",
@@ -34807,7 +34716,6 @@
       "merged_into": "2d7592df-15bc-4b41-9bf8-5594daf95d13"
     },
     "c0c35157-e3fa-485a-ae3d-80452236e782": {
-      "identity_id": "c0c35157-e3fa-485a-ae3d-80452236e782",
       "name": "Unidentified Person 3289",
       "state": "INBOX",
       "anchor_ids": [
@@ -34818,178 +34726,14 @@
         "inbox_f04f311048c3",
         "inbox_f4c39c12f839"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 6,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.057774+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "12b7759a-32ff-4c22-95d9-117b66a65370",
-          "timestamp": "2026-03-10T13:20:44.056408+00:00",
-          "source_id": "250f8b4c-938b-46e8-b5f4-ff60d8dcd185",
-          "source_name": "Unidentified Person 3789",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_9a363cdc1a55"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3789",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3289",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_9a363cdc1a55"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "b7083edb-ec18-4632-adfd-e8f0ce7c57f9",
-          "timestamp": "2026-03-10T13:20:44.056750+00:00",
-          "source_id": "2ae388ae-7c93-4609-9c0c-6bb213ef973a",
-          "source_name": "Unidentified Person 3023",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_40aaf184e76c"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3023",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 2,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3289",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_40aaf184e76c"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "2350eb6d-fc15-4e86-a326-bc3e12180a55",
-          "timestamp": "2026-03-10T13:20:44.057075+00:00",
-          "source_id": "348b5145-f51e-4fad-813a-0c36f3cc77c0",
-          "source_name": "Unidentified Person 3601",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_81aa9174d958"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3601",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 3,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3289",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_81aa9174d958"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "734db3e1-855b-4490-a241-84a0c6325844",
-          "timestamp": "2026-03-10T13:20:44.057423+00:00",
-          "source_id": "9c25fbc2-d772-4519-9c00-458365f9c69d",
-          "source_name": "Unidentified Person 4023",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_f04f311048c3"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 4023",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 4,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3289",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_f04f311048c3"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "98ba29e1-3371-454e-ae11-3e6217246295",
-          "timestamp": "2026-03-10T13:20:44.057774+00:00",
-          "source_id": "c66901c1-c292-4b8e-88a9-f185d9f1bf53",
-          "source_name": "Unidentified Person 3033",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_f4c39c12f839"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 3033",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 5,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3289",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_f4c39c12f839"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T04:32:34.775899+00:00",
+      "version_id": 6,
+      "identity_id": "c0c35157-e3fa-485a-ae3d-80452236e782",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "cbec2f25-22d5-437b-882f-8aae830c668c": {
       "identity_id": "cbec2f25-22d5-437b-882f-8aae830c668c",
@@ -37973,7 +37717,7 @@
         "inbox_c76c5f35eced"
       ],
       "created_at": "2026-03-10T06:07:24.485773+00:00",
-      "updated_at": "2026-03-10T20:18:22.848954+00:00",
+      "updated_at": "2026-03-15T04:49:09.289847+00:00",
       "version_id": 2,
       "identity_id": "c5fbac2e-aa84-493b-8253-8bb052d270e0",
       "merged_into": "a09cea62-f111-4348-9360-2edb0e1948e9",
@@ -39564,53 +39308,20 @@
       "merged_into": "57be1c0a-e69f-45a8-bdd4-a93718e0670c"
     },
     "3c9b8aef-db31-4b59-8540-a72b612f24ab": {
-      "identity_id": "3c9b8aef-db31-4b59-8540-a72b612f24ab",
       "name": "Unidentified Person 3500",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_74f1c121ba57",
         "inbox_8bf042b28a74"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.045355+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "391cf4ee-d545-4df6-b80c-bb33046b377d",
-          "timestamp": "2026-03-10T13:20:44.045355+00:00",
-          "source_id": "8e44e38b-fea0-4e34-8c6e-0f3e40862e9b",
-          "source_name": "Unidentified Person 2973",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_8bf042b28a74"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2973",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3500",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_8bf042b28a74"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T05:16:47.429154+00:00",
+      "version_id": 2,
+      "identity_id": "3c9b8aef-db31-4b59-8540-a72b612f24ab",
+      "merged_into": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "dbadf874-df06-491b-b24f-cfb270f91020": {
       "name": "Unidentified Person 3501",
@@ -40067,121 +39778,22 @@
       "updated_at": "2026-03-10T06:07:03.103622+00:00"
     },
     "96069b65-43aa-4812-991b-47b28118a45a": {
-      "identity_id": "96069b65-43aa-4812-991b-47b28118a45a",
       "name": "Unidentified Person 3529",
-      "state": "INBOX",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_e64862970959",
         "inbox_19060fb39dba",
         "inbox_4b1359c3e85c",
         "inbox_4b131879a1df"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 4,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:43.932185+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "225c7a8e-7883-4793-8787-b1e470563173",
-          "timestamp": "2026-03-10T13:20:43.931802+00:00",
-          "source_id": "6edc0553-03ec-422c-b728-162432d84846",
-          "source_name": "Unidentified Person 2841",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_19060fb39dba"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2841",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3529",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_19060fb39dba"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "335a020b-7c09-45d1-ad9a-5c9731201a8e",
-          "timestamp": "2026-03-10T13:20:43.931990+00:00",
-          "source_id": "42cf8426-de20-456d-8e59-b79388c332b9",
-          "source_name": "Unidentified Person 2794",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_4b1359c3e85c"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2794",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 2,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3529",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_4b1359c3e85c"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        },
-        {
-          "merge_event_id": "34f3e882-a016-4c26-ad22-89078ca3ed30",
-          "timestamp": "2026-03-10T13:20:43.932185+00:00",
-          "source_id": "1c8b83bf-375f-46a9-b200-84aba1834957",
-          "source_name": "Unidentified Person 2729",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_4b131879a1df"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2729",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 3,
-            "candidate_count": 0,
-            "name": "Unidentified Person 3529",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_4b131879a1df"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "updated_at": "2026-03-15T04:49:04.268127+00:00",
+      "version_id": 4,
+      "identity_id": "96069b65-43aa-4812-991b-47b28118a45a",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "8a4f88ed-df74-402c-968f-5be1dee56d74": {
       "identity_id": "8a4f88ed-df74-402c-968f-5be1dee56d74",
@@ -48873,27 +48485,27 @@
     "87f9b806-8ec8-45e3-8316-5c89d223b233": {
       "name": "Unidentified Person 3940",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_6f821b2a77f7"
-      ],
-      "created_at": "2026-03-10T06:07:25.231554+00:00",
-      "updated_at": "2026-03-11T05:29:43.947689+00:00",
-      "version_id": 2,
-      "identity_id": "87f9b806-8ec8-45e3-8316-5c89d223b233",
-      "merged_into": "65207728-9ee6-48c1-be68-a2da23354caf",
-      "display_name": null,
-      "negative_ids": [],
-      "candidate_ids": [],
       "metadata": {
         "merge_chain_repairs": [
           {
             "source": "data_integrity_audit",
             "flattened_at": "2026-03-11T05:29:43.947689+00:00",
-            "previous_merged_into": "bfeeda01-e5e3-42d7-8fb4-5d7359901b8e",
-            "new_merged_into": "65207728-9ee6-48c1-be68-a2da23354caf"
+            "new_merged_into": "65207728-9ee6-48c1-be68-a2da23354caf",
+            "previous_merged_into": "bfeeda01-e5e3-42d7-8fb4-5d7359901b8e"
           }
         ]
-      }
+      },
+      "anchor_ids": [
+        "inbox_6f821b2a77f7"
+      ],
+      "created_at": "2026-03-10T06:07:25.231554+00:00",
+      "updated_at": "2026-03-15T05:02:15.446681+00:00",
+      "version_id": 2,
+      "identity_id": "87f9b806-8ec8-45e3-8316-5c89d223b233",
+      "merged_into": "65207728-9ee6-48c1-be68-a2da23354caf",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "36b4d107-375b-42b6-81f0-d06fb7cb5259": {
       "name": "Unidentified Person 3941",
@@ -50120,53 +49732,21 @@
       "candidate_ids": []
     },
     "475b2111-2928-4dab-880b-b6d227a3e353": {
-      "identity_id": "475b2111-2928-4dab-880b-b6d227a3e353",
-      "name": "Unidentified Person 4005",
-      "state": "INBOX",
+      "name": "Fannie Burd Yanishefsky",
+      "state": "CONFIRMED",
+      "last_name": "Yanishefsky",
       "anchor_ids": [
         "inbox_1aaefa955cfe",
         "inbox_ca05252f7b8b"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.038796+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "83f8761f-fec3-44d3-84f6-45c20b25e122",
-          "timestamp": "2026-03-10T13:20:44.038796+00:00",
-          "source_id": "05bdcf24-3ced-4516-9edb-0f58cddfb181",
-          "source_name": "Unidentified Person 2937",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_ca05252f7b8b"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2937",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4005",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_ca05252f7b8b"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Fannie Burd",
+      "updated_at": "2026-03-15T05:01:37.837113+00:00",
+      "version_id": 4,
+      "identity_id": "475b2111-2928-4dab-880b-b6d227a3e353",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "582d43ce-9832-4a1b-ae01-8ddcb049a942": {
       "identity_id": "582d43ce-9832-4a1b-ae01-8ddcb049a942",
@@ -50260,102 +49840,38 @@
       "merged_into": "89ef6a3d-0b01-409c-8a09-da7e34c3f549"
     },
     "5490d7a8-04b4-4460-852c-72fb68ee7e5d": {
-      "identity_id": "5490d7a8-04b4-4460-852c-72fb68ee7e5d",
-      "name": "Unidentified Person 4010",
-      "state": "INBOX",
+      "name": "Miriam Cohen Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_86f908dcc64f",
         "inbox_4d967e0604bd"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.032908+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "62485b68-d008-48c7-b3e7-b21b1df14362",
-          "timestamp": "2026-03-10T13:20:44.032908+00:00",
-          "source_id": "7ab5f7ef-51bb-4583-b643-339dca47ef6b",
-          "source_name": "Unidentified Person 2928",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_4d967e0604bd"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2928",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4010",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_4d967e0604bd"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Miriam Cohen",
+      "updated_at": "2026-03-15T05:02:11.537133+00:00",
+      "version_id": 4,
+      "identity_id": "5490d7a8-04b4-4460-852c-72fb68ee7e5d",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "e24d3f7f-8930-479a-b525-8a36bba9fda0": {
-      "identity_id": "e24d3f7f-8930-479a-b525-8a36bba9fda0",
-      "name": "Unidentified Person 4011",
-      "state": "INBOX",
+      "name": "Susan Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_950e3ab67071",
         "inbox_a08fadc9c08d"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.036676+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "da543116-9d4a-43e8-842f-58a3551c751b",
-          "timestamp": "2026-03-10T13:20:44.036676+00:00",
-          "source_id": "6fdc9455-8e67-405d-986f-98be8ae4664f",
-          "source_name": "Unidentified Person 2933",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_a08fadc9c08d"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2933",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4011",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_a08fadc9c08d"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Susan",
+      "updated_at": "2026-03-15T04:55:39.140631+00:00",
+      "version_id": 4,
+      "identity_id": "e24d3f7f-8930-479a-b525-8a36bba9fda0",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "d501b640-feb4-4e59-affc-ad773f873d40": {
       "identity_id": "d501b640-feb4-4e59-affc-ad773f873d40",
@@ -50407,102 +49923,38 @@
       ]
     },
     "10aef910-9632-4a6c-a644-4551b6e91981": {
-      "identity_id": "10aef910-9632-4a6c-a644-4551b6e91981",
-      "name": "Unidentified Person 4013",
-      "state": "INBOX",
+      "name": "Mike Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_9e2c3fd1f167",
         "inbox_bb4ebf382d40"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.038306+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "08e1dc0c-a43e-453b-89fa-5c65d75cf60a",
-          "timestamp": "2026-03-10T13:20:44.038306+00:00",
-          "source_id": "77481285-5084-49c3-90c5-af779d955484",
-          "source_name": "Unidentified Person 2936",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_bb4ebf382d40"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2936",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4013",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_bb4ebf382d40"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Mike",
+      "updated_at": "2026-03-15T04:56:07.948031+00:00",
+      "version_id": 4,
+      "identity_id": "10aef910-9632-4a6c-a644-4551b6e91981",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "0ea528ac-01c0-451e-8089-24cae46c8e6a": {
-      "identity_id": "0ea528ac-01c0-451e-8089-24cae46c8e6a",
-      "name": "Unidentified Person 4014",
-      "state": "INBOX",
+      "name": "Dora Burd Shane",
+      "state": "CONFIRMED",
+      "last_name": "Shane",
       "anchor_ids": [
         "inbox_a1c2aea2c06f",
         "inbox_3b7631da32ee"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.032006+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "83fab2eb-33ee-4951-aa97-17fd76cf7716",
-          "timestamp": "2026-03-10T13:20:44.032006+00:00",
-          "source_id": "6bd8be2c-55d3-422b-b858-e9067fa71973",
-          "source_name": "Unidentified Person 2926",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_3b7631da32ee"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2926",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4014",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_3b7631da32ee"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Dora Burd",
+      "updated_at": "2026-03-15T05:01:52.902612+00:00",
+      "version_id": 4,
+      "identity_id": "0ea528ac-01c0-451e-8089-24cae46c8e6a",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "b1b70094-184a-448b-92da-550ce934cd56": {
       "identity_id": "b1b70094-184a-448b-92da-550ce934cd56",
@@ -50588,53 +50040,21 @@
       }
     },
     "df2860e6-8038-4ae8-9359-9c6acc52ea8e": {
-      "identity_id": "df2860e6-8038-4ae8-9359-9c6acc52ea8e",
-      "name": "Unidentified Person 4020",
-      "state": "INBOX",
+      "name": "Syril Buros Burd",
+      "state": "CONFIRMED",
+      "last_name": "Burd",
       "anchor_ids": [
         "inbox_f93096b46cb7",
         "inbox_50a27898f074"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 2,
       "created_at": "2026-03-10T06:07:03.103622+00:00",
-      "updated_at": "2026-03-10T13:20:44.033381+00:00",
-      "merge_history": [
-        {
-          "merge_event_id": "2b5c0333-6316-432d-b721-ecdebdd61dfe",
-          "timestamp": "2026-03-10T13:20:44.033381+00:00",
-          "source_id": "2e54d75a-5874-48b4-adb3-e20ee4927d1a",
-          "source_name": "Unidentified Person 2929",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [
-              "inbox_50a27898f074"
-            ],
-            "candidate_ids": [],
-            "negative_ids": [],
-            "name": "Unidentified Person 2929",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 1,
-            "candidate_count": 0,
-            "name": "Unidentified Person 4020",
-            "state": "INBOX"
-          },
-          "faces_added": {
-            "anchors": [
-              "inbox_50a27898f074"
-            ],
-            "candidates": [],
-            "negatives": []
-          },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
-        }
-      ]
+      "first_name": "Syril Buros",
+      "updated_at": "2026-03-15T04:54:13.418498+00:00",
+      "version_id": 4,
+      "identity_id": "df2860e6-8038-4ae8-9359-9c6acc52ea8e",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "783fa6cb-ee8b-4382-9c37-33c2b327b31b": {
       "identity_id": "783fa6cb-ee8b-4382-9c37-33c2b327b31b",
@@ -53045,7 +52465,7 @@
         "inbox_d70919994370"
       ],
       "created_at": "2026-03-09T20:57:47.673739+00:00",
-      "updated_at": "2026-03-10T18:06:59.058681+00:00",
+      "updated_at": "2026-03-15T05:02:15.082017+00:00",
       "version_id": 1,
       "identity_id": "af696910-85e4-42c2-949c-e51735a1e789",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -54395,7 +53815,7 @@
         "inbox_c5c2fa0bc579"
       ],
       "created_at": "2026-03-09T20:57:47.012303+00:00",
-      "updated_at": "2026-03-10T18:06:59.428969+00:00",
+      "updated_at": "2026-03-15T05:02:15.517352+00:00",
       "version_id": 1,
       "identity_id": "609a55c7-7295-4dfe-be78-fbba4cb1b73a",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -59001,7 +58421,7 @@
         "inbox_2b611415dcaa"
       ],
       "created_at": "2026-03-09T20:57:48.655889+00:00",
-      "updated_at": "2026-03-10T05:32:43.168399+00:00",
+      "updated_at": "2026-03-15T05:02:16.275248+00:00",
       "version_id": 1,
       "identity_id": "2646ffd9-b198-4084-ae79-62e8264d8c6a",
       "merged_into": "9b686cf1-b1ad-4f0b-ad38-49407a6049fa",
@@ -59091,7 +58511,7 @@
         "inbox_bc25fb715de5"
       ],
       "created_at": "2026-03-09T20:57:48.655889+00:00",
-      "updated_at": "2026-03-10T05:32:43.168399+00:00",
+      "updated_at": "2026-03-15T05:02:15.517352+00:00",
       "version_id": 1,
       "identity_id": "eb8d4c32-080d-4876-8c3e-6b0b985147bd",
       "merged_into": "057725ca-d55c-4251-8a6f-a900c941c768",
@@ -66296,21 +65716,19 @@
       }
     },
     "97b93c16-b57a-4570-b2f2-61433032b1f8": {
-      "identity_id": "97b93c16-b57a-4570-b2f2-61433032b1f8",
       "name": "Unidentified Person 97b93c16",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_e3cbb2666a7f"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-11T05:29:43.636021+00:00",
-      "updated_at": "2026-03-11T05:29:43.636021+00:00",
-      "provenance": {
-        "source": "data_integrity_audit",
-        "action": "orphan_fix"
-      }
+      "updated_at": "2026-03-15T05:15:24.511181+00:00",
+      "version_id": 1,
+      "identity_id": "97b93c16-b57a-4570-b2f2-61433032b1f8",
+      "merged_into": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+      "display_name": null,
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "a7e4dc49-e72c-41da-bf96-f8c60be785b5": {
       "identity_id": "a7e4dc49-e72c-41da-bf96-f8c60be785b5",
@@ -66665,6 +66083,406 @@
       "display_name": null,
       "negative_ids": [],
       "candidate_ids": []
+    },
+    "62d59cf4-52ee-4c48-80c2-df21a9172753": {
+      "identity_id": "62d59cf4-52ee-4c48-80c2-df21a9172753",
+      "name": "Unidentified Person 82863506",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b5b1075b769a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.639337+00:00",
+      "updated_at": "2026-03-15T14:09:13.639337+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.639250+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "b92d6f48-46f9-47b8-a572-6645902c646a": {
+      "identity_id": "b92d6f48-46f9-47b8-a572-6645902c646a",
+      "name": "Unidentified Person 82863507",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7a0619b2c280"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681493+00:00",
+      "updated_at": "2026-03-15T14:09:13.681493+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681450+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "805c1553-672a-447a-97d9-33c37480854c": {
+      "identity_id": "805c1553-672a-447a-97d9-33c37480854c",
+      "name": "Unidentified Person 82863508",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c65dba5a87a9"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681556+00:00",
+      "updated_at": "2026-03-15T14:09:13.681556+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681541+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "8f344c1c-6467-49d3-92f1-dcc1bb611af7": {
+      "identity_id": "8f344c1c-6467-49d3-92f1-dcc1bb611af7",
+      "name": "Unidentified Person 82863509",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_bcd7538b75af"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681593+00:00",
+      "updated_at": "2026-03-15T14:09:13.681593+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681581+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "2c9014fc-50d0-4adc-a424-50619cf5ecdb": {
+      "identity_id": "2c9014fc-50d0-4adc-a424-50619cf5ecdb",
+      "name": "Unidentified Person 82863510",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d4b84d1c0485"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681629+00:00",
+      "updated_at": "2026-03-15T14:09:13.681629+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681617+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "fb79f451-c84a-49da-b586-bec25fc81af7": {
+      "identity_id": "fb79f451-c84a-49da-b586-bec25fc81af7",
+      "name": "Unidentified Person 82863511",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0bb6a27cf383"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681663+00:00",
+      "updated_at": "2026-03-15T14:09:13.681663+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681652+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "7df72f15-ea9f-4509-84a6-040eedef6202": {
+      "identity_id": "7df72f15-ea9f-4509-84a6-040eedef6202",
+      "name": "Unidentified Person 82863512",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9bb4ce964be2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681694+00:00",
+      "updated_at": "2026-03-15T14:09:13.681694+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681683+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "b9f41a3b-445b-4df5-9bea-c4bacc5e75f8": {
+      "identity_id": "b9f41a3b-445b-4df5-9bea-c4bacc5e75f8",
+      "name": "Unidentified Person 82863513",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_e8b9205ffaa7"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681730+00:00",
+      "updated_at": "2026-03-15T14:09:13.681730+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681716+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "beee0663-8f17-4b93-9b2e-6f3f95ed0179": {
+      "identity_id": "beee0663-8f17-4b93-9b2e-6f3f95ed0179",
+      "name": "Unidentified Person 82863514",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_977751db597d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:13.681769+00:00",
+      "updated_at": "2026-03-15T14:09:13.681769+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104",
+        "filename": "robert_mattatia_congo_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:13.681758+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "0eedcaed-3ab7-49fc-bfec-48b22f8b5446": {
+      "identity_id": "0eedcaed-3ab7-49fc-bfec-48b22f8b5446",
+      "name": "Unidentified Person 82863515",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_489b08b47a3d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.970564+00:00",
+      "updated_at": "2026-03-15T14:09:27.970564+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.970492+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "a8f3a5b0-6a42-40dc-a643-5531a9d4a49c": {
+      "identity_id": "a8f3a5b0-6a42-40dc-a643-5531a9d4a49c",
+      "name": "Unidentified Person 82863516",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_da1fddea8743"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.996866+00:00",
+      "updated_at": "2026-03-15T14:09:27.996866+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.996823+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "9c6dab09-b831-4d95-bce7-91c23b37f22e": {
+      "identity_id": "9c6dab09-b831-4d95-bce7-91c23b37f22e",
+      "name": "Unidentified Person 82863517",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0f9421a14c38"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.996930+00:00",
+      "updated_at": "2026-03-15T14:09:27.996930+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.996914+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "a3c44e7a-854d-4094-922f-99cf128b1e36": {
+      "identity_id": "a3c44e7a-854d-4094-922f-99cf128b1e36",
+      "name": "Unidentified Person 82863518",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_36536b37b6ff"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.996968+00:00",
+      "updated_at": "2026-03-15T14:09:27.996968+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.996956+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "142a164e-a94e-441b-a7de-ed08b37ff282": {
+      "identity_id": "142a164e-a94e-441b-a7de-ed08b37ff282",
+      "name": "Unidentified Person 82863519",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_97287f9a8014"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997006+00:00",
+      "updated_at": "2026-03-15T14:09:27.997006+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.996994+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "b679754b-817c-4b24-a6db-50bc22721421": {
+      "identity_id": "b679754b-817c-4b24-a6db-50bc22721421",
+      "name": "Unidentified Person 82863520",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_6e746b779f14"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997043+00:00",
+      "updated_at": "2026-03-15T14:09:27.997043+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997032+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "7cd345d1-ad9d-4fbb-8ee4-e24fce622d4c": {
+      "identity_id": "7cd345d1-ad9d-4fbb-8ee4-e24fce622d4c",
+      "name": "Unidentified Person 82863521",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0d0302f0cced"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997076+00:00",
+      "updated_at": "2026-03-15T14:09:27.997076+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997065+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "3ed22ba8-ff7c-4da6-a2a0-80c67cf6dbea": {
+      "identity_id": "3ed22ba8-ff7c-4da6-a2a0-80c67cf6dbea",
+      "name": "Unidentified Person 82863522",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f0a1ea2d2ef8"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997113+00:00",
+      "updated_at": "2026-03-15T14:09:27.997113+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997099+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "538f47d1-0a74-4a66-92f5-53d8f9032714": {
+      "identity_id": "538f47d1-0a74-4a66-92f5-53d8f9032714",
+      "name": "Unidentified Person 82863523",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_a6d9add15d1e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997153+00:00",
+      "updated_at": "2026-03-15T14:09:27.997153+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997142+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "c7a46d92-50f1-49de-a5ba-6ea53b62d1dd": {
+      "identity_id": "c7a46d92-50f1-49de-a5ba-6ea53b62d1dd",
+      "name": "Unidentified Person 82863524",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_39bd2be31e04"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997185+00:00",
+      "updated_at": "2026-03-15T14:09:27.997185+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997174+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "22645c1e-eeca-4648-9849-672763dbb81b": {
+      "identity_id": "22645c1e-eeca-4648-9849-672763dbb81b",
+      "name": "Unidentified Person 82863525",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_93b72e386e0c"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-03-15T14:09:27.997215+00:00",
+      "updated_at": "2026-03-15T14:09:27.997215+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "claude-benatar-104b",
+        "filename": "robert_mattatia_family_group.jpeg",
+        "ingested_at": "2026-03-15T14:09:27.997205+00:00",
+        "grouped_faces": 1
+      }
     }
   },
   "history": [
@@ -101241,6 +101059,266 @@
         "previous_name": "Unidentified Person 554",
         "new_name": "Molly israel"
       }
+    },
+    {
+      "event_id": "60adf7bd-17cf-49c4-b75d-31277dc4c0ef",
+      "timestamp": "2026-03-15T14:09:13.639371+00:00",
+      "identity_id": "62d59cf4-52ee-4c48-80c2-df21a9172753",
+      "action": "create",
+      "face_ids": [
+        "inbox_b5b1075b769a"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "6e2ca9ca-a330-4c3d-b112-0c9ae4b44c54",
+      "timestamp": "2026-03-15T14:09:13.681527+00:00",
+      "identity_id": "b92d6f48-46f9-47b8-a572-6645902c646a",
+      "action": "create",
+      "face_ids": [
+        "inbox_7a0619b2c280"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "2a592d9b-a04d-49e8-8092-266efe5ebea5",
+      "timestamp": "2026-03-15T14:09:13.681571+00:00",
+      "identity_id": "805c1553-672a-447a-97d9-33c37480854c",
+      "action": "create",
+      "face_ids": [
+        "inbox_c65dba5a87a9"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "7f177a0a-5887-4f3a-8aad-82675113ca55",
+      "timestamp": "2026-03-15T14:09:13.681607+00:00",
+      "identity_id": "8f344c1c-6467-49d3-92f1-dcc1bb611af7",
+      "action": "create",
+      "face_ids": [
+        "inbox_bcd7538b75af"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "0ec0c51d-a760-45fe-87de-87fafb8eb264",
+      "timestamp": "2026-03-15T14:09:13.681643+00:00",
+      "identity_id": "2c9014fc-50d0-4adc-a424-50619cf5ecdb",
+      "action": "create",
+      "face_ids": [
+        "inbox_d4b84d1c0485"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "b5459323-d763-4bde-a678-498a17328e24",
+      "timestamp": "2026-03-15T14:09:13.681675+00:00",
+      "identity_id": "fb79f451-c84a-49da-b586-bec25fc81af7",
+      "action": "create",
+      "face_ids": [
+        "inbox_0bb6a27cf383"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "045a3ac9-2201-45ba-a977-1392db0780f2",
+      "timestamp": "2026-03-15T14:09:13.681706+00:00",
+      "identity_id": "7df72f15-ea9f-4509-84a6-040eedef6202",
+      "action": "create",
+      "face_ids": [
+        "inbox_9bb4ce964be2"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "173324c5-0e39-4328-a30d-cf69b1041b39",
+      "timestamp": "2026-03-15T14:09:13.681745+00:00",
+      "identity_id": "b9f41a3b-445b-4df5-9bea-c4bacc5e75f8",
+      "action": "create",
+      "face_ids": [
+        "inbox_e8b9205ffaa7"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "ab7ba8de-d7cf-4aeb-81b9-6771163e317e",
+      "timestamp": "2026-03-15T14:09:13.681781+00:00",
+      "identity_id": "beee0663-8f17-4b93-9b2e-6f3f95ed0179",
+      "action": "create",
+      "face_ids": [
+        "inbox_977751db597d"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "8adb506c-31fb-48ed-a95e-3e12c3a7e9a1",
+      "timestamp": "2026-03-15T14:09:27.970606+00:00",
+      "identity_id": "0eedcaed-3ab7-49fc-bfec-48b22f8b5446",
+      "action": "create",
+      "face_ids": [
+        "inbox_489b08b47a3d"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "f3eb9ae8-fb95-43a0-bd6d-8b79e5169637",
+      "timestamp": "2026-03-15T14:09:27.996899+00:00",
+      "identity_id": "a8f3a5b0-6a42-40dc-a643-5531a9d4a49c",
+      "action": "create",
+      "face_ids": [
+        "inbox_da1fddea8743"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "985a5f31-603c-45cd-915f-6ab08b1dfb42",
+      "timestamp": "2026-03-15T14:09:27.996945+00:00",
+      "identity_id": "9c6dab09-b831-4d95-bce7-91c23b37f22e",
+      "action": "create",
+      "face_ids": [
+        "inbox_0f9421a14c38"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "feb56611-f18f-4c5e-b990-04fd1c1ce347",
+      "timestamp": "2026-03-15T14:09:27.996984+00:00",
+      "identity_id": "a3c44e7a-854d-4094-922f-99cf128b1e36",
+      "action": "create",
+      "face_ids": [
+        "inbox_36536b37b6ff"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "edcc0972-ec44-4484-a12e-4e35c7612a6e",
+      "timestamp": "2026-03-15T14:09:27.997022+00:00",
+      "identity_id": "142a164e-a94e-441b-a7de-ed08b37ff282",
+      "action": "create",
+      "face_ids": [
+        "inbox_97287f9a8014"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "0d88f7c1-c509-44cc-83d0-1eee881014e1",
+      "timestamp": "2026-03-15T14:09:27.997056+00:00",
+      "identity_id": "b679754b-817c-4b24-a6db-50bc22721421",
+      "action": "create",
+      "face_ids": [
+        "inbox_6e746b779f14"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "458b3519-5a8b-45a6-b6fc-4c4ed3a88af7",
+      "timestamp": "2026-03-15T14:09:27.997088+00:00",
+      "identity_id": "7cd345d1-ad9d-4fbb-8ee4-e24fce622d4c",
+      "action": "create",
+      "face_ids": [
+        "inbox_0d0302f0cced"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "73a31514-3f6e-4ffe-bc14-b4380fec9bb1",
+      "timestamp": "2026-03-15T14:09:27.997128+00:00",
+      "identity_id": "3ed22ba8-ff7c-4da6-a2a0-80c67cf6dbea",
+      "action": "create",
+      "face_ids": [
+        "inbox_f0a1ea2d2ef8"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "7275f123-095d-461b-b2cf-37b8d2fd8dc0",
+      "timestamp": "2026-03-15T14:09:27.997165+00:00",
+      "identity_id": "538f47d1-0a74-4a66-92f5-53d8f9032714",
+      "action": "create",
+      "face_ids": [
+        "inbox_a6d9add15d1e"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "f867966f-f459-419b-af4a-67d9b030b696",
+      "timestamp": "2026-03-15T14:09:27.997197+00:00",
+      "identity_id": "c7a46d92-50f1-49de-a5ba-6ea53b62d1dd",
+      "action": "create",
+      "face_ids": [
+        "inbox_39bd2be31e04"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "6a7800c9-ac54-41a2-b59c-2c25316f60e5",
+      "timestamp": "2026-03-15T14:09:27.997227+00:00",
+      "identity_id": "22645c1e-eeca-4648-9849-672763dbb81b",
+      "action": "create",
+      "face_ids": [
+        "inbox_93b72e386e0c"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
     }
   ]
 }
