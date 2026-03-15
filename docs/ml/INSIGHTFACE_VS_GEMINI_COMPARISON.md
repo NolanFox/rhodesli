@@ -63,10 +63,26 @@ Gemini's 8.5-9/10 confidence should NOT be treated as proof. The research shows 
 - Both together: "Worth investigating further with family members"
 
 ## Sources
-- FaceXBench (2025): arxiv.org/html/2501.10360v2
-- FRoundation (2024): arxiv.org/abs/2410.23831
-- Foundation vs Domain-specific (ICCV 2025): arxiv.org/html/2507.03541v2
-- ChatGPT Biometrics (2024): arxiv.org/abs/2401.13641
+
+### Primary Benchmarks
+1. **FaceXBench** (Jan 2025) — 26 open-source + 2 proprietary MLLMs, 14 face tasks, 5000 questions. GPT-4o ~50%, Gemini ~54% on face verification. https://arxiv.org/html/2501.10360v2
+2. **FRoundation** (Oct 2024) — Pre-trained foundation models vs face-specific models. Fine-tuned foundation models promising when training data limited. https://arxiv.org/abs/2410.23831
+3. **Foundation vs Domain-specific Models** (ICCV 2025 Workshop) — GPT-4o, Grok-4, CLIP, BLIP vs ArcFace/AdaFace. Domain-specific wins on all benchmarks. Score fusion improves at low FMR. https://arxiv.org/html/2507.03541v2
+
+### ChatGPT/LLM Face Recognition Studies
+4. **How Good is ChatGPT at Face Biometrics?** (Jan 2024) — Recognition, soft biometrics, explainability. ~77% avg accuracy, false positive tendency. https://arxiv.org/abs/2401.13641
+5. **ChatGPT and Biometrics** (Mar 2024) — Face recognition, gender, age estimation. 97.5% on Black faces, 83.9% on White (demographic variance). https://arxiv.org/abs/2403.02965
+6. **Face to Face: Comparing ChatGPT with Human Performance** (2024) — Direct comparison with human face matching. https://pmc.ncbi.nlm.nih.gov/articles/PMC11646356/
+7. **Benchmarking MLLMs for Face Recognition** (Oct 2025) — Multi-model benchmark. https://arxiv.org/html/2510.14866v1
+
+### Specialized Topics
+8. **Synthetic Face Ageing** (Jun 2024) — Evaluation of age-robust facial recognition. Cross-age degradation analysis. https://arxiv.org/html/2406.06932v1
+9. **Impact of Image Resolution on Age Estimation** (Nov 2025) — DeepFace and InsightFace resolution study. https://arxiv.org/html/2511.14689v1
+10. **Masked Face Recognition Challenge** — InsightFace track report on occlusion handling. https://researchgate.net/publication/356518573
+11. **50 Years of Automated Face Recognition** (May 2025) — Comprehensive survey. https://arxiv.org/html/2505.24247v1/
+12. **GPT-4 Emergent Facial Recognition** — Without explicit training. https://idtechwire.com/gpt-4-demonstrates-emergent-facial-recognition-capabilities-without-explicit-training-study/
+13. **FaceLLM** (ICCV 2025 Workshop) — Multimodal LLM for face understanding. https://openaccess.thecvf.com/content/ICCV2025W/FoundGen-Bio/papers/
+14. **llm-face-vision benchmark** — GitHub repo with benchmark code. https://github.com/yhenon/llm-face-vision
 
 ## Breadcrumbs
 - BACKLOG: TOOLS-007 (Deep Comparison), TOOLS-008 (reliability research)
