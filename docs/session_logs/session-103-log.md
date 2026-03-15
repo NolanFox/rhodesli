@@ -6,8 +6,8 @@ Started: 2026-03-15
 - [x] Phase 1: Create ML Supabase tables
 - [x] Phase 2: Run baseline clustering with tracking
 - [x] Phase 3: Run reranker comparison
-- [ ] Phase 4: Community-scoped suggestions
-- [ ] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
+- [x] Phase 4: Community-scoped suggestions
+- [x] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
 - [ ] Phase 6: P0 triage fixes (FB-168, FB-150)
 - [ ] Phase 7: P1 triage fixes
 - [ ] Phase 8: Deploy + browser verify
@@ -46,6 +46,22 @@ Started: 2026-03-15
 - Recommendation: Do NOT activate reranker until more age-gap labels exist
 - 8 new tests in `tests/test_compare_ml_runs.py`
 - Results: `docs/ml/run_results/reranker_comparison_103.md`
+
+## Phase 4: Community-Scoped Suggestions
+- Find-similar panel (`browse_routes.py`): fetches 20 neighbors, filters to same-community first (cross-community fills if < 5)
+- Speed-run suggestions (`cluster_review_routes.py`): `_get_confirmed_identity_suggestions()` now accepts `community_slug`, ranks same-community confirmed identities first
+- Cross-community badge (`main.py`): removed "From " prefix — shows "Fox Family Archive" not "From Fox Family Archive"
+- 7 new tests in `tests/test_community_scoped_suggestions.py` — all pass
+- 4331 app tests pass (3 pre-existing failures unchanged)
+- Commit: 047558c
+
+## Phase 5: Session 102 Test Gaps
+- TEST-003: `test_rhodes_photo_excluded_from_fox_identity_set` + `test_cross_community_identity_included_when_faces_in_both` — verify community photo-derived identity sets prevent cross-community leakage
+- TEST-004: 3 tests for `shadow_write_identities_batch` DATA-020 name protection guard — verifies Postgres real names never overwritten by "Unidentified Person NNN"
+- OBS-003: Added `input_method` parameter to 6 speed-run routes (confirm-all, reject-all, skip, dismiss, save-name, merge) — conditionally passed through to `log_user_action()`
+- 4 tests for input_method logging: records keyboard/button, omits when empty, source code verification
+- 9 new tests total in `tests/test_session102_gaps.py`
+- 4340 app tests pass (3 pre-existing failures unchanged)
 
 ## Phase 0: Orient
 - Set current_session.txt to 103

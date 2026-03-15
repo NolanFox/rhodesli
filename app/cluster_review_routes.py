@@ -1398,7 +1398,13 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
 
 @rt("/api/cluster-review/confirm-all")
 def post(
-    identity_id: str = "", speed_run: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None
+    identity_id: str = "",
+    speed_run: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    input_method: str = "",
+    sess=None,
+    request=None,
 ):
     """Confirm all candidate faces for an identity."""
     denied = _main_mod._check_admin(sess)
@@ -1443,6 +1449,7 @@ def post(
             state_after="CONFIRMED",
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
+            **({"input_method": input_method} if input_method else {}),
         )
     except (ValueError, KeyError) as e:
         return Div(
@@ -1481,7 +1488,13 @@ def post(
 
 @rt("/api/cluster-review/reject-all")
 def post(
-    identity_id: str = "", speed_run: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None
+    identity_id: str = "",
+    speed_run: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    input_method: str = "",
+    sess=None,
+    request=None,
 ):
     """Reject all candidate faces for an identity."""
     denied = _main_mod._check_admin(sess)
@@ -1513,6 +1526,7 @@ def post(
             face_count=len(candidates),
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
+            **({"input_method": input_method} if input_method else {}),
         )
     except (ValueError, KeyError) as e:
         return Div(
@@ -2113,7 +2127,9 @@ def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
 
 
 @rt("/api/cluster-review/skip")
-def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+def post(
+    identity_id: str = "", offset: int = 0, community_slug: str = "", input_method: str = "", sess=None, request=None
+):
     """Skip a cluster (no data change) and auto-advance with undo support."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2130,6 +2146,7 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
         identity_id=identity_id,
         mode="speed-run",
         admin=_speed_run_admin_email(sess),
+        **({"input_method": input_method} if input_method else {}),
     )
 
     undo_state = _build_undo_state(
@@ -2147,7 +2164,13 @@ def post(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=
 
 @rt("/api/cluster-review/dismiss")
 def post(
-    identity_id: str = "", offset: int = 0, community_slug: str = "", speed_run: str = "", sess=None, request=None
+    identity_id: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    speed_run: str = "",
+    input_method: str = "",
+    sess=None,
+    request=None,
 ):
     """Dismiss a cluster (set to SKIPPED) and auto-advance."""
     denied = _main_mod._check_admin(sess)
@@ -2168,6 +2191,7 @@ def post(
         identity_id=identity_id,
         mode="speed-run",
         admin=_speed_run_admin_email(sess),
+        **({"input_method": input_method} if input_method else {}),
     )
 
     undo_state = _build_undo_state(
@@ -2185,7 +2209,15 @@ def post(
 
 
 @rt("/api/cluster-review/save-name")
-def post(identity_id: str = "", new_name: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+def post(
+    identity_id: str = "",
+    new_name: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    input_method: str = "",
+    sess=None,
+    request=None,
+):
     """Save a name for an identity during speed-run enrichment, then advance."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -2202,6 +2234,7 @@ def post(identity_id: str = "", new_name: str = "", offset: int = 0, community_s
                 new_name=new_name.strip(),
                 mode="speed-run",
                 admin=_speed_run_admin_email(sess),
+                **({"input_method": input_method} if input_method else {}),
             )
         except (KeyError, ValueError) as e:
             return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-2")
@@ -2303,7 +2336,15 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
 
 
 @rt("/api/cluster-review/merge")
-def post(source_id: str = "", target_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+def post(
+    source_id: str = "",
+    target_id: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    input_method: str = "",
+    sess=None,
+    request=None,
+):
     """Merge source identity into target during speed-run enrichment."""
     import time as _time
     import logging
@@ -2340,6 +2381,7 @@ def post(source_id: str = "", target_id: str = "", offset: int = 0, community_sl
             faces_merged=result.get("faces_merged", 0),
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
+            **({"input_method": input_method} if input_method else {}),
         )
     except (KeyError, ValueError) as e:
         return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-4")
