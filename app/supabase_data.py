@@ -658,11 +658,19 @@ def get_gemini_call_summary(batch_id=None):
 # JSON to Supabase as the primary data store.
 
 
-def shadow_write_photo(photo_data: dict) -> None:
-    """Shadow-write photo metadata to Supabase. Fire-and-forget."""
+def shadow_write_photo(photo_data: dict, strict: bool = False) -> None:
+    """Shadow-write photo metadata to Supabase.
+
+    Args:
+        photo_data: Photo metadata dict with photo_id, path, etc.
+        strict: If True, re-raise exceptions instead of swallowing them.
+                Use strict=True when DATA_SOURCE=postgres (Session 105).
+    """
     try:
         client = get_supabase_client()
         if not client:
+            if strict:
+                raise ConnectionError("Supabase client not available for strict shadow write")
             return
         row = {
             "photo_id": photo_data.get("photo_id", ""),
@@ -679,7 +687,15 @@ def shadow_write_photo(photo_data: dict) -> None:
         }
         client.table("photos").upsert(row).execute()
     except Exception as e:
-        logger.warning(f"Shadow write photo failed: {e}")
+        logger.error(f"Shadow write photo failed: {e}")
+        try:
+            import sentry_sdk
+
+            sentry_sdk.add_breadcrumb(category="shadow_write", message=f"photo write failed: {e}", level="error")
+        except ImportError:
+            pass
+        if strict:
+            raise
 
 
 def _ensure_list_for_supabase(val):
@@ -700,11 +716,19 @@ def _ensure_list_for_supabase(val):
     return []
 
 
-def shadow_write_identity(identity_data: dict) -> None:
-    """Shadow-write identity to Supabase. Fire-and-forget."""
+def shadow_write_identity(identity_data: dict, strict: bool = False) -> None:
+    """Shadow-write identity to Supabase.
+
+    Args:
+        identity_data: Identity dict with identity_id, name, state, etc.
+        strict: If True, re-raise exceptions instead of swallowing them.
+                Use strict=True when DATA_SOURCE=postgres (Session 105).
+    """
     try:
         client = get_supabase_client()
         if not client:
+            if strict:
+                raise ConnectionError("Supabase client not available for strict shadow write")
             return
         row = {
             "identity_id": identity_data.get("identity_id", ""),
@@ -722,13 +746,28 @@ def shadow_write_identity(identity_data: dict) -> None:
         }
         client.table("identities").upsert(row).execute()
     except Exception as e:
-        logger.warning(f"Shadow write identity failed: {e}")
+        logger.error(f"Shadow write identity failed: {e}")
+        try:
+            import sentry_sdk
+
+            sentry_sdk.add_breadcrumb(category="shadow_write", message=f"identity write failed: {e}", level="error")
+        except ImportError:
+            pass
+        if strict:
+            raise
 
 
-def shadow_write_photos_batch(photos_list: list[dict]) -> int:
-    """Shadow-write a batch of photos to Supabase. Returns count written."""
+def shadow_write_photos_batch(photos_list: list[dict], strict: bool = False) -> int:
+    """Shadow-write a batch of photos to Supabase. Returns count written.
+
+    Args:
+        photos_list: List of photo dicts with photo_id, path, etc.
+        strict: If True, re-raise exceptions instead of swallowing them.
+    """
     client = get_supabase_client()
     if not client:
+        if strict:
+            raise ConnectionError("Supabase client not available for strict shadow write")
         return 0
 
     written = 0
@@ -756,11 +795,13 @@ def shadow_write_photos_batch(photos_list: list[dict]) -> int:
             client.table("photos").upsert(rows).execute()
             written += len(rows)
         except Exception as e:
-            logger.warning(f"Shadow write photos batch failed: {e}")
+            logger.error(f"Shadow write photos batch failed: {e}")
+            if strict:
+                raise
     return written
 
 
-def shadow_write_identities_batch(identities_list: list[dict]) -> int:
+def shadow_write_identities_batch(identities_list: list[dict], strict: bool = False) -> int:
     """Shadow-write a batch of identities to Supabase. Returns count written.
 
     DATA-020: Never overwrite a meaningful Postgres name with an auto-generated
@@ -769,6 +810,8 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
     """
     client = get_supabase_client()
     if not client:
+        if strict:
+            raise ConnectionError("Supabase client not available for strict shadow write")
         return 0
 
     # DATA-020: Pre-fetch existing Postgres names for protection check
@@ -832,7 +875,9 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
             client.table("identities").upsert(rows).execute()
             written += len(rows)
         except Exception as e:
-            logger.warning(f"Shadow write identities batch failed: {e}")
+            logger.error(f"Shadow write identities batch failed: {e}")
+            if strict:
+                raise
 
     if name_protected:
         logger.info(f"DATA-020: Protected {name_protected} Postgres names from auto-generated overwrite")

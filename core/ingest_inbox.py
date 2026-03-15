@@ -1487,6 +1487,12 @@ def main():
         default="",
         help="Email of the uploader",
     )
+    parser.add_argument(
+        "--community",
+        type=str,
+        default="",
+        help="Community slug to auto-assign photos to (e.g., 'rhodes', 'fox-family')",
+    )
     args = parser.parse_args()
 
     # Resolve data_dir: CLI arg > DATA_DIR env var > default
@@ -1528,6 +1534,46 @@ def main():
 
     if result["status"] == "error":
         sys.exit(1)
+
+    # Session 105: Auto-assign photos and identities to community after ingest
+    if args.community and result.get("status") in ("success", "partial"):
+        try:
+            from app.supabase_data import (
+                add_photo_to_community,
+                add_identity_to_community,
+                get_supabase_client,
+            )
+
+            # Look up community ID from slug
+            sb = get_supabase_client()
+            community_id = None
+            if sb:
+                resp = sb.table("communities").select("id").eq("slug", args.community).execute()
+                if resp.data:
+                    community_id = resp.data[0]["id"]
+
+            if community_id:
+                photo_ids = result.get("photo_ids", [])
+                for pid in photo_ids:
+                    add_photo_to_community(pid, community_id)
+
+                # Also tag identities created for these photos
+                face_ids = result.get("face_ids", [])
+                if face_ids:
+                    from core.registry import IdentityRegistry
+
+                    resolve_dir = data_dir or Path(os.environ.get("DATA_DIR", "data"))
+                    registry = IdentityRegistry.load(resolve_dir / "identities.json")
+                    for fid in face_ids:
+                        identity = registry.get_identity_for_face(fid)
+                        if identity:
+                            add_identity_to_community(identity["identity_id"], community_id)
+
+                print(f"[ingest] Tagged {len(photo_ids)} photos to community {args.community} ({community_id})")
+            else:
+                print(f"[ingest] WARNING: Community '{args.community}' not found in Supabase")
+        except Exception as e:
+            print(f"[ingest] Community tagging failed (non-fatal): {e}")
 
     print(json.dumps(result, indent=2))
 

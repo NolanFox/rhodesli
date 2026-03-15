@@ -57,66 +57,6 @@ def get(request):
     }
 
 
-@rt("/api/sync/debug-cache")
-def get(request, photo_id: str = ""):
-    """Temporary debug endpoint — check photo cache state for a given photo_id."""
-    denied = _check_sync_token(request)
-    if denied:
-        return denied
-
-    _main_mod._build_caches()
-    cache_entry = (_main_mod._photo_cache or {}).get(photo_id)
-    aliases = _main_mod._photo_id_aliases or {}
-    alias_target = aliases.get(photo_id)
-
-    # Check filename_to_source map
-    from pathlib import Path as _P
-
-    photo_index_path = _main_mod.data_path / "photo_index.json"
-    pi_entry = None
-    if photo_index_path.exists():
-        with open(photo_index_path) as f:
-            pi_data = json.load(f)
-        pi_entry = pi_data.get("photos", {}).get(photo_id)
-
-    # Check the photo_registry used by _build_caches
-    from core.photo_registry import PhotoRegistry as _PR
-
-    pr = _PR.load(photo_index_path) if photo_index_path.exists() else _PR()
-    pr_source = pr.get_source(photo_id) if photo_id else ""
-    pr_path = pr.get_photo_path(photo_id) if photo_id else ""
-
-    # Check filename mapping
-    cache_fname = _P(cache_entry.get("filename", "")).name if cache_entry else ""
-    pr_entries_with_fname = []
-    for rpid in pr._photos:
-        rpath = pr.get_photo_path(rpid)
-        if rpath and _P(rpath).name == cache_fname:
-            pr_entries_with_fname.append(
-                {
-                    "pid": rpid[:40],
-                    "source": pr.get_source(rpid),
-                    "collection": pr.get_collection(rpid),
-                }
-            )
-
-    return {
-        "photo_id": photo_id,
-        "in_photo_cache": cache_entry is not None,
-        "cache_filename": cache_entry.get("filename") if cache_entry else None,
-        "cache_source": cache_entry.get("source") if cache_entry else None,
-        "cache_collection": cache_entry.get("collection") if cache_entry else None,
-        "cache_upload_date": cache_entry.get("upload_date") if cache_entry else None,
-        "cache_face_count": len(cache_entry.get("faces", [])) if cache_entry else 0,
-        "alias_target": alias_target,
-        "in_photo_index": pi_entry is not None,
-        "pi_source": pi_entry.get("source") if pi_entry else None,
-        "pr_direct_source": pr_source,
-        "pr_direct_path": pr_path,
-        "pr_entries_matching_filename": pr_entries_with_fname,
-    }
-
-
 @rt("/api/sync/identities")
 def get(request):
     """Download identities.json via sync token. For scripts/sync_from_production.py."""
@@ -543,6 +483,47 @@ async def post(request):
             "backup": backup_path.name,
         }
 
+    # Session 105: Write to Supabase so DATA_SOURCE=postgres sees the data.
+    # This is synchronous — if it fails, we return the error (not fire-and-forget).
+    supabase_results = {}
+    try:
+        from app.supabase_data import (
+            shadow_write_identities_batch,
+            shadow_write_photos_batch,
+            add_photo_to_community,
+        )
+
+        if body.get("identities"):
+            id_data = body["identities"]
+            identities_dict = id_data.get("identities", id_data)
+            if isinstance(identities_dict, dict):
+                items = [dict(v, identity_id=k) for k, v in identities_dict.items()]
+                written = shadow_write_identities_batch(items)
+                supabase_results["identities_synced"] = written
+
+        if body.get("photo_index"):
+            pi_data = body["photo_index"]
+            photos = pi_data.get("photos", {})
+            if isinstance(photos, dict):
+                items = [dict(v, photo_id=k) for k, v in photos.items()]
+                written = shadow_write_photos_batch(items)
+                supabase_results["photos_synced"] = written
+
+                # Auto-assign photos to communities based on existing community assignments
+                # (best effort — if community info is available from photo data)
+                community_tagged = 0
+                for photo_id, photo_data in photos.items():
+                    community_id = photo_data.get("community_id")
+                    if community_id:
+                        if add_photo_to_community(photo_id, community_id):
+                            community_tagged += 1
+                if community_tagged:
+                    supabase_results["community_tagged"] = community_tagged
+
+    except Exception as e:
+        logging.error(f"Sync push Supabase write failed: {e}")
+        supabase_results["error"] = str(e)
+
     # Invalidate ALL in-memory caches so subsequent requests see the new data
     _main_mod._invalidate_all_caches()
 
@@ -550,6 +531,7 @@ async def post(request):
     # Keep at most 3 of each type (identities, photo_index, annotations).
     _prune_bak_files(data_path)
 
+    results["supabase"] = supabase_results
     return {"status": "ok", "results": results, "timestamp": ts}
 
 

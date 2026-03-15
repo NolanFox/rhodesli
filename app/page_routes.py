@@ -124,6 +124,63 @@ def _build_timeline_person_filter_items(
     return items
 
 
+def _check_data_parity(json_photo_count: int, json_identity_count: int) -> dict:
+    """Compare JSON and Supabase data counts. Session 105.
+
+    Returns a dict with counts and sync status for the health endpoint.
+    """
+    result = {
+        "photos_json": json_photo_count,
+        "identities_json": json_identity_count,
+        "photos_pg": None,
+        "identities_pg": None,
+        "synced": None,
+    }
+    try:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if not sb:
+            result["error"] = "supabase_not_configured"
+            return result
+
+        # Count photos in Supabase
+        pg_photos = sb.table("photos").select("photo_id", count="exact").execute()
+        result["photos_pg"] = pg_photos.count if pg_photos.count is not None else len(pg_photos.data or [])
+
+        # Count identities in Supabase
+        pg_ids = sb.table("identities").select("identity_id", count="exact").execute()
+        result["identities_pg"] = pg_ids.count if pg_ids.count is not None else len(pg_ids.data or [])
+
+        # Check sync status
+        photo_diff = abs(result["photos_json"] - (result["photos_pg"] or 0))
+        id_diff = abs(result["identities_json"] - (result["identities_pg"] or 0))
+
+        if photo_diff == 0 and id_diff == 0:
+            result["synced"] = True
+        else:
+            result["synced"] = False
+            result["photo_diff"] = photo_diff
+            result["identity_diff"] = id_diff
+            # Log warnings/errors based on severity
+            total = max(json_photo_count + json_identity_count, 1)
+            pct = (photo_diff + id_diff) / total * 100
+            if pct > 5:
+                logging.error(
+                    f"DATA PARITY ERROR: photos JSON={json_photo_count} PG={result['photos_pg']}, "
+                    f"identities JSON={json_identity_count} PG={result['identities_pg']} ({pct:.1f}% mismatch)"
+                )
+            elif photo_diff + id_diff > 0:
+                logging.warning(
+                    f"Data parity warning: photos JSON={json_photo_count} PG={result['photos_pg']}, "
+                    f"identities JSON={json_identity_count} PG={result['identities_pg']}"
+                )
+    except Exception as e:
+        result["error"] = str(e)
+
+    return result
+
+
 @rt("/health")
 def health():
     """Health check endpoint for Railway deployment."""
@@ -197,6 +254,9 @@ def health():
     except Exception:
         disk_info = {"error": "unavailable"}
 
+    # Session 105: Data parity check — compare JSON and Supabase counts
+    data_parity = _check_data_parity(photo_count, len(registry.list_identities()))
+
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
@@ -207,6 +267,7 @@ def health():
         "calibration_model": calibration_status,
         "supabase": _main_mod._ping_supabase(),
         "disk": disk_info,
+        "data_parity": data_parity,
     }
 
 
