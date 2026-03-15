@@ -1121,6 +1121,14 @@ def save_registry(registry, confirmed_identity_info=None):
     _registry_cache_ts = time.time()
     # Keep cache_key — it will match on next load
 
+    # Clear face-identity lookup cache so get_identity_for_face() rebuilds it
+    # from the updated _identities dict. Without this, merges/tags appear to
+    # succeed but the stale cache causes the old mapping to be returned on
+    # the next render, silently reverting the tag (BUG-001 / FB-141).
+    registry_dict = getattr(registry, "__dict__", None)
+    if registry_dict is not None:
+        registry_dict.pop("_face_identity_lookup_cache", None)
+
     if DATA_SOURCE == "postgres":
         # Postgres write path: sync overrides inline (fast), batch write in background
         import threading
@@ -1146,9 +1154,6 @@ def save_registry(registry, confirmed_identity_info=None):
 
     # JSON write path (default)
     registry.save(REGISTRY_PATH)
-    registry_dict = getattr(registry, "__dict__", None)
-    if registry_dict is not None:
-        registry_dict.pop("_face_identity_lookup_cache", None)
 
     # Sync identities to Supabase in background thread (non-blocking)
     def _background_supabase_sync(identities_dict):
