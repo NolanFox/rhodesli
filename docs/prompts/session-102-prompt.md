@@ -361,14 +361,29 @@ The academic literature strongly supports this approach:
 3. **Adapter experiment harness** (Phase 4) — frozen-embedding fine-tuning track
 4. All rollout gates closed — not enough labels at the time
 
-### Tasks for this phase
-1. **Audit PRD-038 state**: Read `rhodesli_ml/` modules, check what's working in shadow mode, what data we have
-2. **Count confirmed Fox labels**: How many confirmed identities × faces do we have? Minimum viable for constrained re-clustering?
-3. **Design retroactive experiment**: Take current confirmed anchors, re-run clustering with must-link constraints, compare cluster quality vs. blind clustering
-4. **Write PRD-045**: "Active Learning Feedback Loop" — scope: (a) activate prototype-bank reranker, (b) re-cluster with confirmed anchors as seeds, (c) measure improvement, (d) if positive, wire into post-triage pipeline (after confirming N clusters, auto-improve remaining matches)
-5. **Document research**: Save findings to `docs/ml/ACTIVE_LEARNING_RESEARCH.md` with paper references and breadcrumbs to PRD-038
+### PREREQUISITE: ML Run Provenance Schema (FB-146, DATA-021)
+Before any ML re-runs, the data schema MUST support run-level tracking. Current state:
+- `core/run_context.py` has run IDs but only in local text file, not Supabase
+- `core/event_recorder.py` writes JSONL events but not wired into clustering
+- `proposals.json` has NO run_id — re-runs overwrite previous results
+- No way to compare two runs or A/B test
 
-**Commit:** `docs: PRD-045 active learning feedback loop + research`
+**Write PRD-046: "ML Pipeline Run Provenance"** covering:
+1. `ml_runs` Supabase table: run_id, timestamp, pipeline_type, config_json, status, result_summary
+2. `ml_proposals` Supabase table: proposal_id, run_id, source_identity_id, target_identity_id, score, status, decided_by, decided_at
+3. Run-aware `cluster_new_faces.py` — writes to Supabase with run_id, doesn't overwrite proposals.json (appends or versions)
+4. Diff/compare tooling — compare two runs: what changed, what improved, what regressed
+5. Cross-store consistency — proposals in Supabase (source of truth), not just local JSON
+
+### Tasks for this phase
+1. **Write PRD-046** (ML Run Provenance) — prerequisite for any ML pipeline changes
+2. **Audit PRD-038 state**: Read `rhodesli_ml/` modules, check what's working in shadow mode
+3. **Count confirmed Fox labels**: How many confirmed identities × faces? Minimum viable for constrained re-clustering?
+4. **Write PRD-045**: "Active Learning Feedback Loop" — scope: (a) activate prototype-bank reranker, (b) re-cluster with confirmed anchors as seeds, (c) measure improvement via PRD-046 diff tooling, (d) if positive, wire into post-triage pipeline
+5. **Document research**: Save findings to `docs/ml/ACTIVE_LEARNING_RESEARCH.md` with paper references and breadcrumbs to PRD-038
+6. **Identify other risk scenarios**: What else could go wrong? Production-local divergence during ML re-runs, embedding version drift, threshold changes without tracking, etc.
+
+**Commit:** `docs: PRD-045 + PRD-046 active learning + ML run provenance`
 **/clear after commit**
 
 ---

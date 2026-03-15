@@ -177,6 +177,30 @@ Nolan drives triage. Claude fixes or logs.
 - **Implication:** Speed-run needs fundamental rethink. Consider: sort by face count (like New Matches), skip non-Fox clusters automatically, batch operations, pre-loading next card.
 - **BACKLOG:** UX-093
 
+### FB-146: ML pipeline needs run-level provenance before any re-clustering (PREREQUISITE)
+- **Severity:** P0 (data integrity / prerequisite for FB-145)
+- **Context:** Nolan's directive: "Every ML run should have an ID and timestamp. When an ML decision is assigned, it should be linked to that run. We need A/B testing capability. We cannot overwrite previous results."
+- **Current state (investigated 2026-03-14):**
+  - `core/run_context.py` — creates run IDs (`run_YYYYMMDD_HHMMSS`) but stored in a local text file, not Supabase
+  - `core/event_recorder.py` — writes structured JSONL events with `run_id`, `event_type`, `actor`, `payload`. But only used by ~10 files, not wired into clustering pipeline
+  - `user_source` field on registry mutations — records WHO (e.g. "admin/cluster-review") but NOT which ML run produced the proposal
+  - `proposals.json` — clustering output, but NO run_id, NO timestamp, NO way to diff between runs
+  - `gemini_api_calls` table in Supabase — has `model`, `prompt_text`, `response_summary` but that's for Gemini, not clustering
+  - **Data lives in 3 places**: local JSON (git), Railway volume, Supabase Postgres — no cross-store ML run tracking
+- **Gaps that MUST be fixed before re-running ML:**
+  1. No `ml_runs` table in Supabase — need: run_id, timestamp, pipeline_type (clustering/reranking/active_learning), config (thresholds, model version), status, result_summary
+  2. No `ml_proposals` table — need: proposal_id, run_id, source_identity_id, target_identity_id, score, status (pending/accepted/rejected), decided_by, decided_at
+  3. `proposals.json` has no run provenance — a re-run overwrites the file, losing the previous run's proposals
+  4. No way to compare two runs — need before/after diff capability
+  5. Clustering script (`cluster_new_faces.py`) writes directly to proposals.json with no versioning
+- **Risk scenarios if we skip this:**
+  - Re-run clustering → overwrites proposals.json → lose record of which proposals were from original run vs. new run
+  - Can't measure if active learning actually improved matching — no baseline to compare against
+  - Production-local divergence AGAIN — re-clustering locally produces different results than what's deployed
+  - A/B test is impossible without run-level tracking
+- **Recommendation:** This is a prerequisite PRD/SDD (PRD-046) that must be scoped in Phase 7 of session 102, BEFORE any ML pipeline changes. The PRD should cover: ml_runs table, ml_proposals table, run-aware clustering script, diff/compare tooling.
+- **BACKLOG:** DATA-021 (ML run provenance schema)
+
 ### FB-145: Active learning — can confirmed clusters improve ML matching?
 - **Severity:** P1 (product direction / ML)
 - **Context:** Nolan's question: after confirming several Fox Family clusters, can we re-run ML with that feedback to get better matches and reduce manual work? Answer: YES — PRD-038 (Session 97) built exactly this:
