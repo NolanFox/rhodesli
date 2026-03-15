@@ -27,6 +27,8 @@ import json
 import os
 import sys
 import tempfile
+import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -227,10 +229,103 @@ def apply_suggestions(
     return data, applied
 
 
+def _get_supabase_client():
+    """Get Supabase client, returning None if not configured."""
+    try:
+        from app.supabase_data import get_supabase_client
+
+        return get_supabase_client()
+    except Exception:
+        return None
+
+
+def create_ml_run(sb, config: dict, scorer: str) -> str | None:
+    """Create an ml_runs record at pipeline start. Returns run_id or None."""
+    if sb is None:
+        return None
+    run_id = str(uuid.uuid4())
+    try:
+        sb.table("ml_runs").insert(
+            {
+                "run_id": run_id,
+                "pipeline_type": "cluster_new_faces",
+                "config_json": {
+                    "threshold": config.get("threshold"),
+                    "scorer": scorer,
+                    "limit": config.get("limit"),
+                    "mode": config.get("mode", "dry_run"),
+                },
+                "status": "running",
+                "triggered_by": "manual",
+            }
+        ).execute()
+        print(f"ML run created: {run_id}")
+        return run_id
+    except Exception as e:
+        print(f"WARNING: Failed to create ml_run: {e}")
+        return None
+
+
+def write_proposals_to_supabase(sb, run_id: str, suggestions: list[dict], scorer: str) -> int:
+    """Write proposals to ml_proposals table. Returns count written."""
+    if sb is None or run_id is None:
+        return 0
+    rows = []
+    for s in suggestions:
+        tier = (
+            "tier1"
+            if s["distance"] < MATCH_THRESHOLD_VERY_HIGH
+            else ("tier2" if s["distance"] < MATCH_THRESHOLD_HIGH else "tier3")
+        )
+        rows.append(
+            {
+                "run_id": run_id,
+                "source_identity_id": s["source_identity_id"],
+                "target_identity_id": s["target_identity_id"],
+                "score": round(s["distance"], 6),
+                "calibrated_score": round(s.get("reranker_score", s["distance"]), 6)
+                if s.get("reranker_score")
+                else None,
+                "tier": tier,
+                "status": "pending",
+            }
+        )
+    if not rows:
+        return 0
+    try:
+        # Batch in chunks of 100
+        written = 0
+        for i in range(0, len(rows), 100):
+            chunk = rows[i : i + 100]
+            sb.table("ml_proposals").insert(chunk).execute()
+            written += len(chunk)
+        print(f"Wrote {written} proposals to ml_proposals (run_id={run_id})")
+        return written
+    except Exception as e:
+        print(f"WARNING: Failed to write proposals to Supabase: {e}")
+        return 0
+
+
+def complete_ml_run(sb, run_id: str, result_summary: dict, start_time: float) -> None:
+    """Update ml_runs with completion status and result summary."""
+    if sb is None or run_id is None:
+        return
+    duration_ms = int((time.time() - start_time) * 1000)
+    try:
+        sb.table("ml_runs").update(
+            {
+                "status": "completed",
+                "result_summary": result_summary,
+                "duration_ms": duration_ms,
+            }
+        ).eq("run_id", run_id).execute()
+        print(f"ML run completed: {run_id} ({duration_ms}ms)")
+    except Exception as e:
+        print(f"WARNING: Failed to update ml_run: {e}")
+
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Cluster newly detected faces against confirmed identity centroids."
-    )
+    parser = argparse.ArgumentParser(description="Cluster newly detected faces against confirmed identity centroids.")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -273,6 +368,7 @@ def main():
 
     data_path = project_root / "data"
     identities_path = data_path / "identities.json"
+    start_time = time.time()
 
     print("=" * 60)
     print("CLUSTER NEW FACES")
@@ -282,6 +378,14 @@ def main():
     print(f"Mode: {'DRY RUN' if args.dry_run else 'EXECUTE'}")
     print(f"Scorer: {args.scorer}")
     print()
+
+    # Create ML run record in Supabase
+    sb = _get_supabase_client()
+    run_id = create_ml_run(
+        sb,
+        {"threshold": args.threshold, "limit": args.limit, "mode": "execute" if args.execute else "dry_run"},
+        args.scorer,
+    )
 
     # Load data
     print("Loading identities...")
@@ -310,11 +414,19 @@ def main():
     suggestions = find_matches(identities_data, face_data, args.threshold, reranker=reranker)
 
     if args.limit:
-        suggestions = suggestions[:args.limit]
+        suggestions = suggestions[: args.limit]
 
     if not suggestions:
         print("No match suggestions found at this threshold.")
         print(f"Try increasing --threshold (current: {args.threshold})")
+        complete_ml_run(
+            sb,
+            run_id,
+            {"proposals_created": 0, "tier_breakdown": {"tier1": 0, "tier2": 0, "tier3": 0}},
+            start_time,
+        )
+        if run_id:
+            print(f"\nRun ID: {run_id}")
         return
 
     # Display suggestions
@@ -332,8 +444,7 @@ def main():
             target_display = target_display[:21] + "..."
 
         confidence = confidence_label(s["distance"])
-        print(f"  {face_display:<34} -> {target_display:<24} "
-              f"{s['distance']:>8.4f}  [{confidence}]")
+        print(f"  {face_display:<34} -> {target_display:<24} {s['distance']:>8.4f}  [{confidence}]")
 
     # Group by source identity for readability
     print()
@@ -359,23 +470,54 @@ def main():
         "proposals": [],
     }
     for s in suggestions:
-        proposals_data["proposals"].append({
-            "source_identity_id": s["source_identity_id"],
-            "source_identity_name": s["source_identity_name"],
-            "source_state": s.get("source_state", "INBOX"),
-            "target_identity_id": s["target_identity_id"],
-            "target_identity_name": s["target_identity_name"],
-            "face_id": s["face_id"],
-            "distance": round(s["distance"], 4),
-            "confidence": confidence_label(s["distance"]),
-            "scorer_variant": s.get("scorer_variant", args.scorer),
-            "reranker_score": s.get("reranker_score"),
-            "margin": s.get("margin", 0),
-            "ambiguous": s.get("ambiguous", False),
-        })
+        proposals_data["proposals"].append(
+            {
+                "source_identity_id": s["source_identity_id"],
+                "source_identity_name": s["source_identity_name"],
+                "source_state": s.get("source_state", "INBOX"),
+                "target_identity_id": s["target_identity_id"],
+                "target_identity_name": s["target_identity_name"],
+                "face_id": s["face_id"],
+                "distance": round(s["distance"], 4),
+                "confidence": confidence_label(s["distance"]),
+                "scorer_variant": s.get("scorer_variant", args.scorer),
+                "reranker_score": s.get("reranker_score"),
+                "margin": s.get("margin", 0),
+                "ambiguous": s.get("ambiguous", False),
+            }
+        )
     with open(proposals_path, "w") as f:
         json.dump(proposals_data, f, indent=2)
     print(f"\nWrote {len(suggestions)} proposals to {proposals_path}")
+
+    # Write proposals to Supabase ml_proposals table
+    write_proposals_to_supabase(sb, run_id, suggestions, args.scorer)
+
+    # Compute tier breakdown for result summary
+    tier_counts = {"tier1": 0, "tier2": 0, "tier3": 0}
+    for s in suggestions:
+        if s["distance"] < MATCH_THRESHOLD_VERY_HIGH:
+            tier_counts["tier1"] += 1
+        elif s["distance"] < MATCH_THRESHOLD_HIGH:
+            tier_counts["tier2"] += 1
+        else:
+            tier_counts["tier3"] += 1
+
+    # Complete the ML run
+    complete_ml_run(
+        sb,
+        run_id,
+        {
+            "proposals_created": len(suggestions),
+            "tier_breakdown": tier_counts,
+            "identity_count": len(identities_data.get("identities", {})),
+            "embedding_count": len(face_data),
+        },
+        start_time,
+    )
+
+    if run_id:
+        print(f"\nRun ID: {run_id}")
 
     # Set confirmed_match promotion fields on SKIPPED identities with
     # VERY HIGH or HIGH proposals. This allows the UI triage bar to show
@@ -396,15 +538,15 @@ def main():
         source["promoted_from"] = "SKIPPED"
         source["promoted_at"] = now
         source["promotion_reason"] = "confirmed_match"
-        source["promotion_context"] = (
-            f"Matches {s['target_identity_name']} at distance {s['distance']:.3f} ({conf})"
+        source["promotion_context"] = f"Matches {s['target_identity_name']} at distance {s['distance']:.3f} ({conf})"
+        promotions.append(
+            {
+                "identity_id": source_id,
+                "name": s["source_identity_name"],
+                "target": s["target_identity_name"],
+                "distance": s["distance"],
+            }
         )
-        promotions.append({
-            "identity_id": source_id,
-            "name": s["source_identity_name"],
-            "target": s["target_identity_name"],
-            "distance": s["distance"],
-        })
 
     if promotions:
         # Save updated identities with promotion fields

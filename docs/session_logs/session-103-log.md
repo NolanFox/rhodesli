@@ -4,7 +4,7 @@ Started: 2026-03-15
 ## Phase Checklist
 - [x] Phase 0: Orient
 - [x] Phase 1: Create ML Supabase tables
-- [ ] Phase 2: Run baseline clustering with tracking
+- [x] Phase 2: Run baseline clustering with tracking
 - [ ] Phase 3: Run reranker comparison
 - [ ] Phase 4: Community-scoped suggestions
 - [ ] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
@@ -25,6 +25,15 @@ Started: 2026-03-15
 - Test insert + delete confirmed working
 - 9 new tests in `tests/test_ml_run_tables.py` — all pass
 - Pre-existing failure: `test_browse_cards_use_unified_card` (unrelated)
+
+## Phase 2: Run Baseline Clustering with Run Tracking
+- Modified `scripts/cluster_new_faces.py`: added `create_ml_run()`, `write_proposals_to_supabase()`, `complete_ml_run()`
+- Run creates ml_runs record at start, writes proposals to ml_proposals, completes run with summary
+- Fire-and-forget pattern: tracking silently skips when Supabase not configured
+- Dry-run results: 470 proposals (86 VERY HIGH, 384 HIGH), 42 zero-distance pre-grouped
+- Fox family dominates: Charles Fox 165, Esther Burd Fox 101, Albert Fox 95, Roland Fox 66
+- 11 new tests in `tests/test_cluster_ml_run_tracking.py` — all pass
+- Results saved to `docs/ml/run_results/baseline_run_103.md`
 
 ## Phase 0: Orient
 - Set current_session.txt to 103

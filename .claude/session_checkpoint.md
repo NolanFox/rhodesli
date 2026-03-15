@@ -1,24 +1,32 @@
-# Session 103 Checkpoint — Phase 1 Complete
+# Session 103 Checkpoint — Phase 2 Complete
 
 ## What was done
-- Created SQL migration: `scripts/migrations/create_ml_run_tables.sql`
-- Ran migration against Supabase via psycopg2 (direct Postgres connection)
-- Both `ml_runs` and `ml_proposals` tables created with correct schema
-- Verified with test insert + delete cycle
-- Wrote 9 tests in `tests/test_ml_run_tables.py` covering insert/query/update shapes
+- Added ML run tracking to `scripts/cluster_new_faces.py`:
+  - `create_ml_run()` — inserts ml_runs row at pipeline start
+  - `write_proposals_to_supabase()` — batch-writes proposals to ml_proposals (100/chunk)
+  - `complete_ml_run()` — updates status=completed with result_summary + duration_ms
+  - `_get_supabase_client()` — safe import wrapper, returns None if not configured
+- All tracking is fire-and-forget: silently skips when Supabase unavailable
+- Ran baseline clustering dry-run: 470 proposals (86 VERY HIGH, 384 HIGH)
+- Saved results to `docs/ml/run_results/baseline_run_103.md`
+- 11 new tests in `tests/test_cluster_ml_run_tracking.py`
 
 ## Key files changed
-- `scripts/migrations/create_ml_run_tables.sql` — new migration
-- `tests/test_ml_run_tables.py` — new test file (9 tests)
-- `docs/session_logs/session-103-log.md` — phase 1 marked done
+- `scripts/cluster_new_faces.py` — ML run tracking wired into main()
+- `tests/test_cluster_ml_run_tracking.py` — new test file (11 tests)
+- `docs/ml/run_results/baseline_run_103.md` — baseline run report
+- `docs/session_logs/session-103-log.md` — phase 2 marked done
 
-## Schema summary
-- `ml_runs`: run_id, created_at, pipeline_type, config_json, status, result_summary, duration_ms, triggered_by, parent_run_id
-- `ml_proposals`: proposal_id, run_id, source_identity_id, target_identity_id, score, calibrated_score, tier, status, decided_by, decided_at
+## Baseline run stats
+- 470 proposals total, 42 zero-distance (pre-grouped), 428 real
+- Tier1 (VERY HIGH): 86, Tier2 (HIGH): 384
+- Top targets: Charles Fox (165), Esther Burd Fox (101), Albert Fox (95), Roland Fox (66)
+- 0 cross-community matches flagged
+- 3413 identities, 2852 embeddings, 99 confirmed
 
 ## Issues found
-- Pre-existing test failure: `test_browse_cards_use_unified_card` (not related to this phase)
-- DATABASE_URL has `@` in password — requires explicit connection params, not URL string parsing
+- Supabase client returns None locally (expected — no credentials in .env)
+- Tracking will activate on Railway where SUPABASE_URL is set
 
 ## Next phase
-- Phase 2: Run baseline clustering with tracking
+- Phase 3: Run reranker comparison
