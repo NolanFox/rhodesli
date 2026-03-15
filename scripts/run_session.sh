@@ -98,7 +98,9 @@ echo "$SESSION_ID" > .claude/current_session.txt
 log_stage "Main Session" "BEGIN"
 
 # Split prompt into phases
-PHASE_COUNT=$(grep -cE '^## PHASE [0-9]' "$PROMPT_FILE" || echo "0")
+# Accept both "## PHASE N" and "## Phase N:" markers
+PHASE_PATTERN='^## [Pp][Hh][Aa][Ss][Ee] [0-9]'
+PHASE_COUNT=$(grep -cE "$PHASE_PATTERN" "$PROMPT_FILE" || echo "0")
 echo "Found $PHASE_COUNT phases"
 
 if [ "$PHASE_COUNT" -eq 0 ]; then
@@ -116,45 +118,58 @@ if [ "$PHASE_COUNT" -eq 0 ]; then
         exit $EXIT_CODE
     fi
 else
-    # Extract phase boundaries (line numbers where ## PHASE appears)
-    PHASE_LINES=$(grep -nE '^## PHASE [0-9]' "$PROMPT_FILE" | cut -d: -f1)
+    # Extract phase boundary line numbers into an array
+    PHASE_LINES_STR=$(grep -nE "$PHASE_PATTERN" "$PROMPT_FILE" | cut -d: -f1)
     TOTAL_LINES=$(wc -l < "$PROMPT_FILE")
 
-    PREV_LINE=0
+    # Convert to array for proper boundary calculation
+    PHASE_LINES_ARRAY=()
+    while IFS= read -r line; do
+        PHASE_LINES_ARRAY+=("$line")
+    done <<< "$PHASE_LINES_STR"
+
     PHASE_NUM=0
     PHASE_PASS=0
     PHASE_FAIL=0
+    ARRAY_LEN=${#PHASE_LINES_ARRAY[@]}
 
-    for LINE in $PHASE_LINES; do
+    for ((i=0; i<ARRAY_LEN; i++)); do
         PHASE_NUM=$((PHASE_NUM + 1))
+        LINE="${PHASE_LINES_ARRAY[$i]}"
 
-        # Find the end of this phase (start of next phase or end of file)
-        NEXT_LINE=$(echo "$PHASE_LINES" | awk "NR>1{print prev} {prev=\$0}" | head -n "$PHASE_NUM" | tail -1)
-        if [ -z "$NEXT_LINE" ]; then
-            NEXT_LINE=$TOTAL_LINES
+        # End of this phase = start of next phase - 1, or end of file
+        NEXT_IDX=$((i + 1))
+        if [ "$NEXT_IDX" -lt "$ARRAY_LEN" ]; then
+            END_LINE=$(( ${PHASE_LINES_ARRAY[$NEXT_IDX]} - 1 ))
+        else
+            END_LINE=$TOTAL_LINES
         fi
 
         echo ""
-        echo "=== Phase $PHASE_NUM of $PHASE_COUNT (lines $LINE-$NEXT_LINE) ==="
+        echo "=== Phase $PHASE_NUM of $PHASE_COUNT (lines $LINE-$END_LINE) ==="
         log_stage "Phase $PHASE_NUM" "BEGIN"
 
         # Extract phase content
-        PHASE_CONTENT=$(sed -n "${LINE},${NEXT_LINE}p" "$PROMPT_FILE")
+        PHASE_CONTENT=$(sed -n "${LINE},${END_LINE}p" "$PROMPT_FILE")
 
         # Build the phase prompt with context
-        PHASE_PROMPT="You are running Phase $PHASE_NUM of Session $SESSION_ID.
+        PHASE_PROMPT="You are running Phase $PHASE_NUM of $PHASE_COUNT in Session $SESSION_ID.
 
 Read CLAUDE.md for project rules.
-Read SESSION_LOG.md for current progress.
+Read the session log at docs/session_logs/session-${SESSION_ID}-log.md for current progress.
 $([ -f "$CHECKPOINT_FILE" ] && echo "Read $CHECKPOINT_FILE for previous phase results." || echo "This is the first phase.")
 
 ## Phase Instructions
 $PHASE_CONTENT
 
 ## After completing this phase:
-1. Update SESSION_LOG.md with results
-2. Commit changes with conventional commit message
-3. Write a checkpoint summary to $CHECKPOINT_FILE"
+1. Update docs/session_logs/session-${SESSION_ID}-log.md — mark this phase done with what was built
+2. Run tests: scripts/test-gate.sh fast
+3. Commit changes with conventional commit message
+4. Write a checkpoint summary to $CHECKPOINT_FILE with: what was done, key files changed, any issues found"
+
+        # Reset commit counter for fresh context
+        echo "0" > .claude/commits_since_clear.txt
 
         # Run the phase
         echo "Running phase $PHASE_NUM..."
@@ -172,7 +187,7 @@ $PHASE_CONTENT
         fi
 
         # Check for commit
-        LATEST_COMMIT=$(git log --oneline -1 --since="1 minute ago" 2>/dev/null || echo "")
+        LATEST_COMMIT=$(git log --oneline -1 --since="2 minutes ago" 2>/dev/null || echo "")
         if [ -n "$LATEST_COMMIT" ]; then
             echo "Commit: $LATEST_COMMIT"
         else

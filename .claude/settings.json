@@ -23,6 +23,16 @@
             "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -5; fi'"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-work-clear-gate.sh\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -33,6 +43,27 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-format.sh\"",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-commit-clear-gate.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"WARNING: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\"; fi; exit 0'",
+            "timeout": 5
           }
         ]
       }
