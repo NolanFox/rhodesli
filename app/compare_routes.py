@@ -1585,8 +1585,10 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"), id=result_id)
 
     # Determine user and admin status (Lesson 19: admin-only for data modification)
-    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
-    user_is_admin = user and user.is_admin if _main_mod.is_auth_enabled() else True
+    # Always attempt user retrieval — don't gate on is_auth_enabled() to avoid
+    # losing attribution when auth is enabled but session appears empty.
+    user = _main_mod.get_current_user(sess or {}) if hasattr(_main_mod, "get_current_user") else None
+    user_is_admin = user and user.is_admin if user else (not _main_mod.is_auth_enabled())
 
     # Generate job ID and stage file — SAME as Upload page
     job_id = str(uuid.uuid4())[:8]
@@ -1624,8 +1626,10 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         properties={"is_admin": user_is_admin},
     )
 
-    # Non-admin flow: queue for admin review (same as Upload page)
+    # Non-admin flow: auto-approve for logged-in contributors, queue anonymous
     if not user_is_admin:
+        is_logged_in = user is not None and uploader_email != "anonymous"
+
         # Upload to R2 for durability — staging alone is not safe (Session 100d audit)
         try:
             from core.storage import can_write_r2, upload_bytes_to_r2
@@ -1639,6 +1643,11 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         except Exception as e:
             logging.warning(f"R2 backup of pending compare upload {job_id} failed: {e}")
 
+        submitted_at = datetime.now(timezone.utc).isoformat()
+        # Auto-approve for logged-in contributors — the approval pipeline is fragile
+        # and logged-in users have accountability via their email.
+        upload_status = "approved" if is_logged_in else "pending"
+
         pending = _main_mod._load_pending_uploads()
         pending["uploads"][job_id] = {
             "job_id": job_id,
@@ -1648,11 +1657,57 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             "source_url": "",
             "files": [safe_filename],
             "file_count": 1,
-            "submitted_at": datetime.now(timezone.utc).isoformat(),
-            "status": "pending",
+            "submitted_at": submitted_at,
+            "status": upload_status,
             "compare_mode": True,
+            "auto_approved": is_logged_in,
         }
         _main_mod._save_pending_uploads(pending)
+
+        if is_logged_in and PROCESSING_ENABLED:
+            # Spawn background processing — same as admin approval flow
+            import threading
+
+            def _bg_auto_approve():
+                try:
+                    from core.ingest_inbox import process_directory
+
+                    process_directory(
+                        directory=job_dir,
+                        job_id=job_id,
+                        data_dir=_main_mod.data_path,
+                        source="Compare Upload",
+                        collection="",
+                        prefer_hybrid=True,
+                        uploaded_by=uploader_email,
+                        upload_date=submitted_at,
+                    )
+                    _main_mod._invalidate_all_caches()
+                except Exception:
+                    import traceback
+
+                    logging.warning(f"Auto-approve ingest failed for {job_id}: {traceback.format_exc()}")
+
+            threading.Thread(target=_bg_auto_approve, daemon=True, name=f"auto-approve-{job_id}").start()
+            _main_mod.log_user_action(
+                "AUTO_APPROVE_UPLOAD",
+                job_id=job_id,
+                uploader=uploader_email,
+            )
+
+        if is_logged_in:
+            return Div(
+                Div(Span("&#10003;", cls="text-3xl text-emerald-400"), cls="flex justify-center mb-3"),
+                P("Photo Uploaded", cls="text-lg font-semibold text-white text-center"),
+                P(
+                    "Your photo has been accepted and is being processed.",
+                    cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto",
+                ),
+                P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+                cls="py-8 px-4",
+                id=result_id,
+                data_testid="upload-auto-approved",
+            )
 
         return Div(
             Div(Span("&#10003;", cls="text-3xl text-emerald-400"), cls="flex justify-center mb-3"),

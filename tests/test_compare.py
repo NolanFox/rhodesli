@@ -266,7 +266,7 @@ def test_compare_upload_stages_file(tmp_path, monkeypatch):
 
 
 def test_compare_upload_nonadmin_queued(tmp_path, monkeypatch):
-    """Non-admin compare upload queued for review (Lesson 19)."""
+    """Non-admin logged-in compare upload is auto-approved (Session 104 change)."""
     import json
     import app.main as main_mod
 
@@ -283,12 +283,15 @@ def test_compare_upload_nonadmin_queued(tmp_path, monkeypatch):
 
     tc = TestClient(main_mod.app)
 
-    response = tc.post(
-        "/api/compare/upload",
-        files={"photo": ("test.jpg", b"fake", "image/jpeg")},
-    )
+    with patch("app.main.log_user_action"), patch("threading.Thread") as mock_thread:
+        mock_thread.return_value.start = lambda: None
+        response = tc.post(
+            "/api/compare/upload",
+            files={"photo": ("test.jpg", b"fake", "image/jpeg")},
+        )
     assert response.status_code == 200
-    assert "submitted" in response.text.lower()
+    # Logged-in contributors are now auto-approved
+    assert "uploaded" in response.text.lower() or "accepted" in response.text.lower()
     # Check pending_uploads.json
     pending_path = tmp_path / "pending_uploads.json"
     assert pending_path.exists()
@@ -296,8 +299,9 @@ def test_compare_upload_nonadmin_queued(tmp_path, monkeypatch):
     uploads = data.get("uploads", {})
     assert len(uploads) == 1
     entry = list(uploads.values())[0]
-    assert entry["status"] == "pending"
+    assert entry["status"] == "approved"
     assert entry.get("compare_mode") is True
+    assert entry.get("auto_approved") is True
 
 
 def test_compare_status_starting(tmp_path, monkeypatch, client):

@@ -4,8 +4,8 @@ Prompt: docs/prompts/session-104-prompt.md
 
 ## Phase Checklist
 - [x] Phase 0: Orient + Reproduce
-- [ ] Phase 1: Diagnose Upload Pipeline
-- [ ] Phase 2: Fix Upload Pipeline
+- [x] Phase 1: Diagnose Upload Pipeline
+- [x] Phase 2: Fix Upload Pipeline
 - [ ] Phase 3: Ingest Robert Mattatia Photos + Full ML Analysis
 - [ ] Phase 4: Generate Compare Result + Shareable Link
 - [ ] Phase 5: Compare UX Audit + Community Scoping Design

@@ -484,8 +484,8 @@ def get(request, sess=None):
                     elif os.environ.get("R2_PUBLIC_URL"):
                         r2_base = os.environ["R2_PUBLIC_URL"]
                         if is_compare:
-                            # Compare uploads stored under uploads/compare/{job_id}.jpg on R2
-                            thumb_url = f"{r2_base}/uploads/compare/{quote(job_id)}.jpg"
+                            # Compare uploads stored at uploads/pending/{job_id}/{filename} on R2
+                            thumb_url = f"{r2_base}/uploads/pending/{quote(job_id)}/{quote(fname)}"
                         else:
                             thumb_url = f"{r2_base}/raw_photos/{quote(fname)}"
                     else:
@@ -1011,13 +1011,12 @@ def post(job_id: str, sess=None):
             will_process = True
             uploads_dir.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
-        elif job_id.startswith("compare_"):
-            # Compare contribute jobs store photos in R2, not staging.
+        elif upload.get("compare_mode"):
+            # Compare uploads store photos in R2 at uploads/pending/{job_id}/{filename}.
             # Try to recover the photo from R2 for processing.
             try:
                 from core.storage import can_write_r2
 
-                upload_id = job_id.replace("compare_", "", 1)
                 if can_write_r2():
                     import boto3
 
@@ -1028,16 +1027,20 @@ def post(job_id: str, sess=None):
                         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
                     )
                     bucket = os.environ.get("R2_BUCKET_NAME", "rhodesli-photos")
-                    r2_key = f"uploads/compare/{upload_id}.jpg"
+                    # R2 path matches what compare_routes.py uploads (line 1635)
+                    upload_files = upload.get("files", [])
+                    r2_filename = upload_files[0] if upload_files else f"{job_id}.jpg"
+                    r2_key = f"uploads/pending/{job_id}/{r2_filename}"
                     uploads_dir.mkdir(parents=True, exist_ok=True)
-                    local_path = uploads_dir / f"{upload_id}.jpg"
+                    local_path = uploads_dir / r2_filename
                     s3.download_file(bucket, r2_key, str(local_path))
                     will_process = True
                     logger.info(f"Downloaded compare photo from R2 for job {job_id}")
             except Exception as r2_err:
                 logger.warning(f"Could not recover compare photo from R2 for {job_id}: {r2_err}")
 
-            # Run processing in background thread (AD-161: avoids OOM from subprocess)
+        # Run processing in background thread for ANY approved upload with files
+        if will_process:
             import threading
 
             source = upload.get("source", "")
@@ -1370,10 +1373,37 @@ async def post(request, sess=None):
                 upload = pending["uploads"][job_id]
                 staging_dir = _main_mod.data_path / "staging" / job_id
                 uploads_dir = _main_mod.data_path / "uploads" / job_id
-                if not staging_dir.exists():
+                has_files = False
+                if staging_dir.exists():
+                    uploads_dir.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
+                    has_files = True
+                elif upload.get("compare_mode"):
+                    # Compare uploads: recover from R2
+                    try:
+                        from core.storage import can_write_r2
+
+                        if can_write_r2():
+                            import boto3
+
+                            s3 = boto3.client(
+                                "s3",
+                                endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
+                                aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                                aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+                            )
+                            bucket = os.environ.get("R2_BUCKET_NAME", "rhodesli-photos")
+                            upload_files = upload.get("files", [])
+                            r2_filename = upload_files[0] if upload_files else f"{job_id}.jpg"
+                            r2_key = f"uploads/pending/{job_id}/{r2_filename}"
+                            uploads_dir.mkdir(parents=True, exist_ok=True)
+                            local_path = uploads_dir / r2_filename
+                            s3.download_file(bucket, r2_key, str(local_path))
+                            has_files = True
+                    except Exception as r2_err:
+                        logger.warning(f"Batch approve: could not recover {job_id} from R2: {r2_err}")
+                if not has_files:
                     continue
-                uploads_dir.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
 
                 source = upload.get("source", "")
                 upload_collection = upload.get("collection", "")
