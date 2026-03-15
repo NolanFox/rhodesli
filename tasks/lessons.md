@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-139 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+141 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -137,6 +137,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 136 | **Fire-and-forget Supabase syncs with `except: pass` create invisible data loss** |
 | 137 | **Proposals must be regenerated after every upload — stale proposals = invisible new faces** |
 | 138 | **Features built but never linked from navigation are invisible to users** |
+| 141 | **Never git-add production-origin data files — 6th occurrence of deploy-overwrite pattern (Lessons 56→69→78→85→141)** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

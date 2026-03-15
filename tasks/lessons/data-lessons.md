@@ -121,6 +121,13 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: Confirmed identity workflow needs visual verification gate — admin must see the face before confirming.
 - **Prevention**: Add a data integrity CI check: every CONFIRMED identity's anchor_ids must exist in embeddings AND photo_index.
 
+### Lesson 141: Never git-add production-origin data files — 6th occurrence of the deploy-overwrite pattern
+- **Mistake (Session 104):** Attempted to `git add data/comparison_results.json` to create a shareable comparison result. This file is created by users on production when they run comparisons. Adding it to git would have overwritten all existing comparison results on the next deploy — the exact same pattern as Lessons 56, 69, 78, and 85.
+- **The chain:** Lesson 56 (admin merge overwritten) → Lesson 69 (annotations wiped) → Lesson 78 (birth years lost, 4th time) → Lesson 85 (confirmations lost, 5th time, triple protection added) → NOW (comparison_results, caught by .gitignore)
+- **Rule:** Before `git add`-ing ANY file in `data/`, ask: "Who writes this file on production?" If users or the app create/modify it at runtime → it's production-origin → NEVER add to git. If .gitignore blocks the add, that's the safety system WORKING — don't use `-f`.
+- **Prevention:** (1) Trust .gitignore. (2) Production-origin files need API/UI creation, not git push. (3) The `data/*` allowlist in .gitignore is the canonical list of git-safe data files.
+- **See also:** Lessons 56, 69, 78, 85, 133; AD-134 (safety gate), AD-135 (structural fix)
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.
