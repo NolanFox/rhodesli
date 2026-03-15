@@ -3562,6 +3562,7 @@ def photo_view_content(
     is_admin: bool = False,
     from_compare: bool = False,
     seq_mode: bool = False,
+    from_queue: bool = False,
     community_slug: str = "rhodes",
 ) -> tuple:
     """
@@ -4369,12 +4370,31 @@ def photo_view_content(
         else "Review this photo with full face context."
     )
 
+    # "Back to Review Queue" escape hatch (when entering Speed Loop from cluster review)
+    back_to_queue_link = None
+    if from_queue and seq_mode and is_admin:
+        back_to_queue_link = A(
+            NotStr(
+                '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'
+            ),
+            "Back to Review Queue",
+            href=f"{nav_prefix}/admin/upload-review?mode=speed",
+            cls="px-3 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+            data_testid="back-to-review-queue",
+        )
+
     return (
         Title(f"{heading} - {photo['filename']}"),
         style,
         Main(
             # Back button
-            A(f"< {back_label}", href=back_href, cls="text-slate-400 hover:text-slate-300 mb-2 inline-block"),
+            Div(
+                A(f"< {back_label}", href=back_href, cls="text-slate-400 hover:text-slate-300 inline-block"),
+                back_to_queue_link,
+                cls="flex items-center gap-4 mb-2",
+            )
+            if back_to_queue_link
+            else A(f"< {back_label}", href=back_href, cls="text-slate-400 hover:text-slate-300 mb-2 inline-block"),
             H1(heading, cls="text-2xl font-serif font-bold text-white mb-1"),
             P(subtitle, cls="text-sm text-slate-400 mb-4"),
             Div(content, id="photo-modal-content"),
@@ -4951,6 +4971,79 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         # Replace the form with the success banner
         form_section = Div(submission_banner, form_section)
 
+    # Admin enrichment panel — name input, merge search, GEDCOM link
+    admin_enrichment = None
+    if is_admin:
+        _admin_input_cls = (
+            "w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
+            "placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+        )
+        admin_enrichment = Div(
+            H3("Admin Tools", cls="text-lg font-semibold text-indigo-300 mb-4"),
+            # Current identity info
+            Div(
+                P(f"Identity: {display_name}", cls="text-sm text-slate-300"),
+                P(
+                    f"State: {state} \u00b7 {len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}",
+                    cls="text-xs text-slate-500 mt-1",
+                ),
+                cls="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-lg",
+            ),
+            # Name input with save
+            Div(
+                Label("Name this person:", cls="text-sm text-slate-300 block mb-1.5"),
+                Div(
+                    Input(
+                        type="text",
+                        name="new_name",
+                        placeholder="Enter name...",
+                        value="" if display_name.startswith("Unidentified") else display_name,
+                        cls=_admin_input_cls,
+                        id="admin-identify-name-input",
+                    ),
+                    Button(
+                        "Apply",
+                        cls="ml-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors",
+                        hx_post=f"{nav_prefix}/api/identify/{person_id}/respond",
+                        hx_target="#admin-enrichment-result",
+                        hx_swap="innerHTML",
+                        hx_include="#admin-identify-name-input",
+                    ),
+                    cls="flex items-center",
+                ),
+                Div(id="admin-enrichment-result", cls="mt-2"),
+                cls="mb-4",
+            ),
+            # Merge search
+            Div(
+                Label("Merge with existing person:", cls="text-sm text-slate-300 block mb-1.5"),
+                Input(
+                    type="text",
+                    name="q",
+                    placeholder="Search confirmed identities...",
+                    cls=_admin_input_cls,
+                    hx_get=f"{nav_prefix}/api/cluster-review/search-identities?source_id={person_id}&offset=0&community_slug={community_slug}",
+                    hx_target="#admin-merge-results",
+                    hx_swap="innerHTML",
+                    hx_trigger="keyup changed delay:300ms",
+                ),
+                Div(id="admin-merge-results", cls="mt-2 space-y-2"),
+                cls="mb-4",
+            ),
+            # GEDCOM link button
+            Div(
+                A(
+                    "Link to GEDCOM Record",
+                    href=f"{nav_prefix}/person/{person_id}?from=admin",
+                    cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
+                    data_testid="identify-gedcom-link",
+                ),
+                cls="mb-2",
+            ),
+            cls="mt-8 p-6 bg-indigo-900/20 border border-indigo-500/30 rounded-xl max-w-md mx-auto",
+            data_testid="identify-admin-enrichment",
+        )
+
     # Share button
     share_url = f"{_main_mod.SITE_URL}{nav_prefix}/identify/{person_id}"
     share_btn = Button(
@@ -5093,6 +5186,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     photos_section,
                     matches_section,
                     form_section,
+                    admin_enrichment,
                     Div(share_btn, cls="flex justify-center mt-10 mb-6"),
                     explore_section,
                     cls="max-w-3xl mx-auto pt-12 pb-20 px-6",
@@ -10921,6 +11015,7 @@ def public_photo_page(
     identity_id: str = None,
     sort_by: str = "date_asc",
     seq_mode: bool = False,
+    from_queue: bool = False,
     user=None,
     is_admin: bool = False,
     community_slug: str = "rhodes",
@@ -10979,6 +11074,7 @@ def public_photo_page(
             sort_by=sort_by,
             is_admin=is_admin,
             seq_mode=True,
+            from_queue=from_queue,
             community_slug=community_slug,
         )
 
@@ -11246,10 +11342,14 @@ def public_photo_page(
                 )
 
             # Click navigates to person page (identified) or identify page (unidentified)
+            # Admin: unidentified face clicks open Speed Loop at that face
             if fi["bbox_conflict"] and not fi["is_identified"]:
                 click_href = None
             elif fi["is_identified"] and fi["identity_id"]:
                 click_href = f"{nav_prefix}/person/{fi['identity_id']}"
+            elif fi["identity_id"] and is_admin:
+                _face_param = f"&face={fi['face_id']}" if fi.get("face_id") else ""
+                click_href = f"{nav_prefix}/photo/{photo_id}?seq=1{_face_param}"
             elif fi["identity_id"]:
                 click_href = f"{nav_prefix}/identify/{fi['identity_id']}"
             else:
@@ -12041,16 +12141,30 @@ def public_photo_page(
                         )
                         if face_overlays
                         else None,
-                        Button(
-                            NotStr(
-                                '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
-                            ),
-                            Span("Identify Mode", id="identify-mode-text"),
-                            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
-                            type="button",
-                            data_action="toggle-identify-mode",
-                            id="identify-mode-toggle",
-                            data_testid="identify-mode-toggle",
+                        # Admin: Identify Mode links to Speed Loop; non-admin: toggle behavior
+                        (
+                            A(
+                                NotStr(
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
+                                ),
+                                Span("Identify Mode"),
+                                cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+                                href=f"{nav_prefix}/photo/{photo_id}?seq=1",
+                                id="identify-mode-toggle",
+                                data_testid="identify-mode-toggle",
+                            )
+                            if is_admin
+                            else Button(
+                                NotStr(
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
+                                ),
+                                Span("Identify Mode", id="identify-mode-text"),
+                                cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
+                                type="button",
+                                data_action="toggle-identify-mode",
+                                id="identify-mode-toggle",
+                                data_testid="identify-mode-toggle",
+                            )
                         )
                         if face_overlays and (unidentified_count > 0 or is_admin)
                         else None,
@@ -12504,6 +12618,7 @@ def get(
     identity_id: str = None,
     sort_by: str = "date_asc",
     seq: bool = False,
+    from_queue: bool = False,
     sess=None,
     request=None,
 ):
@@ -12518,6 +12633,7 @@ def get(
     - identity_id: Optional person context for prev/next photo navigation
     - sort_by: Optional person-gallery sort mode for prev/next navigation
     - seq: If True for admins, enter the standalone speed-loop flow
+    - from_queue: If True, show "Back to Review Queue" link in Speed Loop
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
@@ -12528,6 +12644,7 @@ def get(
         identity_id=identity_id,
         sort_by=sort_by,
         seq_mode=seq and user_is_admin,
+        from_queue=from_queue and user_is_admin,
         user=user,
         is_admin=user_is_admin,
         community_slug=community_slug,

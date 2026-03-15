@@ -250,7 +250,7 @@ def _recent_active_learning_card(label):
     )
 
 
-def _face_match_card(proposal, identity_name, identity_id):
+def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
     """Render a single face match card with confirm/reject buttons."""
     face_id = proposal["face_id"]
     distance = proposal["distance"]
@@ -281,7 +281,7 @@ def _face_match_card(proposal, identity_name, identity_id):
             # View photo link
             A(
                 "View photo",
-                href=f"/photo/{photo_id}" if photo_id else "#",
+                href=f"{nav_prefix}/photo/{photo_id}" if photo_id else "#",
                 cls="text-xs text-blue-400 hover:text-blue-300 underline",
                 target="_blank",
             )
@@ -383,7 +383,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
         ),
         # Individual face cards
         Div(
-            *[_face_match_card(p, identity_name, identity_id) for p in proposals_sorted],
+            *[_face_match_card(p, identity_name, identity_id, nav_prefix=nav_prefix) for p in proposals_sorted],
             cls="space-y-2",
         ),
         id=f"identity-group-{identity_id}",
@@ -1588,12 +1588,13 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
     return [(iid, idata) for iid, idata, _ in clusters]
 
 
-def _get_photo_url_for_face(face_id):
-    """Get the source photo page URL for a face_id."""
+def _get_photo_url_for_face(face_id, community_slug=""):
+    """Get the source photo page URL for a face_id, with community prefix."""
     photo_registry = _main_mod.load_photo_registry()
     photo_id = photo_registry.get_photo_for_face(face_id)
     if photo_id:
-        return f"/photo/{photo_id}"
+        nav_prefix = _main_mod.community_url_prefix(community_slug) if community_slug else ""
+        return f"{nav_prefix}/photo/{photo_id}"
     return None
 
 
@@ -1610,7 +1611,7 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     face_thumbs = []
     for fid in all_faces:
         crop_url = _get_crop_url_for_face(fid)
-        photo_url = _get_photo_url_for_face(fid)
+        photo_url = _get_photo_url_for_face(fid, community_slug=community_slug)
         if crop_url:
             img_el = Img(
                 src=crop_url,
@@ -1626,7 +1627,13 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             )
             if photo_url:
                 face_thumbs.append(
-                    A(img_el, href=photo_url, target="_blank", cls="block", title=f"View source photo for {fid[:16]}")
+                    A(
+                        img_el,
+                        href=f"{photo_url}?from_queue=1",
+                        target="_blank",
+                        cls="block",
+                        title=f"View source photo for {fid[:16]}",
+                    )
                 )
                 face_thumbs.append(fallback_el)
             else:
