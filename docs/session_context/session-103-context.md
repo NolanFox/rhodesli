@@ -91,6 +91,10 @@ Additionally, Session 102's triage sprint (Phase 8) produced UX feedback that ne
 - Had to switch communities, sidebar search, browse results — 7 steps
 - Need direct URL or admin search (e.g., `/admin/identity/4066` or global search)
 
+### FB-154: Finding a specific identity by number is too hard
+- Had to switch communities, sidebar search, browse results — 7 steps
+- Need direct URL or admin search (e.g., `/admin/identity/4066` or global search)
+
 ### FB-155: "View in Admin Queue" link missing community prefix (COMMUNITY-015)
 - URL is `/?section=to_review&view=browse#identity-{id}` — should be `/c/fox-family/...`
 - Third instance of COMMUNITY-015 found in this triage
@@ -118,6 +122,58 @@ Additionally, Session 102's triage sprint (Phase 8) produced UX feedback that ne
 - Active learning research: `docs/ml/ACTIVE_LEARNING_RESEARCH.md`
 - Proposals: `data/proposals.json` (17 proposals from 2026-03-10, baseline scorer)
 - Clustering: `scripts/cluster_new_faces.py`
+
+---
+
+### FB-156: Workstation search for identity by number returns no results
+- Typed "4066" in Fox Family workstation search — zero cards returned
+- Search only shows first 150 cards, doesn't match "Person 4066" or "Unidentified Person 4066"
+
+### FB-157: Identity cards in manual search / similar panel have no clickable link to person page
+- Thumbnail and name should link to `/c/{slug}/person/{id}`
+
+### FB-158: Manual search results show no distance/match score
+- Similar panel shows "83% match · Dist: 0.57" but manual search results show nothing
+
+### FB-159: Confirmed identity (Esther Burd Fox) ranks #9, below 8 unnamed fragments
+- Person 4066 similar panel shows 8 INBOX clusters before Esther (dist 0.87-0.94)
+- Esther at dist 0.9467 — those 8 fragments are likely all Esther too
+- Similar panel should prioritize confirmed identities over unnamed clusters
+
+### FB-160: Similar panel shows fragmented clusters above confirmed identity
+- If 5+ of top 10 neighbors are unnamed INBOX clusters close to each other, flag as likely same person
+- Confirmed identities should be boosted in ranking
+
+### FB-161: Dismissed/skipped identities re-appear in speed-run queue
+- Person 434 (Rhodes, should not be in Fox) shown, skipped, then shown again at same cluster count
+- Skip/dismiss action not persisting or queue not tracking reviewed clusters
+
+### FB-162: Tag search results don't prioritize same-community or confirmed identities
+- Typing "Esther" shows Esther Brenda Israel (1 face, Rhodes) before Esther Burd Fox (24 faces, Fox, confirmed)
+- Should sort: confirmed first, same-community first, face count as tiebreaker
+
+### FB-163: No community badge on tag search results
+- "Esther Brenda Israel" from Rhodes shown without any community indicator in Fox Family context
+
+### FB-164: "Go to Face Card" link goes to current face, not to search result
+- When trying to verify if face is Esther, can't click search result to see Esther's face card
+- Each search result row should link to that person's face card
+
+### FB-165: Speed-run cluster cards need face crop ↔ source photo toggle
+- Can't see source photo context (who else is in frame, setting, era) from cluster card
+- Critical for distinguishing similar family members (Roland vs Charlie as kids)
+- Other parts of app have Faces/Photos toggle — speed-run needs the same
+- Face crop click or keyboard shortcut (P) should show source photo with face highlighted
+
+---
+
+## Part 5: Execution Strategy
+
+**Sequential, not parallel.** Session 102 parallel tracks executed fine but the orchestrator cut corners on verification. Session 103 should run phases sequentially to ensure each is verified before moving on.
+
+**Overnight autonomous execution.** Nolan will set this running and check results in the morning. Every phase must produce verifiable artifacts — no "PASS without evidence."
+
+**Priority order:** Data integrity fixes first (DATA-019 complete fix, community links), then UX regressions (navigation, search), then ML pipeline execution, then remaining UX polish.
 
 ---
 

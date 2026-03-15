@@ -237,11 +237,14 @@ For each item:
 ## Critical Rules
 
 - **/clear between phases** — MANDATORY
+- **Sequential, not parallel** — Session 102 parallel tracks executed but orchestrator cut corners on verification. Run each phase fully, verify, commit, then move to next.
 - **Run code, don't write docs** — Phase 7 of Session 102 wrote PRDs instead of executing. This session RUNS the pipeline.
 - **Report actual numbers** — "AUC improved from X to Y" or "no improvement, here's why"
 - **Test before every commit** — `make test-fast`
 - **Browser verify** — Lesson 131
 - **Monitor context** — at 30% remaining, stop and write handoff
+- **Overnight execution** — Nolan will check results in the morning. Every phase must produce verifiable artifacts. No "PASS without evidence."
+- **Do not lose functionality** — FB-150 was a regression. Before modifying any UI component, verify existing functionality still works after the change.
 
 ---
 
