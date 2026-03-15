@@ -530,7 +530,7 @@ def community_url_prefix(slug: str | None) -> str:
 def _cross_community_badge(identity_id: str, current_community: dict | None) -> "FT | None":
     """Return a badge if identity belongs to a DIFFERENT community than current.
 
-    COMMUNITY-014: Shows "From [Community Name]" when viewing cross-community content.
+    COMMUNITY-014: Shows "[Community Name]" badge when viewing cross-community content.
     Returns None if same community or no community context.
     """
     if current_community is None:
@@ -564,7 +564,7 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
         if other_ids and identity_id in other_ids:
             comm_name = comm.get("name", comm_slug.replace("-", " ").title())
             return Span(
-                f"From {comm_name}",
+                comm_name,
                 cls="text-xs px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/30",
                 title=f"This person appears in the {comm_name} archive",
             )

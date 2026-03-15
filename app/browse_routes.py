@@ -132,9 +132,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                     P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
                     if photo["collection"]
                     else None,
-                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight")
-                    if provenance
-                    else None,
+                    P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight") if provenance else None,
                     P(provenance["subline"], cls="text-[10px] text-slate-500 leading-tight")
                     if provenance and provenance.get("subline")
                     else None,
@@ -831,7 +829,11 @@ def get(sort_by: str = "name", sess=None, request=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -1042,7 +1044,11 @@ def get(identity_id: str, sess=None, request=None):
             Div(
                 Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
                 Div(
-                    Span(state_label, cls=f"text-[10px] px-2 py-0.5 rounded-full {state_cls}", data_testid="similar-result-state"),
+                    Span(
+                        state_label,
+                        cls=f"text-[10px] px-2 py-0.5 rounded-full {state_cls}",
+                        data_testid="similar-result-state",
+                    ),
                     _main_mod._cross_community_badge(nid, current_community),
                     cls="flex items-center gap-1 flex-wrap mt-1",
                 ),
@@ -1259,9 +1265,22 @@ def get(identity_id: str, sess=None, request=None):
     try:
         from core.neighbors import find_nearest_neighbors
 
-        neighbors = find_nearest_neighbors(identity_id, registry, photo_registry, face_data, limit=12)
+        neighbors = find_nearest_neighbors(identity_id, registry, photo_registry, face_data, limit=20)
     except Exception as e:
         logging.warning(f"Find similar failed: {e}")
+
+    # Community-scope results: same-community first (FB-147, PERF-007)
+    if neighbors and community_slug:
+        current_community = getattr(request.state, "community", None) if request else None
+        comm_ids = _main_mod._get_community_identity_ids(current_community) if current_community else None
+        if comm_ids is not None:
+            same_comm = [n for n in neighbors if n["identity_id"] in comm_ids]
+            cross_comm = [n for n in neighbors if n["identity_id"] not in comm_ids]
+            # Show same-community results first; add cross-community only if < 5 same-community
+            if len(same_comm) >= 5:
+                neighbors = same_comm[:12]
+            else:
+                neighbors = (same_comm + cross_comm)[:12]
 
     # Enhance neighbors with crop URLs
     for n in neighbors:
@@ -1507,7 +1526,11 @@ def get(sess=None, request=None):
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -1678,7 +1701,11 @@ def get(slug: str, sess=None, request=None):
         Div(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href=f"{nav_prefix}/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
                 ),
@@ -1687,7 +1714,11 @@ def get(slug: str, sess=None, request=None):
             Div(
                 # Breadcrumb
                 Div(
-                    A("Collections", href=f"{nav_prefix}/collections", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                    A(
+                        "Collections",
+                        href=f"{nav_prefix}/collections",
+                        cls="text-indigo-400 hover:text-indigo-300 text-sm",
+                    ),
                     Span(" / ", cls="text-slate-600 mx-2"),
                     Span(col_name, cls="text-slate-300 text-sm"),
                     cls="mb-6",

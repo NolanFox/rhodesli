@@ -1779,7 +1779,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
     import logging
 
     _t_sug = _time.time()
-    suggestions = _get_confirmed_identity_suggestions(identity_id, limit=3)
+    suggestions = _get_confirmed_identity_suggestions(identity_id, limit=6, community_slug=community_slug)
     logging.info(f"PERF enrichment suggestions: {_time.time() - _t_sug:.3f}s ({len(suggestions)} results)")
     suggestion_els = []
     for sug in suggestions:
@@ -1936,8 +1936,11 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
     )
 
 
-def _get_confirmed_identity_suggestions(identity_id, limit=3):
-    """Get top confirmed identities as merge suggestions (by face count)."""
+def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=None):
+    """Get top confirmed identities as merge suggestions (by face count).
+
+    When community_slug is provided, same-community identities are ranked first.
+    """
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
     suggestions = []
@@ -1960,9 +1963,28 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3):
                 "best_face_id": best_fid,
             }
         )
-    # Sort by face count descending — most prominent first
-    suggestions.sort(key=lambda s: -s["face_count"])
-    return suggestions[:limit]
+
+    # Community-scope: same-community first, then cross-community
+    comm_ids = None
+    if community_slug:
+        from app.supabase_data import load_communities
+
+        communities = load_communities()
+        for comm in communities or []:
+            if comm.get("slug") == community_slug:
+                comm_ids = _main_mod._get_community_identity_ids(comm)
+                break
+
+    if comm_ids is not None:
+        same = [s for s in suggestions if s["identity_id"] in comm_ids]
+        cross = [s for s in suggestions if s["identity_id"] not in comm_ids]
+        same.sort(key=lambda s: -s["face_count"])
+        cross.sort(key=lambda s: -s["face_count"])
+        suggestions = (same + cross)[:limit]
+    else:
+        suggestions.sort(key=lambda s: -s["face_count"])
+        suggestions = suggestions[:limit]
+    return suggestions
 
 
 def _speed_run_done_card(offset, total):
