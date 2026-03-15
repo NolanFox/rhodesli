@@ -69,6 +69,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Proposals API Incomplete
 - **COMMUNITY-016**: `/api/proposed-matches` only reads `registry.list_proposed_matches()`, not `proposals.json`. Sidebar counts include both sources (via `_compute_sidebar_counts`), so Fox Family shows "17 Proposals" in sidebar but "No pending proposals" in content. Fix: API endpoint must also read proposals.json, same as sidebar does. Source: Session 96e-cont4 browser verification.
 
+### P2 — Session 102 Gaps (2026-03-15)
+- **PERF-007**: Similar panel results not community-scoped — cache + TTL works, links prefixed, but `find_nearest_neighbors()` results not filtered by community. Community identities should appear first. Source: Session 102 audit.
+- **TEST-003**: DATA-019 community reassignment script lacks automated test. Script works (`scripts/fix_data_019_community_reassignment.py`), verified in browser. Source: Session 102 audit.
+- **TEST-004**: DATA-020 Postgres name protection guard lacks dedicated unit test. Guard works (`app/supabase_data.py` line 748). Source: Session 102 audit.
+- **OBS-003**: FB-142 keyboard vs button `input_method` tracking not implemented in `log_user_action()` — hotkeys work but no input source distinction. Source: Session 102 prompt Phase 3, not built.
+
 ### P1 — Session 100b Dogfood (2026-03-13)
 - ~~**DOGFOOD-001**: Confirmed faces show "Needs review" on bbox overlap~~ FIXED (Session 100b) — show identity name for confirmed faces
 - ~~**DOGFOOD-002**: Photo metadata save silently loses data~~ FIXED (Session 100b) — duplicate routes removed, page_routes.py with logging now active
