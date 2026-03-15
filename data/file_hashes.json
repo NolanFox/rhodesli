@@ -6999,6 +6999,38 @@
       ],
       "job_id": "658979c2",
       "filename": "family_search_david_capeloto_declaration_of_intent_image.jpg"
+    },
+    "3ee0fc9a568757bd1833e0b90c1d41928f9228a1541b92910e50f23805e4b3e2": {
+      "face_ids": [
+        "inbox_b5b1075b769a",
+        "inbox_7a0619b2c280",
+        "inbox_c65dba5a87a9",
+        "inbox_bcd7538b75af",
+        "inbox_d4b84d1c0485",
+        "inbox_0bb6a27cf383",
+        "inbox_9bb4ce964be2",
+        "inbox_e8b9205ffaa7",
+        "inbox_977751db597d"
+      ],
+      "job_id": "claude-benatar-104",
+      "filename": "robert_mattatia_congo_group.jpeg"
+    },
+    "81d91d77502529671157bdedd7a861b5d9d87b1b192243a7cb84cbded0f85bb3": {
+      "face_ids": [
+        "inbox_489b08b47a3d",
+        "inbox_da1fddea8743",
+        "inbox_0f9421a14c38",
+        "inbox_36536b37b6ff",
+        "inbox_97287f9a8014",
+        "inbox_6e746b779f14",
+        "inbox_0d0302f0cced",
+        "inbox_f0a1ea2d2ef8",
+        "inbox_a6d9add15d1e",
+        "inbox_39bd2be31e04",
+        "inbox_93b72e386e0c"
+      ],
+      "job_id": "claude-benatar-104b",
+      "filename": "robert_mattatia_family_group.jpeg"
     }
   }
 }
