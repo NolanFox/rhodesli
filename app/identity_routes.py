@@ -8,6 +8,7 @@ neighbors, search, and associated helpers.
 
 import json
 import logging
+import time as _time
 from pathlib import Path
 
 from fasthtml.common import *
@@ -21,6 +22,41 @@ from app.utils import photo_url, _section_for_state
 import app.main as _main_mod
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Neighbors (similar panel) TTL cache — 5 min per identity_id
+# ---------------------------------------------------------------------------
+_neighbors_cache: dict = {}  # identity_id -> (timestamp, results_list)
+_NEIGHBORS_CACHE_TTL: float = 300.0  # 5 minutes
+
+
+def _get_cached_neighbors(identity_id: str):
+    """Return cached neighbors or None if cache miss / expired."""
+    entry = _neighbors_cache.get(identity_id)
+    if entry is None:
+        return None
+    ts, results = entry
+    if _time.time() - ts > _NEIGHBORS_CACHE_TTL:
+        del _neighbors_cache[identity_id]
+        return None
+    return results
+
+
+def _set_cached_neighbors(identity_id: str, results: list):
+    """Store neighbors in cache."""
+    _neighbors_cache[identity_id] = (_time.time(), results)
+
+
+def invalidate_neighbors_cache(identity_id: str | None = None):
+    """Invalidate neighbors cache for one identity or all.
+
+    Called after merge/confirm/reject to ensure stale results are not shown.
+    """
+    if identity_id:
+        _neighbors_cache.pop(identity_id, None)
+    else:
+        _neighbors_cache.clear()
 
 
 def _nav_prefix_from_request(request) -> str:
@@ -173,7 +209,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     nav_prefix = _nav_prefix_from_request(request)
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="red", show_actions=False, nav_prefix=nav_prefix),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="red", show_actions=False, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Identity contested.", "warning"),
     )
 
@@ -300,6 +338,7 @@ def get(
     Returns HTML partial with neighbor cards and merge buttons.
     Implements D3 (Load More pagination).
     """
+    _t0 = _time.monotonic()
     try:
         registry = _main_mod.load_registry()
         registry.get_identity(identity_id)
@@ -311,11 +350,21 @@ def get(
     photo_registry = _main_mod.load_photo_registry()
 
     # Request one extra to determine if more exist (B3: pagination)
+    total_to_fetch = offset + limit + 1
     try:
-        from core.neighbors import find_nearest_neighbors
+        # Check cache first
+        cached = _get_cached_neighbors(identity_id)
+        if cached is not None and len(cached) >= total_to_fetch:
+            all_neighbors = cached[:total_to_fetch]
+            cache_hit = True
+        else:
+            from core.neighbors import find_nearest_neighbors
 
-        total_to_fetch = offset + limit + 1
-        all_neighbors = find_nearest_neighbors(identity_id, registry, photo_registry, face_data, limit=total_to_fetch)
+            # Fetch a generous batch so the cache serves Load More requests too
+            fetch_limit = max(total_to_fetch, 20)
+            all_neighbors = find_nearest_neighbors(identity_id, registry, photo_registry, face_data, limit=fetch_limit)
+            _set_cached_neighbors(identity_id, all_neighbors)
+            cache_hit = False
     except ImportError as e:
         print(f"[neighbors] Missing dependency: {e}")
         return Div(
@@ -327,6 +376,15 @@ def get(
         return Div(
             P("Could not compute similar identities.", cls="text-red-500 text-center py-4"), cls="neighbors-sidebar"
         )
+
+    _elapsed_ms = round((_time.monotonic() - _t0) * 1000, 1)
+    logger.info(
+        "similar_scan",
+        similar_scan_ms=_elapsed_ms,
+        identity_id=identity_id,
+        result_count=len(all_neighbors),
+        cache_hit=cache_hit,
+    )
 
     # Determine if more neighbors exist beyond current page
     has_more = len(all_neighbors) > offset + limit
@@ -2654,13 +2712,13 @@ def post(
             updated_name = identity.get("name", "Unknown")
             gen_qual = identity.get("generation_qualifier", "")
             oob_name = Div(
-            _main_mod.name_display(
-                identity_id,
-                updated_name,
-                is_admin=True,
-                generation_qualifier=gen_qual,
-                nav_prefix=_nav_prefix_from_request(request),
-            ),
+                _main_mod.name_display(
+                    identity_id,
+                    updated_name,
+                    is_admin=True,
+                    generation_qualifier=gen_qual,
+                    nav_prefix=_nav_prefix_from_request(request),
+                ),
                 hx_swap_oob=f"outerHTML:#name-{identity_id}",
             )
             oob_parts.append(oob_name)
@@ -3206,7 +3264,9 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     # Return updated card (now REJECTED)
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="rose", show_actions=False, nav_prefix=nav_prefix),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="rose", show_actions=False, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Identity rejected.", "success"),
     )
 
@@ -3480,6 +3540,8 @@ def post(identity_id: str, sess=None, request=None):
     nav_prefix = _nav_prefix_from_request(request)
 
     return (
-        _main_mod.identity_card(updated_identity, crop_files, lane_color="blue", show_actions=True, nav_prefix=nav_prefix),
+        _main_mod.identity_card(
+            updated_identity, crop_files, lane_color="blue", show_actions=True, nav_prefix=nav_prefix
+        ),
         _main_mod.toast("Returned to Inbox.", "info"),
     )
