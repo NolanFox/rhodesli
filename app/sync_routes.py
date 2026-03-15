@@ -79,6 +79,27 @@ def get(request, photo_id: str = ""):
             pi_data = json.load(f)
         pi_entry = pi_data.get("photos", {}).get(photo_id)
 
+    # Check the photo_registry used by _build_caches
+    from core.photo_registry import PhotoRegistry as _PR
+
+    pr = _PR.load(photo_index_path) if photo_index_path.exists() else _PR()
+    pr_source = pr.get_source(photo_id) if photo_id else ""
+    pr_path = pr.get_photo_path(photo_id) if photo_id else ""
+
+    # Check filename mapping
+    cache_fname = _P(cache_entry.get("filename", "")).name if cache_entry else ""
+    pr_entries_with_fname = []
+    for rpid in pr._photos:
+        rpath = pr.get_photo_path(rpid)
+        if rpath and _P(rpath).name == cache_fname:
+            pr_entries_with_fname.append(
+                {
+                    "pid": rpid[:40],
+                    "source": pr.get_source(rpid),
+                    "collection": pr.get_collection(rpid),
+                }
+            )
+
     return {
         "photo_id": photo_id,
         "in_photo_cache": cache_entry is not None,
@@ -90,6 +111,9 @@ def get(request, photo_id: str = ""):
         "alias_target": alias_target,
         "in_photo_index": pi_entry is not None,
         "pi_source": pi_entry.get("source") if pi_entry else None,
+        "pr_direct_source": pr_source,
+        "pr_direct_path": pr_path,
+        "pr_entries_matching_filename": pr_entries_with_fname,
     }
 
 
