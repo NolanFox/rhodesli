@@ -786,6 +786,19 @@ def get(
     # Search all identities (confirmed get priority in search_identities)
     results = registry.search_identities(q, exclude_id=exclude_id)
 
+    # FB-162: Re-sort to prioritize same-community + confirmed + higher face count
+    community = getattr(request.state, "community", None) if request else None
+    comm_ids = _main_mod._get_community_identity_ids(community) if community else None
+    if comm_ids is not None:
+        _sr = {"CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2, "SKIPPED": 3}
+        results.sort(
+            key=lambda r: (
+                0 if r["identity_id"] in comm_ids else 1,
+                _sr.get(r.get("state", "INBOX"), 9),
+                -(r.get("face_count", 0)),
+            )
+        )
+
     crop_files = _main_mod.get_crop_files()
     items = []
     for r in results[:8]:

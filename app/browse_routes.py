@@ -971,6 +971,11 @@ def get(identity_id: str, sess=None, request=None):
             n["state"] = "INBOX"
             n["face_count"] = 0
 
+    # FB-159/160: Re-sort to boost CONFIRMED identities above unnamed fragments
+    # Sort key: CONFIRMED first (0), then by distance. Preserves distance order within tiers.
+    _state_boost = {"CONFIRMED": 0, "PROPOSED": 1, "INBOX": 1, "SKIPPED": 2, "REJECTED": 2}
+    neighbors.sort(key=lambda n: (_state_boost.get(n.get("state", "INBOX"), 1), n.get("distance", 99)))
+
     # Confidence tier for distance — color-coded labels
     from core.confidence import confidence_tier_from_distance
 
@@ -1297,6 +1302,10 @@ def get(identity_id: str, sess=None, request=None):
             n["crop_url"] = ""
             n["name"] = "Unknown"
             n["state"] = "INBOX"
+
+    # FB-159/160: Re-sort to boost CONFIRMED identities above unnamed fragments
+    _state_boost = {"CONFIRMED": 0, "PROPOSED": 1, "INBOX": 1, "SKIPPED": 2, "REJECTED": 2}
+    neighbors.sort(key=lambda n: (_state_boost.get(n.get("state", "INBOX"), 1), n.get("distance", 99)))
 
     # Confidence tier helper
     def _tier(dist):

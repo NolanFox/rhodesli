@@ -4703,6 +4703,21 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
 
     registry = _main_mod.load_registry()
     identity = _main_mod._safe_get_identity(registry, person_id)
+
+    # FB-153: Determine identity's actual community (may differ from URL community)
+    if identity and community:
+        comm_ids = _main_mod._get_community_identity_ids(community)
+        if comm_ids is not None and person_id not in comm_ids:
+            from app.supabase_data import get_community_by_slug, load_communities
+
+            all_communities = load_communities() or []
+            for c in all_communities:
+                if c.get("slug") == community_slug:
+                    continue
+                other_ids = _main_mod._get_community_identity_ids(c)
+                if other_ids and person_id in other_ids:
+                    community_name = c.get("name", c.get("slug", "").replace("-", " ").title())
+                    break
     # UX-038: Redirect merged identities to canonical person
     if identity and identity.get("merged_into"):
         return RedirectResponse(f"{nav_prefix}/identify/{identity['merged_into']}", status_code=301)
