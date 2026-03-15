@@ -171,6 +171,23 @@ Nolan drives triage. Claude fixes or logs.
 - Wire to nav or remove — invisible features are worse than missing features
 - **BACKLOG:** UX-081 (rethink or remove), PIPELINE-001 (audit incremental clustering reliability)
 
+### FB-144: Speed-run is slower than manually browsing New Matches
+- **Severity:** P0 (product / workflow)
+- **Context:** Nolan finds it faster to go to New Matches → sort by face count → browse/merge from there than to use speed-run. The speed-run is supposed to be the fast path but it's slower due to: performance issues, Rhodes data pollution, lack of connected flows, and linear one-at-a-time progression.
+- **Implication:** Speed-run needs fundamental rethink. Consider: sort by face count (like New Matches), skip non-Fox clusters automatically, batch operations, pre-loading next card.
+- **BACKLOG:** UX-093
+
+### FB-145: Active learning — can confirmed clusters improve ML matching?
+- **Severity:** P1 (product direction / ML)
+- **Context:** Nolan's question: after confirming several Fox Family clusters, can we re-run ML with that feedback to get better matches and reduce manual work? Answer: YES — PRD-038 (Session 97) built exactly this:
+  - **Prototype-bank reranker** (Phase 2): uses confirmed identities as reference centroids. Built, shadow mode, gates closed.
+  - **Active learning** (Phase 3): surfaces most informative faces to review next. Built, wired into review UX.
+  - **Adapter experiment harness** (Phase 4): frozen-embedding adapter for fine-tuning. Built, gates closed.
+  - All rollout gates stayed closed because not enough Fox Family labels existed. Now we have ~8 confirmed Fox people — may be enough to test.
+- **Action:** Session 102 or 103 should evaluate opening PRD-038 rollout gates. Investigate: (1) re-run clustering with confirmed faces as anchors, (2) activate prototype-bank reranker, (3) measure if match quality improves.
+- **Breadcrumbs:** PRD-038 (`docs/prds/`), AD entries from Session 97, `rhodesli_ml/` modules
+- **BACKLOG:** ML-101
+
 ### FB-143: Enrichment panel doesn't show existing GEDCOM link after merge
 - **Severity:** P2 (UX confusion)
 - **Context:** After merging 8 faces into Esther Burd Fox (who is already GEDCOM-linked), the enrichment panel still shows "Link to Family Tree" with a search field as if she's not linked. The "Linked" badge only appears if you manually search "Esther Burd" in the GEDCOM search. The panel should detect the existing link and show "Already linked to: Esther Burd (b. 1900 — d. 1966)" immediately, with an option to change/unlink.
