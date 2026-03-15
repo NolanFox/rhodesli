@@ -48,6 +48,18 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Annotation Approval State Drift (AUDIT-002)
 - **AUDIT-002**: During the Session 96f attribution review, the matching `name_suggestion` annotations for the observed `Jenny israel` / `Emily israel` renames still showed `status=pending_unverified` with null `reviewed_by/reviewed_at`, even though registry history, `audit_log.json`, and `user_actions.log` all showed approval events. Fix: investigate annotation replay/sync/reapproval semantics, reconcile existing rows, and add an integrity check that flags approval-state mismatches. Source: `docs/assessments/session-96f-attribution-findings.json`.
 
+### P0 — Speed Loop Tag Save (BUG-001) — FIXED Session 102
+- ~~**BUG-001**: Speed Loop tag assignments silently dropped. Face lookup cache not cleared after Postgres save path.~~ FIXED (Session 102) — `46f259e` clears face lookup cache in Postgres save path. Browser verified: pending count decremented after Ignore Stranger action. Source: FB-141, Session 101 triage.
+
+### P1 — Rhodes Photos in Fox Family (DATA-019) — FIXED Session 102
+- ~~**DATA-019**: Community-batch-20260214 included Rhodes-community photos alongside Fox Family photos, causing them to appear in Fox Family speed-run.~~ FIXED (Session 102) — community reassignment script. Browser verified: "Bohor Sabatai Soriano" absent from Fox Family people. Source: FB-129.
+
+### P1 — Postgres Name Overwrite (DATA-020) — FIXED Session 102
+- ~~**DATA-020**: Non-blocking Postgres shadow sync could overwrite production name ("Charles Fox") with local auto-generated name ("Unidentified Person 2986").~~ FIXED (Session 102) — guard skips name field when local is auto-generated and Postgres has a real name. Source: FB-122.
+
+### P2 — Unwired Route Detection (TEST-002) — FIXED Session 102
+- ~~**TEST-002**: No test to detect admin routes without navigation entries.~~ FIXED (Session 102) — `test_unwired_admin_routes_detection` with explicit skip list. Source: FB-132, Lesson 138.
+
 ### P2 — Test Ordering Flakiness (TEST-001)
 - ~~**TEST-001**: 31 tests fail in full suite but pass individually.~~ FIXED (Session 96e-cont12 closeout) — cache/env leakage fixtures were tightened, calibration early stopping was stabilized, and the final `/timeline` empty-filter failure was closed. Full suite now passes: `4098` app + `566` ML.
 

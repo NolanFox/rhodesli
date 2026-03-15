@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.3 · ~4276 tests · 941 photos · 3412 identities · 84 confirmed
+Current: v0.99.5 · ~4276 tests · 941 photos · 3412 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -177,6 +177,10 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-14: **v0.99.5 — Session 102**: Performance + Speed Loop fix + Navigation wiring. BUG-001 P0 fix (face lookup cache cleared in Postgres save path). DATA-019 community reassignment (Rhodes photos removed from Fox Family). DATA-020 Postgres name protection guard. Connected triage navigation (Identify Mode → Speed Loop, face click → per-face, back-to-queue). GEDCOM search optimization (trigram index, 3-char min). Similar panel community scoping. PRD-045 Active Learning Feedback Loop + PRD-046 ML Run Provenance. Unwired route detection test (TEST-002). 10/12 browser checks PASS. Health: 1922 identities, 941 photos. Session froze during Phase 5, recovered by second instance. Phase 8 (triage sprint) deferred to next session.
+
+- [x] 2026-03-14: **v0.99.4 — Session 101**: Fox Triage P1 Fixes + Performance. GEDCOM link auto-renames, cross-community badges, CONFIRMED badge fix, non-blocking Supabase sync. 22 feedback items from triage sprint (FB-120–FB-143). 7/7 browser verified. 3 deploys SUCCESS.
 
 - [x] 2026-03-14: **Session 100g**: Session 100 closeout. 5 BACKLOG entries created (PERF-003/004, UX-073-075). Browser verified: speed-run enrichment panel, batch cluster validation grid, Yaacov Franco person page. 1 new issue found (UX-076 reject advance). Session 100 officially complete.
 

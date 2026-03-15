@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.5] — 2026-03-14 (Session 102: Performance, Speed Loop Fix, Navigation Wiring)
+
+### Fixed
+- **BUG-001 (P0): Speed Loop tag assignments now persist** — face lookup cache cleared in Postgres save path (FB-141)
+- **DATA-019: Rhodes photos removed from Fox Family** — community reassignment script
+- **DATA-020: Postgres name protection** — guard prevents overwriting real names with auto-generated "Unidentified Person"
+- **Performance: Supabase sync non-blocking** — save operations moved to background thread
+- **CONFIRMED badge** shown regardless of name (FB-113)
+
+### Added
+- **Connected triage navigation** — Identify Mode → Speed Loop, face click → Speed Loop per face, back-to-queue link (FB-125/134-138)
+- **GEDCOM search optimization** — trigram index prep, 3-character minimum guard, debounce (FB-120, PERF-006)
+- **Similar panel community scoping** — community identities checked first, cross-community as fallback (FB-127, PERF-005)
+- **Registry cache logging** — structlog timing for cache hit/miss monitoring
+- **PRD-045: Active Learning Feedback Loop** — activate prototype-bank reranker with confirmed anchors
+- **PRD-046: ML Run Provenance** — ml_runs + ml_proposals Supabase schema for pipeline tracking
+- **Unwired route detection test (TEST-002)** — prevents Lesson 138 from recurring
+
+### Verification
+- 10/12 browser checks PASS, 2 code-verified
+- Health: 1922 identities, 941 photos, ML pipeline ready
+- Deploy SUCCESS via `railway deploy` CLI
+
 ## [v0.99.4] — 2026-03-14 (Session 101: Fox Triage P1 Fixes + Performance + Triage Sprint)
 
 ### Added

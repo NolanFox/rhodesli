@@ -14,6 +14,35 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 102: Performance + Speed Loop Fix + Navigation Wiring (2026-03-14) — v0.99.5
+- BUG-001 P0 fix: face lookup cache cleared in Postgres save path (FB-141)
+- DATA-019: community reassignment script (Rhodes photos removed from Fox Family)
+- DATA-020: Postgres name protection guard (never overwrite real name with auto-generated)
+- Connected triage navigation: Identify Mode → Speed Loop, face click → per-face, back-to-queue link
+- GEDCOM search optimization: trigram index prep, 3-char minimum guard
+- Similar panel community scoping: community identities first, cross-community fallback
+- PRD-045 Active Learning Feedback Loop + PRD-046 ML Run Provenance
+- Unwired route detection test (TEST-002)
+- 3 parallel worktree tracks, merged via merge.sh
+- 10/12 browser checks PASS, deploy SUCCESS
+- Session froze during Phase 5, recovered by second instance
+
+## Session 101: Fox Triage P1 Fixes + Performance (2026-03-14) — v0.99.4
+- GEDCOM link auto-renames (FB-121)
+- Cross-community badges on speed-run (FB-100)
+- CONFIRMED badge fix regardless of name (FB-113)
+- Non-blocking Supabase sync — merge dropped from 4s to near-instant (FB-105)
+- Charles Fox name restored via API (FB-122)
+- 22 feedback items from triage sprint (FB-120–FB-143)
+- 7/7 browser verified, 3 deploys SUCCESS
+
+## Session 100d-100g: Contributor Experience + Closeout (2026-03-13-14) — v0.99.2-v0.99.3
+- Contributor experience overhaul (email notifications, My Contributions page)
+- Cluster validation & enrichment overhaul (PRD-040)
+- Enriched speed-run: all faces, name input, merge search, recent actions, undo
+- Audit trail on all speed-run actions
+- Session 100 closeout — all sub-sessions verified
+
 ## Session 100c: Speed-Run Cluster Review (2026-03-13) — v0.99.1
 - PRD-039: Batch cluster review — speed-run mode
 - `/admin/upload-review?mode=speed` with keyboard shortcuts (Y/N/S/D), auto-advance, progress bar
