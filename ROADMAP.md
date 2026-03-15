@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.6 · ~4357 tests · 941 photos · 3412 identities · 95 confirmed
+Current: v0.99.7 · ~4377 tests · 943 photos · 3433 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -142,6 +142,16 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
 - Prompt: docs/prompts/session-93-prompt.md
 
+### Session 104: Fix Contributor UX + Claude Benatar Photos — COMPLETE
+- P0 upload pipeline fixes: 404 after approval, anonymous attribution, missing thumbnails
+- Auto-approve for logged-in contributor Compare uploads
+- Robert Mattatia photos ingested (2 photos, 20 faces, R2 uploaded, production verified)
+- Gemini deep comparison: 2.5 Pro (9/10) + 3.1 Pro (8.5/10) confidence, both logged
+- Lesson 140 (hooks exit 0 are advisory), hook threshold fix
+- 10 new tests, 3 BACKLOG items (TOOLS-007, TOOLS-008, OBS-002)
+- Claude Benatar response message drafted
+- Prompt: docs/prompts/session-104-prompt.md
+
 ### Session 100d: Contributor Experience + Upload Fixes — COMPLETE
 - 6 pending approval workflow fixes (HTMX swap, batch approve, auto-confirm)
 - Compare upload data loss prevention (3 safety fixes)
@@ -177,6 +187,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-15: **v0.99.7 — Session 104**: Fix Contributor UX + Claude Benatar Photos. P0 upload pipeline fixes: 404 after approval (compare_mode detection), anonymous attribution (auth gate removed), missing thumbnails (R2 path fix). Auto-approve for logged-in contributor uploads. Robert Mattatia photos ingested (2 photos, 20 faces, Congo group + family group). Gemini deep comparison: 2.5 Pro 9/10, 3.1 Pro 8.5/10 confidence — ML false negative from periocular occlusion. Both API calls logged. Lesson 140 (hooks exit 0). Pre-work hook threshold 2→1. 10 new tests, 4377 app tests pass. 2/2 photos browser verified. Deploy SUCCESS.
 
 - [x] 2026-03-15: **v0.99.6 — Session 103**: ML Pipeline Execution + Triage Fixes. PRD-046 ml_runs + ml_proposals Supabase tables. Baseline clustering: 470 proposals (86 VERY HIGH, 384 HIGH). Reranker shadow comparison: Neutral (0 changes, not activated). compare_ml_runs.py diff tool. Community-scoped suggestions (find-similar + speed-run). P0 fixes: FB-168 tag search assignment, FB-150 clickable suggestion thumbnails. P1 fixes: FB-153 identify community lookup, FB-159/160 similar panel CONFIRMED ranking, FB-162 tag search prioritization. Session 102 test gaps closed (TEST-003, TEST-004, OBS-003). 14 P2 BACKLOG entries. 61 new tests, 4357 app tests pass. 5/5 browser verified. Deploy SUCCESS.
 

@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.7] — 2026-03-15 (Session 104: Fix Contributor UX + Claude Benatar Photos)
+
+### Added
+- **Robert Mattatia photos ingested** — 2 photos (Congo group + family group), 20 faces detected, uploaded to R2
+- **Gemini deep comparison** — forensic analysis via Gemini 2.5 Pro (9/10) and 3.1 Pro (8.5/10) for cross-photo identification
+- **Auto-approve for logged-in contributors** — Compare uploads by authenticated users skip the approval queue
+- **`face_comparison` call_type** for gemini_api_calls logging
+- **Lesson 140** — hooks that exit 0 are advisory only, must exit 2 to block
+- **10 new upload pipeline tests** in tests/test_upload_bugs_session104.py
+- **3 BACKLOG items** — TOOLS-007 (Deep Comparison), TOOLS-008 (ML vs Gemini research), OBS-002 (contributor logging)
+
+### Fixed
+- **P0: 404 after upload approval** — `job_id.startswith("compare_")` never matched plain UUID job IDs; changed to `upload.get("compare_mode")`
+- **P0: Anonymous upload attribution** — removed `is_auth_enabled()` gate on user retrieval in Compare uploads
+- **P1: Missing thumbnails on pending uploads** — R2 path mismatch `uploads/compare/` vs `uploads/pending/` corrected
+- **Pre-work hook threshold** — lowered from 2 to 1 commits to enforce /clear
+
 ## [v0.99.6] — 2026-03-15 (Session 103: ML Pipeline Execution + Triage Fixes)
 
 ### Added
