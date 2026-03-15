@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"WARNING: Assessment file missing for session ${S} (create before ending)\" >&2; exit 1; fi; if [ ! -f \"docs/session_logs/session-${S}-log.md\" ]; then echo \"WARNING: Session log missing: docs/session_logs/session-${S}-log.md (create before ending)\" >&2; exit 1; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"WARNING: Uncommitted files (commit before ending session)\" >&2; git status --porcelain >&2; exit 1; fi; exit 0'",
+            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S} (create before ending)\" >&2; exit 2; fi; if [ ! -f \"docs/session_logs/session-${S}-log.md\" ]; then echo \"BLOCKED: Session log missing: docs/session_logs/session-${S}-log.md (create before ending)\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"BLOCKED: Uncommitted files (commit before ending session)\" >&2; git status --porcelain >&2; exit 2; fi; exit 0'",
             "timeout": 30
           }
         ]
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -5; fi'"
+            "command": "bash -c 'set -o pipefail; INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); if ! bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -20; then echo \"BLOCKED: Tests failed. Fix before committing.\" >&2; exit 2; fi; fi'"
           }
         ]
       },
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"WARNING: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\"; fi; exit 0'",
+            "command": "bash -c 'COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"BLOCKED: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\" >&2; exit 2; fi; exit 0'",
             "timeout": 5
           }
         ]

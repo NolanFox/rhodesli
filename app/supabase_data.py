@@ -682,6 +682,24 @@ def shadow_write_photo(photo_data: dict) -> None:
         logger.warning(f"Shadow write photo failed: {e}")
 
 
+def _ensure_list_for_supabase(val):
+    """Ensure value is a proper list for Supabase JSONB columns.
+
+    Prevents writing JSON-encoded strings like '["face_id"]' instead of
+    proper arrays ["face_id"]. Root cause of face tagging bug (Session 104b).
+    """
+    if isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return []
+
+
 def shadow_write_identity(identity_data: dict) -> None:
     """Shadow-write identity to Supabase. Fire-and-forget."""
     try:
@@ -693,9 +711,9 @@ def shadow_write_identity(identity_data: dict) -> None:
             "name": identity_data.get("name", ""),
             "display_name": identity_data.get("display_name"),
             "state": identity_data.get("state", "INBOX"),
-            "anchor_ids": identity_data.get("anchor_ids", []),
-            "candidate_ids": identity_data.get("candidate_ids", []),
-            "negative_ids": identity_data.get("negative_ids", []),
+            "anchor_ids": _ensure_list_for_supabase(identity_data.get("anchor_ids", [])),
+            "candidate_ids": _ensure_list_for_supabase(identity_data.get("candidate_ids", [])),
+            "negative_ids": _ensure_list_for_supabase(identity_data.get("negative_ids", [])),
             "metadata": identity_data.get("metadata", {}),
             "version_id": identity_data.get("version_id", 1),
             "merged_into": identity_data.get("merged_into"),
@@ -797,9 +815,9 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
                 "identity_id": identity_id,
                 "display_name": ident.get("display_name"),
                 "state": ident.get("state", "INBOX"),
-                "anchor_ids": ident.get("anchor_ids", []),
-                "candidate_ids": ident.get("candidate_ids", []),
-                "negative_ids": ident.get("negative_ids", []),
+                "anchor_ids": _ensure_list_for_supabase(ident.get("anchor_ids", [])),
+                "candidate_ids": _ensure_list_for_supabase(ident.get("candidate_ids", [])),
+                "negative_ids": _ensure_list_for_supabase(ident.get("negative_ids", [])),
                 "metadata": ident.get("metadata", {}),
                 "version_id": ident.get("version_id", 1),
                 "merged_into": ident.get("merged_into"),

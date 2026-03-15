@@ -642,6 +642,85 @@ class TestRoundTrip:
         assert identity["name"] == "New Name"
         assert identity["version_id"] == 2
 
+    @patch("core.registry.logger")
+    def test_string_encoded_anchor_ids_coerced_to_list(self, mock_logger):
+        """Regression: Supabase may return anchor_ids as JSON string instead of array.
+
+        Root cause of Session 104b face tagging bug — faces showed 'Unidentified'
+        because string anchor_ids like '["face1"]' don't match in face lookup.
+        """
+        rows = [
+            {
+                "identity_id": "string-anchor-test",
+                "name": "Robert Mattatia",
+                "display_name": None,
+                "state": "PROPOSED",
+                "anchor_ids": '["inbox_e8b9205ffaa7"]',  # STRING, not list
+                "candidate_ids": "[]",  # STRING, not list
+                "negative_ids": "[]",  # STRING, not list
+                "version_id": 1,
+                "merged_into": None,
+                "metadata": None,
+                "created_at": "2026-03-15T00:00:00+00:00",
+                "updated_at": "2026-03-15T00:00:00+00:00",
+            }
+        ]
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = rows
+        mock_client.table.return_value.select.return_value.range.return_value.execute.return_value = mock_result
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            registry = IdentityRegistry.load_from_postgres()
+
+        identity = registry.get_identity("string-anchor-test")
+        assert identity["name"] == "Robert Mattatia"
+        # anchor_ids must be a real list, not a string
+        assert isinstance(identity["anchor_ids"], list)
+        assert identity["anchor_ids"] == ["inbox_e8b9205ffaa7"]
+        assert isinstance(identity["candidate_ids"], list)
+        assert isinstance(identity["negative_ids"], list)
+
+    @patch("core.registry.logger")
+    def test_string_anchor_ids_face_lookup_works(self, mock_logger):
+        """Face lookup must work even when Supabase returned string-encoded arrays."""
+        rows = [
+            {
+                "identity_id": "face-lookup-test",
+                "name": "Test Person",
+                "display_name": None,
+                "state": "PROPOSED",
+                "anchor_ids": '["face_abc123"]',  # STRING
+                "candidate_ids": "[]",
+                "negative_ids": "[]",
+                "version_id": 1,
+                "merged_into": None,
+                "metadata": None,
+                "created_at": "2026-03-15T00:00:00+00:00",
+                "updated_at": "2026-03-15T00:00:00+00:00",
+            }
+        ]
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = rows
+        mock_client.table.return_value.select.return_value.range.return_value.execute.return_value = mock_result
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            registry = IdentityRegistry.load_from_postgres()
+
+        # Simulate get_identity_for_face logic
+        face_lookup = {}
+        for identity in registry.list_identities():
+            all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            for entry in all_face_ids:
+                fid = entry if isinstance(entry, str) else entry.get("face_id")
+                if fid:
+                    face_lookup[fid] = identity
+
+        result = face_lookup.get("face_abc123")
+        assert result is not None, "Face lookup must find identity for string-coerced anchor"
+        assert result["name"] == "Test Person"
+
 
 # =========================================================================
 # SAVE PATH ROUTING

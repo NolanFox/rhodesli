@@ -167,6 +167,25 @@ class TestShadowWriteIdentity:
         row = mock_supabase_client.table.return_value.upsert.call_args[0][0]
         assert row["merged_into"] == "def-456"
 
+    def test_string_encoded_anchor_ids_coerced(self, mock_supabase_client):
+        """Regression: string-encoded arrays must be parsed before writing to Supabase."""
+        ident = {
+            "identity_id": "coerce-test",
+            "name": "Test",
+            "state": "PROPOSED",
+            "anchor_ids": '["face1", "face2"]',  # String, not list
+            "candidate_ids": "[]",
+            "negative_ids": "[]",
+        }
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_supabase_client):
+            shadow_write_identity(ident)
+
+        row = mock_supabase_client.table.return_value.upsert.call_args[0][0]
+        assert isinstance(row["anchor_ids"], list)
+        assert row["anchor_ids"] == ["face1", "face2"]
+        assert isinstance(row["candidate_ids"], list)
+        assert isinstance(row["negative_ids"], list)
+
 
 # ---------------------------------------------------------------------------
 # shadow_write_photos_batch

@@ -1824,14 +1824,32 @@ class IdentityRegistry:
             registry = cls()
             for row in all_rows:
                 identity_id = row["identity_id"]
+
+                def _ensure_list(val):
+                    """Coerce string-encoded JSON arrays to lists.
+
+                    Some Supabase rows have anchor_ids/candidate_ids stored as
+                    JSON text instead of JSONB arrays (caused by sync bugs).
+                    """
+                    if isinstance(val, list):
+                        return val
+                    if isinstance(val, str):
+                        try:
+                            parsed = json.loads(val)
+                            if isinstance(parsed, list):
+                                return parsed
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                    return []
+
                 identity = {
                     "identity_id": identity_id,
                     "name": row.get("name", ""),
                     "display_name": row.get("display_name"),
                     "state": row.get("state", "INBOX"),
-                    "anchor_ids": row.get("anchor_ids", []),
-                    "candidate_ids": row.get("candidate_ids", []),
-                    "negative_ids": row.get("negative_ids", []),
+                    "anchor_ids": _ensure_list(row.get("anchor_ids", [])),
+                    "candidate_ids": _ensure_list(row.get("candidate_ids", [])),
+                    "negative_ids": _ensure_list(row.get("negative_ids", [])),
                     "version_id": row.get("version_id", 1),
                     "created_at": row.get("created_at"),
                     "updated_at": row.get("updated_at"),

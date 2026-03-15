@@ -33,13 +33,14 @@ if echo "$CMD" | grep -qE '\bgit commit\b'; then
     echo "$NEW" > "$COUNTER_FILE"
 
     if [ "$NEW" -ge 1 ]; then
-        echo ""
-        echo "=== COMMIT #${NEW} SINCE LAST /clear ==="
-        echo "You MUST /clear before starting the next phase."
-        echo "Run /clear NOW. Do not read the next phase first."
-        echo "After /clear, re-read the prompt file for the next phase."
-        echo "============================================"
-        echo ""
+        echo "" >&2
+        echo "=== BLOCKED: COMMIT #${NEW} SINCE LAST /clear ===" >&2
+        echo "You MUST /clear before starting the next phase." >&2
+        echo "Run /clear NOW. Do not read the next phase first." >&2
+        echo "After /clear, reset counter: echo 0 > .claude/commits_since_clear.txt" >&2
+        echo "============================================" >&2
+        echo "" >&2
+        exit 2
     fi
 fi
 
