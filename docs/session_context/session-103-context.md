@@ -165,6 +165,16 @@ Additionally, Session 102's triage sprint (Phase 8) produced UX feedback that ne
 - Other parts of app have Faces/Photos toggle — speed-run needs the same
 - Face crop click or keyboard shortcut (P) should show source photo with face highlighted
 
+### FB-166: GEDCOM link results need more context to avoid wrong-person linking
+- Search returns "Morris Shane · b. 1891 · d. 1937 · Yugoslavia" but Ancestry shows "b. 1889 · Moscow, Russia"
+- Need: preview family tree context inline (parents, spouse, children) before clicking Link
+- Need: relationship path ("husband of great-grandaunt") shown in search results
+- Need: obvious, safe undo for GEDCOM links — currently unclear how to unlink
+
+### FB-167: GEDCOM birth year inconsistency (1891 vs 1889)
+- GEDCOM file and Ancestry show different birth years — data quality issue in GEDCOM import
+- Multiple date records may exist; rendering doesn't clarify which is canonical
+
 ---
 
 ## Part 5: Execution Strategy
