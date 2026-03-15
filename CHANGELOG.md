@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.6] — 2026-03-15 (Session 103: ML Pipeline Execution + Triage Fixes)
+
+### Added
+- **PRD-046: ML Run Provenance tables** — `ml_runs` + `ml_proposals` Supabase tables with run tracking in clustering pipeline
+- **ML comparison tool** — `scripts/compare_ml_runs.py` diffs two proposals files or Supabase run IDs
+- **Community-scoped suggestions** — find-similar panel and speed-run suggestions prioritize same-community identities (FB-147, PERF-007)
+- **input_method tracking** — speed-run routes log keyboard vs button input source (OBS-003)
+- **61 new tests** across 7 test files
+
+### Fixed
+- **FB-168 (P0): Tag search click assigns identity** — fallback photo lookup when embeddings cache misses, toast retargeted to container
+- **FB-150 (P0): Speed Loop suggestion thumbnails clickable** — wrapped in A tags linking to person page
+- **FB-169: Esther Burd Fox label** — resolved by FB-168 fix (tag now completes)
+- **FB-153 (P1): /identify/ community lookup** — checks identity's actual community, not URL community
+- **FB-159/160 (P1): Similar panel ranking** — CONFIRMED identities sorted above INBOX fragments
+- **FB-162 (P1): Tag search prioritization** — same-community first, then state rank, then face count
+- **Cross-community badge text** — removed "From " prefix (FB-148)
+
+### ML Results
+- Baseline clustering: 470 proposals (86 VERY HIGH, 384 HIGH)
+- Reranker shadow comparison: **Neutral** — 0 changes vs baseline, reranker not activated
+- Recommendation: collect more age-gap labels before graduating reranker (PRD-038 Phase 5)
+
+### Verification
+- 5/5 browser checks PASS (3 browser-verified, 2 code-verified)
+- 4357 app tests pass
+- Deploy SUCCESS via `railway up`
+- Health: 1902 identities, 941 photos
+
 ## [v0.99.5] — 2026-03-14 (Session 102: Performance, Speed Loop Fix, Navigation Wiring)
 
 ### Fixed

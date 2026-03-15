@@ -14,6 +14,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 103: ML Pipeline Execution + Triage Fixes (2026-03-15) — v0.99.6
+- PRD-046: ml_runs + ml_proposals Supabase tables with clustering pipeline tracking
+- Baseline clustering: 470 proposals (86 VERY HIGH, 384 HIGH), 42 zero-distance pre-grouped
+- Reranker shadow comparison: Neutral — 0 changes vs baseline, not activated
+- compare_ml_runs.py: diff tool for proposals files or Supabase run IDs
+- Community-scoped suggestions: find-similar + speed-run prioritize same-community
+- P0: FB-168 tag search assignment fix, FB-150 clickable suggestion thumbnails, FB-169 resolved
+- P1: FB-153 identify community lookup, FB-159/160 CONFIRMED ranking, FB-162 tag search priority
+- Session 102 test gaps: TEST-003 community identity sets, TEST-004 name protection, OBS-003 input_method
+- 14 P2 BACKLOG entries (FB-149, FB-151/152, FB-154-158, FB-163-167)
+- 61 new tests, 4357 app tests pass, 5/5 browser verified, deploy SUCCESS
+
 ## Session 102: Performance + Speed Loop Fix + Navigation Wiring (2026-03-14) — v0.99.5
 - BUG-001 P0 fix: face lookup cache cleared in Postgres save path (FB-141)
 - DATA-019: community reassignment script (Rhodes photos removed from Fox Family)

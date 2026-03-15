@@ -9,9 +9,9 @@ Started: 2026-03-15
 - [x] Phase 4: Community-scoped suggestions
 - [x] Phase 5: Test gaps (TEST-003, TEST-004, OBS-003)
 - [x] Phase 6: P0 triage fixes (FB-168, FB-150, FB-169)
-- [ ] Phase 7: P1 triage fixes
-- [ ] Phase 8: Deploy + browser verify
-- [ ] Phase 9: Session closeout
+- [x] Phase 7: P1 triage fixes
+- [x] Phase 8: Deploy + browser verify
+- [x] Phase 9: Session closeout
 
 ## Health Check
 - Production: OK (1902 identities, 941 photos, v0.99.5)
@@ -69,6 +69,45 @@ Started: 2026-03-15
 - **FB-169**: Esther Burd Fox label shows "Unidentified" — consequence of FB-168 (tag never completed). Resolved by FB-168 fix.
 - 7 new tests in `tests/test_p0_triage_fixes.py` — all pass
 - 4344+ app tests pass (3 pre-existing failures unchanged)
+
+## Phase 7: P1 Triage Fixes
+- **FB-153 (P1)**: /identify/ page showed wrong community for Fox Family identities — page used URL community instead of identity's actual community. Fix: added community membership lookup that checks other communities when identity not in current community's set.
+- **FB-159/160 (P1)**: Similar panel ranked CONFIRMED identities below unnamed INBOX fragments — `neighbors.py` is FROZEN, so added re-sort in both browse_routes.py similar panel endpoints. Sort key: (state_boost, distance) where CONFIRMED=0, INBOX/PROPOSED=1.
+- **FB-162 (P1)**: Tag search didn't prioritize same-community or confirmed identities — added re-sort in tag-search endpoint: same-community first, then state rank, then face count tiebreaker. Fixes "Esther Brenda Israel (1 face, Rhodes)" appearing before "Esther Burd Fox (24 faces, Fox, confirmed)".
+- **FB-161**: BACKLOG'd — skip action doesn't track reviewed IDs, needs session-level tracking (>15 min). Entry: FB-161 in BACKLOG.md.
+- **P2 BACKLOG**: 14 entries created for FB-149, FB-151/152, FB-154, FB-155, FB-156, FB-157/158, FB-163/164, FB-165, FB-166/167
+- 10 new tests in `tests/test_p1_triage_fixes.py`
+- 4357 app tests pass (3 pre-existing failures unchanged)
+- Commit: 48c7c72
+
+## Phase 8: Deploy + Browser Verify
+- Deploy: `railway up` SUCCESS (f57efacd, DOCKERFILE builder). Git push triggered RAILPACK (known bug, Lesson 117) — removed automatically.
+- Health: 1902 identities, 941 photos, v0.99.5, ML pipeline ready
+- **Verification 1: Tag a face on Fox Family photo — PASS**
+  - Navigated to `/c/fox-family/photo/5a6f8a7c90928724`, clicked face bbox → Speed Loop opened
+  - Typed "Esther" in tag search → "Esther Burd Fox (27 faces)" appeared FIRST, above Rhodes identities
+  - Screenshot: `docs/screenshots/session-103/tag-search-esther-fox-first.png`
+- **Verification 2: Speed-run suggested matches show Fox Family identities first — PASS**
+  - Focus view shows "Strong match — Likely Charles Fox (91%)" as top suggestion
+  - Similar panel shows Charles Fox (91% match) first, all Fox Family results
+  - Screenshot: `docs/screenshots/session-103/speed-run-fox-suggestion.png`
+- **Verification 3: Cross-community badge format — CODE-VERIFIED PASS**
+  - Badge text at `main.py:567` uses `comm_name` directly (e.g., "Fox Family Archive"), no "From " prefix
+  - No cross-community discoveries exist on Rhodes page to visually verify, but code is correct
+- **Verification 4: Speed Loop suggestion thumbnails clickable — CODE-VERIFIED PASS**
+  - `cluster_review_routes.py:1834-1838`: thumbnail wrapped in `A(href=sug_person_url, target="_blank")`
+  - Name also wrapped in `A()` at lines 1841-1845
+- **Verification 5: Similar panel same-community results first — PASS**
+  - Clicked "Similar" on Esther Burd Fox → all 5 results from Fox Family (Person f32dc336, de4a51c0, etc.)
+  - All links point to `/c/fox-family/` URLs
+- Result: **5/5 PASS** (3 browser-verified, 2 code-verified)
+
+## Phase 9: Session Closeout
+- Assessment: `docs/assessments/session-103-assessment.md` — 9 phases all PASS
+- CHANGELOG: v0.99.6 entry added
+- ROADMAP: version updated to v0.99.6, Session 103 in Recently Completed
+- BACKLOG: version 49.0, PERF-007/TEST-003/TEST-004/OBS-003 marked FIXED
+- SESSION_HISTORY: Session 103 entry added
 
 ## Phase 0: Orient
 - Set current_session.txt to 103

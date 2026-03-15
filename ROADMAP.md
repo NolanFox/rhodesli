@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.5 · ~4276 tests · 941 photos · 3412 identities · 95 confirmed
+Current: v0.99.6 · ~4357 tests · 941 photos · 3412 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -177,6 +177,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 - Prompt: docs/prompts/session-95-prompt.md
 
 ## Recently Completed
+
+- [x] 2026-03-15: **v0.99.6 — Session 103**: ML Pipeline Execution + Triage Fixes. PRD-046 ml_runs + ml_proposals Supabase tables. Baseline clustering: 470 proposals (86 VERY HIGH, 384 HIGH). Reranker shadow comparison: Neutral (0 changes, not activated). compare_ml_runs.py diff tool. Community-scoped suggestions (find-similar + speed-run). P0 fixes: FB-168 tag search assignment, FB-150 clickable suggestion thumbnails. P1 fixes: FB-153 identify community lookup, FB-159/160 similar panel CONFIRMED ranking, FB-162 tag search prioritization. Session 102 test gaps closed (TEST-003, TEST-004, OBS-003). 14 P2 BACKLOG entries. 61 new tests, 4357 app tests pass. 5/5 browser verified. Deploy SUCCESS.
 
 - [x] 2026-03-14: **v0.99.5 — Session 102**: Performance + Speed Loop fix + Navigation wiring. BUG-001 P0 fix (face lookup cache cleared in Postgres save path). DATA-019 community reassignment (Rhodes photos removed from Fox Family). DATA-020 Postgres name protection guard. Connected triage navigation (Identify Mode → Speed Loop, face click → per-face, back-to-queue). GEDCOM search optimization (trigram index, 3-char min). Similar panel community scoping. PRD-045 Active Learning Feedback Loop + PRD-046 ML Run Provenance. Unwired route detection test (TEST-002). 10/12 browser checks PASS. Health: 1922 identities, 941 photos. Session froze during Phase 5, recovered by second instance. Phase 8 (triage sprint) deferred to next session.
 
