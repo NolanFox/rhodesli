@@ -3829,8 +3829,6 @@ def post(
     _main_mod._build_caches()
 
     # Compute distance between the two faces
-    from core.neighbors import get_neighbors
-
     source_emb = None
     target_emb = None
     embs = np.load(_main_mod.data_path / "embeddings.npy", allow_pickle=True)
@@ -3858,15 +3856,15 @@ def post(
     target_name = "Unknown"
     source_identity_id = ""
     target_identity_id = ""
-    identities = _main_mod.load_registry()
-    for iid, idata in identities.items():
-        all_faces = idata.get("anchor_ids", []) + idata.get("candidate_ids", [])
-        if source_face_id in all_faces:
-            source_name = idata.get("name", "Unknown")
-            source_identity_id = iid
-        if target_face_id in all_faces:
-            target_name = idata.get("name", "Unknown")
-            target_identity_id = iid
+    registry = _main_mod.load_registry()
+    source_identity = _main_mod.get_identity_for_face(registry, source_face_id)
+    if source_identity:
+        source_name = source_identity.get("name", "Unknown")
+        source_identity_id = source_identity.get("identity_id", "")
+    target_identity = _main_mod.get_identity_for_face(registry, target_face_id)
+    if target_identity:
+        target_name = target_identity.get("name", "Unknown")
+        target_identity_id = target_identity.get("identity_id", "")
 
     # Look up photo IDs
     source_photo_id = _main_mod._face_to_photo_cache.get(source_face_id, "")
