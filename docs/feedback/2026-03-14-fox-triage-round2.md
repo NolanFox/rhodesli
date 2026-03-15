@@ -171,6 +171,17 @@ Nolan drives triage. Claude fixes or logs.
 - Wire to nav or remove — invisible features are worse than missing features
 - **BACKLOG:** UX-081 (rethink or remove), PIPELINE-001 (audit incremental clustering reliability)
 
+### FB-142: Keyboard shortcuts may cause accidental actions + need usage logging
+- **Severity:** P2 (data safety / analytics)
+- **Context:** Nolan rarely uses keyboard shortcuts (Y/N/S/D/Z) and is more concerned about accidental presses — e.g., pressing Y while typing something else could confirm a cluster unintentionally. Unclear if anyone uses hotkeys vs. clicking buttons.
+- **Requirements:**
+  1. **Log input method** — every action must record whether it was triggered by keyboard shortcut or button click
+  2. **Log undo patterns** — track when users confirm then immediately undo (signal of accidental action)
+  3. **Analytics** — PostHog events for keyboard vs button usage, undo frequency, time-between-actions
+  4. **Consider:** disable hotkeys when text input is focused (already may be done but verify), add confirmation for keyboard shortcuts, or make them opt-in
+- **Broader principle:** "Everything should be logged and nothing should be lost. Ever."
+- **BACKLOG:** OBS-002 (action method logging), DATA-020 (comprehensive audit trail)
+
 ### FB-124: Merge search can't find people with lost names
 - **Severity:** P2 (UX)
 - **Context:** When searching "charles" in the merge search during speed-run, "No matches found" because Charles Fox's name had been wiped to "Unidentified Person 2986". The identity appeared in Suggested Matches but not in search.
