@@ -202,7 +202,7 @@ class TestD8IdentifiedTooltip:
         source = inspect.getsource(pr.public_person_page)
         # Find the section where the "Identified" badge is created
         # It should have a title= kwarg
-        assert 'title="This person has been identified by an admin"' in source
+        assert 'title="This person has been confirmed by an admin"' in source
 
     def test_under_review_badge_exists(self):
         """The Under Review badge should still exist as the alternative state."""

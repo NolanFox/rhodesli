@@ -117,6 +117,21 @@ def disable_supabase_writes():
     sd._supabase_client = old_client
 
 
+@pytest.fixture(autouse=True)
+def reset_registry_cache():
+    """Reset global registry cache after each test.
+
+    Prevents save_registry() in one test from poisoning _registry_cache
+    for other tests in the same xdist worker. CI fix for test isolation.
+    """
+    yield
+    import app.main as main_mod
+
+    main_mod._registry_cache = None
+    main_mod._registry_cache_ts = 0.0
+    main_mod._registry_cache_key = None
+
+
 # ---------------------------------------------------------------------------
 # Auth state fixtures
 # ---------------------------------------------------------------------------
