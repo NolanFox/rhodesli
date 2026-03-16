@@ -29,23 +29,23 @@ from app.auth import User
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def client():
     from app.main import app
+
     return TestClient(app)
 
 
 @pytest.fixture
 def auth_enabled():
-    with patch("app.main.is_auth_enabled", return_value=True), \
-         patch("app.auth.is_auth_enabled", return_value=True):
+    with patch("app.main.is_auth_enabled", return_value=True), patch("app.auth.is_auth_enabled", return_value=True):
         yield
 
 
 @pytest.fixture
 def auth_disabled():
-    with patch("app.main.is_auth_enabled", return_value=False), \
-         patch("app.auth.is_auth_enabled", return_value=False):
+    with patch("app.main.is_auth_enabled", return_value=False), patch("app.auth.is_auth_enabled", return_value=False):
         yield
 
 
@@ -155,12 +155,14 @@ def sample_search_index():
 # _load_date_labels tests
 # ---------------------------------------------------------------------------
 
+
 class TestLoadDateLabels:
     """Tests for _load_date_labels() — dual-key caching."""
 
     def test_returns_empty_dict_when_file_missing(self):
         """When date_labels.json does not exist, returns empty dict."""
         import app.main as main_module
+
         main_module._date_labels_cache = None  # Reset cache
         with patch("pathlib.Path.exists", return_value=False):
             result = main_module._load_date_labels()
@@ -170,6 +172,7 @@ class TestLoadDateLabels:
     def test_returns_cached_value_on_second_call(self):
         """Once loaded, _load_date_labels returns cached dict without re-reading."""
         import app.main as main_module
+
         expected = {"photo1": {"estimated_decade": 1930}}
         main_module._date_labels_cache = expected
         result = main_module._load_date_labels()
@@ -179,6 +182,7 @@ class TestLoadDateLabels:
     def test_indexes_labels_by_photo_id(self, sample_date_labels):
         """Labels are keyed by their photo_id field."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         result = main_module._load_date_labels()
         assert "abc123" in result
@@ -190,12 +194,14 @@ class TestLoadDateLabels:
 # _load_search_index tests
 # ---------------------------------------------------------------------------
 
+
 class TestLoadSearchIndex:
     """Tests for _load_search_index() — search index with cache_photo_id alias."""
 
     def test_returns_empty_list_when_file_missing(self):
         """When photo_search_index.json does not exist, returns empty list."""
         import app.main as main_module
+
         main_module._search_index_cache = None
         with patch("pathlib.Path.exists", return_value=False):
             result = main_module._load_search_index()
@@ -205,6 +211,7 @@ class TestLoadSearchIndex:
     def test_returns_cached_value_on_second_call(self, sample_search_index):
         """Once loaded, _load_search_index returns cached list."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         result = main_module._load_search_index()
         assert result is sample_search_index
@@ -220,12 +227,14 @@ class TestLoadSearchIndex:
 # _get_decade_counts tests
 # ---------------------------------------------------------------------------
 
+
 class TestGetDecadeCounts:
     """Tests for _get_decade_counts() — decade aggregation."""
 
     def test_counts_photos_per_decade(self, sample_search_index):
         """Returns correct counts for each decade."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         counts = main_module._get_decade_counts()
         assert counts[1930] == 2  # abc123 + jkl012
@@ -236,6 +245,7 @@ class TestGetDecadeCounts:
     def test_returns_sorted_by_decade(self, sample_search_index):
         """Decades should be sorted chronologically."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         counts = main_module._get_decade_counts()
         decades = list(counts.keys())
@@ -245,6 +255,7 @@ class TestGetDecadeCounts:
     def test_empty_index_returns_empty_dict(self):
         """Empty search index produces no decade counts."""
         import app.main as main_module
+
         main_module._search_index_cache = []
         counts = main_module._get_decade_counts()
         assert counts == {}
@@ -253,6 +264,7 @@ class TestGetDecadeCounts:
     def test_skips_docs_without_decade(self):
         """Documents missing estimated_decade are not counted."""
         import app.main as main_module
+
         main_module._search_index_cache = [
             {"photo_id": "x", "searchable_text": "test", "controlled_tags": [], "estimated_decade": 1930},
             {"photo_id": "y", "searchable_text": "test", "controlled_tags": []},  # no decade
@@ -282,12 +294,14 @@ class TestGetDecadeCounts:
 # _get_tag_counts tests
 # ---------------------------------------------------------------------------
 
+
 class TestGetTagCounts:
     """Tests for _get_tag_counts() — tag aggregation."""
 
     def test_counts_photos_per_tag(self, sample_search_index):
         """Returns correct counts for each tag."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         counts = main_module._get_tag_counts()
         assert counts["studio"] == 2  # abc123 + jkl012
@@ -300,6 +314,7 @@ class TestGetTagCounts:
     def test_sorted_by_count_descending(self, sample_search_index):
         """Tags should be sorted by count (highest first)."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         counts = main_module._get_tag_counts()
         values = list(counts.values())
@@ -309,6 +324,7 @@ class TestGetTagCounts:
     def test_empty_index_returns_empty_dict(self):
         """Empty search index produces no tag counts."""
         import app.main as main_module
+
         main_module._search_index_cache = []
         counts = main_module._get_tag_counts()
         assert counts == {}
@@ -319,12 +335,14 @@ class TestGetTagCounts:
 # _search_photos tests
 # ---------------------------------------------------------------------------
 
+
 class TestSearchPhotos:
     """Tests for _search_photos() — in-memory search with match_reason."""
 
     def test_returns_all_docs_when_no_filters(self, sample_search_index):
         """No query/decade/tag returns all documents."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos()
         assert len(results) == 4
@@ -333,6 +351,7 @@ class TestSearchPhotos:
     def test_query_filters_by_searchable_text(self, sample_search_index):
         """Query string filters by substring match in searchable_text."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="harbor")
         assert len(results) == 1
@@ -342,6 +361,7 @@ class TestSearchPhotos:
     def test_query_is_case_insensitive(self, sample_search_index):
         """Search is case-insensitive."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="WEDDING")
         assert len(results) == 1
@@ -351,6 +371,7 @@ class TestSearchPhotos:
     def test_decade_filter(self, sample_search_index):
         """Decade filter returns only photos from that decade."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(decade=1930)
         assert len(results) == 2
@@ -361,6 +382,7 @@ class TestSearchPhotos:
     def test_tag_filter(self, sample_search_index):
         """Tag filter returns only photos with that tag."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(tag="outdoor")
         assert len(results) == 1
@@ -370,6 +392,7 @@ class TestSearchPhotos:
     def test_query_and_decade_combined(self, sample_search_index):
         """Query + decade filter combine with AND logic."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         # "studio" appears in abc123 (1930s) and jkl012 (1930s) — but not def456 (1920s)
         results = main_module._search_photos(query="studio", decade=1920)
@@ -379,6 +402,7 @@ class TestSearchPhotos:
     def test_query_and_tag_combined(self, sample_search_index):
         """Query + tag filter combine with AND logic."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="formal", tag="family")
         assert len(results) == 1
@@ -388,6 +412,7 @@ class TestSearchPhotos:
     def test_match_reason_tags_when_query_matches_tag(self, sample_search_index):
         """match_reason is 'tags' when query matches a controlled tag."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="studio")
         for r in results:
@@ -397,6 +422,7 @@ class TestSearchPhotos:
     def test_match_reason_scene_when_query_matches_text_only(self, sample_search_index):
         """match_reason is 'scene' when query matches searchable_text but not tags."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="harbor")
         assert len(results) == 1
@@ -406,6 +432,7 @@ class TestSearchPhotos:
     def test_match_reason_none_when_no_query(self, sample_search_index):
         """match_reason is None when no text query is applied."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(decade=1930)
         for r in results:
@@ -415,6 +442,7 @@ class TestSearchPhotos:
     def test_empty_query_string_treated_as_no_query(self, sample_search_index):
         """Empty string query returns all docs (no text filter)."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="")
         assert len(results) == 4
@@ -423,6 +451,7 @@ class TestSearchPhotos:
     def test_no_results_for_nonexistent_query(self, sample_search_index):
         """Query that matches nothing returns empty list."""
         import app.main as main_module
+
         main_module._search_index_cache = sample_search_index
         results = main_module._search_photos(query="xylophone")
         assert len(results) == 0
@@ -446,10 +475,109 @@ class TestSearchPhotos:
         main_module._search_index_cache = None
         main_module._date_labels_cache = None
 
+    def test_filename_search_finds_photo_by_partial_filename(self, sample_search_index):
+        """Searching a substring of the filename finds the photo (FB-007)."""
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        # Simulate _photo_cache with filenames
+        original_cache = main_module._photo_cache
+        main_module._photo_cache = {
+            "abc123": {"filename": "IMG_01984_compress.jpg", "faces": []},
+            "def456": {"filename": "13akf5twbc5244.jpg", "faces": []},
+            "ghi789": {"filename": "wedding_photo.jpg", "faces": []},
+            "jkl012": {"filename": "studio_child.jpg", "faces": []},
+        }
+        try:
+            results = main_module._search_photos(query="01984")
+            assert len(results) == 1
+            assert results[0]["photo_id"] == "abc123"
+            assert results[0]["match_reason"] == "filename"
+        finally:
+            main_module._search_index_cache = None
+            main_module._photo_cache = original_cache
+
+    def test_filename_search_finds_photo_by_full_filename(self, sample_search_index):
+        """Searching the full filename finds the photo (FB-007)."""
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        original_cache = main_module._photo_cache
+        main_module._photo_cache = {
+            "abc123": {"filename": "IMG_01984_compress.jpg", "faces": []},
+            "def456": {"filename": "13akf5twbc5244.jpg", "faces": []},
+            "ghi789": {"filename": "wedding_photo.jpg", "faces": []},
+            "jkl012": {"filename": "studio_child.jpg", "faces": []},
+        }
+        try:
+            results = main_module._search_photos(query="13akf5twbc5244")
+            assert len(results) == 1
+            assert results[0]["photo_id"] == "def456"
+            assert results[0]["match_reason"] == "filename"
+        finally:
+            main_module._search_index_cache = None
+            main_module._photo_cache = original_cache
+
+    def test_filename_search_no_match_for_nonexistent(self, sample_search_index):
+        """Searching a filename that doesn't exist returns no results (FB-007)."""
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        original_cache = main_module._photo_cache
+        main_module._photo_cache = {
+            "abc123": {"filename": "IMG_01984_compress.jpg", "faces": []},
+            "def456": {"filename": "13akf5twbc5244.jpg", "faces": []},
+        }
+        try:
+            results = main_module._search_photos(query="NONEXISTENT_FILE")
+            assert len(results) == 0
+        finally:
+            main_module._search_index_cache = None
+            main_module._photo_cache = original_cache
+
+    def test_filename_search_text_search_still_works(self, sample_search_index):
+        """Text search regression: searchable_text match still works (FB-007)."""
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        original_cache = main_module._photo_cache
+        main_module._photo_cache = {
+            "abc123": {"filename": "file1.jpg", "faces": []},
+            "def456": {"filename": "file2.jpg", "faces": []},
+            "ghi789": {"filename": "file3.jpg", "faces": []},
+            "jkl012": {"filename": "file4.jpg", "faces": []},
+        }
+        try:
+            results = main_module._search_photos(query="harbor")
+            assert len(results) == 1
+            assert results[0]["photo_id"] == "def456"
+            assert results[0]["match_reason"] == "scene"
+        finally:
+            main_module._search_index_cache = None
+            main_module._photo_cache = original_cache
+
+    def test_filename_search_is_case_insensitive(self, sample_search_index):
+        """Filename search should be case-insensitive (FB-007)."""
+        import app.main as main_module
+
+        main_module._search_index_cache = sample_search_index
+        original_cache = main_module._photo_cache
+        main_module._photo_cache = {
+            "abc123": {"filename": "IMG_01984_Compress.JPG", "faces": []},
+        }
+        try:
+            results = main_module._search_photos(query="img_01984")
+            assert len(results) == 1
+            assert results[0]["match_reason"] == "filename"
+        finally:
+            main_module._search_index_cache = None
+            main_module._photo_cache = original_cache
+
 
 # ---------------------------------------------------------------------------
 # _get_date_badge tests
 # ---------------------------------------------------------------------------
+
 
 class TestGetDateBadge:
     """Tests for _get_date_badge() — badge text/confidence/tooltip tuple."""
@@ -457,6 +585,7 @@ class TestGetDateBadge:
     def test_returns_badge_for_known_photo(self, sample_date_labels):
         """Returns (badge_text, confidence, tooltip) for a photo with a label."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         badge_text, confidence, tooltip = main_module._get_date_badge("abc123")
         assert badge_text == "c. 1930s"
@@ -469,6 +598,7 @@ class TestGetDateBadge:
     def test_returns_none_tuple_for_unknown_photo(self, sample_date_labels):
         """Returns (None, None, None) for a photo with no label."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         result = main_module._get_date_badge("nonexistent_photo")
         assert result == (None, None, None)
@@ -477,9 +607,8 @@ class TestGetDateBadge:
     def test_returns_none_tuple_when_no_decade(self):
         """Returns (None, None, None) when label exists but has no decade."""
         import app.main as main_module
-        main_module._date_labels_cache = {
-            "nodecade": {"photo_id": "nodecade", "confidence": "low"}
-        }
+
+        main_module._date_labels_cache = {"nodecade": {"photo_id": "nodecade", "confidence": "low"}}
         result = main_module._get_date_badge("nodecade")
         assert result == (None, None, None)
         main_module._date_labels_cache = None
@@ -487,6 +616,7 @@ class TestGetDateBadge:
     def test_tooltip_format_with_year_and_range(self, sample_date_labels):
         """Tooltip shows 'Best estimate: YEAR (range: START-END)'."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         _, _, tooltip = main_module._get_date_badge("abc123")
         assert tooltip.startswith("Best estimate: 1935")
@@ -496,6 +626,7 @@ class TestGetDateBadge:
     def test_tooltip_fallback_without_year(self):
         """Tooltip falls back to 'Estimated: DECADEs' when no best_year."""
         import app.main as main_module
+
         main_module._date_labels_cache = {
             "noyr": {"photo_id": "noyr", "estimated_decade": 1950, "confidence": "medium"}
         }
@@ -508,12 +639,14 @@ class TestGetDateBadge:
 # _build_ai_analysis_section tests
 # ---------------------------------------------------------------------------
 
+
 class TestBuildAiAnalysisSection:
     """Tests for _build_ai_analysis_section() — AI metadata panel rendering."""
 
     def test_returns_none_when_no_label(self, sample_date_labels):
         """Returns None when photo has no date label."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = []
         result = main_module._build_ai_analysis_section("nonexistent_photo")
@@ -525,6 +658,7 @@ class TestBuildAiAnalysisSection:
         """Returns a Section with data_testid='ai-analysis'."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -538,6 +672,7 @@ class TestBuildAiAnalysisSection:
         """Section contains 'AI Analysis' heading."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -550,6 +685,7 @@ class TestBuildAiAnalysisSection:
         """Section shows the date estimate value."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -562,6 +698,7 @@ class TestBuildAiAnalysisSection:
         """Section shows the scene description."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -574,6 +711,7 @@ class TestBuildAiAnalysisSection:
         """Section shows controlled tags with ai-tag testid."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -587,6 +725,7 @@ class TestBuildAiAnalysisSection:
         """Section shows visible text when present."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -599,6 +738,7 @@ class TestBuildAiAnalysisSection:
         """Section shows dating evidence with cue text."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -612,6 +752,7 @@ class TestBuildAiAnalysisSection:
         """Section shows subject ages when present."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -625,6 +766,7 @@ class TestBuildAiAnalysisSection:
         """Human-verified label shows 'Verified' and emerald styling."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("ghi789")
@@ -638,6 +780,7 @@ class TestBuildAiAnalysisSection:
         """AI-estimated label shows 'AI Estimated' and data-provenance='ai'."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -651,6 +794,7 @@ class TestBuildAiAnalysisSection:
         """Section includes the correction pencil button."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         main_module._date_labels_cache = sample_date_labels
         main_module._search_index_cache = sample_search_index
         section = main_module._build_ai_analysis_section("abc123")
@@ -680,12 +824,14 @@ class TestBuildAiAnalysisSection:
 # _compute_correction_priority tests
 # ---------------------------------------------------------------------------
 
+
 class TestComputeCorrectionPriority:
     """Tests for _compute_correction_priority() — priority scoring."""
 
     def test_high_confidence_narrow_range_low_priority(self):
         """High confidence + narrow range = low priority score."""
         import app.main as main_module
+
         label = {"confidence": "high", "probable_range": [1930, 1940]}
         score = main_module._compute_correction_priority(label)
         # (1 - 0.9) * (10/50) * (1 + 0) = 0.1 * 0.2 * 1.0 = 0.02
@@ -694,6 +840,7 @@ class TestComputeCorrectionPriority:
     def test_low_confidence_wide_range_high_priority(self):
         """Low confidence + wide range = high priority score."""
         import app.main as main_module
+
         label = {"confidence": "low", "probable_range": [1910, 1950]}
         score = main_module._compute_correction_priority(label)
         # (1 - 0.3) * (40/50) * (1 + 0) = 0.7 * 0.8 * 1.0 = 0.56
@@ -702,6 +849,7 @@ class TestComputeCorrectionPriority:
     def test_medium_confidence_default(self):
         """Medium confidence uses 0.6 numeric value."""
         import app.main as main_module
+
         label = {"confidence": "medium", "probable_range": [1920, 1940]}
         score = main_module._compute_correction_priority(label)
         # (1 - 0.6) * (20/50) * (1 + 0) = 0.4 * 0.4 * 1.0 = 0.16
@@ -710,6 +858,7 @@ class TestComputeCorrectionPriority:
     def test_missing_range_defaults_to_20(self):
         """Missing probable_range defaults to width 20."""
         import app.main as main_module
+
         label = {"confidence": "medium"}
         score = main_module._compute_correction_priority(label)
         # (1 - 0.6) * (20/50) * (1 + 0) = 0.4 * 0.4 * 1.0 = 0.16
@@ -718,6 +867,7 @@ class TestComputeCorrectionPriority:
     def test_unknown_confidence_defaults_to_0_5(self):
         """Unknown confidence string defaults to 0.5."""
         import app.main as main_module
+
         label = {"confidence": "unknown_level", "probable_range": [1920, 1970]}
         score = main_module._compute_correction_priority(label)
         # (1 - 0.5) * (50/50) * (1 + 0) = 0.5 * 1.0 * 1.0 = 0.5
@@ -726,12 +876,9 @@ class TestComputeCorrectionPriority:
     def test_low_confidence_always_higher_than_high_confidence(self):
         """Low confidence labels always have higher priority than high confidence."""
         import app.main as main_module
-        low = main_module._compute_correction_priority(
-            {"confidence": "low", "probable_range": [1920, 1940]}
-        )
-        high = main_module._compute_correction_priority(
-            {"confidence": "high", "probable_range": [1920, 1940]}
-        )
+
+        low = main_module._compute_correction_priority({"confidence": "low", "probable_range": [1920, 1940]})
+        high = main_module._compute_correction_priority({"confidence": "high", "probable_range": [1920, 1940]})
         assert low > high
 
 
@@ -739,12 +886,14 @@ class TestComputeCorrectionPriority:
 # _get_priority_reason tests
 # ---------------------------------------------------------------------------
 
+
 class TestGetPriorityReason:
     """Tests for _get_priority_reason() — human-readable priority reason."""
 
     def test_low_confidence_reason(self):
         """Low confidence label shows 'Low confidence' reason."""
         import app.main as main_module
+
         label = {"confidence": "low", "probable_range": [1930, 1940]}
         reason = main_module._get_priority_reason(label)
         assert "Low confidence" in reason
@@ -752,6 +901,7 @@ class TestGetPriorityReason:
     def test_wide_range_reason(self):
         """Wide date range (>=15 years) shows range in reason."""
         import app.main as main_module
+
         label = {"confidence": "medium", "probable_range": [1910, 1950]}
         reason = main_module._get_priority_reason(label)
         assert "Wide date range" in reason
@@ -761,6 +911,7 @@ class TestGetPriorityReason:
     def test_both_reasons_combined(self):
         """Low confidence + wide range shows both reasons joined."""
         import app.main as main_module
+
         label = {"confidence": "low", "probable_range": [1910, 1950]}
         reason = main_module._get_priority_reason(label)
         assert "Low confidence" in reason
@@ -769,6 +920,7 @@ class TestGetPriorityReason:
     def test_routine_review_when_no_flags(self):
         """High confidence + narrow range shows 'Routine review'."""
         import app.main as main_module
+
         label = {"confidence": "high", "probable_range": [1930, 1935]}
         reason = main_module._get_priority_reason(label)
         assert reason == "Routine review"
@@ -776,6 +928,7 @@ class TestGetPriorityReason:
     def test_no_range_means_no_wide_range_reason(self):
         """Missing probable_range does not trigger 'Wide date range'."""
         import app.main as main_module
+
         label = {"confidence": "high"}
         reason = main_module._get_priority_reason(label)
         assert "Wide date range" not in reason
@@ -785,12 +938,14 @@ class TestGetPriorityReason:
 # _load_corrections_log / _save_corrections_log tests
 # ---------------------------------------------------------------------------
 
+
 class TestCorrectionsLog:
     """Tests for _load_corrections_log and _save_corrections_log."""
 
     def test_load_returns_empty_schema_when_no_file(self, tmp_path):
         """Loading from nonexistent file returns default schema."""
         import app.main as main_module
+
         with patch.object(main_module, "data_path", tmp_path):
             result = main_module._load_corrections_log()
         assert result == {"schema_version": 1, "corrections": []}
@@ -798,6 +953,7 @@ class TestCorrectionsLog:
     def test_load_reads_existing_file(self, tmp_path):
         """Loading from existing file returns its contents."""
         import app.main as main_module
+
         corrections = {"schema_version": 1, "corrections": [{"id": "corr_1"}]}
         (tmp_path / "corrections_log.json").write_text(json.dumps(corrections))
         with patch.object(main_module, "data_path", tmp_path):
@@ -808,6 +964,7 @@ class TestCorrectionsLog:
     def test_save_and_reload(self, tmp_path):
         """Save followed by load returns the same data."""
         import app.main as main_module
+
         data = {"schema_version": 1, "corrections": [{"id": "corr_test", "photo_id": "abc"}]}
         with patch.object(main_module, "data_path", tmp_path):
             main_module._save_corrections_log(data)
@@ -817,6 +974,7 @@ class TestCorrectionsLog:
     def test_load_handles_corrupt_file(self, tmp_path):
         """Loading corrupt JSON returns default schema."""
         import app.main as main_module
+
         (tmp_path / "corrections_log.json").write_text("{invalid json!!!")
         with patch.object(main_module, "data_path", tmp_path):
             result = main_module._load_corrections_log()
@@ -827,16 +985,20 @@ class TestCorrectionsLog:
 # POST /api/photo/{id}/correct-date endpoint tests
 # ---------------------------------------------------------------------------
 
+
 class TestCorrectDateEndpoint:
     """Tests for POST /api/photo/{photo_id}/correct-date."""
 
     def test_correct_date_auth_disabled(self, client, auth_disabled, sample_date_labels):
         """When auth disabled, correction succeeds."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels.copy()
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             response = client.post("/api/photo/abc123/correct-date", data={"correction_year": 1938})
         assert response.status_code == 200
         mock_save.assert_called_once()
@@ -850,10 +1012,13 @@ class TestCorrectDateEndpoint:
     def test_correct_date_regular_user_succeeds(self, client, regular_user, sample_date_labels):
         """Logged-in non-admin user can submit corrections."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels.copy()
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             response = client.post("/api/photo/abc123/correct-date", data={"correction_year": 1938})
         assert response.status_code == 200
         mock_save.assert_called_once()
@@ -867,6 +1032,7 @@ class TestCorrectDateEndpoint:
     def test_correct_date_invalid_year_rejected(self, client, auth_disabled, sample_date_labels):
         """Year outside 1850-2030 returns error message."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels.copy()
         response = client.post("/api/photo/abc123/correct-date", data={"correction_year": 1800})
         assert response.status_code == 200
@@ -876,6 +1042,7 @@ class TestCorrectDateEndpoint:
     def test_correct_date_no_year_rejected(self, client, auth_disabled, sample_date_labels):
         """Missing correction_year returns error message."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels.copy()
         response = client.post("/api/photo/abc123/correct-date", data={})
         assert response.status_code == 200
@@ -885,6 +1052,7 @@ class TestCorrectDateEndpoint:
     def test_correct_date_unknown_photo_returns_error(self, client, auth_disabled):
         """Correction for unknown photo_id returns 'No date label found'."""
         import app.main as main_module
+
         main_module._date_labels_cache = {}
         response = client.post("/api/photo/unknown_photo/correct-date", data={"correction_year": 1935})
         assert response.status_code == 200
@@ -894,11 +1062,14 @@ class TestCorrectDateEndpoint:
     def test_correct_date_updates_cache(self, client, auth_disabled, sample_date_labels):
         """Correction updates the in-memory label cache."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             response = client.post("/api/photo/abc123/correct-date", data={"correction_year": 1942})
         assert response.status_code == 200
         # The in-memory cache should be updated
@@ -911,11 +1082,14 @@ class TestCorrectDateEndpoint:
     def test_correct_date_logs_correction_entry(self, client, auth_disabled, sample_date_labels):
         """Correction is appended to the corrections log."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             client.post("/api/photo/abc123/correct-date", data={"correction_year": 1938})
         saved_data = mock_save.call_args[0][0]
         correction = saved_data["corrections"][0]
@@ -934,6 +1108,7 @@ class TestCorrectDateEndpoint:
 # GET /admin/review-queue route tests
 # ---------------------------------------------------------------------------
 
+
 class TestReviewQueueRoute:
     """Tests for GET /admin/review-queue — admin-only."""
 
@@ -950,6 +1125,7 @@ class TestReviewQueueRoute:
     def test_review_queue_accessible_auth_disabled(self, client, auth_disabled, sample_date_labels):
         """When auth disabled, admin routes pass through."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         response = client.get("/admin/review-queue")
         assert response.status_code == 200
@@ -959,6 +1135,7 @@ class TestReviewQueueRoute:
     def test_review_queue_shows_unverified_photos(self, client, auth_disabled, sample_date_labels):
         """Queue shows photos with source != 'human'."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         response = client.get("/admin/review-queue")
         assert response.status_code == 200
@@ -969,9 +1146,16 @@ class TestReviewQueueRoute:
     def test_review_queue_excludes_human_verified(self, client, auth_disabled):
         """Human-verified labels are excluded from the review queue."""
         import app.main as main_module
+
         main_module._date_labels_cache = {
-            "verified1": {"photo_id": "verified1", "source": "human", "estimated_decade": 1930,
-                          "best_year_estimate": 1935, "confidence": "high", "probable_range": [1930, 1940]},
+            "verified1": {
+                "photo_id": "verified1",
+                "source": "human",
+                "estimated_decade": 1930,
+                "best_year_estimate": 1935,
+                "confidence": "high",
+                "probable_range": [1930, 1940],
+            },
         }
         response = client.get("/admin/review-queue")
         assert response.status_code == 200
@@ -982,15 +1166,22 @@ class TestReviewQueueRoute:
     def test_review_queue_sorted_by_priority(self, client, auth_disabled):
         """Review items are sorted by priority score (highest first)."""
         import app.main as main_module
+
         main_module._date_labels_cache = {
             "high_priority": {
-                "photo_id": "high_priority", "source": "gemini", "confidence": "low",
-                "estimated_decade": 1920, "best_year_estimate": 1925,
+                "photo_id": "high_priority",
+                "source": "gemini",
+                "confidence": "low",
+                "estimated_decade": 1920,
+                "best_year_estimate": 1925,
                 "probable_range": [1910, 1950],
             },
             "low_priority": {
-                "photo_id": "low_priority", "source": "gemini", "confidence": "high",
-                "estimated_decade": 1930, "best_year_estimate": 1935,
+                "photo_id": "low_priority",
+                "source": "gemini",
+                "confidence": "high",
+                "estimated_decade": 1930,
+                "best_year_estimate": 1935,
                 "probable_range": [1930, 1940],
             },
         }
@@ -1006,6 +1197,7 @@ class TestReviewQueueRoute:
     def test_review_queue_has_confirm_button(self, client, auth_disabled, sample_date_labels):
         """Each review item has a 'Confirm AI' button."""
         import app.main as main_module
+
         main_module._date_labels_cache = sample_date_labels
         response = client.get("/admin/review-queue")
         assert response.status_code == 200
@@ -1015,6 +1207,7 @@ class TestReviewQueueRoute:
     def test_review_queue_empty_shows_all_reviewed(self, client, auth_disabled):
         """Empty label set shows 'All photos have been reviewed!'."""
         import app.main as main_module
+
         main_module._date_labels_cache = {}
         response = client.get("/admin/review-queue")
         assert response.status_code == 200
@@ -1025,6 +1218,7 @@ class TestReviewQueueRoute:
 # ---------------------------------------------------------------------------
 # POST /api/photo/{id}/confirm-date endpoint tests
 # ---------------------------------------------------------------------------
+
 
 class TestConfirmDateEndpoint:
     """Tests for POST /api/photo/{photo_id}/confirm-date — admin-only."""
@@ -1042,11 +1236,14 @@ class TestConfirmDateEndpoint:
     def test_confirm_date_succeeds_auth_disabled(self, client, auth_disabled, sample_date_labels):
         """When auth disabled, confirm succeeds."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             response = client.post("/api/photo/abc123/confirm-date")
         assert response.status_code == 200
         assert "Confirmed" in response.text
@@ -1056,11 +1253,14 @@ class TestConfirmDateEndpoint:
     def test_confirm_date_sets_source_to_human(self, client, auth_disabled, sample_date_labels):
         """Confirming sets source to 'human' in the in-memory cache."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             client.post("/api/photo/abc123/confirm-date")
         assert labels["abc123"]["source"] == "human"
         main_module._date_labels_cache = None
@@ -1068,11 +1268,14 @@ class TestConfirmDateEndpoint:
     def test_confirm_date_does_not_change_values(self, client, auth_disabled, sample_date_labels):
         """Confirming preserves the original decade and year (only changes source)."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             client.post("/api/photo/abc123/confirm-date")
         assert labels["abc123"]["estimated_decade"] == 1930
         assert labels["abc123"]["best_year_estimate"] == 1935
@@ -1081,11 +1284,14 @@ class TestConfirmDateEndpoint:
     def test_confirm_date_logs_confirmation(self, client, auth_disabled, sample_date_labels):
         """Confirmation is logged with status 'confirmed'."""
         import app.main as main_module
+
         labels = {k: dict(v) for k, v in sample_date_labels.items()}
         main_module._date_labels_cache = labels
         mock_save = MagicMock()
-        with patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}), \
-             patch.object(main_module, "_save_corrections_log", mock_save):
+        with (
+            patch.object(main_module, "_load_corrections_log", return_value={"schema_version": 1, "corrections": []}),
+            patch.object(main_module, "_save_corrections_log", mock_save),
+        ):
             client.post("/api/photo/abc123/confirm-date")
         saved_data = mock_save.call_args[0][0]
         correction = saved_data["corrections"][0]
@@ -1097,6 +1303,7 @@ class TestConfirmDateEndpoint:
     def test_confirm_date_unknown_photo_returns_error(self, client, auth_disabled):
         """Confirming unknown photo_id returns 'Label not found'."""
         import app.main as main_module
+
         main_module._date_labels_cache = {}
         response = client.post("/api/photo/unknown_photo/confirm-date")
         assert response.status_code == 200
@@ -1107,6 +1314,7 @@ class TestConfirmDateEndpoint:
 # ---------------------------------------------------------------------------
 # Photo Context modal includes AI Analysis
 # ---------------------------------------------------------------------------
+
 
 class TestPhotoContextModalAIAnalysis:
     """Verify AI Analysis section appears in the Photo Context modal partial."""

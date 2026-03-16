@@ -2130,14 +2130,25 @@ def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list
         match_reason = None
         if query_lower:
             searchable = doc.get("searchable_text", "").lower()
-            if query_lower not in searchable:
-                continue
-            # Determine match reason
-            tags_lower = " ".join(doc.get("controlled_tags", [])).lower()
-            if query_lower in tags_lower:
-                match_reason = "tags"
+            if query_lower in searchable:
+                # Determine match reason
+                tags_lower = " ".join(doc.get("controlled_tags", [])).lower()
+                if query_lower in tags_lower:
+                    match_reason = "tags"
+                else:
+                    match_reason = "scene"
             else:
-                match_reason = "scene"
+                # Check filename match from photo cache (FB-007)
+                filename_matched = False
+                for pid in (doc.get("cache_photo_id"), doc.get("photo_id")):
+                    if pid and _photo_cache and pid in _photo_cache:
+                        fname = _photo_cache[pid].get("filename", "")
+                        if fname and query_lower in fname.lower():
+                            match_reason = "filename"
+                            filename_matched = True
+                            break
+                if not filename_matched:
+                    continue
         elif not decade and not tag:
             pass  # No filters, include all
 
