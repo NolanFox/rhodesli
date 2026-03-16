@@ -1294,13 +1294,15 @@ async def post(
 
 
 @rt("/upload/status/{job_id}")
-def get(job_id: str):
+def get(job_id: str, request=None):
     """
     Poll job status for upload processing.
 
     Returns HTML partial with current status driven by backend job state.
     Shows real progress (% complete, files processed) and error counts.
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     data_path = _main_mod.data_path
 
     status_path = data_path / "inbox" / f"{job_id}.status.json"
@@ -1508,7 +1510,7 @@ def get(job_id: str):
         elements.append(
             A(
                 "Refresh to see inbox",
-                href="/?section=to_review&view=browse",
+                href=f"{nav_prefix}/?section=to_review&view=browse",
                 cls="text-indigo-400 hover:underline text-xs mt-1 block",
             )
         )
@@ -1551,7 +1553,7 @@ def get(job_id: str):
         P(success_text, cls="text-emerald-400 text-sm font-medium"),
         A(
             "Refresh to see inbox",
-            href="/?section=to_review&view=browse",
+            href=f"{nav_prefix}/?section=to_review&view=browse",
             cls="text-indigo-400 hover:underline text-xs ml-2",
         ),
         cls="p-2 bg-emerald-900/30 border border-emerald-500/30 rounded flex items-center",

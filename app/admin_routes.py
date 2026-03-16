@@ -1734,7 +1734,7 @@ def get(request, sess=None):
         )
 
     return Title(f"ML Dashboard — {community_name}"), Div(
-        _admin_nav_bar("ml-dashboard"),
+        _admin_nav_bar("ml-dashboard", request=request),
         Div(H1("ML Evaluation Dashboard", cls="text-2xl font-bold text-white"), cls="mb-6"),
         stat_cards,
         gs_section,
@@ -1846,12 +1846,14 @@ def _load_recent_actions(limit: int = 10) -> list:
 # Annotation data stored in data/annotations.json
 
 
-def _admin_nav_bar(active: str = "") -> Div:
+def _admin_nav_bar(active: str = "", request=None) -> Div:
     """Consistent navigation bar for admin sub-pages.
 
     Shows links to all admin areas + back to dashboard.
     `active` should be one of: approvals, proposals, gedcom, uploads, audit, ml-dashboard
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     links = [
         ("Uploads", "/admin/pending", "uploads"),
         ("Approvals", "/admin/approvals", "approvals"),
@@ -1871,7 +1873,7 @@ def _admin_nav_bar(active: str = "") -> Div:
     nav_items.append(
         A(
             "Dashboard",
-            href="/?section=to_review",
+            href=f"{nav_prefix}/?section=to_review",
             cls="px-3 py-1.5 text-sm text-indigo-400 hover:text-indigo-300 ml-auto",
         ),
     )
@@ -2152,7 +2154,7 @@ def get(request, sess=None):
     )
 
     return Title(f"Annotation Approvals — {community_name}"), Div(
-        _admin_nav_bar("approvals"),
+        _admin_nav_bar("approvals", request=request),
         Div(H1("Pending Approvals", cls="text-2xl font-bold text-white"), cls="mb-6"),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
         bulk_controls if bulk_controls else "",
@@ -2657,6 +2659,8 @@ def get(request, sess=None):
 
     community = getattr(request.state, "community", None) if request else None
     community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     pending = _main_mod._get_pending_ml_birth_year_suggestions()
     crop_files = _main_mod.get_crop_files()
@@ -2712,7 +2716,11 @@ def get(request, sess=None):
                     ),
                     # Info
                     Div(
-                        A(name, href=f"/person/{iid}", cls="text-white text-sm font-medium hover:text-indigo-400"),
+                        A(
+                            name,
+                            href=f"{nav_prefix}/person/{iid}",
+                            cls="text-white text-sm font-medium hover:text-indigo-400",
+                        ),
                         Div(
                             Span(f"Born c. {est}", cls="text-slate-300 text-sm"),
                             Span(f" ({range_str})" if range_str else "", cls="text-slate-500 text-xs"),
@@ -2801,7 +2809,7 @@ def get(request, sess=None):
         Title(f"ML Birth Year Review - {community_name} Admin"),
         page_style,
         Main(
-            _admin_nav_bar("birth-year-review"),
+            _admin_nav_bar("birth-year-review", request=request),
             Div(
                 H1("ML Birth Year Estimates", cls="text-2xl font-serif font-bold text-white mb-2"),
                 P(f"{len(pending)} pending review", cls="text-slate-400 text-sm mb-6", id="pending-count"),
@@ -2922,7 +2930,7 @@ def get(request, sess=None):
         rows = [P("No audit entries yet.", cls="text-slate-400 text-center py-12")]
 
     return Title(f"Audit Log — {community_name}"), Div(
-        _admin_nav_bar("audit"),
+        _admin_nav_bar("audit", request=request),
         Div(H1("Audit Log", cls="text-2xl font-bold text-white"), cls="mb-6"),
         P(f"{len(entries)} audit entries", cls="text-sm text-slate-400 mb-4"),
         Div(*rows, cls="space-y-0"),
@@ -3331,7 +3339,7 @@ def get(request, sess=None):
         )
 
     return Title(f"GEDCOM Import — {community_name}"), Div(
-        _admin_nav_bar("gedcom"),
+        _admin_nav_bar("gedcom", request=request),
         Div(
             H1("GEDCOM Management", cls="text-2xl font-bold text-white"),
             P(

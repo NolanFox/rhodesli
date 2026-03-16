@@ -53,7 +53,7 @@ def post(identity_id: str, target_id: str, note: str = "", sess=None):
 
 
 @rt("/api/proposed-matches")
-def get(community_slug: str = "", page: int = 1):
+def get(request=None, community_slug: str = "", page: int = 1):
     """List all pending proposed matches, optionally filtered by community.
 
     Combines two data sources:
@@ -122,6 +122,9 @@ def get(community_slug: str = "", page: int = 1):
     end = start + page_size
     page_proposals = proposals[start:end]
 
+    _community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(_community_slug)
+
     crop_files = _main_mod.get_crop_files()
     items = []
     for p in page_proposals:
@@ -159,12 +162,12 @@ def get(community_slug: str = "", page: int = 1):
                 Div(
                     A(
                         "View Source",
-                        href=f"/person/{source_id}",
+                        href=f"{nav_prefix}/person/{source_id}",
                         cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
                     ),
                     A(
                         "View Target",
-                        href=f"/person/{target_id}",
+                        href=f"{nav_prefix}/person/{target_id}",
                         cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 ml-1",
                     ),
                     cls="flex gap-2 mt-2",
@@ -1144,7 +1147,7 @@ async def post(email: str, password: str, sess):
 
 
 @rt("/my-contributions")
-def get(sess=None):
+def get(request=None, sess=None):
     """User's contribution history — annotations AND uploads."""
     denied = _main_mod._check_login(sess)
     if denied:
@@ -1153,6 +1156,9 @@ def get(sess=None):
     user = _main_mod.get_current_user(sess)
     if not user:
         return RedirectResponse("/login", status_code=303)
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     # --- Annotation contributions ---
     annotations = _main_mod._load_annotations()
@@ -1275,7 +1281,7 @@ def get(sess=None):
                 Div(
                     A(
                         "Browse Photos",
-                        href="/?section=photos",
+                        href=f"{nav_prefix}/?section=photos",
                         cls="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 text-sm",
                     ),
                     A(
@@ -1285,7 +1291,7 @@ def get(sess=None):
                     ),
                     A(
                         "Help Identify",
-                        href="/?section=skipped",
+                        href=f"{nav_prefix}/?section=skipped",
                         cls="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-600 text-sm",
                     ),
                     cls="flex gap-3 justify-center",

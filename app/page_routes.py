@@ -856,7 +856,7 @@ def _platform_root_page(auth_enabled: bool = False):
     )
 
 
-def landing_page(stats, featured_photos):
+def landing_page(stats, featured_photos, nav_prefix: str = ""):
     """Render the public landing page for the Rhodesli heritage archive.
 
     This page is only shown to anonymous visitors. Logged-in users are
@@ -1730,8 +1730,8 @@ def landing_page(stats, featured_photos):
                         cls="text-amber-100/50 text-center mb-8 max-w-lg mx-auto",
                     ),
                     Div(
-                        A("Start Exploring", href="/?section=photos", cls="btn-ui99-primary"),
-                        A("Browse People", href="/?section=confirmed", cls="btn-ui99-secondary"),
+                        A("Start Exploring", href=f"{nav_prefix}/?section=photos", cls="btn-ui99-primary"),
+                        A("Browse People", href=f"{nav_prefix}/?section=confirmed", cls="btn-ui99-secondary"),
                         cls="flex flex-wrap gap-4 justify-center",
                     ),
                     cls="max-w-3xl mx-auto text-center",
@@ -2045,7 +2045,7 @@ def get():
 
 
 def _personalized_discovery_banner(
-    interest_surnames: list[str], confirmed_list: list, crop_files: set, counts: dict
+    interest_surnames: list[str], confirmed_list: list, crop_files: set, counts: dict, nav_prefix: str = ""
 ) -> Div:
     """Render a personalized discovery banner showing people matching user's interest surnames.
 
@@ -2098,7 +2098,7 @@ def _personalized_discovery_banner(
                     Span(m["name"].split()[0], cls="text-xs text-slate-400 mt-1 truncate w-14 text-center"),
                     cls="flex flex-col items-center",
                 ),
-                href=f"/?section=confirmed&current={m['identity_id']}",
+                href=f"{nav_prefix}/?section=confirmed&current={m['identity_id']}",
                 cls="hover:opacity-80 transition-opacity",
             )
         )
@@ -2118,7 +2118,7 @@ def _personalized_discovery_banner(
         ),
         A(
             "View all \u2192",
-            href="/?section=confirmed",
+            href=f"{nav_prefix}/?section=confirmed",
             cls="text-xs text-amber-400 hover:text-amber-300 mt-2 inline-block",
         ),
         cls="bg-amber-900/20 border border-amber-700/30 rounded-lg p-4 mb-4",
@@ -2173,7 +2173,7 @@ def get(
                 if community_slug == "rhodes":
                     stats = _main_mod._compute_landing_stats()
                     featured_photos = _main_mod._get_featured_photos(8)
-                    return _main_mod.landing_page(stats, featured_photos)
+                    return _main_mod.landing_page(stats, featured_photos, nav_prefix=nav_prefix)
                 return _community_landing_page(community, community_slug)
 
         if user is not None:
@@ -2240,7 +2240,7 @@ def get(
     discovery_banner = None
     if interest_surnames and section == "skipped":
         discovery_banner = _main_mod._personalized_discovery_banner(
-            interest_surnames, confirmed_list, crop_files, counts
+            interest_surnames, confirmed_list, crop_files, counts, nav_prefix=nav_prefix
         )
 
     # Render the appropriate section
@@ -5454,7 +5454,7 @@ def _match_community_summary(person_a: str, person_b: str):
     )
 
 
-def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files=None):
+def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files=None, nav_prefix: str = ""):
     """Build a source photo thumbnail with face highlight for the match page.
 
     When registry and crop_files are provided, also builds face chips for
@@ -5572,18 +5572,18 @@ def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files
         else None,
         Div(*meta_parts, cls="flex gap-3 mt-1") if meta_parts else None,
         # Inline face chips preview below the thumbnail
-        _match_face_chips_inline(face_chips_data) if face_chips_data else None,
+        _match_face_chips_inline(face_chips_data, nav_prefix=nav_prefix) if face_chips_data else None,
         cls="mb-6",
     )
 
 
-def _match_face_chips_inline(chips_data):
+def _match_face_chips_inline(chips_data, nav_prefix: str = ""):
     """Render small face chip thumbnails below a source photo card."""
     if not chips_data:
         return None
     chip_els = []
     for iid, iname, istate, chip_url in chips_data[:8]:  # Cap at 8
-        href = f"/person/{iid}" if istate == "CONFIRMED" else f"/identify/{iid}"
+        href = f"{nav_prefix}/person/{iid}" if istate == "CONFIRMED" else f"{nav_prefix}/identify/{iid}"
         short_name = iname if not iname.startswith("Unidentified") else "Unknown"
         chip_els.append(
             A(
@@ -5857,7 +5857,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         if date_text:
             meta_items.append(P(date_text, cls="text-xs text-slate-500 text-center"))
         # Link to person page (CONFIRMED) or identify page (all others)
-        person_href = f"/person/{pid}" if state == "CONFIRMED" else f"/identify/{pid}"
+        person_href = f"{nav_prefix}/person/{pid}" if state == "CONFIRMED" else f"{nav_prefix}/identify/{pid}"
         profile_label = f"View {display_name}'s Profile" if state == "CONFIRMED" else f"Help Identify {display_name}"
 
         # Build face data for carousel (if multiple faces)
@@ -6025,10 +6025,10 @@ def get(person_a: str, person_b: str, sess=None, request=None):
     # Source photo cards
     source_photos = []
     src_photo_a = _match_source_photo_card(
-        best_a, photo_id_a, f"Photo of {display_a}", registry=registry, crop_files=crop_files
+        best_a, photo_id_a, f"Photo of {display_a}", registry=registry, crop_files=crop_files, nav_prefix=nav_prefix
     )
     src_photo_b = _match_source_photo_card(
-        best_b, photo_id_b, f"Photo of {display_b}", registry=registry, crop_files=crop_files
+        best_b, photo_id_b, f"Photo of {display_b}", registry=registry, crop_files=crop_files, nav_prefix=nav_prefix
     )
     if src_photo_a or src_photo_b:
         source_photos_content = []
@@ -10380,7 +10380,9 @@ def _compute_shared_photos(person_ids, registry):
     return result
 
 
-def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map=None):
+def _make_tree_node(
+    pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map=None, nav_prefix: str = ""
+):
     """Create a single family-chart node with expansion indicators."""
     from rhodesli_ml.graph.relationship_graph import parse_gedcom_year, format_lifespan
 
@@ -10460,7 +10462,7 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, 
             "birthday": parse_gedcom_year(str(br)) if br else "",
             "lifespan": lifespan,
             "avatar": avatar,
-            "identity_url": f"/person/{pid}" if not pid.startswith("@") else "",
+            "identity_url": f"{nav_prefix}/person/{pid}" if not pid.startswith("@") else "",
             "face_count": len(all_faces),
             "all_faces": all_faces,
             "has_more_parents": bool(all_parents - included),
@@ -10623,7 +10625,7 @@ def compute_subtree_for_photo(person_ids, ptc, ctp, pts):
 
 
 @rt("/api/tree/data")
-def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: str = ""):
+def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: str = "", request=None):
     """Return tree data for a focal person + N levels of connections.
 
     When `people` is provided (comma-separated IDs from photo navigation),
@@ -10633,6 +10635,8 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
     people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     # Smart subtree for multiple people (from photo navigation)
     if people_list and len(people_list) > 1:
@@ -10645,7 +10649,9 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
         if included:
             shared_photos_map = _main_mod._compute_shared_photos(included, registry)
             nodes = [
-                _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map)
+                _make_tree_node(
+                    pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map, nav_prefix=nav_prefix
+                )
                 for pid in included
             ]
             return JSONResponse(
@@ -10667,7 +10673,9 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
         lookup = _build_tree_person_lookup_for_ids(included, xref_to_uuid)
         shared_photos_map = _main_mod._compute_shared_photos(included, registry)
         nodes = [
-            _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map)
+            _make_tree_node(
+                pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map, nav_prefix=nav_prefix
+            )
             for pid in included
         ]
         return JSONResponse({"focal_person": person_id, "nodes": nodes})
@@ -10710,17 +10718,21 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
     shared_photos_map = _main_mod._compute_shared_photos(included, registry)
 
     nodes = [
-        _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map)
+        _make_tree_node(
+            pid, lookup, ptc, ctp, pts, included, crop_files, registry, shared_photos_map, nav_prefix=nav_prefix
+        )
         for pid in included
     ]
     return JSONResponse({"focal_person": person_id, "nodes": nodes})
 
 
 @rt("/api/tree/expand")
-def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
+def get(person_id: str, direction: str = "parents", show_theory: str = "true", request=None):
     """Return additional tree nodes for expansion in a given direction."""
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     _, uuid_to_gedcom = _build_tree_link_maps()
     if _tree_query_ids_for_person(person_id, uuid_to_gedcom):
         ptc, ctp, pts, _, xref_to_uuid = _build_targeted_tree_adjacency(
@@ -10757,7 +10769,10 @@ def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
     shared_photos_map = _main_mod._compute_shared_photos(all_ids, registry)
 
     nodes = [
-        _make_tree_node(pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry, shared_photos_map) for pid in all_ids
+        _make_tree_node(
+            pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry, shared_photos_map, nav_prefix=nav_prefix
+        )
+        for pid in all_ids
     ]
     return JSONResponse({"source_person": person_id, "direction": direction, "nodes": nodes})
 
@@ -11162,6 +11177,7 @@ def public_photo_page(
     Shows the photo with face overlays, person cards, and a call to action.
     No authentication required.
     """
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     photo = _main_mod.get_photo_metadata(photo_id)
     if not photo:
         # Gentle 404 page with correct HTTP status
@@ -11187,7 +11203,7 @@ def public_photo_page(
                             P("This photo hasn't been added to the archive yet.", cls="text-slate-400 mb-8"),
                             A(
                                 "Explore the Archive",
-                                href="/?section=photos",
+                                href=f"{nav_prefix}/?section=photos",
                                 cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
                             ),
                             cls="text-center",
@@ -11217,7 +11233,6 @@ def public_photo_page(
     width, height = _main_mod.get_photo_dimensions(filename)
     has_dimensions = width > 0 and height > 0
     registry = _main_mod.load_registry()
-    nav_prefix = _main_mod.community_url_prefix(community_slug)
     from urllib.parse import quote as _url_quote
 
     if sort_by not in {"date_asc", "date_desc", "uploaded_desc", "uploaded_asc"}:
@@ -12867,11 +12882,13 @@ def get(photo_id: str):
 
 
 @rt("/api/onboarding/discover")
-def get(surnames: str = ""):
+def get(surnames: str = "", request=None):
     """Return HTML fragment showing confirmed identities matching selected surnames.
 
     Public endpoint — no auth required. Used by the onboarding modal.
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     if not surnames.strip():
         return Div(P("No surnames selected.", cls="text-sm text-slate-400"))
 
@@ -12951,7 +12968,7 @@ def get(surnames: str = ""):
                     ),
                     cls="flex items-center gap-3",
                 ),
-                href=f"/?section=confirmed&current={m['identity_id']}",
+                href=f"{nav_prefix}/?section=confirmed&current={m['identity_id']}",
                 cls="block p-2 rounded-lg hover:bg-slate-700/50 transition-colors",
                 data_action="onboarding-close",
             )

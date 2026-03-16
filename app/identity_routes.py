@@ -784,7 +784,7 @@ def get(identity_id: str, q: str = "", sess=None, request=None):
 
 
 @rt("/api/search")
-def get(q: str = ""):
+def get(q: str = "", request=None):
     """
     Global search for identities by name. Used by the sidebar search input.
 
@@ -796,6 +796,7 @@ def get(q: str = ""):
     """
     if len(q.strip()) < 2:
         return ""
+    nav_prefix = _nav_prefix_from_request(request)
 
     try:
         registry = _main_mod.load_registry()
@@ -859,9 +860,9 @@ def get(q: str = ""):
 
         # Navigate to the right page based on state
         if state == "CONFIRMED" and not name.startswith("Unidentified"):
-            result_href = f"/person/{r['identity_id']}"
+            result_href = f"{nav_prefix}/person/{r['identity_id']}"
         else:
-            result_href = f"/identify/{r['identity_id']}"
+            result_href = f"{nav_prefix}/identify/{r['identity_id']}"
 
         items.append(
             A(
@@ -908,7 +909,7 @@ def get(q: str = ""):
                         ),
                         cls="flex flex-col min-w-0",
                     ),
-                    href=f"/photo/{photo_id}",
+                    href=f"{nav_prefix}/photo/{photo_id}",
                     cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer",
                     data_testid="search-photo-result",
                 )
