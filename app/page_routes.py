@@ -513,7 +513,7 @@ def _community_landing_page(community: dict, slug: str):
                 # Upload CTA for admins (visible to all, auth checked on click)
                 A(
                     "Upload Photos",
-                    href=f"/c/{slug}/upload" if slug != "rhodes" else "/upload",
+                    href=f"{nav_prefix}/upload",
                     cls="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg "
                     "font-medium transition-colors mr-3",
                     data_testid="upload-cta",
@@ -916,7 +916,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     loading="lazy",
                     cls="w-full h-full object-cover rounded-full border-2 border-amber-400/50 hover:border-amber-300 transition-all duration-300 hover:scale-110",
                 ),
-                href=f"/identify/{face['identity_id']}",
+                href=f"{nav_prefix}/identify/{face['identity_id']}",
                 cls="block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0",
             )
         )
@@ -924,18 +924,18 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
     # Navigation bar
     _nav_cls = "text-amber-100/70 hover:text-amber-50 transition-colors font-serif tracking-wide text-sm md:text-base ui99-landing-nav"
     nav_items = [
-        A("Photos", href="/photos", cls=_nav_cls),
-        A("Collections", href="/collections", cls=_nav_cls),
-        A("People", href="/people", cls=_nav_cls),
-        A("Map", href="/map", cls=_nav_cls),
-        A("Timeline", href="/timeline", cls=_nav_cls),
+        A("Photos", href=f"{nav_prefix}/photos", cls=_nav_cls),
+        A("Collections", href=f"{nav_prefix}/collections", cls=_nav_cls),
+        A("People", href=f"{nav_prefix}/people", cls=_nav_cls),
+        A("Map", href=f"{nav_prefix}/map", cls=_nav_cls),
+        A("Timeline", href=f"{nav_prefix}/timeline", cls=_nav_cls),
         Span("|", cls="text-amber-900/40 hidden md:inline"),
-        A("Tree", href="/tree", cls=_nav_cls),
+        A("Tree", href=f"{nav_prefix}/tree", cls=_nav_cls),
         A("Compare", href="/tools/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
         A(
             "Help Identify",
-            href="/help",
+            href=f"{nav_prefix}/help",
             cls="text-amber-400 hover:text-amber-300 font-serif font-medium text-sm md:text-base transition-colors border border-amber-800/50 hover:bg-amber-900/20 px-3 py-1 rounded-sm ml-2",
         ),
     ]

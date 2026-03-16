@@ -39,7 +39,7 @@ def _tools_nav_bar(active_tool=None):
 
 
 @rt("/tools/compare")
-def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
+def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, request=None):
     """
     Universal Comparison Workspace (PRD-026).
 
@@ -51,6 +51,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         photo_id: pre-select photo as source
         person_id: pre-select person as target
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = user and user.is_admin if _main_mod.is_auth_enabled() else True
 
@@ -699,7 +701,11 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -774,7 +780,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int, nav_prefix: 
         return None
 
     photo_id = _main_mod.get_photo_id_for_face(fid)
-    photo_link = f"/photo/{photo_id}" if photo_id else "#"
+    photo_link = f"{nav_prefix}/photo/{photo_id}" if photo_id else "#"
 
     # Tier-specific styling
     tier_styles = {
@@ -823,7 +829,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int, nav_prefix: 
     if state == "CONFIRMED" and identity_id:
         timeline_link = A(
             "Timeline",
-            href=f"/timeline?person={identity_id}",
+            href=f"{nav_prefix}/timeline?person={identity_id}",
             cls="text-[10px] text-slate-400 hover:text-indigo-300 block text-center",
         )
 
@@ -2574,12 +2580,12 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
                 Div(
                     A(
                         Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto", alt="Archive photo"),
-                        href=f"/photo/{photo_id}",
+                        href=f"{nav_prefix}/photo/{photo_id}",
                     ),
                     P(
                         A(
                             "View photo page",
-                            href=f"/photo/{photo_id}",
+                            href=f"{nav_prefix}/photo/{photo_id}",
                             cls="text-indigo-400 hover:text-indigo-300 text-xs",
                         ),
                         cls="text-center mt-2",
@@ -3553,10 +3559,14 @@ def get(result_id: str, sess=None, request=None):
             P("From this photo:", cls="text-xs text-slate-500 mb-2"),
             A(
                 Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto", alt="Source photo"),
-                href=f"/photo/{photo_id}",
+                href=f"{nav_prefix}/photo/{photo_id}",
             ),
             P(
-                A("View full photo", href=f"/photo/{photo_id}", cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                A(
+                    "View full photo",
+                    href=f"{nav_prefix}/photo/{photo_id}",
+                    cls="text-indigo-400 hover:text-indigo-300 text-xs",
+                ),
                 cls="text-center mt-1",
             ),
             cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/30 text-center",
@@ -3746,7 +3756,11 @@ def get(result_id: str, sess=None, request=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -3950,10 +3964,12 @@ def post(
 
 
 @rt("/compare/pair")
-def get(sess=None):
+def get(sess=None, request=None):
     """Two-photo face comparison — upload two photos, select a face in each,
     and see how similar they are.
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     nav_links = _main_mod._public_nav_links(active="compare", user=user)
 
@@ -4056,7 +4072,11 @@ def get(sess=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    A(
+                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                        href=f"{nav_prefix}/",
+                        cls="hover:opacity-90",
+                    ),
                     Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -5792,7 +5812,7 @@ def get(
             Div(
                 A(
                     t_name,
-                    href=f"/?section={t_section}&current={target_id}{_filter_suffix}",
+                    href=f"{nav_prefix}/?section={t_section}&current={target_id}{_filter_suffix}",
                     cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
                     **{"_": "on click add .hidden to #compare-modal"},
                 ),
@@ -5805,7 +5825,7 @@ def get(
             Div(
                 A(
                     n_name,
-                    href=f"/?section={n_section}&current={neighbor_id}{_filter_suffix}",
+                    href=f"{nav_prefix}/?section={n_section}&current={neighbor_id}{_filter_suffix}",
                     cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
                     **{"_": "on click add .hidden to #compare-modal"},
                 ),

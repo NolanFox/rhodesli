@@ -376,6 +376,8 @@ def get(request, sess=None):
     user = get_current_user(sess or {})
     community = getattr(request.state, "community", None) if request else None
     community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     style = Style("""
         html, body { height: 100%; margin: 0; }
@@ -657,7 +659,7 @@ def get(request, sess=None):
                         photo_links.append(
                             A(
                                 "View photo",
-                                href=f"/photo/{candidate_id}",
+                                href=f"{nav_prefix}/photo/{candidate_id}",
                                 cls="text-indigo-400 hover:text-indigo-300 text-[10px] underline",
                                 data_testid="reviewed-photo-link",
                             )
@@ -3979,6 +3981,8 @@ def get(request, sess=None):
 
     community = getattr(request.state, "community", None) if request else None
     community_name = community.get("name", "Rhodesli") if community else "Rhodesli"
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     labels = _main_mod._load_date_labels()
     _main_mod._build_caches()
@@ -4039,7 +4043,7 @@ def get(request, sess=None):
                         cls="w-20 h-20 object-cover rounded",
                         loading="lazy",
                     ),
-                    href=f"/photo/{photo_id}",
+                    href=f"{nav_prefix}/photo/{photo_id}",
                     cls="shrink-0",
                 )
                 if filename
@@ -4062,7 +4066,7 @@ def get(request, sess=None):
                         ),
                         A(
                             "View & Correct",
-                            href=f"/photo/{photo_id}",
+                            href=f"{nav_prefix}/photo/{photo_id}",
                             cls="text-xs px-2 py-1 bg-indigo-600/30 text-indigo-400 rounded hover:bg-indigo-600/50 transition-colors",
                         ),
                         cls="flex gap-2",
