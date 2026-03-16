@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.14] — 2026-03-16 (Session 109: Cross-Batch Clustering — PRD-049)
+
+### Added
+- **Cross-batch matching** — New `core/cross_batch_matching.py` compares uploaded faces against ALL existing identities (INBOX, PROPOSED, CONFIRMED, SKIPPED). Returns proposals sorted by distance with confidence tiers. No auto-merge — all cross-batch matches require human review. (AD-226)
+- **Upload pipeline cross-batch** — After within-batch grouping, new faces are matched against the full archive. Proposals written to proposals.json + ml_runs/ml_proposals Supabase tables.
+- **Recluster cross-batch** — `/api/admin/recluster` Step 3 runs cross-batch matching for all INBOX faces. Independent error handling so grouping failures don't block cross-batch.
+- **Post-confirm re-matching** — After confirming an identity, background thread re-matches anchor faces against all unresolved identities, surfacing new proposals.
+- 17 new tests (16 unit + 1 integration), CI flaky test fixed.
+
+### Fixed
+- **CI: test_people_link_to_person_pages** — Test now handles empty state when registry fails to load, instead of asserting person links always exist.
+
+### Validated
+- Production dry-run: **1355 cross-batch matches** found across Fox Family archive.
+
 ## [v0.99.13] — 2026-03-16 (Session 108b: Bug Fix Sprint — Compare, Photo Links, Search)
 
 ### Fixed

@@ -2635,3 +2635,15 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Alternatives rejected**: (1) Full Supabase-only — too large a migration. (2) Outbox pattern — over-engineering for current scale. (3) Background threads for Supabase writes — caused silent data loss.
 - **Affects**: `app/main.py`, `app/upload_routes.py`, `app/sync_routes.py`, `app/supabase_data.py`, `app/page_routes.py`
 - **Lessons**: 144 (split-brain), 145 (photo_faces write gap), 136 (fire-and-forget sync)
+
+### AD-226: Cross-Batch Matching — Proposals Only, No Auto-Merge
+- **Date**: 2026-03-16 | **Session**: 109
+- **Context**: Clustering pipeline only grouped faces within a single upload batch. INBOX-to-INBOX matches across batches were invisible. James Fields case study: 9 faces, 2 photos, zero cross-batch matches surfaced despite distances as low as 0.87.
+- **Decision**: All cross-batch matches are proposals requiring human review. No auto-merge at any threshold. Threshold 1.05 for proposal generation (catches ~55% of same-person pairs).
+- **Rationale**: Empirical data shows Charles Fox ↔ Roland Fox (father-son) at distance 0.50. Any auto-merge threshold creates false positives with family members. Google Photos false-positive experience informed user requirement for human-in-loop.
+- **Implementation**: `core/cross_batch_matching.py` — `find_cross_batch_matches()` compares new face IDs against ALL existing identities (INBOX, PROPOSED, CONFIRMED, SKIPPED). Community-scoped. Co-occurrence blocked. Confidence tiers: very_high (<0.80), high (0.80-1.05), moderate (1.05+).
+- **Triggers**: Upload pipeline (after grouping), admin recluster endpoint, post-confirm identity (background thread).
+- **Validation**: 1355 cross-batch matches found in production dry-run. Within-batch grouping unchanged at 0.95.
+- **Alternatives rejected**: (1) Auto-merge at aggressive threshold — family resemblance FPs. (2) Cross-batch only against CONFIRMED — misses INBOX-to-INBOX. (3) Separate proposals store — existing proposals.json + ml_proposals table sufficient.
+- **Affects**: `core/cross_batch_matching.py`, `app/upload_routes.py`, `app/sync_routes.py`, `app/identity_routes.py`
+- **PRD**: docs/prds/049_cross_batch_clustering.md
