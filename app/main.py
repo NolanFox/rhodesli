@@ -478,6 +478,7 @@ class CommunityMiddleware(BaseHTTPMiddleware):
             if path.startswith(prefix):
                 request.state.community_slug = "rhodes"
                 request.state.community = None  # lazy-loaded if needed
+                request.state.community_explicit = False
                 return await call_next(request)
 
         # Check for /c/{slug}/ prefix
@@ -487,10 +488,12 @@ class CommunityMiddleware(BaseHTTPMiddleware):
             remaining_path = match.group(2) or "/"
             request.state.community_slug = slug
             request.state.community_prefixed = True
+            request.state.community_explicit = True
             # Rewrite the path to remove the /c/{slug} prefix
             request.scope["path"] = remaining_path
         else:
             request.state.community_slug = "rhodes"  # default
+            request.state.community_explicit = False
 
         # Fetch community data (cached)
         from app.supabase_data import get_community_by_slug
@@ -515,6 +518,16 @@ app.add_middleware(CommunityMiddleware)
 
 
 # --- COMMUNITY DATA SCOPING UTILITIES ---
+
+
+def is_community_explicit(request) -> bool:
+    """Check if the community was explicitly set via /c/{slug}/ prefix.
+
+    Returns False when the community defaulted to Rhodes because no prefix
+    was in the URL. Data-modifying routes should use this to avoid silently
+    assigning data to the wrong community.
+    """
+    return getattr(request.state, "community_explicit", False) if request else False
 
 
 def community_url_prefix(slug: str | None) -> str:

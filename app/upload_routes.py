@@ -180,9 +180,11 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
             var src = document.getElementById('upload-source');
             var col = document.getElementById('upload-collection');
             var url = document.getElementById('upload-source-url');
+            var uc = document.getElementById('upload-community');
             if (src) fd.append('source', src.value);
             if (col) fd.append('collection', col.value);
             if (url) fd.append('source_url', url.value);
+            if (uc) fd.append('upload_community', uc.value);
 
             var status = document.getElementById('upload-status');
             if (status) status.innerHTML = '<div class="flex items-center gap-2 py-3"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm text-slate-300">Uploading ' + selectedFiles.length + ' file' + (selectedFiles.length !== 1 ? 's' : '') + '...</span></div>';
@@ -282,6 +284,9 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
                 P("Link to the original (for citation)", cls="text-xs text-slate-500 mt-0.5"),
                 cls="mb-3",
             ),
+            # Hidden field: explicit community slug so uploads go to the right community
+            # even when the URL doesn't have a /c/{slug}/ prefix (Session 107b fix)
+            Input(type="hidden", name="upload_community", id="upload-community", value=community_slug),
             cls="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700",
         ),
         # File selection area (two-step: select → preview → upload)
@@ -513,7 +518,13 @@ def get(sess=None, request=None):
 
 @rt("/upload")
 async def post(
-    files: list[UploadFile], source: str = "", collection: str = "", source_url: str = "", sess=None, request=None
+    files: list[UploadFile],
+    source: str = "",
+    collection: str = "",
+    source_url: str = "",
+    upload_community: str = "",
+    sess=None,
+    request=None,
 ):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
@@ -550,9 +561,31 @@ async def post(
     if denied:
         return denied
 
-    # Community context from middleware (PRD-035)
+    # Community context — prefer explicit form field over middleware default
+    # Session 107b fix: middleware defaults to Rhodes for /api/ routes, which caused
+    # 7 community scoping bugs. The upload_community hidden field is the source of truth.
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     community = getattr(request.state, "community", None) if request else None
+
+    # Override with explicit form field if provided (takes precedence over middleware)
+    if upload_community and upload_community != community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        explicit_community = get_community_by_slug(upload_community)
+        if explicit_community:
+            community_slug = upload_community
+            community = explicit_community
+            logger.info(
+                "Upload community override: middleware=%s, form=%s",
+                getattr(request.state, "community_slug", "rhodes") if request else "rhodes",
+                upload_community,
+            )
+    elif _main_mod.is_community_explicit(request):
+        pass  # Middleware set it from /c/{slug}/ prefix — good
+    else:
+        # Neither form field nor URL prefix — log for debugging
+        logger.debug("Upload using default community: %s (no explicit override)", community_slug)
+
     # Capture community_id for background thread (avoids request state access after response)
     upload_community_id = None
     if community and community.get("id"):
