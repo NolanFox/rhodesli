@@ -28,6 +28,28 @@ import app.main as _main_mod
 logger = logging.getLogger(__name__)
 
 
+def _detect_person_community(person_id: str) -> str | None:
+    """Detect which community a person belongs to by checking identity_communities.
+
+    Returns the community slug if the person belongs to a non-default community,
+    or None if rhodes/unknown. Used for auto-redirect on /person/{id} without prefix.
+    """
+    try:
+        from app.supabase_data import load_communities
+
+        communities = load_communities() or []
+        for comm in communities:
+            slug = comm.get("slug", "")
+            if slug == "rhodes":
+                continue  # Skip default — no redirect needed
+            comm_ids = _main_mod._get_community_identity_ids(comm)
+            if comm_ids and person_id in comm_ids:
+                return slug
+    except Exception:
+        pass
+    return None
+
+
 # =============================================================================
 # HELPERS — Person-exclusive (not used outside person routes)
 # =============================================================================
@@ -1542,6 +1564,21 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
     user = get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+
+    # FB-063: If no explicit community prefix was used, auto-detect the person's
+    # primary community and redirect so all links on the page get the right prefix.
+    community_explicit = getattr(request.state, "community_explicit", False) if request else False
+    if not community_explicit and user_is_admin:
+        detected_slug = _detect_person_community(person_id)
+        if detected_slug and detected_slug != "rhodes":
+            from starlette.responses import RedirectResponse
+
+            qs = request.url.query
+            redirect_url = f"/c/{detected_slug}/person/{person_id}"
+            if qs:
+                redirect_url += f"?{qs}"
+            return RedirectResponse(redirect_url, status_code=302)
+
     return public_person_page(
         person_id, view=view, sort_by=sort_by, user=user, is_admin=user_is_admin, community_slug=community_slug
     )

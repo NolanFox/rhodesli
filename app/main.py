@@ -1294,8 +1294,12 @@ def save_registry(registry, confirmed_identity_info=None):
             shadow_write_identities_batch(items, strict=True)
         except Exception as e:
             logging.error(f"Postgres save_registry failed: {e}")
-            # JSON backup already written above
-        return
+            # JSON backup already written above — but Postgres is stale.
+            # Extend cache TTL so next requests use the in-memory merged state
+            # instead of reloading stale Postgres data (FB-036 / BUG-001).
+            _registry_cache_ts = time.time()
+            return False
+        return True
 
     # JSON mode: shadow-write to Supabase in background
     def _background_supabase_sync(identities_dict):
@@ -8898,7 +8902,7 @@ def neighbor_card(
     checkbox = (
         Input(
             type="checkbox",
-            cls="w-4 h-4 rounded border-slate-500 bg-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
+            cls="visible-bulk-cb w-4 h-4 rounded border-slate-500 bg-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
             **{"_": f"on change set #bulk-{neighbor_id}.checked to my.checked"},
         )
         if (show_checkbox and can_merge)
@@ -9221,7 +9225,9 @@ def neighbors_sidebar(
         select_all_script = (
             "on click "
             "set cbs to <input[name='bulk_ids']/> in closest <form/> "
-            "repeat for cb in cbs set cb.checked to my.checked end"
+            "repeat for cb in cbs set cb.checked to my.checked end "
+            "set vcbs to <input.visible-bulk-cb/> in closest <form/> "
+            "repeat for vcb in vcbs set vcb.checked to my.checked end"
         )
         bulk_actions = Form(
             # Hidden inputs for each mergeable neighbor (checkboxes)

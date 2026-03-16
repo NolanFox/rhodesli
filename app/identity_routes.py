@@ -1167,8 +1167,11 @@ def post(
     )
 
     if result["success"]:
-        _main_mod.save_registry(registry)
+        save_ok = _main_mod.save_registry(registry)
         _main_mod._invalidate_discovery_cache()
+        if save_ok is False:
+            logging.error(f"Tag face {face_id} -> {target_id}: merge in memory but Postgres write failed")
+            # Still continue — in-memory cache has the merge, and JSON backup was written
 
         # Find the photo this face is in to re-render the photo view
         photo_id = _main_mod.get_photo_id_for_face(face_id)
@@ -2184,9 +2187,22 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
         _main_mod.save_registry(registry)
 
     if errors:
-        return _main_mod.toast(
-            f"Merged {merged_count} identities ({total_faces} faces). {len(errors)} failed.", "warning"
-        )
+        # FB-039/FB-056/FB-062: Show WHY merges failed, not just the count.
+        # Most failures are co-occurrence blocks (faces in same photo).
+        _REASON_LABELS = {
+            "co_occurrence": "faces appear in the same photo",
+            "already_merged": "already merged elsewhere",
+            "name_conflict": "conflicting names",
+        }
+        unique_reasons = set()
+        for err in errors:
+            reason_part = err.split(": ", 1)[-1] if ": " in err else err
+            unique_reasons.add(_REASON_LABELS.get(reason_part, reason_part))
+        reason_summary = "; ".join(sorted(unique_reasons)[:3])
+        if len(unique_reasons) > 3:
+            reason_summary += f" (+{len(unique_reasons) - 3} more)"
+        msg = f"Merged {merged_count} ({total_faces} faces). {len(errors)} skipped: {reason_summary}"
+        return _main_mod.toast(msg, "warning")
 
     return _main_mod.toast(f"Merged {merged_count} identities ({total_faces} faces).", "success")
 

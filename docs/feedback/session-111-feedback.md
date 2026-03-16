@@ -229,3 +229,41 @@
 - **Root cause:** TBD — HTMX response from confirm/skip/reject doesn't swap in the next identity card
 - **Fix:** BACKLOG
 - **BACKLOG:** UX-111
+
+### FB-058: Thumbnail in Similar Identities doesn't match default displayed photo (P1 — clarification of FB-054)
+- **Severity:** P1 (UX — visual confusion)
+- **Context:** Clarification from user: the thumbnail mismatch for Person 3124 is NOT a data integrity issue. The identity has multiple face crops, and the thumbnail shown in the Similar Identities list is a different crop than the "default first picture" shown when you click into the person's Compare view. You have to click through faces to find the one matching the thumbnail. This is confusing because it makes you think there's a data error when it's actually just showing a different face from the same person.
+- **Root cause:** Thumbnail selection in Similar Identities uses a different face crop (likely first anchor_id) than the Compare view's default display (likely highest quality or first in list).
+- **Fix:** BACKLOG — unify thumbnail selection so the same face is shown everywhere for a given identity
+- **BACKLOG:** UX-112
+
+### FB-059: Discovery tab extremely slow to load — appears broken (P1)
+- **Severity:** P1 (performance — CRITICAL UX)
+- **Context:** Discovery tab takes so long to load that the user thinks it's not working at all. No loading indicator, just a blank/stale page for many seconds.
+- **Root cause:** TBD — likely heavy neighbor computation or Supabase queries without caching
+- **Fix:** BACKLOG — profile Discovery load path, add loading indicator
+- **BACKLOG:** PERF-009
+
+### FB-060: No easy way to compare photos from Discovery tab (P1)
+- **Severity:** P1 (UX — missing workflow)
+- **Context:** From the Discovery tab, there's no direct "Compare" button to quickly compare a discovered match with the suggested identity. User had to manually construct the compare URL: `/tools/compare?face_id=inbox_e514be13974b&person_id=429cf1b6-04be-475d-9a9d-a3f37dd2f1db`. Should be one click.
+- **Fix:** BACKLOG — add Compare button to Discovery cards
+- **BACKLOG:** UX-113
+
+### FB-062: "Merged 1 identities (3 faces). 4 failed." — Person 84de0218 (P0 — RECURRING)
+- **Severity:** P0 (UX — recurring, blocks triage workflow)
+- **Context:** Screenshot shows Person 84de0218 (3 faces, STRONG MATCH Esther Burd Fox 68%). Yellow warning: "Merged 1 identities (3 faces). 4 failed." This is the SAME pattern as FB-039/FB-056 — co-occurrence blocker silently fails without explaining WHY or WHICH identities failed. User has no way to know what to do next.
+- **Fix:** Same root cause as FB-039/FB-056. Need: (1) per-identity success/failure with reason, (2) Confirm button that merges with the suggested match (FB-052)
+- **BACKLOG:** UX-100 (existing)
+
+### FB-063: Person page /person/{id} lacks community prefix — Similar Identities broken (P0 — RECURRING)
+- **Severity:** P0 (community middleware — CRITICAL RECURRING)
+- **Context:** Debbie Fox Schapiro person page at `rhodesli.nolanandrewfox.com/person/67e830ac...` — NO `/c/fox-family/` prefix. Similar Identities shows Person 3037 and Person 3462 (both Fox Family photos) but all links (Compare, Merge, Not Same) lack community context. User navigated here from Rhodes collection, wants to merge Fox photos into Debbie. The community middleware is not being applied to the /person/ route or to the links generated within Similar Identities.
+- **Root cause:** The `/person/{id}` route generates neighbor cards without community prefix. The neighbors endpoint `/api/identity/{id}/neighbors` also lacks community awareness.
+- **Fix:** IMMEDIATE — audit /person/ route and neighbors endpoint for community prefix
+- **BACKLOG:** COMMUNITY-016
+
+### FB-061: Merge failures recurring — 5 faces attempted, many failed (P1)
+- **Severity:** P1 (UX — recurring, same class as FB-056)
+- **Context:** User tried to merge 5 faces and "seems like many of them didn't work." Same co-occurrence blocking issue as FB-039/FB-056. Every multi-merge shows partial failures without explanation.
+- **Fix:** Same as FB-039/FB-056/UX-100
