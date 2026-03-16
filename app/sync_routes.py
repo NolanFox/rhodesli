@@ -975,12 +975,15 @@ async def post(request, sess):
 
                 photo_reg = PhotoRegistry.load(data_path / "photo_index.json")
 
+            # Recluster matches globally — community_id is only used for Step 4 tagging.
+            # Community filtering via identity_communities field doesn't work here because
+            # JSON identities don't have identity_communities (only Supabase does).
             cross_matches = find_cross_batch_matches(
                 new_face_ids=all_inbox_face_ids,
                 identities=identities_data,
                 face_data=face_data_dict,
                 photo_registry=photo_reg,
-                community_id=community_id,
+                community_id=None,
             )
             results["cross_batch_matches"] = len(cross_matches)
 

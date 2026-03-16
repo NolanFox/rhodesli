@@ -1013,12 +1013,15 @@ async def post(
                     xb_identities = _load_id_xb(data_path)
                     xb_face_data = _load_fd_xb(data_path)
                     xb_photo_reg = _main_mod.load_photo_registry()
+                    # Match globally — community filter doesn't work with JSON identities
+                    # (identity_communities is only in Supabase, not JSON).
+                    # Cross-community matches are valuable (shared people across archives).
                     cross_matches = find_cross_batch_matches(
                         new_face_ids=result.get("face_ids", []),
                         identities=xb_identities,
                         face_data=xb_face_data,
                         photo_registry=xb_photo_reg,
-                        community_id=upload_community_id,
+                        community_id=None,
                     )
 
                     if cross_matches:
