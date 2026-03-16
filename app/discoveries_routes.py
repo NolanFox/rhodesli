@@ -302,6 +302,13 @@ def get(sess=None, request=None):
                         id="discovery-filters",
                     ),
                     Div(
+                        # Loading skeleton shown until HTMX replaces content
+                        Div(
+                            Div(cls="h-24 bg-slate-700/50 rounded-xl animate-pulse mb-3"),
+                            Div(cls="h-24 bg-slate-700/50 rounded-xl animate-pulse mb-3"),
+                            Div(cls="h-24 bg-slate-700/50 rounded-xl animate-pulse mb-3"),
+                            P("Loading discoveries...", cls="text-sm text-slate-500 text-center mt-2"),
+                        ),
                         id="discoveries-list",
                         hx_get=f"{prefix}/api/discoveries",
                         hx_trigger="load",

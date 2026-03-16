@@ -1983,12 +1983,30 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
 
 
 def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=None):
-    """Get top confirmed identities as merge suggestions (by face count).
+    """Get top confirmed identities as merge suggestions sorted by embedding distance.
 
     When community_slug is provided, same-community identities are ranked first.
+    Falls back to face count sorting if embeddings are unavailable.
     """
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
+
+    # Get target identity embedding for distance computation
+    target_identity = identities.get(identity_id, {})
+    target_face_ids = _identity_face_ids(target_identity)
+    target_embedding = None
+    try:
+        face_data = _main_mod.get_face_data()
+        for fid in target_face_ids:
+            fd = face_data.get(fid)
+            if fd and "embeddings" in fd:
+                emb = fd["embeddings"]
+                if hasattr(emb, "__len__") and len(emb) > 0:
+                    target_embedding = np.array(emb).flatten()
+                    break
+    except Exception:
+        pass
+
     suggestions = []
     for iid, idata in identities.items():
         if iid == identity_id:
@@ -2001,12 +2019,28 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
         if not face_ids:
             continue
         best_fid = _best_face_id(face_ids)
+
+        # Compute min embedding distance to target
+        dist = 999.0
+        if target_embedding is not None:
+            try:
+                for fid in face_ids:
+                    fd = face_data.get(fid)
+                    if fd and "embeddings" in fd:
+                        emb = np.array(fd["embeddings"]).flatten()
+                        d = float(cdist([target_embedding], [emb], metric="cosine")[0][0])
+                        if d < dist:
+                            dist = d
+            except Exception:
+                pass
+
         suggestions.append(
             {
                 "identity_id": iid,
                 "name": idata.get("name", "Unknown"),
                 "face_count": len(face_ids),
                 "best_face_id": best_fid,
+                "distance": dist,
             }
         )
 
@@ -2024,11 +2058,11 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
     if comm_ids is not None:
         same = [s for s in suggestions if s["identity_id"] in comm_ids]
         cross = [s for s in suggestions if s["identity_id"] not in comm_ids]
-        same.sort(key=lambda s: -s["face_count"])
-        cross.sort(key=lambda s: -s["face_count"])
+        same.sort(key=lambda s: s["distance"])
+        cross.sort(key=lambda s: s["distance"])
         suggestions = (same + cross)[:limit]
     else:
-        suggestions.sort(key=lambda s: -s["face_count"])
+        suggestions.sort(key=lambda s: s["distance"])
         suggestions = suggestions[:limit]
     return suggestions
 
