@@ -58,7 +58,9 @@ def convert_tiff_to_jpg(file_bytes: bytes, quality: int = 95) -> bytes:
     return output.read()
 
 
-def upload_area(existing_sources: list[str] = None, existing_collections: list[str] = None) -> Div:
+def upload_area(
+    existing_sources: list[str] = None, existing_collections: list[str] = None, community_slug: str = "rhodes"
+) -> Div:
     """
     Drag-and-drop file upload area with separate collection, source, and source URL fields.
     UX Intent: Easy bulk ingestion into inbox with provenance tracking.
@@ -505,7 +507,11 @@ def get(sess=None, request=None):
                         cls="mb-6",
                     ),
                     # Upload form
-                    upload_area(existing_sources=existing_sources, existing_collections=existing_collections),
+                    upload_area(
+                        existing_sources=existing_sources,
+                        existing_collections=existing_collections,
+                        community_slug=community_slug,
+                    ),
                     cls="max-w-3xl mx-auto px-4 sm:px-8 py-6",
                 ),
                 cls="main-content min-h-screen overflow-x-hidden",

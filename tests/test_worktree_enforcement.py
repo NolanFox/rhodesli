@@ -69,15 +69,20 @@ class TestClaudeCodeHooksEnforcement:
         bash_hook = next((h for h in pre_hooks if h.get("matcher") == "Bash"), None)
         assert bash_hook is not None, "Must have a Bash PreToolUse hook"
         cmd = bash_hook["hooks"][0]["command"]
-        assert "parallel_session_active" in cmd, (
-            "PreToolUse hook must check for parallel_session_active"
-        )
+        assert "parallel_session_active" in cmd, "PreToolUse hook must check for parallel_session_active"
 
     def test_stop_hook_allows_merge_sessions(self):
+        """Stop hook (inline or script) must handle merge sessions."""
         settings = PROJECT_ROOT / ".claude" / "settings.json"
         data = json.loads(settings.read_text())
         stop_hooks = data["hooks"]["Stop"]
         cmd = stop_hooks[0]["hooks"][0]["command"]
-        assert "merge" in cmd.lower(), (
-            "Stop hook must handle merge sessions (skip assessment)"
-        )
+        # Hook may be inline or reference a script file
+        if "stop-gate.sh" in cmd:
+            # Script file — check the script itself
+            script = PROJECT_ROOT / ".claude" / "hooks" / "stop-gate.sh"
+            assert script.exists(), "stop-gate.sh script must exist"
+            content = script.read_text()
+            assert "merge" in content.lower(), "stop-gate.sh must handle merge sessions (skip assessment)"
+        else:
+            assert "merge" in cmd.lower(), "Stop hook must handle merge sessions (skip assessment)"
