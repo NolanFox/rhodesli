@@ -654,3 +654,201 @@ async def post(request, sess):
         }
     except Exception as e:
         return Response(f"Sync error: {e}", status_code=500)
+
+
+@rt("/api/admin/reconcile")
+async def post(request, sess):
+    """Reconcile Supabase with JSON — audit, backfill, or prune stale rows.
+
+    Admin-only. Session 105b.
+
+    Query params:
+        action=audit — compare JSON vs Supabase, return diff report
+        action=backfill — add JSON rows missing from Supabase
+        action=prune&confirm=true — delete Supabase rows not in JSON (exports first)
+    """
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    import json as _json_rec
+
+    params = dict(request.query_params)
+    action = params.get("action", "audit")
+    data_path = _main_mod.data_path
+
+    try:
+        from app.supabase_data import get_supabase_client
+
+        client = get_supabase_client()
+        if not client:
+            return Response("Supabase not configured", status_code=503)
+
+        # Load JSON IDs
+        json_identity_ids = set()
+        json_photo_ids = set()
+        json_face_to_photo = {}
+
+        id_path = data_path / "identities.json"
+        if id_path.exists():
+            with open(id_path) as f:
+                id_data = _json_rec.load(f)
+            json_identity_ids = set(id_data.get("identities", {}).keys())
+
+        pi_path = data_path / "photo_index.json"
+        if pi_path.exists():
+            with open(pi_path) as f:
+                pi_data = _json_rec.load(f)
+            json_photo_ids = set(pi_data.get("photos", {}).keys())
+            json_face_to_photo = pi_data.get("face_to_photo", {})
+
+        # Load Supabase IDs (paginated)
+        pg_identity_ids = set()
+        pg_photo_ids = set()
+        page_size = 1000
+
+        offset = 0
+        while True:
+            result = client.table("identities").select("identity_id").range(offset, offset + page_size - 1).execute()
+            if not result.data:
+                break
+            for row in result.data:
+                pg_identity_ids.add(row["identity_id"])
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        offset = 0
+        while True:
+            result = client.table("photos").select("photo_id").range(offset, offset + page_size - 1).execute()
+            if not result.data:
+                break
+            for row in result.data:
+                pg_photo_ids.add(row["photo_id"])
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        stale_identities = sorted(pg_identity_ids - json_identity_ids)
+        stale_photos = sorted(pg_photo_ids - json_photo_ids)
+        missing_identities = sorted(json_identity_ids - pg_identity_ids)
+        missing_photos = sorted(json_photo_ids - pg_photo_ids)
+
+        if action == "audit":
+            return {
+                "json_identities": len(json_identity_ids),
+                "json_photos": len(json_photo_ids),
+                "json_faces": len(json_face_to_photo),
+                "pg_identities": len(pg_identity_ids),
+                "pg_photos": len(pg_photo_ids),
+                "stale_identities": len(stale_identities),
+                "stale_photos": len(stale_photos),
+                "missing_identities": len(missing_identities),
+                "missing_photos": len(missing_photos),
+                "stale_identity_sample": stale_identities[:20],
+                "missing_identity_sample": missing_identities[:20],
+            }
+
+        elif action == "backfill":
+            from app.supabase_data import (
+                shadow_write_identities_batch,
+                shadow_write_photos_batch,
+                shadow_write_photo_faces_batch,
+            )
+
+            id_written = 0
+            if missing_identities:
+                all_ids = id_data.get("identities", {})
+                items = [dict(v, identity_id=k) for k, v in all_ids.items() if k in set(missing_identities)]
+                id_written = shadow_write_identities_batch(items)
+
+            photo_written = 0
+            face_written = 0
+            if missing_photos:
+                all_photos = pi_data.get("photos", {})
+                items = [dict(v, photo_id=k) for k, v in all_photos.items() if k in set(missing_photos)]
+                photo_written = shadow_write_photos_batch(items)
+                face_items = [
+                    {"photo_id": k, "face_ids": list(v.get("face_ids", []))}
+                    for k, v in all_photos.items()
+                    if k in set(missing_photos)
+                ]
+                face_written = shadow_write_photo_faces_batch(face_items)
+
+            _main_mod._invalidate_all_caches()
+            return {
+                "action": "backfill",
+                "identities_written": id_written,
+                "photos_written": photo_written,
+                "faces_written": face_written,
+            }
+
+        elif action == "prune":
+            if params.get("confirm") != "true":
+                return Response("Prune requires confirm=true", status_code=400)
+
+            # Export stale rows first (non-destructive safety net)
+            exported = {"identities": [], "photos": []}
+            batch_size = 200
+
+            for i in range(0, len(stale_identities), batch_size):
+                batch = stale_identities[i : i + batch_size]
+                result = client.table("identities").select("*").in_("identity_id", batch).execute()
+                if result.data:
+                    exported["identities"].extend(result.data)
+
+            for i in range(0, len(stale_photos), batch_size):
+                batch = stale_photos[i : i + batch_size]
+                result = client.table("photos").select("*").in_("photo_id", batch).execute()
+                if result.data:
+                    exported["photos"].extend(result.data)
+
+            # Save export artifact
+            export_path = data_path / "reconcile_export.json"
+            with open(export_path, "w") as f:
+                _json_rec.dump(
+                    {
+                        "exported_at": datetime.now(timezone.utc).isoformat(),
+                        "stale_identities": exported["identities"],
+                        "stale_photos": exported["photos"],
+                    },
+                    f,
+                    indent=2,
+                    default=str,
+                )
+
+            # Delete stale rows
+            id_deleted = 0
+            for i in range(0, len(stale_identities), batch_size):
+                batch = stale_identities[i : i + batch_size]
+                try:
+                    client.table("identities").delete().in_("identity_id", batch).execute()
+                    id_deleted += len(batch)
+                except Exception as e:
+                    logging.error(f"Failed to delete identity batch: {e}")
+
+            photo_deleted = 0
+            for i in range(0, len(stale_photos), batch_size):
+                batch = stale_photos[i : i + batch_size]
+                try:
+                    client.table("photo_faces").delete().in_("photo_id", batch).execute()
+                    client.table("photos").delete().in_("photo_id", batch).execute()
+                    photo_deleted += len(batch)
+                except Exception as e:
+                    logging.error(f"Failed to delete photo batch: {e}")
+
+            _main_mod._invalidate_all_caches()
+            return {
+                "action": "prune",
+                "identities_deleted": id_deleted,
+                "photos_deleted": photo_deleted,
+                "export_path": str(export_path),
+                "exported_identities": len(exported["identities"]),
+                "exported_photos": len(exported["photos"]),
+            }
+
+        else:
+            return Response(f"Unknown action: {action}. Use audit, backfill, or prune.", status_code=400)
+
+    except Exception as e:
+        return Response(f"Reconcile error: {e}", status_code=500)
