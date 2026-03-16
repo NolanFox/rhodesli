@@ -921,6 +921,34 @@ def _startup_disk_cleanup(base_path: Path):
             except OSError:
                 pass
 
+    # Auto-expire orphaned pending_uploads entries (Session 107b Phase 3)
+    # Entries whose staging directory no longer exists AND are older than 24 hours
+    try:
+        pending = _load_pending_uploads()
+        expired_count = 0
+        for jid, upload in list(pending.get("uploads", {}).items()):
+            if upload.get("status") in ("pending", "staged"):
+                staging_exists = (staging_dir / jid).exists() if staging_dir.exists() else False
+                if not staging_exists:
+                    # Check age from submitted_at or created_at
+                    submitted = upload.get("submitted_at") or upload.get("created_at", "")
+                    try:
+                        from datetime import datetime as dt_cls
+
+                        ts = dt_cls.fromisoformat(submitted.replace("Z", "+00:00"))
+                        age_seconds = (dt_cls.now(ts.tzinfo) - ts).total_seconds()
+                    except (ValueError, TypeError, AttributeError):
+                        age_seconds = 999999  # If we can't parse, assume old
+                    if age_seconds > 86400:  # 24 hours
+                        upload["status"] = "expired"
+                        upload["expired_reason"] = "staging_dir_missing"
+                        expired_count += 1
+        if expired_count > 0:
+            _save_pending_uploads(pending)
+            logging.info(f"Auto-expired {expired_count} orphaned pending upload(s)")
+    except Exception as e:
+        logging.warning(f"Failed to auto-expire pending uploads: {e}")
+
     # Clean stale inbox status/log files (older than 24 hours)
     inbox_dir = base_path / "inbox"
     if inbox_dir.exists():
