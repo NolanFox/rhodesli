@@ -313,8 +313,10 @@ class TestFindCrossBatchMatches:
 class TestReclusterIncludesCrossBatch:
     """Test that recluster endpoint returns cross_batch_matches."""
 
+    @pytest.mark.timeout(120)
     def test_recluster_response_has_cross_batch_key(self, client, admin_user):
-        """Recluster dry run should include cross_batch_matches in response."""
+        """Recluster dry run should include cross_batch_matches in response.
+        Uses real data (3446 identities), so needs extended timeout."""
         response = client.post("/api/admin/recluster?dry_run=true")
         assert response.status_code == 200
         data = response.json()
