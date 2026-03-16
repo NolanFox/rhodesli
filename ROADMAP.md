@@ -54,7 +54,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
 
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
-- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, unblock face compare. 3-4 sessions. See `docs/architecture/ML_SERVICE.md`
+- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, unblock face compare. 3-4 sessions. See `docs/architecture/ML_SERVICE.md`. **Agent team candidate** — spans Docker, API, app integration, tests across 4+ modules. See `docs/architecture/PARALLEL_AGENT_STRATEGY.md`.
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
@@ -101,7 +101,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 ### Near-Term — Workspace & Onboarding (PRD-036)
 Self-service workspace for users. See `docs/prds/036_workspace_onboarding.md`.
 
-- [ ] WORKSPACE-001: Personal archive auto-creation on signup — 1 session
+- [ ] WORKSPACE-001: Personal archive auto-creation on signup — 1 session. **Agent team candidate** — auth, upload, permissions, UI layers in parallel. See `docs/architecture/PARALLEL_AGENT_STRATEGY.md`.
 - [ ] WORKSPACE-002: Sharing mode UX (Help Identify for members) — 1-2 sessions, depends on WORKSPACE-001
 - [ ] WORKSPACE-003: Add photos to community flow — 1-2 sessions, depends on WORKSPACE-001
 - [ ] WORKSPACE-004: Anonymous contributions with session tracking — 1 session
