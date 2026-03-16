@@ -19,8 +19,13 @@
 - [LOW] GitHub auto-deploy uses RAILPACK builder — need to always use `railway up` CLI. Known issue (Lesson 117).
 - [LOW] 4 non-James-Fields orphan faces found — indicates systemic issue beyond this one upload. Startup detection will catch future occurrences.
 
+## Deferred to 108b
+- FB-013: Compare button broken on person page (diagnosed: missing compare_modal() in person page layout)
+- FB-014: Photo Context modal "View Photo" link buried and mislabeled (diagnosed: rename + reposition)
+- FB-015: Sidebar search doesn't find photos by filename (diagnosed: extend /api/search handler)
+
 ## Next Session Should Verify
-1. Data health endpoint returns "healthy" status on production
-2. Startup logs show "no orphan faces found" (since we just repaired them)
-3. James Fields faces appear in clustering proposals (requires local sync + cluster run)
-4. Embeddings sync endpoint works end-to-end with `--include-embeddings`
+1. Data health endpoint returns "healthy" on production (VERIFIED: 0 orphans)
+2. Collage override button works in production browser
+3. James Fields faces visible in Similar Identities (VERIFIED via screenshots)
+4. FB-013/014/015 fixed and browser-verified
