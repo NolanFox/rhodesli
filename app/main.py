@@ -843,6 +843,58 @@ async def startup_event():
         except Exception as e:
             logging.warning(f"Startup parity check failed: {e}")
 
+        # Session 108: Orphan face detection — find faces in photo_index that
+        # have no identity. Auto-create INBOX identities to prevent invisible faces.
+        try:
+            from core.registry import IdentityRegistry, IdentityState
+            from core.photo_registry import PhotoRegistry
+
+            id_path = data_path / "identities.json"
+            pi_path = data_path / "photo_index.json"
+            if id_path.exists() and pi_path.exists():
+                id_reg = IdentityRegistry.load(id_path)
+                photo_reg = PhotoRegistry.load(pi_path)
+
+                all_registered = set()
+                for iid, idata in id_reg._identities.items():
+                    all_registered.update(idata.get("anchor_ids", []))
+                    all_registered.update(idata.get("candidate_ids", []))
+
+                orphan_faces = []
+                for pid, pdata in photo_reg._photos.items():
+                    for fid in pdata.get("face_ids", []):
+                        if fid not in all_registered:
+                            orphan_faces.append(fid)
+
+                if orphan_faces:
+                    logging.warning(
+                        f"Startup orphan detection: {len(orphan_faces)} faces have no identity. "
+                        f"Creating INBOX identities."
+                    )
+                    for fid in orphan_faces:
+                        id_reg.create_identity(
+                            anchor_ids=[fid],
+                            user_source="startup_orphan_repair",
+                            state=IdentityState.INBOX,
+                        )
+                    id_reg.save(id_path)
+
+                    # Sync repaired identities to Supabase
+                    try:
+                        from app.supabase_data import shadow_write_identities_batch
+
+                        items = [dict(v, identity_id=k) for k, v in id_reg._identities.items()]
+                        shadow_write_identities_batch(items)
+                    except Exception as sync_err:
+                        logging.error(f"Startup orphan repair Supabase sync failed: {sync_err}")
+
+                    _invalidate_all_caches()
+                    logging.info(f"Startup orphan repair: created {len(orphan_faces)} INBOX identities")
+                else:
+                    logging.info("Startup orphan detection: no orphan faces found")
+        except Exception as e:
+            logging.warning(f"Startup orphan detection failed: {e}")
+
     threading.Thread(target=_startup_parity_check, daemon=True, name="parity-check").start()
 
     get_event_recorder().record(

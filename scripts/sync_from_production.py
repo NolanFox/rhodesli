@@ -59,8 +59,10 @@ def backup_file(filepath: Path) -> Path | None:
 def _get_ssl_context():
     """Get SSL context, using certifi certs if available (fixes macOS Python)."""
     import ssl
+
     try:
         import certifi
+
         return ssl.create_default_context(cafile=certifi.where())
     except ImportError:
         # Fall back to default context; if that fails, try unverified
@@ -83,11 +85,11 @@ def fetch_json(endpoint: str) -> dict:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code == 401:
-            print(f"ERROR: Unauthorized. Check RHODESLI_SYNC_TOKEN is set correctly.")
+            print("ERROR: Unauthorized. Check RHODESLI_SYNC_TOKEN is set correctly.")
             print(f"  Token present: {'yes' if SYNC_TOKEN else 'no'}")
             print(f"  Token length: {len(SYNC_TOKEN)}")
         elif e.code == 503:
-            print(f"ERROR: Sync API not configured on server. Set RHODESLI_SYNC_TOKEN on Railway.")
+            print("ERROR: Sync API not configured on server. Set RHODESLI_SYNC_TOKEN on Railway.")
         elif e.code == 404:
             print(f"ERROR: Endpoint not found at {url}. Is the latest code deployed?")
         else:
@@ -108,8 +110,7 @@ def summarize_identities(data: dict) -> dict:
     confirmed = sum(1 for v in identities.values() if v.get("state") == "CONFIRMED")
     proposed = sum(1 for v in identities.values() if v.get("state") == "PROPOSED")
     inbox = sum(1 for v in identities.values() if v.get("state") == "INBOX")
-    named = sum(1 for v in identities.values()
-                if v.get("name") and not v["name"].startswith("Unidentified"))
+    named = sum(1 for v in identities.values() if v.get("name") and not v["name"].startswith("Unidentified"))
     return {
         "total": total,
         "confirmed": confirmed,
@@ -164,15 +165,18 @@ def sync_from_api(dry_run: bool = False):
     print("  Checking server status...")
     try:
         import urllib.request
+
         ssl_ctx = _get_ssl_context()
         with urllib.request.urlopen(f"{SITE_URL}/api/sync/status", timeout=10, context=ssl_ctx) as resp:
             status = json.loads(resp.read().decode("utf-8"))
-        print(f"  Server: {status.get('identities', '?')} identities, "
-              f"{status.get('photos', '?')} photos, "
-              f"{status.get('confirmed', '?')} confirmed")
+        print(
+            f"  Server: {status.get('identities', '?')} identities, "
+            f"{status.get('photos', '?')} photos, "
+            f"{status.get('confirmed', '?')} confirmed"
+        )
     except Exception as e:
         print(f"  Warning: Could not reach status endpoint: {e}")
-        print(f"  Continuing anyway...")
+        print("  Continuing anyway...")
 
     # Fetch data
     print("\n  Fetching identities.json...")
@@ -203,7 +207,7 @@ def sync_from_api(dry_run: bool = False):
         if annotations_file.exists():
             with open(annotations_file) as f:
                 local_ann_count = len(json.load(f).get("annotations", {}))
-        print(f"\n  Annotations:")
+        print("\n  Annotations:")
         print(f"    count: {local_ann_count} -> {ann_count}")
 
     if dry_run:
@@ -273,22 +277,60 @@ def sync_from_zip(zip_path: str):
     print("\nSync complete. Run 'git diff data/' to see changes.")
 
 
+def fetch_embeddings():
+    """Download embeddings.npy from production (Session 108, Lesson 147)."""
+    import urllib.request
+
+    if not SYNC_TOKEN:
+        print("ERROR: RHODESLI_SYNC_TOKEN not set.")
+        sys.exit(1)
+
+    url = f"{SITE_URL}/api/sync/embeddings"
+    req = urllib.request.Request(url)
+    req.add_header("Authorization", f"Bearer {SYNC_TOKEN}")
+    ssl_ctx = _get_ssl_context()
+
+    emb_path = DATA_DIR / "embeddings.npy"
+    backup = backup_file(emb_path)
+    if backup:
+        print(f"  Backed up embeddings.npy -> {backup.name}")
+
+    print("\n  Fetching embeddings.npy...")
+    try:
+        with urllib.request.urlopen(req, timeout=120, context=ssl_ctx) as resp:
+            data = resp.read()
+        with open(emb_path, "wb") as f:
+            f.write(data)
+        size_mb = len(data) / (1024 * 1024)
+        print(f"  Wrote {emb_path} ({size_mb:.1f} MB)")
+    except Exception as e:
+        print(f"  ERROR downloading embeddings: {e}")
+        # Restore backup if download failed
+        if backup and backup.exists():
+            shutil.copy2(backup, emb_path)
+            print("  Restored backup embeddings.npy")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Sync production data to local.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Fetch and compare but don't write files")
-    parser.add_argument("--from-zip", type=str, metavar="PATH",
-                        help="Sync from a downloaded ZIP file instead of API")
+    parser.add_argument("--dry-run", action="store_true", help="Fetch and compare but don't write files")
+    parser.add_argument("--from-zip", type=str, metavar="PATH", help="Sync from a downloaded ZIP file instead of API")
+    parser.add_argument(
+        "--include-embeddings", action="store_true", help="Also download embeddings.npy (large file, ~2-50MB)"
+    )
     args = parser.parse_args()
 
     if args.from_zip:
         sync_from_zip(args.from_zip)
     else:
         sync_from_api(dry_run=args.dry_run)
+
+    if args.include_embeddings and not args.dry_run and not args.from_zip:
+        fetch_embeddings()
 
 
 if __name__ == "__main__":

@@ -852,3 +852,131 @@ async def post(request, sess):
 
     except Exception as e:
         return Response(f"Reconcile error: {e}", status_code=500)
+
+
+# --- Embeddings Sync (Session 108, Lesson 147) ---
+
+
+@rt("/api/sync/embeddings")
+def get(request):
+    """Download embeddings.npy via sync token. For sync_from_production.py --include-embeddings."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+    fpath = _main_mod.data_path / "embeddings.npy"
+    if not fpath.exists():
+        return Response("embeddings.npy not found", status_code=404)
+    return FileResponse(
+        str(fpath),
+        filename="embeddings.npy",
+        media_type="application/octet-stream",
+    )
+
+
+# --- Data Health Endpoint (Session 108) ---
+
+
+@rt("/api/health/data")
+def get(request, sess):
+    """Admin-only data health diagnostic. Returns orphan faces, stale proposals, etc."""
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    import json as _json_health
+
+    data_path = _main_mod.data_path
+    report = {}
+
+    try:
+        # Load registries
+        from core.registry import IdentityRegistry
+        from core.photo_registry import PhotoRegistry
+
+        id_path = data_path / "identities.json"
+        pi_path = data_path / "photo_index.json"
+
+        if not id_path.exists() or not pi_path.exists():
+            return {"error": "Data files not found"}
+
+        id_reg = IdentityRegistry.load(id_path)
+        photo_reg = PhotoRegistry.load(pi_path)
+
+        # Orphan faces: faces in photo_index with no identity
+        all_registered = set()
+        for iid, idata in id_reg._identities.items():
+            all_registered.update(idata.get("anchor_ids", []))
+            all_registered.update(idata.get("candidate_ids", []))
+
+        orphan_faces = []
+        for pid, pdata in photo_reg._photos.items():
+            for fid in pdata.get("face_ids", []):
+                if fid not in all_registered:
+                    orphan_faces.append(fid)
+        report["orphan_faces"] = {"count": len(orphan_faces), "face_ids": orphan_faces[:20]}
+
+        # Orphan identities: identities with face_ids not in any photo
+        all_photo_faces = set()
+        for pid, pdata in photo_reg._photos.items():
+            all_photo_faces.update(pdata.get("face_ids", []))
+
+        orphan_identities = []
+        for iid, idata in id_reg._identities.items():
+            if idata.get("merged_into"):
+                continue
+            anchors = set(idata.get("anchor_ids", []))
+            candidates = set(idata.get("candidate_ids", []))
+            all_faces = anchors | candidates
+            if all_faces and not all_faces.intersection(all_photo_faces):
+                orphan_identities.append(iid)
+        report["orphan_identities"] = {"count": len(orphan_identities), "identity_ids": orphan_identities[:20]}
+
+        # Embedding count vs face count
+        emb_path = data_path / "embeddings.npy"
+        if emb_path.exists():
+            import numpy as np
+
+            emb_data = np.load(str(emb_path), allow_pickle=True)
+            report["embeddings"] = {
+                "count": len(emb_data),
+                "photo_faces_count": len(all_photo_faces),
+                "match": len(emb_data) >= len(all_photo_faces),
+            }
+        else:
+            report["embeddings"] = {"count": 0, "photo_faces_count": len(all_photo_faces), "match": False}
+
+        # Stale proposals check
+        proposals_path = data_path / "proposals.json"
+        if proposals_path.exists():
+            with open(proposals_path) as f:
+                proposals = _json_health.load(f)
+            report["proposals"] = {
+                "count": len(proposals.get("proposals", [])),
+                "generated_at": proposals.get("generated_at", "unknown"),
+            }
+        else:
+            report["proposals"] = {"count": 0, "generated_at": None}
+
+        # Identity stats
+        total = len(id_reg._identities)
+        merged = sum(1 for v in id_reg._identities.values() if v.get("merged_into"))
+        confirmed = sum(1 for v in id_reg._identities.values() if v.get("state") == "CONFIRMED")
+        inbox = sum(1 for v in id_reg._identities.values() if v.get("state") == "INBOX")
+        proposed = sum(1 for v in id_reg._identities.values() if v.get("state") == "PROPOSED")
+        report["identities"] = {
+            "total": total,
+            "active": total - merged,
+            "confirmed": confirmed,
+            "proposed": proposed,
+            "inbox": inbox,
+            "merged": merged,
+        }
+
+        report["photos"] = {"count": len(photo_reg._photos)}
+        report["status"] = "healthy" if not orphan_faces and not orphan_identities else "issues_found"
+
+    except Exception as e:
+        report["error"] = str(e)
+        report["status"] = "error"
+
+    return report

@@ -77,6 +77,13 @@ if [ -n "$DIRTY" ]; then
     exit 2
 fi
 
+# Session 108 (Lesson 148): Warn if commits haven't been pushed to remote.
+# Don't block (might be intentional for worktree/parallel sessions), but warn clearly.
+AHEAD=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+if [ "$AHEAD" -gt 0 ]; then
+    echo "WARNING: $AHEAD commit(s) ahead of origin/main — run 'git push origin main' before ending." >&2
+fi
+
 # Reset ephemeral state for next conversation (HD-026)
 echo 0 > .claude/commits_since_clear.txt
 echo "interactive" > .claude/session_mode.txt
