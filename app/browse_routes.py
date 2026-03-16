@@ -1500,17 +1500,20 @@ def get(identity_id: str, sess=None, request=None):
 
 
 @rt("/api/identity/{identity_id}/reject-match/{neighbor_id}", methods=["POST"])
-def post(identity_id: str, neighbor_id: str, sess=None):
+def post(identity_id: str, neighbor_id: str, sess=None, request=None):
     """Record a negative match between two identities and remove the tile."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
     if not is_admin:
         return Response("Forbidden", status_code=403)
 
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     registry = _main_mod.load_registry()
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     try:
         registry.get_identity(identity_id)
     except KeyError:

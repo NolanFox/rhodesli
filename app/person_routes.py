@@ -1417,7 +1417,7 @@ def public_person_page(
                         ),
                         A(
                             "Compare with a photo",
-                            href=f"/compare?person_id={person_id}",
+                            href=f"{nav_prefix}/compare?person_id={person_id}",
                             cls="px-3 py-1.5 text-xs rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
                             data_testid="compare-cta",
                         ),

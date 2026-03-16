@@ -1557,7 +1557,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                 P("Watch the story unfold", cls="text-amber-100/40 text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
-                            href="/timeline",
+                            href=f"{nav_prefix}/timeline",
                             cls="block",
                         ),
                         A(
@@ -1763,8 +1763,10 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
 
 
 @rt("/about")
-def get():
+def get(request=None):
     """About page: history, how to help, how it works, roles, dynamic stats."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     stats = _main_mod._compute_landing_stats()
 
     return (
@@ -1793,7 +1795,7 @@ def get():
                         ),
                         A(
                             "Timeline",
-                            href="/timeline",
+                            href=f"{nav_prefix}/timeline",
                             cls="text-slate-300 hover:text-white text-sm font-medium transition-colors",
                         ),
                         A("About", href="/about", cls="text-white text-sm font-medium"),
@@ -5606,10 +5608,15 @@ def _match_face_chips_inline(chips_data, nav_prefix: str = ""):
     )
 
 
-def _match_lightbox_script():
+def _match_lightbox_script(nav_prefix: str = ""):
     """JS for the match page lightbox with face overlays, metadata, zoom."""
-    return Script("""
+    _pfx = nav_prefix  # captured for JS injection
+    return Script(
+        """
     (function() {
+        var _navPfx = '"""
+        + _pfx.replace("'", "\\'")
+        + """';
         var scale = 1;
         var lightbox = document.getElementById('match-lightbox');
         var lbImg = document.getElementById('match-lightbox-img');
@@ -5650,7 +5657,7 @@ def _match_lightbox_script():
                     if (b.identity_id) {
                         div.addEventListener('click', function(e) {
                             e.stopPropagation();
-                            var href = b.state === 'CONFIRMED' ? '/person/' + b.identity_id : '/identify/' + b.identity_id;
+                            var href = b.state === 'CONFIRMED' ? _navPfx + '/person/' + b.identity_id : _navPfx + '/identify/' + b.identity_id;
                             window.location.href = href;
                         });
                     }
@@ -5671,7 +5678,7 @@ def _match_lightbox_script():
             }
             if (photoId) {
                 var link = document.createElement('a');
-                link.href = '/photo/' + photoId;
+                link.href = _navPfx + '/photo/' + photoId;
                 link.textContent = 'View Photo Page →';
                 link.className = 'text-xs text-indigo-400 hover:text-indigo-300 inline-block mt-1 transition-colors';
                 lbMeta.appendChild(link);
@@ -5690,7 +5697,7 @@ def _match_lightbox_script():
                     row.className = 'flex flex-wrap justify-center gap-3';
                     chips.forEach(function(c) {
                         var iid = c[0], iname = c[1], istate = c[2], chipUrl = c[3];
-                        var href = istate === 'CONFIRMED' ? '/person/' + iid : '/identify/' + iid;
+                        var href = istate === 'CONFIRMED' ? _navPfx + '/person/' + iid : _navPfx + '/identify/' + iid;
                         var shortName = iname.startsWith('Unidentified') ? 'Unknown' : iname;
                         var a = document.createElement('a');
                         a.href = href;
@@ -5795,7 +5802,8 @@ def _match_lightbox_script():
         }, {passive: false});
         lbImg.addEventListener('touchend', function() { lastDist = 0; });
     })();
-    """)
+    """
+    )
 
 
 @rt("/identify/{person_a}/match/{person_b}")
@@ -6229,7 +6237,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
             cls="min-h-screen bg-slate-900 text-white",
         ),
         _main_mod._share_script(),
-        _match_lightbox_script(),
+        _match_lightbox_script(nav_prefix=nav_prefix),
         _face_carousel_script(),
     )
 
@@ -8272,7 +8280,11 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
                     Span(" · ", cls="text-slate-700 mx-2"),
                     Span("Click markers to see photos", cls="text-xs text-slate-500"),
                     Span(" · ", cls="text-slate-700 mx-2"),
-                    A("View Timeline →", href="/timeline", cls="text-xs text-indigo-400 hover:text-indigo-300"),
+                    A(
+                        "View Timeline →",
+                        href=f"{nav_prefix}/timeline",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                    ),
                     cls="mt-3 text-center",
                 ),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-8",
@@ -8900,7 +8912,7 @@ def get(
                             *person_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
                             data_testid="person-filter",
-                            onchange=f"window.location.href='/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}&collection=' + encodeURIComponent('{collection or ''}')",
+                            onchange=f"window.location.href='{nav_prefix}/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}&collection=' + encodeURIComponent('{collection or ''}')",
                         ),
                         cls="flex items-center gap-2",
                     ),
@@ -8912,7 +8924,7 @@ def get(
                             *[Option(c, value=c, selected=(collection == c)) for c in all_collections],
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
                             data_testid="collection-filter",
-                            onchange=f"window.location.href='/timeline?collection=' + encodeURIComponent(this.value) + '&person={person or ''}&people={people or ''}&start={start or ''}&end={end or ''}&context={context}'",
+                            onchange=f"window.location.href='{nav_prefix}/timeline?collection=' + encodeURIComponent(this.value) + '&person={person or ''}&people={people or ''}&start={start or ''}&end={end or ''}&context={context}'",
                         ),
                         cls="flex items-center gap-2",
                     )
@@ -11126,7 +11138,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
         .attr('class', 'node-circle')
         .on('click', function(event, d) {{
             // Navigate to person on click
-            window.location.href = '/person/' + d.id;
+            window.location.href = '{nav_prefix}/person/' + d.id;
         }});
 
     node.append('text')
@@ -12604,7 +12616,7 @@ def public_photo_page(
                         else None,
                         A(
                             "Compare faces",
-                            href=f"/compare?photo_id={photo_id}",
+                            href=f"{nav_prefix}/compare?photo_id={photo_id}",
                             cls="text-xs text-indigo-400 hover:text-indigo-300 transition-colors",
                             data_testid="compare-photo-link",
                         ),
@@ -12673,7 +12685,7 @@ def public_photo_page(
                         ),
                         A(
                             "Compare Faces",
-                            href=f"/compare?photo_id={photo_id}",
+                            href=f"{nav_prefix}/compare?photo_id={photo_id}",
                             cls="inline-block px-6 py-3 border border-indigo-600 text-indigo-300 font-medium rounded-lg hover:border-indigo-400 hover:text-white transition-colors",
                             data_testid="compare-photo-link",
                         ),

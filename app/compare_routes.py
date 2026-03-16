@@ -2924,8 +2924,11 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
 
 
 @rt("/api/compare/search-person-photo")
-def get(q: str = "", photo_id: str = "", sess=None):
+def get(q: str = "", photo_id: str = "", sess=None, request=None):
     """Search for a person to compare an archive photo against. Returns clickable results."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     if len(q.strip()) < 2:
         return Div(id="compare-person-search-results")
 
@@ -2966,7 +2969,7 @@ def get(q: str = "", photo_id: str = "", sess=None):
                     ),
                     cls="flex items-center gap-3",
                 ),
-                href=f"/compare?photo_id={photo_id}&person_id={iid}",
+                href=f"{nav_prefix}/compare?photo_id={photo_id}&person_id={iid}",
                 cls="block w-full text-left p-2 hover:bg-slate-700/50 rounded-lg transition-colors cursor-pointer",
                 data_testid=f"compare-person-{iid}",
             )

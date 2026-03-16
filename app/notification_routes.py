@@ -462,7 +462,7 @@ def _time_ago(created_at: str) -> str:
 # =============================================================================
 
 
-def _notification_item(notif: dict) -> object:
+def _notification_item(notif: dict, nav_prefix: str = "") -> object:
     """Render a single notification as a list item."""
     notif_id = notif.get("id", "")
     is_read = notif.get("is_read", False)
@@ -476,9 +476,9 @@ def _notification_item(notif: dict) -> object:
     # Build link target
     link_href = "#"
     if identity_id:
-        link_href = f"/person/{identity_id}"
+        link_href = f"{nav_prefix}/person/{identity_id}"
     elif photo_id:
-        link_href = f"/photo/{photo_id}"
+        link_href = f"{nav_prefix}/photo/{photo_id}"
 
     bg_cls = "bg-slate-800/30" if is_read else "bg-slate-800/80 border-l-2 border-amber-500"
 
@@ -508,7 +508,9 @@ def _notification_item(notif: dict) -> object:
     )
 
 
-def _notifications_list(notifications: list[dict], offset: int = 0, page_size: int = 20) -> object:
+def _notifications_list(
+    notifications: list[dict], offset: int = 0, page_size: int = 20, nav_prefix: str = ""
+) -> object:
     """Render the notification list with optional load-more button."""
     if not notifications:
         return Div(
@@ -524,7 +526,7 @@ def _notifications_list(notifications: list[dict], offset: int = 0, page_size: i
             id="notifications-list",
         )
 
-    items = [_notification_item(n) for n in notifications]
+    items = [_notification_item(n, nav_prefix=nav_prefix) for n in notifications]
 
     # Load more button if we got a full page
     load_more = None
@@ -557,9 +559,12 @@ def get(sess, offset: int = 0, partial: int = 0, request=None):
     page_size = 20
     notifications = _get_notifications(user.id, limit=page_size, offset=offset)
 
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     # Partial response for HTMX pagination
     if partial:
-        items = [_notification_item(n) for n in notifications]
+        items = [_notification_item(n, nav_prefix=nav_prefix) for n in notifications]
         load_more = None
         if len(notifications) >= page_size:
             next_offset = offset + page_size
@@ -573,7 +578,6 @@ def get(sess, offset: int = 0, partial: int = 0, request=None):
         return Div(*items, load_more)
 
     unread_count = _get_unread_count(user.id)
-    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_links = _main_mod._public_nav_links(active="notifications", user=user, community_slug=community_slug)
     nav = _main_mod._public_page_nav(nav_links, active="notifications", user=user, community_slug=community_slug)
 
@@ -602,7 +606,7 @@ def get(sess, offset: int = 0, partial: int = 0, request=None):
             mark_all_btn,
             cls="flex items-center justify-between mb-6",
         ),
-        _notifications_list(notifications, offset=offset, page_size=page_size),
+        _notifications_list(notifications, offset=offset, page_size=page_size, nav_prefix=nav_prefix),
         cls="max-w-2xl mx-auto px-6 py-8",
         id="notifications-container",
     )
@@ -618,11 +622,14 @@ def get(sess, offset: int = 0, partial: int = 0, request=None):
 
 
 @rt("/api/notifications/{notification_id}/read")
-def post(sess, notification_id: str):
+def post(sess, notification_id: str, request=None):
     """POST /api/notifications/{id}/read — Mark a single notification as read."""
     denied = _check_login(sess)
     if denied:
         return denied
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     user = get_current_user(sess or {})
     _mark_read(notification_id, user.id)
@@ -633,7 +640,7 @@ def post(sess, notification_id: str):
         try:
             result = sb.table("notifications").select("*").eq("id", notification_id).execute()
             if result.data:
-                return _notification_item(result.data[0])
+                return _notification_item(result.data[0], nav_prefix=nav_prefix)
         except _SUPABASE_ERRORS:
             pass
 
