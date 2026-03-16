@@ -4331,13 +4331,13 @@ def photo_view_content(
                     else None,
                     _main_mod.share_button(photo_id, style="link", label="Share"),
                     A(
-                        "Public Page",
+                        "View Photo \u2192",
                         href=(
                             f"{nav_prefix}/photo/{photo_id}?identity_id={context_identity_id}&sort_by={sort_by}"
                             if context_identity_id
                             else f"{nav_prefix}/photo/{photo_id}"
                         ),
-                        cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
+                        cls="text-sm font-medium text-indigo-400 hover:text-indigo-300 underline",
                         target="_blank",
                         rel="noopener",
                     ),

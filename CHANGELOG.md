@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.13] — 2026-03-16 (Session 108b: Bug Fix Sprint — Compare, Photo Links, Search)
+
+### Fixed
+- **FB-013: Compare button on person page** — Added missing `compare_modal()` to person page so Compare buttons in Similar Identities actually work.
+- **FB-014: "View Photo" link in photo context modal** — Renamed "Public Page" to "View Photo", increased from text-xs to text-sm for better visibility.
+- **FB-015: Sidebar search finds photos by filename** — `/api/search` now searches photo filenames in addition to identity names, with a "Photos" section separator.
+- **Collage override NameError** — PRD-048 override button in `neighbor_card()` used undefined `identity_id` instead of `target_identity_id`. Fixed.
+- 8 new tests covering all fixes.
+
 ## [v0.99.12] — 2026-03-16 (Session 108: Gap Closure, Data Integrity Fix, Deploy)
 
 ### Added

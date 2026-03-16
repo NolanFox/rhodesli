@@ -354,9 +354,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ### Compare Full Rebuild
 - [ ] **COMPARE-001: Complete compare UX rebuild** — Session 77 (Codex) implemented ~25% of the original 8-phase compare prompt: archive context + auto-queue + golden tests. Remaining: full UX redesign of compare flow, upload pipeline reliability, mobile optimization, standalone compare product vision. Source: docs/session_context/session-78-context.md.
-- [ ] **FB-013: Compare button in Similar Identities broken** — Clicking "Compare" on neighbor cards in Similar Identities panel does nothing or errors. Claimed fixed in Session 106b but still broken as of Session 108. P1. Source: Session 108 user triage.
-- [ ] **FB-014: Photo Context modal missing "View Photo" link** — When clicking face cards in To Review browse view, Photo Context modal opens but has no clickable link to navigate to the actual photo detail page. Users are stuck in the modal with no way to see the full photo page. P1. Source: Session 108 user triage.
-- [ ] **FB-015: Sidebar search doesn't find photos by filename** — Sidebar search only matches identity names, not photo filenames. FB-007 (Session 106b) added filename search to the Photos section filter dropdown, but the sidebar search bar remains identity-only. Users expect to search "02150_p_13akf5twbc1950.jpg" from the sidebar. P2. Source: Session 108 user triage.
+- [x] **FB-013: Compare button in Similar Identities broken** — DONE (Session 108b). Fixed: added compare_modal() to person page.
+- [x] **FB-014: Photo Context modal missing "View Photo" link** — DONE (Session 108b). Fixed: renamed "Public Page" to "View Photo", made prominent.
+- [x] **FB-015: Sidebar search doesn't find photos by filename** — DONE (Session 108b). Fixed: /api/search now searches photo filenames too.
 - [ ] **COMPARE-002: Community-scoped compare with archive-add fallback** — "Find this person" workflow: upload reference photo → match against community faces → show matches with confidence → if not found, offer to add to archive. Triggered by David Fox/James Fields use case (Session 108). Depends on TOOLS-002 (ML service) or could work with existing on-device ML. See: docs/session_context/session-108-ux-brief.md, TOOLS-003.
 
 ### Route Error Investigation

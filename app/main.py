@@ -8794,7 +8794,7 @@ def neighbor_card(
             merge_btn = Button(
                 "Override \u26a0\ufe0f",
                 cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded",
-                hx_post=f"{nav_prefix}/api/identity/{neighbor_id}/merge/{identity_id}"
+                hx_post=f"{nav_prefix}/api/identity/{neighbor_id}/merge/{target_identity_id}"
                 f"?override_co_occurrence=true&override_reason=collage&source=web",
                 hx_target=merge_target,
                 hx_swap=merge_swap,

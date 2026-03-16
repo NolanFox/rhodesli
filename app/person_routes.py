@@ -1510,6 +1510,7 @@ def public_person_page(
                     }
                 });
             """),
+            _main_mod.compare_modal(),
             cls="min-h-screen bg-slate-900",
         ),
     )

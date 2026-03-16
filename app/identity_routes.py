@@ -668,7 +668,20 @@ def get(q: str = ""):
 
     # Search all non-merged identities by name
     results = registry.search_identities(q)
-    if not results:
+
+    # Also search photo filenames (FB-015)
+    query_lower = q.strip().lower()
+    photo_results = []
+    _main_mod._build_caches()
+    photo_cache = _main_mod._photo_cache or {}
+    for photo_id, pdata in photo_cache.items():
+        fname = pdata.get("filename", "")
+        if fname and query_lower in fname.lower():
+            photo_results.append({"photo_id": photo_id, "filename": fname, "pdata": pdata})
+            if len(photo_results) >= 5:
+                break
+
+    if not results and not photo_results:
         return Div(
             P("No matches found.", cls="text-slate-400 italic text-sm p-3"),
         )
@@ -730,6 +743,39 @@ def get(q: str = ""):
                 cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer",
             )
         )
+
+    # Add photo filename results (FB-015)
+    if photo_results:
+        if items:
+            items.append(
+                Div(
+                    Span("Photos", cls="text-[10px] font-medium uppercase tracking-wider text-slate-500"),
+                    cls="px-3 pt-2 pb-1 border-t border-slate-700",
+                )
+            )
+        for pr in photo_results:
+            fname = pr["filename"]
+            photo_id = pr["photo_id"]
+            face_count = len(pr["pdata"].get("faces", []))
+            highlighted_fname = _main_mod._highlight_match(fname, query_stripped)
+            photo_thumb = Div(cls="w-8 h-8 rounded bg-slate-700 flex-shrink-0")
+            items.append(
+                A(
+                    photo_thumb,
+                    Div(
+                        Span(highlighted_fname, cls="text-sm text-slate-200 truncate"),
+                        Span(
+                            f"{face_count} {'face' if face_count == 1 else 'faces'}",
+                            cls="text-xs text-slate-500",
+                        ),
+                        cls="flex flex-col min-w-0",
+                    ),
+                    href=f"/photo/{photo_id}",
+                    cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer",
+                    data_testid="search-photo-result",
+                )
+            )
+
     return Div(*items)
 
 
