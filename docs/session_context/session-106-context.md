@@ -1,6 +1,6 @@
 # Session 106 Context — Fox Triage Sprint + Rhodes Identity Labeling
 
-**Predecessor:** Session 105b (data integrity, running in parallel)
+**Predecessor:** Session 105b (data integrity — COMPLETE, deployed, data_parity.synced=true)
 **Priority:** P1 — user workflow session
 
 ## Purpose
@@ -19,13 +19,9 @@ Nolan needs to use the platform for productive triage work:
 
 ## Known Issues Going In
 - 3 pre-existing flaky xdist tests (ordering issues, not functional bugs)
-- data_parity.synced=false (being fixed in parallel Session 105b)
+- data_parity.synced=true (fixed Session 105b — 15 structural tests guard all write paths)
 - BACKLOG has ~30 open P1/P2 items from previous sessions
-
-## Parallel Session 105b
-Running simultaneously — modifies backend data write paths only.
-Session 106 should avoid editing: supabase_data.py, main.py save functions,
-upload_routes.py ingest sync, sync_routes.py push endpoint.
+- DATA-015 (dead sync functions) FIXED — birth_year_estimates + person_comments now synced
 
 ## Breadcrumbs
 - Speed-run: PRD-039 (docs/prds/039_speed_run.md)

@@ -2,7 +2,7 @@
 
 **Context:** docs/session_context/session-106-context.md
 **Priority:** P1 — user workflow session (triage + feedback collection)
-**Runs in parallel with:** Session 105b (data integrity — backend only, no UI changes)
+**Predecessor:** Session 105b (data integrity — COMPLETE, deployed, data_parity.synced=true)
 
 ## Overview
 
@@ -68,20 +68,5 @@ Based on Phase 1+2 feedback:
 
 ## Non-Goals
 - No ML pipeline changes
-- No data model changes (Session 105b handles that)
 - No architecture changes
 - Focus is UX feedback and quick fixes
-
-## Conflict Avoidance with Session 105b
-Session 105b modifies ONLY:
-- `app/supabase_data.py` (shadow write functions)
-- `app/main.py` (save_registry, save_photo_registry)
-- `app/upload_routes.py` (_background_ingest Supabase sync)
-- `app/sync_routes.py` (push endpoint, reconcile endpoint)
-- `scripts/reconcile_supabase.py` (new file)
-
-Session 106 should NOT modify these files. UX fixes should be in:
-- `app/identity_routes.py`, `app/page_routes.py`, `app/estimate_routes.py`
-- `app/compare_routes.py`, `app/discoveries_routes.py`
-- CSS/JS in templates
-- Route-specific bug fixes
