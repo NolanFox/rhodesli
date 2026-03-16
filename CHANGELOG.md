@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.16] — 2026-03-16 (Session 111 + 111b: Community Prefix Sweep + UX Fix Sprint)
+
+### Fixed
+- **Community prefix sweep** — 80+ hardcoded links across 11 route files now use `nav_prefix` for correct `/c/{slug}/` community context. Files: discoveries, estimate, match_facecompare, event, identity, compare, page, admin, browse, notification, person routes.
+- **FB-026**: Suggested matches in cluster review now sorted by embedding distance (closest ML match first) instead of face count.
+- **FB-052**: Confirm button in triage shows "Confirm as {Name}" when a strong match exists, giving merge context before action.
+- **FB-059**: Discovery tab shows loading skeleton (3 pulsing placeholder cards) while HTMX fetches content.
+- **Session 111 fixes**: Community filter on speed-run, CI test, people page scoping, person page auto-redirect, merge error messages, Select All checkbox.
+
+### Added
+- **Regression test** — `test_community_prefix_audit.py` greps all route files for hardcoded link patterns (`/person/`, `/photo/`, `HX-Redirect`) and fails if found. Prevents future community prefix regressions.
+
 ## [v0.99.15] — 2026-03-16 (Session 109 + 109b: Cross-Batch Clustering — PRD-049)
 
 ### Added

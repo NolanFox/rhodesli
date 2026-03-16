@@ -24,8 +24,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - ~~**COMMUNITY-013**: Admin page headers show "Rhodesli" instead of community name~~ FIXED (Session 96d) — admin headers use community name
 - ~~**COMMUNITY-014**: Cross-community photos/faces have no community indicator~~ FIXED (Session 96d) — "From [Community Name]" badges on neighbor_card + discovery cards
 
-### P1 — Community Link Scoping
-- **COMMUNITY-015**: Internal photo/person links don't include community prefix — clicking a photo from Fox Family browse navigates to `/photo/{id}` (Rhodes context) instead of `/c/fox-family/photo/{id}`. Requires updating hundreds of `href=f"/photo/{id}"` references across all route files. Source: Session 96d browser verification.
+### P1 — Community Link Scoping — MOSTLY FIXED (Session 111 + 111b)
+- ~~**COMMUNITY-015**: Internal photo/person links don't include community prefix.~~ MOSTLY FIXED (Session 111b) — 80+ links fixed across 11 route files. Regression test `test_community_prefix_audit.py` prevents future regressions. Remaining edge cases may exist in dynamically generated JS or template strings. Source: Session 96d browser verification, Session 111b comprehensive sweep.
 
 ### P1 — Default Community Routing Risk (COMMUNITY-017)
 - **COMMUNITY-017**: Root URL `/` defaults to Rhodes community. External users (not Rhodes/Fox family members) who visit the site and upload photos would accidentally add them to the Rhodes archive. As we scale to more communities and share tools more widely (e.g., `/tools/estimate`), this becomes a real risk. **Needs**: (1) Community selector on first visit or signup, (2) Neutral landing page at `/` that doesn't default to any community, (3) Upload requires explicit community selection if user belongs to multiple or none. **Scope**: Architectural — ties into WORKSPACE-001 (personal archive auto-creation) and WORKSPACE-005 (community discovery page). Must be solved before wider sharing. Source: Session 96e-cont5 user feedback.

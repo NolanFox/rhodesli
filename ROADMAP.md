@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.8 · ~4380 tests · 943 photos · 3433 identities · 95 confirmed
+Current: v0.99.16 · ~4519 tests · 943 photos · 3433 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -130,6 +130,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-16: **v0.99.16 — Session 111 + 111b**: Community Prefix Sweep + UX Fix Sprint. 80+ community prefix gaps fixed across 11 route files (3 parallel worktree subagents). Regression test `test_community_prefix_audit.py` prevents future gaps. FB-026 suggestions sorted by embedding distance. FB-052 confirm button shows merge context. FB-059 discovery loading skeleton. COMMUNITY-015 substantially resolved. 4519 tests pass. Deploy SUCCESS.
 
 - [x] 2026-03-16: **v0.99.15 — Session 109 + 109b**: Cross-Batch Clustering (PRD-049). `core/cross_batch_matching.py` compares new faces against ALL existing identities. Wired into upload pipeline, admin recluster, and post-confirm. 1355 cross-batch matches, 1130 proposals written to production. Recluster Supabase writes, community filter fix, CI green. James Fields Person 3474 validated at distance 0.87. AD-226. 20 tests. Deploy SUCCESS.
 
