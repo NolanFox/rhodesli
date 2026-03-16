@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo implementation); S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S} (create before ending)\" >&2; exit 2; fi; if [ ! -f \"docs/session_logs/session-${S}-log.md\" ]; then echo \"BLOCKED: Session log missing: docs/session_logs/session-${S}-log.md (create before ending)\" >&2; exit 2; fi; fi; if [ \"$MODE\" = \"interactive\" ]; then DIRTY=$(git status --porcelain -- \":!.claude/commits_since_clear.txt\" \":!.claude/session_mode.txt\"); else DIRTY=$(git status --porcelain); fi; if [ -n \"$DIRTY\" ]; then echo \"BLOCKED: Uncommitted files (commit before ending session)\" >&2; echo \"$DIRTY\" >&2; exit 2; fi; exit 0'",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-gate.sh\"",
             "timeout": 30
           }
         ]
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo implementation); if [ \"$MODE\" = \"interactive\" ]; then exit 0; fi; COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"BLOCKED: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\" >&2; exit 2; fi; exit 0'",
+            "command": "bash -c 'MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo implementation); if [ \"$MODE\" = \"interactive\" ] || [ \"$MODE\" = \"continuation\" ]; then exit 0; fi; COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"BLOCKED: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\" >&2; exit 2; fi; exit 0'",
             "timeout": 5
           }
         ]
