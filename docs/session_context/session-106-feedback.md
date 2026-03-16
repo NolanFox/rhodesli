@@ -13,6 +13,11 @@
 | FB-007 | Photos section | No photo search by filename — when you have a filename from Google Photos (or any external source) and want to find it in the archive, there's no way to search. Should support filename, collection name, or any photo metadata search | P1 | OPEN | |
 | FB-008 | Find Similar panel | No reciprocal rank indicator — when viewing matches for Person A, you can't see whether Person A is ALSO the top match for the suggested person. Mutual #1 matches are strong signals; asymmetric matches (where the suggestion's real top match is someone else like Esther Burd) are likely false positives. Show "Rank N for this person" next to each suggestion | P1 | OPEN | |
 
+| FB-009 | Compare tool — person search | After selecting a person (e.g., Morris Shane), the search dropdown and results list remain visible. Should collapse/clear after selection to reduce clutter | P2 | OPEN | |
+| FB-010 | Compare tool — community scoping | Compare searches across ALL communities — Rhodes people show up when comparing Fox Family people. No way to filter by community. At scale (hundreds of communities) this becomes unusable noise. Future: community filter or default-to-current-community | P2 | OPEN | |
+| FB-011 | Compare tool — results context | Results show score (20%) and distance (1.40) but don't show the rank of this comparison relative to other matches. "Is Morris Shane in Person 2945's top 5?" is unanswered. The small text "best is 31% (Unidentified Person 193)" partially addresses this but is buried and unclear — needs prominence and clearer language like "Ranked #N of N matches for this person" | P1 | OPEN | |
+| FB-012 | Compare tool — overall UX | General confusion about what the results mean and how to interpret them for identification decisions. The tool shows data but doesn't help the user reach a conclusion. Consider: summary verdict, mutual match indicator, "likely same person" / "unlikely" with explanation | P2 | OPEN | |
+
 ## Rhodes Community Labeling Feedback
 | # | Page/Action | Issue | Priority | Status | BACKLOG |
 |---|------------|-------|----------|--------|---------|
