@@ -30,7 +30,8 @@ if [ "$MODE" = "interactive" ]; then
     DIRTY=$(git status --porcelain \
         -- ':!.claude/commits_since_clear.txt' \
            ':!.claude/session_mode.txt' \
-           ':!.claude/current_session.txt')
+           ':!.claude/current_session.txt' \
+           ':!data/identities.json')
     if [ -n "$DIRTY" ]; then
         echo "BLOCKED: Uncommitted files (commit or restore before ending)" >&2
         echo "$DIRTY" >&2
@@ -57,11 +58,13 @@ else
     fi
 fi
 
-# Check for uncommitted files (exclude ephemeral state files)
+# Check for uncommitted files (exclude ephemeral state + production-origin data)
+# data/identities.json drifts from Supabase runtime syncs — never commit it (Lesson 141)
 DIRTY=$(git status --porcelain \
     -- ':!.claude/commits_since_clear.txt' \
        ':!.claude/session_mode.txt' \
-       ':!.claude/current_session.txt')
+       ':!.claude/current_session.txt' \
+       ':!data/identities.json')
 if [ -n "$DIRTY" ]; then
     echo "BLOCKED: Uncommitted files (commit before ending session)" >&2
     echo "$DIRTY" >&2
