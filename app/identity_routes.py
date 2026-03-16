@@ -93,7 +93,8 @@ def post(
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         identity = registry.get_identity(identity_id)
@@ -355,7 +356,7 @@ def post(
 
 
 @rt("/api/identity/{identity_id}/reject-match/{neighbor_id}", methods=["POST"])
-def post(identity_id: str, neighbor_id: str, sess=None):
+def post(identity_id: str, neighbor_id: str, sess=None, request=None):
     """Record a negative match between two identities and remove the tile."""
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
@@ -365,7 +366,8 @@ def post(identity_id: str, neighbor_id: str, sess=None):
     registry = _main_mod.load_registry()
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     try:
         registry.get_identity(identity_id)
     except KeyError:
@@ -1523,7 +1525,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{source_id}/reject/{target_id}")
-def post(source_id: str, target_id: str, sess=None):
+def post(source_id: str, target_id: str, sess=None, request=None):
     """
     Record that two identities are NOT the same person (D2, D4). Requires admin.
     """
@@ -1540,12 +1542,13 @@ def post(source_id: str, target_id: str, sess=None):
         )
 
     # Guard merged identities (UX-038)
+    nav_prefix = _nav_prefix_from_request(request)
     is_merged, canonical_id = _main_mod._check_merged_identity(source_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     is_merged, canonical_id = _main_mod._check_merged_identity(target_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     # Validate both identities exist
     try:
@@ -1584,7 +1587,7 @@ def post(source_id: str, target_id: str, sess=None):
 
 
 @rt("/api/identity/{source_id}/unreject/{target_id}")
-def post(source_id: str, target_id: str, sess=None):
+def post(source_id: str, target_id: str, sess=None, request=None):
     """Undo "Not Same Person" rejection (D5). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -1599,12 +1602,13 @@ def post(source_id: str, target_id: str, sess=None):
         )
 
     # Guard merged identities (UX-038)
+    nav_prefix = _nav_prefix_from_request(request)
     is_merged, canonical_id = _main_mod._check_merged_identity(source_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     is_merged, canonical_id = _main_mod._check_merged_identity(target_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     # Validate both identities exist
     try:
@@ -1768,12 +1772,13 @@ def post(
         )
 
     # Guard merged identities (UX-038)
+    nav_prefix = _nav_prefix_from_request(request)
     is_merged, canonical_id = _main_mod._check_merged_identity(target_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     is_merged, canonical_id = _main_mod._check_merged_identity(source_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     # Validate both identities exist
     try:
@@ -2130,7 +2135,7 @@ def post(identity_id: str, sess=None):
 
 
 @rt("/api/identity/{identity_id}/bulk-merge")
-def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
+def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
     """
     Bulk merge multiple identities into one target. Requires admin.
 
@@ -2159,7 +2164,8 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
     # Guard merged target identity (UX-038)
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     photo_registry = _main_mod.load_photo_registry()
 
@@ -2208,7 +2214,7 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
 
 
 @rt("/api/identity/{identity_id}/bulk-reject")
-def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
+def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
     """
     Bulk mark multiple identities as Not Same. Requires admin.
     """
@@ -2235,7 +2241,8 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
     # Guard merged identity (UX-038)
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     rejected_count = 0
     for target_id in bulk_ids:
@@ -2551,7 +2558,8 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -3328,7 +3336,7 @@ def post(face_id: str, sess=None, request=None):
 
 # --- INSTRUMENTATION SKIP ENDPOINT ---
 @rt("/api/identity/{id}/skip")
-def post(id: str, sess=None):
+def post(id: str, sess=None, request=None):
     """Log the skip action. Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3336,7 +3344,8 @@ def post(id: str, sess=None):
     registry = _main_mod.load_registry()
     is_merged, canonical_id = _main_mod._check_merged_identity(id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     _main_mod.get_event_recorder().record("SKIP", {"identity_id": id})
     # No return needed as this is fire-and-forget for logging
     # The UI handles the DOM move client-side
@@ -3440,7 +3449,8 @@ def post(
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -3537,7 +3547,8 @@ def post(
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -3626,7 +3637,8 @@ def post(
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -3754,7 +3766,8 @@ def post(identity_id: str, sess=None, request=None):
     registry = _main_mod.load_registry()
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     return (
         _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
         _main_mod.toast("Skipped for now.", "info"),
@@ -3868,7 +3881,8 @@ def post(identity_id: str, sess=None, request=None):
 
     is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
     if is_merged:
-        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
