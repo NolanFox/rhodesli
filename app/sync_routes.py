@@ -1085,6 +1085,48 @@ async def post(request, sess):
         except Exception as xb_err:
             results["cross_batch_error"] = str(xb_err)
 
+        # Step 4: Auto-tag untagged identities to their photo's community
+        # Fixes orphan-repair identities that were created without community tagging (Session 108)
+        if not dry_run and community_id:
+            try:
+                from app.supabase_data import add_identity_to_community, load_photos_for_community
+
+                community_photo_ids = set(load_photos_for_community(community_id) or [])
+                face_to_photo_map = {}
+                if photo_reg:
+                    face_to_photo_map = getattr(photo_reg, "face_to_photo", {})
+                    if not face_to_photo_map:
+                        face_to_photo_map = getattr(photo_reg, "_face_to_photo", {})
+
+                tagged = 0
+                for iid, identity in all_ids.items():
+                    if identity.get("merged_into"):
+                        continue
+                    existing_communities = identity.get("identity_communities", [])
+                    if community_id in existing_communities:
+                        continue
+                    # Check if any face belongs to a photo in this community
+                    face_ids = []
+                    for a in identity.get("anchor_ids", []):
+                        if isinstance(a, str):
+                            face_ids.append(a)
+                    face_ids.extend(identity.get("candidate_ids", []))
+
+                    in_community = False
+                    for fid in face_ids:
+                        pid = face_to_photo_map.get(fid)
+                        if pid and pid in community_photo_ids:
+                            in_community = True
+                            break
+
+                    if in_community:
+                        if add_identity_to_community(iid, community_id):
+                            tagged += 1
+
+                results["community_tagged"] = tagged
+            except Exception as tag_err:
+                results["community_tag_error"] = str(tag_err)
+
         if not dry_run:
             _main_mod._invalidate_all_caches()
 

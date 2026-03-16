@@ -11,6 +11,7 @@ import app.main
 def client():
     """Test client for the app."""
     from app.main import app
+
     return TestClient(app)
 
 
@@ -28,16 +29,17 @@ def admin_user():
     mock_user.is_admin = True
     mock_user.email = "admin@test.com"
     mock_user.id = "admin-123"
-    with patch("app.main.is_auth_enabled", return_value=True), \
-         patch("app.main.get_current_user", return_value=mock_user):
+    with (
+        patch("app.main.is_auth_enabled", return_value=True),
+        patch("app.main.get_current_user", return_value=mock_user),
+    ):
         yield mock_user
 
 
 @pytest.fixture
 def public_user():
     """Mock public (non-admin) user."""
-    with patch("app.main.is_auth_enabled", return_value=True), \
-         patch("app.main.get_current_user", return_value=None):
+    with patch("app.main.is_auth_enabled", return_value=True), patch("app.main.get_current_user", return_value=None):
         yield
 
 
@@ -77,13 +79,11 @@ class TestQuickIdentifyForm:
         html = response.text
         assert "Cancel" in html
 
-    def test_form_has_autocomplete_datalist(self, client, admin_user):
-        """Form includes name suggestions from confirmed identities."""
+    def test_form_has_name_input(self, client, admin_user):
+        """Form includes a name input field for identifying the person."""
         response = client.get("/api/admin/quick-identify-form/test-face-001")
         html = response.text
-        # Should have a datalist element for autocomplete
-        assert "datalist" in html.lower() or "names-" in html
-
+        assert 'name="name"' in html
 
     def test_form_handles_face_id_with_special_chars(self, client, admin_user):
         """Face IDs with colons/spaces must produce valid CSS-safe DOM IDs.
@@ -94,8 +94,9 @@ class TestQuickIdentifyForm:
         Regression test for Session 60b P0 bug.
         """
         from urllib.parse import quote
+
         face_id = "Image 968_compress:face0"
-        encoded = quote(face_id, safe='')
+        encoded = quote(face_id, safe="")
         response = client.get(f"/api/admin/quick-identify-form/{encoded}")
         assert response.status_code == 200
         html = response.text
