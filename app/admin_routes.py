@@ -1948,6 +1948,12 @@ def get(request, sess=None):
                         Div(
                             Span("Merge Suggestion", cls="text-sm font-bold text-purple-400"),
                             Span(f"by {a['submitted_by']}", cls="text-xs text-slate-400 ml-2"),
+                            Span(
+                                _format_submitted_at(a.get("submitted_at", "")),
+                                cls="text-xs text-slate-500 ml-2",
+                            )
+                            if a.get("submitted_at")
+                            else None,
                             guest_badge,
                             cls="flex items-center mb-3",
                         ),
@@ -2063,11 +2069,32 @@ def get(request, sess=None):
                                 f", confirmed by {len(a.get('confirmations', []))} other{'s' if len(a.get('confirmations', [])) != 1 else ''}"
                                 if a.get("confirmations")
                                 else ""
+                            )
+                            + (
+                                f" · {_format_submitted_at(a.get('submitted_at', ''))}" if a.get("submitted_at") else ""
                             ),
                             cls="text-xs text-slate-500",
                         ),
                         P(f"Reason: {a.get('reason', 'none')}", cls="text-xs text-slate-500")
                         if a.get("reason")
+                        else None,
+                        # Auto-confirm checkbox (Session 107b Fix 2)
+                        Div(
+                            Input(
+                                type="checkbox",
+                                name=f"auto_confirm_{ann_id}",
+                                id=f"auto-confirm-{ann_id}",
+                                checked=True,
+                                cls="mr-2 accent-emerald-500",
+                            ),
+                            Label(
+                                "Also confirm this person",
+                                **{"for": f"auto-confirm-{ann_id}"},
+                                cls="text-xs text-slate-400 cursor-pointer",
+                            ),
+                            cls="flex items-center mt-2",
+                        )
+                        if a["type"] == "name_suggestion"
                         else None,
                         Div(
                             Button(
@@ -2075,6 +2102,7 @@ def get(request, sess=None):
                                 hx_post=f"/admin/approvals/{ann_id}/approve",
                                 hx_target=f"#annotation-{ann_id}",
                                 hx_swap="outerHTML",
+                                hx_include=f"#auto-confirm-{ann_id}",
                                 cls="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500",
                             ),
                             Button(
@@ -2202,8 +2230,8 @@ def post(sess=None):
 
 
 @rt("/admin/approvals/{ann_id}/approve")
-def post(ann_id: str, sess=None):
-    """Approve an annotation. Updates target record."""
+def post(ann_id: str, sess=None, **kwargs):
+    """Approve an annotation. Updates target record. Optional auto-confirm."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -2262,7 +2290,19 @@ def post(ann_id: str, sess=None):
                 ann["target_id"],
                 ann["value"],
                 user_source="approved_name_suggestion",
+                annotation_id=ann_id,
             )
+            # Auto-confirm if checkbox was checked (Session 107b Fix 2)
+            auto_confirm_key = f"auto_confirm_{ann_id}"
+            auto_confirm = kwargs.get(auto_confirm_key, "")
+            if auto_confirm == "on" and identity.get("state") != "CONFIRMED":
+                registry.confirm_identity(ann["target_id"], user_source="auto_confirm_on_approve")
+                _main_mod.log_user_action(
+                    "AUTO_CONFIRM_ON_APPROVE",
+                    identity_id=ann["target_id"],
+                    annotation_id=ann_id,
+                    admin=user.email if user else "admin",
+                )
             _main_mod.save_registry(registry)
     elif ann["type"] == "merge_suggestion":
         # Execute the merge
@@ -2542,6 +2582,34 @@ def post(ann_id: str, sess=None):
     # Return the annotation back to its original pending card form
     # Redirect browser to refresh the approvals page
     return Response("", status_code=200, headers={"HX-Redirect": "/admin/approvals"})
+
+
+def _format_submitted_at(submitted_at: str) -> str:
+    """Format a submission timestamp as relative time string."""
+    if not submitted_at:
+        return ""
+    try:
+        from datetime import datetime, timezone
+
+        ts_str = submitted_at.replace("Z", "+00:00")
+        if "+" not in ts_str and "-" not in ts_str[10:]:
+            ts_str += "+00:00"
+        dt = datetime.fromisoformat(ts_str)
+        now = datetime.now(dt.tzinfo) if dt.tzinfo else datetime.now()
+        diff = now - dt
+        seconds = int(diff.total_seconds())
+        if seconds < 60:
+            return "just now"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes}m ago"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours}h ago"
+        days = hours // 24
+        return f"{days}d ago"
+    except Exception:
+        return submitted_at[:16]
 
 
 def _log_audit(action: str, annotation_id: str, admin: str, details: str = ""):

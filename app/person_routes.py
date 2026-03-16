@@ -58,6 +58,42 @@ def _bbox_iou(box_a, box_b) -> float:
     return inter_area / union_area
 
 
+def _name_provenance_line(person_id: str, is_admin: bool):
+    """Show provenance of this person's name — who suggested it, when approved.
+
+    Only shown for admins. Returns None if no provenance is available.
+    """
+    if not is_admin:
+        return None
+
+    try:
+        annotations = _main_mod._load_annotations()
+        for ann in annotations.get("annotations", {}).values():
+            if (
+                ann.get("target_id") == person_id
+                and ann.get("type") == "name_suggestion"
+                and ann.get("status") == "approved"
+            ):
+                parts = []
+                if ann.get("submitted_by"):
+                    parts.append(f"Suggested by {ann['submitted_by']}")
+                if ann.get("submitted_at"):
+                    parts.append(f"on {ann['submitted_at'][:10]}")
+                if ann.get("reviewed_by"):
+                    parts.append(f"approved by {ann['reviewed_by']}")
+                if ann.get("reviewed_at"):
+                    parts.append(f"on {ann['reviewed_at'][:10]}")
+                if parts:
+                    return P(
+                        " · ".join(parts),
+                        cls="text-xs text-slate-500 mt-1",
+                        data_testid="name-provenance",
+                    )
+    except Exception:
+        pass
+    return None
+
+
 def _photo_context_conflict(photo_meta: dict | None, registry, person_id: str) -> bool:
     """Return True when this person's presence in the photo is disputed."""
     if not photo_meta or not person_id:
@@ -1073,6 +1109,7 @@ def public_person_page(
                     Div(
                         H1(display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3"),
                         badge,
+                        _name_provenance_line(person_id, is_admin),
                         cls="text-center mb-3",
                     ),
                     # Contextual explanation for unidentified persons (Gap 1, Session 83a-cont)

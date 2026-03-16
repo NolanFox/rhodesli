@@ -1061,6 +1061,7 @@ class IdentityRegistry:
         identity_id: str,
         new_name: str,
         user_source: str,
+        annotation_id: str = "",
     ) -> str:
         """
         Rename an identity.
@@ -1107,16 +1108,20 @@ class IdentityRegistry:
         identity["version_id"] += 1
         identity["updated_at"] = datetime.now(timezone.utc).isoformat()
 
+        rename_metadata = {
+            "previous_name": previous_name,
+            "new_name": new_name,
+        }
+        if annotation_id:
+            rename_metadata["annotation_id"] = annotation_id
+
         self._record_event(
             identity_id=identity_id,
             action=ActionType.RENAME.value,
             face_ids=[],
             user_source=user_source,
             previous_version_id=previous_version,
-            metadata={
-                "previous_name": previous_name,
-                "new_name": new_name,
-            },
+            metadata=rename_metadata,
         )
 
         return previous_name
