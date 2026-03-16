@@ -652,7 +652,7 @@ def _fc_page(title_text: str, *content, og_title: str = "", og_desc: str = "", o
     )
 
 
-def _fc_result_card(result: dict, crop_files: set, index: int) -> object | None:
+def _fc_result_card(result: dict, crop_files: set, index: int, nav_prefix: str = "") -> object | None:
     """Build a museum-quality result card for facecompare."""
     fid = result["face_id"]
     dist = result["distance"]
@@ -712,7 +712,7 @@ def _fc_result_card(result: dict, crop_files: set, index: int) -> object | None:
         links.append(
             A(
                 f"Explore {name.split()[0]}'s story in the archive",
-                href=f"/person/{identity_id}",
+                href=f"{nav_prefix}/person/{identity_id}",
                 style=f"color: {tc['color']}; font-size: 0.8rem; text-decoration: none;",
                 cls="hover:underline block mt-3",
             )
@@ -721,7 +721,7 @@ def _fc_result_card(result: dict, crop_files: set, index: int) -> object | None:
         links.append(
             A(
                 "View in the archive",
-                href=f"/photo/{photo_id}",
+                href=f"{nav_prefix}/photo/{photo_id}",
                 style="color: var(--fc-warm); font-size: 0.8rem; text-decoration: none;",
                 cls="hover:underline block mt-3",
             )
@@ -776,6 +776,7 @@ def _fc_results_section(
     upload_image_url: str = "",
     face_count: int = 0,
     result_id: str = "",
+    nav_prefix: str = "",
 ) -> object:
     """Build the full results section for facecompare."""
     parts = []
@@ -874,7 +875,7 @@ def _fc_results_section(
         tier_results = [r for r in results if r.get("tier") == tier_name]
         if not tier_results:
             continue
-        cards = [_fc_result_card(r, crop_files, i) for i, r in enumerate(tier_results)]
+        cards = [_fc_result_card(r, crop_files, i, nav_prefix=nav_prefix) for i, r in enumerate(tier_results)]
         cards = [c for c in cards if c is not None]
         if not cards:
             continue

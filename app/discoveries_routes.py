@@ -348,6 +348,10 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
         community = get_community_by_slug("rhodes")
     community_identity_ids = _main_mod._get_community_identity_ids(community)
 
+    # Community URL prefix for user-facing links
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     registry = _main_mod.load_registry()
     discoveries = _main_mod._compute_discoveries(registry, community_identity_ids=community_identity_ids)
     crop_files = _main_mod.get_crop_files()
@@ -448,7 +452,9 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     sections = []
 
     # Build Help Identify section early (shown even when no ML matches)
-    help_section = _build_help_identify_section(registry, crop_files, community_identity_ids=community_identity_ids)
+    help_section = _build_help_identify_section(
+        registry, crop_files, community_identity_ids=community_identity_ids, nav_prefix=nav_prefix
+    )
 
     if not all_items:
         filter_msg = (
@@ -478,7 +484,9 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     if tier_1_items:
         tier_1_cards = []
         for d in tier_1_items:
-            card = _build_discovery_card(d, registry, crop_files, tier=1, current_community=community)
+            card = _build_discovery_card(
+                d, registry, crop_files, tier=1, current_community=community, nav_prefix=nav_prefix
+            )
             if card:
                 tier_1_cards.append(card)
         if tier_1_cards:
@@ -512,7 +520,9 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
     if tier_2_items:
         tier_2_cards = []
         for d in tier_2_items:
-            card = _build_discovery_card(d, registry, crop_files, tier=2, current_community=community)
+            card = _build_discovery_card(
+                d, registry, crop_files, tier=2, current_community=community, nav_prefix=nav_prefix
+            )
             if card:
                 tier_2_cards.append(card)
         if tier_2_cards:
@@ -648,7 +658,7 @@ def get(sess=None, request=None):
 # =============================================================================
 
 
-def _build_discovery_card(d, registry, crop_files, tier=2, current_community=None):
+def _build_discovery_card(d, registry, crop_files, tier=2, current_community=None, nav_prefix=""):
     """Build a single discovery card for the Discoveries page.
 
     Args:
@@ -657,6 +667,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
         crop_files: set of crop filenames
         tier: 1 (auto-added) or 2 (suggestion)
         current_community: current community dict for cross-community badges (COMMUNITY-014)
+        nav_prefix: community URL prefix (e.g. "/c/rhodes") for user-facing links
     """
 
     source_id = d["source_id"]
@@ -722,7 +733,11 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     for co_id, co_name, co_state in co_faces[:3]:
                         state_color = "text-green-400" if co_state == "CONFIRMED" else "text-slate-300"
                         co_labels.append(
-                            A(co_name, href=f"/person/{co_id}", cls=f"text-xs {state_color} hover:text-blue-300")
+                            A(
+                                co_name,
+                                href=f"{nav_prefix}/person/{co_id}",
+                                cls=f"text-xs {state_color} hover:text-blue-300",
+                            )
                         )
                     context_parts.append(
                         Div(
@@ -734,7 +749,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                 context_parts.append(
                     A(
                         "View photo",
-                        href=f"/photo/{photo_id}",
+                        href=f"{nav_prefix}/photo/{photo_id}",
                         cls="text-xs text-blue-400 hover:text-blue-300 underline",
                         data_testid="discovery-photo-link",
                     )
@@ -760,7 +775,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
     )
     source_img = A(
         source_img_el,
-        href=f"/person/{source_id}",
+        href=f"{nav_prefix}/person/{source_id}",
         cls="block cursor-pointer hover:opacity-80 transition-opacity",
         title=f"View {source_name}",
         data_testid="discovery-source-link",
@@ -781,7 +796,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
     )
     target_img = A(
         target_img_el,
-        href=f"/person/{target_id}",
+        href=f"{nav_prefix}/person/{target_id}",
         cls="block cursor-pointer hover:opacity-80 transition-opacity",
         title=f"View {target_name}",
         data_testid="discovery-target-link",
@@ -883,7 +898,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
             viewBox="0 0 24 24",
         ),
         Span("Compare"),
-        href=f"/compare?face_id={face_id_encoded}&person_id={target_id}",
+        href=f"{nav_prefix}/compare?face_id={face_id_encoded}&person_id={target_id}",
         cls="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-300 transition-colors",
         title="Compare side-by-side",
         data_testid="discovery-compare-link",
@@ -905,7 +920,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                 Div(
                     A(
                         source_name,
-                        href=f"/person/{source_id}",
+                        href=f"{nav_prefix}/person/{source_id}",
                         cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
                         title=source_name,
                         data_testid="discovery-source-name-link",
@@ -950,7 +965,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                 Div(
                     A(
                         target_name,
-                        href=f"/person/{target_id}",
+                        href=f"{nav_prefix}/person/{target_id}",
                         cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
                         title=target_name,
                         data_testid="discovery-target-name-link",
@@ -970,7 +985,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
     )
 
 
-def _build_help_identify_section(registry, crop_files, max_faces=6, community_identity_ids=None):
+def _build_help_identify_section(registry, crop_files, max_faces=6, community_identity_ids=None, nav_prefix=""):
     """Build the 'Help Identify' section showing top cold-case faces.
 
     These are unidentified faces (INBOX/PROPOSED/SKIPPED) that need community
@@ -1038,7 +1053,7 @@ def _build_help_identify_section(registry, crop_files, max_faces=6, community_id
                     else None,
                     cls="text-center",
                 ),
-                href=f"/identify/{_iid}",
+                href=f"{nav_prefix}/identify/{_iid}",
                 cls="block hover:opacity-80 transition-opacity",
                 data_testid="help-identify-card",
             )
@@ -1157,11 +1172,14 @@ def post(source_id: str, target_id: str, sess=None):
 
 
 @rt("/api/discovery/confirm")
-def post(face_id: str, target_id: str, source_id: str = "", sess=None):
+def post(face_id: str, target_id: str, source_id: str = "", sess=None, request=None):
     """Confirm a Tier 1 auto-clustered face. Logs to discovery_log.json (AD-179)."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     try:
         from urllib.parse import unquote
@@ -1172,7 +1190,7 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
         registry = _main_mod.load_registry()
         is_merged, canonical_id = _main_mod._check_merged_identity(target_id, registry)
         if is_merged:
-            return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+            return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
         target = registry.get_identity(target_id)
         if target:
             added = registry.add_candidate_face(

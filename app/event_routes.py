@@ -275,7 +275,7 @@ def _event_date_display(event):
     return "Date unknown"
 
 
-def _event_card(event, show_photo_count=False, show_participant_count=False):
+def _event_card(event, show_photo_count=False, show_participant_count=False, nav_prefix=""):
     """Render an event card for lists."""
     icon = EVENT_TYPE_ICONS.get(event.get("event_type", "other"), "📌")
     date_str = _event_date_display(event)
@@ -300,7 +300,7 @@ def _event_card(event, show_photo_count=False, show_participant_count=False):
             ),
             cls="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
         ),
-        href=f"/events/{event['id']}",
+        href=f"{nav_prefix}/events/{event['id']}",
         cls="block",
         data_testid=f"event-card-{event['id']}",
     )
@@ -413,11 +413,11 @@ def _event_form(event=None):
     )
 
 
-def photo_events_section(photo_id, is_admin=False):
+def photo_events_section(photo_id, is_admin=False, nav_prefix=""):
     """Build the events section for a photo detail page."""
     events = get_events_for_photo(photo_id)
 
-    event_items = [_event_card(e) for e in events]
+    event_items = [_event_card(e, nav_prefix=nav_prefix) for e in events]
 
     # Admin: add to event form
     add_to_event_form = None
@@ -476,14 +476,14 @@ def photo_events_section(photo_id, is_admin=False):
     )
 
 
-def person_events_section(identity_id):
+def person_events_section(identity_id, nav_prefix=""):
     """Build the life events section for a person detail page."""
     events = get_events_for_person(identity_id)
 
     if not events:
         return None
 
-    event_items = [_event_card(e) for e in events]
+    event_items = [_event_card(e, nav_prefix=nav_prefix) for e in events]
 
     return Div(
         H3(
@@ -573,8 +573,11 @@ def get(
         cls="mb-6",
     )
 
+    # Community URL prefix for user-facing links
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     # Event list
-    event_cards = [_event_card(e) for e in events]
+    event_cards = [_event_card(e, nav_prefix=nav_prefix) for e in events]
 
     # Create event section (admin only)
     create_section = None
@@ -852,11 +855,15 @@ def post(
     date_precision: str = "year",
     location_name: str = "",
     sess=None,
+    request=None,
 ):
     """Create a new event (admin only)."""
     admin_check = _check_admin(sess)
     if admin_check:
         return admin_check
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if not title or not event_type:
         return Div(
@@ -902,7 +909,7 @@ def post(
                 "Event created! ",
                 A(
                     "View event",
-                    href=f"/events/{event['id']}",
+                    href=f"{nav_prefix}/events/{event['id']}",
                     cls="text-indigo-400 hover:text-indigo-300 underline",
                 ),
                 cls="text-emerald-400 text-sm",

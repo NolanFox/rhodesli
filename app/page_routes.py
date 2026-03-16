@@ -12630,7 +12630,9 @@ def public_photo_page(
             # Face alignment descriptions (PRD-015 coordinate bridging)
             _main_mod._build_face_alignment_section(photo_id, is_admin),
             # Life events linked to this photo (PRD-011)
-            _main_mod.event_routes.photo_events_section(photo_id, is_admin) if is_admin else None,
+            _main_mod.event_routes.photo_events_section(photo_id, is_admin, nav_prefix=nav_prefix)
+            if is_admin
+            else None,
             # Call to action — link to first unidentified face from this photo
             # More prominent when ALL faces are unidentified (UX-105)
             Section(

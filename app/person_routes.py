@@ -152,11 +152,11 @@ def _photo_context_conflict(photo_meta: dict | None, registry, person_id: str) -
     return False
 
 
-def _life_events_section(person_id: str):
+def _life_events_section(person_id: str, nav_prefix: str = ""):
     """Build the life events section for person pages (PRD-011). Lazy import to avoid circular."""
     from app.event_routes import person_events_section
 
-    return person_events_section(person_id)
+    return person_events_section(person_id, nav_prefix=nav_prefix)
 
 
 def _person_comments_section(person_id: str, is_admin: bool = False):
@@ -1473,7 +1473,7 @@ def public_person_page(
                     # Approved community annotations
                     annotations_section if annotations_section else None,
                     # Life events (PRD-011)
-                    _life_events_section(person_id),
+                    _life_events_section(person_id, nav_prefix=nav_prefix),
                     # Comments section
                     _person_comments_section(person_id, is_admin),
                     cls="max-w-5xl mx-auto px-6 py-10",

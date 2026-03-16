@@ -30,7 +30,7 @@ def _tools_nav_bar(active_tool=None):
 
 
 @rt("/tools/estimate")
-def get(photo: str = "", sess=None):
+def get(photo: str = "", sess=None, request=None):
     """
     Year Estimation Tool — estimate when a photo was taken.
 
@@ -39,6 +39,9 @@ def get(photo: str = "", sess=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -99,7 +102,7 @@ def get(photo: str = "", sess=None):
                     f"{face_count} face{'s' if face_count != 1 else ''}",
                     cls="text-[10px] text-slate-500 block text-center mt-0.5",
                 ),
-                href=f"/estimate?photo={pid}",
+                href=f"{nav_prefix}/estimate?photo={pid}",
                 cls="block",
             )
         )
@@ -213,7 +216,7 @@ def get(photo: str = "", sess=None):
                 ),
                 A(
                     "View Photo Page",
-                    href=f"/photo/{photo}",
+                    href=f"{nav_prefix}/photo/{photo}",
                     cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors",
                 ),
                 A(
@@ -409,8 +412,11 @@ def get(photo: str = "", sess=None):
 
 
 @rt("/api/estimate/photos")
-def get(page: int = 0, sess=None):
+def get(page: int = 0, sess=None, request=None):
     """Load more photos for the estimate grid (HTMX partial)."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
+
     _main_mod._build_caches()
     page_size = 24
     all_photo_ids = list(_main_mod._photo_cache.keys()) if _main_mod._photo_cache else []
@@ -440,7 +446,7 @@ def get(page: int = 0, sess=None):
                     f"{face_count} face{'s' if face_count != 1 else ''}",
                     cls="text-[10px] text-slate-500 block text-center mt-0.5",
                 ),
-                href=f"/estimate?photo={pid}",
+                href=f"{nav_prefix}/estimate?photo={pid}",
                 cls="block",
             )
         )
