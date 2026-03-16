@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.11] — 2026-03-16 (Session 107b: Community Middleware Audit + Approvals UX)
+
+### Added
+- **Community explicit flag** — CommunityMiddleware sets `community_explicit=True` only when URL has `/c/{slug}/` prefix. `is_community_explicit()` helper for data-modifying routes.
+- **Upload community override** — Upload form includes hidden `upload_community` field so photos go to the correct community regardless of URL prefix. 7th community scoping bug fix.
+- **Approval card timestamps** — Submission timestamps rendered on approval cards via `_format_submitted_at()`.
+- **Auto-confirm on approve** — Checkbox "Also confirm this person" (default checked) on name suggestion approvals. Wires to `registry.confirm_identity()`.
+- **Annotation ID in rename history** — `rename_identity()` stores optional `annotation_id` in event metadata for audit trail.
+- **Person page name provenance** — Admin view shows "Suggested by X, approved by Y on Z" for approved name suggestions.
+- **Pending upload auto-expiry** — Startup cleanup marks entries as expired when staging dir is gone + older than 24h.
+- **APPROVAL-008/009** — New BACKLOG items for full audit trail and consistent approvals UX.
+- 23 new tests across 3 test files
+
+### Fixed
+- **Hook system redesign** — 3 session modes (implementation, interactive, continuation). Stop hook respects modes — no longer blocks when writing continuation prompts or during interactive triage. Post-commit gate warns (exit 0) instead of blocking. Pre-work gate allows session doc edits after commits.
+- **Upload form community_slug** — `upload_area()` now accepts `community_slug` parameter.
+
 ## [v0.99.10] — 2026-03-16 (Session 106b: Triage Fix Sprint)
 
 ### Added
