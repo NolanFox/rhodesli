@@ -131,6 +131,10 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [-] 2026-03-16: **Session 109**: Cross-Batch Clustering (PRD-049). Compare new upload faces against ALL existing faces. Proposals for INBOX-to-INBOX matches. Post-confirm re-matching. Upload match notifications. CI flaky test fix. See `docs/prds/049_cross_batch_clustering.md`.
+
+- [x] 2026-03-16: **v0.99.13 — Session 108b**: Bug Fix Sprint. FB-013 Compare button on person page fixed. FB-014 "View Photo" link made prominent. FB-015 sidebar photo search. Collage override NameError fix. 8 new tests. Deploy SUCCESS.
+
 - [x] 2026-03-16: **v0.99.12 — Session 108**: Gap Closure, Data Integrity Fix, Deploy. 25 unpushed commits deployed (Sessions 106b-107b). 13 orphan faces repaired (9 James Fields + 4 pre-existing). Startup orphan detection auto-repair. Embeddings sync endpoint `/api/sync/embeddings`. Data health endpoint `/api/health/data`. Push verification in stop-gate.sh. COMPARE-002 backlog item (community-scoped compare). Lessons 146-148. 8 new tests. Deploy SUCCESS.
 
 - [x] 2026-03-16: **v0.99.11 — Session 107b**: Community Middleware Audit + Approvals UX. Community explicit flag, upload community override, approval timestamps, auto-confirm, annotation provenance, person page name provenance, pending upload auto-expiry. Hook system redesign (3 modes). 23 new tests.

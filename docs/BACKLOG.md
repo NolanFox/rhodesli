@@ -362,6 +362,14 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 ### Route Error Investigation
 - [ ] **BUG-004: Verify /connect and /map stability** — Both routes had 500 errors in earlier sessions (Sessions 40-41). /map depends on PhotoRegistry.get_photo() and geocoded data. /connect depends on D3.js social graph. Verify both return 200 in production after deploy, check for ISEs under edge cases (missing data, bad IDs). Source: Session 78 Track 7 prompt.
 
+### Cross-Batch Clustering (PRD-049, Session 108 analysis)
+- [ ] **CLUSTER-001: Cross-batch matching core** — New `core/cross_batch_matching.py`. Compare new faces against ALL existing identities (not just CONFIRMED). Community-scoped, co-occurrence-aware. Source: PRD-049, Session 108 clustering analysis.
+- [ ] **CLUSTER-002: Wire cross-batch into upload pipeline** — After within-batch grouping in `_background_ingest()`, run cross-batch matching. Write proposals to ml_proposals + proposals.json. Source: PRD-049 Phase 2.
+- [ ] **CLUSTER-003: Wire cross-batch into admin recluster** — `/api/admin/recluster` triggers cross-batch for ALL INBOX faces. Source: PRD-049 Phase 3.
+- [ ] **CLUSTER-004: Post-confirm re-matching** — After confirming an identity, re-run proposals against that new confirmed anchor. Source: PRD-049 Phase 4.
+- [ ] **CLUSTER-005: Upload match notifications** — Notify uploader when their photos match existing people. In-app notification + optional email via Resend. Source: PRD-049.
+- [ ] **CLUSTER-006: Merge monitoring dashboard** — Flag identities with high internal face variance, undo rate tracking, identities with 10+ faces. Source: Session 108 user feedback.
+
 ### Per-Identity Adaptive Thresholds
 - [ ] **ML-098: Per-identity adaptive thresholds for auto-clustering** — Current auto-clustering uses global thresholds (Tier 1 < 0.85, Tier 2 < 1.10). Per-identity thresholds based on within-cluster distance variance could improve precision. Big Leon's within-cluster max may exceed 1.10, meaning Tier 2 misses valid matches for high-variance identities. Requires per-identity distance stats from threshold analysis. Source: AD-179, docs/prds/024_auto_clustering.md "Out of Scope".
 
