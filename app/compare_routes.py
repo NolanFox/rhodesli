@@ -759,7 +759,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     )
 
 
-def _compare_result_card(result: dict, crop_files: set, index: int) -> object | None:
+def _compare_result_card(result: dict, crop_files: set, index: int, nav_prefix: str = "") -> object | None:
     """Build a single compare result card."""
     fid = result["face_id"]
     dist = result["distance"]
@@ -814,7 +814,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
     if state == "CONFIRMED" and identity_id:
         person_link = A(
             f"View {name.split()[0]}'s page",
-            href=f"/person/{identity_id}",
+            href=f"{nav_prefix}/person/{identity_id}",
             cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-1",
         )
 
@@ -873,7 +873,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
     )
 
 
-def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -> object:
+def _compare_results_grid(results: list, crop_files: set, result_id: str = "", nav_prefix: str = "") -> object:
     """Build the tiered results grid for face comparison (AD-067/AD-068).
     If result_id is provided, includes a shareable permalink."""
     if not results:
@@ -889,7 +889,7 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
     tiered: dict[str, list] = {t: [] for t in tier_order}
     for i, result in enumerate(results):
         tier = result.get("tier", "WEAK")
-        card = _compare_result_card(result, crop_files, i)
+        card = _compare_result_card(result, crop_files, i, nav_prefix=nav_prefix)
         if card:
             tiered[tier].append(card)
 
@@ -981,7 +981,7 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
 
 
 def _compare_summary_section(
-    results_by_face: list, crop_files: set, user_is_admin: bool, registry, rid: str = ""
+    results_by_face: list, crop_files: set, user_is_admin: bool, registry, rid: str = "", nav_prefix: str = ""
 ) -> object | None:
     """Build a Best Matches summary section aggregating top matches across all faces.
 
@@ -1072,7 +1072,7 @@ def _compare_summary_section(
         # Target link
         target_link = "#"
         if m["target_type"] == "person" and m["target_id"]:
-            target_link = f"/person/{m['target_id']}"
+            target_link = f"{nav_prefix}/person/{m['target_id']}"
         elif m["target_type"] == "photo" and m["target_id"]:
             target_link = f"/photo/{m['target_id']}"
 
@@ -1194,10 +1194,13 @@ def _compare_summary_section(
 
 
 @rt("/api/compare")
-def get(face_id: str = "", limit: int = 20, sess=None):
+def get(face_id: str = "", limit: int = 20, sess=None, request=None):
     """API endpoint for face comparison — returns results HTML partial."""
     if not face_id:
         return Div(P("No face selected.", cls="text-slate-500 text-center py-4"))
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     face_data = _main_mod.get_face_data()
     if face_id not in face_data:
@@ -1239,10 +1242,10 @@ def get(face_id: str = "", limit: int = 20, sess=None):
             "responses": [],
         }
     )
-    return _compare_results_grid(results, crop_files, result_id=rid)
+    return _compare_results_grid(results, crop_files, result_id=rid, nav_prefix=nav_prefix)
 
 
-def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> object:
+def _build_compare_results_view(face_ids: list, job_id: str, sess=None, request=None) -> object:
     """Build the interactive comparison results view after upload + ingest.
 
     Called when background ingest completes. Shows:
@@ -1252,6 +1255,9 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
     - Links to person pages and photo pages
     """
     from core.neighbors import find_similar_faces
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     _main_mod._build_caches()
     face_data = _main_mod.get_face_data()
@@ -1374,7 +1380,7 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
 
         # Face crop
         crop_url = _resolve_crop_url(fid, crop_files)
-        person_link = f"/person/{iid}" if iid else "#"
+        person_link = f"{nav_prefix}/person/{iid}" if iid else "#"
 
         match_cards = []
         for m in matches[:5]:
@@ -1411,7 +1417,7 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
                         Div(
                             A(
                                 m_name,
-                                href=f"/person/{m_iid}" if m_iid else "#",
+                                href=f"{nav_prefix}/person/{m_iid}" if m_iid else "#",
                                 cls="text-sm text-white hover:text-indigo-300 font-medium",
                             ),
                             Div(
@@ -1963,7 +1969,7 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: b
 
 
 @rt("/api/compare/status/{job_id}")
-def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
+def get(job_id: str, ws: str = "", target_ws: str = "", sess=None, request=None):
     """Poll compare upload status. On completion, show comparison results.
 
     Uses the same status file as Upload page (data/inbox/{job_id}.status.json).
@@ -2066,7 +2072,7 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
     if ws == "1":
         return _build_workspace_upload_complete(face_ids, job_id)
 
-    return _build_compare_results_view(face_ids, job_id, sess)
+    return _build_compare_results_view(face_ids, job_id, sess, request=request)
 
 
 @rt("/api/compare/search-person")
@@ -2124,13 +2130,16 @@ def get(q: str = "", job_id: str = "", sess=None):
 
 
 @rt("/api/compare/vs-person")
-def post(job_id: str = "", identity_id: str = "", sess=None):
+def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
     """Compare all faces from a compare upload against a specific person.
 
     Returns per-face match scores with context about the person's existing
     top archive matches. Supports merge/reject actions.
     """
     import json as _json_vs
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if not job_id or not identity_id:
         return Div(P("Missing parameters.", cls="text-red-400 text-sm"), id="compare-results")
@@ -2264,7 +2273,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     )
 
     # Side-by-side: uploaded photo + reference person
-    ref_person_link = f"/person/{identity_id}"
+    ref_person_link = f"{nav_prefix}/person/{identity_id}"
     photo_link = f"/photo/{photo_id}" if photo_id else "#"
     parts.append(
         Div(
@@ -2369,7 +2378,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
                 )
             )
 
-        person_link = f"/person/{fiid}" if fiid else "#"
+        person_link = f"{nav_prefix}/person/{fiid}" if fiid else "#"
 
         parts.append(
             Div(
@@ -2474,7 +2483,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
                 ),
                 A(
                     "Find Similar for " + ref_name,
-                    href=f"/person/{identity_id}",
+                    href=f"{nav_prefix}/person/{identity_id}",
                     cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block",
                 ),
                 cls="flex gap-3 justify-center flex-wrap",
@@ -2504,7 +2513,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
 
 
 @rt("/api/compare/from-photo")
-def get(photo_id: str = "", identity_id: str = "", sess=None):
+def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
     """Compare an existing archive photo's faces against a specific person.
 
     This enables the archive-to-compare flow: click "Compare" on a photo page,
@@ -2514,6 +2523,9 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     Saves result for sharing via /compare/result/{id}.
     """
     import numpy as np
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if not photo_id:
         return Div(P("Missing photo_id.", cls="text-red-400 text-sm"), id="compare-results")
@@ -2676,7 +2688,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
     # Build the response — reuse vs-person layout
     parts = []
-    ref_person_link = f"/person/{identity_id}"
+    ref_person_link = f"{nav_prefix}/person/{identity_id}"
     photo_link = f"/photo/{photo_id}"
 
     parts.append(
@@ -2779,7 +2791,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
                 )
             )
 
-        person_link_face = f"/person/{fiid}" if fiid else "#"
+        person_link_face = f"{nav_prefix}/person/{fiid}" if fiid else "#"
         parts.append(
             Div(
                 Div(
@@ -2877,7 +2889,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
                 ),
                 A(
                     f"Find Similar for {ref_name}",
-                    href=f"/person/{identity_id}",
+                    href=f"{nav_prefix}/person/{identity_id}",
                     cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block",
                 ),
                 cls="flex gap-3 justify-center flex-wrap",
@@ -2968,6 +2980,9 @@ async def post(request, sess=None):
     import time as _time
 
     t0 = _time.time()
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     form = await request.form()
     photos = form.getlist("photos")
@@ -3185,7 +3200,7 @@ async def post(request, sess=None):
                         ),
                         cls="flex flex-col items-center mb-3",
                     ),
-                    _compare_results_grid(pr.get("archive_matches", []), crop_files)
+                    _compare_results_grid(pr.get("archive_matches", []), crop_files, nav_prefix=nav_prefix)
                     if pr.get("archive_matches")
                     else P("No archive matches found.", cls="text-sm text-slate-500"),
                     cls="mb-8 p-4 bg-slate-800/20 rounded-lg border border-slate-700/30",
@@ -3206,11 +3221,14 @@ async def post(request, sess=None):
 
 
 @rt("/api/compare/upload/select")
-def post(upload_id: str = "", face_idx: int = 0, sess=None):
+def post(upload_id: str = "", face_idx: int = 0, sess=None, request=None):
     """Select a specific face from a multi-face upload for comparison."""
     from pathlib import Path as _Path
     import pickle
     from core.storage import can_write_r2, download_bytes_from_r2
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     # Try R2 first, then local filesystem
     faces_data = None
@@ -3270,7 +3288,7 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
             )
         )
 
-    parts.append(_compare_results_grid(results, crop_files))
+    parts.append(_compare_results_grid(results, crop_files, nav_prefix=nav_prefix))
     return Div(*parts, id="compare-results")
 
 
@@ -3339,11 +3357,13 @@ def post(upload_id: str = "", sess=None):
 
 
 @rt("/compare/result/{result_id}")
-def get(result_id: str, sess=None):
+def get(result_id: str, sess=None, request=None):
     """
     Shareable comparison result page — permalink for a specific comparison.
     No authentication required. Shows matches + response form.
     """
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
 
     data = _main_mod._load_comparison_results()
@@ -3450,13 +3470,13 @@ def get(result_id: str, sess=None):
         if not hero_match_url:
             hero_match_url = _resolve_crop_url(hero_match_fid, crop_files)
         if hero_match_id:
-            hero_match_link = f"/person/{hero_match_id}"
+            hero_match_link = f"{nav_prefix}/person/{hero_match_id}"
 
     # For upload_vs_person, prefer reference person as match side
     if ref_crop_url and ref_name and query_type == "upload_vs_person":
         hero_match_url = ref_crop_url
         hero_match_name = ref_name
-        hero_match_link = f"/person/{ref_id}" if ref_id else "#"
+        hero_match_link = f"{nav_prefix}/person/{ref_id}" if ref_id else "#"
 
     if hero_source_url or hero_match_url:
         # Positive question framing
@@ -3599,7 +3619,11 @@ def get(result_id: str, sess=None):
             bar_color = "bg-slate-600"
 
         person_link = (
-            A(name, href=f"/person/{m_identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium")
+            A(
+                name,
+                href=f"{nav_prefix}/person/{m_identity_id}",
+                cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium",
+            )
             if m_identity_id
             else Span(name, cls="text-sm text-white font-medium")
         )
@@ -4278,11 +4302,14 @@ async def post(request):
 
 
 @rt("/api/compare/pair/match")
-def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 0):
+def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 0, request=None):
     """Compute similarity between selected faces and summarize all cross matches."""
     import pickle
     import numpy as np
     from core.storage import can_write_r2, download_bytes_from_r2, get_upload_url
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if not upload_a or not upload_b:
         return Div(P("Both photos must have a face selected.", cls="text-red-400 text-sm"))
@@ -4392,7 +4419,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             archive_sections.append(
                 Div(
                     H4("Top archive matches for selected face A", cls="text-sm font-medium text-slate-300 mb-2"),
-                    _compare_results_grid(archive_a, crop_files),
+                    _compare_results_grid(archive_a, crop_files, nav_prefix=nav_prefix),
                     cls="mt-8",
                     data_testid="pair-archive-a",
                 )
@@ -4401,7 +4428,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             archive_sections.append(
                 Div(
                     H4("Top archive matches for selected face B", cls="text-sm font-medium text-slate-300 mb-2"),
-                    _compare_results_grid(archive_b, crop_files),
+                    _compare_results_grid(archive_b, crop_files, nav_prefix=nav_prefix),
                     cls="mt-8",
                     data_testid="pair-archive-b",
                 )
@@ -4579,7 +4606,9 @@ def _compute_comparison_score(source_emb, target_embs: list) -> dict:
 
 
 @rt("/api/compare/execute")
-def post(source_type: str = "", source_id: str = "", target_type: str = "", target_ids: str = "", sess=None):
+def post(
+    source_type: str = "", source_id: str = "", target_type: str = "", target_ids: str = "", sess=None, request=None
+):
     """Unified comparison endpoint — any entity type against any other.
 
     Supports: person/photo/upload as source, person/photo/upload/archive as target.
@@ -4587,6 +4616,9 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
     Returns HTMX fragment with matrix results.
     """
     import numpy as np
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if not source_type or not source_id:
         return Div(
@@ -4862,6 +4894,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
         user_is_admin,
         registry,
         rid=rid,
+        nav_prefix=nav_prefix,
     )
     has_summary = summary_section is not None
     if has_summary:
@@ -4929,7 +4962,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
             # Target link
             target_link = "#"
             if tr["target_type"] == "person" and tr["target_id"]:
-                target_link = f"/person/{tr['target_id']}"
+                target_link = f"{nav_prefix}/person/{tr['target_id']}"
             elif tr["target_type"] == "photo" and tr["target_id"]:
                 target_link = f"/photo/{tr['target_id']}"
 
@@ -5410,7 +5443,7 @@ def get(identity_id: str = "", face_id: str = "", sess=None):
 
 
 def _compare_photo_with_overlays(
-    photo_url_str: str, photo_id: str, highlight_face_id: str, registry, img_height_cls: str
+    photo_url_str: str, photo_id: str, highlight_face_id: str, registry, img_height_cls: str, nav_prefix: str = ""
 ) -> Div:
     """Render a photo with face bounding box overlays for the compare modal.
 
@@ -5472,7 +5505,7 @@ def _compare_photo_with_overlays(
                 (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #compare-modal "
-                    f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+                    f"then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{identity_id}'"
                 )
                 if identity_id
                 else ""
@@ -5510,8 +5543,11 @@ def get(
     view: str = "faces",
     filter: str = "",
     sess=None,
+    request=None,
 ):
     """Side-by-side comparison view for evaluating merge candidates."""
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
     try:
         registry = _main_mod.load_registry()
         tgt = registry.get_identity(target_id)
@@ -5684,7 +5720,7 @@ def get(
 
     # Build photo containers — with face overlays when in photos view
     if view == "photos" and t_photo_url:
-        t_photo_div = _compare_photo_with_overlays(t_photo_url, t_photo_id, t_fid, registry, img_h)
+        t_photo_div = _compare_photo_with_overlays(t_photo_url, t_photo_id, t_fid, registry, img_h, nav_prefix)
     else:
         t_photo_div = Div(
             Img(
@@ -5703,7 +5739,7 @@ def get(
         )
 
     if view == "photos" and n_photo_url:
-        n_photo_div = _compare_photo_with_overlays(n_photo_url, n_photo_id, n_fid, registry, img_h)
+        n_photo_div = _compare_photo_with_overlays(n_photo_url, n_photo_id, n_fid, registry, img_h, nav_prefix)
     else:
         n_photo_div = Div(
             Img(
