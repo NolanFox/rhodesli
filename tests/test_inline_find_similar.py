@@ -22,6 +22,7 @@ class TestInlineFindSimilarEndpoint:
     def test_returns_200_html(self, client):
         """Endpoint returns 200 with HTML content, not redirect."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -35,6 +36,7 @@ class TestInlineFindSimilarEndpoint:
     def test_returns_hero_and_tiles(self, client):
         """Response contains hero section and similar faces section."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -47,6 +49,7 @@ class TestInlineFindSimilarEndpoint:
     def test_close_button_present(self, client):
         """Response contains close button with hyperscript."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -63,10 +66,10 @@ class TestInlineFindSimilarEndpoint:
     def test_similar_tiles_have_action_buttons(self, client):
         """Similar face tiles include Compare/Merge/Not Same buttons."""
         from app.main import load_registry
+
         registry = load_registry()
         # Find an identity with neighbors
-        confirmed = [iid for iid, data in registry._identities.items()
-                     if data.get("state") == "CONFIRMED"]
+        confirmed = [iid for iid, data in registry._identities.items() if data.get("state") == "CONFIRMED"]
         if not confirmed:
             pytest.skip("No confirmed identities")
         response = client.get(f"/api/find-similar/{confirmed[0]}")
@@ -91,7 +94,7 @@ class TestInlineFindSimilarEndpoint:
             response = client.get(f"/c/fox-family/api/find-similar/{ids[0]}")
 
         html = response.text
-        assert f'/c/fox-family/person/{ids[0]}' in html
+        assert f"/c/fox-family/person/{ids[0]}" in html
         assert "/c/fox-family/person/" in html
         assert f"/c/fox-family/api/identity/{ids[0]}/" in html
 
@@ -102,6 +105,7 @@ class TestFullNeighborsSidebar:
     def test_neighbors_returns_200(self, client):
         """Neighbors endpoint returns 200."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -112,6 +116,7 @@ class TestFullNeighborsSidebar:
     def test_neighbors_has_sidebar_class(self, client):
         """Neighbors response contains neighbors-sidebar class."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -122,6 +127,7 @@ class TestFullNeighborsSidebar:
     def test_neighbors_with_container_id(self, client):
         """Container ID is passed through for browse expansion targeting."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -135,6 +141,7 @@ class TestFullNeighborsSidebar:
     def test_neighbors_has_manual_search(self, client):
         """Neighbors sidebar includes manual search section."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -145,6 +152,7 @@ class TestFullNeighborsSidebar:
     def test_neighbors_has_collapse_toggle(self, client):
         """Neighbors sidebar includes collapse/expand toggle."""
         from app.main import load_registry
+
         registry = load_registry()
         ids = list(registry._identities.keys())
         if not ids:
@@ -176,6 +184,7 @@ class TestExpansionPanelInGrid:
         if response.status_code == 200:
             html = response.text
             import re
+
             panel_ids = re.findall(r'id="expand-([^"]+)"', html)
             # Each panel should have a matching identity card
             for pid in panel_ids:
@@ -188,10 +197,10 @@ class TestRejectMatch:
     def test_reject_match_returns_empty(self, client):
         """Reject match removes tile by returning empty content."""
         from app.main import load_registry, save_registry
+
         registry = load_registry()
         # Filter out merged identities (UX-038: merged identities redirect)
-        ids = [iid for iid in registry._identities.keys()
-               if not registry._identities[iid].get("merged_into")]
+        ids = [iid for iid in registry._identities.keys() if not registry._identities[iid].get("merged_into")]
         if len(ids) < 2:
             pytest.skip("Need at least 2 non-merged identities")
 
@@ -259,6 +268,7 @@ class TestTriageButtons:
     def test_triage_not_on_confirmed(self):
         """Confirmed identities don't get triage buttons."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-confirmed-001",
             "name": "Confirmed Person",
@@ -275,6 +285,7 @@ class TestTriageButtons:
     def test_triage_on_proposed(self):
         """Proposed identities get triage buttons when show_triage=True."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-proposed-triage-001",
             "name": "Proposed Person",
@@ -295,6 +306,7 @@ class TestShareButtonAllStates:
     def test_share_on_proposed_named(self):
         """Named PROPOSED identity gets a share button."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-share-proposed-001",
             "name": "Named Proposed",
@@ -309,6 +321,7 @@ class TestShareButtonAllStates:
     def test_no_share_on_unidentified(self):
         """Unidentified persons don't get share button."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-share-unid-001",
             "name": "Unidentified Person 42",
@@ -338,3 +351,73 @@ class TestCardAnimationCSS:
         if response.status_code == 200:
             html = response.text
             assert "identity-card" in html
+
+
+class TestReciprocalRank:
+    """Tests for FB-008: reciprocal rank indicator in find-similar panel."""
+
+    def test_reciprocal_rank_mutual_top(self, client):
+        """Find-similar shows 'Mutual #1' when both identities are each other's top match."""
+        from app.main import load_registry
+
+        registry = load_registry()
+        ids = [iid for iid in registry._identities.keys() if not registry._identities[iid].get("merged_into")]
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 non-merged identities")
+
+        src_id = ids[0]
+        nbr_id = ids[1]
+
+        def _fake_fnn(target_id, *args, **kwargs):
+            if target_id == src_id:
+                return [{"identity_id": nbr_id, "distance": 0.75}]
+            elif target_id == nbr_id:
+                return [{"identity_id": src_id, "distance": 0.75}]
+            return []
+
+        with (
+            patch("core.neighbors.find_nearest_neighbors", side_effect=_fake_fnn),
+            patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"),
+        ):
+            response = client.get(f"/api/find-similar/{src_id}")
+
+        html = response.text
+        assert response.status_code == 200
+        if 'data-testid="find-similar-panel"' in html:
+            assert 'data-testid="reciprocal-rank"' in html
+            assert "Mutual #1" in html
+
+    def test_reciprocal_rank_non_mutual(self, client):
+        """Non-mutual matches show rank text like 'their #2'."""
+        from app.main import load_registry
+
+        registry = load_registry()
+        ids = [iid for iid in registry._identities.keys() if not registry._identities[iid].get("merged_into")]
+        if len(ids) < 3:
+            pytest.skip("Need at least 3 non-merged identities")
+
+        src_id = ids[0]
+        nbr_id = ids[1]
+        other_id = ids[2]
+
+        def _fake_fnn(target_id, *args, **kwargs):
+            if target_id == src_id:
+                return [{"identity_id": nbr_id, "distance": 0.75}]
+            elif target_id == nbr_id:
+                return [
+                    {"identity_id": other_id, "distance": 0.60},
+                    {"identity_id": src_id, "distance": 0.80},
+                ]
+            return []
+
+        with (
+            patch("core.neighbors.find_nearest_neighbors", side_effect=_fake_fnn),
+            patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"),
+        ):
+            response = client.get(f"/api/find-similar/{src_id}")
+
+        html = response.text
+        assert response.status_code == 200
+        if 'data-testid="find-similar-panel"' in html:
+            assert "Mutual #1" not in html
+            assert "their #2" in html

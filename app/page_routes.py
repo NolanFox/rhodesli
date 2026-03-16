@@ -7384,6 +7384,39 @@ def get(identity_id: str, sess=None, request=None):
             n["name"] = "Unknown"
             n["state"] = "INBOX"
 
+    # FB-008: Compute reciprocal rank for each neighbor
+    if neighbors:
+        try:
+            from core.neighbors import find_nearest_neighbors as _fnn
+
+            for idx, n in enumerate(neighbors):
+                nid = n["identity_id"]
+                try:
+                    reverse_neighbors = _fnn(nid, registry, photo_registry, face_data, limit=12)
+                    # Find source identity's rank in the reverse list
+                    reciprocal_rank = None
+                    reciprocal_best_name = ""
+                    if reverse_neighbors:
+                        reciprocal_best_name = reverse_neighbors[0].get("identity_id", "")
+                        try:
+                            rn_ident = registry.get_identity(reciprocal_best_name)
+                            reciprocal_best_name = ensure_utf8_display(rn_ident.get("name", "Unknown"))
+                        except KeyError:
+                            reciprocal_best_name = "Unknown"
+                        for ri, rn in enumerate(reverse_neighbors):
+                            if rn["identity_id"] == identity_id:
+                                reciprocal_rank = ri + 1  # 1-indexed
+                                break
+                    n["reciprocal_rank"] = reciprocal_rank
+                    n["reciprocal_best_name"] = reciprocal_best_name
+                    n["is_mutual_top"] = idx == 0 and reciprocal_rank == 1
+                except Exception:
+                    n["reciprocal_rank"] = None
+                    n["reciprocal_best_name"] = ""
+                    n["is_mutual_top"] = False
+        except ImportError:
+            pass
+
     # Confidence tier helper
     def _tier(dist):
         if dist < 0.80:
@@ -7452,6 +7485,30 @@ def get(identity_id: str, sess=None, request=None):
                 )
             )
 
+        # FB-008: Reciprocal rank indicator
+        recip_el = None
+        recip_rank = n.get("reciprocal_rank")
+        recip_best = n.get("reciprocal_best_name", "")
+        is_mutual = n.get("is_mutual_top", False)
+        if is_mutual:
+            recip_el = Span(
+                "Mutual #1",
+                cls="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600 text-white",
+                data_testid="reciprocal-rank",
+            )
+        elif recip_rank is not None:
+            recip_el = Span(
+                f"You're their #{recip_rank}",
+                cls="text-[10px] text-slate-400",
+                data_testid="reciprocal-rank",
+            )
+        elif recip_best:
+            recip_el = Span(
+                f"Not in top · #1 is {recip_best}",
+                cls="text-[10px] text-amber-500",
+                data_testid="reciprocal-rank",
+            )
+
         tile = Div(
             A(
                 Img(
@@ -7470,6 +7527,7 @@ def get(identity_id: str, sess=None, request=None):
                     Span(f"{dist:.2f}", cls="text-[10px] text-slate-500 ml-1") if is_admin else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
+                Div(recip_el, cls="mt-1") if recip_el else None,
                 Div(*tile_actions, cls="flex flex-wrap gap-1 mt-2") if tile_actions else None,
                 cls="mt-2",
             ),

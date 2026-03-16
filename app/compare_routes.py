@@ -4781,9 +4781,17 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
                             ),
                         )
                         if t_matches:
+                            # FB-011: Compute rank of uploaded face among target's matches
+                            upload_rank = None
+                            for rank_i, tm in enumerate(t_matches):
+                                tm_iid = tm.get("identity_id", "")
+                                if source_type == "person" and tm_iid == source_id:
+                                    upload_rank = rank_i + 1
+                                    break
                             target_context[tid] = {
                                 "best_pct": t_matches[0].get("confidence_pct", 0),
                                 "best_name": t_matches[0].get("identity_name", "Unknown"),
+                                "upload_rank": upload_rank,
                             }
             if tid not in target_context:
                 target_context[tid] = {"best_pct": 0, "best_name": ""}
@@ -4903,16 +4911,19 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
 
             dist_str = f" · dist: {tr['distance']:.2f}" if user_is_admin else ""
 
-            # Build context line
+            # Build context line — FB-011: more prominent rank context
             ctx = target_context.get(tr["target_id"], {})
             ctx_parts = []
             ctx_best_pct = ctx.get("best_pct", 0)
             ctx_best_name = ctx.get("best_name", "")
+            ctx_rank = ctx.get("upload_rank")
             if ctx_best_pct > 0 and tr["target_type"] == "person":
                 if pct > ctx_best_pct:
                     ctx_parts.append("Better than any existing match!")
                 elif ctx_best_name:
-                    ctx_parts.append(f"{tr['target_name']}'s best is {ctx_best_pct}% ({ctx_best_name})")
+                    ctx_parts.append(f"{tr['target_name']}'s best match: {ctx_best_pct}% ({ctx_best_name})")
+            if ctx_rank is not None and tr["target_type"] == "person":
+                ctx_parts.append(f"Ranked #{ctx_rank} for {tr['target_name']}")
             context_line = " · ".join(ctx_parts) if ctx_parts else ""
 
             # Target link
@@ -4994,7 +5005,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "", targ
                             Span(f"{conf_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
                             Span(
                                 context_line,
-                                cls="text-[11px] text-slate-500 mt-0.5 block",
+                                cls="text-xs text-amber-400 mt-1 block font-medium",
                                 data_testid=f"context-{fi}-{ti}",
                             )
                             if context_line
