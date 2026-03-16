@@ -1522,6 +1522,7 @@ def public_person_page(
                 });
             """),
             _main_mod.compare_modal(),
+            _main_mod.toast_container(),
             cls="min-h-screen bg-slate-900",
         ),
     )

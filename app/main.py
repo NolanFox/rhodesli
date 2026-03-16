@@ -8811,6 +8811,7 @@ def neighbor_card(
                 hx_confirm="These faces appear in the SAME PHOTO. Override only if this is a collage, "
                 "photo-of-album, or composite image. Are you sure these are the same person?",
                 title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
+                **{"_": "on click put 'Merging...' into me"},
             )
         else:
             merge_btn = Button(
@@ -8854,6 +8855,7 @@ def neighbor_card(
             data_auth_action="merge these identities",
             hx_confirm=_confirm_msg,
             title=f"Merge {name} into {target_name}" if target_name else "Merge these identities",
+            **{"_": "on click put 'Merging...' into me"},
         )
 
     # Compare button -- opens side-by-side comparison modal

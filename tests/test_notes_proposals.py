@@ -12,6 +12,7 @@ class TestRegistryNotes:
     def _make_registry(self, tmp_path):
         """Create a test registry with one identity."""
         from core.registry import IdentityRegistry
+
         data = {
             "schema_version": 1,
             "identities": {
@@ -75,6 +76,7 @@ class TestRegistryProposedMatches:
     def _make_registry(self, tmp_path):
         """Create a test registry with two identities."""
         from core.registry import IdentityRegistry
+
         data = {
             "schema_version": 1,
             "identities": {
@@ -110,9 +112,7 @@ class TestRegistryProposedMatches:
     def test_add_proposed_match(self, tmp_path):
         """Can propose a match between two identities."""
         registry = self._make_registry(tmp_path)
-        proposal = registry.add_proposed_match(
-            "id-1", "id-2", note="Looks like same person", author="test@test.com"
-        )
+        proposal = registry.add_proposed_match("id-1", "id-2", note="Looks like same person", author="test@test.com")
 
         assert proposal["target_id"] == "id-2"
         assert proposal["note"] == "Looks like same person"
@@ -170,11 +170,7 @@ class TestNotesEndpoints:
 
     def test_notes_add_requires_admin(self, client, auth_enabled, regular_user):
         """POST /api/identity/{id}/notes requires admin."""
-        resp = client.post(
-            "/api/identity/id-1/notes",
-            data={"text": "Test"},
-            headers={"HX-Request": "true"}
-        )
+        resp = client.post("/api/identity/id-1/notes", data={"text": "Test"}, headers={"HX-Request": "true"})
         assert resp.status_code in (401, 403)
 
 
@@ -183,8 +179,11 @@ class TestProposedMatchesEndpoints:
 
     def test_proposed_matches_list(self, client, auth_disabled):
         """GET /api/proposed-matches returns pending proposals."""
-        with patch("app.main.load_registry") as mock_reg, \
-             patch("app.main.get_crop_files", return_value=set()):
+        with (
+            patch("app.main.load_registry") as mock_reg,
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._load_proposals", return_value={"proposals": []}),
+        ):
             registry = MagicMock()
             registry.list_proposed_matches.return_value = [
                 {
@@ -205,11 +204,14 @@ class TestProposedMatchesEndpoints:
             assert resp.status_code == 200
             assert "Person A" in resp.text
             assert "Person B" in resp.text
-            assert "Accept" in resp.text
+            assert "View Source" in resp.text
 
     def test_proposed_matches_empty(self, client, auth_disabled):
         """Empty proposals shows empty state."""
-        with patch("app.main.load_registry") as mock_reg:
+        with (
+            patch("app.main.load_registry") as mock_reg,
+            patch("app.main._load_proposals", return_value={"proposals": []}),
+        ):
             registry = MagicMock()
             registry.list_proposed_matches.return_value = []
             mock_reg.return_value = registry

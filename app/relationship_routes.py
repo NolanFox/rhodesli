@@ -906,12 +906,23 @@ def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: boo
     if link:
         # Already linked — show linked GEDCOM individual with unlink option
         gedcom_id = link.get("gedcom_id", "")
+        # Look up the GEDCOM person's name for display
+        _gedcom_display_name = None
+        if gedcom_id:
+            try:
+                _gedcom_rows = _load_gedcom_individuals_by_ids([gedcom_id])
+                if _gedcom_rows:
+                    _gedcom_display_name = _gedcom_rows[0].get("display_name") or _gedcom_rows[0].get("name")
+            except Exception:
+                pass
+        _gedcom_label = _gedcom_display_name or gedcom_id or "Unknown"
         return Div(
             H3("Family Tree Link", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
             Div(
                 Div(
                     Span("Linked GEDCOM record: ", cls="text-slate-400 text-sm"),
-                    Code(gedcom_id or "Unknown", cls="text-white font-medium text-sm"),
+                    Span(_gedcom_label, cls="text-white font-medium text-sm"),
+                    Span(f" ({gedcom_id})", cls="text-slate-500 text-xs ml-1") if _gedcom_display_name else None,
                     cls="flex items-baseline flex-wrap gap-1",
                 ),
                 P(
