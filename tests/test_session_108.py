@@ -224,6 +224,24 @@ class TestDataHealthEndpoint:
 # ---------------------------------------------------------------------------
 
 
+class TestAdminReclusterEndpoint:
+    """Test /api/admin/recluster endpoint."""
+
+    def test_recluster_requires_admin(self, client, auth_enabled, no_user):
+        """Recluster endpoint requires admin auth."""
+        response = client.post("/api/admin/recluster")
+        assert response.status_code in (401, 403)
+
+    def test_recluster_dry_run_returns_results(self, client, admin_user):
+        """Recluster dry run returns proposal and group counts."""
+        response = client.post("/api/admin/recluster?dry_run=true")
+        assert response.status_code == 200
+        data = response.json()
+        assert "proposals_found" in data
+        assert "groups_found" in data
+        assert data["dry_run"] is True
+
+
 class TestStopGatePushVerification:
     """Test that stop-gate.sh warns about unpushed commits."""
 

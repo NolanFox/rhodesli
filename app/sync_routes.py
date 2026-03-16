@@ -873,6 +873,94 @@ def get(request):
     )
 
 
+# --- Admin Re-Cluster Endpoint (Session 108) ---
+
+
+@rt("/api/admin/recluster")
+async def post(request, sess):
+    """Re-run clustering and grouping for all faces. Admin-only.
+
+    Session 108: When new photos are uploaded, the auto-cluster runs during
+    ingest. But if it fails (e.g., orphan faces) or you want to re-run after
+    confirming identities, this endpoint triggers the full pipeline:
+    1. find_matches() — match unresolved faces against confirmed identities → proposals
+    2. group_inbox_identities() — group similar INBOX faces → direct merge
+
+    Query params:
+        dry_run=true — preview only, don't write changes (default: true)
+        threshold=1.05 — distance threshold for matching
+    """
+    admin_check = _main_mod._check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    import json as _json_rc
+
+    params = dict(request.query_params)
+    dry_run = params.get("dry_run", "true").lower() != "false"
+    threshold = float(params.get("threshold", "1.05"))
+
+    data_path = _main_mod.data_path
+    results = {"dry_run": dry_run, "threshold": threshold}
+
+    try:
+        from scripts.cluster_new_faces import find_matches, load_face_data, load_identities
+        from core.config import MATCH_THRESHOLD_HIGH
+
+        identities_data = load_identities(data_path)
+        face_data_dict = load_face_data(data_path)
+
+        # Step 1: Find matches against confirmed identities
+        suggestions = find_matches(identities_data, face_data_dict, threshold)
+        results["proposals_found"] = len(suggestions)
+
+        if not dry_run and suggestions:
+            proposals_path = data_path / "proposals.json"
+            proposals_data = {
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "threshold": threshold,
+                "proposals": suggestions,
+                "triggered_by": "admin_recluster",
+            }
+            with open(proposals_path, "w") as f:
+                _json_rc.dump(proposals_data, f, indent=2)
+            results["proposals_written"] = len(suggestions)
+
+        # Step 2: Group similar INBOX faces
+        from core.grouping import group_inbox_identities
+        from core.registry import IdentityRegistry
+        from core.photo_registry import PhotoRegistry
+
+        registry = IdentityRegistry.load(data_path / "identities.json")
+        photo_reg = PhotoRegistry.load(data_path / "photo_index.json")
+
+        group_result = group_inbox_identities(registry, face_data_dict, photo_reg, dry_run=dry_run)
+        results["groups_found"] = len(group_result.get("groups", []))
+        results["merges"] = group_result.get("total_merged", 0)
+
+        if not dry_run and group_result.get("total_merged", 0) > 0:
+            registry.save(data_path / "identities.json")
+            # Sync to Supabase
+            try:
+                from app.supabase_data import shadow_write_identities_batch
+
+                items = [dict(v, identity_id=k) for k, v in registry._identities.items()]
+                shadow_write_identities_batch(items)
+                results["supabase_synced"] = True
+            except Exception as sync_err:
+                results["supabase_sync_error"] = str(sync_err)
+
+        if not dry_run:
+            _main_mod._invalidate_all_caches()
+
+        results["status"] = "ok"
+    except Exception as e:
+        results["status"] = "error"
+        results["error"] = str(e)
+
+    return results
+
+
 # --- Data Health Endpoint (Session 108) ---
 
 
