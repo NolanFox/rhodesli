@@ -4082,6 +4082,11 @@ def _build_caches():
                 merged = {}
                 merged.update(fallback_meta)
                 merged.update(metadata)
+                # Remove source/collection/source_url from merged metadata —
+                # these are already set above from registry with proper priority.
+                # Without this, stale JSON metadata overwrites fresh registry values.
+                for key in ("source", "collection", "source_url"):
+                    merged.pop(key, None)
                 if merged:
                     _photo_cache[photo_id].update(merged)
                 if fname in filename_to_photo_index_order:

@@ -96,6 +96,9 @@ def test_api_photo_skips_faces_without_bbox(monkeypatch):
 
 
 def test_get_photo_metadata_prefers_loaded_registry_values_in_postgres_mode(tmp_path, monkeypatch):
+    # Ensure no stale cache from prior tests (especially test_api_photo which uses TestClient)
+    main_mod._invalidate_all_caches()
+
     stale_data = {
         "schema_version": 1,
         "photos": {
@@ -128,15 +131,25 @@ def test_get_photo_metadata_prefers_loaded_registry_values_in_postgres_mode(tmp_
     }
 
     registry = PhotoRegistry()
-    registry.register_face("pg_photo", "raw_photos/photo.jpg", "face_kept", source="Fresh Source", collection="Fresh Collection")
+    registry.register_face(
+        "pg_photo", "raw_photos/photo.jpg", "face_kept", source="Fresh Source", collection="Fresh Collection"
+    )
     registry.set_source_url("pg_photo", "https://fresh.example/source")
 
+    # Monkeypatch BEFORE invalidating caches so _build_caches() uses our mocks
     monkeypatch.setattr(main_mod, "DATA_SOURCE", "postgres")
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(main_mod, "load_embeddings_for_photos", lambda: embedding_cache)
     monkeypatch.setattr(main_mod, "load_photo_registry", lambda: registry)
 
-    main_mod._invalidate_all_caches()
+    # Acquire cache lock to ensure no background prewarm thread is building
+    # caches with un-monkeypatched data, then clear and release
+    with main_mod._cache_lock:
+        main_mod._photo_cache = None
+        main_mod._face_to_photo_cache = None
+        main_mod._photo_id_aliases = None
+        main_mod._photo_registry_cache = None
+        main_mod._face_data_cache = None
     try:
         photo = main_mod.get_photo_metadata("pg_photo")
         assert photo is not None
