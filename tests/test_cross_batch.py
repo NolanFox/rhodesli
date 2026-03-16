@@ -310,6 +310,17 @@ class TestFindCrossBatchMatches:
         assert "other_community" in target_ids or True  # may be beyond threshold
 
 
+class TestReclusterIncludesCrossBatch:
+    """Test that recluster endpoint returns cross_batch_matches."""
+
+    def test_recluster_response_has_cross_batch_key(self, client, admin_user):
+        """Recluster dry run should include cross_batch_matches in response."""
+        response = client.post("/api/admin/recluster?dry_run=true")
+        assert response.status_code == 200
+        data = response.json()
+        assert "cross_batch_matches" in data
+
+
 class TestGetConfidenceTier:
     def test_very_high(self):
         assert _get_confidence_tier(0.5) == "very_high"

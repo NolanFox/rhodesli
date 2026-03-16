@@ -130,6 +130,93 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     except Exception:
         pass  # Never block confirm on calibration
 
+    # PRD-049: Post-confirm re-matching — find new proposals for confirmed identity
+    try:
+        import threading
+
+        def _post_confirm_rematch(iid, data_path):
+            try:
+                from core.cross_batch_matching import find_cross_batch_matches
+                from scripts.cluster_new_faces import load_face_data, load_identities
+
+                identities_data = load_identities(data_path)
+                face_data_dict = load_face_data(data_path)
+                photo_reg = _main_mod.load_photo_registry()
+                confirmed_identity = identities_data.get("identities", {}).get(iid, {})
+                confirmed_face_ids = []
+                for fid in confirmed_identity.get("anchor_ids", []):
+                    if isinstance(fid, str):
+                        confirmed_face_ids.append(fid)
+
+                if not confirmed_face_ids:
+                    return
+
+                matches = find_cross_batch_matches(
+                    new_face_ids=confirmed_face_ids,
+                    identities=identities_data,
+                    face_data=face_data_dict,
+                    photo_registry=photo_reg,
+                )
+                if matches:
+                    import json
+                    from datetime import datetime as _dt, timezone as _tz
+
+                    proposals_path = data_path / "proposals.json"
+                    existing_proposals = []
+                    if proposals_path.exists():
+                        with open(proposals_path) as f:
+                            pdata = json.load(f)
+                            existing_proposals = pdata.get("proposals", [])
+
+                    existing_pairs = {
+                        (p.get("source_identity_id"), p.get("target_identity_id")) for p in existing_proposals
+                    }
+                    new_proposals = []
+                    for m in matches:
+                        pair = (m["source_identity_id"], m["target_identity_id"])
+                        reverse = (m["target_identity_id"], m["source_identity_id"])
+                        if pair not in existing_pairs and reverse not in existing_pairs:
+                            new_proposals.append(
+                                {
+                                    "source_identity_id": m["source_identity_id"],
+                                    "source_identity_name": m["source_identity_name"],
+                                    "target_identity_id": m["target_identity_id"],
+                                    "target_identity_name": m["target_identity_name"],
+                                    "distance": m["distance"],
+                                    "match_type": m["match_type"],
+                                    "confidence_tier": m["confidence_tier"],
+                                    "face_id": m["source_face_id"],
+                                    "source_state": "CONFIRMED",
+                                }
+                            )
+                            existing_pairs.add(pair)
+
+                    if new_proposals:
+                        all_proposals = existing_proposals + new_proposals
+                        proposals_data = {
+                            "generated_at": _dt.now(_tz.utc).isoformat(),
+                            "threshold": 1.05,
+                            "proposals": all_proposals,
+                            "triggered_by": "post_confirm",
+                        }
+                        with open(proposals_path, "w") as f:
+                            json.dump(proposals_data, f, indent=2)
+                        logger.info(
+                            "Post-confirm re-match for %s: %d new proposals",
+                            iid[:8],
+                            len(new_proposals),
+                        )
+            except Exception as e:
+                logger.error("Post-confirm re-match failed for %s: %s", iid[:8], e)
+
+        threading.Thread(
+            target=_post_confirm_rematch,
+            args=(identity_id, _main_mod.data_path),
+            daemon=True,
+        ).start()
+    except Exception:
+        pass  # Never block confirm on re-matching
+
     # If from focus mode, return the next focus card
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)

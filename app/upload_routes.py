@@ -1002,6 +1002,133 @@ async def post(
                 except Exception as e:
                     print(f"[upload] Face grouping failed (non-fatal): {e}")
 
+            # PRD-049: Cross-batch matching — compare new faces against ALL existing
+            if result.get("status") in ("success", "partial") and result.get("face_ids"):
+                try:
+                    from core.cross_batch_matching import find_cross_batch_matches
+
+                    # Reload registry/face_data in case grouping modified them
+                    from scripts.cluster_new_faces import load_face_data as _load_fd_xb, load_identities as _load_id_xb
+
+                    xb_identities = _load_id_xb(data_path)
+                    xb_face_data = _load_fd_xb(data_path)
+                    xb_photo_reg = _main_mod.load_photo_registry()
+                    cross_matches = find_cross_batch_matches(
+                        new_face_ids=result.get("face_ids", []),
+                        identities=xb_identities,
+                        face_data=xb_face_data,
+                        photo_registry=xb_photo_reg,
+                        community_id=upload_community_id,
+                    )
+
+                    if cross_matches:
+                        import json as _json_xb
+                        from datetime import datetime as _dt_xb, timezone as _tz_xb
+
+                        # Append cross-batch proposals to proposals.json
+                        proposals_path = data_path / "proposals.json"
+                        existing_proposals = []
+                        if proposals_path.exists():
+                            with open(proposals_path) as _rpf:
+                                pdata = _json_xb.load(_rpf)
+                                existing_proposals = pdata.get("proposals", [])
+
+                        # Deduplicate: skip proposals where source+target pair already exists
+                        existing_pairs = {
+                            (p.get("source_identity_id"), p.get("target_identity_id")) for p in existing_proposals
+                        }
+                        new_proposals = []
+                        for m in cross_matches:
+                            pair = (m["source_identity_id"], m["target_identity_id"])
+                            reverse = (m["target_identity_id"], m["source_identity_id"])
+                            if pair not in existing_pairs and reverse not in existing_pairs:
+                                new_proposals.append(
+                                    {
+                                        "source_identity_id": m["source_identity_id"],
+                                        "source_identity_name": m["source_identity_name"],
+                                        "target_identity_id": m["target_identity_id"],
+                                        "target_identity_name": m["target_identity_name"],
+                                        "distance": m["distance"],
+                                        "match_type": m["match_type"],
+                                        "confidence_tier": m["confidence_tier"],
+                                        "face_id": m["source_face_id"],
+                                        "source_state": "INBOX",
+                                    }
+                                )
+                                existing_pairs.add(pair)
+
+                        if new_proposals:
+                            all_proposals = existing_proposals + new_proposals
+                            proposals_data = {
+                                "generated_at": _dt_xb.now(_tz_xb.utc).isoformat(),
+                                "threshold": 1.05,
+                                "proposals": all_proposals,
+                            }
+                            with open(proposals_path, "w") as _wpf:
+                                _json_xb.dump(proposals_data, _wpf, indent=2)
+
+                        # Write to ml_proposals + ml_runs in Supabase
+                        try:
+                            import time as _time_xb
+                            import uuid as _uuid_xb
+
+                            from app.supabase_data import get_supabase_client
+
+                            sb = get_supabase_client()
+                            if sb:
+                                run_id = str(_uuid_xb.uuid4())
+                                start_time = _time_xb.time()
+                                sb.table("ml_runs").insert(
+                                    {
+                                        "run_id": run_id,
+                                        "pipeline_type": "cross_batch_matching",
+                                        "config_json": {
+                                            "threshold": 1.05,
+                                            "community_id": upload_community_id,
+                                            "triggered_by": "upload",
+                                            "job_id": job_id,
+                                        },
+                                        "status": "completed",
+                                        "result_summary": {
+                                            "proposals_created": len(new_proposals),
+                                            "total_matches": len(cross_matches),
+                                        },
+                                        "duration_ms": int((_time_xb.time() - start_time) * 1000),
+                                    }
+                                ).execute()
+                                if new_proposals:
+                                    from core.config import MATCH_THRESHOLD_VERY_HIGH, MATCH_THRESHOLD_HIGH
+
+                                    rows = []
+                                    for p in new_proposals:
+                                        tier = (
+                                            "tier1"
+                                            if p["distance"] < MATCH_THRESHOLD_VERY_HIGH
+                                            else ("tier2" if p["distance"] < MATCH_THRESHOLD_HIGH else "tier3")
+                                        )
+                                        rows.append(
+                                            {
+                                                "run_id": run_id,
+                                                "source_identity_id": p["source_identity_id"],
+                                                "target_identity_id": p["target_identity_id"],
+                                                "score": p["distance"],
+                                                "tier": tier,
+                                                "status": "pending",
+                                                "match_type": "cross_batch",
+                                            }
+                                        )
+                                    for i in range(0, len(rows), 100):
+                                        sb.table("ml_proposals").insert(rows[i : i + 100]).execute()
+                        except Exception as e:
+                            print(f"[upload] Cross-batch Supabase logging error: {e}")
+
+                    print(
+                        f"[upload] Cross-batch matching for job {job_id}: "
+                        f"{len(cross_matches)} matches, {len(new_proposals) if cross_matches else 0} new proposals"
+                    )
+                except Exception as e:
+                    print(f"[upload] Cross-batch matching failed (non-fatal): {e}")
+
             # AD-216: Tag identities to community after clustering
             # Photo-derived identity set handles this automatically via cache,
             # but explicit tagging in identity_communities improves query performance.
