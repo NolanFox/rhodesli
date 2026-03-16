@@ -8742,6 +8742,7 @@ def neighbor_card(
     target_name: str = "",
     current_community: dict | None = None,
     nav_prefix: str = "",
+    from_person_page: bool = False,
 ) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -8781,23 +8782,32 @@ def neighbor_card(
     _focus_filter = f"&filter={triage_filter}" if triage_filter else ""
     _focus_section = f"&focus_section={focus_section}" if focus_section else ""
     focus_suffix = f"?from_focus=true{_focus_filter}{_focus_section}" if from_focus else ""
+    # FB-019: On person page, target the neighbor card itself (no #identity-{id} element exists)
+    _person_page_suffix = "&from_person_page=true" if from_person_page else ""
     if from_focus and focus_section == "skipped":
         merge_target = "#skipped-focus-container"
     elif from_focus:
         merge_target = "#focus-container"
+    elif from_person_page:
+        merge_target = f"#neighbor-{neighbor_id}"
     else:
         merge_target = f"#identity-{target_identity_id}"
     merge_swap = "outerHTML"
     if not can_merge:
         # PRD-048: Admin can override co-occurrence for collages
         if user_role == "admin" and neighbor.get("merge_blocked_reason") == "co_occurrence":
+            # FB-021 fix: correct merge direction (target_identity_id is the survivor, neighbor_id is merged in)
+            _override_sep = "&" if focus_suffix else "?"
+            _override_params = (
+                f"{_override_sep}override_co_occurrence=true&override_reason=collage&source=web{_person_page_suffix}"
+            )
             merge_btn = Button(
                 "Override \u26a0\ufe0f",
-                cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded",
-                hx_post=f"{nav_prefix}/api/identity/{neighbor_id}/merge/{target_identity_id}"
-                f"?override_co_occurrence=true&override_reason=collage&source=web",
+                cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded disabled:opacity-50",
+                hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}{_override_params}",
                 hx_target=merge_target,
                 hx_swap=merge_swap,
+                hx_disabled_elt="this",
                 hx_confirm="These faces appear in the SAME PHOTO. Override only if this is a collage, "
                 "photo-of-album, or composite image. Are you sure these are the same person?",
                 title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
@@ -8828,12 +8838,19 @@ def neighbor_card(
             if target_name and not target_name.startswith("Unidentified")
             else "Merge these identities? This can be undone."
         )
+        # Append person page flag to URL if on person page
+        _merge_url_suffix = focus_suffix
+        if from_person_page and not _merge_url_suffix:
+            _merge_url_suffix = "?from_person_page=true"
+        elif from_person_page:
+            _merge_url_suffix += "&from_person_page=true"
         merge_btn = Button(
             _merge_label,
-            cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}",
+            cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-50",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{_merge_url_suffix}",
             hx_target=merge_target,
             hx_swap=merge_swap,
+            hx_disabled_elt="this",
             data_auth_action="merge these identities",
             hx_confirm=_confirm_msg,
             title=f"Merge {name} into {target_name}" if target_name else "Merge these identities",
@@ -9160,6 +9177,8 @@ def neighbors_sidebar(
         )
 
     # Mergeable neighbors get checkboxes for bulk operations
+    # FB-019: Detect person page context from container_id
+    _is_person_page = container_id.startswith("person-similar-")
     mergeable = [n for n in neighbors if n.get("can_merge")]
     cards = [
         neighbor_card(
@@ -9172,6 +9191,7 @@ def neighbors_sidebar(
             target_name=target_name,
             current_community=current_community,
             nav_prefix=nav_prefix,
+            from_person_page=_is_person_page,
         )
         for n in neighbors
     ]

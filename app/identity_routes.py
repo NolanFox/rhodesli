@@ -66,7 +66,14 @@ def _nav_prefix_from_request(request) -> str:
 
 
 @rt("/confirm/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
+def post(
+    identity_id: str,
+    from_focus: bool = False,
+    filter: str = "",
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
     Requires admin.
@@ -114,6 +121,12 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             "admin_identity_confirmed",
             distinct_id=_user.email if _user else "admin",
             properties={"identity_id": identity_id, "identity_name": identity.get("name", "Unknown")},
+        )
+        _main_mod.log_user_action(
+            "CONFIRM",
+            identity_id=identity_id,
+            identity_name=identity.get("name", "Unknown"),
+            context="person_page" if from_person_page else "browse",
         )
     except Exception as e:
         # Could be variance explosion or other error
@@ -225,6 +238,20 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             _main_mod.toast("Identity confirmed.", "success"),
         )
 
+    # FB-017: On person page, return status update instead of full identity card
+    if from_person_page:
+        return (
+            Div(
+                Span(
+                    "\u2713 CONFIRMED",
+                    cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
+                ),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+            ),
+            _main_mod.toast("Identity confirmed.", "success"),
+        )
+
     # Return updated card (now CONFIRMED, no action buttons)
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
@@ -250,7 +277,14 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 @rt("/reject/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
+def post(
+    identity_id: str,
+    from_focus: bool = False,
+    filter: str = "",
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
     """Contest/reject an identity (move to CONTESTED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -276,6 +310,12 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     try:
         registry.contest_identity(identity_id, user_source="web", reason="Rejected via UI")
         _main_mod.save_registry(registry)
+        _main_mod.log_user_action(
+            "REJECT",
+            identity_id=identity_id,
+            identity_name=identity.get("name", "Unknown"),
+            context="person_page" if from_person_page else "browse",
+        )
     except Exception as e:
         return Response(
             to_xml(_main_mod.toast(f"Cannot reject: {str(e)}", "error")),
@@ -288,6 +328,17 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.toast("Identity contested.", "warning"),
+        )
+
+    # FB-017: On person page, return status update instead of full identity card
+    if from_person_page:
+        return (
+            Div(
+                Span("\u2717 REJECTED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+            ),
             _main_mod.toast("Identity contested.", "warning"),
         )
 
@@ -1687,6 +1738,7 @@ def post(
     focus_section: str = "",
     override_co_occurrence: bool = False,
     override_reason: str = "",
+    from_person_page: bool = False,
     sess=None,
     request=None,
 ):
@@ -1806,14 +1858,20 @@ def post(
     target_name = ensure_utf8_display(updated_identity.get("name")) or "identity"
     is_unnamed = target_name.startswith("Unidentified") or target_name.startswith("identity")
 
-    # Log the action
-    _main_mod.log_user_action(
-        "MERGE",
-        source_identity_id=actual_source_id,
-        target_identity_id=actual_target_id,
-        faces_merged=result["faces_merged"],
-        direction_swapped=result.get("direction_swapped", False),
-    )
+    # Log the action — include override info for audit trail
+    _merge_action = "MERGE_OVERRIDE" if allow_co_occurrence else "MERGE"
+    _merge_log_kwargs = {
+        "source_identity_id": actual_source_id,
+        "target_identity_id": actual_target_id,
+        "faces_merged": result["faces_merged"],
+        "direction_swapped": result.get("direction_swapped", False),
+    }
+    if allow_co_occurrence:
+        _merge_log_kwargs["override_reason"] = override_reason
+        _merge_log_kwargs["co_occurrence_override"] = True
+    if from_person_page:
+        _merge_log_kwargs["context"] = "person_page"
+    _main_mod.log_user_action(_merge_action, **_merge_log_kwargs)
 
     # Build OOB elements to remove absorbed identity from DOM
     oob_elements = [
@@ -1894,6 +1952,30 @@ def post(
     nav_prefix = _nav_prefix_from_request(request)
     if source == "similar_page":
         return HttpHeader("HX-Redirect", return_to or f"{nav_prefix}/person/{actual_target_id}")
+
+    # FB-019/FB-020: On person page, replace the neighbor card with merged indicator
+    # instead of replacing the identity card (which doesn't exist on person page).
+    # This keeps the Similar panel open after merge.
+    if from_person_page:
+        source_name = (
+            ensure_utf8_display(registry.get_identity(actual_target_id).get("name", "identity"))
+            if actual_target_id != source_id
+            else target_name
+        )
+        merged_indicator = Div(
+            Div(
+                Span("\u2713 Merged", cls="text-emerald-400 font-bold text-sm"),
+                cls="p-3 text-center",
+            ),
+            id=f"neighbor-{actual_source_id}",
+            cls="bg-emerald-900/20 border border-emerald-500/30 rounded-lg mb-2",
+            **{"_": "on load wait 2s then transition opacity to 0 over 0.5s then remove me"},
+        )
+        return (
+            merged_indicator,
+            *oob_elements,
+            merge_toast,
+        )
 
     return (
         _main_mod.identity_card(
@@ -3318,7 +3400,14 @@ def post(identity_id: str, sess=None, request=None):
 
 
 @rt("/inbox/{identity_id}/confirm")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
+def post(
+    identity_id: str,
+    from_focus: bool = False,
+    filter: str = "",
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
     """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3358,6 +3447,13 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
                 "user_email": _user.email if _user else None,
             },
         )
+        _main_mod.log_user_action(
+            "CONFIRM",
+            identity_id=identity_id,
+            identity_name=_identity.get("name", "Unknown"),
+            source_state="INBOX",
+            context="person_page" if from_person_page else "browse",
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -3370,6 +3466,20 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.toast("Identity confirmed.", "success"),
+        )
+
+    # FB-017: On person page, return status update instead of full identity card
+    if from_person_page:
+        return (
+            Div(
+                Span(
+                    "\u2713 CONFIRMED",
+                    cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
+                ),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+            ),
             _main_mod.toast("Identity confirmed.", "success"),
         )
 
@@ -3387,7 +3497,14 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 @rt("/inbox/{identity_id}/reject")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
+def post(
+    identity_id: str,
+    from_focus: bool = False,
+    filter: str = "",
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
     """Reject identity from INBOX state (INBOX -> REJECTED). Requires admin."""
     denied = _main_mod._check_admin(sess)
     if denied:
@@ -3415,8 +3532,16 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         )
 
     try:
+        _identity = registry.get_identity(identity_id)
         registry.reject_identity(identity_id, user_source="web_review")
         _main_mod.save_registry(registry)
+        _main_mod.log_user_action(
+            "REJECT",
+            identity_id=identity_id,
+            identity_name=_identity.get("name", "Unknown"),
+            source_state="INBOX",
+            context="person_page" if from_person_page else "browse",
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -3429,6 +3554,17 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.toast("Identity rejected.", "success"),
+        )
+
+    # FB-017: On person page, return status update instead of full identity card
+    if from_person_page:
+        return (
+            Div(
+                Span("\u2717 REJECTED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+            ),
             _main_mod.toast("Identity rejected.", "success"),
         )
 
@@ -3446,7 +3582,14 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
 
 @rt("/identity/{identity_id}/skip")
-def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None, request=None):
+def post(
+    identity_id: str,
+    from_focus: bool = False,
+    filter: str = "",
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
     """
     Skip identity (defer for later review). Requires admin.
 
@@ -3478,8 +3621,15 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         )
 
     try:
+        identity = registry.get_identity(identity_id)
         registry.skip_identity(identity_id, user_source="web_review")
         _main_mod.save_registry(registry)
+        _main_mod.log_user_action(
+            "SKIP",
+            identity_id=identity_id,
+            identity_name=identity.get("name", "Unknown"),
+            context="person_page" if from_person_page else "browse",
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -3492,6 +3642,19 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.toast("Skipped for later.", "info"),
+        )
+
+    # FB-017: On person page, return status update instead of full identity card
+    if from_person_page:
+        return (
+            Div(
+                Span(
+                    "\u23f8 SKIPPED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-400"
+                ),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+            ),
             _main_mod.toast("Skipped for later.", "info"),
         )
 

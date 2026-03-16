@@ -1247,8 +1247,10 @@ def public_person_page(
                                 hx_get=f"{nav_prefix}/api/identity/{person_id}/neighbors?container_id={similar_container_id}",
                                 hx_target=f"#{similar_container_id}",
                                 hx_swap="innerHTML",
-                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
+                                hx_disabled_elt="this",
+                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors disabled:opacity-50",
                                 type="button",
+                                **{"_": "on click put 'Searching...' into me"},
                             )
                             if is_admin
                             else A(
@@ -1289,7 +1291,8 @@ def public_person_page(
                             Button(
                                 "Rename",
                                 type="submit",
-                                cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded",
+                                cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded disabled:opacity-50",
+                                **{"_": "on click put 'Saving...' into me"},
                             ),
                             Span(id=f"rename-status-{person_id}", cls="text-xs text-emerald-400 ml-1"),
                             hx_post=f"/api/identity/{person_id}/rename",
@@ -1299,38 +1302,46 @@ def public_person_page(
                             data_testid="inline-rename-form",
                         ),
                         # State actions (confirm/skip/reject) — only for unresolved states
+                        # FB-017: Use from_person_page=true so handler returns status, not full card
+                        # FB-016/FB-024: Loading indicators via hx_disabled_elt
                         Div(
                             Button(
                                 "\u2713 Confirm",
-                                cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700",
-                                hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}",
-                                hx_target="#person-admin-status",
-                                hx_swap="innerHTML",
+                                cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
+                                hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}?from_person_page=true",
+                                hx_target="#person-admin-actions",
+                                hx_swap="outerHTML",
+                                hx_disabled_elt="this",
                                 type="button",
+                                **{"_": "on click put 'Confirming...' into me"},
                             )
                             if state in ("INBOX", "PROPOSED", "SKIPPED")
                             else None,
                             Button(
                                 "\u23f8 Skip",
-                                cls="px-3 py-1.5 text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600",
-                                hx_post=f"/identity/{person_id}/skip",
-                                hx_target="#person-admin-status",
-                                hx_swap="innerHTML",
+                                cls="px-3 py-1.5 text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50",
+                                hx_post=f"/identity/{person_id}/skip?from_person_page=true",
+                                hx_target="#person-admin-actions",
+                                hx_swap="outerHTML",
+                                hx_disabled_elt="this",
                                 type="button",
+                                **{"_": "on click put 'Skipping...' into me"},
                             )
                             if state in ("INBOX", "PROPOSED")
                             else None,
                             Button(
                                 "\u2717 Reject",
-                                cls="px-3 py-1.5 text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20",
-                                hx_post=f"/{'inbox/' + person_id + '/reject' if state == 'INBOX' else 'reject/' + person_id}",
-                                hx_target="#person-admin-status",
-                                hx_swap="innerHTML",
+                                cls="px-3 py-1.5 text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20 disabled:opacity-50",
+                                hx_post=f"/{'inbox/' + person_id + '/reject' if state == 'INBOX' else 'reject/' + person_id}?from_person_page=true",
+                                hx_target="#person-admin-actions",
+                                hx_swap="outerHTML",
+                                hx_disabled_elt="this",
                                 type="button",
+                                **{"_": "on click put 'Rejecting...' into me"},
                             )
                             if state in ("INBOX", "PROPOSED", "SKIPPED")
                             else None,
-                            Span(id="person-admin-status", cls="text-xs ml-2"),
+                            id="person-admin-actions",
                             cls="flex items-center justify-center gap-2 mb-3",
                             data_testid="person-state-actions",
                         )
