@@ -490,6 +490,7 @@ async def post(request):
         from app.supabase_data import (
             shadow_write_identities_batch,
             shadow_write_photos_batch,
+            shadow_write_photo_faces_batch,
             add_photo_to_community,
         )
 
@@ -508,6 +509,11 @@ async def post(request):
                 items = [dict(v, photo_id=k) for k, v in photos.items()]
                 written = shadow_write_photos_batch(items)
                 supabase_results["photos_synced"] = written
+
+                # Session 105b: Write photo_faces alongside photos
+                face_items = [{"photo_id": k, "face_ids": list(v.get("face_ids", []))} for k, v in photos.items()]
+                faces_written = shadow_write_photo_faces_batch(face_items)
+                supabase_results["photo_faces_synced"] = faces_written
 
                 # Auto-assign photos to communities based on existing community assignments
                 # (best effort — if community info is available from photo data)
@@ -622,6 +628,14 @@ async def post(request, sess):
         photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
         shadow_write_photos_batch(photo_items)
 
+        # Session 105b: Write photo_faces alongside photos
+        from app.supabase_data import shadow_write_photo_faces_batch
+
+        face_items = [
+            {"photo_id": k, "face_ids": list(v.get("face_ids", []))} for k, v in json_photo_reg._photos.items()
+        ]
+        faces_written = shadow_write_photo_faces_batch(face_items)
+
         id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
         shadow_write_identities_batch(id_items)
 
@@ -634,6 +648,7 @@ async def post(request, sess):
             "status": "ok",
             "photos_synced": len(photo_items),
             "identities_synced": len(id_items),
+            "photo_faces_synced": faces_written,
             "upload_date_backfilled": backfill_count,
             "orphan_faces_repaired": orphan_count,
         }

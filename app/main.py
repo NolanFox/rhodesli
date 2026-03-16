@@ -1140,33 +1140,25 @@ def save_registry(registry, confirmed_identity_info=None):
     except ImportError:
         pass
 
-    if DATA_SOURCE == "postgres":
-        # Postgres write path: sync overrides inline (fast), batch write in background
-        import threading
-
-        identities_copy = dict(registry._identities)
-
-        def _background_postgres_save(identities_dict):
-            try:
-                from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
-
-                sync_identity_overrides(identities_dict)
-                items = [dict(v, identity_id=k) for k, v in identities_dict.items()]
-                shadow_write_identities_batch(items)
-            except Exception as e:
-                logging.error(f"Postgres save_registry failed: {e}")
-                # Emergency fallback: write JSON so data isn't lost
-                registry.save(REGISTRY_PATH)
-
-        threading.Thread(target=_background_postgres_save, args=(identities_copy,), daemon=True).start()
-        # Also save JSON as backup
-        registry.save(REGISTRY_PATH)
-        return
-
-    # JSON write path (default)
+    # Always write JSON as backup (Session 105b: write-through)
     registry.save(REGISTRY_PATH)
 
-    # Sync identities to Supabase in background thread (non-blocking)
+    identities_copy = dict(registry._identities)
+
+    if DATA_SOURCE == "postgres":
+        # Synchronous Supabase write — failures are visible (Session 105b)
+        try:
+            from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
+
+            sync_identity_overrides(identities_copy)
+            items = [dict(v, identity_id=k) for k, v in identities_copy.items()]
+            shadow_write_identities_batch(items, strict=True)
+        except Exception as e:
+            logging.error(f"Postgres save_registry failed: {e}")
+            # JSON backup already written above
+        return
+
+    # JSON mode: shadow-write to Supabase in background
     def _background_supabase_sync(identities_dict):
         try:
             from app.supabase_data import sync_identity_overrides
@@ -1186,7 +1178,7 @@ def save_registry(registry, confirmed_identity_info=None):
 
     threading.Thread(
         target=_background_supabase_sync,
-        args=(dict(registry._identities),),
+        args=(identities_copy,),
         daemon=True,
     ).start()
 
@@ -3339,39 +3331,43 @@ def load_photo_registry():
 
 
 def save_photo_registry(registry):
-    """Save photo registry to disk and invalidate cache.
+    """Save photo registry to disk and sync to Supabase.
 
-    When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
-    When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+    Session 105b: Write-through architecture.
+    - Always write JSON as backup (both DATA_SOURCE modes)
+    - When DATA_SOURCE=postgres: synchronous Supabase write (not background thread)
+    - photo_faces table is written alongside photos table
     """
     global _photo_registry_cache
     _photo_registry_cache = registry
 
-    if DATA_SOURCE == "postgres":
-        # Postgres-only write path
-        try:
-            from app.supabase_data import shadow_write_photos_batch
-
-            items = [dict(v, photo_id=k) for k, v in registry._photos.items()]
-            shadow_write_photos_batch(items)
-        except Exception as e:
-            logging.error(f"Postgres save_photo_registry failed: {e}")
-            # Emergency fallback: write JSON so data isn't lost
-            photo_index_path = data_path / "photo_index.json"
-            registry.save(photo_index_path)
-        return
-
-    # JSON write path (default)
+    # Always write JSON as backup
     photo_index_path = data_path / "photo_index.json"
     registry.save(photo_index_path)
 
-    # Shadow-write all photos to Supabase (fire-and-forget background thread)
-    def _shadow_sync_photos(photos_dict):
-        try:
-            from app.supabase_data import shadow_write_photos_batch
+    # Build items for Supabase write
+    items = [dict(v, photo_id=k) for k, v in registry._photos.items()]
+    face_items = [{"photo_id": k, "face_ids": list(v.get("face_ids", []))} for k, v in registry._photos.items()]
 
-            items = [dict(v, photo_id=k) for k, v in photos_dict.items()]
-            shadow_write_photos_batch(items)
+    if DATA_SOURCE == "postgres":
+        # Synchronous write — failures are visible (Session 105b)
+        try:
+            from app.supabase_data import shadow_write_photos_batch, shadow_write_photo_faces_batch
+
+            shadow_write_photos_batch(items, strict=True)
+            shadow_write_photo_faces_batch(face_items, strict=True)
+        except Exception as e:
+            logging.error(f"Postgres save_photo_registry failed: {e}")
+            # JSON backup already written above
+        return
+
+    # JSON mode: shadow-write to Supabase in background
+    def _shadow_sync_photos(photo_items, pf_items):
+        try:
+            from app.supabase_data import shadow_write_photos_batch, shadow_write_photo_faces_batch
+
+            shadow_write_photos_batch(photo_items)
+            shadow_write_photo_faces_batch(pf_items)
         except Exception as e:
             logging.warning(f"Supabase photo shadow sync failed: {e}")
 
@@ -3379,7 +3375,7 @@ def save_photo_registry(registry):
 
     threading.Thread(
         target=_shadow_sync_photos,
-        args=(dict(registry._photos),),
+        args=(items, face_items),
         daemon=True,
     ).start()
 

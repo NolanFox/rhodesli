@@ -1006,15 +1006,24 @@ async def post(
                     photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
                     shadow_write_photos_batch(photo_items)
 
+                    # Session 105b: Write photo_faces alongside photos
+                    from app.supabase_data import shadow_write_photo_faces_batch
+
+                    face_items = [
+                        {"photo_id": k, "face_ids": list(v.get("face_ids", []))}
+                        for k, v in json_photo_reg._photos.items()
+                    ]
+                    shadow_write_photo_faces_batch(face_items)
+
                     # Write ALL identities to Supabase (upsert is idempotent)
                     id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
                     shadow_write_identities_batch(id_items)
 
-                    print(
+                    _bg_logging.info(
                         f"[upload] Synced {len(photo_items)} photos + {len(id_items)} identities to Supabase for job {job_id}"
                     )
                 except Exception as e:
-                    print(f"[upload] Supabase sync error for job {job_id}: {e}")
+                    _bg_logging.error(f"[upload] Supabase sync error for job {job_id}: {e}")
 
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.

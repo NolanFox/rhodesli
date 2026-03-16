@@ -801,6 +801,48 @@ def shadow_write_photos_batch(photos_list: list[dict], strict: bool = False) -> 
     return written
 
 
+def shadow_write_photo_faces_batch(photos_with_faces: list[dict], strict: bool = False) -> int:
+    """Write photo_faces rows to Supabase. Session 105b.
+
+    Closes the critical gap where load_from_postgres() reads photo_faces
+    but no write path ever populated it after the initial migration.
+
+    Args:
+        photos_with_faces: List of dicts with photo_id and face_ids keys.
+            Each dict should have at minimum: {"photo_id": str, "face_ids": list[str]}
+        strict: If True, re-raise exceptions.
+    Returns:
+        Count of face rows written.
+    """
+    client = get_supabase_client()
+    if not client:
+        if strict:
+            raise ConnectionError("Supabase client not available for photo_faces write")
+        return 0
+
+    written = 0
+    batch_size = 200
+    rows = []
+    for photo in photos_with_faces:
+        photo_id = photo.get("photo_id", "")
+        face_ids = photo.get("face_ids", [])
+        if not photo_id or not face_ids:
+            continue
+        for fid in face_ids:
+            rows.append({"face_id": fid, "photo_id": photo_id})
+
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i : i + batch_size]
+        try:
+            client.table("photo_faces").upsert(batch).execute()
+            written += len(batch)
+        except Exception as e:
+            logger.error(f"Shadow write photo_faces batch failed: {e}")
+            if strict:
+                raise
+    return written
+
+
 def shadow_write_identities_batch(identities_list: list[dict], strict: bool = False) -> int:
     """Shadow-write a batch of identities to Supabase. Returns count written.
 
