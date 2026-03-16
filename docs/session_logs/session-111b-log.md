@@ -59,10 +59,20 @@ All merges clean. 4519 tests pass.
 ## Verification Gate
 - [x] All community prefix gaps fixed (80+)
 - [x] Regression test prevents future gaps
-- [x] All tests pass (4519 passed, excluding 2 pre-existing)
+- [x] All tests pass (4519 passed, excluding 1 pre-existing)
 - [x] Discovery tab shows loading indicator
 - [x] Deployed to production (SUCCESS)
-- [x] Browser verified with screenshots
+- [x] Browser verified (PARTIAL — missed Proposals page, see post-session notes)
 - [x] `git log origin/main..HEAD` is empty
 - [x] Assessment written
 - [x] No data file changes committed
+- [x] CHANGELOG updated (v0.99.16)
+- [x] ROADMAP updated (session entry, version bump)
+- [x] BACKLOG updated (COMMUNITY-015 marked mostly fixed)
+- [x] CI fix: test_get_photo_metadata cache ordering bug fixed
+- [x] Session 111c prompt written
+
+## Post-Session Notes
+- **Proposals page is BROKEN** — no thumbnails, no actions, raw distances. Missed during browser verification. P0 for Session 111c.
+- **Lesson saved**: Browser verification must check ALL admin surfaces, not just pages changed in the session.
+- **CI fix**: `test_get_photo_metadata_prefers_loaded_registry_values_in_postgres_mode` — stale JSON metadata overwrote fresh registry values via `.update()`. Fixed by popping source/collection/source_url before merge. Also fixed prewarm thread race in test with `_cache_lock`.
