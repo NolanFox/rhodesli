@@ -1061,8 +1061,43 @@ async def post(
                     _bg_logging.info(
                         f"[upload] Synced {len(photo_items)} photos + {len(id_items)} identities to Supabase for job {job_id}"
                     )
+
+                    # Session 108 (Lesson 146): Post-sync validation — verify every
+                    # new face has a corresponding identity in Supabase. If not, the
+                    # Supabase sync partially failed and we need to retry.
+                    new_face_ids = set(result.get("face_ids", []))
+                    if new_face_ids:
+                        synced_face_ids = set()
+                        for idata in json_registry._identities.values():
+                            synced_face_ids.update(idata.get("anchor_ids", []))
+                            synced_face_ids.update(idata.get("candidate_ids", []))
+                        missing = new_face_ids - synced_face_ids
+                        if missing:
+                            _bg_logging.error(
+                                f"[upload] POST-SYNC VALIDATION FAILED: {len(missing)} new faces "
+                                f"have no identity after Supabase sync. Face IDs: {missing}. "
+                                f"Attempting orphan repair."
+                            )
+                            from core.registry import IdentityState
+
+                            for fid in missing:
+                                json_registry.create_identity(
+                                    anchor_ids=[fid],
+                                    user_source="post_sync_orphan_repair",
+                                    state=IdentityState.INBOX,
+                                )
+                            json_registry.save(data_path / "identities.json")
+                            # Re-sync repaired identities
+                            repaired_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
+                            shadow_write_identities_batch(repaired_items)
+                            _bg_logging.info(
+                                f"[upload] Orphan repair: created {len(missing)} identities for job {job_id}"
+                            )
+
                 except Exception as e:
                     _bg_logging.error(f"[upload] Supabase sync error for job {job_id}: {e}")
+                    # Session 108: Even if sync fails completely, the JSON files have
+                    # the data. Startup orphan detection will catch and repair on restart.
 
             # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
             # Without this, the sidebar counts and photo grid remain stale until restart.

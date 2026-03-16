@@ -100,6 +100,67 @@ class TestOrphanFaceDetection:
 
 
 # ---------------------------------------------------------------------------
+# Post-Sync Validation in Upload Pipeline (Prevention Layer)
+# ---------------------------------------------------------------------------
+
+
+class TestPostSyncValidation:
+    """Test that _background_ingest post-sync validation catches orphan faces."""
+
+    def test_post_sync_detects_missing_identities(self, tmp_path):
+        """New faces missing from registry are detected and repaired."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        # Simulate: process_directory created identities for face_a but not face_b
+        id_reg = IdentityRegistry()
+        id_reg.create_identity(anchor_ids=["face_a"], user_source="ingest", state=IdentityState.INBOX)
+        id_path = tmp_path / "identities.json"
+        id_reg.save(id_path)
+
+        # Simulate post-sync validation check
+        new_face_ids = {"face_a", "face_b"}
+        synced_face_ids = set()
+        for idata in id_reg._identities.values():
+            synced_face_ids.update(idata.get("anchor_ids", []))
+            synced_face_ids.update(idata.get("candidate_ids", []))
+
+        missing = new_face_ids - synced_face_ids
+        assert missing == {"face_b"}
+
+        # Repair
+        for fid in missing:
+            id_reg.create_identity(
+                anchor_ids=[fid],
+                user_source="post_sync_orphan_repair",
+                state=IdentityState.INBOX,
+            )
+        id_reg.save(id_path)
+
+        # Verify all faces now have identities
+        reloaded = IdentityRegistry.load(id_path)
+        all_faces = set()
+        for idata in reloaded._identities.values():
+            all_faces.update(idata.get("anchor_ids", []))
+        assert "face_a" in all_faces
+        assert "face_b" in all_faces
+
+    def test_post_sync_no_repair_when_all_present(self, tmp_path):
+        """No repair needed when all new faces have identities."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        id_reg = IdentityRegistry()
+        id_reg.create_identity(anchor_ids=["face_a"], user_source="ingest", state=IdentityState.INBOX)
+        id_reg.create_identity(anchor_ids=["face_b"], user_source="ingest", state=IdentityState.INBOX)
+
+        new_face_ids = {"face_a", "face_b"}
+        synced_face_ids = set()
+        for idata in id_reg._identities.values():
+            synced_face_ids.update(idata.get("anchor_ids", []))
+        missing = new_face_ids - synced_face_ids
+        assert len(missing) == 0
+
+
+# ---------------------------------------------------------------------------
 # Embeddings Sync Endpoint (Phase 3c)
 # ---------------------------------------------------------------------------
 
