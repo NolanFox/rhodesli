@@ -354,6 +354,7 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ### Compare Full Rebuild
 - [ ] **COMPARE-001: Complete compare UX rebuild** — Session 77 (Codex) implemented ~25% of the original 8-phase compare prompt: archive context + auto-queue + golden tests. Remaining: full UX redesign of compare flow, upload pipeline reliability, mobile optimization, standalone compare product vision. Source: docs/session_context/session-78-context.md.
+- [ ] **COMPARE-002: Community-scoped compare with archive-add fallback** — "Find this person" workflow: upload reference photo → match against community faces → show matches with confidence → if not found, offer to add to archive. Triggered by David Fox/James Fields use case (Session 108). Depends on TOOLS-002 (ML service) or could work with existing on-device ML. See: docs/session_context/session-108-ux-brief.md, TOOLS-003.
 
 ### Route Error Investigation
 - [ ] **BUG-004: Verify /connect and /map stability** — Both routes had 500 errors in earlier sessions (Sessions 40-41). /map depends on PhotoRegistry.get_photo() and geocoded data. /connect depends on D3.js social graph. Verify both return 200 in production after deploy, check for ISEs under edge cases (missing data, bad IDs). Source: Session 78 Track 7 prompt.

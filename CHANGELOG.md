@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.12] — 2026-03-16 (Session 108: Gap Closure, Data Integrity Fix, Deploy)
+
+### Added
+- **Startup orphan face detection** — Auto-creates INBOX identities for faces in photo_index without identities. Prevents invisible faces from partial ingests. (Lesson 146)
+- **Embeddings sync endpoint** — `/api/sync/embeddings` streams embeddings.npy for local ML pipelines. `sync_from_production.py --include-embeddings` downloads them. (Lesson 147)
+- **Data health endpoint** — `/api/health/data` (admin-only) returns orphan faces, orphan identities, embedding counts, proposal staleness. One-click diagnostic.
+- **Push verification in stop-gate** — Warns if commits ahead of origin/main at session end. (Lesson 148)
+- **COMPARE-002 backlog item** — Community-scoped compare with archive-add fallback (James Fields use case)
+- 8 new tests, Lessons 146-148
+
+### Fixed
+- **13 orphan faces repaired** — 9 James Fields + 4 pre-existing faces had no identities. Triggered resync-supabase orphan repair. Fox Family "Internet Research" collection now shows 9/9 identified.
+- **25 unpushed commits deployed** — Sessions 106b, 107, 107b code now live on production.
+
 ## [v0.99.11] — 2026-03-16 (Session 107b: Community Middleware Audit + Approvals UX)
 
 ### Added
