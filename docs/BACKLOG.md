@@ -103,12 +103,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### P1 — Approvals UX (2026-03-16)
 - **APPROVAL-001**: Batch select checkboxes on approvals page — port pattern from pending uploads (select all, floating action bar). File: `app/admin_routes.py`. Effort: ~1h. Source: Session 107 user feedback.
-- **APPROVAL-002**: Show submission timestamp on approval cards — data exists in `submitted_at`, not rendered. File: `app/admin_routes.py`. Effort: ~10 min. Source: Session 107 user feedback.
-- **APPROVAL-003**: Auto-confirm identity on approve — add checkbox "Also confirm?" (default checked), wire to `registry.confirm_identity()`. File: `app/admin_routes.py`. Effort: ~30 min. Source: Session 107 user feedback.
-- **APPROVAL-004**: Store annotation_id in rename history — link identity rename back to the annotation that triggered it. File: `app/main.py` `rename_identity()`. Effort: ~10 min. Source: Session 107 user feedback.
-- **APPROVAL-005**: Person page suggestion provenance — show "Name suggested by [email], approved on [date]" with edit history. File: `app/page_routes.py`. Effort: ~1h. Source: Session 107 user feedback.
+- **APPROVAL-002**: ~~Show submission timestamp on approval cards~~ — DONE (Session 107b). `_format_submitted_at()` renders relative time on each card.
+- **APPROVAL-003**: ~~Auto-confirm identity on approve~~ — DONE (Session 107b). Checkbox "Also confirm this person" (default checked), wired to `registry.confirm_identity()`.
+- **APPROVAL-004**: ~~Store annotation_id in rename history~~ — DONE (Session 107b). `rename_identity()` accepts optional `annotation_id` stored in event metadata.
+- **APPROVAL-005**: ~~Person page suggestion provenance~~ — DONE (Session 107b). `_name_provenance_line()` shows who suggested + when approved (admin only).
 - **APPROVAL-006**: Email digest/batching for approval notifications — currently sends N individual emails for N approvals. Needs PRD. Source: Session 107 user feedback.
-- **APPROVAL-007**: Anonymous pending upload auto-expiry — mark entries as expired when staging dir gone + older than 24h. File: `app/main.py` startup cleanup. Effort: ~20 min. Source: Session 107 user feedback.
+- **APPROVAL-007**: ~~Anonymous pending upload auto-expiry~~ — DONE (Session 107b). Startup cleanup marks entries expired when staging dir gone + older than 24h.
+- **APPROVAL-008**: Person page full audit trail — all name changes with actor + timestamp, not just approved suggestions. Effort: ~1h. Source: Session 107b prompt.
+- **APPROVAL-009**: Approvals page consistent UX with pending uploads — select, action bar, keyboard shortcuts. Effort: ~1-2h. Source: Session 107b prompt.
 
 ### P2 — Session 106 User Triage (2026-03-16)
 - **FB-004**: Consistent face crop ↔ source photo toggle across all views — currently some views show crop only, some show source photo. Need a consistent pattern (click to toggle, or always show both). File: multiple route files. Effort: ~2h. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
