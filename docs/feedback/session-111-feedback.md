@@ -73,3 +73,47 @@
 - **Root cause:** `_build_caches()` populates `filename_to_metadata` only from photo_registry, not from raw photo_index.json data. When IDs mismatch, the fallback path misses metadata like upload_date.
 - **Fix:** IN PROGRESS — added `filename_to_metadata` population from `best_raw_entries`
 - **BACKLOG:** CI-001
+
+### FB-034: More Rhodes clusters in Fox Family (recurring)
+- **Severity:** P0 (data integrity)
+- **Context:** uriel_galante_collection photos (community-batch-20260214) appearing as Person 746 cluster in Fox Family speed-run. Same root cause as FB-029.
+- **Fix:** FIXED — same fix as FB-029 (community slug fallback)
+
+### FB-035: Bad cluster quality — different Fox Family people grouped together
+- **Severity:** P2 (ML quality)
+- **Context:** Person 2820 has 5 faces from fox-charlie-001 collection that appear to be different people. All ARE Fox Family photos (not a community leak). The grouping threshold (0.95) may be too loose for low-quality/partial face crops from old photos.
+- **Root cause:** group_inbox_identities() threshold too permissive for degraded face crops
+- **Fix:** BACKLOG — tighten threshold or add quality-aware clustering
+- **BACKLOG:** ML-102
+
+### FB-036: Speed Loop tagging broken — tags don't persist (BUG-001 regression)
+- **Severity:** P0 (data loss)
+- **Context:** In Speed Loop (/photo/{id}?seq=1), user types "Charles" and selects "Charles Fox" from dropdown. The tag panel shows the selection but the assignment does NOT persist. Same as BUG-001 from previous sessions. Nolan called this "the exact same bug we fixed yesterday."
+- **Root cause:** BUG-001 was never fully fixed — the tag assignment endpoint silently fails
+- **Fix:** BACKLOG — BUG-001 (existing, needs root cause investigation)
+
+### FB-037: Speed Loop tagging broken on second photo too + slowness
+- **Severity:** P0 (data loss + performance)
+- **Context:** Same tagging failure as FB-036 on a different photo (group photo with 10 faces). Also, everything in the Speed Loop is "very very slow."
+- **Fix:** Same as FB-036 + PERF-008
+
+### FB-038: "View More" in Similar Identities panel resets all checkboxes
+- **Severity:** P2 (UX — state loss)
+- **Context:** User checked several identities for batch merge, then scrolled down and clicked "View More" to load additional suggestions. The HTMX swap replaced the DOM and lost all checkbox state. User had to re-check everything.
+- **Root cause:** HTMX innerHTML swap replaces the entire list, losing client-side checkbox state
+- **Fix:** BACKLOG — preserve checked state in hidden field or use hx-swap="beforeend" for pagination
+- **BACKLOG:** UX-099
+
+### FB-039: Batch merge reports "14 confirmed, 11 failed" — confusing
+- **Severity:** P1 (UX — misleading feedback)
+- **Context:** User selected multiple identities and clicked "Merge Selected." Response said "14 confirmed, 11 failed." The failures are likely co-occurrence blocks (faces appear in the same photo). But the message doesn't explain WHY they failed or which ones.
+- **Root cause:** Co-occurrence blocker silently rejects merges without per-identity feedback
+- **Fix:** BACKLOG — show per-identity success/failure with reason ("blocked: faces appear in same photo")
+- **BACKLOG:** UX-100
+
+### FB-040: Merge succeeded but stale card remains in inbox
+- **Severity:** P1 (UX — stale DOM)
+- **Context:** After merge, the identity card was still visible in the inbox list. User had to inspect the photo to confirm the merge actually worked. The "14 confirmed, 11 failed" message made them think it failed for Charles Fox specifically, but it hadn't.
+- **Root cause:** HTMX merge response doesn't remove the source card from the inbox. Card needs to be swapped out with OOB swap or removed after merge.
+- **Fix:** BACKLOG — after merge, remove the merged-from card via OOB swap
+- **BACKLOG:** UX-101
