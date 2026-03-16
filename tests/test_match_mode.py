@@ -40,8 +40,10 @@ class TestMatchModeUI:
         mock_pair.return_value = self._mock_pair()
         reg = MagicMock()
         reg.get_identity.return_value = {
-            "identity_id": "id-b", "name": "Bob",
-            "anchor_ids": ["face-b1"], "candidate_ids": [],
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
         }
         mock_reg.return_value = reg
 
@@ -65,8 +67,10 @@ class TestMatchModeUI:
         mock_pair.return_value = self._mock_pair()
         reg = MagicMock()
         reg.get_identity.return_value = {
-            "identity_id": "id-b", "name": "Bob",
-            "anchor_ids": ["face-b1"], "candidate_ids": [],
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
         }
         mock_reg.return_value = reg
 
@@ -91,8 +95,10 @@ class TestMatchModeUI:
         mock_pair.return_value = self._mock_pair()
         reg = MagicMock()
         reg.get_identity.return_value = {
-            "identity_id": "id-b", "name": "Bob",
-            "anchor_ids": ["face-b1"], "candidate_ids": [],
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
         }
         mock_reg.return_value = reg
 
@@ -126,8 +132,10 @@ class TestMatchModeUI:
         mock_pair.return_value = self._mock_pair()
         reg = MagicMock()
         reg.get_identity.return_value = {
-            "identity_id": "id-b", "name": "Bob",
-            "anchor_ids": ["face-b1"], "candidate_ids": [],
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
         }
         mock_reg.return_value = reg
 
@@ -138,6 +146,132 @@ class TestMatchModeUI:
         # Buttons should include confidence parameter
         assert "confidence=" in html
 
+    @patch("app.match_facecompare_routes._get_best_match_pair")
+    @patch("app.main.get_crop_files", return_value=set())
+    @patch("app.main.get_photo_id_for_face", return_value="photo-1")
+    @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
+    @patch("app.main.load_registry")
+    @patch("app.main.get_photo_metadata")
+    @patch(
+        "app.supabase_data.get_community_by_slug",
+        return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+    )
+    def test_fb001_community_prefix_in_photo_urls(
+        self, mock_community, mock_meta, mock_reg, mock_url, mock_photo, mock_crops, mock_pair
+    ):
+        """FB-001: Photo URLs include community prefix."""
+        from starlette.testclient import TestClient
+        from app.main import app
+
+        mock_pair.return_value = self._mock_pair()
+        mock_meta.return_value = {"filename": "test.jpg"}
+        reg = MagicMock()
+        reg.get_identity.return_value = {
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = reg
+
+        client = TestClient(app)
+        resp = client.get("/c/fox-family/api/match/next-pair")
+        html = resp.text
+
+        # Photo modal URL should include community prefix
+        assert "/c/fox-family/photo/photo-1/partial" in html
+
+    @patch("app.match_facecompare_routes._get_best_match_pair")
+    @patch("app.main.get_crop_files", return_value=set())
+    @patch("app.main.get_photo_id_for_face", return_value="photo-1")
+    @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
+    @patch("app.main.load_registry")
+    @patch("app.main.get_photo_metadata")
+    def test_fb002_source_photo_displayed(self, mock_meta, mock_reg, mock_url, mock_photo, mock_crops, mock_pair):
+        """FB-002: Source photo thumbnail displayed alongside face crop."""
+        from starlette.testclient import TestClient
+        from app.main import app
+
+        mock_pair.return_value = self._mock_pair()
+        mock_meta.return_value = {"filename": "test_photo.jpg"}
+        reg = MagicMock()
+        reg.get_identity.return_value = {
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = reg
+
+        client = TestClient(app)
+        resp = client.get("/api/match/next-pair")
+        html = resp.text
+
+        assert 'data-testid="match-source-photo"' in html
+
+    @patch("app.match_facecompare_routes._get_best_match_pair")
+    @patch("app.main.get_crop_files", return_value=set())
+    @patch("app.main.get_photo_id_for_face", return_value="photo-1")
+    @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
+    @patch("app.main.load_registry")
+    @patch("app.main.get_photo_metadata")
+    def test_fb003_person_and_photo_links(self, mock_meta, mock_reg, mock_url, mock_photo, mock_crops, mock_pair):
+        """FB-003: Person and photo page links visible in face cards."""
+        from starlette.testclient import TestClient
+        from app.main import app
+
+        mock_pair.return_value = self._mock_pair()
+        mock_meta.return_value = {"filename": "test_photo.jpg"}
+        reg = MagicMock()
+        reg.get_identity.return_value = {
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = reg
+
+        client = TestClient(app)
+        resp = client.get("/api/match/next-pair")
+        html = resp.text
+
+        assert 'data-testid="match-photo-link"' in html
+        assert 'data-testid="match-person-link"' in html
+        assert "View Photo" in html
+        assert "View Person" in html
+
+    @patch("app.match_facecompare_routes._get_best_match_pair")
+    @patch("app.main.get_crop_files", return_value=set())
+    @patch("app.main.get_photo_id_for_face", return_value="photo-1")
+    @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
+    @patch("app.main.load_registry")
+    @patch("app.main.get_photo_metadata")
+    def test_fb006_same_person_button_loading_state(
+        self, mock_meta, mock_reg, mock_url, mock_photo, mock_crops, mock_pair
+    ):
+        """FB-006: Same Person button has loading feedback."""
+        from starlette.testclient import TestClient
+        from app.main import app
+
+        mock_pair.return_value = self._mock_pair()
+        mock_meta.return_value = {"filename": "test_photo.jpg"}
+        reg = MagicMock()
+        reg.get_identity.return_value = {
+            "identity_id": "id-b",
+            "name": "Bob",
+            "anchor_ids": ["face-b1"],
+            "candidate_ids": [],
+        }
+        mock_reg.return_value = reg
+
+        client = TestClient(app)
+        resp = client.get("/api/match/next-pair")
+        html = resp.text
+
+        # Button should have hyperscript for loading state
+        assert "Merging..." in html
+        assert "opacity-50" in html
+
 
 class TestMatchDecisionLogging:
     """Tests for match decision logging."""
@@ -146,8 +280,7 @@ class TestMatchDecisionLogging:
         """Decisions are logged to match_decisions.jsonl."""
         from app.match_facecompare_routes import _log_match_decision
 
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.get_current_user", return_value=None):
+        with patch("app.main.data_path", tmp_path), patch("app.main.get_current_user", return_value=None):
             _log_match_decision("id-a", "id-b", "same", 75)
 
         log_path = tmp_path / "match_decisions.jsonl"
@@ -168,8 +301,7 @@ class TestMatchDecisionLogging:
         """Multiple decisions append to the same log file."""
         from app.match_facecompare_routes import _log_match_decision
 
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.get_current_user", return_value=None):
+        with patch("app.main.data_path", tmp_path), patch("app.main.get_current_user", return_value=None):
             _log_match_decision("id-1", "id-2", "same", 80)
             _log_match_decision("id-3", "id-4", "different", 45)
 
@@ -214,6 +346,7 @@ class TestConfidenceCalculation:
         # 0.5 distance → sigmoid CDF with empirical stats → ~86%
         # (was 75% with linear fallback pre-Session 88)
         from core.confidence import compute_confidence_pct
+
         expected_pct = compute_confidence_pct(0.5)
         assert f"{expected_pct}%" in html
 
@@ -293,11 +426,13 @@ class TestMatchModeFilters:
         """filter=ready returns None when no proposals exist (skips NN fallback)."""
         from app.match_facecompare_routes import _get_best_match_pair
 
-        with patch("app.main.load_registry") as mock_reg, \
-             patch("app.main.get_face_data"), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._load_proposals", return_value={"proposals": []}), \
-             patch("app.main._get_identities_with_proposals", return_value=set()):
+        with (
+            patch("app.main.load_registry") as mock_reg,
+            patch("app.main.get_face_data"),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._load_proposals", return_value={"proposals": []}),
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+        ):
             result = _get_best_match_pair(triage_filter="ready")
             assert result is None
 
@@ -305,19 +440,22 @@ class TestMatchModeFilters:
         """filter=unmatched skips proposals and only uses NN search."""
         from app.match_facecompare_routes import _get_best_match_pair
 
-        proposals = {"proposals": [
-            {"source_identity_id": "id1", "target_identity_id": "id2",
-             "distance": 0.5, "confidence": "VERY HIGH"},
-        ]}
+        proposals = {
+            "proposals": [
+                {"source_identity_id": "id1", "target_identity_id": "id2", "distance": 0.5, "confidence": "VERY HIGH"},
+            ]
+        }
 
         mock_reg = MagicMock()
         mock_reg.list_identities.return_value = []
 
-        with patch("app.main.load_registry", return_value=mock_reg), \
-             patch("app.main.get_face_data"), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._load_proposals", return_value=proposals), \
-             patch("app.main._get_identities_with_proposals", return_value={"id1"}):
+        with (
+            patch("app.main.load_registry", return_value=mock_reg),
+            patch("app.main.get_face_data"),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._load_proposals", return_value=proposals),
+            patch("app.main._get_identities_with_proposals", return_value={"id1"}),
+        ):
             # filter=unmatched should skip proposals and find no NN candidates
             result = _get_best_match_pair(triage_filter="unmatched")
             assert result is None
@@ -326,32 +464,39 @@ class TestMatchModeFilters:
         """filter=rediscovered only returns proposals where source has promoted_from."""
         from app.match_facecompare_routes import _get_best_match_pair
 
-        proposals = {"proposals": [
-            {"source_identity_id": "id1", "target_identity_id": "id2",
-             "distance": 0.5, "confidence": "VERY HIGH"},
-        ]}
+        proposals = {
+            "proposals": [
+                {"source_identity_id": "id1", "target_identity_id": "id2", "distance": 0.5, "confidence": "VERY HIGH"},
+            ]
+        }
 
         source_identity = {
-            "identity_id": "id1", "name": "Person 1", "state": "INBOX",
-            "anchor_ids": ["f1"], "candidate_ids": [],
+            "identity_id": "id1",
+            "name": "Person 1",
+            "state": "INBOX",
+            "anchor_ids": ["f1"],
+            "candidate_ids": [],
             # NOT promoted — should be filtered out
         }
         target_identity = {
-            "identity_id": "id2", "name": "Person 2", "state": "CONFIRMED",
-            "anchor_ids": ["f2"], "candidate_ids": [],
+            "identity_id": "id2",
+            "name": "Person 2",
+            "state": "CONFIRMED",
+            "anchor_ids": ["f2"],
+            "candidate_ids": [],
         }
 
         mock_reg = MagicMock()
-        mock_reg.get_identity.side_effect = lambda iid: {
-            "id1": source_identity, "id2": target_identity
-        }.get(iid)
+        mock_reg.get_identity.side_effect = lambda iid: {"id1": source_identity, "id2": target_identity}.get(iid)
         mock_reg.list_identities.return_value = []
 
-        with patch("app.main.load_registry", return_value=mock_reg), \
-             patch("app.main.get_face_data"), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._load_proposals", return_value=proposals), \
-             patch("app.main._get_identities_with_proposals", return_value={"id1"}):
+        with (
+            patch("app.main.load_registry", return_value=mock_reg),
+            patch("app.main.get_face_data"),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._load_proposals", return_value=proposals),
+            patch("app.main._get_identities_with_proposals", return_value={"id1"}),
+        ):
             # id1 has no promoted_from, so rediscovered filter should skip it
             result = _get_best_match_pair(triage_filter="rediscovered")
             assert result is None

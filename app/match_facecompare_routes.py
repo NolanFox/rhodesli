@@ -161,7 +161,7 @@ def _get_best_match_pair(triage_filter: str = ""):
 
 
 @rt("/api/match/next-pair")
-def get(filter: str = "", sess=None):
+def get(filter: str = "", sess=None, request=None):
     """
     Get the next pair of faces to compare in Match mode.
 
@@ -189,6 +189,10 @@ def get(filter: str = "", sess=None):
     identity_a, neighbor_b, distance = pair
     identity_id_a = identity_a["identity_id"]
     identity_id_b = neighbor_b["identity_id"]
+
+    # Community context for URL generation (FB-001)
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     crop_files = _main_mod.get_crop_files()
 
@@ -245,9 +249,13 @@ def get(filter: str = "", sess=None):
             else Span("?", cls="text-6xl text-slate-500")
         )
 
-        # Make clickable to view source photo (with identity nav context)
+        # Make clickable to view source photo (with identity nav context) — FB-001: use nav_prefix
         if photo_id:
-            _fc_url = f"/photo/{photo_id}/partial?face={face_id}" if face_id else f"/photo/{photo_id}/partial"
+            _fc_url = (
+                f"{nav_prefix}/photo/{photo_id}/partial?face={face_id}"
+                if face_id
+                else f"{nav_prefix}/photo/{photo_id}/partial"
+            )
             if iid:
                 _fc_url += f"&identity_id={iid}"
             face_el = Button(
@@ -268,11 +276,53 @@ def get(filter: str = "", sess=None):
                 cls="w-full aspect-square rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center",
             )
 
+        # FB-002: Source photo thumbnail
+        source_photo_el = None
+        if photo_id:
+            photo_meta = _main_mod.get_photo_metadata(photo_id)
+            if photo_meta and photo_meta.get("filename"):
+                source_url = storage.get_photo_url(photo_meta["filename"])
+                source_photo_el = A(
+                    Img(
+                        src=source_url,
+                        alt="Source photo",
+                        cls="w-full h-20 object-cover rounded-lg border border-slate-600",
+                        loading="lazy",
+                    ),
+                    href=f"{nav_prefix}/photo/{photo_id}",
+                    cls="block mt-2",
+                    title="View source photo",
+                    data_testid="match-source-photo",
+                )
+
+        # FB-003: Photo and person page links
+        links = []
+        if photo_id:
+            links.append(
+                A(
+                    "View Photo",
+                    href=f"{nav_prefix}/photo/{photo_id}",
+                    cls="text-xs text-indigo-400 hover:text-indigo-300",
+                    data_testid="match-photo-link",
+                )
+            )
+        if iid:
+            links.append(
+                A(
+                    "View Person",
+                    href=f"{nav_prefix}/person/{iid}",
+                    cls="text-xs text-indigo-400 hover:text-indigo-300",
+                    data_testid="match-person-link",
+                )
+            )
+        links_el = Div(*links, cls="flex gap-3 justify-center mt-1") if links else None
+
         return Div(
             face_el,
+            source_photo_el,
             P(name, cls="text-sm font-medium text-slate-200 mt-3 text-center truncate"),
             P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-500 text-center"),
-            P("Click to view photo", cls="text-xs text-indigo-400 text-center mt-1") if photo_id else None,
+            links_el,
             cls="flex-1 max-w-[280px]",
         )
 
@@ -308,17 +358,20 @@ def get(filter: str = "", sess=None):
             Button(
                 "Suggest Same" if _main_mod._get_user_role(sess) == "contributor" else "Same Person",
                 cls=f"px-8 py-3 text-sm font-bold {'bg-purple-600 hover:bg-purple-500' if _main_mod._get_user_role(sess) == 'contributor' else 'bg-emerald-600 hover:bg-emerald-500'} text-white rounded-lg transition-colors min-h-[44px]",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}{filter_suffix}",
+                hx_post=f"{nav_prefix}/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}{filter_suffix}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
                 id="match-btn-same",
                 data_auth_action="identify these faces",
+                # FB-006: Loading feedback — disable + show merging text on click
+                **{"_": "on click add .opacity-50 to me then put 'Merging...' into me then add @disabled to me"},
+                data_testid="match-btn-same",
             ),
             Button(
                 "Different People",
                 cls="px-8 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors min-h-[44px]",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}{filter_suffix}",
+                hx_post=f"{nav_prefix}/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}{filter_suffix}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
@@ -327,7 +380,9 @@ def get(filter: str = "", sess=None):
             Button(
                 "Skip",
                 cls="px-4 py-3 text-sm text-slate-400 hover:text-slate-300 transition-colors min-h-[44px]",
-                hx_get=f"/api/match/next-pair?filter={filter}" if filter else "/api/match/next-pair",
+                hx_get=f"{nav_prefix}/api/match/next-pair?filter={filter}"
+                if filter
+                else f"{nav_prefix}/api/match/next-pair",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
