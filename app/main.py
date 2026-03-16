@@ -3976,6 +3976,9 @@ def _build_caches():
                 filename_to_face_ids_ordered[fname] = candidate["ordered_face_ids"]
                 filename_to_photo_index_id[fname] = candidate["pid"]
                 filename_to_photo_index_order[fname] = candidate["photo_index_order"]
+                # Populate metadata from raw photo_index (fallback for mismatched IDs)
+                if candidate["metadata"]:
+                    filename_to_metadata[fname] = candidate["metadata"]
 
             best_registry_entries = {}
             for pid in photo_registry._photos:
@@ -8671,7 +8674,7 @@ def face_card(
             else None,
             cls="mt-1 px-0.5 flex items-center justify-between",
         ),
-        cls="face-card-archival group p-1 rounded min-w-[150px]",
+        cls="face-card-archival group p-1 rounded overflow-hidden",
         # Fix: Apply the safe ID to the container
         id=make_css_id(face_id),
     )
@@ -9901,7 +9904,7 @@ def identity_card(
                 Div(
                     Div(
                         *face_cards,
-                        cls="grid grid-cols-3 sm:grid-cols-4 gap-2",
+                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
                     ),
                     pagination,
                     id=f"faces-{identity_id}",

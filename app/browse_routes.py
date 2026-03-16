@@ -746,6 +746,7 @@ def get(sort_by: str = "name", sess=None, request=None):
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_prefix = _main_mod.community_url_prefix(community_slug)
+    community = getattr(request.state, "community", None) if request else None
 
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
@@ -756,6 +757,11 @@ def get(sort_by: str = "name", sess=None, request=None):
         for i in registry.list_identities(state=IdentityState.CONFIRMED)
         if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
     ]
+
+    # Filter by community if available
+    community_ids = _main_mod._get_community_identity_ids(community)
+    if community_ids is not None:
+        confirmed = [i for i in confirmed if i["identity_id"] in community_ids]
 
     # Sort
     if sort_by == "photos":

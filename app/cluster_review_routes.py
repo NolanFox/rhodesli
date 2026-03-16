@@ -995,7 +995,13 @@ def get(sess=None, request=None, mode: str = ""):
     proposals = _load_proposals()
 
     # COMMUNITY-011: Filter proposals by community identity set
+    # Lesson 109: /api/ routes skip CommunityMiddleware — fall back to slug lookup
     community = getattr(request.state, "community", None) if request else None
+    _dash_slug = getattr(request.state, "community_slug", "") if request else ""
+    if not community and _dash_slug:
+        from app.supabase_data import get_community_by_slug as _gcbs
+
+        community = _gcbs(_dash_slug)
     community_identity_ids = None
     if community:
         community_identity_ids = _main_mod._get_community_identity_ids(community)
@@ -1471,6 +1477,10 @@ def post(
         )
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
         community = getattr(request.state, "community", None) if request else None
+        if not community and community_slug:
+            from app.supabase_data import get_community_by_slug as _gcbs2
+
+            community = _gcbs2(community_slug)
         enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug, community=community)
         return enrichment, undo_btn
 
@@ -1577,7 +1587,13 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
     # Community filtering
+    # Lesson 109: /api/ routes skip CommunityMiddleware, so request.state.community
+    # may be None even when community_slug is valid. Fall back to slug lookup.
     community = getattr(request.state, "community", None) if request else None
+    if not community and community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(community_slug)
     community_identity_ids = None
     if community:
         community_identity_ids = _main_mod._get_community_identity_ids(community)
@@ -2422,6 +2438,10 @@ def post(
 
     # Return enrichment panel for the merged-into identity with merge banner prepended
     community = getattr(request.state, "community", None) if request else None
+    if not community and community_slug:
+        from app.supabase_data import get_community_by_slug as _gcbs3
+
+        community = _gcbs3(community_slug)
     enrichment = _speed_run_enrichment_panel(
         result.get("target_id", target_id), target_data, offset, community_slug, community=community
     )
@@ -2698,7 +2718,12 @@ def _get_batch_clusters(community_slug: str = "", request=None, min_faces: int =
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
     # Community filtering
+    # Lesson 109: /api/ routes skip CommunityMiddleware — fall back to slug lookup
     community = getattr(request.state, "community", None) if request else None
+    if not community and community_slug:
+        from app.supabase_data import get_community_by_slug as _gcbs4
+
+        community = _gcbs4(community_slug)
     community_identity_ids = None
     if community:
         community_identity_ids = _main_mod._get_community_identity_ids(community)
