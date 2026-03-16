@@ -29,10 +29,25 @@
 - Phase 1: git push (25 commits) → Railway auto-deploy → SUCCESS (DOCKERFILE)
 - Phase 3: git push (2 commits) → Railway auto-deploy → pending verification
 
+## Additional Work (Post Phase 6)
+- [x] Prevention layer: post-sync validation in _background_ingest()
+- [x] Full ML pipeline: sync production data, run clustering (439 proposals), push to production
+- [x] Admin re-cluster endpoint: /api/admin/recluster (dry_run + execute modes)
+- [x] James Fields clustering: no matches to confirmed identities (closest: Roland Fox at 1.21), but Similar Identities (INBOX-vs-INBOX) IS finding matches (Person 3474 at 62%, Person 3650 at 33%)
+- [x] Feedback logged: complete ML pipeline execution, collage same-photo override
+
+## CI Note
+- Pre-existing flaky test: `test_people_link_to_person_pages` fails intermittently in CI (no confirmed identities in test fixture). Not caused by session 108 changes.
+
 ## Verification Gate
-- [x] All tests pass (166 fast tests)
+- [x] All local tests pass (166 fast tests)
 - [x] git log origin/main..HEAD is empty
 - [x] James Fields faces have identities (9 identified)
 - [x] Orphan repair confirmed (13 total)
-- [ ] Phase 3 deploy verified in browser
-- [ ] Data health endpoint tested in production
+- [x] Phase 3 deploy verified in browser (health endpoint: healthy)
+- [x] Data health endpoint tested in production (0 orphans)
+- [x] Proposals pushed to production (439)
+- [x] Re-cluster endpoint deployed
+
+## Continues In
+- **Session 108b**: Same-photo merge override for collages (PRD + SDD + implementation)

@@ -440,6 +440,7 @@ class IdentityRegistry:
         photo_registry: "PhotoRegistry",
         resolved_name: str = None,
         auto_correct_direction: bool = True,
+        allow_co_occurrence: bool = False,
     ) -> dict:
         """
         Merge source identity INTO target identity.
@@ -478,8 +479,14 @@ class IdentityRegistry:
         )
         # ----------------------------
 
-        # Validate (Safety Foundation - non-negotiable)
-        can_merge, reason = validate_merge(source_id, target_id, self, photo_registry)
+        # Validate (Safety Foundation - co-occurrence override for collages, PRD-048)
+        can_merge, reason = validate_merge(
+            source_id,
+            target_id,
+            self,
+            photo_registry,
+            allow_co_occurrence=allow_co_occurrence,
+        )
 
         if not can_merge:
             logger.warning(f"Merge blocked ({reason}): {source_id} -> {target_id}")
@@ -2241,6 +2248,7 @@ def validate_merge(
     id_b: str,
     identity_registry: "IdentityRegistry",
     photo_registry: "PhotoRegistry",
+    allow_co_occurrence: bool = False,
 ) -> tuple[bool, str]:
     """
     Validate whether two identities can be safely merged.
@@ -2252,16 +2260,22 @@ def validate_merge(
     This function MUST be called by ALL merge entry points.
     No merge may proceed without explicit validation.
 
+    Session 108b (PRD-048): Admin can override co-occurrence for collages,
+    photos-of-albums, and composite images. Override requires explicit
+    allow_co_occurrence=True + logged reason at the call site.
+
     Args:
         id_a: First identity ID
         id_b: Second identity ID
         identity_registry: IdentityRegistry instance
         photo_registry: PhotoRegistry instance
+        allow_co_occurrence: If True, skip co-occurrence check (admin override for collages)
 
     Returns:
         (can_merge: bool, reason: str)
-        - (False, "co_occurrence") if identities share ANY photo_id
+        - (False, "co_occurrence") if identities share ANY photo_id and override not set
         - (True, "ok") otherwise
+        - (True, "co_occurrence_override") if override allowed
     """
     # Get ALL face IDs for both identities (anchors + candidates)
     faces_a = identity_registry.get_all_face_ids(id_a)
@@ -2275,6 +2289,12 @@ def validate_merge(
     shared_photos = photos_a & photos_b
 
     if shared_photos:
+        if allow_co_occurrence:
+            logger.info(
+                f"Merge co-occurrence OVERRIDDEN: identities {id_a} and {id_b} "
+                f"share photo(s): {shared_photos} — admin override"
+            )
+            return (True, "co_occurrence_override")
         logger.warning(f"Merge blocked (co_occurrence): identities {id_a} and {id_b} share photo(s): {shared_photos}")
         return (False, "co_occurrence")
 

@@ -8789,12 +8789,26 @@ def neighbor_card(
         merge_target = f"#identity-{target_identity_id}"
     merge_swap = "outerHTML"
     if not can_merge:
-        merge_btn = Button(
-            "Blocked",
-            cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed",
-            disabled=True,
-            title=neighbor.get("merge_blocked_reason_display"),
-        )
+        # PRD-048: Admin can override co-occurrence for collages
+        if user_role == "admin" and neighbor.get("merge_blocked_reason") == "co_occurrence":
+            merge_btn = Button(
+                "Override \u26a0\ufe0f",
+                cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded",
+                hx_post=f"{nav_prefix}/api/identity/{neighbor_id}/merge/{identity_id}"
+                f"?override_co_occurrence=true&override_reason=collage&source=web",
+                hx_target=merge_target,
+                hx_swap=merge_swap,
+                hx_confirm="These faces appear in the SAME PHOTO. Override only if this is a collage, "
+                "photo-of-album, or composite image. Are you sure these are the same person?",
+                title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
+            )
+        else:
+            merge_btn = Button(
+                "Blocked",
+                cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed",
+                disabled=True,
+                title=neighbor.get("merge_blocked_reason_display"),
+            )
     elif user_role == "contributor":
         merge_btn = Button(
             "Suggest Merge",

@@ -1552,6 +1552,8 @@ def post(
     from_focus: bool = False,
     filter: str = "",
     focus_section: str = "",
+    override_co_occurrence: bool = False,
+    override_reason: str = "",
     sess=None,
     request=None,
 ):
@@ -1608,6 +1610,16 @@ def post(
     elif resolved_name == "__custom__":
         actual_resolved_name = None  # No custom name, will re-trigger conflict
 
+    # PRD-048: Validate override parameters
+    allow_co_occurrence = False
+    if override_co_occurrence and override_reason:
+        valid_reasons = {"collage", "photo_album", "picture_on_wall", "other"}
+        if override_reason in valid_reasons:
+            allow_co_occurrence = True
+            import logging as _merge_log
+
+            _merge_log.info(f"Co-occurrence override: {source_id} -> {target_id} reason={override_reason} by admin")
+
     # Attempt merge (with auto-correction)
     result = registry.merge_identities(
         source_id=source_id,
@@ -1615,6 +1627,7 @@ def post(
         user_source=user_source,
         photo_registry=photo_registry,
         resolved_name=actual_resolved_name,
+        allow_co_occurrence=allow_co_occurrence,
     )
 
     if not result["success"]:
@@ -1628,7 +1641,7 @@ def post(
             )
 
         error_messages = {
-            "co_occurrence": "Cannot merge: these identities appear in the same photo.",
+            "co_occurrence": "Cannot merge: these identities appear in the same photo. Use Override to merge collages.",
             "already_merged": "Cannot merge: source identity was already merged.",
         }
         message = error_messages.get(result["reason"], f"Merge failed: {result['reason']}")
