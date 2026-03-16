@@ -98,6 +98,18 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **FB-166**: GEDCOM link results need more context — search returns name+dates but no family tree context (parents, spouse, children) or relationship path. Fix: add inline family preview before Link action. File: `app/page_routes.py` GEDCOM search. Effort: ~2h. Source: Session 103 triage.
 - **FB-167**: GEDCOM birth year inconsistency (1891 vs 1889) — data quality issue in GEDCOM import, multiple date records not clarified. Fix: show all date variants with source attribution. File: GEDCOM import pipeline. Effort: ~1h. Source: Session 103 triage.
 
+### P1 — Community Middleware Audit (2026-03-16)
+- **MIDDLEWARE-001**: Systematic audit of all data-modifying routes that use `request.state.community`. CommunityMiddleware defaults to Rhodes when no `/c/{slug}/` prefix — has caused data-in-wrong-community 7+ times. Audit upload, match, merge, annotate, cluster-review routes. File: app/main.py CommunityMiddleware + all route files. Effort: ~1h. Source: Session 107 — James Henry Fields upload bug. See `docs/session_context/session-107b-context.md`.
+
+### P1 — Approvals UX (2026-03-16)
+- **APPROVAL-001**: Batch select checkboxes on approvals page — port pattern from pending uploads (select all, floating action bar). File: `app/admin_routes.py`. Effort: ~1h. Source: Session 107 user feedback.
+- **APPROVAL-002**: Show submission timestamp on approval cards — data exists in `submitted_at`, not rendered. File: `app/admin_routes.py`. Effort: ~10 min. Source: Session 107 user feedback.
+- **APPROVAL-003**: Auto-confirm identity on approve — add checkbox "Also confirm?" (default checked), wire to `registry.confirm_identity()`. File: `app/admin_routes.py`. Effort: ~30 min. Source: Session 107 user feedback.
+- **APPROVAL-004**: Store annotation_id in rename history — link identity rename back to the annotation that triggered it. File: `app/main.py` `rename_identity()`. Effort: ~10 min. Source: Session 107 user feedback.
+- **APPROVAL-005**: Person page suggestion provenance — show "Name suggested by [email], approved on [date]" with edit history. File: `app/page_routes.py`. Effort: ~1h. Source: Session 107 user feedback.
+- **APPROVAL-006**: Email digest/batching for approval notifications — currently sends N individual emails for N approvals. Needs PRD. Source: Session 107 user feedback.
+- **APPROVAL-007**: Anonymous pending upload auto-expiry — mark entries as expired when staging dir gone + older than 24h. File: `app/main.py` startup cleanup. Effort: ~20 min. Source: Session 107 user feedback.
+
 ### P2 — Session 106 User Triage (2026-03-16)
 - **FB-004**: Consistent face crop ↔ source photo toggle across all views — currently some views show crop only, some show source photo. Need a consistent pattern (click to toggle, or always show both). File: multiple route files. Effort: ~2h. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
 - **FB-005**: Raw internal IDs shown to users — identity cards display hex IDs like "4ffef472" or numbers like "3980" instead of "Unknown Person" or clean sequential labels. File: `app/main.py` identity card rendering. Effort: ~30 min. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
