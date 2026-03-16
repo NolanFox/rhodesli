@@ -131,7 +131,7 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
-- [x] 2026-03-16: **v0.99.14 — Session 109**: Cross-Batch Clustering (PRD-049). `core/cross_batch_matching.py` compares new faces against ALL existing identities. Wired into upload pipeline, admin recluster, and post-confirm. 1355 cross-batch matches found in production dry-run. CI flaky test fixed. AD-226. 17 new tests. Deploy SUCCESS.
+- [x] 2026-03-16: **v0.99.15 — Session 109 + 109b**: Cross-Batch Clustering (PRD-049). `core/cross_batch_matching.py` compares new faces against ALL existing identities. Wired into upload pipeline, admin recluster, and post-confirm. 1355 cross-batch matches, 1130 proposals written to production. Recluster Supabase writes, community filter fix, CI green. James Fields Person 3474 validated at distance 0.87. AD-226. 20 tests. Deploy SUCCESS.
 
 - [x] 2026-03-16: **v0.99.13 — Session 108b**: Bug Fix Sprint. FB-013 Compare button on person page fixed. FB-014 "View Photo" link made prominent. FB-015 sidebar photo search. Collage override NameError fix. 8 new tests. Deploy SUCCESS.
 
