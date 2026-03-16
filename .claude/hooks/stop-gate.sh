@@ -21,6 +21,9 @@ S=$(cat .claude/current_session.txt 2>/dev/null || echo "unknown")
 # The whole point is to write a prompt file and leave.
 if [ "$MODE" = "continuation" ]; then
     echo "Continuation mode — no stop checks required."
+    # Reset ephemeral state for next conversation (HD-026)
+    echo 0 > .claude/commits_since_clear.txt
+    echo "interactive" > .claude/session_mode.txt
     exit 0
 fi
 
@@ -37,6 +40,9 @@ if [ "$MODE" = "interactive" ]; then
         echo "$DIRTY" >&2
         exit 2
     fi
+    # Reset ephemeral state for next conversation (HD-026)
+    echo 0 > .claude/commits_since_clear.txt
+    echo "interactive" > .claude/session_mode.txt
     exit 0
 fi
 
@@ -71,4 +77,7 @@ if [ -n "$DIRTY" ]; then
     exit 2
 fi
 
+# Reset ephemeral state for next conversation (HD-026)
+echo 0 > .claude/commits_since_clear.txt
+echo "interactive" > .claude/session_mode.txt
 exit 0

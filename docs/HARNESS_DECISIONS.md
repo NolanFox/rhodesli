@@ -602,3 +602,29 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Treat prompt lineage as a Gemini-only special case** — too narrow; the same principle applies to any future AI provider and to app-state changes triggered by AI-assisted workflows.
 
 **Breadcrumbs:** `docs/prds/038_longitudinal/PROMPT_AND_STATE_LINEAGE.md`, `docs/session_context/session-97-context.md`, `docs/prompts/session-97-prompt.md`, `docs/assessments/session-97-prep-assessment.md`, `docs/ml/ALGORITHMIC_DECISIONS.md` (AD-218)
+
+## HD-027: Reset Ephemeral State on Session End
+
+**Date:** 2026-03-16
+**Session:** 107b hotfix
+**Status:** ACCEPTED
+
+**Problem:** The `commits_since_clear.txt` counter and `session_mode.txt` files persisted between Claude Code conversations. A previous session's counter value (e.g., 2) would cause the UserPromptSubmit hook to block the next conversation's first prompt, even though a new conversation is effectively a fresh context (equivalent to /clear).
+
+**Decision:** All successful exits in `stop-gate.sh` now reset ephemeral state:
+- `echo 0 > .claude/commits_since_clear.txt`
+- `echo "interactive" > .claude/session_mode.txt`
+
+This means:
+1. New conversations always start in interactive mode (unblocked by the pre-work gate)
+2. Implementation sessions explicitly set mode to "implementation" when loading a session prompt
+3. The commit counter always starts at 0 for a new conversation
+
+**Alternatives considered:**
+- **Adding a "conversation start" hook:** Does not exist in Claude Code's hook system. There is no SessionStart or equivalent event that fires when a new conversation begins.
+- **Checking file mtime to detect stale counters:** Fragile — depends on timezone handling, filesystem clock accuracy, and defining a staleness threshold. A counter from 5 minutes ago could be stale (new conversation) or fresh (same conversation after a pause).
+- **Removing the UserPromptSubmit hook entirely:** Would lose the /clear enforcement benefit that prevents context degradation during long implementation sessions (the problem that Lessons 89, 102, and 103 document across 5+ failures).
+
+**Rationale:** Ephemeral state files (.claude/commits_since_clear.txt, .claude/session_mode.txt) are conversation-scoped, not project-scoped. Resetting them at session end ensures the next conversation inherits clean defaults rather than stale state from a previous session. The stop hook is the closest available proxy for "conversation end" in Claude Code's hook system.
+
+**Breadcrumbs:** `.claude/hooks/stop-gate.sh`, `.claude/settings.json` (UserPromptSubmit hook), `.claude/rules/session-protocol.md`, `memory/feedback_hook_modes.md`
