@@ -2625,3 +2625,13 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: Activating reranker with current data (no measurable improvement, adds complexity).
 - **Affects**: `scripts/cluster_new_faces.py`, `rhodesli_ml/longitudinal_reranker.py`, `scripts/compare_ml_runs.py`
 - **Full review**: `docs/ml/RERANKER_REVIEW_103.md`
+
+### AD-225: Write-Through Architecture for Dual-Store Data Integrity
+- **Date**: 2026-03-15 | **Session**: 105 + 105b
+- **Context**: 3 P0 incidents in Sessions 104/104b from DATA_SOURCE split-brain. Root cause: write paths diverged from read paths — `save_photo_registry()` wrote JSON but not `photo_faces` in Supabase, `save_registry()` used fire-and-forget background threads for Supabase writes, upload pipeline swallowed sync failures with `print()`.
+- **Decision**: When `DATA_SOURCE=postgres`, Supabase is primary write (synchronous with `strict=True`), JSON is always-written backup. `photo_faces` written alongside photos in ALL write paths. Parity check on `/health` endpoint + app startup (background thread). Reconciliation endpoint (`/api/admin/reconcile`) for manual drift recovery.
+- **Write paths hardened**: (1) `save_registry()` — synchronous `shadow_write_identities_batch(strict=True)`. (2) `save_photo_registry()` — synchronous `shadow_write_photos_batch(strict=True)` + `shadow_write_photo_faces_batch(strict=True)`. (3) `_background_ingest()` — photo_faces batch write + `logging.error` on failure. (4) `/api/sync/push` — all three batch writers called.
+- **Prevention**: Structural tests in `tests/test_data_parity_invariants.py` read source code and verify dual-write patterns exist. Startup parity check logs WARNING/ERROR on drift.
+- **Alternatives rejected**: (1) Full Supabase-only — too large a migration. (2) Outbox pattern — over-engineering for current scale. (3) Background threads for Supabase writes — caused silent data loss.
+- **Affects**: `app/main.py`, `app/upload_routes.py`, `app/sync_routes.py`, `app/supabase_data.py`, `app/page_routes.py`
+- **Lessons**: 144 (split-brain), 145 (photo_faces write gap), 136 (fire-and-forget sync)

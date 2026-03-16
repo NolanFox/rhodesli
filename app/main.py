@@ -786,6 +786,52 @@ async def startup_event():
 
     threading.Thread(target=_prewarm_caches, daemon=True, name="cache-prewarm").start()
 
+    # Session 105b: Startup parity check — compare JSON and Supabase counts
+    # Runs in background thread to avoid blocking startup
+    def _startup_parity_check():
+        try:
+            from app.page_routes import _check_data_parity
+
+            registry = load_registry()
+            photo_index_path = data_path / "photo_index.json"
+            photo_count = 0
+            if photo_index_path.exists():
+                import json as _json_parity
+
+                with open(photo_index_path) as f:
+                    photo_count = len(_json_parity.load(f).get("photos", {}))
+
+            total_identities = len(registry.list_identities(include_merged=True))
+            result = _check_data_parity(photo_count, total_identities)
+
+            if result.get("error"):
+                logging.warning(f"Startup parity check skipped: {result['error']}")
+                return
+
+            if result.get("synced"):
+                logging.info("Startup parity check: JSON and Supabase in sync")
+                return
+
+            photo_diff = result.get("photo_diff", 0)
+            id_diff = result.get("identity_diff", 0)
+            pg_ids = result.get("identities_pg", 0)
+
+            if photo_diff > 0:
+                logging.warning(
+                    f"Startup parity: photo mismatch — JSON={result['photos_json']} PG={result['photos_pg']}"
+                )
+            if total_identities > (pg_ids or 0):
+                logging.warning(f"Startup parity: identities in JSON > PG — JSON={total_identities} PG={pg_ids}")
+            elif (pg_ids or 0) > total_identities and id_diff > 100:
+                logging.error(
+                    f"Startup parity: {id_diff} stale Supabase identity rows detected — "
+                    f"run /api/admin/reconcile?action=prune to clean up"
+                )
+        except Exception as e:
+            logging.warning(f"Startup parity check failed: {e}")
+
+    threading.Thread(target=_startup_parity_check, daemon=True, name="parity-check").start()
+
     get_event_recorder().record(
         "RUN_START", {"action": "server_start", "timestamp_utc": datetime.utcnow().isoformat()}, actor="system"
     )

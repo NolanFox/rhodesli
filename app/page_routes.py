@@ -255,7 +255,8 @@ def health():
         disk_info = {"error": "unavailable"}
 
     # Session 105: Data parity check — compare JSON and Supabase counts
-    data_parity = _check_data_parity(photo_count, len(registry.list_identities()))
+    # Use include_merged=True to match Supabase which stores all identities
+    data_parity = _check_data_parity(photo_count, len(registry.list_identities(include_merged=True)))
 
     return {
         "status": "ok",

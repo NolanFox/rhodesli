@@ -14,6 +14,31 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 105/105b: Write-Through Data Integrity (2026-03-15) — v0.99.9
+- P0: DATA_SOURCE split-brain — write paths diverged from read paths causing face tagging, photo visibility, identity sync failures
+- Write-through architecture (AD-225): Supabase writes synchronous with strict=True, JSON always-written backup
+- photo_faces written in ALL 4 write paths (save_photo_registry, _background_ingest, /api/sync/push, /api/sync/resync-supabase)
+- Health parity fix: uses include_merged=True for correct identity comparison
+- Production reconciliation: 1 stale photo pruned, 0 stale identities
+- Startup parity check: background thread logs WARNING/ERROR on drift
+- Reconciliation endpoint + CLI (audit, backfill, prune with export)
+- 8 structural prevention tests + 28 regression tests
+- Lessons 144-145, deploy SUCCESS
+
+## Session 104b: P0 Face Tagging Fix + Hook Enforcement (2026-03-15) — v0.99.8
+- P0: Supabase anchor_ids stored as JSON text strings instead of JSONB arrays
+- Fix: _ensure_list() read guard, _ensure_list_for_supabase() write guard, 20 rows repaired
+- Hook enforcement audit: 4 broken hooks fixed (all now exit 2)
+- test-gate.sh fast mode uses targeted core tests
+- Lessons 142-143, 3 new tests, deploy SUCCESS
+
+## Session 104: Fix Contributor UX + Claude Benatar Photos (2026-03-15) — v0.99.7
+- P0: 404 after upload approval (compare_mode detection), anonymous attribution, missing thumbnails
+- Auto-approve for logged-in contributor Compare uploads
+- Robert Mattatia photos ingested (2 photos, 20 faces, R2 uploaded)
+- Gemini deep comparison: 2.5 Pro 9/10, 3.1 Pro 8.5/10 confidence
+- Lesson 140, 10 new tests, deploy SUCCESS
+
 ## Session 103: ML Pipeline Execution + Triage Fixes (2026-03-15) — v0.99.6
 - PRD-046: ml_runs + ml_proposals Supabase tables with clustering pipeline tracking
 - Baseline clustering: 470 proposals (86 VERY HIGH, 384 HIGH), 42 zero-distance pre-grouped

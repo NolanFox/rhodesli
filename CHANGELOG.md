@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.9] — 2026-03-15 (Session 105/105b: Write-Through Data Integrity)
+
+### Fixed
+- **P0: DATA_SOURCE split-brain** — Write paths diverged from read paths causing face tagging, photo visibility, and identity sync failures. Root cause: `save_photo_registry()` never wrote `photo_faces` to Supabase, `save_registry()` used fire-and-forget background threads, upload pipeline swallowed sync errors with `print()`
+- **Health parity check** — was comparing active identities (1922) vs all Supabase identities (3433 including merged). Now uses `include_merged=True` for apples-to-apples comparison
+- **Production reconciliation** — 1 stale photo row pruned from Supabase, data_parity now shows photos synced
+
+### Added
+- **Write-through architecture (AD-225)** — Supabase writes synchronous with `strict=True`, JSON always written as backup, `photo_faces` written in ALL 4 write paths
+- **Startup parity check** — background thread on app start compares JSON vs Supabase, logs WARNING/ERROR on drift
+- **Reconciliation endpoint** — `/api/admin/reconcile` with audit, backfill, prune actions (exports before deleting)
+- **Reconciliation CLI** — `scripts/reconcile_supabase.py` for offline audit/prune operations
+- **8 structural prevention tests** — `tests/test_data_parity_invariants.py` reads source code to verify dual-write patterns, catches future regressions
+- **28 split-brain regression tests** across `test_session105_split_brain.py` + `test_session105b_write_through.py`
+- Lessons 144 (split-brain) and 145 (photo_faces write gap)
+
 ## [v0.99.8] — 2026-03-15 (Session 104b: P0 Face Tagging Fix + Hook Enforcement)
 
 ### Fixed
