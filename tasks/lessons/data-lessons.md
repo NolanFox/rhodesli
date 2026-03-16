@@ -143,6 +143,11 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Prevention:** `_ensure_list()` in `core/registry.py:load_from_postgres()` and `_ensure_list_for_supabase()` in `app/supabase_data.py`. 3 regression tests.
 - **See also:** Lesson 105 (mock tests don't catch column mismatches), Lesson 133 (DATA_SOURCE fallback masks failures)
 
+### Lesson 145: photo_faces table must be written alongside photos table — READ path queries it, WRITE path must populate it
+- **Mistake (Session 105b):** `load_from_postgres()` reads `photo_faces` table to build the face-to-photo mapping. But NO write path ever populated `photo_faces` after the one-time migration script. `save_photo_registry()`, `_background_ingest()`, and `/api/sync/push` all wrote to the `photos` table but not `photo_faces`. New uploads had faces in JSON but not in the Supabase face mapping — causing incomplete face data on production when `DATA_SOURCE=postgres`.
+- **Rule:** When adding a Supabase read path, immediately verify the corresponding write path exists. If a table is queried by `load_from_*()`, every function that calls `save_*()` must also write to that table.
+- **Prevention:** `shadow_write_photo_faces_batch()` now called in all write paths. Structural test verifies photo_faces is written whenever photos are written.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

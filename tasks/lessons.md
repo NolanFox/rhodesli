@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-144 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+145 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -43,6 +43,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 79 | NEVER use manual patch.start()/patch.stop() without try/finally — use ExitStack |
 | 80 | Always run tests in venv — `source venv/bin/activate && pytest` |
 | 134 | Data integrity CI test needed for CONFIRMED identity face references |
+| 145 | photo_faces table must be written alongside photos — READ path queries it, WRITE path must populate it |
 
 ## Deployment & Infrastructure — `tasks/lessons/deployment-lessons.md`
 

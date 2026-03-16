@@ -121,8 +121,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Proposals Supabase Sync (DATA-013)
 - **DATA-013**: Proposals are JSON-only (not in Supabase). No backup if Railway volume is lost. proposals.json was last generated 2026-03-10 with only 17 proposals. Fix: (1) Add proposals table to Supabase, (2) sync on generation, (3) add staleness warning in UI when proposals are >24h old. Source: Session 100d data integrity audit.
 
-### P1 — Silent Supabase Sync Failures (DATA-014)
-- **DATA-014**: Identity shadow writes, photo shadow writes, identity history events, and user action logging all use `except Exception: pass` — completely silent failure. If Supabase is down, no indication in logs. Fix: change `pass` to `logger.warning()` in 4 locations (main.py:1156, main.py:3350, registry.py:1919, main.py:1339). Source: Session 100d data integrity audit.
+### P1 — Silent Supabase Sync Failures (DATA-014) — MOSTLY FIXED (Session 105/105b)
+- **DATA-014**: Shadow writes now log at ERROR level. save_registry/save_photo_registry postgres paths use strict=True (synchronous). photo_faces written alongside photos. Remaining: registry.py history events and user action logging still have silent failures. Source: Session 100d audit, fixed Session 105/105b.
 
 ### P1 — Dead Sync Functions (DATA-015)
 - **DATA-015**: `sync_birth_year_estimate()` and `sync_person_comment()` in supabase_data.py are defined but never called from any app route. Birth year estimates and person comments are not being persisted to Supabase. Fix: wire into save paths or remove dead code. Source: Session 100d data integrity audit.
