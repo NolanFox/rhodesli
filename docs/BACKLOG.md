@@ -98,6 +98,13 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **FB-166**: GEDCOM link results need more context — search returns name+dates but no family tree context (parents, spouse, children) or relationship path. Fix: add inline family preview before Link action. File: `app/page_routes.py` GEDCOM search. Effort: ~2h. Source: Session 103 triage.
 - **FB-167**: GEDCOM birth year inconsistency (1891 vs 1889) — data quality issue in GEDCOM import, multiple date records not clarified. Fix: show all date variants with source attribution. File: GEDCOM import pipeline. Effort: ~1h. Source: Session 103 triage.
 
+### P2 — Session 106 User Triage (2026-03-16)
+- **FB-004**: Consistent face crop ↔ source photo toggle across all views — currently some views show crop only, some show source photo. Need a consistent pattern (click to toggle, or always show both). File: multiple route files. Effort: ~2h. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
+- **FB-005**: Raw internal IDs shown to users — identity cards display hex IDs like "4ffef472" or numbers like "3980" instead of "Unknown Person" or clean sequential labels. File: `app/main.py` identity card rendering. Effort: ~30 min. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
+- **FB-009**: Compare search dropdown persists after person selection — after selecting a person (e.g., Morris Shane), the search dropdown and results list remain visible. Should collapse/clear after selection. File: `app/compare_routes.py`. Effort: ~20 min. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
+- **FB-010**: Compare tool shows all communities — searches across ALL communities. No way to filter by community. At scale (hundreds of communities) this becomes unusable noise. Fix: default to current community, add community filter dropdown. File: `app/compare_routes.py`. Effort: ~1h. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
+- **FB-012**: Compare tool UX doesn't help reach identification conclusions — tool shows data but doesn't guide user to a verdict. Consider: summary verdict, mutual match indicator, "likely same person" / "unlikely" with explanation. File: `app/compare_routes.py`. Effort: ~2h. Source: Session 106 triage. See `docs/session_context/session-106-feedback.md`.
+
 ### P1 — Session 100b Dogfood (2026-03-13)
 - ~~**DOGFOOD-001**: Confirmed faces show "Needs review" on bbox overlap~~ FIXED (Session 100b) — show identity name for confirmed faces
 - ~~**DOGFOOD-002**: Photo metadata save silently loses data~~ FIXED (Session 100b) — duplicate routes removed, page_routes.py with logging now active
