@@ -3,61 +3,63 @@ Started: 2026-03-16
 Prompt: docs/prompts/session-106b-prompt.md
 
 ## Phase Checklist
-- [ ] Phase 0: Orient + Plan
-- [ ] Phase 1: Photo Search by Filename (FB-007)
-- [ ] Phase 2: Match View Fixes (FB-001, FB-002, FB-003, FB-006)
-- [ ] Phase 3: Reciprocal Rank Indicator (FB-008, FB-011)
-- [ ] Phase 4: P2 Items → BACKLOG
-- [ ] Phase 5: Deploy + Browser Verify
-- [ ] Phase 6: Assessment + Session Close
+- [x] Phase 0: Orient + Plan
+- [x] Phase 1: Photo Search by Filename (FB-007)
+- [x] Phase 2: Match View Fixes (FB-001, FB-002, FB-003, FB-006)
+- [x] Phase 3: Reciprocal Rank Indicator (FB-008, FB-011)
+- [x] Phase 4: P2 Items → BACKLOG
+- [x] Phase 5: Deploy + Browser Verify
+- [x] Phase 6: Assessment + Session Close
 
 ## Phase 0: Orient + Plan
+- Read all 12 feedback items, context file, lessons
+- Planned each P1 fix with files, tests, risks
+- Commit: 60839f7
 
-### Plan per P1 item:
+## Phase 1: Photo Search by Filename (FB-007)
+- Added filename matching fallback in `_search_photos()` (app/main.py:2130-2142)
+- Searches `_photo_cache` filename when `searchable_text` doesn't match
+- match_reason = "filename" shown in UI as yellow "Matched: filename" badge
+- 5 new tests in test_discovery_layer.py
+- Browser verified: "Image 001" search returns 1 result on production
+- Commit: bb1229b
 
-**FB-007 (Photo Search by Filename)**
-- File: `app/main.py` `_search_photos()` line 2104
-- Current: search only checks `searchable_text` field (Gemini descriptions)
-- Fix: Also check photo path/filename from `_photo_cache` using `cache_photo_id` or `photo_id`
-- Tests: search by partial filename, full filename, non-existent filename, regression for text search
+## Phase 2: Match View Fixes (FB-001, FB-002, FB-003, FB-006)
+- FB-001: Added `nav_prefix` to all URLs in match_facecompare_routes.py (photo modal, decide, skip)
+- FB-002: Added source photo thumbnails below face crops using `get_photo_url()`
+- FB-003: Added "View Photo" and "View Person" text links below each face card
+- FB-006: Added hyperscript loading state to "Same Person" button (opacity-50 + "Merging..." + disabled)
+- 4 new tests in test_match_mode.py
+- Browser verified: all visible on production match view
+- Commit: b5375a6
 
-**FB-001 (Match view photo button missing community prefix)**
-- File: `app/match_facecompare_routes.py` line 250
-- Current: `_fc_url = f"/photo/{photo_id}/partial?face={face_id}"` — no community prefix
-- Fix: Add `nav_prefix` to the URL. Need to get community context in `_face_card` or pass it as param.
-- Tests: verify match view HTML has community-prefixed URLs
+## Phase 3: Reciprocal Rank Indicator (FB-008, FB-011)
+- FB-008: Compute reciprocal rank for each neighbor in find-similar API
+  - Added to BOTH browse_routes.py and page_routes.py (duplicate endpoints)
+  - Shows "Mutual #1" (green badge), "You're their #N", or "Not in top · #1 is Name"
+  - Verified via curl: production API returns reciprocal-rank data
+- FB-011: Upgraded compare context line styling from text-[11px] text-slate-500 to text-xs text-amber-400 font-medium
+  - Added "Ranked #N for Name" alongside "best match" info
+  - Added upload_rank computation in target_context building
+- 2 new tests in test_inline_find_similar.py
+- Commit: 9174a46
 
-**FB-002 (Show source photos side-by-side in match view)**
-- File: `app/match_facecompare_routes.py` `_face_card()` line 241
-- Current: shows only face crop, no source photo
-- Fix: Add small source photo thumbnail below face crop using `get_photo_url()`
-- Tests: match view HTML contains photo thumbnail img elements
+## Phase 4: P2 Items → BACKLOG
+- Added 5 P2 items to BACKLOG.md: FB-004, FB-005, FB-009, FB-010, FB-012
+- Updated feedback status in session-106-feedback.md: 7 FIXED, 5 BACKLOG
+- Commit: 008e595
 
-**FB-003 (Clickable photo + person links in match view)**
-- File: `app/match_facecompare_routes.py` `_face_card()` line 241
-- Current: face card clickable to photo modal, but no visible links to photo/person pages
-- Fix: Add text links "View Photo" and "View Person" below face info
-- Tests: match view HTML contains person page links
-
-**FB-006 (Loading feedback on "Same Person" button)**
-- File: `app/match_facecompare_routes.py` line 309
-- Current: button clicks with no feedback
-- Fix: Add hyperscript `on click add .opacity-50 to me then put 'Merging...' into me`
-- Tests: verify button has loading indicator attributes
-
-**FB-008 (Reciprocal rank in Find Similar panel)**
-- File: `app/page_routes.py` line 7332
-- Current: shows neighbors but no reciprocal rank info
-- Fix: For each neighbor, compute reverse neighbors and find source identity's rank
-- Performance: ~12 × 50ms = 600ms, acceptable for admin tool
-- Tests: find-similar response includes reciprocal rank data
-
-**FB-011 (Compare tool rank context buried)**
-- File: `app/compare_routes.py` line 4994-4998
-- Current: context line is `text-[11px] text-slate-500` — buried
-- Fix: Make it larger, colored, and positioned more prominently. Add rank text.
-- Tests: compare results have prominent context styling
+## Phase 5: Deploy + Browser Verify
+- make test-fast: 2989 passed
+- Deploy: `railway up` → SUCCESS with DOCKERFILE builder
+- Browser verifications:
+  - [x] Photos search "Image 001" → 1 result with "Matched: filename"
+  - [x] Match view: source photos visible, View Photo/View Person links present
+  - [x] Match view: community prefix in URLs (/c/fox-family/)
+  - [x] Same Person button has loading state attributes
+  - [x] Find Similar API: reciprocal-rank data in response (verified via curl)
+  - [x] Compare tool: code deployed with prominent context styling
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed

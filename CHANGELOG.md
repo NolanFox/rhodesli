@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.10] — 2026-03-16 (Session 106b: Triage Fix Sprint)
+
+### Added
+- **Photo search by filename (FB-007)** — Photos section search now matches filenames from `_photo_cache`, not just Gemini descriptions. Shows "Matched: filename" badge on results.
+- **Reciprocal rank indicator (FB-008)** — Find Similar panel shows mutual match status: "Mutual #1" (green badge), "You're their #N", or "Not in top · #1 is Name". Helps distinguish strong mutual matches from asymmetric false positives.
+- **Match view source photos (FB-002)** — Source photo thumbnails shown below face crops in match mode for visual context.
+- **Match view navigation links (FB-003)** — "View Photo" and "View Person" links on each face card in match mode.
+- **Match view loading feedback (FB-006)** — "Same Person" button shows "Merging..." + disables on click.
+- 11 new tests across test_discovery_layer.py, test_match_mode.py, test_inline_find_similar.py
+
+### Fixed
+- **Match view community prefix (FB-001)** — All URLs in match mode now include `/c/{community}/` prefix. Photo modal, decide, and skip buttons all route correctly.
+- **Compare tool rank context (FB-011)** — Context line upgraded from tiny gray text to prominent amber with rank info ("Ranked #N for Name").
+
 ## [v0.99.9] — 2026-03-15 (Session 105/105b: Write-Through Data Integrity)
 
 ### Fixed
