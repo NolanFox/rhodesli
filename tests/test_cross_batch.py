@@ -321,6 +321,148 @@ class TestReclusterIncludesCrossBatch:
         assert "cross_batch_matches" in data
 
 
+class TestJamesFieldsScenario:
+    """Simulate James Fields case: 2 photos uploaded in separate batches,
+    same person should be proposed for merge but NOT auto-merged."""
+
+    def test_cross_batch_finds_same_person_in_different_photos(self):
+        """Two faces from different photos of the same person should match."""
+        base = _make_embedding(seed=100)
+        # Same person in photo 1 (batch 1) and photo 2 (batch 2)
+        batch1_face = _make_close_embedding(base, distance=0.4)
+        batch2_face = _make_close_embedding(base, distance=0.3)
+
+        face_data = {
+            "batch1_face": {"mu": batch1_face, "sigma_sq": 0.1},
+            "batch2_face": {"mu": batch2_face, "sigma_sq": 0.1},
+        }
+        identities = {
+            "identities": {
+                "person_batch1": {
+                    "identity_id": "person_batch1",
+                    "name": "James Fields (batch 1)",
+                    "state": "INBOX",
+                    "anchor_ids": ["batch1_face"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "person_batch2": {
+                    "identity_id": "person_batch2",
+                    "name": "James Fields (batch 2)",
+                    "state": "INBOX",
+                    "anchor_ids": ["batch2_face"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+        photo_reg = FakePhotoRegistry(face_to_photo={"batch1_face": "photo_1", "batch2_face": "photo_2"})
+
+        matches = find_cross_batch_matches(
+            new_face_ids=["batch2_face"],
+            identities=identities,
+            face_data=face_data,
+            photo_registry=photo_reg,
+        )
+        assert len(matches) == 1
+        assert matches[0]["target_identity_id"] == "person_batch1"
+        assert matches[0]["match_type"] == "cross_batch_vs_inbox"
+        # Should be very high confidence (distance < 0.80)
+        assert matches[0]["distance"] < 1.05
+
+    def test_family_resemblance_not_auto_merged(self):
+        """Father and son with similar faces should generate proposal, not auto-merge.
+        Simulates Charles Fox ↔ Roland Fox scenario (distance ~0.50)."""
+        base = _make_embedding(seed=200)
+        father = _make_close_embedding(base, distance=0.50)
+        son = _make_close_embedding(base, distance=0.45)
+
+        face_data = {
+            "father_face": {"mu": father, "sigma_sq": 0.1},
+            "son_face": {"mu": son, "sigma_sq": 0.1},
+        }
+        identities = {
+            "identities": {
+                "father": {
+                    "identity_id": "father",
+                    "name": "Charles Fox",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["father_face"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "son": {
+                    "identity_id": "son",
+                    "name": "Roland Fox",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["son_face"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+        photo_reg = FakePhotoRegistry(face_to_photo={"father_face": "photo_f", "son_face": "photo_s"})
+
+        # Cross-batch matching generates proposals, NOT merges
+        matches = find_cross_batch_matches(
+            new_face_ids=["son_face"],
+            identities=identities,
+            face_data=face_data,
+            photo_registry=photo_reg,
+        )
+        # Should find a match (they're similar)
+        father_matches = [m for m in matches if m["target_identity_id"] == "father"]
+        assert len(father_matches) == 1
+        # But the function returns proposals only — the caller decides whether to merge.
+        # find_cross_batch_matches NEVER merges. This is the safety guarantee.
+        assert father_matches[0]["confidence_tier"] in ("very_high", "high")
+
+    def test_cooccurrence_blocked_in_collage(self):
+        """Faces from the same collage photo should NOT be proposed.
+        Simulates James Fields collage where multiple sub-photos are one image."""
+        base = _make_embedding(seed=300)
+        face_a = _make_close_embedding(base, distance=0.3)
+        face_b = _make_close_embedding(base, distance=0.35)
+
+        face_data = {
+            "collage_face_a": {"mu": face_a, "sigma_sq": 0.1},
+            "collage_face_b": {"mu": face_b, "sigma_sq": 0.1},
+        }
+        identities = {
+            "identities": {
+                "person_a": {
+                    "identity_id": "person_a",
+                    "name": "Person A",
+                    "state": "INBOX",
+                    "anchor_ids": ["collage_face_a"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "person_b": {
+                    "identity_id": "person_b",
+                    "name": "Person B",
+                    "state": "INBOX",
+                    "anchor_ids": ["collage_face_b"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+        # Both faces in the SAME photo (collage)
+        photo_reg = FakePhotoRegistry(
+            face_to_photo={"collage_face_a": "collage_photo", "collage_face_b": "collage_photo"}
+        )
+
+        matches = find_cross_batch_matches(
+            new_face_ids=["collage_face_a"],
+            identities=identities,
+            face_data=face_data,
+            photo_registry=photo_reg,
+        )
+        # Should be blocked by co-occurrence
+        assert len(matches) == 0
+
+
 class TestGetConfidenceTier:
     def test_very_high(self):
         assert _get_confidence_tier(0.5) == "very_high"

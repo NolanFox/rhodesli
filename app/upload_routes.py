@@ -1114,7 +1114,6 @@ async def post(
                                                 "score": p["distance"],
                                                 "tier": tier,
                                                 "status": "pending",
-                                                "match_type": "cross_batch",
                                             }
                                         )
                                     for i in range(0, len(rows), 100):

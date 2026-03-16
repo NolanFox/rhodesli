@@ -1027,6 +1027,61 @@ async def post(request, sess):
                         _json_rc.dump(proposals_data, _wpf, indent=2)
 
                 results["cross_batch_new_proposals"] = len(new_xb_proposals)
+
+                # Write to Supabase ml_runs + ml_proposals
+                try:
+                    import time as _time_rc
+                    import uuid as _uuid_rc
+
+                    from app.supabase_data import get_supabase_client
+
+                    sb = get_supabase_client()
+                    if sb and new_xb_proposals:
+                        run_id = str(_uuid_rc.uuid4())
+                        start_time = _time_rc.time()
+                        sb.table("ml_runs").insert(
+                            {
+                                "run_id": run_id,
+                                "pipeline_type": "cross_batch_matching",
+                                "config_json": {
+                                    "threshold": threshold,
+                                    "community_id": community_id,
+                                    "triggered_by": "admin_recluster",
+                                },
+                                "status": "completed",
+                                "result_summary": {
+                                    "proposals_created": len(new_xb_proposals),
+                                    "total_matches": len(cross_matches),
+                                },
+                                "duration_ms": int((_time_rc.time() - start_time) * 1000),
+                            }
+                        ).execute()
+
+                        from core.config import MATCH_THRESHOLD_VERY_HIGH, MATCH_THRESHOLD_HIGH
+
+                        rows = []
+                        for p in new_xb_proposals:
+                            tier = (
+                                "tier1"
+                                if p["distance"] < MATCH_THRESHOLD_VERY_HIGH
+                                else ("tier2" if p["distance"] < MATCH_THRESHOLD_HIGH else "tier3")
+                            )
+                            row = {
+                                "run_id": run_id,
+                                "source_identity_id": p["source_identity_id"],
+                                "target_identity_id": p["target_identity_id"],
+                                "score": p["distance"],
+                                "tier": tier,
+                                "status": "pending",
+                            }
+                            rows.append(row)
+
+                        for i in range(0, len(rows), 100):
+                            sb.table("ml_proposals").insert(rows[i : i + 100]).execute()
+
+                        results["supabase_proposals_written"] = len(rows)
+                except Exception as sb_err:
+                    results["supabase_write_error"] = str(sb_err)
         except Exception as xb_err:
             results["cross_batch_error"] = str(xb_err)
 
