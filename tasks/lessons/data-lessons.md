@@ -148,6 +148,16 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule:** When adding a Supabase read path, immediately verify the corresponding write path exists. If a table is queried by `load_from_*()`, every function that calls `save_*()` must also write to that table.
 - **Prevention:** `shadow_write_photo_faces_batch()` now called in all write paths. Structural test verifies photo_faces is written whenever photos are written.
 
+### Lesson 146: Upload pipeline creates orphaned faces — post-sync identity verification missing
+- **Mistake**: `_background_ingest()` in `app/upload_routes.py` calls `process_directory()` which writes faces to JSON and photo_faces to Supabase. But if the Supabase sync at lines 1034-1065 fails (or writes incorrect identity data), the app (reading from Supabase via DATA_SOURCE=postgres) doesn't see the new identities. 9 James Fields faces existed in photo_faces but had zero corresponding identities in Supabase.
+- **Rule**: Upload pipeline must verify identity creation in Supabase after sync. If identity count mismatches face count, log error and retry sync. The `/api/sync/resync-supabase` endpoint has orphan repair logic — but it's a manual endpoint, not wired into the pipeline.
+- **Prevention**: Add post-sync validation in `_background_ingest()`: after Supabase sync, query photo_faces and identities tables to verify counts match. If mismatch, call the orphan repair logic directly. Add a data health endpoint for ad-hoc diagnostics.
+
+### Lesson 147: Local-production data divergence — 7th occurrence
+- **Mistake**: James Fields photos uploaded to production but local data has zero entries. Clustering impossible locally. No automated sync-back mechanism for embeddings. This is the 7th occurrence of local-production data divergence (Lessons 56→69→78→85→141→142→147).
+- **Rule**: After any production upload, local must be synced before running ML pipelines locally. Alternatively, ML pipelines should run on production data directly.
+- **Prevention**: Add `/api/sync/embeddings` endpoint that streams embeddings.npy. Update `sync_from_production.py` to optionally download embeddings with `--include-embeddings`.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

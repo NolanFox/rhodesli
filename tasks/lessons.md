@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-145 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+148 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -141,6 +141,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 141 | **Never git-add production-origin data files — 6th occurrence of deploy-overwrite pattern (Lessons 56→69→78→85→141)** |
 | 142 | **Supabase JSONB columns can silently store string-encoded arrays — guard reads AND writes** |
 | 144 | **DATA_SOURCE split-brain — ingest writes JSON, production reads Supabase, photos vanish** |
+| 146 | **Upload pipeline creates orphaned faces — post-sync identity verification missing** |
+| 147 | **Local-production data divergence — 7th occurrence, embeddings sync-back missing** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
@@ -186,3 +188,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 114 | **os.getenv("DATA_DIR") ≠ core.config.DATA_DIR on Railway — STORAGE_DIR derivation only in config.py** |
 | 140 | **Hooks that exit 0 are advisory only — Claude ignores warnings, must exit 2 to block** |
 | 143 | **Hook audit must be exhaustive — partial fixes create false confidence** |
+| 148 | **25 commits never pushed — every session must verify git log origin/main..HEAD is empty** |

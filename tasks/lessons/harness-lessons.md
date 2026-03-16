@@ -116,6 +116,11 @@
 - **Rule:** When ANY hook is found broken, audit ALL hooks in the same pass. Partial fixes create false confidence — "I fixed the hooks" when only 1 of 4 was actually fixed.
 - **Prevention:** (1) Hook changes require a full audit table (hook name, event, expected exit, actual exit, verdict). (2) Test each hook by triggering its condition. (3) The audit table goes in the commit message or session log as evidence.
 
+## Lesson 148: 25 commits never pushed — 3 sessions without deploy
+- **Mistake (Sessions 106b, 107, 107b):** All three sessions produced code and assessments that claimed "deploy triggered" but git log showed origin/main was 25 commits behind local main. No session end check verified the remote was up to date.
+- **Rule:** Every session MUST end with `git push` and then verify `git log origin/main..HEAD` is empty. If any commits are unpushed, the session is not complete.
+- **Prevention:** Add push verification to stop-gate.sh: warn (or block) if `git log origin/main..HEAD` is non-empty. The assessment file should include a line confirming the remote SHA matches local HEAD.
+
 ## Lesson 110: Existing Data Not Surfaced Is Worse Than Missing Data
 - **Mistake:** Session 96c-cont4 — auto-clustering ran correctly, producing 35 proposals (30 Roland Fox, 4 Betty Capeluto Fox, 1 Ray Franco). But the UI showed "0 Proposals" and user concluded "clustering is completely missing." Hours of debugging ensued for what was purely a UI surfacing gap.
 - **Rule:** When a data pipeline produces results, the SAME session must verify they appear in the UI. A pipeline that produces results nobody can see is functionally broken. "Data exists in file X" is not shipped — "user sees data in the app" is shipped.
