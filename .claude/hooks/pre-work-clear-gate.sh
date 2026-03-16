@@ -16,6 +16,12 @@
 #
 # See: HD-025
 
+# Interactive sessions skip the /clear gate.
+SESSION_MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo "implementation")
+if [ "$SESSION_MODE" = "interactive" ]; then
+    exit 0
+fi
+
 COUNTER_FILE=".claude/commits_since_clear.txt"
 CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
 

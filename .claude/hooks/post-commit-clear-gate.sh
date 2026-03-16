@@ -24,6 +24,14 @@ except:
     print('')
 " 2>/dev/null)
 
+# Interactive sessions skip the /clear gate.
+# Set mode: echo "interactive" > .claude/session_mode.txt
+# Default (implementation): requires /clear between phases.
+SESSION_MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo "implementation")
+if [ "$SESSION_MODE" = "interactive" ]; then
+    exit 0
+fi
+
 # Detect successful git commit
 if echo "$CMD" | grep -qE '\bgit commit\b'; then
     # Check if the commit actually succeeded (exit code 0 from the tool)
