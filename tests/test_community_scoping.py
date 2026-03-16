@@ -246,7 +246,7 @@ class TestComputeSidebarCountsCommunity:
         assert counts["photos"] == 3
 
     @patch("app.main._count_discoveries", return_value=2)
-    @patch("app.main._load_annotations", return_value={"annotations": [{"status": "pending"}]})
+    @patch("app.main._load_annotations", return_value={"annotations": {"ann-1": {"status": "pending"}}})
     @patch("app.main._get_community_identity_ids", return_value={"a1", "a4"})
     @patch("app.main._get_community_photo_ids", return_value={"p1"})
     @patch("app.main._count_pending_uploads", return_value=0)

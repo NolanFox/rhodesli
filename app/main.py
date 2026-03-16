@@ -3232,8 +3232,8 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
     pending_annotations = 0
     try:
         annotations_data = _load_annotations()
-        for ann in annotations_data.get("annotations", []):
-            if ann.get("status") in ("pending", "pending_unverified"):
+        for ann in annotations_data.get("annotations", {}).values():
+            if isinstance(ann, dict) and ann.get("status") in ("pending", "pending_unverified"):
                 pending_annotations += 1
     except Exception:
         pass
