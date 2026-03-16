@@ -1848,6 +1848,14 @@ def post(person_id: str, author: str = "", text: str = "", sess=None, request=No
     comments_data["comments"][person_id].append(comment)
     _main_mod._save_person_comments(comments_data)
 
+    # Session 105b: Sync comment to Supabase (was DATA-015 dead code)
+    try:
+        from app.supabase_data import sync_person_comment
+
+        sync_person_comment(person_id, text.strip(), author=author.strip() or "Anonymous")
+    except Exception as e:
+        logging.error(f"Supabase person comment sync failed for {person_id}: {e}")
+
     # Re-render comments list
     visible = [c for c in comments_data["comments"][person_id] if c.get("status") == "visible"]
     items = []

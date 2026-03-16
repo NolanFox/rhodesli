@@ -124,8 +124,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Silent Supabase Sync Failures (DATA-014) — MOSTLY FIXED (Session 105/105b)
 - **DATA-014**: Shadow writes now log at ERROR level. save_registry/save_photo_registry postgres paths use strict=True (synchronous). photo_faces written alongside photos. Remaining: registry.py history events and user action logging still have silent failures. Source: Session 100d audit, fixed Session 105/105b.
 
-### P1 — Dead Sync Functions (DATA-015)
-- **DATA-015**: `sync_birth_year_estimate()` and `sync_person_comment()` in supabase_data.py are defined but never called from any app route. Birth year estimates and person comments are not being persisted to Supabase. Fix: wire into save paths or remove dead code. Source: Session 100d data integrity audit.
+### P1 — Dead Sync Functions (DATA-015) — FIXED Session 105b-cont
+- ~~**DATA-015**: `sync_birth_year_estimate()` and `sync_person_comment()` in supabase_data.py are defined but never called from any app route.~~ FIXED (Session 105b-cont) — `sync_birth_year_estimate()` wired into admin birth year accept route (`admin_routes.py`). `sync_person_comment()` wired into comment save path (`person_routes.py`). Structural tests verify both remain wired. Source: Session 100d data integrity audit.
 
 ### P1 — Proposal Regeneration After Upload (DATA-016)
 - **DATA-016**: After new photos are uploaded and processed, proposals.json is NOT automatically regenerated. Admin must manually run `cluster_new_faces.py`. This means new uploads don't produce ML match suggestions until a manual step happens. Fix: auto-regenerate proposals after upload processing completes, or add a "Regenerate Proposals" button in admin UI. Source: Session 100d — proposals stale since March 10.

@@ -283,6 +283,21 @@ def post(identity_id: str, birth_year: str = "", source_detail: str = "", sess=N
         original_ml_estimate=original_ml,
     )
 
+    # Session 105b: Sync birth year estimate to Supabase (was DATA-015 dead code)
+    try:
+        from app.supabase_data import sync_birth_year_estimate
+
+        sync_birth_year_estimate(
+            identity_id,
+            {
+                "birth_year_estimate": by,
+                "birth_year_confidence": "confirmed",
+                "source": source,
+            },
+        )
+    except Exception as e:
+        logging.error(f"Supabase birth year estimate sync failed for {identity_id}: {e}")
+
     name = ensure_utf8_display(identity.get("name", ""))
     correction_note = f" (ML: {original_ml})" if original_ml and by != original_ml else ""
 

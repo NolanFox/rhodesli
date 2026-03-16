@@ -6,7 +6,6 @@ are maintained. They catch if someone removes a Supabase write path in a future 
 
 import ast
 import inspect
-import textwrap
 
 import pytest
 
@@ -65,7 +64,6 @@ class TestSyncPushDualWrite:
         import app.sync_routes
 
         source = inspect.getsource(app.sync_routes)
-        # The sync_routes module must contain calls to all three batch writers
         assert "shadow_write_photo_faces_batch" in source, (
             "sync_routes must call shadow_write_photo_faces_batch — /api/sync/push must write photo_faces (Lesson 145)"
         )
@@ -84,26 +82,19 @@ class TestNoSilentExceptionSwallowing:
 
         source = inspect.getsource(app.supabase_data)
 
-        # Parse the AST and find except handlers that catch broad Exception with bare pass
         tree = ast.parse(source)
         broad_pass_handlers = []
 
-        # Narrow exception types that are OK to silently pass
         allowed_narrow = {"ImportError", "JSONDecodeError", "TypeError", "ValueError"}
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ExceptHandler):
-                # Check if body is just `pass`
                 if len(node.body) == 1 and isinstance(node.body[0], ast.Pass):
-                    # Check what exception type is caught
                     if node.type is None:
-                        # Bare `except:` — always bad
                         broad_pass_handlers.append(node.lineno)
                     elif isinstance(node.type, ast.Name) and node.type.id == "Exception":
-                        # `except Exception: pass` — bad
                         broad_pass_handlers.append(node.lineno)
                     elif isinstance(node.type, ast.Tuple):
-                        # `except (A, B): pass` — check if all are narrow
                         names = {elt.id for elt in node.type.elts if isinstance(elt, ast.Name)}
                         if not names.issubset(allowed_narrow):
                             broad_pass_handlers.append(node.lineno)
@@ -141,3 +132,77 @@ class TestStartupParityCheck:
         assert "_startup_parity_check" in source or "_check_data_parity" in source, (
             "startup_event must include a parity check (Session 105b Phase 2)"
         )
+
+
+class TestSecondaryTableSyncWired:
+    """Secondary Supabase tables must have their sync functions called (DATA-015)."""
+
+    def test_person_comments_synced_to_supabase(self):
+        """Person comment save path must call sync_person_comment."""
+        import app.person_routes
+
+        source = inspect.getsource(app.person_routes)
+        assert "sync_person_comment" in source, (
+            "person_routes must call sync_person_comment when saving comments — "
+            "DATA-015: person_comments sync function was dead code"
+        )
+
+    def test_birth_year_estimate_synced_to_supabase(self):
+        """Birth year accept path must call sync_birth_year_estimate."""
+        import app.admin_routes
+
+        source = inspect.getsource(app.admin_routes)
+        assert "sync_birth_year_estimate" in source, (
+            "admin_routes must call sync_birth_year_estimate when accepting birth years — "
+            "DATA-015: birth_year_estimates sync function was dead code"
+        )
+
+
+class TestCommunityTableWritesExist:
+    """Community membership tables must be written during uploads and syncs."""
+
+    def test_upload_writes_photo_communities(self):
+        """Upload pipeline must call add_photo_to_community."""
+        import app.upload_routes
+
+        source = inspect.getsource(app.upload_routes)
+        assert "add_photo_to_community" in source, (
+            "upload_routes must call add_photo_to_community — uploaded photos must be assigned to their community"
+        )
+
+    def test_upload_writes_identity_communities(self):
+        """Upload pipeline must call add_identity_to_community."""
+        import app.upload_routes
+
+        source = inspect.getsource(app.upload_routes)
+        assert "add_identity_to_community" in source, (
+            "upload_routes must call add_identity_to_community — "
+            "new identities from uploads must be assigned to their community"
+        )
+
+    def test_sync_push_writes_photo_communities(self):
+        """Sync push must call add_photo_to_community."""
+        import app.sync_routes
+
+        source = inspect.getsource(app.sync_routes)
+        assert "add_photo_to_community" in source, (
+            "sync_routes must call add_photo_to_community — pushed photos must be assigned to their community"
+        )
+
+
+class TestDateEstimationSyncsToSupabase:
+    """Date estimation must sync results to Supabase."""
+
+    def test_estimate_routes_syncs_date_labels(self):
+        """Estimate routes must call sync_date_label or sync_date_labels_batch."""
+        import app.estimate_routes
+
+        source = inspect.getsource(app.estimate_routes)
+        assert "sync_date_label" in source, "estimate_routes must sync date labels to Supabase"
+
+    def test_estimate_routes_syncs_photo_locations(self):
+        """Estimate routes must call sync_photo_location or sync_photo_locations_batch."""
+        import app.estimate_routes
+
+        source = inspect.getsource(app.estimate_routes)
+        assert "sync_photo_location" in source, "estimate_routes must sync photo locations to Supabase"
