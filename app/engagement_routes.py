@@ -53,16 +53,50 @@ def post(identity_id: str, target_id: str, note: str = "", sess=None):
 
 
 @rt("/api/proposed-matches")
-def get(community_slug: str = ""):
-    """List all pending proposed matches, optionally filtered by community."""
+def get(community_slug: str = "", page: int = 1):
+    """List all pending proposed matches, optionally filtered by community.
+
+    Combines two data sources:
+    1. registry.list_proposed_matches() — user-submitted proposals
+    2. proposals.json — ML clustering proposals (from cluster_new_faces + cross-batch)
+    """
     try:
         registry = _main_mod.load_registry()
     except Exception:
-        return P("Unable to load proposals.", cls="text-red-400")
+        registry = None
 
-    proposals = registry.list_proposed_matches()
+    # Source 1: User-submitted proposals from registry
+    user_proposals = []
+    if registry and hasattr(registry, "list_proposed_matches"):
+        user_proposals = registry.list_proposed_matches()
 
-    # Community filtering: only show proposals involving identities in this community
+    # Source 2: ML proposals from proposals.json (clustering + cross-batch)
+    ml_proposals = []
+    try:
+        proposals_data = _main_mod._load_proposals()
+        for p in proposals_data.get("proposals", []):
+            ml_proposals.append(
+                {
+                    "source_id": p.get("source_identity_id", ""),
+                    "target_id": p.get("target_identity_id", ""),
+                    "source_name": p.get("source_identity_name", ""),
+                    "target_name": p.get("target_identity_name", ""),
+                    "distance": p.get("distance", 0),
+                    "confidence_tier": p.get("confidence_tier", ""),
+                    "match_type": p.get("match_type", "clustering"),
+                    "id": f"ml_{p.get('source_identity_id', '')[:8]}_{p.get('target_identity_id', '')[:8]}",
+                    "author": "ML pipeline",
+                    "note": f"Distance: {p.get('distance', 0):.2f}" if p.get("distance") else "",
+                    "timestamp": proposals_data.get("generated_at", ""),
+                }
+            )
+    except Exception:
+        pass
+
+    # Combine both sources
+    proposals = user_proposals + ml_proposals
+
+    # Community filtering
     if community_slug:
         from app.supabase_data import get_community_by_slug
 
@@ -75,45 +109,63 @@ def get(community_slug: str = ""):
                 if p.get("source_id") in community_identity_ids or p.get("target_id") in community_identity_ids
             ]
 
+    # Sort by distance (lowest first = best matches)
+    proposals.sort(key=lambda p: p.get("distance", 999))
+
     if not proposals:
         return Div(P("No pending proposals.", cls="text-slate-400 italic text-sm"), cls="text-center py-8")
 
+    # Paginate — show 50 per page to avoid slow renders
+    page_size = 50
+    total = len(proposals)
+    start = (page - 1) * page_size
+    end = start + page_size
+    page_proposals = proposals[start:end]
+
     crop_files = _main_mod.get_crop_files()
     items = []
-    for p in proposals:
-        source_name = ensure_utf8_display(p.get("source_name")) or f"Identity {p['source_id'][:8]}..."
-        target_name = ensure_utf8_display(p.get("target_name")) or f"Identity {p['target_id'][:8]}..."
+    for p in page_proposals:
+        source_id = p.get("source_id", "")
+        target_id = p.get("target_id", "")
+        source_name = ensure_utf8_display(p.get("source_name")) or f"Person {source_id[:8]}..."
+        target_name = ensure_utf8_display(p.get("target_name")) or f"Person {target_id[:8]}..."
+        distance = p.get("distance")
+        tier = p.get("confidence_tier", "")
+
+        # Confidence badge
+        tier_colors = {"very_high": "bg-red-500", "high": "bg-orange-500", "moderate": "bg-yellow-600"}
+        tier_labels = {"very_high": "Very High", "high": "High", "moderate": "Moderate"}
+        badge = None
+        if tier:
+            badge = Span(
+                tier_labels.get(tier, tier),
+                cls=f"px-1.5 py-0.5 text-xs rounded {tier_colors.get(tier, 'bg-slate-600')} text-white ml-2",
+            )
 
         items.append(
             Div(
                 Div(
                     Span(source_name, cls="text-sm font-medium text-slate-200"),
-                    Span(" → ", cls="text-slate-500"),
+                    Span(" → ", cls="text-slate-500 mx-1"),
                     Span(target_name, cls="text-sm font-medium text-slate-200"),
-                    cls="flex items-center gap-1",
-                ),
-                P(p.get("note", ""), cls="text-xs text-slate-400 mt-1") if p.get("note") else None,
-                Div(
-                    Span(f"by {p.get('author', 'unknown')}", cls="text-xs text-slate-500"),
-                    Span(p.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
-                    cls="flex items-center mt-1",
+                    badge,
+                    Span(f"Dist: {distance:.2f}", cls="text-xs text-slate-500 ml-2") if distance else None,
+                    cls="flex items-center gap-1 flex-wrap",
                 ),
                 Div(
-                    Button(
-                        "Accept (Merge)",
-                        cls="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500",
-                        hx_post=f"/api/proposed-matches/{p['source_id']}/{p['id']}/accept",
-                        hx_target="#proposed-matches-list",
-                        hx_swap="innerHTML",
-                        type="button",
+                    Span(f"by {p.get('author', 'ML pipeline')}", cls="text-xs text-slate-500"),
+                    cls="mt-1",
+                ),
+                Div(
+                    A(
+                        "View Source",
+                        href=f"/person/{source_id}",
+                        cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
                     ),
-                    Button(
-                        "Reject",
-                        cls="px-2 py-1 text-xs border border-red-400 text-red-400 rounded hover:bg-red-500/20",
-                        hx_post=f"/api/proposed-matches/{p['source_id']}/{p['id']}/reject",
-                        hx_target="#proposed-matches-list",
-                        hx_swap="innerHTML",
-                        type="button",
+                    A(
+                        "View Target",
+                        href=f"/person/{target_id}",
+                        cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 ml-1",
                     ),
                     cls="flex gap-2 mt-2",
                 ),
@@ -121,7 +173,33 @@ def get(community_slug: str = ""):
             )
         )
 
-    return Div(*items, id="proposed-matches-list")
+    # Pagination controls
+    pagination = None
+    if total > page_size:
+        pages = (total + page_size - 1) // page_size
+        page_links = []
+        for pg in range(1, pages + 1):
+            if pg == page:
+                page_links.append(Span(str(pg), cls="px-2 py-1 bg-indigo-600 text-white rounded text-xs"))
+            else:
+                page_links.append(
+                    A(
+                        str(pg),
+                        href=f"?page={pg}",
+                        cls="px-2 py-1 bg-slate-700 text-slate-300 rounded text-xs hover:bg-slate-600",
+                        hx_get=f"/api/proposed-matches?community_slug={community_slug}&page={pg}",
+                        hx_target="#proposed-matches-list",
+                        hx_swap="innerHTML",
+                    )
+                )
+        pagination = Div(
+            P(f"Showing {start + 1}-{min(end, total)} of {total} proposals", cls="text-xs text-slate-400 mb-2"),
+            Div(*page_links, cls="flex gap-1 flex-wrap"),
+            cls="mt-4 text-center",
+        )
+
+    result_items = items + ([pagination] if pagination else [])
+    return Div(*result_items, id="proposed-matches-list")
 
 
 @rt("/api/proposed-matches/{source_id}/{proposal_id}/accept")
