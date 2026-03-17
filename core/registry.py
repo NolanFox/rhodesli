@@ -366,8 +366,45 @@ class IdentityRegistry:
         a_named = self._is_real_name(a.get("name"))
         b_named = self._is_real_name(b.get("name"))
 
-        # Rule 4: Two real names -> conflict
+        # Rule 4: Two real names -> conflict (unless identical)
         if a_named and b_named:
+            a_name = (a.get("name") or "").strip()
+            b_name = (b.get("name") or "").strip()
+            if a_name.lower() == b_name.lower():
+                # Same name — no conflict, use higher-state / more-faces tiebreak
+                # but keep a as target (preserves caller intent, name is same)
+                a_priority = self._state_priority(a.get("state", "INBOX"))
+                b_priority = self._state_priority(b.get("state", "INBOX"))
+                if b_priority > a_priority:
+                    return {
+                        "target_id": id_b,
+                        "source_id": id_a,
+                        "swapped": True,
+                        "conflict": None,
+                    }
+                if a_priority > b_priority:
+                    return {
+                        "target_id": id_a,
+                        "source_id": id_b,
+                        "swapped": False,
+                        "conflict": None,
+                    }
+                # Same state — more faces wins
+                a_faces = len(a.get("anchor_ids", [])) + len(a.get("candidate_ids", []))
+                b_faces = len(b.get("anchor_ids", [])) + len(b.get("candidate_ids", []))
+                if b_faces > a_faces:
+                    return {
+                        "target_id": id_b,
+                        "source_id": id_a,
+                        "swapped": True,
+                        "conflict": None,
+                    }
+                return {
+                    "target_id": id_a,
+                    "source_id": id_b,
+                    "swapped": False,
+                    "conflict": None,
+                }
             return {
                 "target_id": id_a,
                 "source_id": id_b,

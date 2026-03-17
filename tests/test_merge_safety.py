@@ -32,10 +32,12 @@ class TestMergeDirectionAutoCorrection:
     def test_unnamed_into_named_preserves_name(self):
         """When an unnamed identity is the UI target and named is source,
         direction should auto-correct so named identity survives."""
-        identity_reg, photo_reg = _make_registries({
-            "face_named": "photo_1",
-            "face_unnamed": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_named": "photo_1",
+                "face_unnamed": "photo_2",
+            }
+        )
 
         named_id = identity_reg.create_identity(
             anchor_ids=["face_named"],
@@ -75,10 +77,12 @@ class TestMergeDirectionAutoCorrection:
     def test_named_into_unnamed_preserves_name(self):
         """When named identity is the UI target and unnamed is source,
         no swap needed — named identity survives naturally."""
-        identity_reg, photo_reg = _make_registries({
-            "face_named": "photo_1",
-            "face_unnamed": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_named": "photo_1",
+                "face_unnamed": "photo_2",
+            }
+        )
 
         named_id = identity_reg.create_identity(
             anchor_ids=["face_named"],
@@ -111,10 +115,12 @@ class TestMergeDirectionAutoCorrection:
     def test_two_named_returns_name_conflict(self):
         """When both identities have names, merge should return conflict
         requiring explicit resolution — no silent name loss."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -147,12 +153,108 @@ class TestMergeDirectionAutoCorrection:
         assert b["name"] == "Maurice Mazal"
         assert "merged_into" not in b
 
+    def test_identical_names_skip_name_conflict(self):
+        """FB-074: When both identities have the SAME name, merge should
+        proceed without name conflict — no modal needed."""
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
+
+        id_a = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            name="Robert Mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+        id_b = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+            name="Robert Mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+
+        # Should succeed without resolved_name — names are identical
+        result = identity_reg.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_reg,
+        )
+
+        assert result["success"] is True
+        target = identity_reg.get_identity(result["target_id"])
+        assert target["name"] == "Robert Mattatia"
+        # Source should be merged into target
+        source = identity_reg.get_identity(id_b)
+        assert source.get("merged_into") is not None
+
+    def test_identical_names_case_insensitive_skip_conflict(self):
+        """FB-074: Case-insensitive identical names should also skip conflict."""
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
+
+        id_a = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            name="Robert Mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+        id_b = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+            name="robert mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+
+        result = identity_reg.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_reg,
+        )
+
+        assert result["success"] is True
+
+    def test_resolve_merge_direction_identical_names_no_conflict(self):
+        """resolve_merge_direction should return no conflict for identical names."""
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
+
+        id_a = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            name="Robert Mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+        id_b = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+            name="Robert Mattatia",
+            state=IdentityState.CONFIRMED,
+        )
+
+        resolution = identity_reg.resolve_merge_direction(id_a, id_b)
+        assert resolution["conflict"] is None
+
     def test_two_named_with_resolved_name_merges(self):
         """Name conflict resolved with explicit name choice should succeed."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -187,10 +289,12 @@ class TestMergeStatePromotion:
 
     def test_confirmed_source_promotes_inbox_target(self):
         """CONFIRMED source merged into INBOX target should promote to CONFIRMED."""
-        identity_reg, photo_reg = _make_registries({
-            "face_confirmed": "photo_1",
-            "face_inbox": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_confirmed": "photo_1",
+                "face_inbox": "photo_2",
+            }
+        )
 
         confirmed_id = identity_reg.create_identity(
             anchor_ids=["face_confirmed"],
@@ -219,10 +323,12 @@ class TestMergeStatePromotion:
 
     def test_inbox_source_into_confirmed_stays_confirmed(self):
         """INBOX source into CONFIRMED target should stay CONFIRMED."""
-        identity_reg, photo_reg = _make_registries({
-            "face_confirmed": "photo_1",
-            "face_inbox": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_confirmed": "photo_1",
+                "face_inbox": "photo_2",
+            }
+        )
 
         confirmed_id = identity_reg.create_identity(
             anchor_ids=["face_confirmed"],
@@ -249,10 +355,12 @@ class TestMergeStatePromotion:
 
     def test_proposed_source_promotes_inbox_target(self):
         """PROPOSED source into INBOX target should promote to PROPOSED."""
-        identity_reg, photo_reg = _make_registries({
-            "face_proposed": "photo_1",
-            "face_inbox": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_proposed": "photo_1",
+                "face_inbox": "photo_2",
+            }
+        )
 
         proposed_id = identity_reg.create_identity(
             anchor_ids=["face_proposed"],
@@ -283,10 +391,12 @@ class TestMergeHistory:
 
     def test_merge_history_recorded(self):
         """After merge, target should have merge_history entry with correct data."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -320,10 +430,12 @@ class TestMergeHistory:
 
     def test_merge_history_records_direction_correction(self):
         """When direction is auto-corrected, merge_history records this."""
-        identity_reg, photo_reg = _make_registries({
-            "face_named": "photo_1",
-            "face_unnamed": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_named": "photo_1",
+                "face_unnamed": "photo_2",
+            }
+        )
 
         named_id = identity_reg.create_identity(
             anchor_ids=["face_named"],
@@ -352,13 +464,15 @@ class TestMergeHistory:
 
     def test_all_faces_from_source_appear_in_target(self):
         """Every face from source must appear in target after merge."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a1": "photo_1",
-            "face_a2": "photo_2",
-            "face_b1": "photo_3",
-            "face_b2": "photo_4",
-            "face_b3": "photo_5",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a1": "photo_1",
+                "face_a2": "photo_2",
+                "face_b1": "photo_3",
+                "face_b2": "photo_4",
+                "face_b3": "photo_5",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a1", "face_a2"],
@@ -393,10 +507,12 @@ class TestMergeHistory:
 
     def test_source_marked_as_merged_not_deleted(self):
         """Source identity should be soft-deleted (merged_into), not hard-deleted."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -438,10 +554,12 @@ class TestUndoMerge:
 
     def test_undo_merge_restores_previous_state(self):
         """Undo merge should restore both target and source to pre-merge state."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -468,7 +586,11 @@ class TestUndoMerge:
 
         # Verify merge happened
         target_after_merge = identity_reg.get_identity(actual_target)
-        assert "face_b" in target_after_merge["anchor_ids"] or "face_b" in target_after_merge.get("candidate_ids", []) or "face_a" in target_after_merge["anchor_ids"]
+        assert (
+            "face_b" in target_after_merge["anchor_ids"]
+            or "face_b" in target_after_merge.get("candidate_ids", [])
+            or "face_a" in target_after_merge["anchor_ids"]
+        )
 
         # Undo
         undo_result = identity_reg.undo_merge(actual_target, "test")
@@ -485,10 +607,12 @@ class TestUndoMerge:
 
     def test_undo_preserves_original_faces(self):
         """After undo, target has only its original faces, source has only its original faces."""
-        identity_reg, photo_reg = _make_registries({
-            "face_target": "photo_1",
-            "face_source": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_target": "photo_1",
+                "face_source": "photo_2",
+            }
+        )
 
         target_id = identity_reg.create_identity(
             anchor_ids=["face_target"],
@@ -530,11 +654,13 @@ class TestUndoMerge:
 
     def test_undo_blocked_when_target_is_merged(self):
         """If target was subsequently merged into another identity, undo is blocked."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-            "face_c": "photo_3",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+                "face_c": "photo_3",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -556,15 +682,19 @@ class TestUndoMerge:
 
         # Merge B into A
         result1 = identity_reg.merge_identities(
-            source_id=id_b, target_id=id_a,
-            user_source="test", photo_registry=photo_reg,
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_reg,
         )
         assert result1["success"] is True
 
         # Now merge A into C (A becomes source, gets merged_into)
         result2 = identity_reg.merge_identities(
-            source_id=id_a, target_id=id_c,
-            user_source="test", photo_registry=photo_reg,
+            source_id=id_a,
+            target_id=id_c,
+            user_source="test",
+            photo_registry=photo_reg,
             auto_correct_direction=False,
         )
         assert result2["success"] is True
@@ -576,9 +706,11 @@ class TestUndoMerge:
 
     def test_undo_with_no_merge_history(self):
         """Undo on identity with no merge history should fail gracefully."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
@@ -595,10 +727,12 @@ class TestMergeDirectionTiebreakers:
 
     def test_both_unnamed_higher_state_wins(self):
         """When both are unnamed, higher-trust state becomes target."""
-        identity_reg, photo_reg = _make_registries({
-            "face_proposed": "photo_1",
-            "face_inbox": "photo_2",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_proposed": "photo_1",
+                "face_inbox": "photo_2",
+            }
+        )
 
         proposed_id = identity_reg.create_identity(
             anchor_ids=["face_proposed"],
@@ -624,12 +758,14 @@ class TestMergeDirectionTiebreakers:
 
     def test_both_unnamed_same_state_more_faces_wins(self):
         """When both unnamed and same state, more faces becomes target."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a1": "photo_1",
-            "face_a2": "photo_2",
-            "face_a3": "photo_3",
-            "face_b1": "photo_4",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a1": "photo_1",
+                "face_a2": "photo_2",
+                "face_a3": "photo_3",
+                "face_b1": "photo_4",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a1", "face_a2", "face_a3"],
@@ -656,11 +792,13 @@ class TestMergeDirectionTiebreakers:
 
     def test_negative_evidence_preserved_on_merge(self):
         """Negative face IDs from source should be preserved in target."""
-        identity_reg, photo_reg = _make_registries({
-            "face_a": "photo_1",
-            "face_b": "photo_2",
-            "face_rejected": "photo_3",
-        })
+        identity_reg, photo_reg = _make_registries(
+            {
+                "face_a": "photo_1",
+                "face_b": "photo_2",
+                "face_rejected": "photo_3",
+            }
+        )
 
         id_a = identity_reg.create_identity(
             anchor_ids=["face_a"],
