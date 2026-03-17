@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.16 · ~4519 tests · 943 photos · 3433 identities · 95 confirmed
+Current: v0.99.17 · ~4519 tests · 943 photos · 3433 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -130,6 +130,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-17: **v0.99.17 — Session 111c**: Proposals Page Rebuild + Triage Fixes. Proposals page rebuilt with face thumbnails, confidence tiers, action buttons. FB-039/055/067 fixed (bulk merge feedback, select-all, server-side search). Speed-run lazy-load enrichment (FB-025). Next Cluster button (FB-027). FB-068/069/070 documented. Deploy SUCCESS.
 
 - [x] 2026-03-16: **v0.99.16 — Session 111 + 111b**: Community Prefix Sweep + UX Fix Sprint. 80+ community prefix gaps fixed across 11 route files (3 parallel worktree subagents). Regression test `test_community_prefix_audit.py` prevents future gaps. FB-026 suggestions sorted by embedding distance. FB-052 confirm button shows merge context. FB-059 discovery loading skeleton. COMMUNITY-015 substantially resolved. 4519 tests pass. Deploy SUCCESS.
 

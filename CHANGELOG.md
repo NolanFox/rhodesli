@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.17] — 2026-03-17 (Session 111c: Proposals Rebuild + Triage Fixes)
+
+### Fixed
+- **Proposals page rebuilt** — Face pair thumbnails, confidence tier labels (Strong/Good/Possible/Weak match), action buttons ("Confirm as {Name}" / "Not a match"), Compare links, source identity deduplication. Was text-only with raw distance numbers.
+- **FB-039/056/061/062**: Bulk merge now shows per-identity names and failure reasons (e.g. "Charles Fox (same photo)") instead of just "11 failed."
+- **FB-055**: Select All checkbox in Similar Identities fixed — Hyperscript now targets the correct container.
+- **FB-067**: Server-side review search for identities beyond 150-card display limit. Dual search: client-side (instant on visible cards) + server-side HTMX (complete registry).
+- **FB-025**: Speed-run confirm returns instant feedback with pulsing placeholder; enrichment panel lazy-loads via HTMX.
+- **FB-027**: "Next Cluster →" button added to merge confirmation banner in speed-run.
+
+### Added
+- `/api/review-search` endpoint — server-side identity search with face thumbnails, state badges, direct links.
+- `/api/cluster-review/enrichment-panel` endpoint — lazy-loaded enrichment for perceived speed.
+- ML proposal accept/reject handlers support both user-submitted and ML proposals (ml_ prefix IDs).
+
 ## [v0.99.16] — 2026-03-16 (Session 111 + 111b: Community Prefix Sweep + UX Fix Sprint)
 
 ### Fixed
