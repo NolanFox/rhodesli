@@ -564,13 +564,6 @@ def get(
     # These show as Dist ~0.00 with co-occurrence (seen together in same photo)
     neighbors = [n for n in neighbors if not (n.get("distance", 1.0) < 0.1 and n.get("co_occurrence", 0) > 0)]
 
-    # FB-044: Filter out the best match to avoid showing it in both BEST MATCH banner and Similar list
-    best_match = _main_mod._get_best_match_for_identity(identity_id)
-    if best_match:
-        best_match_id = best_match.get("target_identity_id")
-        if best_match_id:
-            neighbors = [n for n in neighbors if n.get("identity_id") != best_match_id]
-
     # Count rejected identities for contextual recovery indicator
     identity = registry.get_identity(identity_id)
     rejected_count = sum(1 for neg in identity.get("negative_ids", []) if neg.startswith("identity:"))
