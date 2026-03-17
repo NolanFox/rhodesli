@@ -2155,12 +2155,71 @@ def get(request, sess=None):
         else None
     )
 
+    # FB-072: Recently approved annotations history
+    approved = [
+        a for a in annotations["annotations"].values() if a.get("status") == "approved" and a.get("reviewed_at")
+    ]
+    approved.sort(key=lambda a: a.get("reviewed_at", ""), reverse=True)
+    approved = approved[:20]  # Show last 20
+
+    history_rows = []
+    for ann in approved:
+        ann_type = ann.get("type", "unknown")
+        value = ann.get("value", "")
+        reviewed_at = ann.get("reviewed_at", "")[:16].replace("T", " ")
+        reviewed_by = ann.get("reviewed_by", "admin")
+        identity_id = ann.get("identity_id", "")
+        submitted_by = ann.get("user_email", ann.get("submitted_by", "anonymous"))
+
+        # Build display
+        if ann_type == "name_suggestion":
+            desc = f'Named "{value}"'
+        elif ann_type == "merge_suggestion":
+            desc = "Merge suggestion"
+        else:
+            desc = f"{ann_type}: {value[:40]}"
+
+        nav_prefix = _main_mod.community_url_prefix(community.get("slug", "") if community else "")
+        history_rows.append(
+            Div(
+                Div(
+                    Span(desc, cls="text-sm text-white font-medium"),
+                    Span(f" by {submitted_by}", cls="text-xs text-slate-500 ml-2"),
+                    cls="flex-1",
+                ),
+                Div(
+                    Span(reviewed_at, cls="text-xs text-slate-500"),
+                    A(
+                        "View",
+                        href=f"{nav_prefix}/person/{identity_id}" if identity_id else "#",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300 ml-3",
+                    )
+                    if identity_id
+                    else "",
+                    cls="flex items-center gap-1",
+                ),
+                cls="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg",
+            )
+        )
+
+    history_section = (
+        Div(
+            H2("Recently Approved", cls="text-lg font-bold text-white mt-8 mb-4"),
+            Div(f"{len(approved)} recent approvals", cls="text-sm text-slate-400 mb-3"),
+            Div(*history_rows, cls="space-y-2"),
+            cls="border-t border-slate-700 pt-4 mt-8",
+        )
+        if history_rows
+        else ""
+    )
+
     return Title(f"Annotation Approvals — {community_name}"), Div(
         _admin_nav_bar("approvals", request=request),
         Div(H1("Pending Approvals", cls="text-2xl font-bold text-white"), cls="mb-6"),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
         bulk_controls if bulk_controls else "",
         Div(*rows, cls="space-y-3", id="annotations-list"),
+        history_section,
         cls="max-w-3xl mx-auto p-6",
     )
 

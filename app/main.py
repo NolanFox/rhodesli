@@ -1282,6 +1282,14 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     except ImportError:
         pass
 
+    # Invalidate cluster review caches — stale after any identity change (Session 111e)
+    try:
+        from app.cluster_review_routes import invalidate_cluster_review_caches
+
+        invalidate_cluster_review_caches()
+    except ImportError:
+        pass
+
     # Always write JSON as backup (Session 105b: write-through)
     registry.save(REGISTRY_PATH)
 
@@ -3619,7 +3627,11 @@ _photo_dimensions_cache = None
 
 
 def _load_photo_dimensions_cache() -> dict:
-    """Load photo dimensions from photo_index.json into a cache."""
+    """Load photo dimensions from photo_index.json + photo registry into a cache.
+
+    Session 111e: Also populates from Supabase-backed photo registry so that
+    photos uploaded after the local JSON was last synced still have dimensions.
+    """
     global _photo_dimensions_cache
     if _photo_dimensions_cache is not None:
         return _photo_dimensions_cache
@@ -3643,6 +3655,24 @@ def _load_photo_dimensions_cache() -> dict:
                         _photo_dimensions_cache[Path(path).name] = (width, height)
         except Exception as e:
             logging.warning(f"Failed to load photo dimensions cache: {e}")
+
+    # Also populate from photo registry (Supabase-backed) — catches photos
+    # not in the local JSON (FB-075: face overlays missing on some photos)
+    try:
+        photo_reg = load_photo_registry()
+        for pid in photo_reg._photos:
+            w = photo_reg._photos[pid].get("width", 0)
+            h = photo_reg._photos[pid].get("height", 0)
+            if w > 0 and h > 0:
+                path = photo_reg.get_photo_path(pid)
+                if path:
+                    basename = Path(path).name
+                    # Don't overwrite existing entries (local JSON is authoritative)
+                    if basename not in _photo_dimensions_cache:
+                        _photo_dimensions_cache[basename] = (w, h)
+                        _photo_dimensions_cache[path] = (w, h)
+    except Exception as e:
+        logging.warning(f"Failed to load photo dimensions from registry: {e}")
 
     return _photo_dimensions_cache
 
@@ -3832,6 +3862,13 @@ def _invalidate_all_caches():
     _community_photo_ids_cache = {}
     _community_identity_ids_cache = {}
     _community_ids_cache_ts = 0.0
+    # Also invalidate cluster_review_routes caches
+    try:
+        from app.cluster_review_routes import invalidate_cluster_review_caches
+
+        invalidate_cluster_review_caches()
+    except ImportError:
+        pass
 
 
 def _upload_new_files_to_r2(data_dir: Path, job_id: str):
@@ -5585,6 +5622,7 @@ def identity_card_expanded(
                 hx_post=confirm_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
+                hx_push_url="false",
                 type="button",
                 id="focus-btn-confirm",
             ),
@@ -5594,6 +5632,7 @@ def identity_card_expanded(
                 hx_post=skip_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
+                hx_push_url="false",
                 type="button",
                 id="focus-btn-skip",
             ),
@@ -5603,6 +5642,7 @@ def identity_card_expanded(
                 hx_post=reject_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
+                hx_push_url="false",
                 type="button",
                 id="focus-btn-reject",
             ),
@@ -8896,6 +8936,9 @@ def neighbor_card(
             "data_auth_action": "merge these identities",
             "title": f"Merge {name} into {target_name}" if target_name else "Merge these identities",
         }
+        # Prevent URL changes in focus mode (FB-040: URL parameter stripping)
+        if from_focus:
+            _merge_btn_attrs["hx_push_url"] = "false"
         if not from_focus:
             _merge_btn_attrs["hx_confirm"] = _confirm_msg
         merge_btn = Button(

@@ -12,6 +12,7 @@ Two sections on one page:
 
 import json
 import os
+import time
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -36,6 +37,18 @@ from rhodesli_ml.active_learning import (
 UNRESOLVED_REVIEW_THRESHOLD = 0.85
 UNRESOLVED_REVIEW_GROUP_LIMIT = 18
 UNRESOLVED_REVIEW_MEMBER_LIMIT = 6
+
+# Performance caches — Session 111e
+_speed_run_cache = {}  # keyed by community_slug -> (timestamp, result)
+_suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp, result)
+_CACHE_TTL = 30  # seconds
+
+
+def invalidate_cluster_review_caches():
+    """Clear speed-run and suggestions caches. Called on confirm/merge/skip/reject."""
+    global _speed_run_cache, _suggestions_cache
+    _speed_run_cache = {}
+    _suggestions_cache = {}
 
 
 def _load_proposals():
@@ -1660,7 +1673,13 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
 
     Returns list of (identity_id, identity_data) tuples, sorted by face count descending.
     Filters to multi-face INBOX identities, community-scoped if applicable.
+    Cached for 30s, invalidated on confirm/merge/skip/reject.
     """
+    cache_key = community_slug or "__all__"
+    cached = _speed_run_cache.get(cache_key)
+    if cached and (time.time() - cached[0]) < _CACHE_TTL:
+        return cached[1]
+
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
@@ -1693,7 +1712,9 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
             clusters.append((iid, idata, len(all_faces)))
 
     clusters.sort(key=lambda x: -x[2])  # Most faces first
-    return [(iid, idata) for iid, idata, _ in clusters]
+    result = [(iid, idata) for iid, idata, _ in clusters]
+    _speed_run_cache[cache_key] = (time.time(), result)
+    return result
 
 
 def _get_photo_url_for_face(face_id, community_slug=""):
@@ -2083,7 +2104,13 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
 
     When community_slug is provided, same-community identities are ranked first.
     Falls back to face count sorting if embeddings are unavailable.
+    Cached for 30s per identity_id, invalidated on confirm/merge/skip/reject.
     """
+    cache_key = (identity_id, community_slug or "")
+    cached = _suggestions_cache.get(cache_key)
+    if cached and (time.time() - cached[0]) < _CACHE_TTL:
+        return cached[1]
+
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
@@ -2156,11 +2183,12 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
         cross = [s for s in suggestions if s["identity_id"] not in comm_ids]
         same.sort(key=lambda s: s["distance"])
         cross.sort(key=lambda s: s["distance"])
-        suggestions = (same + cross)[:limit]
+        result = (same + cross)[:limit]
     else:
         suggestions.sort(key=lambda s: s["distance"])
-        suggestions = suggestions[:limit]
-    return suggestions
+        result = suggestions[:limit]
+    _suggestions_cache[cache_key] = (time.time(), result)
+    return result
 
 
 def _speed_run_done_card(offset, total):

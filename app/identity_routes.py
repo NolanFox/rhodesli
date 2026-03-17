@@ -106,6 +106,27 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
+    # FB-077: Pre-check for placeholder names — show inline error on person page
+    identity_name = identity.get("name", "")
+    if identity_name.startswith("Unidentified Person "):
+        if from_person_page:
+            return (
+                Div(
+                    P(
+                        "Rename this person first, then confirm.",
+                        cls="text-amber-400 text-sm font-medium",
+                    ),
+                    id="person-admin-actions",
+                    cls="flex items-center justify-center gap-2 mb-3 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg",
+                ),
+            )
+        elif from_focus:
+            return Response(
+                to_xml(_main_mod.toast("Rename this person first, then confirm.", "warning")),
+                status_code=409,
+                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+            )
+
     # Confirm the identity (state promotion only — merge is a separate explicit action)
     try:
         registry.confirm_identity(identity_id, user_source="web")

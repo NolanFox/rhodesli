@@ -61,6 +61,10 @@ def _mock_registry(identities_dict):
     mock_reg = MagicMock()
     mock_reg._identities = identities_dict
     mock_reg.get = lambda iid: identities_dict.get(iid)
+    # Clear caches that depend on registry data (Session 111e)
+    from app.cluster_review_routes import invalidate_cluster_review_caches
+
+    invalidate_cluster_review_caches()
     return patch("app.cluster_review_routes._main_mod.load_registry", return_value=mock_reg)
 
 
@@ -1053,3 +1057,139 @@ class TestPerformanceCacheRepopulation:
         # Cache should now be the saved registry
         assert main_module._registry_cache is mock_reg
         assert main_module._registry_cache_ts > 0
+
+
+class TestClusterReviewCaches:
+    """Session 111e: TTL caches for speed-run and suggestions."""
+
+    def test_speed_run_cache_returns_same_result(self):
+        """Cached speed-run clusters match uncached."""
+        from app.cluster_review_routes import (
+            _get_speed_run_clusters,
+            invalidate_cluster_review_caches,
+        )
+
+        identities = {
+            "id-1": _make_identity("A", state="INBOX", n_candidates=3),
+            "id-2": _make_identity("B", state="INBOX", n_candidates=2),
+            "id-3": _make_identity("C", state="CONFIRMED"),
+        }
+        invalidate_cluster_review_caches()
+        with _mock_registry(identities):
+            mock_req = MagicMock()
+            mock_req.state = MagicMock()
+            mock_req.state.community = None
+            result1 = _get_speed_run_clusters(community_slug="", request=mock_req)
+            result2 = _get_speed_run_clusters(community_slug="", request=mock_req)
+
+        # Both calls should return same IDs
+        ids1 = [iid for iid, _ in result1]
+        ids2 = [iid for iid, _ in result2]
+        assert ids1 == ids2
+        # Only INBOX/PROPOSED with 2+ faces
+        assert len(ids1) == 2
+
+    def test_speed_run_cache_invalidation(self):
+        """After invalidation, speed-run cache is cleared."""
+        import app.cluster_review_routes as cr_mod
+
+        cr_mod._speed_run_cache["test"] = (0, [("fake", {})])
+        cr_mod.invalidate_cluster_review_caches()
+        assert cr_mod._speed_run_cache == {}
+
+    def test_suggestions_cache_returns_same_result(self):
+        """Cached suggestions match uncached."""
+        from app.cluster_review_routes import (
+            _get_confirmed_identity_suggestions,
+            invalidate_cluster_review_caches,
+        )
+
+        identities = {
+            "target": _make_identity("Target", state="INBOX", anchor_ids=["f1"]),
+            "conf-1": _make_identity("Albert", state="CONFIRMED", anchor_ids=["f2"]),
+        }
+        invalidate_cluster_review_caches()
+        with ExitStack() as stack:
+            stack.enter_context(_mock_registry(identities))
+            stack.enter_context(patch("app.cluster_review_routes._main_mod.get_face_data", return_value={}))
+            result1 = _get_confirmed_identity_suggestions("target", limit=3)
+            result2 = _get_confirmed_identity_suggestions("target", limit=3)
+
+        assert result1 == result2
+        assert len(result1) == 1
+        assert result1[0]["name"] == "Albert"
+
+    def test_save_registry_invalidates_cluster_caches(self):
+        """save_registry() should clear cluster review caches."""
+        import app.cluster_review_routes as cr_mod
+        import app.main as main_module
+
+        cr_mod._speed_run_cache["test"] = (0, [])
+        cr_mod._suggestions_cache[("id", "")] = (0, [])
+
+        mock_reg = MagicMock()
+        mock_reg._identities = {}
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(mock_reg, "save"))
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(patch("threading.Thread"))
+            main_module.save_registry(mock_reg)
+
+        assert cr_mod._speed_run_cache == {}
+        assert cr_mod._suggestions_cache == {}
+
+
+class TestConfirmUnidentifiedPersonPage:
+    """FB-077: Confirm button shows inline error for unidentified persons."""
+
+    def test_confirm_unidentified_person_page_shows_inline_error(self):
+        """Confirm on person page for 'Unidentified Person NNN' shows visible error."""
+        client = _get_test_client()
+        identity_data = _make_identity("Unidentified Person 42", state="INBOX")
+        mock_reg = MagicMock()
+        mock_reg._identities = {"unid-1": identity_data}
+        mock_reg.get_identity = MagicMock(return_value=identity_data)
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            stack.enter_context(patch("app.identity_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(
+                patch("app.identity_routes._main_mod._check_merged_identity", return_value=(False, None))
+            )
+            resp = client.post("/confirm/unid-1?from_person_page=true")
+
+        assert resp.status_code == 200
+        html = resp.text
+        assert "Rename this person first" in html
+        assert "person-admin-actions" in html
+
+    def test_confirm_named_person_page_succeeds(self):
+        """Confirm on person page for named person should work."""
+        client = _get_test_client()
+        identities = {
+            "named-1": _make_identity("Albert Fox", state="PROPOSED", anchor_ids=["f1"]),
+        }
+        with ExitStack() as stack:
+            stack.enter_context(_admin_session())
+            mock_reg = MagicMock()
+            mock_reg._identities = identities
+            mock_reg.get = lambda iid: identities.get(iid)
+            mock_reg.get_identity = MagicMock(return_value=identities["named-1"])
+            stack.enter_context(patch("app.identity_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.identity_routes._main_mod.save_registry"))
+            stack.enter_context(
+                patch("app.identity_routes._main_mod._check_merged_identity", return_value=(False, None))
+            )
+            stack.enter_context(patch("app.identity_routes._main_mod.posthog_capture"))
+            stack.enter_context(patch("app.identity_routes._main_mod.log_user_action"))
+            stack.enter_context(
+                patch(
+                    "app.identity_routes._main_mod.get_current_user",
+                    return_value=MagicMock(id="u1", email="admin@test.com"),
+                )
+            )
+            stack.enter_context(patch("app.identity_routes._main_mod.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.identity_routes._main_mod._fire_recalibration_hook"))
+            resp = client.post("/confirm/named-1?from_person_page=true")
+
+        assert resp.status_code == 200
+        assert "CONFIRMED" in resp.text
