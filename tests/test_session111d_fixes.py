@@ -146,3 +146,83 @@ class TestTargetedSupabaseWrites:
             )
             assert changed is not None
             assert source_id in changed
+
+
+class TestFB065MergedIdentitySearch:
+    """FB-065: Post-merge findability — merged identities appear in search results."""
+
+    def _make_registry_with_merged(self):
+        """Create a registry with a merged identity pair."""
+        reg = IdentityRegistry.__new__(IdentityRegistry)
+        target_id = "target-001"
+        source_id = "source-002"
+        reg._identities = {
+            target_id: {
+                "identity_id": target_id,
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_a", "face_b"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+            source_id: {
+                "identity_id": source_id,
+                "name": "Unidentified Person 3053",
+                "state": "PROPOSED",
+                "anchor_ids": [],
+                "candidate_ids": [],
+                "negative_ids": [],
+                "merged_into": target_id,
+            },
+        }
+        reg._version_id = 1
+        return reg, target_id, source_id
+
+    def test_merged_identity_appears_in_search(self):
+        """Searching for a merged identity's name should return it."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        results = reg.search_identities("3053")
+        ids = [r["identity_id"] for r in results]
+        assert source_id in ids
+
+    def test_merged_identity_has_merged_into_name(self):
+        """Merged identity result should include merged_into_name."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        results = reg.search_identities("3053")
+        merged_result = next(r for r in results if r["identity_id"] == source_id)
+        assert merged_result["merged_into"] == target_id
+        assert merged_result["merged_into_name"] == "Leon Capeluto"
+
+    def test_merged_identity_ranks_after_non_merged(self):
+        """Merged identities should sort after non-merged results."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        reg._identities["other-003"] = {
+            "identity_id": "other-003",
+            "name": "Person 3053 Junior",
+            "state": "INBOX",
+            "anchor_ids": [],
+            "candidate_ids": [],
+            "negative_ids": [],
+        }
+        results = reg.search_identities("3053")
+        ids = [r["identity_id"] for r in results]
+        assert "other-003" in ids
+        assert source_id in ids
+        # Non-merged should come before merged
+        assert ids.index("other-003") < ids.index(source_id)
+
+    def test_non_merged_search_unchanged(self):
+        """Normal (non-merged) identities should still work as before."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        results = reg.search_identities("Leon")
+        ids = [r["identity_id"] for r in results]
+        assert target_id in ids
+        assert source_id not in ids
+
+    def test_merged_into_unknown_target(self):
+        """If merge target doesn't exist, merged_into_name should be 'Unknown'."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        reg._identities[source_id]["merged_into"] = "nonexistent-999"
+        results = reg.search_identities("3053")
+        merged_result = next(r for r in results if r["identity_id"] == source_id)
+        assert merged_result["merged_into_name"] == "Unknown"

@@ -634,7 +634,7 @@ class TestSpeedLoopSaveBug:
 
         saved_registries = []
 
-        def mock_save_registry(reg, confirmed_identity_info=None):
+        def mock_save_registry(reg, confirmed_identity_info=None, changed_ids=None):
             saved_registries.append(True)
             # Clear the cache like the fix should do
             reg_dict = getattr(reg, "__dict__", None)

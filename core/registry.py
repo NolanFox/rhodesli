@@ -2033,10 +2033,7 @@ class IdentityRegistry:
         fuzzy_candidates = []
 
         for identity in self._identities.values():
-            # Skip merged identities
-            if identity.get("merged_into"):
-                continue
-
+            merged_into = identity.get("merged_into")
             identity_state = identity.get("state", "INBOX")
 
             # Filter by requested states if specified
@@ -2050,7 +2047,7 @@ class IdentityRegistry:
             name = identity.get("name") or ""
 
             # Build summary dict (shared between exact and fuzzy paths)
-            def _build_summary(ident=identity, n=name):
+            def _build_summary(ident=identity, n=name, _merged=merged_into):
                 anchor_ids = ident.get("anchor_ids", [])
                 candidate_ids = ident.get("candidate_ids", [])
                 face_count = len(anchor_ids) + len(candidate_ids)
@@ -2064,13 +2061,18 @@ class IdentityRegistry:
                             preview_face_id = first_face.get("face_id")
                         if preview_face_id:
                             break
-                return {
+                summary = {
                     "identity_id": ident["identity_id"],
                     "name": n,
                     "face_count": face_count,
                     "preview_face_id": preview_face_id,
                     "state": ident.get("state", "INBOX"),
                 }
+                if _merged:
+                    target = self._identities.get(_merged)
+                    summary["merged_into"] = _merged
+                    summary["merged_into_name"] = target.get("name", "Unknown") if target else "Unknown"
+                return summary
 
             # Also search aliases/alternate names
             searchable_texts = [name.lower()]
@@ -2088,6 +2090,9 @@ class IdentityRegistry:
                     words_matched += 1
 
             rank = _state_rank.get(identity_state, 9)
+            # Merged identities sort after all non-merged results
+            if merged_into:
+                rank += 10
             if words_matched == len(word_term_sets):
                 # All words matched — primary result
                 full_matches.append((rank, name.lower(), _build_summary()))

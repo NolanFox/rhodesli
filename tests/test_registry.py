@@ -865,8 +865,8 @@ class TestSearchIdentities:
         assert len(results) == 1
         assert results[0]["identity_id"] == id_b
 
-    def test_excludes_merged_identities(self):
-        """Search should not return merged identities."""
+    def test_merged_identities_appear_with_indicator(self):
+        """Search returns merged identities with merged_into_name field (FB-065)."""
         from core.registry import IdentityRegistry
         from unittest.mock import MagicMock
 
@@ -894,8 +894,7 @@ class TestSearchIdentities:
         mock_photo_registry = MagicMock()
         mock_photo_registry.get_photos_for_faces.return_value = set()
 
-        # Merge source into target (auto_correct_direction=False to skip
-        # name conflict detection -- this test is about search exclusion)
+        # Merge source into target
         registry.merge_identities(
             source_id=source_id,
             target_id=target_id,
@@ -904,10 +903,15 @@ class TestSearchIdentities:
             auto_correct_direction=False,
         )
 
-        # After merge, only target should appear
+        # After merge, both should appear — merged one has merged_into_name
         results = registry.search_identities("John")
-        assert len(results) == 1
-        assert results[0]["identity_id"] == target_id
+        assert len(results) == 2
+        target_result = next(r for r in results if r["identity_id"] == target_id)
+        source_result = next(r for r in results if r["identity_id"] == source_id)
+        assert target_result.get("merged_into") is None
+        assert source_result.get("merged_into_name") == "John Target"
+        # Merged results should sort after non-merged
+        assert results.index(target_result) < results.index(source_result)
 
     def test_empty_query_returns_empty_list(self):
         """Empty or whitespace query should return empty list."""
