@@ -39,6 +39,7 @@ class TestShareButtonComponent:
     def test_icon_style_has_data_action(self):
         """Icon-style share button has data-action='share-photo'."""
         from fasthtml.common import to_xml
+
         btn = share_button("abc123", style="icon")
         html = to_xml(btn)
         assert 'data-action="share-photo"' in html
@@ -47,6 +48,7 @@ class TestShareButtonComponent:
     def test_button_style_has_label(self):
         """Button-style share button includes label text."""
         from fasthtml.common import to_xml
+
         btn = share_button("abc123", style="button", label="Share Photo")
         html = to_xml(btn)
         assert "Share Photo" in html
@@ -55,6 +57,7 @@ class TestShareButtonComponent:
     def test_link_style_has_label(self):
         """Link-style share button includes label text."""
         from fasthtml.common import to_xml
+
         btn = share_button("abc123", style="link", label="Share")
         html = to_xml(btn)
         assert "Share" in html
@@ -63,6 +66,7 @@ class TestShareButtonComponent:
     def test_share_url_uses_photo_path(self):
         """Share URL is always /photo/{id}."""
         from fasthtml.common import to_xml
+
         btn = share_button("test_photo_id", style="icon")
         html = to_xml(btn)
         assert 'data-share-url="/photo/test_photo_id"' in html
@@ -70,6 +74,7 @@ class TestShareButtonComponent:
     def test_url_param_takes_precedence(self):
         """url= keyword overrides photo_id for any URL."""
         from fasthtml.common import to_xml
+
         btn = share_button(url="/person/abc123", style="button", label="Share Person")
         html = to_xml(btn)
         assert 'data-share-url="/person/abc123"' in html
@@ -78,6 +83,7 @@ class TestShareButtonComponent:
     def test_prominent_style_renders(self):
         """Prominent style creates a large CTA button."""
         from fasthtml.common import to_xml
+
         btn = share_button(url="/compare/result/xyz", style="prominent", label="Share This Match")
         html = to_xml(btn)
         assert "Share This Match" in html
@@ -87,6 +93,7 @@ class TestShareButtonComponent:
     def test_share_title_and_text_data_attributes(self):
         """title and text params add data attributes for native share."""
         from fasthtml.common import to_xml
+
         btn = share_button(url="/person/abc", style="button", title="Check this out", text="A face from Rhodes")
         html = to_xml(btn)
         assert 'data-share-title="Check this out"' in html
@@ -99,26 +106,29 @@ class TestOgTagsHelper:
     def test_basic_og_tags(self):
         """og_tags returns title, description, and site_name."""
         from fasthtml.common import to_xml
+
         tags = og_tags("Test Title", "Test Description")
         html = " ".join(to_xml(t) for t in tags)
-        assert 'og:title' in html
-        assert 'Test Title' in html
-        assert 'og:description' in html
-        assert 'Test Description' in html
-        assert 'og:site_name' in html
+        assert "og:title" in html
+        assert "Test Title" in html
+        assert "og:description" in html
+        assert "Test Description" in html
+        assert "og:site_name" in html
 
     def test_og_image_absolute_url(self):
         """Relative image URLs are converted to absolute."""
         from fasthtml.common import to_xml
+
         tags = og_tags("T", image_url="/static/crops/test.jpg")
         html = " ".join(to_xml(t) for t in tags)
-        assert 'og:image' in html
+        assert "og:image" in html
         assert "https://" in html
         assert "/static/crops/test.jpg" in html
 
     def test_og_image_already_absolute(self):
         """Absolute image URLs are passed through unchanged."""
         from fasthtml.common import to_xml
+
         tags = og_tags("T", image_url="https://example.com/img.jpg")
         html = " ".join(to_xml(t) for t in tags)
         assert "https://example.com/img.jpg" in html
@@ -126,21 +136,24 @@ class TestOgTagsHelper:
     def test_og_canonical_url(self):
         """Canonical URL appears in og:url."""
         from fasthtml.common import to_xml
+
         tags = og_tags("T", canonical_url="/person/abc123")
         html = " ".join(to_xml(t) for t in tags)
-        assert 'og:url' in html
+        assert "og:url" in html
         assert "/person/abc123" in html
 
     def test_twitter_card_with_image(self):
         """summary_large_image card when image is provided."""
         from fasthtml.common import to_xml
+
         tags = og_tags("T", image_url="/img.jpg")
         html = " ".join(to_xml(t) for t in tags)
-        assert 'summary_large_image' in html
+        assert "summary_large_image" in html
 
     def test_twitter_card_without_image(self):
         """summary card when no image provided."""
         from fasthtml.common import to_xml
+
         tags = og_tags("T")
         html = " ".join(to_xml(t) for t in tags)
         assert 'content="summary"' in html
@@ -159,34 +172,25 @@ class TestPhotoModalShareButton:
         """The photo partial (modal content) has a share button."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(
-            f"/photo/{real_photo_id}/partial",
-            headers={"HX-Request": "true"}
-        )
+        response = client.get(f"/photo/{real_photo_id}/partial", headers={"HX-Request": "true"})
         html = response.text
         assert 'data-action="share-photo"' in html
         assert f"/photo/{real_photo_id}" in html
 
-    def test_partial_has_public_page_link(self, client, real_photo_id):
-        """The photo partial has an explicit public-page link."""
+    def test_partial_has_view_photo_link(self, client, real_photo_id):
+        """The photo partial has a 'View Photo' link that opens in new tab."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(
-            f"/photo/{real_photo_id}/partial",
-            headers={"HX-Request": "true"}
-        )
+        response = client.get(f"/photo/{real_photo_id}/partial", headers={"HX-Request": "true"})
         html = response.text
-        assert "Public Page" in html
+        assert "View Photo" in html
         assert 'target="_blank"' in html
 
     def test_no_full_page_text(self, client, real_photo_id):
         """'Open Full Page' and 'Full Page' text no longer appears."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(
-            f"/photo/{real_photo_id}/partial",
-            headers={"HX-Request": "true"}
-        )
+        response = client.get(f"/photo/{real_photo_id}/partial", headers={"HX-Request": "true"})
         html = response.text
         assert "Open Full Page" not in html
         assert "Full Page" not in html
@@ -205,7 +209,7 @@ class TestPhotosGridShareButton:
         """Photos grid has explicit public-page links."""
         response = client.get("/?section=photos")
         html = response.text
-        assert '/photo/' in html
+        assert "/photo/" in html
         assert "Public Page" in html
 
     def test_photos_section_no_full_page_text(self, client):
@@ -225,7 +229,7 @@ class TestFaceCardShareButton:
         html = response.text
         # Browse identity cards share the person page, not a specific photo page.
         if 'data-action="share-photo"' in html:
-            assert '/person/' in html
+            assert "/person/" in html
             assert 'data-share-url="/person/' in html
 
 
@@ -263,4 +267,4 @@ class TestGlobalShareJS:
         """Global event delegation handles share-photo action."""
         response = client.get("/?section=photos")
         html = response.text
-        assert 'share-photo' in html
+        assert "share-photo" in html
