@@ -363,3 +363,67 @@ class TestFB036037TagSyncFailureWarning:
         assert resp.status_code == 200
         assert "Tagged as Good Person" in resp.text
         assert "sync failed" not in resp.text
+
+
+class TestFB028ToastOOBSwap:
+    """FB-028: Toast persistence via OOB swap in focus mode."""
+
+    def test_confirm_focus_mode_has_oob_toast(self, client, admin_user, confirm_registry):
+        """Confirm with from_focus=true returns OOB toast for #toast-container."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
+
+        with (
+            patch("app.main.load_registry", return_value=reg),
+            patch("app.main.save_registry"),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main.log_user_action"),
+            patch("app.main.get_next_focus_card", return_value=Div("next card", id="focus-container")),
+        ):
+            resp = client.post(
+                f"/confirm/{source_id}?from_focus=true&filter=",
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 200
+        assert "hx-swap-oob" in resp.text
+        assert "toast-container" in resp.text
+        assert 'id="focus-container"' in resp.text
+
+    def test_skip_focus_mode_has_oob_toast(self, client, admin_user, confirm_registry):
+        """Skip with from_focus=true returns OOB toast for #toast-container."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
+
+        with (
+            patch("app.main.load_registry", return_value=reg),
+            patch("app.main.save_registry"),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main.log_user_action"),
+            patch("app.main.get_next_focus_card", return_value=Div("next card", id="focus-container")),
+        ):
+            resp = client.post(
+                f"/identity/{source_id}/skip?from_focus=true&filter=",
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 200
+        assert "hx-swap-oob" in resp.text
+        assert "toast-container" in resp.text
+        assert 'id="focus-container"' in resp.text
+
+    def test_reject_focus_mode_has_oob_toast(self, client, admin_user, confirm_registry):
+        """Reject with from_focus=true returns OOB toast for #toast-container."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
+
+        with (
+            patch("app.main.load_registry", return_value=reg),
+            patch("app.main.save_registry"),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main.log_user_action"),
+            patch("app.main.get_next_focus_card", return_value=Div("next card", id="focus-container")),
+        ):
+            resp = client.post(
+                f"/reject/{source_id}?from_focus=true&filter=",
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 200
+        assert "hx-swap-oob" in resp.text
+        assert "toast-container" in resp.text
+        assert 'id="focus-container"' in resp.text

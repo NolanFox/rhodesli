@@ -233,12 +233,16 @@ def post(
     except Exception:
         pass  # Never block confirm on re-matching
 
-    # If from focus mode, return the next focus card
+    # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            _main_mod.toast("Identity confirmed.", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast("Identity confirmed.", "success"),
+            oob_toast,
         )
 
     # FB-017: On person page, return status update instead of full identity card
@@ -327,12 +331,16 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # If from focus mode, return the next focus card
+    # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            _main_mod.toast("Identity contested.", "warning"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast("Identity contested.", "warning"),
+            oob_toast,
         )
 
     # FB-017: On person page, return status update instead of full identity card
@@ -2040,17 +2048,21 @@ def post(
         )
 
     # If from focus mode, advance to next identity instead of showing browse card
-    # Note: OOB elements not needed in focus mode — focus container replaces entirely
+    # FB-028: Use OOB swap for toast so it persists across focus container replacement
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            merge_toast,
+            hx_swap_oob="beforeend:#toast-container",
+        )
         if focus_section == "skipped":
             return (
                 _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id, nav_prefix=nav_prefix),
-                merge_toast,
+                oob_toast,
             )
         return (
             _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter, nav_prefix=nav_prefix),
-            merge_toast,
+            oob_toast,
         )
 
     nav_prefix = _nav_prefix_from_request(request)
@@ -3584,12 +3596,16 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # If from focus mode, return the next focus card
+    # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            _main_mod.toast("Identity confirmed.", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast("Identity confirmed.", "success"),
+            oob_toast,
         )
 
     # FB-017: On person page, return status update
@@ -3673,12 +3689,16 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # If from focus mode, return the next focus card
+    # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            _main_mod.toast("Identity rejected.", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast("Identity rejected.", "success"),
+            oob_toast,
         )
 
     # FB-017: On person page, return status update instead of full identity card
@@ -3762,12 +3782,16 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # If from focus mode, return the next focus card
+    # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            _main_mod.toast("Skipped for later.", "info"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast("Skipped for later.", "info"),
+            oob_toast,
         )
 
     # FB-017: On person page, return status update instead of full identity card
