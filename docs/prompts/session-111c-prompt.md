@@ -122,6 +122,31 @@ Match the quality of the New Matches page and Discoveries page. Each proposal ca
 - Fix: JS event delegation for select-all pattern
 - File: `app/main.py` neighbors_sidebar
 
+### FB-042: Help Identify section purpose unclear (P1)
+- Overlaps with New Matches and Discoveries — unclear distinction
+- Fix: add explanatory subtitle or merge into Discoveries. Minimum: clarify purpose text.
+- File: `app/main.py` or `app/page_routes.py` Help Identify section
+
+### FB-043: Help Identify face crops too small to compare (P1)
+- "WHO IS THIS?" and "BEST MATCH" crops too zoomed — no surrounding context
+- Fix: show larger face regions or include photo context inline
+- File: Help Identify rendering
+
+### FB-048: No direct path from face card to person page in tagging view (P1)
+- In Speed Loop tagging, identity name shown but not linked
+- Fix: add "View Person" link in face tag popup
+- File: `app/page_routes.py` or `app/identity_routes.py` tag panel
+
+### FB-049: Sentry circular import error (P1)
+- `AttributeError: partially initialized module 'app.engagement_routes'`
+- Fix: refactor circular import or use lazy import pattern
+- File: `app/main.py` line ~10580 engagement_routes reference
+
+### FB-060: No Compare button on Discovery cards (P1)
+- From Discovery tab, no direct "Compare" button — user had to manually construct URL
+- Fix: add Compare button to discovery cards linking to `/tools/compare?face_id=...&person_id=...`
+- File: `app/discoveries_routes.py` `_build_discovery_card()`
+
 ---
 
 ## Phase 4: P2 Fixes (20 min — as time allows)

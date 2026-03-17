@@ -35,7 +35,7 @@
 - **Severity:** P1 (UX — wrong sort order)
 - **Context:** After confirming a cluster that is clearly Esther Burd Fox, the "Suggested Matches" list shows Charles Fox (106 faces) first, then Roland Fox (64), Albert Fox (57), and Esther Burd Fox (31) fourth. Should be sorted by embedding distance so the best ML match appears first.
 - **Root cause:** `_get_confirmed_identity_suggestions()` in cluster_review_routes.py sorts by `-s["face_count"]` instead of embedding distance
-- **Fix:** IN PROGRESS — modified to use `_compute_top_neighbors()` for ML-based ranking
+- **Fix:** FIXED (Session 111b) — `_get_confirmed_identity_suggestions()` now computes cosine distance per-face and sorts by ascending distance
 - **BACKLOG:** UX-095
 
 ### FB-027: After merge in speed-run, should auto-advance to next cluster
@@ -70,8 +70,8 @@
 ### FB-033: CI tests failing on GitHub
 - **Severity:** P1 (infrastructure)
 - **Context:** GitHub Actions test run failing on `test_upload_date_propagated_for_inbox_photos` — upload_date not propagated in _photo_cache when photo IDs mismatch between photo_index.json (inbox_*) and _photo_cache (SHA256).
-- **Root cause:** `_build_caches()` populates `filename_to_metadata` only from photo_registry, not from raw photo_index.json data. When IDs mismatch, the fallback path misses metadata like upload_date.
-- **Fix:** IN PROGRESS — added `filename_to_metadata` population from `best_raw_entries`
+- **Root cause:** `_build_caches()` populates `filename_to_metadata` only from photo_registry, not from raw photo_index.json data. When IDs mismatch, the fallback path misses metadata like upload_date. Also: stale JSON metadata overwrote fresh registry source/collection/source_url via `.update()`. Plus test ordering bug from prewarm thread race.
+- **Fix:** FIXED (Session 111b) — popped source/collection/source_url from merged metadata before update. Used `_cache_lock` in test to prevent prewarm thread race.
 - **BACKLOG:** CI-001
 
 ### FB-034: More Rhodes clusters in Fox Family (recurring)
@@ -193,6 +193,7 @@
 - **Context:** Card shows "STRONG MATCH — Likely Charles Fox (69%) (+7 additional)" with face thumbnails. User expects "Confirm" to mean "Yes, this IS Charles Fox" and merge the faces into Charles Fox's identity. Instead, Confirm just promotes Person 791fb268 to CONFIRMED as a NEW separate person. To actually merge with Charles Fox, user must: click Similar → find Charles Fox → click Merge. That's 3-4 clicks for what should be 1 click.
 - **Impact:** Misleading to anyone who doesn't understand the internal data model. The UI asserts "this is Charles Fox" then doesn't act on it when you confirm. Creates duplicate confirmed identities instead of merging.
 - **Proposed fix:** When a STRONG MATCH exists, change Confirm to "Confirm as Charles Fox" which does confirm + merge in one action. Keep a separate "Confirm as New Person" for cases where the match is wrong. This is how Google Photos works — "Is this [Name]?" with Yes/No.
+- **Fix:** PARTIAL (Session 111b) — Button text now shows "Confirm as {Name}" when strong match exists. But clicking still only confirms as new person — actual confirm+merge-in-one-click needs PRD-level design.
 - **BACKLOG:** UX-108
 
 ### FB-053: Identity IDs inconsistent — mix of numbers and hex hashes (P2)
@@ -241,7 +242,7 @@
 - **Severity:** P1 (performance — CRITICAL UX)
 - **Context:** Discovery tab takes so long to load that the user thinks it's not working at all. No loading indicator, just a blank/stale page for many seconds.
 - **Root cause:** TBD — likely heavy neighbor computation or Supabase queries without caching
-- **Fix:** BACKLOG — profile Discovery load path, add loading indicator
+- **Fix:** PARTIAL (Session 111b) — Added loading skeleton (3 pulsing placeholder cards + "Loading discoveries..." text). Underlying performance issue still needs profiling.
 - **BACKLOG:** PERF-009
 
 ### FB-060: No easy way to compare photos from Discovery tab (P1)
