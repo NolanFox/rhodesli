@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.20 · ~4560 tests · 965 photos · 3522 identities · 95 confirmed
+Current: v0.99.21 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -130,6 +130,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-17: **v0.99.21 — Session 112**: Single Source of Truth (PRD-051 Phase 1). Supabase is the only read source for identities and photos — no JSON fallback. `_build_caches()` refactored to remove `json.load(photo_index.json)`. `_load_photo_dimensions_cache()` simplified. DATA_SOURCE default "json"→"postgres". JSON writes kept as backup only. 6 FB items verified (5 working, 1 deferred). Session 111f perf preserved. 14 new tests. 4584 app tests pass. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.20 — Session 111f**: Performance Overhaul. Vectorized confirmed identity distance via precomputed L2-normalized embedding matrix (`app/perf_cache.py`). Smart cache invalidation — surgical per-identity instead of full flush. `find_nearest_neighbors_fast()` added to `core/neighbors.py`. Focus mode 124ms (was 3-5s), Speed-run 171ms, Neighbors API 142ms. FB-036/037 tag persistence verified correct. FB-040 browse mode OOB delete verified present. 23 new tests. Deploy SUCCESS.
 

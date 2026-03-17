@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.21] — 2026-03-17 (Session 112: Single Source of Truth)
+
+### Architecture (PRD-051 Phase 1)
+- **Supabase single source of truth**: `load_registry()` and `load_photo_registry()` no longer fall back to JSON when DATA_SOURCE=postgres. If Supabase is unavailable, error propagates (500 page) instead of silently serving stale JSON. Addresses 8 documented split-brain incidents (Lessons 56→150).
+- **`_build_caches()` refactored**: Removed `json.load(photo_index.json)` — now uses `load_photo_registry()` exclusively. Eliminates the #1 remaining split-brain vector.
+- **`_load_photo_dimensions_cache()` simplified**: Reads from photo registry only (Supabase-backed), not JSON file.
+- **DATA_SOURCE default changed**: "json" → "postgres". JSON mode kept as rollback escape hatch with deprecation warning. Set `DATA_SOURCE=json` on Railway to rollback if needed.
+- **JSON writes preserved as backup**: `save_registry()` and `save_photo_registry()` still write JSON for emergency recovery, but JSON is never read in production.
+
+### Verified (FB Items from Session 111 series)
+- FB-031: Not a bug (no gear icon on /people page)
+- FB-051: Photo filename search working correctly
+- FB-057: Focus mode auto-advance wired to all action buttons
+- FB-064: Override merge redirect uses community prefix
+- FB-071: Approve auto-confirm implemented (Session 107b)
+- FB-076: Deferred (annotations lack community context)
+
+### Added
+- 14 new tests in `test_single_source_of_truth.py` covering all read/write paths
+- Test conftest autouse fixture: DATA_SOURCE=json for test isolation
+
 ## [v0.99.20] — 2026-03-17 (Session 111f: Performance Overhaul)
 
 ### Performance
