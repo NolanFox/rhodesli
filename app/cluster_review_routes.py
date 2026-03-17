@@ -22,6 +22,7 @@ from scipy.spatial.distance import cdist
 
 from app.main import rt
 import app.main as _main_mod
+from app.audit import _log_audit
 from app.supabase_data import get_supabase_client
 from core import storage
 from core.registry import IdentityRegistry
@@ -1435,6 +1436,14 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
         registry.promote_candidate(identity_id, face_id, user_source="admin/cluster-review")
         registry.save(data_path / "identities.json")
         _main_mod._invalidate_all_caches()
+        _log_audit(
+            "confirm",
+            entity_id=identity_id,
+            user_email=_speed_run_admin_email(sess),
+            old_value={"face_id": face_id, "list": "candidate_ids"},
+            new_value={"list": "anchor_ids"},
+            metadata={"route": "cluster_review_confirm"},
+        )
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
@@ -1484,6 +1493,13 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
 
         registry.save(data_path / "identities.json")
         _main_mod._invalidate_all_caches()
+        _log_audit(
+            "reject",
+            entity_id=identity_id,
+            user_email=_speed_run_admin_email(sess),
+            old_value={"face_id": face_id},
+            metadata={"route": "cluster_review_reject"},
+        )
     except (ValueError, KeyError) as e:
         return Div(
             P(f"Error: {e}", cls="text-red-400 text-sm"),
@@ -1551,6 +1567,14 @@ def post(
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
             **({"input_method": input_method} if input_method else {}),
+        )
+        _log_audit(
+            "confirm",
+            entity_id=identity_id,
+            user_email=_speed_run_admin_email(sess),
+            old_value={"state": prev_state, "name": identity.get("name")},
+            new_value={"state": "CONFIRMED", "confirmed_faces": confirmed_count},
+            metadata={"route": "speed_run_confirm_all", "input_method": input_method or "click"},
         )
     except (ValueError, KeyError) as e:
         return Div(
@@ -1644,6 +1668,14 @@ def post(
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
             **({"input_method": input_method} if input_method else {}),
+        )
+        _log_audit(
+            "reject",
+            entity_id=identity_id,
+            user_email=_speed_run_admin_email(sess),
+            old_value={"candidates": candidates[:10]},
+            new_value={"rejected_count": rejected_count},
+            metadata={"route": "speed_run_reject_all", "input_method": input_method or "click"},
         )
     except (ValueError, KeyError) as e:
         return Div(
@@ -2563,6 +2595,17 @@ def post(
             mode="speed-run",
             admin=_speed_run_admin_email(sess),
             **({"input_method": input_method} if input_method else {}),
+        )
+        _log_audit(
+            "merge",
+            entity_id=result.get("target_id", target_id),
+            user_email=_speed_run_admin_email(sess),
+            old_value={"source_id": result.get("source_id", source_id)},
+            new_value={
+                "merged_into": result.get("target_id", target_id),
+                "faces_merged": result.get("faces_merged", 0),
+            },
+            metadata={"route": "speed_run_merge", "input_method": input_method or "click"},
         )
     except (KeyError, ValueError) as e:
         return Div(P(f"Error: {e}", cls="text-red-400 text-sm"), cls="p-4")

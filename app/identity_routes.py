@@ -19,6 +19,7 @@ from core.ui_safety import ensure_utf8_display
 
 from app.main import rt
 from app.utils import photo_url, _section_for_state
+from app.audit import _log_audit
 
 import app.main as _main_mod
 
@@ -152,6 +153,14 @@ def post(
             identity_id=identity_id,
             identity_name=identity.get("name", "Unknown"),
             context="person_page" if from_person_page else "browse",
+        )
+        _log_audit(
+            "confirm",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"state": identity.get("state", "PROPOSED"), "name": identity.get("name")},
+            new_value={"state": "CONFIRMED"},
+            metadata={"route": "confirm", "context": "person_page" if from_person_page else "browse"},
         )
     except Exception as e:
         return Response(
@@ -1331,6 +1340,15 @@ def post(
         actual_target = result.get("target_id", target_id)
         save_ok = _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
         _main_mod._invalidate_discovery_cache()
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "merge",
+            entity_id=actual_target,
+            user_email=_user.email if _user else None,
+            old_value={"source_id": actual_source, "face_id": face_id},
+            new_value={"merged_into": actual_target, "faces_merged": result.get("faces_merged", 0)},
+            metadata={"route": "face_tag"},
+        )
         if save_ok is False:
             logging.error(f"Tag face {face_id} -> {target_id}: merge in memory but Postgres write failed")
             # FB-036/037: Surface sync failure to user instead of silent success
@@ -1457,6 +1475,22 @@ def post(
                 "user_email": _user.email if _user else None,
             }
         _main_mod.save_registry(registry, confirmed_identity_info=_notify, changed_ids={identity_id})
+        _user_email = None
+        if action == "confirm" and _notify:
+            _user_email = _notify.get("user_email")
+        elif _main_mod.is_auth_enabled():
+            _qa_user = _main_mod.get_current_user(sess or {})
+            _user_email = _qa_user.email if _qa_user else None
+        _log_audit(
+            action,
+            entity_id=identity_id,
+            user_email=_user_email,
+            old_value={"state": state, "name": identity.get("name")},
+            new_value={
+                "state": "CONFIRMED" if action == "confirm" else ("SKIPPED" if action == "skip" else "CONTESTED")
+            },
+            metadata={"route": "quick_action", "photo_id": photo_id},
+        )
     except (ValueError, Exception) as e:
         return Response(
             to_xml(_main_mod.toast(f"Cannot {action}: {str(e)}", "error")),
@@ -1563,6 +1597,14 @@ def post(
         new_name=name,
         admin=_user.email if _user else "admin",
         source="face_tag",
+    )
+    _log_audit(
+        "rename",
+        entity_id=identity_id,
+        user_email=_user.email if _user else None,
+        old_value={"name": previous_name},
+        new_value={"name": name, "state": "CONFIRMED" if _notify else current_state},
+        metadata={"route": "create_identity", "auto_confirmed": bool(_notify)},
     )
 
     # Re-render the photo view to show the new name
@@ -2026,6 +2068,16 @@ def post(
     # Save with targeted Supabase write (FB-069: only write changed identities)
     _main_mod.save_registry(registry, changed_ids={actual_target_id, actual_source_id})
 
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _log_audit(
+        "merge",
+        entity_id=actual_target_id,
+        user_email=_user.email if _user else None,
+        old_value={"source_id": actual_source_id},
+        new_value={"merged_into": actual_target_id, "faces_merged": result.get("faces_merged", 0)},
+        metadata={"route": "merge_search", "user_source": user_source, "override_co_occurrence": allow_co_occurrence},
+    )
+
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
         _main_mod._fire_recalibration_hook("merge", actual_target_id, actual_source_id)
@@ -2378,6 +2430,15 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
 
     if merged_count > 0:
         _main_mod.save_registry(registry)
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "merge",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"source_ids": bulk_ids},
+            new_value={"merged_count": merged_count, "total_faces": total_faces},
+            metadata={"route": "bulk_merge"},
+        )
 
     # FB-039/FB-056/FB-062: Show per-identity success/failure with reasons
     if failed_details:
@@ -2431,6 +2492,15 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
 
     if rejected_count > 0:
         _main_mod.save_registry(registry)
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "negative_match",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"rejected_ids": bulk_ids[:10]},
+            new_value={"rejected_count": rejected_count},
+            metadata={"route": "bulk_reject"},
+        )
 
     return _main_mod.toast(f"Marked {rejected_count} identities as 'Not Same'.", "info")
 
@@ -2767,6 +2837,14 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
             new_name=name,
             admin=user.email if user else "admin",
             source="web",
+        )
+        _log_audit(
+            "rename",
+            entity_id=identity_id,
+            user_email=user.email if user else None,
+            old_value={"name": previous_name},
+            new_value={"name": name},
+            metadata={"route": "rename"},
         )
     except ValueError as e:
         return Response(
@@ -3116,6 +3194,14 @@ def post(
                 new_name=display_name.strip(),
                 admin=user.email if user else "admin",
                 source="admin_web",
+            )
+            _log_audit(
+                "rename",
+                entity_id=identity_id,
+                user_email=user.email if user else None,
+                old_value={"name": previous_name},
+                new_value={"name": display_name.strip()},
+                metadata={"route": "metadata"},
             )
             renamed = True
         except KeyError:
@@ -3469,6 +3555,15 @@ def post(face_id: str, sess=None, request=None):
         from_identity_id=identity_id,
         to_identity_id=result["to_identity_id"],
     )
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _log_audit(
+        "detach",
+        entity_id=identity_id,
+        user_email=_user.email if _user else None,
+        old_value={"face_id": face_id, "from_identity_id": identity_id},
+        new_value={"to_identity_id": result["to_identity_id"]},
+        metadata={"route": "detach"},
+    )
 
     # 1. Get crop files for rendering
     crop_files = _main_mod.get_crop_files()
@@ -3660,6 +3755,14 @@ def post(
             source_state="INBOX",
             context="person_page" if from_person_page else "browse",
         )
+        _log_audit(
+            "confirm",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"state": _identity.get("state", "INBOX"), "name": _identity.get("name")},
+            new_value={"state": "CONFIRMED"},
+            metadata={"route": "inbox_confirm"},
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -3846,6 +3949,15 @@ def post(
             identity_name=identity.get("name", "Unknown"),
             context="person_page" if from_person_page else "browse",
         )
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "skip",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"state": identity.get("state", "INBOX"), "name": identity.get("name")},
+            new_value={"state": "SKIPPED"},
+            metadata={"route": "skip"},
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -3977,6 +4089,14 @@ def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
             registry = _main_mod.load_registry()
             registry.reject_identity_pair(identity_id, suggestion_id, user_source="skipped_focus")
             _main_mod.save_registry(registry)
+            _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+            _log_audit(
+                "negative_match",
+                entity_id=identity_id,
+                user_email=_user.email if _user else None,
+                old_value={"suggestion_id": suggestion_id},
+                metadata={"route": "skipped_focus"},
+            )
         except (KeyError, ValueError):
             # If reject fails, just advance — don't block the user
             pass
@@ -4048,6 +4168,14 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
         previous_name=previous_name or "",
         admin=_user.email if _user else "admin",
     )
+    _log_audit(
+        "confirm",
+        entity_id=identity_id,
+        user_email=_user.email if _user else None,
+        old_value={"name": previous_name, "state": "SKIPPED"},
+        new_value={"name": name, "state": "CONFIRMED"},
+        metadata={"route": "name_and_confirm"},
+    )
 
     return (
         _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
@@ -4084,9 +4212,20 @@ def post(identity_id: str, sess=None, request=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
+    _prev_identity = registry.get_identity(identity_id)
+    _prev_state = _prev_identity.get("state", "INBOX")
     try:
         registry.reset_identity(identity_id, user_source="web_review")
         _main_mod.save_registry(registry)
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "reset",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"state": _prev_state, "name": _prev_identity.get("name")},
+            new_value={"state": "INBOX"},
+            metadata={"route": "reset"},
+        )
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),

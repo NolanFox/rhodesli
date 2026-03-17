@@ -28,6 +28,7 @@ from app.main import rt
 # All other main.py functions accessed via module reference
 # so that test patches on app.main.X work correctly
 import app.main as _main_mod
+from app.audit import _log_audit
 
 logger = logging.getLogger(__name__)
 
@@ -484,6 +485,18 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, f
             )
             if result["success"]:
                 _main_mod.save_registry(registry)
+                _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+                _log_audit(
+                    "merge",
+                    entity_id=result.get("target_id", identity_a),
+                    user_email=_user.email if _user else None,
+                    old_value={"source_id": result.get("source_id", identity_b)},
+                    new_value={
+                        "merged_into": result.get("target_id", identity_a),
+                        "faces_merged": result.get("faces_merged", 0),
+                    },
+                    metadata={"route": "match_mode", "confidence": confidence},
+                )
                 oob_toast = Div(
                     _main_mod.toast(f"Merged! {_main_mod._pl(result['faces_merged'], 'face')} combined.", "success"),
                     hx_swap_oob="beforeend:#toast-container",
@@ -504,6 +517,14 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, f
             registry = _main_mod.load_registry()
             registry.reject_identity_pair(identity_a, identity_b, user_source="match_mode")
             _main_mod.save_registry(registry)
+            _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+            _log_audit(
+                "negative_match",
+                entity_id=identity_a,
+                user_email=_user.email if _user else None,
+                old_value={"rejected_id": identity_b},
+                metadata={"route": "match_mode", "confidence": confidence},
+            )
             oob_toast = Div(
                 _main_mod.toast("Marked as different people.", "info"),
                 hx_swap_oob="beforeend:#toast-container",

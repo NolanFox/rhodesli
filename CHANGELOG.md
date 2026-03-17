@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.22] — 2026-03-17 (Session 113: Audit Logging + Embeddings Sync)
+
+### Added
+- **Audit logging foundation (AUDIT-001)**: New `app/audit.py` helper with `log_audit()` fire-and-forget function. 22 audit_log calls across `identity_routes.py`, `match_facecompare_routes.py`, and `cluster_review_routes.py`. Covers: confirm, reject, merge, rename, detach, skip, tag, compare, cluster review actions. Never crashes mutations — all errors silently logged.
+- **Production embeddings sync**: Synced `embeddings.npy` from production (2957 entries, +85 from web uploads). Naturalization form embedding confirmed present.
+- 16 new tests in `test_audit_logging.py` covering all audit paths.
+
+### Investigation Results
+- **Harry Fox cluster quality (CLUSTER-QUALITY-001)**: 3/4 Dayton photo faces are closer to Albert Fox centroid than to the naturalization form ground truth anchor. Full 8x8 distance matrix documented. Human visual review needed for H2, H3, H4.
+
 ## [v0.99.21] — 2026-03-17 (Session 112: Single Source of Truth)
 
 ### Architecture (PRD-051 Phase 1)

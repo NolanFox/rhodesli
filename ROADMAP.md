@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.21 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
+Current: v0.99.22 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -90,7 +90,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 ### Near-Term — Infrastructure
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
-- [ ] AUDIT-001: Canonical actor attribution + person/photo history timelines — registry history still records `user_source` rather than actor identity, and entity-level timeline UI is still missing. Build canonical actor fields on mutations, Supabase-backed read paths, and admin timelines on `/person` + `/photo`. See `docs/BACKLOG.md`.
+- [x] 2026-03-17: AUDIT-001: Audit logging foundation — 22 audit_log calls across route files, new app/audit.py. Remaining: entity timelines on `/person` + `/photo`, canonical actor fields. See `docs/BACKLOG.md`.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -130,6 +130,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-17: **v0.99.22 — Session 113**: Audit Logging + Embeddings Sync. AUDIT-001 (P0): 22 audit_log calls across identity_routes, match_facecompare_routes, cluster_review_routes. New app/audit.py. Production embeddings synced (2957 entries, +85 from web uploads). Harry Fox cluster verification: 3/4 Dayton faces closer to Albert than naturalization form ground truth. CLUSTER-QUALITY-001 logged. 16 new tests. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.21 — Session 112**: Single Source of Truth (PRD-051 Phase 1). Supabase is the only read source for identities and photos — no JSON fallback. `_build_caches()` refactored to remove `json.load(photo_index.json)`. `_load_photo_dimensions_cache()` simplified. DATA_SOURCE default "json"→"postgres". JSON writes kept as backup only. 6 FB items verified (5 working, 1 deferred). Session 111f perf preserved. 14 new tests. 4584 app tests pass. Deploy SUCCESS.
 
