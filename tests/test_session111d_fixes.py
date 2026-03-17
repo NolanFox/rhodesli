@@ -10,6 +10,7 @@ from unittest.mock import patch, MagicMock
 
 from core.registry import IdentityRegistry, IdentityState
 from core.photo_registry import PhotoRegistry
+from fasthtml.common import Div
 from app.auth import User
 
 
@@ -226,3 +227,133 @@ class TestFB065MergedIdentitySearch:
         results = reg.search_identities("3053")
         merged_result = next(r for r in results if r["identity_id"] == source_id)
         assert merged_result["merged_into_name"] == "Unknown"
+
+
+class TestFB066UnidentifiedConfirm:
+    """FB-066: Green checkmark on photo overlay should show clear error for unidentified faces."""
+
+    def test_quick_action_confirm_unidentified_returns_warning(self, client, admin_user):
+        """Confirming an unidentified person via quick-action should return a helpful warning."""
+        reg = IdentityRegistry()
+        identity_id = reg.create_identity(anchor_ids=["face_fb066"], user_source="test")
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry", return_value=reg),
+            patch("app.identity_routes._main_mod.save_registry"),
+        ):
+            resp = client.post(
+                "/api/face/quick-action",
+                data={"identity_id": identity_id, "action": "confirm", "photo_id": "fake_photo"},
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 409
+        assert "Name this person first" in resp.text
+
+    def test_quick_action_confirm_named_identity_succeeds(self, client, admin_user):
+        """Confirming a named identity via quick-action should succeed."""
+        reg = IdentityRegistry()
+        identity_id = reg.create_identity(anchor_ids=["face_fb066b"], user_source="test", name="Leon Capeluto")
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry", return_value=reg),
+            patch("app.identity_routes._main_mod.save_registry"),
+            patch("app.identity_routes._main_mod.photo_view_content", return_value=(Div("ok"),)),
+            patch("app.identity_routes._main_mod.get_current_user", return_value=None),
+            patch("app.identity_routes._main_mod.is_auth_enabled", return_value=False),
+        ):
+            resp = client.post(
+                "/api/face/quick-action",
+                data={"identity_id": identity_id, "action": "confirm", "photo_id": "fake_photo"},
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 200
+
+    def test_quick_action_skip_unidentified_still_works(self, client, admin_user):
+        """Skip action should still work for unidentified faces (only confirm is blocked)."""
+        reg = IdentityRegistry()
+        identity_id = reg.create_identity(anchor_ids=["face_fb066c"], user_source="test")
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry", return_value=reg),
+            patch("app.identity_routes._main_mod.save_registry"),
+            patch("app.identity_routes._main_mod.photo_view_content", return_value=(Div("ok"),)),
+        ):
+            resp = client.post(
+                "/api/face/quick-action",
+                data={"identity_id": identity_id, "action": "skip", "photo_id": "fake_photo"},
+                headers=HTMX_HEADERS,
+            )
+        assert resp.status_code == 200
+
+
+class TestFB036037TagSyncFailureWarning:
+    """FB-036/037: Tag endpoint surfaces Supabase save failure to user.
+
+    When save_registry returns False, the toast should warn the user
+    instead of showing silent success.
+    """
+
+    def _make_mock_registry(self, target_name="Target Person"):
+        """Create a mock registry that returns successful merge."""
+        registry = MagicMock()
+        registry.get_identity.return_value = {"identity_id": "target-id", "name": target_name}
+        registry.merge_identities.return_value = {
+            "success": True,
+            "faces_merged": 1,
+            "source_id": "source-id",
+            "target_id": "target-id",
+            "direction_swapped": False,
+        }
+        return registry
+
+    def test_tag_shows_warning_on_save_failure(self, client, admin_user):
+        """When save_registry returns False, toast says sync failed."""
+        registry = self._make_mock_registry("Target Person")
+        photo_reg = MagicMock()
+        photo_reg.get_photo_for_face.return_value = None
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry", return_value=registry),
+            patch("app.identity_routes._main_mod.load_photo_registry", return_value=photo_reg),
+            patch("app.identity_routes._main_mod.save_registry", return_value=False),
+            patch(
+                "app.identity_routes._main_mod.get_identity_for_face",
+                return_value={"identity_id": "source-id", "name": "Unidentified Person 1"},
+            ),
+            patch("app.identity_routes._main_mod.get_photo_id_for_face", return_value=None),
+            patch("app.identity_routes._main_mod._invalidate_discovery_cache"),
+        ):
+            resp = client.post(
+                "/api/face/tag?face_id=face_source&target_id=target-id",
+                headers=HTMX_HEADERS,
+            )
+
+        assert resp.status_code == 200
+        assert "sync failed" in resp.text
+        assert "may not persist" in resp.text
+
+    def test_tag_shows_success_on_save_ok(self, client, admin_user):
+        """When save_registry returns True (default), toast shows success."""
+        registry = self._make_mock_registry("Good Person")
+        photo_reg = MagicMock()
+        photo_reg.get_photo_for_face.return_value = None
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry", return_value=registry),
+            patch("app.identity_routes._main_mod.load_photo_registry", return_value=photo_reg),
+            patch("app.identity_routes._main_mod.save_registry", return_value=True),
+            patch(
+                "app.identity_routes._main_mod.get_identity_for_face",
+                return_value={"identity_id": "source-id", "name": "Unidentified Person 2"},
+            ),
+            patch("app.identity_routes._main_mod.get_photo_id_for_face", return_value=None),
+            patch("app.identity_routes._main_mod._invalidate_discovery_cache"),
+        ):
+            resp = client.post(
+                "/api/face/tag?face_id=face_source2&target_id=target-id",
+                headers=HTMX_HEADERS,
+            )
+
+        assert resp.status_code == 200
+        assert "Tagged as Good Person" in resp.text
+        assert "sync failed" not in resp.text

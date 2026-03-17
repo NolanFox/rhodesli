@@ -3968,6 +3968,15 @@ def photo_view_content(
                     )
                     if (face_identity_id and not seq_mode)
                     else None,
+                    # FB-048: View Person link in seq mode
+                    A(
+                        "View Person \u2192",
+                        href=f"{nav_prefix}/person/{face_identity_id}",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                        target="_blank",
+                    )
+                    if (face_identity_id and seq_mode)
+                    else None,
                     # UX-075: Skip button in sequential mode
                     Button(
                         "Ignore Stranger \u2192",

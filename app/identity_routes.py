@@ -14,6 +14,7 @@ from pathlib import Path
 from fasthtml.common import *
 from starlette.responses import Response
 
+from core.registry import IdentityRegistry
 from core.ui_safety import ensure_utf8_display
 
 from app.main import rt
@@ -1260,7 +1261,12 @@ def post(
         _main_mod._invalidate_discovery_cache()
         if save_ok is False:
             logging.error(f"Tag face {face_id} -> {target_id}: merge in memory but Postgres write failed")
-            # Still continue — in-memory cache has the merge, and JSON backup was written
+            # FB-036/037: Surface sync failure to user instead of silent success
+            toast_msg = f"Tagged as {target_name}, but sync failed — may not persist. Try refreshing."
+            toast_level = "warning"
+        else:
+            toast_msg = f"Tagged as {target_name}!"
+            toast_level = "success"
 
         # Find the photo this face is in to re-render the photo view
         photo_id = _main_mod.get_photo_id_for_face(face_id)
@@ -1288,7 +1294,7 @@ def post(
                 community_slug=community_slug,
             )
             oob_toast = Div(
-                _main_mod.toast(f"Tagged as {target_name}!", "success"),
+                _main_mod.toast(toast_msg, toast_level),
                 hx_swap_oob="beforeend:#toast-container",
             )
             return (*photo_content, oob_toast)
@@ -1297,7 +1303,7 @@ def post(
             # Without retarget, the bare toast replaces the entire photo viewer
             # with a fading message — appears as "nothing happens."
             return Response(
-                to_xml(_main_mod.toast(f"Tagged as {target_name}!", "success")),
+                to_xml(_main_mod.toast(toast_msg, toast_level)),
                 status_code=200,
                 headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
             )
@@ -1353,6 +1359,14 @@ def post(
 
     state = identity.get("state", "INBOX")
     action_name = "Ignored" if action == "skip" else action.capitalize()
+
+    # FB-066: Pre-check for unidentified names before confirm
+    if action == "confirm" and not IdentityRegistry._is_real_name(identity.get("name")):
+        return Response(
+            to_xml(_main_mod.toast("Name this person first, then confirm.", "warning")),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
 
     try:
         if action == "confirm":
@@ -2038,10 +2052,12 @@ def post(
         if focus_section == "skipped":
             return (
                 _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id, nav_prefix=nav_prefix),
+                *oob_elements,
                 merge_toast,
             )
         return (
             _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter, nav_prefix=nav_prefix),
+            *oob_elements,
             merge_toast,
         )
 
