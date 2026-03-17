@@ -2171,7 +2171,13 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
 
     merged_count = 0
     total_faces = 0
-    errors = []
+    failed_details = []  # list of (name, reason)
+
+    _REASON_LABELS = {
+        "co_occurrence": "same photo",
+        "already_merged": "already merged",
+        "name_conflict": "name conflict",
+    }
 
     for source_id in bulk_ids:
         try:
@@ -2185,29 +2191,22 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
                 merged_count += 1
                 total_faces += result["faces_merged"]
             else:
-                errors.append(f"{source_id[:8]}: {result['reason']}")
+                source_ident = _main_mod._safe_get_identity(registry, source_id)
+                name = ensure_utf8_display(source_ident.get("name", "")) if source_ident else f"Person {source_id[:8]}"
+                reason = _REASON_LABELS.get(result["reason"], result["reason"])
+                failed_details.append((name, reason))
         except Exception as e:
-            errors.append(f"{source_id[:8]}: {str(e)}")
+            failed_details.append((f"Person {source_id[:8]}", str(e)))
 
     if merged_count > 0:
         _main_mod.save_registry(registry)
 
-    if errors:
-        # FB-039/FB-056/FB-062: Show WHY merges failed, not just the count.
-        # Most failures are co-occurrence blocks (faces in same photo).
-        _REASON_LABELS = {
-            "co_occurrence": "faces appear in the same photo",
-            "already_merged": "already merged elsewhere",
-            "name_conflict": "conflicting names",
-        }
-        unique_reasons = set()
-        for err in errors:
-            reason_part = err.split(": ", 1)[-1] if ": " in err else err
-            unique_reasons.add(_REASON_LABELS.get(reason_part, reason_part))
-        reason_summary = "; ".join(sorted(unique_reasons)[:3])
-        if len(unique_reasons) > 3:
-            reason_summary += f" (+{len(unique_reasons) - 3} more)"
-        msg = f"Merged {merged_count} ({total_faces} faces). {len(errors)} skipped: {reason_summary}"
+    # FB-039/FB-056/FB-062: Show per-identity success/failure with reasons
+    if failed_details:
+        failed_items = "; ".join(f"{name} ({reason})" for name, reason in failed_details[:5])
+        if len(failed_details) > 5:
+            failed_items += f" +{len(failed_details) - 5} more"
+        msg = f"Merged {merged_count} ({total_faces} faces). {len(failed_details)} skipped: {failed_items}"
         return _main_mod.toast(msg, "warning")
 
     return _main_mod.toast(f"Merged {merged_count} identities ({total_faces} faces).", "success")

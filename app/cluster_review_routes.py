@@ -1476,13 +1476,25 @@ def post(
             face_count=len(all_faces),
         )
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
-        community = getattr(request.state, "community", None) if request else None
-        if not community and community_slug:
-            from app.supabase_data import get_community_by_slug as _gcbs2
-
-            community = _gcbs2(community_slug)
-        enrichment = _speed_run_enrichment_panel(identity_id, identity, offset, community_slug, community=community)
-        return enrichment, undo_btn
+        # FB-025: Lazy-load enrichment panel — return instant confirm feedback,
+        # then load the heavier suggestions panel via HTMX for perceived speed.
+        enrichment_placeholder = Div(
+            Div(
+                Span("\u2713", cls="text-emerald-400 text-lg mr-2"),
+                Span(f"Confirmed as {iname}", cls="text-emerald-400 font-medium"),
+                cls="flex items-center mb-4",
+            ),
+            Div(
+                Div(cls="h-6 w-48 bg-slate-700/50 rounded animate-pulse mb-3"),
+                Div(cls="h-20 w-full bg-slate-700/30 rounded animate-pulse"),
+                cls="space-y-2",
+            ),
+            id="speed-run-card",
+            hx_get=f"/api/cluster-review/enrichment-panel?identity_id={identity_id}&offset={offset}&community_slug={community_slug}",
+            hx_trigger="load",
+            hx_swap="outerHTML",
+        )
+        return enrichment_placeholder, undo_btn
 
     identity_name = identity.get("name", "Unknown")
     face_word = "face" if confirmed_count == 1 else "faces"
@@ -1782,6 +1794,24 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
         ),
         id="speed-run-card",
     )
+
+
+@rt("/api/cluster-review/enrichment-panel")
+def get(identity_id: str = "", offset: int = 0, community_slug: str = "", sess=None, request=None):
+    """FB-025: Lazy-load enrichment panel after confirm for perceived speed."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+    registry = _main_mod.load_registry()
+    identity = registry.get_identity(identity_id) if identity_id else None
+    if not identity:
+        return Div(P("Identity not found.", cls="text-slate-400"), id="speed-run-card")
+    community = getattr(request.state, "community", None) if request else None
+    if not community and community_slug:
+        from app.supabase_data import get_community_by_slug as _gcbs
+
+        community = _gcbs(community_slug)
+    return _speed_run_enrichment_panel(identity_id, identity, offset, community_slug, community=community)
 
 
 def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_slug, community=None):
@@ -2459,15 +2489,25 @@ def post(
 
     next_params = urlencode({"offset": offset + 1, "community_slug": community_slug})
 
-    # Build merge confirmation banner
+    # Build merge confirmation banner with auto-advance button (FB-027)
     merge_banner = Div(
-        Span("Merged!", cls="text-indigo-400 text-lg font-semibold mr-2"),
-        Span(
-            f"Merged {faces_merged} face{'s' if faces_merged != 1 else ''} into {target_name} "
-            f"(now {target_face_count} total faces)",
-            cls="text-slate-300 text-sm",
+        Div(
+            Span("Merged!", cls="text-indigo-400 text-lg font-semibold mr-2"),
+            Span(
+                f"Merged {faces_merged} face{'s' if faces_merged != 1 else ''} into {target_name} "
+                f"(now {target_face_count} total faces)",
+                cls="text-slate-300 text-sm",
+            ),
+            cls="flex items-center flex-wrap",
         ),
-        cls="flex items-center mb-4 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg",
+        Button(
+            "Next Cluster \u2192",
+            hx_get=f"/admin/cluster-review/next?{next_params}",
+            hx_target="#speed-run-card",
+            hx_swap="outerHTML",
+            cls="mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors min-h-[44px]",
+        ),
+        cls="mb-4 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg",
     )
 
     # Return enrichment panel for the merged-into identity with merge banner prepended

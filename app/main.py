@@ -9229,9 +9229,10 @@ def neighbors_sidebar(
     if len(mergeable) > 1:
         select_all_script = (
             "on click "
-            "set cbs to <input[name='bulk_ids']/> in closest <form/> "
+            "set container to closest <div.neighbors-sidebar/> "
+            "set cbs to <input[name='bulk_ids']/> in container "
             "repeat for cb in cbs set cb.checked to my.checked end "
-            "set vcbs to <input.visible-bulk-cb/> in closest <form/> "
+            "set vcbs to <input.visible-bulk-cb/> in container "
             "repeat for vcb in vcbs set vcb.checked to my.checked end"
         )
         bulk_actions = Form(
