@@ -49,6 +49,10 @@ def invalidate_cluster_review_caches():
     global _speed_run_cache, _suggestions_cache
     _speed_run_cache = {}
     _suggestions_cache = {}
+    # Also invalidate the vectorized confirmed matrix
+    from app.perf_cache import mark_confirmed_dirty
+
+    mark_confirmed_dirty()
 
 
 def _load_proposals():
@@ -2102,8 +2106,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
 def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=None):
     """Get top confirmed identities as merge suggestions sorted by embedding distance.
 
-    When community_slug is provided, same-community identities are ranked first.
-    Falls back to face count sorting if embeddings are unavailable.
+    Uses precomputed vectorized matrix from perf_cache for O(1) distance computation.
     Cached for 30s per identity_id, invalidated on confirm/merge/skip/reject.
     """
     cache_key = (identity_id, community_slug or "")
@@ -2114,7 +2117,7 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
     registry = _main_mod.load_registry()
     identities = registry._identities if hasattr(registry, "_identities") else {}
 
-    # Get target identity embedding for distance computation
+    # Get target identity embedding
     target_identity = identities.get(identity_id, {})
     target_face_ids = _identity_face_ids(target_identity)
     target_embedding = None
@@ -2130,63 +2133,39 @@ def _get_confirmed_identity_suggestions(identity_id, limit=3, community_slug=Non
     except Exception:
         pass
 
-    suggestions = []
-    for iid, idata in identities.items():
-        if iid == identity_id:
-            continue
-        if idata.get("merged_into"):
-            continue
-        if idata.get("state") != "CONFIRMED":
-            continue
-        face_ids = _identity_face_ids(idata)
-        if not face_ids:
-            continue
-        best_fid = _best_face_id(face_ids)
+    if target_embedding is not None:
+        # Use vectorized perf_cache
+        from app.perf_cache import get_confirmed_distances
 
-        # Compute min embedding distance to target
-        dist = 999.0
-        if target_embedding is not None:
-            try:
-                for fid in face_ids:
-                    fd = face_data.get(fid)
-                    if fd and "embeddings" in fd:
-                        emb = np.array(fd["embeddings"]).flatten()
-                        d = float(cdist([target_embedding], [emb], metric="cosine")[0][0])
-                        if d < dist:
-                            dist = d
-            except Exception:
-                pass
-
-        suggestions.append(
-            {
-                "identity_id": iid,
-                "name": idata.get("name", "Unknown"),
-                "face_count": len(face_ids),
-                "best_face_id": best_fid,
-                "distance": dist,
-            }
-        )
-
-    # Community-scope: same-community first, then cross-community
-    comm_ids = None
-    if community_slug:
-        from app.supabase_data import load_communities
-
-        communities = load_communities()
-        for comm in communities or []:
-            if comm.get("slug") == community_slug:
-                comm_ids = _main_mod._get_community_identity_ids(comm)
-                break
-
-    if comm_ids is not None:
-        same = [s for s in suggestions if s["identity_id"] in comm_ids]
-        cross = [s for s in suggestions if s["identity_id"] not in comm_ids]
-        same.sort(key=lambda s: s["distance"])
-        cross.sort(key=lambda s: s["distance"])
-        result = (same + cross)[:limit]
+        all_results = get_confirmed_distances(target_embedding, community_slug=community_slug)
+        # Filter out self
+        result = [r for r in all_results if r["identity_id"] != identity_id][:limit]
     else:
-        suggestions.sort(key=lambda s: s["distance"])
+        # Fallback: face-count sorting (no embedding available)
+        suggestions = []
+        for iid, idata in identities.items():
+            if iid == identity_id:
+                continue
+            if idata.get("merged_into"):
+                continue
+            if idata.get("state") != "CONFIRMED":
+                continue
+            face_ids = _identity_face_ids(idata)
+            if not face_ids:
+                continue
+            best_fid = _best_face_id(face_ids)
+            suggestions.append(
+                {
+                    "identity_id": iid,
+                    "name": idata.get("name", "Unknown"),
+                    "face_count": len(face_ids),
+                    "best_face_id": best_fid,
+                    "distance": 999.0,
+                }
+            )
+        suggestions.sort(key=lambda s: s["face_count"], reverse=True)
         result = suggestions[:limit]
+
     _suggestions_cache[cache_key] = (time.time(), result)
     return result
 
