@@ -810,8 +810,8 @@ def get(q: str = "", request=None):
             P("Search unavailable.", cls="text-slate-400 italic text-sm p-2"),
         )
 
-    # Search all non-merged identities by name
-    results = registry.search_identities(q)
+    # Search identities by name — include merged so users can find them (FB-065)
+    results = registry.search_identities(q, include_merged=True)
 
     # Also search photo filenames (FB-015)
     query_lower = q.strip().lower()
@@ -939,7 +939,7 @@ def get(q: str = "", request=None, sess=None):
     except Exception:
         return ""
 
-    results = registry.search_identities(q)
+    results = registry.search_identities(q, include_merged=True)
     if not results:
         return Div(P("No matching identities found.", cls="text-slate-400 text-sm italic p-2"))
 

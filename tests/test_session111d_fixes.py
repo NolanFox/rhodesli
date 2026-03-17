@@ -179,17 +179,24 @@ class TestFB065MergedIdentitySearch:
         reg._version_id = 1
         return reg, target_id, source_id
 
-    def test_merged_identity_appears_in_search(self):
-        """Searching for a merged identity's name should return it."""
+    def test_default_search_excludes_merged(self):
+        """Default search excludes merged identities (safe for tag/merge)."""
         reg, target_id, source_id = self._make_registry_with_merged()
         results = reg.search_identities("3053")
+        ids = [r["identity_id"] for r in results]
+        assert source_id not in ids
+
+    def test_include_merged_finds_merged_identity(self):
+        """With include_merged=True, merged identities appear in results."""
+        reg, target_id, source_id = self._make_registry_with_merged()
+        results = reg.search_identities("3053", include_merged=True)
         ids = [r["identity_id"] for r in results]
         assert source_id in ids
 
     def test_merged_identity_has_merged_into_name(self):
         """Merged identity result should include merged_into_name."""
         reg, target_id, source_id = self._make_registry_with_merged()
-        results = reg.search_identities("3053")
+        results = reg.search_identities("3053", include_merged=True)
         merged_result = next(r for r in results if r["identity_id"] == source_id)
         assert merged_result["merged_into"] == target_id
         assert merged_result["merged_into_name"] == "Leon Capeluto"
@@ -205,11 +212,10 @@ class TestFB065MergedIdentitySearch:
             "candidate_ids": [],
             "negative_ids": [],
         }
-        results = reg.search_identities("3053")
+        results = reg.search_identities("3053", include_merged=True)
         ids = [r["identity_id"] for r in results]
         assert "other-003" in ids
         assert source_id in ids
-        # Non-merged should come before merged
         assert ids.index("other-003") < ids.index(source_id)
 
     def test_non_merged_search_unchanged(self):
@@ -224,7 +230,7 @@ class TestFB065MergedIdentitySearch:
         """If merge target doesn't exist, merged_into_name should be 'Unknown'."""
         reg, target_id, source_id = self._make_registry_with_merged()
         reg._identities[source_id]["merged_into"] = "nonexistent-999"
-        results = reg.search_identities("3053")
+        results = reg.search_identities("3053", include_merged=True)
         merged_result = next(r for r in results if r["identity_id"] == source_id)
         assert merged_result["merged_into_name"] == "Unknown"
 

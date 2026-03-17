@@ -903,8 +903,13 @@ class TestSearchIdentities:
             auto_correct_direction=False,
         )
 
-        # After merge, both should appear — merged one has merged_into_name
+        # Default search excludes merged (safe for tag/merge contexts)
         results = registry.search_identities("John")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == target_id
+
+        # With include_merged=True, both appear — merged one has merged_into_name
+        results = registry.search_identities("John", include_merged=True)
         assert len(results) == 2
         target_result = next(r for r in results if r["identity_id"] == target_id)
         source_result = next(r for r in results if r["identity_id"] == source_id)

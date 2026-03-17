@@ -1984,6 +1984,7 @@ class IdentityRegistry:
         limit: int = 10,
         exclude_id: str = None,
         states: list[str] | None = None,
+        include_merged: bool = False,
     ) -> list[dict]:
         """
         Search for identities by name across all states.
@@ -1995,6 +1996,8 @@ class IdentityRegistry:
             limit: Maximum results to return (default 10)
             exclude_id: Identity ID to exclude (e.g., the currently viewed identity)
             states: Optional list of states to include. None = all non-merged states.
+            include_merged: If True, include merged identities with merged_into_name.
+                Default False to avoid showing merged identities in tag/merge search.
 
         Returns:
             List of lightweight summaries: {identity_id, name, face_count,
@@ -2035,6 +2038,10 @@ class IdentityRegistry:
         for identity in self._identities.values():
             merged_into = identity.get("merged_into")
             identity_state = identity.get("state", "INBOX")
+
+            # Skip merged identities unless explicitly requested (FB-065)
+            if merged_into and not include_merged:
+                continue
 
             # Filter by requested states if specified
             if states is not None and identity_state not in states:
