@@ -8887,16 +8887,21 @@ def neighbor_card(
             _merge_url_suffix = "?from_person_page=true"
         elif from_person_page:
             _merge_url_suffix += "&from_person_page=true"
+        # Skip confirmation dialog in focus mode — user already sees face-to-face comparison
+        _merge_btn_attrs = {
+            "hx_post": f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{_merge_url_suffix}",
+            "hx_target": merge_target,
+            "hx_swap": merge_swap,
+            "hx_disabled_elt": "this",
+            "data_auth_action": "merge these identities",
+            "title": f"Merge {name} into {target_name}" if target_name else "Merge these identities",
+        }
+        if not from_focus:
+            _merge_btn_attrs["hx_confirm"] = _confirm_msg
         merge_btn = Button(
             _merge_label,
             cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-50",
-            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{_merge_url_suffix}",
-            hx_target=merge_target,
-            hx_swap=merge_swap,
-            hx_disabled_elt="this",
-            data_auth_action="merge these identities",
-            hx_confirm=_confirm_msg,
-            title=f"Merge {name} into {target_name}" if target_name else "Merge these identities",
+            **_merge_btn_attrs,
             **{"_": "on click put 'Merging...' into me"},
         )
 
