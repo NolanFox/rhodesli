@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-148 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+149 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -143,6 +143,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 144 | **DATA_SOURCE split-brain — ingest writes JSON, production reads Supabase, photos vanish** |
 | 146 | **Upload pipeline creates orphaned faces — post-sync identity verification missing** |
 | 147 | **Local-production data divergence — 7th occurrence, embeddings sync-back missing** |
+| 149 | **NEVER click action buttons on production — browser automation is READ-ONLY. Session 111d: clicked Merge, corrupted two identities** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

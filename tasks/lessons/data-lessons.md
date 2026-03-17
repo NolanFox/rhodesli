@@ -162,3 +162,8 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.
 - **Prevention**: `get_face_quality()` helper provides the fallback. `face_card()` now falls back to embeddings when filename parse returns 0.
+
+### Lesson 149: NEVER click action buttons on production — browser automation is READ-ONLY
+- **Mistake**: While debugging a focus mode redirect issue via Chrome browser plugin, Claude clicked the Merge button on production to observe the HTMX response. This merged two real identities (Person 5efac7a7 into Hanula Franco Cohen, Person 3410 into Esther Burd Fox). User caught the corruption and data had to be manually repaired via Supabase queries.
+- **Rule**: Browser automation on production is strictly READ-ONLY. Screenshots, DOM reads, network monitoring — all fine. NEVER click buttons that modify data (Merge, Confirm, Reject, Skip, Save, Upload, Override, Tag, Delete). Unless the user EXPLICITLY instructs you to click a specific button, always ask first.
+- **Prevention**: Rule file at `.claude/rules/browser-read-only.md`. Memory entry saved. If you need to test an interaction: read the button's hx-post URL from the DOM (sufficient for debugging), ask the user to click while you watch, or write a unit test.
