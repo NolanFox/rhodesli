@@ -1,7 +1,7 @@
 """
 Tests for Session 111d — Feedback Fix Sprint.
 
-FB-068: Confirm button merges with best match when one exists.
+FB-069: Performance — targeted Supabase writes via changed_ids.
 FB-070: CI test fix (separate commit).
 """
 
@@ -24,8 +24,8 @@ def admin_user():
 
 
 @pytest.fixture
-def confirm_merge_registry():
-    """Registry with a PROPOSED identity and a CONFIRMED target for merge."""
+def confirm_registry():
+    """Registry with identities for confirm/reject/skip testing."""
     reg = IdentityRegistry()
     target_id = reg.create_identity(
         anchor_ids=["face_target_1", "face_target_2"],
@@ -42,6 +42,7 @@ def confirm_merge_registry():
     inbox_id = reg.create_identity(
         anchor_ids=["face_inbox_1"],
         user_source="test",
+        name="Jane Test",
         state=IdentityState.INBOX,
     )
     photo_reg = PhotoRegistry()
@@ -52,112 +53,96 @@ def confirm_merge_registry():
     return reg, target_id, source_id, inbox_id, photo_reg
 
 
-class TestConfirmMerge:
-    """FB-068: Confirm button merges with best match when strong match exists."""
+class TestConfirmOnlyConfirms:
+    """Confirm button promotes state without auto-merging."""
 
-    def test_confirm_with_strong_match_merges(self, client, admin_user, confirm_merge_registry):
-        """When best match exists, confirm merges source into target."""
-        reg, target_id, source_id, inbox_id, photo_reg = confirm_merge_registry
-        best_match = {
-            "target_identity_id": target_id,
-            "target_identity_name": "Charles Fox",
-            "distance": 0.75,
-            "confidence": "VERY HIGH",
-        }
+    def test_confirm_promotes_to_confirmed(self, client, admin_user, confirm_registry):
+        """Confirm promotes PROPOSED to CONFIRMED — does not merge."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
 
         with (
             patch("app.main.load_registry", return_value=reg),
             patch("app.main.save_registry"),
-            patch("app.main._get_best_match_for_identity", return_value=best_match),
-            patch("app.main.load_photo_registry", return_value=photo_reg),
-            patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main.log_user_action"),
-        ):
-            resp = client.post(f"/confirm/{source_id}", headers=HTMX_HEADERS)
-            assert resp.status_code == 200
-            assert "Merged into Charles Fox" in resp.text
-
-    def test_confirm_without_match_confirms_normally(self, client, admin_user, confirm_merge_registry):
-        """When no best match, confirm promotes to CONFIRMED as before."""
-        reg, target_id, source_id, inbox_id, photo_reg = confirm_merge_registry
-
-        with (
-            patch("app.main.load_registry", return_value=reg),
-            patch("app.main.save_registry"),
-            patch("app.main._get_best_match_for_identity", return_value=None),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.main.log_user_action"),
         ):
             resp = client.post(f"/confirm/{source_id}", headers=HTMX_HEADERS)
             assert resp.status_code == 200
             assert "confirmed" in resp.text.lower()
-
-    def test_confirm_with_weak_match_does_not_merge(self, client, admin_user, confirm_merge_registry):
-        """When best match is LOW confidence, confirm normally without merge."""
-        reg, target_id, source_id, inbox_id, photo_reg = confirm_merge_registry
-        best_match = {
-            "target_identity_id": target_id,
-            "target_identity_name": "Charles Fox",
-            "distance": 1.5,
-            "confidence": "LOW",
-        }
-
-        with (
-            patch("app.main.load_registry", return_value=reg),
-            patch("app.main.save_registry"),
-            patch("app.main._get_best_match_for_identity", return_value=best_match),
-            patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main.log_user_action"),
-        ):
-            resp = client.post(f"/confirm/{source_id}", headers=HTMX_HEADERS)
-            assert resp.status_code == 200
-            # Should confirm normally, not merge
+            # Should NOT contain merge language
             assert "Merged into" not in resp.text
 
-    def test_inbox_confirm_with_strong_match_merges(self, client, admin_user, confirm_merge_registry):
-        """Inbox confirm also merges with best match when strong."""
-        reg, target_id, source_id, inbox_id, photo_reg = confirm_merge_registry
-        best_match = {
-            "target_identity_id": target_id,
-            "target_identity_name": "Charles Fox",
-            "distance": 0.90,
-            "confidence": "HIGH",
-        }
+    def test_inbox_confirm_promotes_to_confirmed(self, client, admin_user, confirm_registry):
+        """Inbox confirm promotes INBOX to CONFIRMED — does not merge."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
 
         with (
             patch("app.main.load_registry", return_value=reg),
             patch("app.main.save_registry"),
-            patch("app.main._get_best_match_for_identity", return_value=best_match),
-            patch("app.main.load_photo_registry", return_value=photo_reg),
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.main.log_user_action"),
         ):
             resp = client.post(f"/inbox/{inbox_id}/confirm", headers=HTMX_HEADERS)
             assert resp.status_code == 200
-            assert "Merged into Charles Fox" in resp.text
+            assert "confirmed" in resp.text.lower()
+            assert "Merged into" not in resp.text
 
-    def test_confirm_merge_from_focus_returns_next_card(self, client, admin_user, confirm_merge_registry):
-        """In focus mode, confirm-merge still returns next focus card."""
-        reg, target_id, source_id, inbox_id, photo_reg = confirm_merge_registry
-        best_match = {
-            "target_identity_id": target_id,
-            "target_identity_name": "Charles Fox",
-            "distance": 0.75,
-            "confidence": "VERY HIGH",
-        }
+    def test_confirm_returns_updated_card(self, client, admin_user, confirm_registry):
+        """After confirm, response contains the identity card."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
 
         with (
             patch("app.main.load_registry", return_value=reg),
             patch("app.main.save_registry"),
-            patch("app.main._get_best_match_for_identity", return_value=best_match),
-            patch("app.main.load_photo_registry", return_value=photo_reg),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main.get_next_focus_card", return_value="<div>next card</div>"),
             patch("app.main.log_user_action"),
         ):
-            resp = client.post(
-                f"/confirm/{source_id}?from_focus=true",
-                headers=HTMX_HEADERS,
-            )
+            resp = client.post(f"/confirm/{source_id}", headers=HTMX_HEADERS)
             assert resp.status_code == 200
-            assert "Merged into Charles Fox" in resp.text
+            # Card should still be in the DOM with the identity ID
+            assert f"identity-{source_id}" in resp.text
+
+
+class TestTargetedSupabaseWrites:
+    """FB-069: save_registry passes changed_ids for targeted writes."""
+
+    def test_confirm_passes_changed_ids(self, client, admin_user, confirm_registry):
+        """Confirm passes changed_ids={identity_id} to save_registry."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
+
+        with (
+            patch("app.main.load_registry", return_value=reg),
+            patch("app.main.save_registry") as mock_save,
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main.log_user_action"),
+        ):
+            resp = client.post(f"/confirm/{source_id}", headers=HTMX_HEADERS)
+            assert resp.status_code == 200
+            # Verify changed_ids was passed
+            call_kwargs = mock_save.call_args
+            assert call_kwargs is not None
+            changed = call_kwargs.kwargs.get("changed_ids") or (
+                call_kwargs[1].get("changed_ids") if len(call_kwargs) > 1 else None
+            )
+            assert changed is not None
+            assert source_id in changed
+
+    def test_skip_passes_changed_ids(self, client, admin_user, confirm_registry):
+        """Skip passes changed_ids={identity_id} to save_registry."""
+        reg, target_id, source_id, inbox_id, photo_reg = confirm_registry
+
+        with (
+            patch("app.main.load_registry", return_value=reg),
+            patch("app.main.save_registry") as mock_save,
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main.log_user_action"),
+        ):
+            resp = client.post(f"/identity/{source_id}/skip", headers=HTMX_HEADERS)
+            assert resp.status_code == 200
+            call_kwargs = mock_save.call_args
+            assert call_kwargs is not None
+            changed = call_kwargs.kwargs.get("changed_ids") or (
+                call_kwargs[1].get("changed_ids") if len(call_kwargs) > 1 else None
+            )
+            assert changed is not None
+            assert source_id in changed

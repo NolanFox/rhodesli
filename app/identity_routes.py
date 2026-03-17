@@ -105,83 +105,38 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # FB-068: Check for best match — if strong match exists, merge instead of just confirming
-    best_match = _main_mod._get_best_match_for_identity(identity_id)
-    merged_into_name = None
-    if best_match:
-        target_id = best_match.get("target_identity_id")
-        target_name = best_match.get("target_identity_name", "Unknown")
-        confidence = best_match.get("confidence", "LOW")
-        if target_id and confidence in ("VERY HIGH", "HIGH", "MODERATE"):
-            try:
-                photo_registry = _main_mod.load_photo_registry()
-                merge_result = registry.merge_identities(
-                    source_id=identity_id,
-                    target_id=target_id,
-                    user_source="web_confirm_merge",
-                    photo_registry=photo_registry,
-                    resolved_name=target_name,
-                )
-                if merge_result.get("success"):
-                    merged_into_name = target_name
-                    # FB-069: Only write the 2 changed identities, not all ~3400
-                    actual_source = merge_result.get("source_id", identity_id)
-                    actual_target = merge_result.get("target_id", target_id)
-                    _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
-                    _main_mod.log_user_action(
-                        "CONFIRM_MERGE",
-                        identity_id=identity_id,
-                        identity_name=identity.get("name", "Unknown"),
-                        target_identity_id=target_id,
-                        target_identity_name=target_name,
-                        context="person_page" if from_person_page else "browse",
-                    )
-                    _invalidate_neighbors_for(identity_id)
-                    _invalidate_neighbors_for(target_id)
-                else:
-                    logger.warning(
-                        "Confirm-merge not applied for %s -> %s: %s",
-                        identity_id,
-                        target_id,
-                        merge_result.get("reason", "unknown"),
-                    )
-            except Exception as e:
-                logger.warning("Confirm-merge failed for %s -> %s: %s", identity_id, target_id, e)
-                # Fall through to regular confirm
-
-    # If merge didn't happen, do regular confirm
-    if not merged_into_name:
-        try:
-            registry.confirm_identity(identity_id, user_source="web")
-            _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
-            # FB-069: Only write the 1 changed identity
-            _main_mod.save_registry(
-                registry,
-                confirmed_identity_info={
-                    "identity_id": identity_id,
-                    "identity_name": identity.get("name", "Unknown"),
-                    "user_id": _user.id if _user else None,
-                    "user_email": _user.email if _user else None,
-                },
-                changed_ids={identity_id},
-            )
-            _main_mod.posthog_capture(
-                "admin_identity_confirmed",
-                distinct_id=_user.email if _user else "admin",
-                properties={"identity_id": identity_id, "identity_name": identity.get("name", "Unknown")},
-            )
-            _main_mod.log_user_action(
-                "CONFIRM",
-                identity_id=identity_id,
-                identity_name=identity.get("name", "Unknown"),
-                context="person_page" if from_person_page else "browse",
-            )
-        except Exception as e:
-            return Response(
-                to_xml(_main_mod.toast(f"Cannot confirm: {str(e)}", "error")),
-                status_code=409,
-                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
-            )
+    # Confirm the identity (state promotion only — merge is a separate explicit action)
+    try:
+        registry.confirm_identity(identity_id, user_source="web")
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        # FB-069: Only write the 1 changed identity
+        _main_mod.save_registry(
+            registry,
+            confirmed_identity_info={
+                "identity_id": identity_id,
+                "identity_name": identity.get("name", "Unknown"),
+                "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
+            },
+            changed_ids={identity_id},
+        )
+        _main_mod.posthog_capture(
+            "admin_identity_confirmed",
+            distinct_id=_user.email if _user else "admin",
+            properties={"identity_id": identity_id, "identity_name": identity.get("name", "Unknown")},
+        )
+        _main_mod.log_user_action(
+            "CONFIRM",
+            identity_id=identity_id,
+            identity_name=identity.get("name", "Unknown"),
+            context="person_page" if from_person_page else "browse",
+        )
+    except Exception as e:
+        return Response(
+            to_xml(_main_mod.toast(f"Cannot confirm: {str(e)}", "error")),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
 
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
@@ -277,45 +232,29 @@ def post(
     except Exception:
         pass  # Never block confirm on re-matching
 
-    # FB-068: Choose toast message based on whether merge happened
-    toast_msg = f"Merged into {merged_into_name}." if merged_into_name else "Identity confirmed."
-
     # If from focus mode, return the next focus card
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast(toast_msg, "success"),
+            _main_mod.toast("Identity confirmed.", "success"),
         )
 
     # FB-017: On person page, return status update instead of full identity card
     if from_person_page:
-        status_label = f"Merged into {merged_into_name}" if merged_into_name else "\u2713 CONFIRMED"
         return (
             Div(
                 Span(
-                    status_label,
+                    "\u2713 CONFIRMED",
                     cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
-            _main_mod.toast(toast_msg, "success"),
+            _main_mod.toast("Identity confirmed.", "success"),
         )
 
     nav_prefix = _nav_prefix_from_request(request)
-
-    # FB-068: If merged, remove the card from DOM (it was absorbed into target)
-    if merged_into_name:
-        return (
-            Div(
-                P(f"Merged into {merged_into_name}", cls="text-emerald-400 text-sm font-medium text-center py-2"),
-                id=f"identity-{identity_id}",
-                cls="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20 transition-opacity duration-1000",
-                **{"_": "on load wait 2s then transition opacity to 0 over 1s then remove me"},
-            ),
-            _main_mod.toast(toast_msg, "success"),
-        )
 
     # Return updated card (now CONFIRMED, no action buttons)
     crop_files = _main_mod.get_crop_files()
@@ -333,7 +272,7 @@ def post(
         _main_mod.identity_card(
             updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
         ),
-        _main_mod.toast(toast_msg, "success"),
+        _main_mod.toast("Identity confirmed.", "success"),
     ]
     if gedcom_panel:
         parts.append(gedcom_panel)
@@ -1424,7 +1363,7 @@ def post(
                 "user_id": _user.id if _user else None,
                 "user_email": _user.email if _user else None,
             }
-        _main_mod.save_registry(registry, confirmed_identity_info=_notify)
+        _main_mod.save_registry(registry, confirmed_identity_info=_notify, changed_ids={identity_id})
     except (ValueError, Exception) as e:
         return Response(
             to_xml(_main_mod.toast(f"Cannot {action}: {str(e)}", "error")),
@@ -3603,117 +3542,56 @@ def post(
 
     _identity = registry.get_identity(identity_id)
 
-    # FB-068: Check for best match — merge if strong match exists
-    best_match = _main_mod._get_best_match_for_identity(identity_id)
-    merged_into_name = None
-    if best_match:
-        target_id = best_match.get("target_identity_id")
-        target_name = best_match.get("target_identity_name", "Unknown")
-        confidence = best_match.get("confidence", "LOW")
-        if target_id and confidence in ("VERY HIGH", "HIGH", "MODERATE"):
-            try:
-                photo_registry = _main_mod.load_photo_registry()
-                merge_result = registry.merge_identities(
-                    source_id=identity_id,
-                    target_id=target_id,
-                    user_source="web_confirm_merge",
-                    photo_registry=photo_registry,
-                    resolved_name=target_name,
-                )
-                if merge_result.get("success"):
-                    merged_into_name = target_name
-                    actual_source = merge_result.get("source_id", identity_id)
-                    actual_target = merge_result.get("target_id", target_id)
-                    _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
-                    _main_mod.log_user_action(
-                        "CONFIRM_MERGE",
-                        identity_id=identity_id,
-                        identity_name=_identity.get("name", "Unknown"),
-                        target_identity_id=target_id,
-                        target_identity_name=target_name,
-                        source_state="INBOX",
-                        context="person_page" if from_person_page else "browse",
-                    )
-                    _invalidate_neighbors_for(identity_id)
-                    _invalidate_neighbors_for(target_id)
-                else:
-                    logger.warning(
-                        "Inbox confirm-merge not applied for %s -> %s: %s",
-                        identity_id,
-                        target_id,
-                        merge_result.get("reason", "unknown"),
-                    )
-            except Exception as e:
-                logger.warning("Inbox confirm-merge failed for %s -> %s: %s", identity_id, target_id, e)
-
-    # If merge didn't happen, do regular confirm
-    if not merged_into_name:
-        try:
-            registry.confirm_identity(identity_id, user_source="web_review")
-            _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
-            _main_mod.save_registry(
-                registry,
-                confirmed_identity_info={
-                    "identity_id": identity_id,
-                    "identity_name": _identity.get("name", "Unknown"),
-                    "user_id": _user.id if _user else None,
-                    "user_email": _user.email if _user else None,
-                },
-                changed_ids={identity_id},
-            )
-            _main_mod.log_user_action(
-                "CONFIRM",
-                identity_id=identity_id,
-                identity_name=_identity.get("name", "Unknown"),
-                source_state="INBOX",
-                context="person_page" if from_person_page else "browse",
-            )
-        except ValueError as e:
-            return Response(
-                to_xml(_main_mod.toast(str(e), "error")),
-                status_code=400,
-                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
-            )
-
-    toast_msg = f"Merged into {merged_into_name}." if merged_into_name else "Identity confirmed."
+    try:
+        registry.confirm_identity(identity_id, user_source="web_review")
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _main_mod.save_registry(
+            registry,
+            confirmed_identity_info={
+                "identity_id": identity_id,
+                "identity_name": _identity.get("name", "Unknown"),
+                "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
+            },
+            changed_ids={identity_id},
+        )
+        _main_mod.log_user_action(
+            "CONFIRM",
+            identity_id=identity_id,
+            identity_name=_identity.get("name", "Unknown"),
+            source_state="INBOX",
+            context="person_page" if from_person_page else "browse",
+        )
+    except ValueError as e:
+        return Response(
+            to_xml(_main_mod.toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
 
     # If from focus mode, return the next focus card
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
         return (
             _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
-            _main_mod.toast(toast_msg, "success"),
+            _main_mod.toast("Identity confirmed.", "success"),
         )
 
     # FB-017: On person page, return status update
     if from_person_page:
-        status_label = f"Merged into {merged_into_name}" if merged_into_name else "\u2713 CONFIRMED"
         return (
             Div(
                 Span(
-                    status_label,
+                    "\u2713 CONFIRMED",
                     cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
-            _main_mod.toast(toast_msg, "success"),
+            _main_mod.toast("Identity confirmed.", "success"),
         )
 
     nav_prefix = _nav_prefix_from_request(request)
-
-    # FB-068: If merged, show fade-out card
-    if merged_into_name:
-        return (
-            Div(
-                P(f"Merged into {merged_into_name}", cls="text-emerald-400 text-sm font-medium text-center py-2"),
-                id=f"identity-{identity_id}",
-                cls="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20 transition-opacity duration-1000",
-                **{"_": "on load wait 2s then transition opacity to 0 over 1s then remove me"},
-            ),
-            _main_mod.toast(toast_msg, "success"),
-        )
-
     crop_files = _main_mod.get_crop_files()
     updated_identity = registry.get_identity(identity_id)
 
@@ -3722,7 +3600,7 @@ def post(
         _main_mod.identity_card(
             updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
         ),
-        _main_mod.toast(toast_msg, "success"),
+        _main_mod.toast("Identity confirmed.", "success"),
     )
 
 
