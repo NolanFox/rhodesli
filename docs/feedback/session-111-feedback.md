@@ -89,8 +89,8 @@
 ### FB-036: Speed Loop tagging broken — tags don't persist (BUG-001 regression)
 - **Severity:** P0 (data loss)
 - **Context:** In Speed Loop (/photo/{id}?seq=1), user types "Charles" and selects "Charles Fox" from dropdown. The tag panel shows the selection but the assignment does NOT persist. Same as BUG-001 from previous sessions. Nolan called this "the exact same bug we fixed yesterday."
-- **Root cause:** BUG-001 was never fully fixed — the tag assignment endpoint silently fails
-- **Fix:** BACKLOG — BUG-001 (existing, needs root cause investigation)
+- **Root cause:** Supabase save failure silently returns success. Tag merge succeeds in memory but vanishes on page reload.
+- **Fix:** PARTIAL (Session 111d) — Tag endpoint now surfaces Supabase save failure as warning toast ("sync failed, may not persist") instead of false success.
 
 ### FB-037: Speed Loop tagging broken on second photo too + slowness
 - **Severity:** P0 (data loss + performance)
@@ -288,7 +288,7 @@
 - **Severity:** P0 (core workflow broken)
 - **Context:** On photo overlay in browse view, the green checkmark (✓) button for confirming a face doesn't do anything when clicked. The button posts to `/api/face/quick-action?action=confirm` targeting `#photo-modal-content`.
 - **Root cause:** TBD — endpoint exists and looks correct. May be HTMX target mismatch, JS event propagation issue, or response format problem.
-- **Fix:** INVESTIGATING
+- **Fix:** FIXED (Session 111d) — Returns clear error toast "Name this person first, then confirm" for unidentified faces. Root cause was `confirm_identity()` rejecting placeholder names silently.
 - **BACKLOG:** UX-115
 
 ### FB-067: People search broken for >150 identities (P1)
@@ -300,18 +300,18 @@
 - **Severity:** P0 (core workflow — BLOCKS TRIAGE)
 - **Context:** Identity card shows "Confirm as Edith Judith Gukaylo Burd" button. User clicks it expecting merge. Nothing visible happens — the card doesn't update, no toast, no feedback. The button text implies merge but the endpoint only confirms as new person (FB-052). The lack of ANY visible feedback makes it appear completely broken.
 - **Root cause:** Two issues: (1) confirm endpoint promotes to CONFIRMED but doesn't merge with the suggested match (FB-052 partial fix — label changed but action didn't), (2) the HTMX response may not be swapping correctly — needs debugging.
-- **Fix:** Must fix BOTH: make the button actually merge when a strong match exists, AND ensure HTMX swap provides visible feedback.
-- **BACKLOG:** UX-108 (existing, escalate to P0)
+- **Fix:** DEFERRED — needs PRD. Auto-merge on confirm attempted in Session 111d, caused regression (Person 3141 disappeared). Reverted. Confirm only promotes state. Merge remains separate action.
+- **BACKLOG:** UX-108 (existing, needs PRD)
 
 ### FB-069: Overall performance too slow to use (P0 — RECURRING)
 - **Severity:** P0 (performance — BLOCKS TRIAGE)
 - **Context:** User says "the performance is still garbage the site is too slow to use." Speed-run, confirm, merge, page loads all feel sluggish. Session 111c added lazy-load for enrichment panel (quick win) but root causes remain: (1) `save_registry()` writes ALL identities to Supabase on every confirm, (2) `_get_confirmed_identity_suggestions()` iterates all identities, (3) no caching of speed-run clusters, (4) TTL cache reloads.
-- **Fix:** Must address root causes: targeted Supabase writes, suggestion caching, cluster caching.
-- **BACKLOG:** PERF-008 (existing, escalate to P0)
+- **Fix:** PARTIAL (Session 111d) — `save_registry()` now accepts `changed_ids` for targeted Supabase writes (1-2 identities vs ~3400). Applied to all triage ops. Remaining: suggestion caching, cluster caching.
+- **BACKLOG:** PERF-008 (existing, partially addressed)
 
 ### FB-070: GitHub CI failure emails recurring (P1)
 - **Severity:** P1 (infrastructure — noise)
 - **Context:** User keeps getting failure emails from GitHub CI. Pre-existing test `test_partial_has_public_page_link` fails consistently. Every push triggers a failure email.
 - **Root cause:** Test assertion doesn't match current UI. The test was never updated when the UI changed.
-- **Fix:** Fix or skip the failing test so CI passes green.
-- **BACKLOG:** CI-002 (existing)
+- **Fix:** FIXED (Session 111d) — Test assertion updated to match current UI ("View Photo" replaces "Public Page").
+- **BACKLOG:** CI-002 (DONE)

@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.18] — 2026-03-17 (Session 111d: Feedback Fix Sprint)
+
+### Fixed
+- **FB-069**: Targeted Supabase writes — `save_registry()` now writes only changed identities (1-2) instead of all ~3,400. Confirm/merge/skip/reject all use `changed_ids`.
+- **FB-070**: CI test assertion updated — "View Photo" replaces "Public Page" in photo partial.
+- **FB-065**: Search now finds merged identities with "Merged into {Name}" indicator.
+- **FB-044**: Best match excluded from Similar Identities list (was duplicated).
+- **FB-066**: Green checkmark returns clear error for unidentified faces: "Name this person first."
+- **FB-036/037**: Tag save failure surfaced as warning toast instead of false success.
+- **FB-040**: Focus mode merge now removes stale source card (OOB delete was missing).
+- **Face overlay cache**: `_photo_dimensions_cache` added to `_invalidate_all_caches()`. New uploads now show bounding boxes.
+
+### Added
+- **FB-048**: "View Person" link in Speed Loop tag popup (opens in new tab).
+- Supabase photo registry fallback for photo dimensions lookup.
+
+### Reverted
+- **FB-068**: Auto-merge on confirm REVERTED — caused Person 3141 to disappear. Needs PRD for proper implementation.
+
 ## [v0.99.17] — 2026-03-17 (Session 111c: Proposals Rebuild + Triage Fixes)
 
 ### Fixed

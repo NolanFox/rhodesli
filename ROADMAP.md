@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.17 · ~4519 tests · 943 photos · 3433 identities · 95 confirmed
+Current: v0.99.18 · ~4537 tests · 943 photos · 3433 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -130,6 +130,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-17: **v0.99.18 — Session 111d**: Feedback Fix Sprint. FB-069 targeted Supabase writes (1 identity vs ~3400 per confirm). FB-065 merged identity search. FB-066 green checkmark error message. FB-036/037 tag save failure surfaced. FB-044 best match dedup. FB-048 Speed Loop view person link. FB-040 focus mode OOB fix. FB-070 CI fix. Face overlay cache invalidation for new uploads. FB-068 auto-merge attempted and REVERTED (needs PRD). 18 new tests. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.17 — Session 111c**: Proposals Page Rebuild + Triage Fixes. Proposals page rebuilt with face thumbnails, confidence tiers, action buttons. FB-039/055/067 fixed (bulk merge feedback, select-all, server-side search). Speed-run lazy-load enrichment (FB-025). Next Cluster button (FB-027). FB-068/069/070 documented. Deploy SUCCESS.
 
