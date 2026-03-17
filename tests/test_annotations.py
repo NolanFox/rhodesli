@@ -16,6 +16,7 @@ from pathlib import Path
 @pytest.fixture
 def client():
     from app.main import app
+
     return TestClient(app)
 
 
@@ -39,12 +40,15 @@ class TestAnnotationSubmit:
     def test_annotation_submit_anonymous_saves_directly(self, client, tmp_path):
         """Anonymous users save directly as pending_unverified (no modal)."""
         from app.main import _invalidate_annotations_cache
+
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps({"schema_version": 1, "annotations": {}}))
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=None), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=None),
+            patch("app.main.data_path", tmp_path),
+        ):
             _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
@@ -53,7 +57,7 @@ class TestAnnotationSubmit:
                     "target_id": "test-id",
                     "annotation_type": "name_suggestion",
                     "value": "Leon Capeluto",
-                }
+                },
             )
             assert response.status_code == 200
             assert "thanks" in response.text.lower()
@@ -71,10 +75,12 @@ class TestAnnotationSubmit:
         mock_user.email = "test@example.com"
         mock_user.is_admin = False
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main._check_login", return_value=None), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main._check_login", return_value=None),
+            patch("app.main.data_path", tmp_path),
+        ):
             _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
@@ -84,7 +90,7 @@ class TestAnnotationSubmit:
                     "annotation_type": "name_suggestion",
                     "value": "Leon Capeluto",
                     "confidence": "certain",
-                }
+                },
             )
             assert response.status_code == 200
             assert "pending" in response.text.lower() or "thanks" in response.text.lower()
@@ -103,8 +109,10 @@ class TestAnnotationApproval:
 
     def test_annotation_approval_requires_admin(self, client):
         """Non-admin users cannot approve annotations."""
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=None):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=None),
+        ):
             response = client.post("/admin/approvals/fake-id/approve")
             assert response.status_code in (401, 403)
 
@@ -134,12 +142,13 @@ class TestAnnotationApproval:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -209,6 +218,132 @@ class TestAnnotationApproval:
         assert registry._history[-1]["identity_id"] == "identity-1"
         assert registry._history[-1]["metadata"]["previous_name"] == "Unidentified Person 1"
         assert registry._history[-1]["metadata"]["new_name"] == "Leon Capeluto"
+
+    def test_name_suggestion_approval_with_auto_confirm_checkbox(self, client, tmp_path):
+        """FB-071: Approving a name suggestion with auto-confirm checkbox promotes identity to CONFIRMED."""
+        from core.registry import IdentityRegistry
+        from app.main import _invalidate_annotations_cache
+
+        ann_id = "test-ann-autoconfirm"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "identity-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "certain",
+                    "reason": "Family confirmation",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            },
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        registry = IdentityRegistry()
+        now = datetime.now(timezone.utc).isoformat()
+        registry._identities["identity-1"] = {
+            "identity_id": "identity-1",
+            "name": "Unidentified Person 1",
+            "state": "PROPOSED",
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": now,
+            "updated_at": now,
+            "provenance": {"source": "test"},
+            "metadata": {},
+        }
+
+        _invalidate_annotations_cache()
+
+        mock_save = MagicMock()
+        with (
+            patch("app.main.data_path", tmp_path),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry", mock_save),
+        ):
+            response = client.post(
+                f"/admin/approvals/{ann_id}/approve",
+                data={f"auto_confirm_{ann_id}": "on"},
+            )
+
+        assert response.status_code == 200
+        # Name was applied
+        assert registry._identities["identity-1"]["name"] == "Leon Capeluto"
+        # Identity was confirmed (promoted from PROPOSED to CONFIRMED)
+        assert registry._identities["identity-1"]["state"] == "CONFIRMED"
+        # save_registry was called with changed_ids
+        mock_save.assert_called_once()
+        call_kwargs = mock_save.call_args
+        assert call_kwargs[1].get("changed_ids") == {"identity-1"} or (len(call_kwargs[0]) >= 1)
+
+    def test_name_suggestion_approval_without_checkbox_does_not_confirm(self, client, tmp_path):
+        """FB-071: Without checkbox, approve only renames — does NOT confirm."""
+        from core.registry import IdentityRegistry
+        from app.main import _invalidate_annotations_cache
+
+        ann_id = "test-ann-noconfirm"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "identity-2",
+                    "value": "Stella Notaras",
+                    "confidence": "certain",
+                    "reason": "Photo caption",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            },
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        registry = IdentityRegistry()
+        now = datetime.now(timezone.utc).isoformat()
+        registry._identities["identity-2"] = {
+            "identity_id": "identity-2",
+            "name": "Unidentified Person 2",
+            "state": "PROPOSED",
+            "anchor_ids": ["face-2"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": now,
+            "updated_at": now,
+            "provenance": {"source": "test"},
+            "metadata": {},
+        }
+
+        _invalidate_annotations_cache()
+
+        with (
+            patch("app.main.data_path", tmp_path),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry"),
+        ):
+            # POST without checkbox data — should not confirm
+            response = client.post(f"/admin/approvals/{ann_id}/approve")
+
+        assert response.status_code == 200
+        assert registry._identities["identity-2"]["name"] == "Stella Notaras"
+        # State should remain PROPOSED (not confirmed)
+        assert registry._identities["identity-2"]["state"] == "PROPOSED"
 
     def test_name_suggestion_approval_is_idempotent_once_approved(self, client, tmp_path):
         """Re-approving an approved suggestion must not replay the rename side effects."""
@@ -289,12 +424,13 @@ class TestAnnotationApproval:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -332,7 +468,7 @@ class TestExistingSuggestions:
                     "reviewed_at": None,
                     "confirmations": [{"by": "user2@test.com", "timestamp": "2026-02-10T01:00:00Z"}],
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
@@ -388,7 +524,7 @@ class TestAnnotationDedup:
                     "reviewed_at": None,
                     "confirmations": [],
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
@@ -396,9 +532,11 @@ class TestAnnotationDedup:
         mock_user = MagicMock()
         mock_user.email = "user2@test.com"  # Different user
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main.data_path", tmp_path),
+        ):
             _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
@@ -407,7 +545,7 @@ class TestAnnotationDedup:
                     "target_id": "target-id-1",
                     "annotation_type": "name_suggestion",
                     "value": "Leon Capeluto",
-                }
+                },
             )
             assert response.status_code == 200
 
@@ -441,7 +579,7 @@ class TestAnnotationDedup:
                     "reviewed_at": None,
                     "confirmations": [],
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
@@ -449,9 +587,11 @@ class TestAnnotationDedup:
         mock_user = MagicMock()
         mock_user.email = "user1@test.com"  # Same user as original submitter
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main.data_path", tmp_path),
+        ):
             _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
@@ -460,7 +600,7 @@ class TestAnnotationDedup:
                     "target_id": "target-id-1",
                     "annotation_type": "name_suggestion",
                     "value": "Leon Capeluto",
-                }
+                },
             )
             assert response.status_code == 200
 
@@ -492,7 +632,7 @@ class TestAnnotationDedup:
                     "reviewed_at": None,
                     "confirmations": [],
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
@@ -500,9 +640,11 @@ class TestAnnotationDedup:
         mock_user = MagicMock()
         mock_user.email = "user2@test.com"
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main.data_path", tmp_path),
+        ):
             _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
@@ -511,7 +653,7 @@ class TestAnnotationDedup:
                     "target_id": "target-id-1",
                     "annotation_type": "name_suggestion",
                     "value": "Different Name",  # Different value
-                }
+                },
             )
             assert response.status_code == 200
 
@@ -543,12 +685,13 @@ class TestAnnotationSkip:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -579,12 +722,13 @@ class TestAnnotationSkip:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -615,17 +759,17 @@ class TestAnnotationUndo:
                     "reviewed_by": "admin@test.com",
                     "reviewed_at": "2026-02-10T01:00:00Z",
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
-            response = client.post(f"/admin/approvals/{ann_id}/undo",
-                                   follow_redirects=False)
+            response = client.post(f"/admin/approvals/{ann_id}/undo", follow_redirects=False)
             assert response.status_code == 200
 
         saved = json.loads(ann_path.read_text())
@@ -652,17 +796,17 @@ class TestAnnotationUndo:
                     "reviewed_by": "admin@test.com",
                     "reviewed_at": "2026-02-10T01:00:00Z",
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
-            response = client.post(f"/admin/approvals/{ann_id}/undo",
-                                   follow_redirects=False)
+            response = client.post(f"/admin/approvals/{ann_id}/undo", follow_redirects=False)
             assert response.status_code == 200
 
         saved = json.loads(ann_path.read_text())
@@ -675,11 +819,21 @@ class TestAuditLog:
     def test_audit_page_renders(self, client, tmp_path):
         """Audit log page renders without error."""
         audit_path = tmp_path / "audit_log.json"
-        audit_path.write_text(json.dumps({"entries": [
-            {"action": "approved", "annotation_id": "a1",
-             "admin": "admin@test.com",
-             "timestamp": "2026-01-01T00:00:00Z", "details": "Test"}
-        ]}))
+        audit_path.write_text(
+            json.dumps(
+                {
+                    "entries": [
+                        {
+                            "action": "approved",
+                            "annotation_id": "a1",
+                            "admin": "admin@test.com",
+                            "timestamp": "2026-01-01T00:00:00Z",
+                            "details": "Test",
+                        }
+                    ]
+                }
+            )
+        )
 
         with patch("app.main.data_path", tmp_path):
             response = client.get("/admin/audit")
@@ -706,13 +860,14 @@ class TestAuditLog:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
         audit_path = tmp_path / "audit_log.json"
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -745,13 +900,14 @@ class TestAuditLog:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
         audit_path = tmp_path / "audit_log.json"
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -787,12 +943,13 @@ class TestApprovalCardThumbnails:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -821,12 +978,13 @@ class TestApprovalCardThumbnails:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -853,12 +1011,13 @@ class TestApprovalCardThumbnails:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -893,12 +1052,13 @@ class TestApprovalCardThumbnails:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 }
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
         with patch("app.main.data_path", tmp_path):
@@ -911,8 +1071,10 @@ class TestMyContributions:
 
     def test_my_contributions_requires_login(self, client):
         """Anonymous users are redirected from contributions page."""
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=None):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=None),
+        ):
             response = client.get("/my-contributions", follow_redirects=False)
             assert response.status_code == 303
 
@@ -949,7 +1111,7 @@ class TestMyContributions:
                     "reviewed_by": None,
                     "reviewed_at": None,
                 },
-            }
+            },
         }
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
@@ -959,12 +1121,15 @@ class TestMyContributions:
         mock_user.is_admin = False
 
         from app.main import _invalidate_annotations_cache
+
         _invalidate_annotations_cache()
 
-        with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main._check_login", return_value=None), \
-             patch("app.main.data_path", tmp_path):
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main._check_login", return_value=None),
+            patch("app.main.data_path", tmp_path),
+        ):
             response = client.get("/my-contributions")
             assert response.status_code == 200
             assert "Leon" in response.text

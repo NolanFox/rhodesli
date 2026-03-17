@@ -2234,13 +2234,21 @@ def post(sess=None):
 
 
 @rt("/admin/approvals/{ann_id}/approve")
-def post(ann_id: str, sess=None, **kwargs):
+async def post(ann_id: str, request=None, sess=None, **kwargs):
     """Approve an annotation. Updates target record. Optional auto-confirm."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
     user = get_current_user(sess)
+
+    # Parse form data to check for auto-confirm checkbox (FB-071)
+    _form_data = {}
+    if request is not None:
+        try:
+            _form_data = dict(await request.form())
+        except Exception:
+            pass
     annotations = _main_mod._load_annotations()
     ann = annotations["annotations"].get(ann_id)
     if not ann:
@@ -2296,9 +2304,9 @@ def post(ann_id: str, sess=None, **kwargs):
                 user_source="approved_name_suggestion",
                 annotation_id=ann_id,
             )
-            # Auto-confirm if checkbox was checked (Session 107b Fix 2)
+            # Auto-confirm if checkbox was checked (FB-071 / Session 107b Fix 2)
             auto_confirm_key = f"auto_confirm_{ann_id}"
-            auto_confirm = kwargs.get(auto_confirm_key, "")
+            auto_confirm = _form_data.get(auto_confirm_key, "") or kwargs.get(auto_confirm_key, "")
             if auto_confirm == "on" and identity.get("state") != "CONFIRMED":
                 registry.confirm_identity(ann["target_id"], user_source="auto_confirm_on_approve")
                 _main_mod.log_user_action(
@@ -2307,7 +2315,7 @@ def post(ann_id: str, sess=None, **kwargs):
                     annotation_id=ann_id,
                     admin=user.email if user else "admin",
                 )
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={ann["target_id"]})
     elif ann["type"] == "merge_suggestion":
         # Execute the merge
         try:
