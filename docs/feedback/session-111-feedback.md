@@ -267,4 +267,31 @@
 ### FB-061: Merge failures recurring — 5 faces attempted, many failed (P1)
 - **Severity:** P1 (UX — recurring, same class as FB-056)
 - **Context:** User tried to merge 5 faces and "seems like many of them didn't work." Same co-occurrence blocking issue as FB-039/FB-056. Every multi-merge shows partial failures without explanation.
-- **Fix:** Same as FB-039/FB-056/UX-100
+- **Fix:** FIXED (Session 111c) — bulk merge now shows per-identity names and failure reasons
+
+## Session 111c — New Feedback
+
+### FB-064: Override merge redirects to wrong community (P0)
+- **Severity:** P0 (community middleware — RECURRING)
+- **Context:** In Focus mode on Fox Family, clicking "Override" to merge a co-occurrence blocked face redirects to `/` (Rhodes community) instead of staying in `/c/fox-family/`
+- **Root cause:** Investigated — all HX-Redirects use `_nav_prefix_from_request(request)` which should be correct. May have been fixed by Session 111b community prefix sweep. Needs production verification.
+- **Fix:** NEEDS VERIFICATION on production
+
+### FB-065: Post-merge findability — searching for old identity number doesn't find merged-into identity (P1)
+- **Severity:** P1 (UX — workflow)
+- **Context:** User merged Person 3053 with a match. Searching for "3053" no longer finds anything because the merged identity was absorbed. Had to find it indirectly through another face's Similar Identities panel. User notes "this kind of thing is fairly common."
+- **Root cause:** `search_identities()` filters out merged identities (line 2037). No "merged into X" redirect exists.
+- **Fix:** BACKLOG — search should return merged identities with "Merged into {target_name}" indicator
+- **BACKLOG:** UX-114
+
+### FB-066: Green checkmark confirm button on photo overlay doesn't work (P0)
+- **Severity:** P0 (core workflow broken)
+- **Context:** On photo overlay in browse view, the green checkmark (✓) button for confirming a face doesn't do anything when clicked. The button posts to `/api/face/quick-action?action=confirm` targeting `#photo-modal-content`.
+- **Root cause:** TBD — endpoint exists and looks correct. May be HTMX target mismatch, JS event propagation issue, or response format problem.
+- **Fix:** INVESTIGATING
+- **BACKLOG:** UX-115
+
+### FB-067: People search broken for >150 identities (P1)
+- **Severity:** P1 (UX — search broken for large sets)
+- **Context:** Searching for "3051" in New Matches shows "Showing first 150 review cards" but no results. The search only filters the 150 DOM-rendered cards — identities beyond card #150 are unfindable.
+- **Fix:** FIXED (Session 111c) — added server-side HTMX search endpoint `/api/review-search` that searches the full registry. Both client-side (instant) and server-side (complete) search now work together.
