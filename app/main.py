@@ -147,8 +147,14 @@ photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_ro
 # Canonical site URL for Open Graph tags and sharing
 SITE_URL = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
 
-# Data source feature flag: "json" (default) or "postgres" (PRD-027 Phase B/C)
-DATA_SOURCE = os.environ.get("DATA_SOURCE", "json")
+# Data source: "postgres" (default, single source of truth — PRD-051) or "json" (rollback only)
+DATA_SOURCE = os.environ.get("DATA_SOURCE", "postgres")
+if DATA_SOURCE == "json":
+    logging.warning(
+        "DATA_SOURCE=json is deprecated (PRD-051). "
+        "Supabase is the single source of truth. "
+        "JSON mode is a temporary rollback escape hatch only."
+    )
 
 # APP_VERSION imported from app.utils
 
@@ -1195,13 +1201,15 @@ _REGISTRY_CACHE_TTL: float = 120.0
 def load_registry():
     """Load the identity registry (backend authority).
 
-    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
-    When DATA_SOURCE=json (default), loads from JSON file.
+    When DATA_SOURCE=postgres (default), loads from Supabase ONLY.
+    No JSON fallback — if Supabase is unavailable, error propagates.
+    JSON exists as backup for manual recovery only, not automatic fallback.
+
+    When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
 
     Uses a 120-second TTL cache to avoid repeated Supabase queries.
 
-    Returns an empty registry if the source is missing or corrupted,
-    so the server never crashes on bad data.
+    PRD-051 Phase 1 (Session 112): Supabase is the single source of truth.
     """
     global _registry_cache, _registry_cache_ts, _registry_cache_key
     import time as _time
@@ -1218,18 +1226,21 @@ def load_registry():
 
     logging.debug("registry_cache_miss source=%s", DATA_SOURCE)
     if DATA_SOURCE == "postgres":
-        try:
-            registry = IdentityRegistry.load_from_postgres()
-            if registry is not None:
-                _registry_cache = registry
-                _registry_cache_ts = now
-                _registry_cache_key = cache_key
-                logging.debug("registry_cache_populated source=postgres count=%d", len(registry._identities))
-                return registry
-            logging.warning("Postgres load returned None, falling back to JSON")
-        except Exception as e:
-            logging.warning(f"Postgres identity load failed, falling back to JSON: {e}")
+        # PRD-051: Supabase is the ONLY source. No JSON fallback.
+        # If Supabase fails, let the error propagate (500 page is better than 0 identities).
+        registry = IdentityRegistry.load_from_postgres()
+        if registry is None:
+            raise RuntimeError(
+                "Supabase identity load unavailable (returned None). "
+                "Set DATA_SOURCE=json on Railway as emergency rollback."
+            )
+        _registry_cache = registry
+        _registry_cache_ts = now
+        _registry_cache_key = cache_key
+        logging.debug("registry_cache_populated source=postgres count=%d", len(registry._identities))
+        return registry
 
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     if REGISTRY_PATH.exists():
         try:
             registry = IdentityRegistry.load(REGISTRY_PATH)
@@ -1246,8 +1257,9 @@ def load_registry():
 def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     """Save registry with atomic write + sync to Supabase (AD-135).
 
-    When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
-    When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+    When DATA_SOURCE=postgres (default), writes Supabase synchronously + JSON as backup.
+    When DATA_SOURCE=json (rollback), writes JSON + shadow-writes to Supabase.
+    JSON write is backup only — never read in production (PRD-051).
 
     Args:
         registry: The IdentityRegistry to save
@@ -3474,26 +3486,29 @@ def get_face_data() -> dict[str, dict]:
 def load_photo_registry():
     """Load the photo registry for merge validation.
 
-    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
-    When DATA_SOURCE=json (default), loads from JSON file.
+    When DATA_SOURCE=postgres (default), loads from Supabase ONLY.
+    No JSON fallback — if Supabase is unavailable, error propagates.
 
-    Returns an empty registry if the source is missing or corrupted,
-    so the server never crashes on bad data.
+    When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
+
+    PRD-051 Phase 1 (Session 112): Supabase is the single source of truth.
     """
     global _photo_registry_cache
     if _photo_registry_cache is None:
         from core.photo_registry import PhotoRegistry
 
         if DATA_SOURCE == "postgres":
-            try:
-                loaded = PhotoRegistry.load_from_postgres()
-                if loaded is not None:
-                    _photo_registry_cache = loaded
-                    return _photo_registry_cache
-                logging.warning("Postgres photo load returned None, falling back to JSON")
-            except Exception as e:
-                logging.warning(f"Postgres photo load failed, falling back to JSON: {e}")
+            # PRD-051: Supabase is the ONLY source. No JSON fallback.
+            loaded = PhotoRegistry.load_from_postgres()
+            if loaded is None:
+                raise RuntimeError(
+                    "Supabase photo registry unavailable (returned None). "
+                    "Set DATA_SOURCE=json on Railway as emergency rollback."
+                )
+            _photo_registry_cache = loaded
+            return _photo_registry_cache
 
+        # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
         photo_index_path = data_path / "photo_index.json"
         if photo_index_path.exists():
             try:
@@ -3634,37 +3649,17 @@ _photo_dimensions_cache = None
 
 
 def _load_photo_dimensions_cache() -> dict:
-    """Load photo dimensions from photo_index.json + photo registry into a cache.
+    """Load photo dimensions from photo registry (Supabase-backed) into a cache.
 
-    Session 111e: Also populates from Supabase-backed photo registry so that
-    photos uploaded after the local JSON was last synced still have dimensions.
+    PRD-051 (Session 112): Reads from photo registry ONLY — no JSON read.
+    The photo registry is the single source of truth (backed by Supabase
+    when DATA_SOURCE=postgres).
     """
     global _photo_dimensions_cache
     if _photo_dimensions_cache is not None:
         return _photo_dimensions_cache
 
     _photo_dimensions_cache = {}
-    photo_index_path = data_path / "photo_index.json"
-    if photo_index_path.exists():
-        try:
-            import json
-
-            with open(photo_index_path) as f:
-                data = json.load(f)
-            for photo_id, photo_data in data.get("photos", {}).items():
-                width = photo_data.get("width", 0)
-                height = photo_data.get("height", 0)
-                if width > 0 and height > 0:
-                    # Index by path and by filename for flexible lookup
-                    path = photo_data.get("path", "")
-                    if path:
-                        _photo_dimensions_cache[path] = (width, height)
-                        _photo_dimensions_cache[Path(path).name] = (width, height)
-        except Exception as e:
-            logging.warning(f"Failed to load photo dimensions cache: {e}")
-
-    # Also populate from photo registry (Supabase-backed) — catches photos
-    # not in the local JSON (FB-075: face overlays missing on some photos)
     try:
         photo_reg = load_photo_registry()
         for pid in photo_reg._photos:
@@ -3674,10 +3669,8 @@ def _load_photo_dimensions_cache() -> dict:
                 path = photo_reg.get_photo_path(pid)
                 if path:
                     basename = Path(path).name
-                    # Don't overwrite existing entries (local JSON is authoritative)
-                    if basename not in _photo_dimensions_cache:
-                        _photo_dimensions_cache[basename] = (w, h)
-                        _photo_dimensions_cache[path] = (w, h)
+                    _photo_dimensions_cache[basename] = (w, h)
+                    _photo_dimensions_cache[path] = (w, h)
     except Exception as e:
         logging.warning(f"Failed to load photo dimensions from registry: {e}")
 
@@ -3976,10 +3969,11 @@ def _build_caches():
     """Build photo and face-to-photo caches.
 
     Loads raw detections from embeddings.npy, then filters each photo's
-    face list to only include faces registered in photo_index.json.
-    This removes noise detections (e.g., a newspaper photo might have
-    63 raw detections but only 21 real registered faces).
+    face list to only include faces registered in the photo registry
+    (Supabase-backed). This removes noise detections (e.g., a newspaper
+    photo might have 63 raw detections but only 21 real registered faces).
 
+    PRD-051 (Session 112): No JSON reads — photo_registry is the single source.
     Thread-safe: uses _cache_lock to prevent concurrent builds during
     background prewarm and request handling.
     """
@@ -3991,25 +3985,22 @@ def _build_caches():
             return  # Double-check after acquiring lock
         _photo_cache = load_embeddings_for_photos()
 
-        # Merge source data and filter faces using photo_index.json
+        # Merge source data and filter faces using photo registry (Supabase-backed).
+        # PRD-051 (Session 112): No JSON reads — photo_registry is the single source.
         try:
-            photo_index_raw = {}
-            photo_index_path = data_path / "photo_index.json"
-            if photo_index_path.exists():
-                with open(photo_index_path) as f:
-                    photo_index_raw = json.load(f)
             photo_registry = load_photo_registry()
 
-            # Build filename-based fallback maps for photos with mismatched IDs
-            # (e.g., inbox_* IDs in photo_index.json vs SHA256 IDs in _photo_cache)
+            # Build filename-based maps from photo registry.
+            # These handle the ID mismatch between registry IDs (inbox_*) and
+            # _photo_cache IDs (SHA256) by mapping through filenames.
             filename_to_source = {}
             filename_to_collection = {}
             filename_to_source_url = {}
             filename_to_face_ids = {}
             filename_to_face_ids_ordered = {}
             filename_to_metadata = {}
-            filename_to_photo_index_id = {}
-            filename_to_photo_index_order = {}
+            filename_to_registry_id = {}
+            filename_to_registry_order = {}
 
             def _filename_entry_score(path: str, metadata: dict, face_ids) -> tuple:
                 """Rank duplicate basename entries so the richest archive metadata wins."""
@@ -4023,35 +4014,9 @@ def _build_caches():
                     len(face_ids or []),
                 )
 
-            best_raw_entries = {}
-            for photo_index_order, (pid, photo_data) in enumerate(photo_index_raw.get("photos", {}).items()):
-                path = photo_data.get("path", "")
-                if not path:
-                    continue
-                fname = Path(path).name
-                candidate = {
-                    "pid": pid,
-                    "path": path,
-                    "photo_index_order": photo_index_order,
-                    "ordered_face_ids": [fid for fid in photo_data.get("face_ids", []) if isinstance(fid, str) and fid],
-                    "metadata": {k: v for k, v in photo_data.items() if v},
-                }
-                existing = best_raw_entries.get(fname)
-                if existing is None or _filename_entry_score(
-                    candidate["path"], candidate["metadata"], candidate["ordered_face_ids"]
-                ) > _filename_entry_score(existing["path"], existing["metadata"], existing["ordered_face_ids"]):
-                    best_raw_entries[fname] = candidate
-
-            for fname, candidate in best_raw_entries.items():
-                filename_to_face_ids_ordered[fname] = candidate["ordered_face_ids"]
-                filename_to_photo_index_id[fname] = candidate["pid"]
-                filename_to_photo_index_order[fname] = candidate["photo_index_order"]
-                # Populate metadata from raw photo_index (fallback for mismatched IDs)
-                if candidate["metadata"]:
-                    filename_to_metadata[fname] = candidate["metadata"]
-
+            # Build best entries from photo registry (single source)
             best_registry_entries = {}
-            for pid in photo_registry._photos:
+            for registry_order, pid in enumerate(photo_registry._photos):
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
                 collection = photo_registry.get_collection(pid)
@@ -4061,7 +4026,9 @@ def _build_caches():
                 if path:
                     fname = Path(path).name
                     candidate = {
+                        "pid": pid,
                         "path": path,
+                        "registry_order": registry_order,
                         "source": source,
                         "collection": collection,
                         "source_url": source_url,
@@ -4082,15 +4049,18 @@ def _build_caches():
                 if candidate["source_url"]:
                     filename_to_source_url[fname] = candidate["source_url"]
                 filename_to_face_ids[fname] = candidate["face_ids"]
-                filename_to_face_ids_ordered.setdefault(fname, sorted(candidate["face_ids"]))
+                # Sort face_ids for deterministic ordering (replaces JSON face_id order)
+                filename_to_face_ids_ordered[fname] = sorted(candidate["face_ids"])
                 if candidate["metadata"]:
                     filename_to_metadata[fname] = candidate["metadata"]
+                filename_to_registry_id[fname] = candidate["pid"]
+                filename_to_registry_order[fname] = candidate["registry_order"]
 
             for photo_id in _photo_cache:
                 filename = _photo_cache[photo_id].get("filename", "")
                 fname = Path(filename).name
 
-                # Filter faces to only registered ones from photo_index
+                # Filter faces to only registered ones from photo registry
                 registered_ids = filename_to_face_ids_ordered.get(fname)
                 if registered_ids is None:
                     registered_ids = sorted(filename_to_face_ids.get(fname, []))
@@ -4122,7 +4092,7 @@ def _build_caches():
                     if missing_artifacts:
                         _photo_cache[photo_id]["missing_face_artifacts"] = missing_artifacts
 
-                # Set source (provenance)
+                # Set source (provenance) — direct registry lookup, then filename fallback
                 source = photo_registry.get_source(photo_id)
                 if not source:
                     source = filename_to_source.get(fname, "")
@@ -4140,32 +4110,25 @@ def _build_caches():
                     source_url = filename_to_source_url.get(fname, "")
                 _photo_cache[photo_id]["source_url"] = source_url
 
-                # Merge photo metadata (BE-012)
-                # Try direct lookup first, then filename fallback for mismatched IDs
+                # Merge photo metadata
                 metadata = photo_registry.get_metadata(photo_id)
                 fallback_meta = filename_to_metadata.get(fname, {})
-                # Merge fallback first (lower priority), then direct (higher priority)
                 merged = {}
                 merged.update(fallback_meta)
                 merged.update(metadata)
-                # Remove source/collection/source_url from merged metadata —
-                # these are already set above from registry with proper priority.
-                # Without this, stale JSON metadata overwrites fresh registry values.
                 for key in ("source", "collection", "source_url"):
                     merged.pop(key, None)
                 if merged:
                     _photo_cache[photo_id].update(merged)
-                if fname in filename_to_photo_index_order:
-                    _photo_cache[photo_id]["photo_index_order"] = filename_to_photo_index_order[fname]
+                if fname in filename_to_registry_order:
+                    _photo_cache[photo_id]["photo_index_order"] = filename_to_registry_order[fname]
 
-            # Preserve photo_index-only photos even when embeddings are absent.
-            for fname, photo_index_id in filename_to_photo_index_id.items():
+            # Preserve registry-only photos even when embeddings are absent.
+            for fname, registry_id in filename_to_registry_id.items():
                 cache_id = generate_photo_id(fname)
                 if cache_id in _photo_cache:
                     continue
-                registered_ids = filename_to_face_ids_ordered.get(fname)
-                if registered_ids is None:
-                    registered_ids = sorted(filename_to_face_ids.get(fname, []))
+                registered_ids = filename_to_face_ids_ordered.get(fname, [])
                 placeholder_faces = [
                     {
                         "face_id": face_id,
@@ -4187,15 +4150,15 @@ def _build_caches():
                 metadata = filename_to_metadata.get(fname, {})
                 if metadata:
                     photo_data.update(metadata)
-                if fname in filename_to_photo_index_order:
-                    photo_data["photo_index_order"] = filename_to_photo_index_order[fname]
+                if fname in filename_to_registry_order:
+                    photo_data["photo_index_order"] = filename_to_registry_order[fname]
                 if placeholder_faces:
                     photo_data["missing_face_artifacts"] = len(placeholder_faces)
                 _photo_cache[cache_id] = photo_data
-        except FileNotFoundError:
-            # No photo_index.json yet, set empty sources
+        except Exception as e:
+            logging.error(f"Failed to merge photo registry data into cache: {e}")
             for photo_id in _photo_cache:
-                _photo_cache[photo_id]["source"] = ""
+                _photo_cache[photo_id].setdefault("source", "")
 
         # Build reverse mapping AFTER filtering: face_id -> photo_id
         _face_to_photo_cache = {}
@@ -4203,8 +4166,8 @@ def _build_caches():
             for face in photo_data["faces"]:
                 _face_to_photo_cache[face["face_id"]] = photo_id
 
-        # Also include face_to_photo from photo_index.json for faces not in embeddings.
-        # Some faces exist in photo_index but not in embeddings.npy (e.g., inbox faces
+        # Also include face_to_photo from photo registry for faces not in embeddings.
+        # Some faces exist in registry but not in embeddings.npy (e.g., inbox faces
         # from community uploads). Without this, community scoping misses them.
         try:
             for fid, pid in photo_registry._face_to_photo.items():
@@ -4213,14 +4176,12 @@ def _build_caches():
         except Exception:
             pass
 
-        # Build alias map: photo_index.json IDs → SHA256 cache IDs
+        # Build alias map: registry IDs → SHA256 cache IDs
         # Community/inbox photos have IDs like "inbox_community-batch-..."
-        # in photo_index.json, but _photo_cache uses SHA256(filename)[:16].
+        # in the registry, but _photo_cache uses SHA256(filename)[:16].
+        # PRD-051: uses already-loaded photo_registry (no second JSON load).
         _photo_id_aliases = {}
         try:
-            from core.photo_registry import PhotoRegistry
-
-            photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
             filename_to_cache_id = {}
             for cache_id, pdata in _photo_cache.items():
                 fname = Path(pdata.get("filename", "")).name
@@ -4234,7 +4195,7 @@ def _build_caches():
                         cache_id = filename_to_cache_id.get(fname)
                         if cache_id:
                             _photo_id_aliases[pid] = cache_id
-        except (FileNotFoundError, Exception):
+        except Exception:
             pass
 
 

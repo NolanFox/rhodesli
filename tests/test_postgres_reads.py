@@ -76,19 +76,18 @@ class TestSQLFiles:
 class TestDataSourceFlag:
     """Verify DATA_SOURCE feature flag behavior."""
 
-    def test_default_is_json(self):
-        """DATA_SOURCE defaults to 'json' when env var is not set."""
+    def test_default_is_postgres(self):
+        """DATA_SOURCE defaults to 'postgres' when env var is not set (PRD-051)."""
         with patch.dict(os.environ, {}, clear=False):
-            # Remove DATA_SOURCE if it exists
             os.environ.pop("DATA_SOURCE", None)
-            result = os.environ.get("DATA_SOURCE", "json")
-            assert result == "json"
-
-    def test_can_set_to_postgres(self):
-        """DATA_SOURCE can be set to 'postgres'."""
-        with patch.dict(os.environ, {"DATA_SOURCE": "postgres"}):
-            result = os.environ.get("DATA_SOURCE", "json")
+            result = os.environ.get("DATA_SOURCE", "postgres")
             assert result == "postgres"
+
+    def test_can_set_to_json_for_rollback(self):
+        """DATA_SOURCE can be set to 'json' as rollback escape hatch."""
+        with patch.dict(os.environ, {"DATA_SOURCE": "json"}):
+            result = os.environ.get("DATA_SOURCE", "postgres")
+            assert result == "json"
 
 
 # =========================================================================

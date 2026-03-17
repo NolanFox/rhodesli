@@ -132,6 +132,25 @@ def reset_registry_cache():
     main_mod._registry_cache_key = None
 
 
+@pytest.fixture(autouse=True)
+def default_data_source_json():
+    """Default DATA_SOURCE to 'json' for tests (PRD-051 Session 112).
+
+    Production defaults to 'postgres' (Supabase single source of truth).
+    Tests default to 'json' so they read from local JSON files without
+    needing a live Supabase connection.
+
+    Tests that specifically verify Supabase behavior should patch
+    DATA_SOURCE to 'postgres' explicitly.
+    """
+    import app.main as main_mod
+
+    old = main_mod.DATA_SOURCE
+    main_mod.DATA_SOURCE = "json"
+    yield
+    main_mod.DATA_SOURCE = old
+
+
 # ---------------------------------------------------------------------------
 # Auth state fixtures
 # ---------------------------------------------------------------------------
