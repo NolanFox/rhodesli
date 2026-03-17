@@ -234,3 +234,32 @@ class TestRealDataIntegrity:
             meta_str = json.dumps(h.get("metadata", {}))
             for pattern in test_patterns:
                 assert pattern not in meta_str, f"History entry [{i}] contains test pattern '{pattern}'"
+
+
+class TestEmbeddingsIntegrity:
+    """Tests for embeddings data integrity."""
+
+    def test_naturalization_form_has_embedding(self):
+        """Verify inbox_c6abb86ff55b (Harry Fox naturalization form) exists in embeddings.npy with a 512-dim vector."""
+        import numpy as np
+
+        emb_path = Path("data/embeddings.npy")
+        if not emb_path.exists():
+            pytest.skip("No data/embeddings.npy")
+
+        emb_data = np.load(str(emb_path), allow_pickle=True)
+
+        target_face_id = "inbox_c6abb86ff55b"
+        found = False
+        for entry in emb_data:
+            if entry.get("face_id") == target_face_id:
+                mu = entry.get("mu")
+                assert mu is not None, f"Face {target_face_id} has no mu embedding"
+                assert len(mu) == 512, f"Expected 512-dim, got {len(mu)}"
+                found = True
+                break
+
+        assert found, (
+            f"Face {target_face_id} (Harry Fox naturalization form) not found in embeddings.npy. "
+            f"Total entries: {len(emb_data)}. Sync production embeddings first."
+        )

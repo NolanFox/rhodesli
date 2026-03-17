@@ -73,9 +73,7 @@ Person 4063's top 10 similar identities are all Fox family (Albert, Charles, Rol
 | inbox_94bbb9408f42 | 01810 | Dayton |
 | inbox_c66961c76a6a | 02071 | Dayton |
 
-The naturalization form photo was uploaded by nolanfox@gmail.com via web UI on March 17 at 04:24 UTC. The embedding was extracted on Railway and saved to production embeddings.npy, but **never synced back to local embeddings.npy**.
-
-Local embeddings.npy: 2872 entries. Production: 2957 (85 more). This is Lesson 147 (local-production data divergence, 7th occurrence).
+The naturalization form photo was uploaded by nolanfox@gmail.com via web UI on March 17 at 04:24 UTC. The embedding was extracted on Railway and saved to production embeddings.npy. **Synced to local in Session 113 Phase 0** (2957 entries, previously 2872).
 
 ### Harry Fox Cluster Quality
 
@@ -111,6 +109,60 @@ User explicitly said: *"With so many actions on the app we need good logging so 
 2. **Session 113** should address PRD-051 Phases 2-3 (embeddings in Supabase)
 3. **Harry Fox cluster** needs human visual review of H2, H3, H4 against naturalization form
 4. **Person 4063** remains unidentified -- likely a Fox family member but not Harry and not Albert
+
+---
+
+## Verified Analysis with Production Embeddings
+
+**Date:** 2026-03-17 (Session 113, Phase 2)
+**Embeddings:** 2957 entries (synced from production), all 8 target faces found.
+**Albert Fox centroid:** computed from 160 confirmed anchor embeddings.
+
+### Naturalization Form to Harry Dayton Faces
+
+| Face | Dist to Nat Form | Dist to Albert Centroid | Closer to | Margin |
+|------|-------------------|------------------------|-----------|--------|
+| H1 (01811) | 0.960 | 0.977 | HARRY | 0.017 |
+| H2 (01632) | 0.996 | 0.981 | ALBERT | 0.015 |
+| H3 (01810) | 1.118 | 1.000 | ALBERT | 0.118 |
+| H4 (02071) | 1.103 | 1.042 | ALBERT | 0.061 |
+
+**Result: 3 of 4 Harry Dayton faces are closer to Albert Fox than to the naturalization form.** Only H1 is closer to Harry, and by a margin of just 0.017. This confirms the pre-sync finding exactly.
+
+### Naturalization Form to Person 4063 Faces
+
+| Face | Dist to Nat Form | Dist to Albert Centroid |
+|------|-------------------|------------------------|
+| P1 (01843) | 1.395 | 1.106 |
+| P2 (01612) | 1.346 | 1.145 |
+| P3 (01775) | 1.382 | 0.844 |
+
+Person 4063 is far from Harry (1.35-1.40) and moderately far from Albert (0.84-1.15). P3 (01775) is notably close to Albert at 0.844 but was explicitly rejected during triage. This confirms Person 4063 is neither Harry nor Albert.
+
+### Full 8x8 Distance Matrix
+
+```
+                 Nat Form  H1(01811)  H2(01632)  H3(01810)  H4(02071)  P1(01843)  P2(01612)  P3(01775)
+Nat Form            0.000      0.960      0.996      1.118      1.103      1.395      1.346      1.382
+H1 (01811)          0.960      0.000      0.693      0.715      1.047      1.318      1.362      1.236
+H2 (01632)          0.996      0.693      0.000      0.901      1.108      1.341      1.393      1.275
+H3 (01810)          1.118      0.715      0.901      0.000      1.097      1.269      1.303      1.213
+H4 (02071)          1.103      1.047      1.108      1.097      0.000      1.261      1.370      1.318
+P1 (01843)          1.395      1.318      1.341      1.269      1.261      0.000      0.889      1.241
+P2 (01612)          1.346      1.362      1.393      1.303      1.370      0.889      0.000      1.252
+P3 (01775)          1.382      1.236      1.275      1.213      1.318      1.241      1.252      0.000
+```
+
+### Key Observations
+
+1. **Harry cluster internal cohesion is good**: H1-H2 (0.693), H1-H3 (0.715) are tight. H4 is the outlier at 1.05-1.11 from H1-H3.
+2. **Person 4063 internal cohesion**: P1-P2 (0.889) is tight, but P1-P3 (1.241) and P2-P3 (1.252) are weak — this is a marginal cluster.
+3. **Harry and 4063 are distinct clusters**: minimum cross-cluster distance is 1.213 (H3-P3), well above same-person thresholds.
+4. **Harry cluster quality concern confirmed**: 3/4 faces closer to Albert than to ground truth anchor. H2 margin is razor-thin (0.015), but H3 (0.118) and H4 (0.061) are clearly more Albert-like.
+
+### Conclusion
+
+The pre-sync analysis is **confirmed exactly** with the full production embedding set. The Harry Fox cluster warrants human visual review of H2, H3, and H4 against the naturalization form. These three Dayton photos may depict Albert Fox, not Harry. This is logged as a data quality concern in BACKLOG.md (CLUSTER-QUALITY-001).
 
 ---
 
