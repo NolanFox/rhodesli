@@ -124,8 +124,10 @@ def post(
                 )
                 if merge_result.get("success"):
                     merged_into_name = target_name
-                    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
-                    _main_mod.save_registry(registry)
+                    # FB-069: Only write the 2 changed identities, not all ~3400
+                    actual_source = merge_result.get("source_id", identity_id)
+                    actual_target = merge_result.get("target_id", target_id)
+                    _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
                     _main_mod.log_user_action(
                         "CONFIRM_MERGE",
                         identity_id=identity_id,
@@ -152,6 +154,7 @@ def post(
         try:
             registry.confirm_identity(identity_id, user_source="web")
             _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+            # FB-069: Only write the 1 changed identity
             _main_mod.save_registry(
                 registry,
                 confirmed_identity_info={
@@ -160,6 +163,7 @@ def post(
                     "user_id": _user.id if _user else None,
                     "user_email": _user.email if _user else None,
                 },
+                changed_ids={identity_id},
             )
             _main_mod.posthog_capture(
                 "admin_identity_confirmed",
@@ -369,7 +373,7 @@ def post(
 
     try:
         registry.contest_identity(identity_id, user_source="web", reason="Rejected via UI")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _main_mod.log_user_action(
             "REJECT",
             identity_id=identity_id,
@@ -435,7 +439,7 @@ def post(identity_id: str, neighbor_id: str, sess=None, request=None):
     # Record bidirectional negative pair
     try:
         registry.reject_identity_pair(identity_id, neighbor_id, user_source="admin_inline")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id, neighbor_id})
     except KeyError:
         pass  # Neighbor may have been merged/deleted
 
@@ -1304,7 +1308,9 @@ def post(
     )
 
     if result["success"]:
-        save_ok = _main_mod.save_registry(registry)
+        actual_source = result.get("source_id", source_id)
+        actual_target = result.get("target_id", target_id)
+        save_ok = _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
         _main_mod._invalidate_discovery_cache()
         if save_ok is False:
             logging.error(f"Tag face {face_id} -> {target_id}: merge in memory but Postgres write failed")
@@ -1698,7 +1704,7 @@ def post(source_id: str, target_id: str, sess=None, request=None):
 
     # Record rejection
     registry.reject_identity_pair(source_id, target_id, user_source="web")
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={source_id, target_id})
 
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
@@ -1981,12 +1987,12 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # Save and return success
-    _main_mod.save_registry(registry)
-
     # Use the actual target/source from the result (may have been swapped)
     actual_target_id = result["target_id"]
     actual_source_id = result["source_id"]
+
+    # Save with targeted Supabase write (FB-069: only write changed identities)
+    _main_mod.save_registry(registry, changed_ids={actual_target_id, actual_source_id})
 
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
@@ -3616,7 +3622,9 @@ def post(
                 )
                 if merge_result.get("success"):
                     merged_into_name = target_name
-                    _main_mod.save_registry(registry)
+                    actual_source = merge_result.get("source_id", identity_id)
+                    actual_target = merge_result.get("target_id", target_id)
+                    _main_mod.save_registry(registry, changed_ids={actual_source, actual_target})
                     _main_mod.log_user_action(
                         "CONFIRM_MERGE",
                         identity_id=identity_id,
@@ -3651,6 +3659,7 @@ def post(
                     "user_id": _user.id if _user else None,
                     "user_email": _user.email if _user else None,
                 },
+                changed_ids={identity_id},
             )
             _main_mod.log_user_action(
                 "CONFIRM",
@@ -3756,7 +3765,7 @@ def post(
     try:
         _identity = registry.get_identity(identity_id)
         registry.reject_identity(identity_id, user_source="web_review")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _main_mod.log_user_action(
             "REJECT",
             identity_id=identity_id,
@@ -3846,7 +3855,7 @@ def post(
     try:
         identity = registry.get_identity(identity_id)
         registry.skip_identity(identity_id, user_source="web_review")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _main_mod.log_user_action(
             "SKIP",
             identity_id=identity_id,

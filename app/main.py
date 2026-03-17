@@ -1243,7 +1243,7 @@ def load_registry():
     return IdentityRegistry()
 
 
-def save_registry(registry, confirmed_identity_info=None):
+def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     """Save registry with atomic write + sync to Supabase (AD-135).
 
     When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
@@ -1256,6 +1256,9 @@ def save_registry(registry, confirmed_identity_info=None):
             - identity_name: str
             - user_id: str (Supabase auth user ID of the admin)
             - user_email: str (email for Resend notification delivery)
+        changed_ids: Optional set/list of identity IDs that were modified.
+            When provided, only these identities are written to Supabase
+            instead of the full batch (~3400 identities). FB-069 performance fix.
     """
     global _registry_cache, _registry_cache_key, _registry_cache_ts
     # Repopulate cache with the registry we just saved (avoid redundant reload)
@@ -1282,7 +1285,11 @@ def save_registry(registry, confirmed_identity_info=None):
     # Always write JSON as backup (Session 105b: write-through)
     registry.save(REGISTRY_PATH)
 
-    identities_copy = dict(registry._identities)
+    # FB-069: Only write changed identities to Supabase when changed_ids is provided
+    if changed_ids:
+        identities_copy = {k: dict(registry._identities[k]) for k in changed_ids if k in registry._identities}
+    else:
+        identities_copy = dict(registry._identities)
 
     if DATA_SOURCE == "postgres":
         # Synchronous Supabase write — failures are visible (Session 105b)
