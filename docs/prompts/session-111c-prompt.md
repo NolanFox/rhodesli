@@ -64,6 +64,13 @@ Match the quality of the New Matches page and Discoveries page. Each proposal ca
 
 ## Phase 2: Remaining P0 Fixes (30 min)
 
+### FB-064: Override merge redirects to wrong community (P0 — RECURRING)
+- In Focus mode on Fox Family, clicking "Override" to merge a co-occurrence blocked face redirects to `/` (Rhodes community) instead of staying in `/c/fox-family/`
+- This is the same community prefix bug class — the Override handler's HX-Redirect is missing nav_prefix
+- Also check: ALL merge/confirm/reject/skip handler redirects in Focus mode for correct nav_prefix
+- File: `app/identity_routes.py` — find the override/co-occurrence merge handler
+- **VERIFY on production after fix**: Override → should stay in Fox Family
+
 ### FB-036/037: Speed Loop tagging doesn't persist (P0 — RECURRING)
 - BUG-001 was marked fixed in Session 102 but user reports it's broken again
 - Root cause: tag assignment endpoint silently fails
@@ -214,6 +221,7 @@ Match the quality of the New Matches page and Discoveries page. Each proposal ca
 - [ ] All tests pass
 - [ ] EVERY admin sidebar section checked on production
 - [ ] Speed Loop tagging verified persistent on production
+- [ ] Override merge stays in correct community (Fox Family)
 - [ ] Multi-merge shows per-identity success/failure reasons
 - [ ] Deployed and pushed
 - [ ] Assessment written with screenshot evidence for EACH admin surface
