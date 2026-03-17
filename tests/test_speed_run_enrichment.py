@@ -211,11 +211,10 @@ class TestEnrichmentPanel:
             )
             html = resp.text
 
-            # Enrichment panel markers
-            assert "Confirmed!" in html
-            assert "enrichment-name-input" in html
-            assert "Done" in html and "Next Cluster" in html
-            assert "Skip" in html
+            # Enrichment panel markers — lazy-loads via HTMX (Session 111c)
+            assert "Confirmed as" in html or "Confirmed!" in html
+            assert "speed-run-card" in html
+            assert "enrichment-panel" in html
 
     def test_enrichment_panel_has_data_enrichment_attribute(self):
         """The enrichment panel card should have data-enrichment='true'."""
