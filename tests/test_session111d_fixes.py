@@ -450,3 +450,201 @@ class TestFB030SpeedRunCounterPersistence:
         assert "speed-run-reset" in html
         # restoreStats call
         assert "restoreStats" in html
+class TestFB054058ThumbnailConsistency:
+    """FB-054/058: Compare view should default to best-quality face, matching neighbor card thumbnail."""
+
+    def test_compare_defaults_to_best_face(self):
+        """Compare view should use get_best_face_id to pick the default face index."""
+        from app import compare_routes
+        import app.main as main_mod
+
+        # Create mock identities with multiple faces
+        mock_registry = MagicMock()
+        target_identity = {
+            "identity_id": "target-id",
+            "name": "Target Person",
+            "anchor_ids": ["face_a", "face_b", "face_c"],
+            "candidate_ids": [],
+            "state": "CONFIRMED",
+        }
+        neighbor_identity = {
+            "identity_id": "neighbor-id",
+            "name": "Neighbor Person",
+            "anchor_ids": ["face_x", "face_y", "face_z"],
+            "candidate_ids": [],
+            "state": "PROPOSED",
+        }
+
+        def get_identity(iid):
+            if iid == "target-id":
+                return target_identity
+            if iid == "neighbor-id":
+                return neighbor_identity
+            raise KeyError(iid)
+
+        mock_registry.get_identity = get_identity
+
+        # get_best_face_id picks face_b for target (index 1), face_z for neighbor (index 2)
+        def mock_best_face(face_ids):
+            if "face_b" in face_ids:
+                return "face_b"
+            if "face_z" in face_ids:
+                return "face_z"
+            return face_ids[0] if face_ids else None
+
+        with (
+            patch.object(main_mod, "load_registry", return_value=mock_registry),
+            patch.object(main_mod, "get_crop_files", return_value=set()),
+            patch.object(main_mod, "get_best_face_id", side_effect=mock_best_face),
+            patch.object(main_mod, "resolve_face_image_url", return_value="/crop/test.jpg"),
+            patch.object(main_mod, "_build_caches"),
+            patch.object(main_mod, "_face_to_photo_cache", {"face_b": "photo1", "face_z": "photo2"}),
+            patch.object(main_mod, "_photo_cache", {}),
+        ):
+            mock_request = MagicMock()
+            mock_request.state.community_slug = "rhodes"
+            result = compare_routes.get.__wrapped__(
+                target_id="target-id",
+                neighbor_id="neighbor-id",
+                target_idx=0,  # default
+                neighbor_idx=0,  # default
+                view="faces",
+                filter="",
+                sess=None,
+                request=mock_request,
+            )
+            html = repr(result)
+            # The compare view should show face_b and face_z (best faces)
+            # not face_a and face_x (first faces)
+            assert "face_b" in html or "face_z" in html, (
+                "Compare view should default to best-quality face, not first face"
+            )
+
+    def test_neighbor_card_uses_get_best_face_id(self):
+        """Neighbor card thumbnail should use get_best_face_id for consistency."""
+        from app.main import neighbor_card
+
+        neighbor = {
+            "identity_id": "nbr-123",
+            "name": "Test Person",
+            "distance": 0.85,
+            "can_merge": True,
+            "face_count": 3,
+            "anchor_face_ids": ["face1", "face2", "face3"],
+            "candidate_face_ids": [],
+            "state": "PROPOSED",
+        }
+
+        with (
+            patch("app.main.get_best_face_id", return_value="face2") as mock_best,
+            patch("app.main.resolve_face_image_url", return_value="/crop/face2.jpg"),
+            patch("app.main._identity_home_community_slug", return_value=None),
+            patch("app.main.community_url_prefix", return_value=""),
+        ):
+            neighbor_card(
+                neighbor,
+                "target-123",
+                crop_files={"face2.jpg"},
+                nav_prefix="",
+            )
+            # Verify get_best_face_id was called with combined face IDs
+            mock_best.assert_called_once_with(["face1", "face2", "face3"])
+
+
+class TestFB038LoadMorePreservesCheckboxes:
+    """FB-038: Load More should append new cards, not replace entire sidebar."""
+
+    def test_load_more_button_uses_outerhtml(self):
+        """Load More button should use outerHTML swap to preserve existing cards."""
+        from app.main import neighbors_sidebar
+
+        neighbors = [
+            {
+                "identity_id": f"nbr-{i}",
+                "name": f"Person {i}",
+                "distance": 0.8 + i * 0.01,
+                "can_merge": True,
+                "face_count": 1,
+                "anchor_face_ids": [f"face_{i}"],
+                "candidate_face_ids": [],
+                "state": "PROPOSED",
+            }
+            for i in range(5)
+        ]
+
+        with (
+            patch("app.main.get_best_face_id", return_value=None),
+            patch("app.main.resolve_face_image_url", return_value=None),
+            patch("app.main._identity_home_community_slug", return_value=None),
+            patch("app.main.community_url_prefix", return_value=""),
+        ):
+            result = neighbors_sidebar(
+                "target-id",
+                neighbors,
+                crop_files=set(),
+                offset=5,
+                has_more=True,
+                nav_prefix="",
+            )
+            html = repr(result)
+            # The Load More button should use outerHTML swap
+            assert 'hx-swap="outerHTML"' in html, "Load More button must use outerHTML swap to preserve checkbox state"
+            # Should have a load-more container with specific ID
+            assert "load-more-target-id" in html
+
+    def test_incremental_load_returns_only_new_cards(self, client):
+        """When offset > 0, neighbors endpoint returns only new cards (not full sidebar)."""
+        import app.main as main_mod
+
+        mock_registry = MagicMock()
+        identity = {
+            "identity_id": "target-id",
+            "name": "Target",
+            "anchor_ids": ["face_t"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "state": "CONFIRMED",
+        }
+        mock_registry.get_identity.return_value = identity
+        mock_registry.get_anchor_face_ids.return_value = ["face_x"]
+        mock_registry.get_candidate_face_ids.return_value = []
+
+        # Pre-cached neighbors (11 total — must exceed offset+limit+1 to hit cache path)
+        cached_neighbors = [
+            {
+                "identity_id": f"nbr-{i}",
+                "name": f"Person {i}",
+                "distance": 0.8 + i * 0.01,
+                "can_merge": True,
+                "merge_blocked_reason": None,
+                "face_count": 1,
+                "co_occurrence": 0,
+            }
+            for i in range(11)
+        ]
+
+        with (
+            patch.object(main_mod, "load_registry", return_value=mock_registry),
+            patch.object(main_mod, "get_face_data", return_value={}),
+            patch.object(main_mod, "load_photo_registry", return_value=MagicMock()),
+            patch.object(main_mod, "get_crop_files", return_value=set()),
+            patch.object(main_mod, "_compute_co_occurrence", return_value=0),
+            patch.object(main_mod, "_get_user_role", return_value="admin"),
+            patch("app.identity_routes._get_cached_neighbors", return_value=cached_neighbors),
+            patch.object(main_mod, "get_best_face_id", return_value=None),
+            patch.object(main_mod, "resolve_face_image_url", return_value=None),
+            patch.object(main_mod, "_identity_home_community_slug", return_value=None),
+            patch.object(main_mod, "community_url_prefix", return_value=""),
+            patch("app.identity_routes._nav_prefix_from_request", return_value=""),
+        ):
+            resp = client.get(
+                "/api/identity/target-id/neighbors?offset=5&limit=5",
+                headers={"HX-Request": "true"},
+            )
+            html = resp.text
+            # Should NOT contain sidebar wrapper elements (header, bulk actions)
+            assert "Similar Identities" not in html, "Incremental load should NOT return full sidebar with header"
+            # Should contain some of the new neighbors
+            assert "nbr-5" in html or "nbr-6" in html or "Person 5" in html or "Person 6" in html, (
+                "Incremental load should return new neighbor cards"
+            )

@@ -535,6 +535,10 @@ def get(
     # Return only neighbors up to current offset + limit
     neighbors = all_neighbors[: offset + limit]
 
+    # FB-038: For Load More (offset > 0), only return NEW cards (not already-shown ones)
+    # The new cards will be appended via outerHTML on the Load More button
+    is_incremental = offset > 0
+
     # Enhance neighbor data with additional info for UI
     crop_files = _main_mod.get_crop_files()
     for n in neighbors:
@@ -571,6 +575,50 @@ def get(
     target_name = ensure_utf8_display(identity.get("name", "")) or ""
     current_community = getattr(request.state, "community", None) if request else None
     nav_prefix = _nav_prefix_from_request(request)
+
+    # FB-038: When Load More is clicked (offset > 0), return only the NEW cards
+    # plus a new Load More button. This preserves checkbox state on existing cards.
+    if is_incremental:
+        new_neighbors = neighbors[offset:]  # Only the newly fetched ones
+        _is_person_page = container_id.startswith("person-similar-") if container_id else False
+        new_cards = [
+            _main_mod.neighbor_card(
+                n,
+                identity_id,
+                crop_files,
+                user_role=_main_mod._get_user_role(sess),
+                from_focus=from_focus,
+                focus_section=focus_section,
+                target_name=target_name,
+                current_community=current_community,
+                nav_prefix=nav_prefix,
+                from_person_page=_is_person_page,
+            )
+            for n in new_neighbors
+        ]
+        # Build new Load More button (or nothing if no more)
+        _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
+        _container_param = f"&container_id={container_id}" if container_id else ""
+        focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
+        next_offset = offset + limit
+        _load_more_id = f"load-more-{identity_id}"
+        if has_more:
+            load_more_btn = Div(
+                Button(
+                    "Load More",
+                    cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={next_offset}{focus_param}{_container_param}",
+                    hx_target=f"#{_load_more_id}",
+                    hx_swap="outerHTML",
+                ),
+                id=_load_more_id,
+            )
+        else:
+            load_more_btn = None
+
+        # Return fragment: new cards + optional load more (replaces the old load-more div)
+        return Div(*new_cards, load_more_btn)
+
     return _main_mod.neighbors_sidebar(
         identity_id,
         neighbors,

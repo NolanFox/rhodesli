@@ -5582,6 +5582,24 @@ def get(
     nf = nbr.get("anchor_ids", []) + nbr.get("candidate_ids", [])
     if not tf or not nf:
         return P("No faces available for comparison", cls="text-slate-400")
+
+    # FB-054/058: Default to best-quality face (consistent with neighbor card thumbnail)
+    def _best_face_index(entries):
+        """Find index of best-quality face in a list of face entries."""
+        fids = [e if isinstance(e, str) else e.get("face_id", "") for e in entries]
+        best = _main_mod.get_best_face_id(fids)
+        if best:
+            try:
+                return fids.index(best)
+            except ValueError:
+                pass
+        return 0
+
+    if target_idx == 0 and len(tf) > 1:
+        target_idx = _best_face_index(tf)
+    if neighbor_idx == 0 and len(nf) > 1:
+        neighbor_idx = _best_face_index(nf)
+
     target_idx = max(0, min(target_idx, len(tf) - 1))
     neighbor_idx = max(0, min(neighbor_idx, len(nf) - 1))
 
