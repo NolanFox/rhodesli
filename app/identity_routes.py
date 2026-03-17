@@ -530,11 +530,13 @@ def get(
             all_neighbors = cached[:total_to_fetch]
             cache_hit = True
         else:
-            from core.neighbors import find_nearest_neighbors
+            from core.neighbors import find_nearest_neighbors_fast
 
             # Fetch a generous batch so the cache serves Load More requests too
             fetch_limit = max(total_to_fetch, 20)
-            all_neighbors = find_nearest_neighbors(identity_id, registry, photo_registry, face_data, limit=fetch_limit)
+            all_neighbors = find_nearest_neighbors_fast(
+                identity_id, registry, photo_registry, face_data, limit=fetch_limit
+            )
             _set_cached_neighbors(identity_id, all_neighbors)
             cache_hit = False
     except ImportError as e:

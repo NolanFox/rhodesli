@@ -44,11 +44,23 @@ _suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp,
 _CACHE_TTL = 30  # seconds
 
 
-def invalidate_cluster_review_caches():
-    """Clear speed-run and suggestions caches. Called on confirm/merge/skip/reject."""
+def invalidate_cluster_review_caches(changed_ids=None):
+    """Clear speed-run and suggestions caches.
+
+    When changed_ids is provided, only remove affected entries instead of full flush.
+    This preserves cache for identities not involved in the action.
+    """
     global _speed_run_cache, _suggestions_cache
-    _speed_run_cache = {}
-    _suggestions_cache = {}
+    if changed_ids is None:
+        # Full flush for bulk operations
+        _speed_run_cache = {}
+        _suggestions_cache = {}
+    else:
+        # Surgical: remove entries for changed identities + speed-run (ordering may change)
+        _speed_run_cache = {}  # speed-run depends on ordering, always invalidate
+        keys_to_remove = [k for k in _suggestions_cache if k[0] in changed_ids]
+        for k in keys_to_remove:
+            del _suggestions_cache[k]
 
 
 def _load_proposals():
