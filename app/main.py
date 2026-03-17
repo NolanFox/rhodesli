@@ -9247,13 +9247,18 @@ def neighbors_sidebar(
     _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
     _container_param = f"&container_id={container_id}" if container_id else ""
     focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
+    # FB-038: Load More targets itself with outerHTML to preserve checkbox state
+    _load_more_id = f"load-more-{identity_id}"
     load_more = (
-        Button(
-            "Load More",
-            cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-            hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}",
-            hx_target=f"#{_target_id}",
-            hx_swap="innerHTML",
+        Div(
+            Button(
+                "Load More",
+                cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}",
+                hx_target=f"#{_load_more_id}",
+                hx_swap="outerHTML",
+            ),
+            id=_load_more_id,
         )
         if has_more
         else None
