@@ -363,3 +363,90 @@ class TestFB036037TagSyncFailureWarning:
         assert resp.status_code == 200
         assert "Tagged as Good Person" in resp.text
         assert "sync failed" not in resp.text
+
+
+class TestFB051PhotoSearchCommunityPrefix:
+    """FB-051: Photo filename search results include community prefix in links."""
+
+    def test_photo_search_results_include_nav_prefix(self, client, admin_user):
+        """Photo search results should use nav_prefix in photo links."""
+        mock_photo_cache = {
+            "photo_abc123": {
+                "filename": "beach_photo.jpg",
+                "faces": [{"face_id": "f1"}],
+            }
+        }
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry") as mock_reg,
+            patch("app.identity_routes._main_mod._build_caches"),
+            patch("app.identity_routes._main_mod._photo_cache", mock_photo_cache),
+            patch("app.identity_routes._main_mod.get_crop_files", return_value=set()),
+            patch("app.identity_routes._main_mod._highlight_match", side_effect=lambda name, q: name),
+        ):
+            mock_reg.return_value.search_identities.return_value = []
+            resp = client.get("/api/search?q=beach", headers=HTMX_HEADERS)
+
+        assert resp.status_code == 200
+        # Default community is rhodes, prefix is /c/rhodes
+        assert "/photo/photo_abc123" in resp.text
+
+    def test_photo_search_link_has_data_testid(self, client, admin_user):
+        """Photo search results should have data-testid for testing."""
+        mock_photo_cache = {
+            "photo_xyz789": {
+                "filename": "wedding_photo.jpg",
+                "faces": [{"face_id": "f2"}, {"face_id": "f3"}],
+            }
+        }
+
+        with (
+            patch("app.identity_routes._main_mod.load_registry") as mock_reg,
+            patch("app.identity_routes._main_mod._build_caches"),
+            patch("app.identity_routes._main_mod._photo_cache", mock_photo_cache),
+            patch("app.identity_routes._main_mod.get_crop_files", return_value=set()),
+            patch("app.identity_routes._main_mod._highlight_match", side_effect=lambda name, q: name),
+        ):
+            mock_reg.return_value.search_identities.return_value = []
+            resp = client.get("/api/search?q=wedding", headers=HTMX_HEADERS)
+
+        assert resp.status_code == 200
+        assert "search-photo-result" in resp.text
+
+
+class TestFB030SpeedRunCounterPersistence:
+    """FB-030: Speed-run counter should persist via localStorage."""
+
+    def test_speed_run_page_has_localstorage_js(self, client, admin_user):
+        """Speed-run page should include localStorage persistence JS."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        reg = IdentityRegistry()
+        iid = reg.create_identity(
+            anchor_ids=["face_sr_1", "face_sr_2"],
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+
+        with (
+            patch("app.cluster_review_routes._main_mod.load_registry", return_value=reg),
+            patch("app.cluster_review_routes._main_mod.get_crop_files", return_value=set()),
+            patch("app.cluster_review_routes._main_mod.resolve_face_image_url", return_value="/static/crops/test.jpg"),
+            patch("app.cluster_review_routes._main_mod._get_community_identity_ids", return_value=None),
+            patch("app.cluster_review_routes._main_mod.get_photo_id_for_face", return_value=None),
+            patch("app.supabase_data.load_communities", return_value=[]),
+        ):
+            resp = client.get("/admin/upload-review?mode=speed", headers=HTMX_HEADERS)
+
+        assert resp.status_code == 200
+        html = resp.text
+        # localStorage key
+        assert "rhodesli_speedrun_stats" in html
+        # saveStats function
+        assert "saveStats" in html
+        # loadStats function
+        assert "loadStats" in html
+        # Reset button
+        assert "speed-run-reset" in html
+        # restoreStats call
+        assert "restoreStats" in html

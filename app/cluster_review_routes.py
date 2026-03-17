@@ -847,6 +847,43 @@ def get(sess=None, request=None, mode: str = ""):
         recent_actions_js = Script("""
             (function() {
                 window._speedRunActions = [];
+                var STORAGE_KEY = 'rhodesli_speedrun_stats';
+                function saveStats(confirmed, skipped, rejected, dismissed) {
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                            confirmed: confirmed, skipped: skipped,
+                            rejected: rejected, dismissed: dismissed,
+                            timestamp: Date.now()
+                        }));
+                    } catch(e) {}
+                }
+                function loadStats() {
+                    try {
+                        var raw = localStorage.getItem(STORAGE_KEY);
+                        if (!raw) return null;
+                        var data = JSON.parse(raw);
+                        // Expire after 24 hours
+                        if (Date.now() - (data.timestamp || 0) > 86400000) {
+                            localStorage.removeItem(STORAGE_KEY);
+                            return null;
+                        }
+                        return data;
+                    } catch(e) { return null; }
+                }
+                window._resetSpeedRunCount = function() {
+                    localStorage.removeItem(STORAGE_KEY);
+                    var progress = document.getElementById('speed-run-progress');
+                    if (!progress) return;
+                    var total = parseInt(progress.getAttribute('data-total') || '0', 10);
+                    progress.setAttribute('data-confirmed', '0');
+                    progress.setAttribute('data-skipped', '0');
+                    progress.setAttribute('data-rejected', '0');
+                    progress.setAttribute('data-dismissed', '0');
+                    var textEl = document.getElementById('speed-run-stats-text');
+                    if (textEl) textEl.textContent = '0 confirmed \\u00b7 0 skipped \\u00b7 0 rejected \\u00b7 ' + total + ' remaining';
+                    var bar = progress.querySelector('.bg-purple-500, .bg-emerald-500');
+                    if (bar) bar.style.width = '0%';
+                };
                 function updateStats(action) {
                     var progress = document.getElementById('speed-run-progress');
                     if (!progress) return;
@@ -863,6 +900,7 @@ def get(sess=None, request=None, mode: str = ""):
                     progress.setAttribute('data-skipped', String(skipped));
                     progress.setAttribute('data-rejected', String(rejected));
                     progress.setAttribute('data-dismissed', String(dismissed));
+                    saveStats(confirmed, skipped, rejected, dismissed);
                     var reviewed = confirmed + skipped + rejected + dismissed;
                     var remaining = Math.max(0, total - reviewed);
                     var textEl = document.getElementById('speed-run-stats-text');
@@ -873,6 +911,27 @@ def get(sess=None, request=None, mode: str = ""):
                         bar.style.width = pct + '%';
                     }
                 }
+                // Restore stats from localStorage on page load
+                (function restoreStats() {
+                    var saved = loadStats();
+                    if (!saved) return;
+                    var progress = document.getElementById('speed-run-progress');
+                    if (!progress) return;
+                    var total = parseInt(progress.getAttribute('data-total') || '0', 10);
+                    progress.setAttribute('data-confirmed', String(saved.confirmed || 0));
+                    progress.setAttribute('data-skipped', String(saved.skipped || 0));
+                    progress.setAttribute('data-rejected', String(saved.rejected || 0));
+                    progress.setAttribute('data-dismissed', String(saved.dismissed || 0));
+                    var reviewed = (saved.confirmed || 0) + (saved.skipped || 0) + (saved.rejected || 0) + (saved.dismissed || 0);
+                    var remaining = Math.max(0, total - reviewed);
+                    var textEl = document.getElementById('speed-run-stats-text');
+                    if (textEl) textEl.textContent = (saved.confirmed || 0) + ' confirmed \\u00b7 ' + (saved.skipped || 0) + ' skipped \\u00b7 ' + (saved.rejected || 0) + ' rejected \\u00b7 ' + remaining + ' remaining';
+                    var bar = progress.querySelector('.bg-purple-500, .bg-emerald-500');
+                    if (bar) {
+                        var pct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+                        bar.style.width = pct + '%';
+                    }
+                })();
                 function renderActions() {
                     var container = document.getElementById('speed-run-recent-actions');
                     if (!container) return;
@@ -959,6 +1018,13 @@ def get(sess=None, request=None, mode: str = ""):
                             f"0 confirmed \u00b7 0 skipped \u00b7 0 rejected \u00b7 {total} remaining",
                             id="speed-run-stats-text",
                             cls="text-sm text-slate-300",
+                        ),
+                        Button(
+                            "Reset",
+                            onclick="window._resetSpeedRunCount && window._resetSpeedRunCount()",
+                            cls="text-xs text-slate-500 hover:text-slate-300 transition-colors",
+                            type="button",
+                            data_testid="speed-run-reset",
                         ),
                         cls="flex justify-between items-center mb-2",
                     ),
