@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.20] — 2026-03-17 (Session 111f: Performance Overhaul)
+
+### Performance
+- **Vectorized confirmed identity distance**: New `app/perf_cache.py` precomputes L2-normalized embedding matrix for all confirmed identities. Single `matrix @ target` dot product replaces O(N) per-face `cdist` loops. ~25-40x speedup for suggestions endpoint.
+- **Smart cache invalidation**: `save_registry()` now passes `changed_ids` through to cache invalidation. Only affected identity entries are removed instead of full flush. Preserves warm cache across most admin actions.
+- **`find_nearest_neighbors_fast()`**: New vectorized function in `core/neighbors.py` (alongside frozen original). Builds candidate matrix, uses vectorized `cdist`. Wired into neighbors API endpoint.
+- **Measured results**: Focus mode 124ms (was 3-5s), Speed-run 171ms, Neighbors API 142ms.
+
+### Investigation Results
+- **FB-036/037**: Tag persistence save path verified structurally correct — synchronous Supabase writes, proper `changed_ids`, cache clearing. No code change needed.
+- **FB-040**: Browse mode merge OOB delete already present in all return paths. No code change needed.
+
+### Added
+- 23 new tests across 3 files: `test_perf_cache.py` (6), `test_smart_invalidation.py` (7), `test_tag_persistence.py` (10).
+
 ## [v0.99.19] — 2026-03-17 (Session 111e: Performance + Fix Sprint)
 
 ### Performance
