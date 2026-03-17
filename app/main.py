@@ -1274,19 +1274,26 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     if registry_dict is not None:
         registry_dict.pop("_face_identity_lookup_cache", None)
 
-    # Invalidate neighbors cache — stale after any identity change
+    # Invalidate neighbors cache — surgical invalidation for changed identities only
     try:
         from app.identity_routes import invalidate_neighbors_cache
 
-        invalidate_neighbors_cache()
+        if changed_ids:
+            for cid in changed_ids:
+                invalidate_neighbors_cache(identity_id=cid)
+        else:
+            invalidate_neighbors_cache()  # full flush for bulk operations
     except ImportError:
         pass
 
-    # Invalidate cluster review caches — stale after any identity change (Session 111e)
+    # Invalidate cluster review caches — surgical for changed identities
     try:
         from app.cluster_review_routes import invalidate_cluster_review_caches
 
-        invalidate_cluster_review_caches()
+        if changed_ids:
+            invalidate_cluster_review_caches(changed_ids=changed_ids)
+        else:
+            invalidate_cluster_review_caches()
     except ImportError:
         pass
 
