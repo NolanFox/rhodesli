@@ -2040,17 +2040,16 @@ def post(
         )
 
     # If from focus mode, advance to next identity instead of showing browse card
+    # Note: OOB elements not needed in focus mode — focus container replaces entirely
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
         if focus_section == "skipped":
             return (
                 _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id, nav_prefix=nav_prefix),
-                *oob_elements,
                 merge_toast,
             )
         return (
             _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter, nav_prefix=nav_prefix),
-            *oob_elements,
             merge_toast,
         )
 

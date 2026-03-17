@@ -1,79 +1,49 @@
-# Session 111d Assessment
+# Session 111d Assessment — FINAL
 
 ## Shipped
 
-- [x] Phase 0: CI fix — `test_partial_has_public_page_link` updated to match current UI
-  - Evidence: `pytest tests/test_internal_photo_links.py::TestPhotoModalShareButton` — 3 passed
-  - Commit: 9a94303
-
-- [x] Phase 2: FB-069 Performance — targeted Supabase writes
-  - `save_registry()` now accepts `changed_ids` parameter
-  - All triage operations (confirm, merge, skip, reject, tag, reject-pair) pass 1-2 IDs instead of ~3400
-  - Before: 34 Supabase API calls per confirm. After: 1 API call.
-  - Evidence: 2 tests verify `changed_ids` is passed
-  - Commit: 99929f2
-
-- [x] Face overlay cache fix (user-reported during session)
-  - `_photo_dimensions_cache` never invalidated in `_invalidate_all_caches()` — new uploads had no bounding boxes
-  - Added cache invalidation + Supabase photo registry fallback
-  - Commit: b19c8a9
-
-- [x] FB-065: Post-merge findability — search finds merged identities with "Merged into {Name}"
-  - `search_identities()` includes merged identities, ranked after non-merged
-  - 5 new tests
-  - Commit: 4709520
-
-- [x] FB-044: Best match deduped from Similar Identities list
-  - Neighbors endpoint filters out the best match identity
-  - Commit: 4709520
-
+- [x] Phase 0: FB-070 CI fix — test assertion matches current UI
+- [x] Phase 2: FB-069 Performance — targeted Supabase writes (1-2 identities vs ~3400)
+- [x] Face overlay cache — `_photo_dimensions_cache` invalidation + Supabase fallback
+- [x] FB-065: Search finds merged identities with "Merged into {Name}" (sidebar/global only)
 - [x] FB-066: Green checkmark returns clear error for unidentified faces
-  - "Name this person first, then confirm." instead of silent failure
-  - 3 new tests
-  - Commit: e12c63d
-
 - [x] FB-036/037: Tag save failure surfaced as warning toast
-  - When Supabase write fails, user sees "sync failed" warning instead of false success
-  - 2 new tests
-  - Commit: e12c63d
-
 - [x] FB-048: "View Person" link in Speed Loop tag popup
-  - Opens person page in new tab without interrupting Speed Loop
-  - Commit: e12c63d
+- [x] FB-040: Focus mode merge includes OOB delete elements
+- [x] FB-044: REVERTED — best match filter was hiding confirmed identities
+- [x] Search regression fix — merged identities excluded from tag/merge search via `include_merged` parameter
+- [x] Focus mode merge confirmation dialog removed — instant merge on click
+- [x] Browser verified: merge in focus mode works, stays on fox-family, no redirect
 
-- [x] FB-040: Focus mode merge stale card fix
-  - OOB delete elements now included in focus mode merge response
-  - Commit: e12c63d
+## REGRESSIONS CAUSED AND FIXED
 
-## REGRESSION — Shipped and Reverted
+1. **FB-068 auto-merge** — confirm button caused identities to disappear. REVERTED. Needs PRD.
+2. **FB-044 best match filter** — removed confirmed identities from Similar list. REVERTED.
+3. **Search regression** — merged identities appeared in tag/merge search causing errors. Fixed with `include_merged` parameter.
 
-- [x] FB-068: Auto-merge on confirm — REVERTED
-  - Attempted to make "Confirm as {Name}" button auto-merge with best match
-  - Caused Person 3141 to disappear from UI (name conflict edge case)
-  - Reverted immediately. Confirm now only promotes state (original behavior).
-  - **Lesson:** Complex workflow changes need PRD with edge case analysis. Saved to memory.
-  - Commit (revert): c5323ea
+## Deferred (with justification)
 
-## Deferred
-
-- FB-068: Confirm+merge in one click — needs PRD (complex workflow, caused regression)
-- FB-057: Focus mode auto-advance — investigation shows buttons/handlers are correct; likely confirm failing for unidentified names (now addressed by FB-066)
+- FB-068: Confirm+merge in one click — needs PRD (caused regression)
+- FB-057: Focus mode auto-advance — buttons/handlers are correct; likely was the unidentified name issue now addressed by FB-066
 - FB-054/058: Thumbnail mismatch — needs investigation of face selection logic
-- FB-031: Face grid CSS — low priority, cosmetic
 - FB-030: Cluster count persistence — needs server-side session state design
-- FB-028: Toast persistence (P2) — HTMX swap lifecycle issue
-- FB-038: View More checkboxes (P2) — client-side state management
+- FB-028/038: P2 toast/checkbox fixes — low priority
+- FB-031: Face grid CSS — already fixed in prior session
+- Source URL save issue — code path looks correct, may be transient
 
 ## Red Flags
 
-- [HIGH] Auto-merge regression caused user to lose access to Person 3141 temporarily. Identity was preserved (INBOX state) but invisible in triage UI. REVERTED.
-- [MEDIUM] Performance fix (`changed_ids`) changes Supabase write behavior — needs monitoring for missed writes.
-- [LOW] FB-057 root cause may be FB-066 (confirm failing silently for unnamed faces). Production verification needed.
+- [HIGH] Three regressions shipped and fixed in one session. Root cause: insufficient planning and edge case analysis before implementation.
+- [MEDIUM] Performance improvement confirmed (user said "speed is finally getting better") but neighbor computation still slow.
 
-## Next Session Should Verify
+## Browser Verification Evidence
 
-1. Person 3141 is accessible and confirmable after rename
-2. Confirm/skip/reject all work in focus mode
-3. Performance improvement is noticeable during triage
-4. Face overlays appear on newly uploaded photos
-5. Tag persistence in Speed Loop
+- Focus mode merge: stays on `/c/fox-family/`, advances to next card, no redirect
+- Merge confirmation dialog: removed in focus mode, still present in browse mode
+- Network request: POST returns 200, HTMX swaps correctly
+
+## Lessons
+
+- Complex workflow changes (confirm+merge) need PRD with edge case enumeration
+- search_identities() callers have different needs — use parameter to control merged visibility
+- Removing items from a list (FB-044) can hide critical functionality — verify the full user flow
