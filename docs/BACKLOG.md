@@ -435,6 +435,10 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **DATA-005: Nightly R2 backup for critical JSON/NPY files** — Upload identities.json, photo_index.json, embeddings.npy, date_labels.json, photo_locations.json to R2 nightly. Closes "total data loss" risk. ~0.5 session. Source: PRD-027.
 - [x] **DATA-006: Shadow writes for all identities + photo_index** — DONE (Session 90b). Tables created, backfill script exists, save_registry() and save_photo_registry() fire-and-forget to Supabase. Backfill on production pending.
 - [x] **DATA-007: Full Postgres migration (triggered)** — Core tables created (identities, photos, photo_faces), data backfilled, DATA_SOURCE=postgres flipped on Railway. Session 93. Supplementary tables also migrated (date_labels, photo_locations, birth_year_estimates). Source: PRD-027.
+- [x] **DATA-024: Single source of truth — PRD-051 Phase 1** — Supabase is the only read source for identities and photos. JSON fallback removed. `_build_caches()` and `_load_photo_dimensions_cache()` refactored. DATA_SOURCE default "json"→"postgres". Session 112. Source: PRD-051, Lessons 56→150.
+- [ ] **DATA-025: PRD-051 Phase 2 — Wire remaining JSON reads** — proposals.json, annotations.json, relationships.json still read from JSON. Need Supabase-only read paths. Source: PRD-051 Phase 2.
+- [ ] **DATA-026: PRD-051 Phase 4 — Remove JSON code paths** — After 48h stability, remove dead JSON read code, remove identities.json/photo_index.json from REQUIRED_DATA_FILES. Source: PRD-051 Phase 4.
+- [ ] **FB-076: Community awareness on approve** — Approve endpoint doesn't update `identity_communities` table. Annotations don't store community context, making this non-trivial. Needs design decision on how to infer community. Source: Session 112 FB investigation.
 
 ### PRD Backlog — Session 91
 - [-] **NOTIFY-001: PRD-028 Contributor Notifications P0** — In-app notification center, bell icon, identity confirmation trigger, auto-clustering match trigger. Origin: Claude Benatar feedback ("how does someone know if there's a match?"). PRD: `docs/prds/028_contributor_notifications.md`.

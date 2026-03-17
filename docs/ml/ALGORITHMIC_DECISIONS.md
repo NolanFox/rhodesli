@@ -2647,3 +2647,14 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Alternatives rejected**: (1) Auto-merge at aggressive threshold — family resemblance FPs. (2) Cross-batch only against CONFIRMED — misses INBOX-to-INBOX. (3) Separate proposals store — existing proposals.json + ml_proposals table sufficient.
 - **Affects**: `core/cross_batch_matching.py`, `app/upload_routes.py`, `app/sync_routes.py`, `app/identity_routes.py`
 - **PRD**: docs/prds/049_cross_batch_clustering.md
+
+### AD-227: Single Source of Truth — Supabase-Only Read Paths (PRD-051 Phase 1)
+- **Date**: 2026-03-17 | **Session**: 112
+- **Context**: 8 documented data corruption incidents (Lessons 56→150) caused by three-source split-brain: local JSON, Railway volume JSON, Supabase. Session 111d: direct Supabase repair didn't propagate to Railway volume, leaving stale `merged_into` active for 30+ minutes.
+- **Decision**: Supabase is the single read source for identities and photos when DATA_SOURCE=postgres (new default). JSON fallback removed from read paths. JSON still written as backup but never read in production.
+- **Rationale**: Every fallback chain creates a hidden read path that can serve stale data. Failing loud (500 page) is better than silently serving wrong data. The JSON backup exists for manual recovery, not automatic fallback.
+- **Implementation**: `load_registry()` raises RuntimeError if Supabase unavailable (no JSON fallback). `load_photo_registry()` same. `_build_caches()` uses `load_photo_registry()` instead of `json.load(photo_index.json)`. `_load_photo_dimensions_cache()` reads from photo registry only.
+- **Rollback**: Set `DATA_SOURCE=json` on Railway. JSON code paths kept as dead code for 48h.
+- **Alternatives rejected**: (1) Keep fallback with logging — logging doesn't prevent data corruption. (2) Remove JSON writes entirely — too risky without stability period.
+- **Affects**: `app/main.py` (load_registry, load_photo_registry, _build_caches, _load_photo_dimensions_cache), `tests/conftest.py`
+- **PRD**: docs/prds/051_single_source_of_truth.md

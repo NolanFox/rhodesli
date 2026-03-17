@@ -80,5 +80,43 @@ Committed as `bad20ca`:
 - Status: DEFERRED to BACKLOG
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+
+### Data Path
+- [x] No `json.load()` calls on identities.json or photo_index.json in app/ read paths
+- [x] `_build_caches()` uses `load_photo_registry()` not `json.load()`
+- [x] `_load_photo_dimensions_cache()` uses photo registry not `json.load()`
+- [x] `load_registry()` always loads from Supabase (when DATA_SOURCE=postgres)
+- [x] `save_registry()` writes Supabase synchronously + JSON as backup
+- [x] `DATA_SOURCE` default changed from "json" to "postgres"
+- [x] JSON code paths still exist as rollback (not removed yet)
+
+### Performance (111f preserved)
+- [x] `app/perf_cache.py` still builds confirmed matrix — test_perf_cache_builds_matrix PASS
+- [x] `invalidate_neighbors_cache(identity_id=...)` preserved — test_save_registry_surgical_invalidation_preserved PASS
+- [x] `invalidate_cluster_review_caches(changed_ids=...)` preserved — same test PASS
+- [x] Production pages load correctly — browser verified
+
+### FB Items
+- [x] FB-031: Not a bug (no gear icon on /people page)
+- [x] FB-051: Filename search verified working in code
+- [x] FB-057: Focus auto-advance verified — from_focus=true wired
+- [x] FB-064: Override redirect verified — community prefix used
+- [x] FB-071: Approve confirms identity — already implemented (Session 107b)
+- [ ] FB-076: Deferred — annotations lack community context — BACKLOG FB-076
+
+### Standard
+- [ ] All admin actions persist across app restart (user-verified — ask user)
+- [x] All tests pass (app 4584 + ML 590)
+- [x] Deployed and browser verified (READ-ONLY)
+- [x] `git log origin/main..HEAD` is empty
+- [x] Assessment written with evidence
+- [x] BACKLOG updated (DATA-024 done, DATA-025/026 added, FB-076 added)
+- [x] ALGORITHMIC_DECISIONS updated (AD-227)
+
+### Harness Outputs
+- [x] docs/assessments/session-112-assessment.md
+- [x] docs/session_logs/session-112-log.md
+- [x] ROADMAP.md — v0.99.21, session entry
+- [x] CHANGELOG.md — v0.99.21 entry
+- [x] BACKLOG.md — DATA-024 done, DATA-025/026/FB-076 added
+- [x] ALGORITHMIC_DECISIONS.md — AD-227
