@@ -8,11 +8,11 @@ Prompt: docs/prompts/session-112-prompt.md
 - Pre-existing failures: test_sidebar_navigation[chromium] (e2e), test_confirmed_anchors_in_face_to_photo (data integrity)
 
 ## Phase Checklist
-- [ ] Phase 0: Audit + Plan
-- [ ] Phase 1: Identity Read Path — Supabase Only
-- [ ] Phase 2: Photo Read Path — Supabase Only
-- [ ] Phase 3: Clean Up DATA_SOURCE
-- [ ] Phase 4: FB Item Cleanup
+- [x] Phase 0: Audit + Plan
+- [x] Phase 1: Identity Read Path — Supabase Only
+- [x] Phase 2: Photo Read Path — Supabase Only
+- [x] Phase 3: Clean Up DATA_SOURCE
+- [x] Phase 4: FB Item Cleanup
 - [ ] Phase 5: Deploy + Exhaustive Verification
 - [ ] Phase 6: Harness Outputs
 
@@ -22,42 +22,62 @@ Prompt: docs/prompts/session-112-prompt.md
 
 | # | File:Line | What | Read/Write | Replacement |
 |---|-----------|------|------------|-------------|
-| 1 | main.py:1220 | `load_registry()` — DATA_SOURCE check, JSON fallback at 1233 | READ | Remove fallback, always use Supabase |
-| 2 | main.py:1301 | `save_registry()` — always writes JSON | WRITE | Keep as backup only (no change needed) |
-| 3 | main.py:1309 | `save_registry()` — DATA_SOURCE check for Supabase write | WRITE | Keep (already correct behavior) |
-| 4 | main.py:3487 | `load_photo_registry()` — DATA_SOURCE check, JSON fallback at 3497 | READ | Remove fallback, always use Supabase |
-| 5 | main.py:3522 | `save_photo_registry()` — always writes JSON | WRITE | Keep as backup only (no change needed) |
-| 6 | main.py:3528 | `save_photo_registry()` — DATA_SOURCE check | WRITE | Keep (already correct) |
-| 7 | main.py:3652 | `_load_photo_dimensions_cache()` — reads photo_index.json directly | READ | Use load_photo_registry() only |
-| 8 | main.py:3999 | `_build_caches()` — json.load(photo_index.json) | READ | Use load_photo_registry() only |
-| 9 | main.py:4223 | `_build_caches()` — PhotoRegistry.load(photo_index.json) for aliases | READ | Use already-loaded photo_registry |
+| 1 | main.py:1220 | `load_registry()` — DATA_SOURCE check, JSON fallback | READ | Remove fallback, always Supabase |
+| 2 | main.py:1301 | `save_registry()` — always writes JSON | WRITE | Keep as backup |
+| 3 | main.py:1309 | `save_registry()` — DATA_SOURCE check for Supabase | WRITE | Keep |
+| 4 | main.py:3487 | `load_photo_registry()` — DATA_SOURCE check, JSON fallback | READ | Remove fallback |
+| 5 | main.py:3522 | `save_photo_registry()` — always writes JSON | WRITE | Keep as backup |
+| 6 | main.py:3528 | `save_photo_registry()` — DATA_SOURCE check | WRITE | Keep |
+| 7 | main.py:3652 | `_load_photo_dimensions_cache()` — reads photo_index.json | READ | Use photo registry only |
+| 8 | main.py:3999 | `_build_caches()` — json.load(photo_index.json) | READ | Use photo registry only |
+| 9 | main.py:4223 | `_build_caches()` — PhotoRegistry.load(photo_index.json) | READ | Use already-loaded registry |
 
-### Plan
+## Phases 1-3: Implementation
 
-**Phase 1: Identity Read Path**
-- `load_registry()`: Remove JSON fallback. If DATA_SOURCE=postgres (default), always use Supabase. If fails, re-raise. Keep JSON fallback ONLY when DATA_SOURCE=json (rollback escape hatch).
-- `save_registry()`: No functional change needed — already does the right thing. Update docstring/comments.
-- Tests first, then implement.
+Committed as `bad20ca`:
+- `load_registry()`: Supabase-only when DATA_SOURCE=postgres, raises on failure
+- `load_photo_registry()`: Same treatment
+- `_build_caches()`: Removed json.load(photo_index.json) and PhotoRegistry.load(). Uses load_photo_registry() exclusively.
+- `_load_photo_dimensions_cache()`: Removed direct JSON read, uses photo registry only
+- DATA_SOURCE default: "json" → "postgres" with deprecation warning
+- `save_registry()` / `save_photo_registry()`: No functional changes, docstrings updated
+- Smart cache invalidation from Session 111f fully preserved
+- Test conftest: autouse fixture sets DATA_SOURCE=json for tests
+- 14 new tests in test_single_source_of_truth.py
+- 4584 app tests pass, 590 ML tests pass
 
-**Phase 2: Photo Read Path**
-- `load_photo_registry()`: Same treatment as load_registry.
-- `_load_photo_dimensions_cache()`: Remove direct json.load, use only load_photo_registry().
-- `_build_caches()`: Remove json.load(photo_index.json) at line 3999. Remove PhotoRegistry.load() at line 4223. Use already-loaded photo_registry variable. Build best_raw_entries from photo_registry instead of raw JSON.
-- Key risk: face ordering. Sort by face_id to keep deterministic.
-- Tests first, then implement.
+## Phase 4: FB Item Cleanup
 
-**Phase 3: DATA_SOURCE default**
-- Change default to "postgres"
-- Add deprecation warning for "json"
+### FB-031: Face grid broken on gear click — VERIFIED NOT PRESENT
+- No gear/settings icon on /people page (browse_routes.py:738-815)
+- People page is a simple grid, no expandable panels
+- Status: NOT A BUG (feature doesn't exist on /people)
 
-**Phase 4: FB fixes** — independent, after data path changes
+### FB-051: Photo filename search — VERIFIED WORKING
+- Search endpoint at identity_routes.py:870-1002 searches `_photo_cache` filenames
+- Results include community prefix (line 996)
+- Status: WORKING, needs production verification
 
-**Phase 5: Deploy + verify**
+### FB-057: Focus mode auto-advance — VERIFIED WORKING
+- `from_focus=true` passed from all focus action buttons (main.py:5582-5584)
+- Auto-advance handler at identity_routes.py:2121-2137 returns next card
+- Status: WORKING, needs production verification
 
-### perf_cache.py Analysis
-- Calls `load_registry()` and `get_face_data()` — both will work fine after changes
-- `mark_confirmed_dirty()` is called by `save_registry()` via `invalidate_cluster_review_caches()` — preserved
-- No JSON reads in perf_cache.py — safe
+### FB-064: Override merge redirect — VERIFIED WORKING
+- `nav_prefix = _nav_prefix_from_request(request)` at identity_routes.py:1948
+- All redirects use the extracted prefix
+- Status: WORKING
+
+### FB-071: Approve confirms identity — VERIFIED IMPLEMENTED
+- Auto-confirm checkbox at admin_routes.py:2366-2376
+- Promotes state to CONFIRMED when checkbox checked
+- Status: IMPLEMENTED (Session 107b)
+
+### FB-076: Community awareness on approve — DEFERRED
+- Approve endpoint doesn't update identity_communities
+- But identities get community association via photo-derived paths in upload/sync routes
+- Annotations don't store community context, making this non-trivial
+- Status: DEFERRED to BACKLOG
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
