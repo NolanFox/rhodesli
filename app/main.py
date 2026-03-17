@@ -3658,6 +3658,19 @@ def get_photo_dimensions(filename: str) -> tuple:
         cache = _load_photo_dimensions_cache()
         if basename in cache:
             return cache[basename]
+        # Fallback: check photo registry (Supabase-backed, has dimensions for new uploads)
+        try:
+            photo_reg = load_photo_registry()
+            for pid in photo_reg._photos:
+                path = photo_reg.get_photo_path(pid)
+                if path and Path(path).name == basename:
+                    w = photo_reg._photos[pid].get("width", 0)
+                    h = photo_reg._photos[pid].get("height", 0)
+                    if w > 0 and h > 0:
+                        cache[basename] = (w, h)
+                        return (w, h)
+        except Exception:
+            pass
         return (0, 0)
 
     # Local mode: read from filesystem
@@ -3799,6 +3812,7 @@ def _invalidate_all_caches():
     global _registry_cache, _photo_registry_cache
     global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
     global _face_data_cache
+    global _photo_dimensions_cache
     _photo_cache = None
     _face_to_photo_cache = None
     _photo_id_aliases = None
@@ -3807,6 +3821,7 @@ def _invalidate_all_caches():
     _registry_cache = None
     _photo_registry_cache = None
     _face_data_cache = None
+    _photo_dimensions_cache = None
     _community_photo_ids_cache = {}
     _community_identity_ids_cache = {}
     _community_ids_cache_ts = 0.0
