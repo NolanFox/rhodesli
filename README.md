@@ -103,3 +103,4 @@ pip install -r requirements-local.txt
 - **Framework**: Built with [FastHTML](https://fastht.ml/) for server-rendered HTML with HTMX interactivity.
 - **Styling**: Tailwind CSS with an "archival" aesthetic—muted tones, sepia accents, and typography that evokes historical documents.
 - **Philosophy**: No generative AI. We use forensic face matching (InsightFace/AdaFace) to surface connections, not fabricate them.
+
