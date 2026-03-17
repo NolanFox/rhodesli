@@ -60,6 +60,10 @@ def get(request=None, community_slug: str = "", page: int = 1):
     1. registry.list_proposed_matches() — user-submitted proposals
     2. proposals.json — ML clustering proposals (from cluster_new_faces + cross-batch)
     """
+    from urllib.parse import quote
+
+    from app.discoveries_routes import confidence_tier_label, confidence_tier_style
+
     try:
         registry = _main_mod.load_registry()
     except Exception:
@@ -86,7 +90,7 @@ def get(request=None, community_slug: str = "", page: int = 1):
                     "match_type": p.get("match_type", "clustering"),
                     "id": f"ml_{p.get('source_identity_id', '')[:8]}_{p.get('target_identity_id', '')[:8]}",
                     "author": "ML pipeline",
-                    "note": f"Distance: {p.get('distance', 0):.2f}" if p.get("distance") else "",
+                    "note": "",
                     "timestamp": proposals_data.get("generated_at", ""),
                 }
             )
@@ -112,11 +116,21 @@ def get(request=None, community_slug: str = "", page: int = 1):
     # Sort by distance (lowest first = best matches)
     proposals.sort(key=lambda p: p.get("distance", 999))
 
+    # Deduplicate by source identity — group proposals, keep best match per source
+    seen_sources = {}
+    deduped = []
+    for p in proposals:
+        src = p.get("source_id", "")
+        if src not in seen_sources:
+            seen_sources[src] = True
+            deduped.append(p)
+    proposals = deduped
+
     if not proposals:
         return Div(P("No pending proposals.", cls="text-slate-400 italic text-sm"), cls="text-center py-8")
 
-    # Paginate — show 50 per page to avoid slow renders
-    page_size = 50
+    # Paginate — show 30 per page (cards are larger now)
+    page_size = 30
     total = len(proposals)
     start = (page - 1) * page_size
     end = start + page_size
@@ -132,49 +146,182 @@ def get(request=None, community_slug: str = "", page: int = 1):
         target_id = p.get("target_id", "")
         source_name = ensure_utf8_display(p.get("source_name")) or f"Person {source_id[:8]}..."
         target_name = ensure_utf8_display(p.get("target_name")) or f"Person {target_id[:8]}..."
-        distance = p.get("distance")
-        tier = p.get("confidence_tier", "")
+        distance = p.get("distance", 999)
+        proposal_id = p.get("id", "")
 
-        # Confidence badge
-        tier_colors = {"very_high": "bg-red-500", "high": "bg-orange-500", "moderate": "bg-yellow-600"}
-        tier_labels = {"very_high": "Very High", "high": "High", "moderate": "Moderate"}
-        badge = None
-        if tier:
-            badge = Span(
-                tier_labels.get(tier, tier),
-                cls=f"px-1.5 py-0.5 text-xs rounded {tier_colors.get(tier, 'bg-slate-600')} text-white ml-2",
+        # Use discovery-style confidence display
+        tier_label = confidence_tier_label(distance)
+        badge_cls, ring_cls = confidence_tier_style(distance)
+
+        # Resolve face thumbnails via identity best face
+        source_identity = _main_mod._safe_get_identity(registry, source_id) if registry else None
+        target_identity = _main_mod._safe_get_identity(registry, target_id) if registry else None
+
+        source_face_ids = []
+        if source_identity:
+            source_face_ids = source_identity.get("anchor_ids", []) + source_identity.get("candidate_ids", [])
+        source_best = _main_mod.get_best_face_id(source_face_ids) if source_face_ids else None
+        source_crop = _main_mod.resolve_face_image_url(source_best, crop_files) if source_best else None
+
+        target_face_ids = []
+        if target_identity:
+            target_face_ids = target_identity.get("anchor_ids", []) + target_identity.get("candidate_ids", [])
+        target_best = _main_mod.get_best_face_id(target_face_ids) if target_face_ids else None
+        target_crop = _main_mod.resolve_face_image_url(target_best, crop_files) if target_best else None
+
+        # Face count info
+        source_face_count = len(source_face_ids)
+        target_face_count = len(target_face_ids)
+
+        # Face images — matching discovery card style
+        source_img_el = (
+            Img(
+                src=source_crop,
+                alt=source_name,
+                cls=f"w-24 h-24 rounded-lg object-cover {ring_cls}",
+                loading="lazy",
             )
-
-        items.append(
-            Div(
-                Div(
-                    Span(source_name, cls="text-sm font-medium text-slate-200"),
-                    Span(" → ", cls="text-slate-500 mx-1"),
-                    Span(target_name, cls="text-sm font-medium text-slate-200"),
-                    badge,
-                    Span(f"Dist: {distance:.2f}", cls="text-xs text-slate-500 ml-2") if distance else None,
-                    cls="flex items-center gap-1 flex-wrap",
-                ),
-                Div(
-                    Span(f"by {p.get('author', 'ML pipeline')}", cls="text-xs text-slate-500"),
-                    cls="mt-1",
-                ),
-                Div(
-                    A(
-                        "View Source",
-                        href=f"{nav_prefix}/person/{source_id}",
-                        cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
-                    ),
-                    A(
-                        "View Target",
-                        href=f"{nav_prefix}/person/{target_id}",
-                        cls="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 ml-1",
-                    ),
-                    cls="flex gap-2 mt-2",
-                ),
-                cls="p-3 bg-slate-800 border border-slate-700 rounded-lg mb-2",
+            if source_crop
+            else Div(
+                Span("?", cls="text-2xl text-slate-500"),
+                cls=f"w-24 h-24 rounded-lg bg-slate-700 flex items-center justify-center {ring_cls}",
             )
         )
+        source_img = A(
+            source_img_el,
+            href=f"{nav_prefix}/person/{source_id}",
+            cls="block cursor-pointer hover:opacity-80 transition-opacity",
+            title=f"View {source_name}",
+        )
+
+        target_img_el = (
+            Img(
+                src=target_crop,
+                alt=target_name,
+                cls="w-24 h-24 rounded-lg object-cover ring-2 ring-green-400/50",
+                loading="lazy",
+            )
+            if target_crop
+            else Div(
+                Span("?", cls="text-2xl text-slate-500"),
+                cls="w-24 h-24 rounded-lg bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50",
+            )
+        )
+        target_img = A(
+            target_img_el,
+            href=f"{nav_prefix}/person/{target_id}",
+            cls="block cursor-pointer hover:opacity-80 transition-opacity",
+            title=f"View {target_name}",
+        )
+
+        # Encode face ID for compare link
+        face_id_for_compare = quote(source_best, safe="") if source_best else ""
+
+        # Compare link
+        compare_link = (
+            A(
+                Span("Compare"),
+                href=f"{nav_prefix}/compare?face_id={face_id_for_compare}&person_id={target_id}",
+                cls="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-300 transition-colors",
+                title="Compare side-by-side",
+                data_testid="proposal-compare-link",
+            )
+            if face_id_for_compare
+            else None
+        )
+
+        # Action buttons: Confirm (merge), Not a match (reject)
+        action_buttons = Div(
+            Button(
+                Span(f"Confirm as {target_name}", cls="truncate max-w-[180px]"),
+                hx_post=f"{nav_prefix}/api/proposed-matches/{source_id}/{proposal_id}/accept",
+                hx_target=f"#proposal-card-{source_id[:12]}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px] max-w-full",
+                title=f"Merge into {target_name}",
+                data_testid="proposal-accept-btn",
+            ),
+            Button(
+                Span("Not a match"),
+                hx_post=f"{nav_prefix}/api/proposed-matches/{source_id}/{proposal_id}/reject",
+                hx_target=f"#proposal-card-{source_id[:12]}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-slate-600 text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors min-h-[44px]",
+                data_testid="proposal-reject-btn",
+            ),
+            cls="flex items-center justify-center gap-3 pb-4 px-4",
+        )
+
+        # Build the card — matching discovery card layout
+        card = Div(
+            # Face pair row: source -> confidence -> target
+            Div(
+                # Source face + name
+                Div(
+                    source_img,
+                    Div(
+                        A(
+                            source_name,
+                            href=f"{nav_prefix}/person/{source_id}",
+                            cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[150px] block",
+                            title=source_name,
+                        ),
+                        Span(
+                            f"{source_face_count} face{'s' if source_face_count != 1 else ''}",
+                            cls="text-xs text-slate-400",
+                        ),
+                        cls="mt-1.5 text-center",
+                    ),
+                    cls="flex flex-col items-center",
+                ),
+                # Confidence indicator + compare
+                Div(
+                    Svg(
+                        Path(
+                            stroke_linecap="round",
+                            stroke_linejoin="round",
+                            stroke_width="2",
+                            d="M14 5l7 7m0 0l-7 7m7-7H3",
+                        ),
+                        cls="w-6 h-6 text-slate-400",
+                        fill="none",
+                        stroke="currentColor",
+                        viewBox="0 0 24 24",
+                    ),
+                    Span(
+                        tier_label,
+                        cls=f"text-sm font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
+                        data_testid="proposal-confidence-label",
+                    ),
+                    compare_link,
+                    cls="flex flex-col items-center gap-1.5 px-4",
+                ),
+                # Target face + name
+                Div(
+                    target_img,
+                    Div(
+                        A(
+                            target_name,
+                            href=f"{nav_prefix}/person/{target_id}",
+                            cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[150px] block",
+                            title=target_name,
+                        ),
+                        Span(
+                            f"{target_face_count} face{'s' if target_face_count != 1 else ''}",
+                            cls="text-xs text-slate-400",
+                        ),
+                        cls="mt-1.5 text-center",
+                    ),
+                    cls="flex flex-col items-center",
+                ),
+                cls="flex items-center justify-center gap-2 py-4",
+            ),
+            # Action buttons
+            action_buttons,
+            id=f"proposal-card-{source_id[:12]}",
+            cls="bg-slate-800/80 border border-slate-700/50 rounded-xl hover:border-slate-600/50 transition-colors border-l-2 border-l-indigo-500 mb-3",
+        )
+        items.append(card)
 
     # Pagination controls
     pagination = None
@@ -206,28 +353,72 @@ def get(request=None, community_slug: str = "", page: int = 1):
 
 
 @rt("/api/proposed-matches/{source_id}/{proposal_id}/accept")
-def post(source_id: str, proposal_id: str, sess=None):
-    """Accept a proposed match — execute the merge."""
+def post(source_id: str, proposal_id: str, sess=None, request=None):
+    """Accept a proposed match — execute the merge.
+
+    Handles both user-submitted proposals (in registry) and ML proposals
+    (proposal_id starts with 'ml_', target extracted from ID).
+    """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    _community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(_community_slug)
+    community_slug_param = _community_slug if _community_slug != "rhodes" else ""
 
     try:
         registry = _main_mod.load_registry()
         photo_registry = _main_mod.load_photo_registry()
 
-        # Get the proposal to find target_id
-        identity = registry.get_identity(source_id)
-        proposal = None
-        for pm in identity.get("proposed_matches", []):
-            if pm["id"] == proposal_id:
-                proposal = pm
-                break
+        target_id = None
+        is_ml_proposal = proposal_id.startswith("ml_")
 
-        if not proposal:
-            return _main_mod.toast("Proposal not found.", "error")
-
-        target_id = proposal["target_id"]
+        if is_ml_proposal:
+            # ML proposal: extract target from proposals data
+            try:
+                proposals_data = _main_mod._load_proposals()
+                for p in proposals_data.get("proposals", []):
+                    if p.get("source_identity_id", "") == source_id:
+                        target_id = p.get("target_identity_id", "")
+                        break
+            except Exception:
+                pass
+            if not target_id:
+                # Try extracting target from proposal_id: ml_{source8}_{target8}
+                parts = proposal_id.split("_")
+                if len(parts) >= 3:
+                    target_prefix = parts[2]
+                    # Search registry for identity starting with this prefix
+                    for ident in registry.list_identities():
+                        if ident["identity_id"].startswith(target_prefix):
+                            target_id = ident["identity_id"]
+                            break
+            if not target_id:
+                return (
+                    Div(id=f"proposal-card-{source_id[:12]}"),
+                    Div(
+                        _main_mod.toast("Could not find target identity for this proposal.", "error"),
+                        hx_swap_oob="beforeend:#toast-container",
+                    ),
+                )
+        else:
+            # User-submitted proposal: look up in registry
+            identity = registry.get_identity(source_id)
+            proposal = None
+            for pm in identity.get("proposed_matches", []):
+                if pm["id"] == proposal_id:
+                    proposal = pm
+                    break
+            if not proposal:
+                return (
+                    Div(id=f"proposal-card-{source_id[:12]}"),
+                    Div(
+                        _main_mod.toast("Proposal not found.", "error"),
+                        hx_swap_oob="beforeend:#toast-container",
+                    ),
+                )
+            target_id = proposal["target_id"]
 
         # Execute the merge
         result = registry.merge_identities(
@@ -238,10 +429,20 @@ def post(source_id: str, proposal_id: str, sess=None):
         )
 
         if result["success"]:
-            registry.resolve_proposed_match(source_id, proposal_id, "accepted")
+            if not is_ml_proposal:
+                try:
+                    registry.resolve_proposed_match(source_id, proposal_id, "accepted")
+                except Exception:
+                    pass
             _main_mod.save_registry(registry)
+            target_name = result.get("target_name", "")
+            if not target_name:
+                target_identity = _main_mod._safe_get_identity(registry, target_id)
+                target_name = target_identity.get("name", target_id[:8]) if target_identity else target_id[:8]
             oob_toast = Div(
-                _main_mod.toast(f"Merged! {_main_mod._pl(result['faces_merged'], 'face')} combined.", "success"),
+                _main_mod.toast(
+                    f"Merged into {target_name}! {_main_mod._pl(result['faces_merged'], 'face')} combined.", "success"
+                ),
                 hx_swap_oob="beforeend:#toast-container",
             )
         else:
@@ -255,52 +456,44 @@ def post(source_id: str, proposal_id: str, sess=None):
             hx_swap_oob="beforeend:#toast-container",
         )
 
-    # Re-render the proposals list
-    proposals = registry.list_proposed_matches()
-    if not proposals:
-        return (
-            Div(
-                P("No pending proposals.", cls="text-slate-400 italic text-sm"),
-                cls="text-center py-8",
-                id="proposed-matches-list",
-            ),
-            oob_toast,
-        )
-
-    # Return a placeholder that triggers reload of the proposals list
+    # Remove the card and show toast (card disappears on accept)
     return (
-        Div(
-            P("Refreshing...", cls="text-slate-400"),
-            hx_get="/api/proposed-matches",
-            hx_trigger="load",
-            hx_swap="outerHTML",
-            id="proposed-matches-list",
-        ),
+        Div(id=f"proposal-card-{source_id[:12]}"),
         oob_toast,
     )
 
 
 @rt("/api/proposed-matches/{source_id}/{proposal_id}/reject")
-def post(source_id: str, proposal_id: str, sess=None):
+def post(source_id: str, proposal_id: str, sess=None, request=None):
     """Reject a proposed match."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
+    is_ml_proposal = proposal_id.startswith("ml_")
+
     try:
         registry = _main_mod.load_registry()
-        registry.resolve_proposed_match(source_id, proposal_id, "rejected")
-        _main_mod.save_registry(registry)
+        if not is_ml_proposal:
+            registry.resolve_proposed_match(source_id, proposal_id, "rejected")
+            _main_mod.save_registry(registry)
+        # For ML proposals: just remove the card (no persistent reject yet)
     except Exception as e:
-        return _main_mod.toast(f"Error: {e}", "error")
+        return (
+            Div(id=f"proposal-card-{source_id[:12]}"),
+            Div(
+                _main_mod.toast(f"Error: {e}", "error"),
+                hx_swap_oob="beforeend:#toast-container",
+            ),
+        )
 
-    # Re-render with reload trigger
-    return Div(
-        P("Refreshing...", cls="text-slate-400"),
-        hx_get="/api/proposed-matches",
-        hx_trigger="load",
-        hx_swap="outerHTML",
-        id="proposed-matches-list",
+    # Remove the card with a dismissal toast
+    return (
+        Div(id=f"proposal-card-{source_id[:12]}"),
+        Div(
+            _main_mod.toast("Proposal dismissed.", "info"),
+            hx_swap_oob="beforeend:#toast-container",
+        ),
     )
 
 

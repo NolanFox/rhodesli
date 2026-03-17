@@ -178,11 +178,14 @@ class TestProposedMatchesEndpoints:
     """Tests for the proposed matches API endpoints."""
 
     def test_proposed_matches_list(self, client, auth_disabled):
-        """GET /api/proposed-matches returns pending proposals."""
+        """GET /api/proposed-matches returns pending proposals with face thumbnails."""
         with (
             patch("app.main.load_registry") as mock_reg,
             patch("app.main.get_crop_files", return_value=set()),
             patch("app.main._load_proposals", return_value={"proposals": []}),
+            patch("app.main._safe_get_identity", return_value={"anchor_ids": ["face1"], "candidate_ids": []}),
+            patch("app.main.get_best_face_id", return_value="face1"),
+            patch("app.main.resolve_face_image_url", return_value="/static/crops/face1.jpg"),
         ):
             registry = MagicMock()
             registry.list_proposed_matches.return_value = [
@@ -196,6 +199,7 @@ class TestProposedMatchesEndpoints:
                     "author": "test@t.com",
                     "status": "pending",
                     "timestamp": "2026-01-01T00:00:00Z",
+                    "distance": 0.85,
                 },
             ]
             mock_reg.return_value = registry
@@ -204,7 +208,14 @@ class TestProposedMatchesEndpoints:
             assert resp.status_code == 200
             assert "Person A" in resp.text
             assert "Person B" in resp.text
-            assert "View Source" in resp.text
+            assert "proposal-card-" in resp.text
+            # Face thumbnails present
+            assert "/static/crops/face1.jpg" in resp.text
+            # Confidence tier shown (not raw distance)
+            assert "Good match" in resp.text or "Strong match" in resp.text
+            # Action buttons present
+            assert "proposal-accept-btn" in resp.text
+            assert "proposal-reject-btn" in resp.text
 
     def test_proposed_matches_empty(self, client, auth_disabled):
         """Empty proposals shows empty state."""
