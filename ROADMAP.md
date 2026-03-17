@@ -131,6 +131,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-03-17: **v0.99.19 — Session 111e**: Performance + Fix Sprint. TTL caches for suggestions (30s) and speed-run clusters (30s) with invalidation on every identity mutation. FB-077 confirm button inline error for unidentified persons. FB-075 face overlay fix via Supabase photo registry. Focus URL preservation (`hx-push-url=false`). FB-072 approval history section. 8 new tests. Deploy SUCCESS.
+
 - [x] 2026-03-17: **v0.99.18 — Session 111d**: Feedback Fix Sprint. FB-069 targeted Supabase writes (1 identity vs ~3400 per confirm). FB-065 merged identity search. FB-066 green checkmark error message. FB-036/037 tag save failure surfaced. FB-044 best match dedup. FB-048 Speed Loop view person link. FB-040 focus mode OOB fix. FB-070 CI fix. Face overlay cache invalidation for new uploads. FB-068 auto-merge attempted and REVERTED (needs PRD). 18 new tests. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.17 — Session 111c**: Proposals Page Rebuild + Triage Fixes. Proposals page rebuilt with face thumbnails, confidence tiers, action buttons. FB-039/055/067 fixed (bulk merge feedback, select-all, server-side search). Speed-run lazy-load enrichment (FB-025). Next Cluster button (FB-027). FB-068/069/070 documented. Deploy SUCCESS.

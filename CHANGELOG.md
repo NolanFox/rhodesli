@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.19] — 2026-03-17 (Session 111e: Performance + Fix Sprint)
+
+### Performance
+- **TTL cache for suggestions**: `_get_confirmed_identity_suggestions()` cached 30s — was iterating all ~3,400 identities and computing cosine distances on every call.
+- **TTL cache for speed-run clusters**: `_get_speed_run_clusters()` cached 30s — was recomputed on every request.
+- **Cache invalidation**: Both caches cleared on confirm/merge/skip/reject via `save_registry()`.
+
+### Fixed
+- **FB-077**: Confirm button on person page shows inline "Rename this person first" for unidentified persons (was silently failing with invisible toast).
+- **FB-075**: Face overlays on photos uploaded after local JSON sync — `_load_photo_dimensions_cache()` now also reads from Supabase-backed photo registry.
+- **Focus URL stripping**: `hx_push_url="false"` on all focus mode action buttons prevents URL parameter loss after confirm/skip/reject/merge.
+
+### Added
+- **FB-072**: Recently Approved section on `/admin/approvals` — last 20 approved items with timestamps and View links.
+- 8 new tests: cache correctness, invalidation, confirm UX.
+
 ## [v0.99.18] — 2026-03-17 (Session 111d: Feedback Fix Sprint)
 
 ### Fixed
