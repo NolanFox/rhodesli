@@ -295,3 +295,23 @@
 - **Severity:** P1 (UX — search broken for large sets)
 - **Context:** Searching for "3051" in New Matches shows "Showing first 150 review cards" but no results. The search only filters the 150 DOM-rendered cards — identities beyond card #150 are unfindable.
 - **Fix:** FIXED (Session 111c) — added server-side HTMX search endpoint `/api/review-search` that searches the full registry. Both client-side (instant) and server-side (complete) search now work together.
+
+### FB-068: "Confirm as {Name}" button doesn't actually merge — misleading (P0)
+- **Severity:** P0 (core workflow — BLOCKS TRIAGE)
+- **Context:** Identity card shows "Confirm as Edith Judith Gukaylo Burd" button. User clicks it expecting merge. Nothing visible happens — the card doesn't update, no toast, no feedback. The button text implies merge but the endpoint only confirms as new person (FB-052). The lack of ANY visible feedback makes it appear completely broken.
+- **Root cause:** Two issues: (1) confirm endpoint promotes to CONFIRMED but doesn't merge with the suggested match (FB-052 partial fix — label changed but action didn't), (2) the HTMX response may not be swapping correctly — needs debugging.
+- **Fix:** Must fix BOTH: make the button actually merge when a strong match exists, AND ensure HTMX swap provides visible feedback.
+- **BACKLOG:** UX-108 (existing, escalate to P0)
+
+### FB-069: Overall performance too slow to use (P0 — RECURRING)
+- **Severity:** P0 (performance — BLOCKS TRIAGE)
+- **Context:** User says "the performance is still garbage the site is too slow to use." Speed-run, confirm, merge, page loads all feel sluggish. Session 111c added lazy-load for enrichment panel (quick win) but root causes remain: (1) `save_registry()` writes ALL identities to Supabase on every confirm, (2) `_get_confirmed_identity_suggestions()` iterates all identities, (3) no caching of speed-run clusters, (4) TTL cache reloads.
+- **Fix:** Must address root causes: targeted Supabase writes, suggestion caching, cluster caching.
+- **BACKLOG:** PERF-008 (existing, escalate to P0)
+
+### FB-070: GitHub CI failure emails recurring (P1)
+- **Severity:** P1 (infrastructure — noise)
+- **Context:** User keeps getting failure emails from GitHub CI. Pre-existing test `test_partial_has_public_page_link` fails consistently. Every push triggers a failure email.
+- **Root cause:** Test assertion doesn't match current UI. The test was never updated when the UI changed.
+- **Fix:** Fix or skip the failing test so CI passes green.
+- **BACKLOG:** CI-002 (existing)
