@@ -920,6 +920,82 @@ def get(q: str = "", request=None):
     return Div(*items)
 
 
+@rt("/api/review-search")
+def get(q: str = "", request=None, sess=None):
+    """FB-067: Server-side search for review cards beyond the 150-card display limit.
+
+    Returns compact identity cards matching the query, including identities
+    not rendered in the initial page load.
+    """
+    if len(q.strip()) < 2:
+        return ""
+
+    nav_prefix = _nav_prefix_from_request(request)
+    try:
+        registry = _main_mod.load_registry()
+    except Exception:
+        return ""
+
+    results = registry.search_identities(q)
+    if not results:
+        return Div(P("No matching identities found.", cls="text-slate-400 text-sm italic p-2"))
+
+    crop_files = _main_mod.get_crop_files()
+    items = []
+    for r in results[:20]:
+        identity_id = r["identity_id"]
+        name = ensure_utf8_display(r["name"]) or f"Person {identity_id[:8]}"
+        state = r.get("state", "INBOX")
+        face_count = r.get("face_count", 0)
+        face_url = (
+            _main_mod.resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
+        )
+        thumb = (
+            Img(src=face_url, cls="w-10 h-10 rounded object-cover flex-shrink-0", loading="lazy")
+            if face_url
+            else Div(cls="w-10 h-10 rounded bg-slate-700 flex-shrink-0")
+        )
+        state_colors = {
+            "CONFIRMED": "text-emerald-400",
+            "PROPOSED": "text-indigo-400",
+            "INBOX": "text-slate-400",
+            "SKIPPED": "text-amber-400",
+        }
+        state_cls = state_colors.get(state, "text-slate-400")
+        section = _section_for_state(state)
+        href = f"{nav_prefix}/?section={section}&view=browse#identity-{identity_id}"
+        if state == "CONFIRMED" and not name.startswith("Unidentified"):
+            href = f"{nav_prefix}/person/{identity_id}"
+
+        items.append(
+            A(
+                thumb,
+                Div(
+                    Span(name, cls="text-sm text-white font-medium truncate"),
+                    Div(
+                        Span(state, cls=f"text-xs {state_cls}"),
+                        Span(f" · {face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-500"),
+                        cls="flex items-center gap-1",
+                    ),
+                    cls="flex flex-col min-w-0",
+                ),
+                href=href,
+                cls="flex items-center gap-3 px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors",
+            )
+        )
+
+    return Div(
+        Div(
+            Span(
+                f"Server search: {len(results)} match{'es' if len(results) != 1 else ''}", cls="text-xs text-slate-500"
+            ),
+            cls="px-1 mb-1",
+        ),
+        *items,
+        cls="space-y-1",
+    )
+
+
 @rt("/api/face/tag-search")
 def get(
     face_id: str,

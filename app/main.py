@@ -6052,7 +6052,8 @@ def render_to_review_section(
         nav_prefix=nav_prefix,
     )
     if view_mode == "browse":
-        # Client-side search filter for admin browse grid (Session 83a)
+        # Server-side search filter for admin browse grid (FB-067: works beyond 150-card limit)
+        _search_url = f"{nav_prefix}/api/review-search"
         search_filter = (
             Div(
                 Input(
@@ -6061,19 +6062,26 @@ def render_to_review_section(
                     cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg"
                     " text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
                     id="card-search-input",
+                    name="q",
+                    hx_get=_search_url,
+                    hx_trigger="keyup changed delay:200ms",
+                    hx_target="#review-search-results",
+                    hx_swap="innerHTML",
+                    autocomplete="off",
                 ),
+                Div(id="review-search-results", cls="mt-2"),
                 Script("""
                 document.addEventListener('input', function(e) {
                     if (e.target.id !== 'card-search-input') return;
-                    var q = e.target.value.toLowerCase().trim();
+                    var q = e.target.value.trim();
+                    // Also do client-side filtering for instant feedback on visible cards
                     var cards = document.querySelectorAll('.identity-card');
                     cards.forEach(function(card) {
                         var name = (card.getAttribute('data-name') || '').toLowerCase();
                         var id = card.id.replace('identity-', '');
                         var text = card.textContent.toLowerCase();
-                        var match = !q || name.indexOf(q) !== -1 || id.indexOf(q) !== -1 || text.indexOf(q) !== -1;
+                        var match = !q || name.indexOf(q.toLowerCase()) !== -1 || id.indexOf(q.toLowerCase()) !== -1 || text.indexOf(q.toLowerCase()) !== -1;
                         card.style.display = match ? '' : 'none';
-                        // Also hide the expansion panel after the card
                         var next = card.nextElementSibling;
                         if (next && next.classList.contains('expansion-panel')) {
                             next.style.display = match ? '' : 'none';
