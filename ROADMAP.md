@@ -54,7 +54,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
 
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
-- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, unblock face compare. 3-4 sessions. See `docs/architecture/ML_SERVICE.md`. **Agent team candidate** — spans Docker, API, app integration, tests across 4+ modules. See `docs/architecture/PARALLEL_AGENT_STRATEGY.md`.
+- [-] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (Extract skeleton) in Session 115. Phase 2-4 in Sessions 116-117. See `docs/architecture/ML_SERVICE.md`.
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
@@ -64,7 +64,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [-] 2026-03-09: COMMUNITY-002: Workspace switcher UX — admin dropdown to switch between communities (Session 95b)
 - [x] 2026-03-10: COMMUNITY-003: Cross-community identity tagging — photo-derived identity sets + auto-tag identity_communities (AD-213, AD-216, Session 96c + 96d)
 - [ ] COMMUNITY-004: "Shared person" indicator on identity cards — show when a person appears in multiple archives
-- [ ] COMMUNITY-017: Default community routing — root URL defaults to Rhodes, risks accidental uploads from external users. Needs neutral landing + community selector. Blocks wider sharing. See `docs/BACKLOG.md`
+- [-] 2026-03-18: COMMUNITY-017: Community routing safety hardening — audit all write routes, add safety tests (PRD-052, Session 115)
 - [x] 2026-03-10: COMMUNITY-005: Community-scoped sidebar counts — remove ML feature zeroing, enable Admin section for all communities (Session 96c + 96d proposals count)
 - [x] 2026-03-10: COMMUNITY-006: Community-aware discoveries — filter by photo-derived identity set (Session 96c + 96d cross-community badges)
 
