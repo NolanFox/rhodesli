@@ -53,15 +53,14 @@ DATA_DIR = PROJECT_ROOT / "data"
 
 # Essential data files that get committed
 DATA_FILES = [
-    "data/identities.json",
-    "data/photo_index.json",
-    # Critical for photo overlays and face cache parity on production.
+    # PRD-051 (Sessions 112-114): Structured data reads from Supabase.
+    # identities.json, photo_index.json, proposals.json removed — no longer
+    # needed on Railway volume for runtime reads.
+    # Embeddings remain required (binary format, not in Supabase).
     "data/embeddings.npy",
-    # NOTE: annotations.json is NOT pushed — it is production-origin data
-    # written by users. Pushing local copy would overwrite user submissions.
+    # Static reference data (no Supabase table, ML pipeline generated)
     "data/file_hashes.json",
     "data/golden_set.json",
-    "data/proposals.json",
     "data/date_labels.json",
     "data/photo_search_index.json",
 ]
@@ -69,9 +68,7 @@ DATA_FILES = [
 
 def run(cmd: list[str], check: bool = True, capture: bool = True) -> subprocess.CompletedProcess:
     """Run a shell command from the project root."""
-    return subprocess.run(
-        cmd, cwd=PROJECT_ROOT, check=check, capture_output=capture, text=True
-    )
+    return subprocess.run(cmd, cwd=PROJECT_ROOT, check=check, capture_output=capture, text=True)
 
 
 def check_data_integrity() -> bool:
@@ -101,9 +98,7 @@ def get_local_stats() -> dict:
             data = json.load(f)
         identities = data.get("identities", data)
         stats["identities"] = len(identities)
-        stats["confirmed"] = sum(
-            1 for v in identities.values() if v.get("state") == "CONFIRMED"
-        )
+        stats["confirmed"] = sum(1 for v in identities.values() if v.get("state") == "CONFIRMED")
 
     pi_path = DATA_DIR / "photo_index.json"
     if pi_path.exists():
@@ -117,8 +112,10 @@ def get_local_stats() -> dict:
 def _get_ssl_context():
     """Get SSL context, using certifi certs if available."""
     import ssl
+
     try:
         import certifi
+
         return ssl.create_default_context(cafile=certifi.where())
     except ImportError:
         return ssl.create_default_context()
@@ -306,13 +303,17 @@ def perform_merge() -> bool:
         if report["kept_production"] > 0 or report["production_only"] > 0:
             with open(local_path, "w") as f:
                 json.dump(merged_data, f, indent=2)
-            print(f"  Identities merged: {report['kept_production']} production wins, "
-                  f"{report['new_local']} new local, "
-                  f"{report['production_only']} production-only, "
-                  f"{report['kept_local']} unchanged")
+            print(
+                f"  Identities merged: {report['kept_production']} production wins, "
+                f"{report['new_local']} new local, "
+                f"{report['production_only']} production-only, "
+                f"{report['kept_local']} unchanged"
+            )
             merged_any = True
         else:
-            print(f"  Identities: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)")
+            print(
+                f"  Identities: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)"
+            )
 
     # Merge photo index
     if prod_photo_index:
@@ -325,13 +326,17 @@ def perform_merge() -> bool:
         if report["kept_production"] > 0 or report["production_only"] > 0:
             with open(local_path, "w") as f:
                 json.dump(merged_data, f, indent=2)
-            print(f"  Photo index merged: {report['kept_production']} production wins, "
-                  f"{report['new_local']} new local, "
-                  f"{report['production_only']} production-only, "
-                  f"{report['kept_local']} unchanged")
+            print(
+                f"  Photo index merged: {report['kept_production']} production wins, "
+                f"{report['new_local']} new local, "
+                f"{report['production_only']} production-only, "
+                f"{report['kept_local']} unchanged"
+            )
             merged_any = True
         else:
-            print(f"  Photo index: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)")
+            print(
+                f"  Photo index: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)"
+            )
 
     return merged_any
 
@@ -372,7 +377,8 @@ def main():
         help="Compare local vs remote without pushing",
     )
     parser.add_argument(
-        "-m", "--message",
+        "-m",
+        "--message",
         default=None,
         help="Custom commit message (default: auto-generated)",
     )
@@ -385,8 +391,8 @@ def main():
 
     print("=== Push to Production (merge-aware) ===\n")
 
-    # Step 1: Verify essential data files exist
-    missing = [f for f in DATA_FILES[:3] if not (PROJECT_ROOT / f).exists()]
+    # Step 1: Verify essential data files exist (embeddings.npy is the only required one)
+    missing = [f for f in DATA_FILES[:1] if not (PROJECT_ROOT / f).exists()]
     if missing:
         print(f"ERROR: Missing essential files: {missing}")
         sys.exit(1)

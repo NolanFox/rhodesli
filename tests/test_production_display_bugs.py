@@ -26,12 +26,13 @@ def test_embeddings_npy_in_required_data_files():
 
 
 def test_required_data_files_includes_all_essentials():
-    """All three essential data files must be synced."""
+    """Only embeddings.npy is required (PRD-051: structured data reads from Supabase)."""
     from scripts.init_railway_volume import REQUIRED_DATA_FILES
 
-    assert "identities.json" in REQUIRED_DATA_FILES
-    assert "photo_index.json" in REQUIRED_DATA_FILES
     assert "embeddings.npy" in REQUIRED_DATA_FILES
+    # PRD-051 Session 114: identities.json and photo_index.json no longer required
+    assert "identities.json" not in REQUIRED_DATA_FILES
+    assert "photo_index.json" not in REQUIRED_DATA_FILES
 
 
 def test_annotations_json_not_in_sync_files():
@@ -79,8 +80,7 @@ def test_get_face_quality_returns_quality_from_cache():
     }
     mock_face_to_photo = {"inbox_abc123": "photo123"}
 
-    with patch.object(m, "_photo_cache", mock_cache), \
-         patch.object(m, "_face_to_photo_cache", mock_face_to_photo):
+    with patch.object(m, "_photo_cache", mock_cache), patch.object(m, "_face_to_photo_cache", mock_face_to_photo):
         quality = m.get_face_quality("inbox_abc123")
         assert quality == 24.6
 
@@ -89,8 +89,7 @@ def test_get_face_quality_returns_none_for_unknown_face():
     """get_face_quality returns None for faces not in cache."""
     import app.main as m
 
-    with patch.object(m, "_photo_cache", {}), \
-         patch.object(m, "_face_to_photo_cache", {}):
+    with patch.object(m, "_photo_cache", {}), patch.object(m, "_face_to_photo_cache", {}):
         quality = m.get_face_quality("inbox_unknown")
         assert quality is None
 
@@ -106,6 +105,7 @@ def test_face_card_quality_fallback_for_inbox_crops():
     # Mock get_face_quality to return a non-zero value
     with patch.object(m, "get_face_quality", return_value=24.6):
         from fasthtml.common import to_xml
+
         card = m.face_card(
             face_id="inbox_abc123",
             crop_url="https://example.com/crops/inbox_abc123.jpg",
@@ -122,6 +122,7 @@ def test_face_card_quality_from_filename_when_available():
 
     with patch.object(m, "get_face_quality", return_value=None):
         from fasthtml.common import to_xml
+
         card = m.face_card(
             face_id="Image_001:face0",
             crop_url="/static/crops/Image_001_compress_21.98_0.jpg",
@@ -149,10 +150,13 @@ def test_identity_card_expanded_shows_crop_without_photo_id():
     }
 
     # crop URL resolves, but photo_id is None (stale embeddings scenario)
-    with patch.object(m, "resolve_face_image_url", return_value="https://r2.dev/crops/inbox_abc123.jpg"), \
-         patch.object(m, "get_photo_id_for_face", return_value=None), \
-         patch.object(m, "is_auth_enabled", return_value=False):
+    with (
+        patch.object(m, "resolve_face_image_url", return_value="https://r2.dev/crops/inbox_abc123.jpg"),
+        patch.object(m, "get_photo_id_for_face", return_value=None),
+        patch.object(m, "is_auth_enabled", return_value=False),
+    ):
         from fasthtml.common import to_xml
+
         card = m.identity_card_expanded(identity, crop_files=set(), is_admin=True)
         html = to_xml(card)
 

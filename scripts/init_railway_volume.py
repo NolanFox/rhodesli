@@ -58,21 +58,27 @@ else:
 # Bundle paths (where Docker image has the seed data)
 BUNDLED_DATA = Path("/app/data_bundle")
 
-# Critical files that MUST exist for valid initialization
-REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
+# Critical files that MUST exist for valid initialization.
+# PRD-051 Session 114: identities.json and photo_index.json removed — Supabase
+# is the single source of truth for structured data. Only embeddings.npy remains
+# as required (binary format, not in Supabase).
+REQUIRED_DATA_FILES = ["embeddings.npy"]
 
 # Optional files that should be synced from bundle when they differ.
 # These are NOT required for the app to start, but enhance functionality.
 #
-# AD-135: User-entered data is NO LONGER synced from bundle — it lives in
-# Supabase and is synced to JSON on app startup. Files excluded:
-#   - annotations.json — user submissions via web UI
-#   - relationships.json — user-entered and GEDCOM-derived relationships
-#   - gedcom_matches.json — user review decisions on GEDCOM matches
+# PRD-051 (Sessions 112-114): All structured data reads from Supabase.
+# JSON files excluded from sync — they exist on volume as backup only:
+#   - identities.json — Supabase identities table (PRD-051 Phase 1, Session 112)
+#   - photo_index.json — Supabase photos + photo_faces tables (PRD-051 Phase 1)
+#   - proposals.json — Supabase ml_proposals table (PRD-051 Phase 2A, Session 114)
+#   - annotations.json — Supabase annotations table (PRD-051 Phase 2B, Session 114)
+#   - relationships.json — Supabase relationships table (PRD-051 Phase 2B)
+#   - gedcom_matches.json — Supabase gedcom_matches table (PRD-051 Phase 2B)
 #   - ancestry_links.json — derived from user-reviewed GEDCOM matches
-# These are rebuilt from Supabase on every app start (see app/supabase_data.py).
+#
+# Remaining optional files are static reference data with no Supabase table.
 OPTIONAL_SYNC_FILES = [
-    "proposals.json",
     "surname_variants.json",
     "date_labels.json",
     "photo_search_index.json",

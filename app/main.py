@@ -778,6 +778,20 @@ async def startup_event():
     # AD-162: Clean up temp files from previous runs to prevent disk exhaustion.
     _startup_disk_cleanup(data_path)
 
+    # PRD-051: Verify Supabase connection on startup (Session 114).
+    # Log warning if unavailable — JSON backup exists for emergency recovery.
+    try:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if sb:
+            sb.table("identities").select("identity_id").limit(1).execute()
+            logging.info("Supabase health check: OK")
+        else:
+            logging.warning("Supabase health check: client unavailable — JSON backup mode")
+    except Exception as e:
+        logging.warning(f"Supabase health check failed: {e} — JSON backup available")
+
     # AD-135: Sync user data from Supabase on startup.
     # This ensures deploys can never lose user-entered data —
     # even if the Docker bundle has stale JSON, Supabase has the truth.
