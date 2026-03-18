@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt .
+# Install Python dependencies (ML-only, not the web app's requirements)
+COPY ml_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download buffalo_l model at build time (~300MB)
@@ -20,10 +20,8 @@ fa = FaceAnalysis(name='buffalo_l', allowed_modules=['detection', 'recognition']
 fa.prepare(ctx_id=-1, det_size=(640, 640)); \
 print('buffalo_l model downloaded successfully')"
 
-# Copy application code
-# When rootDirectory=ml_service, build context is ml_service/
-# COPY . . puts files at /app/ (config.py, main.py, detect.py, etc.)
-COPY . /app/ml_service/
+# Copy ML service application code only
+COPY ml_service/__init__.py ml_service/config.py ml_service/main.py ml_service/detect.py /app/ml_service/
 
 # Performance tuning for single-threaded inference
 ENV OMP_NUM_THREADS=1
