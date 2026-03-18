@@ -14,6 +14,78 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 113: Audit Logging + Embeddings Sync (2026-03-17) — v0.99.22
+- AUDIT-001: 22 audit_log calls across identity_routes, match_facecompare_routes, cluster_review_routes. New app/audit.py helper.
+- Production embeddings synced (2957 entries, +85 from web uploads)
+- Harry Fox cluster verification: 3/4 Dayton faces closer to Albert than naturalization form ground truth. CLUSTER-QUALITY-001 logged.
+- 16 new tests, deploy SUCCESS
+
+## Session 112: Single Source of Truth — PRD-051 Phase 1 (2026-03-17) — v0.99.21
+- Supabase is the only read source for identities and photos — no JSON fallback
+- `_build_caches()` refactored to remove `json.load(photo_index.json)`
+- `_load_photo_dimensions_cache()` simplified
+- DATA_SOURCE default "json"→"postgres"
+- JSON writes kept as backup only
+- 14 new tests, 4584 app tests pass, deploy SUCCESS
+
+## Session 111f: Performance Overhaul (2026-03-17) — v0.99.20
+- Vectorized confirmed identity distance via precomputed L2-normalized embedding matrix (`app/perf_cache.py`)
+- Smart cache invalidation — surgical per-identity instead of full flush
+- Focus mode 124ms (was 3-5s), Speed-run 171ms, Neighbors API 142ms
+- 23 new tests, deploy SUCCESS
+
+## Session 111e: Performance + Fix Sprint (2026-03-17) — v0.99.19
+- TTL caches for suggestions (30s) and speed-run clusters (30s) with invalidation
+- FB-077 confirm button inline error, FB-075 face overlay fix, focus URL preservation
+- FB-072 approval history section
+- 8 new tests, deploy SUCCESS
+
+## Session 111d: Feedback Fix Sprint (2026-03-17) — v0.99.18
+- FB-069 targeted Supabase writes (1 identity vs ~3400 per confirm)
+- FB-065 merged identity search, FB-066 green checkmark error, FB-036/037 tag save failure
+- FB-044 best match dedup, FB-048 Speed Loop view person link, FB-040 focus mode OOB fix
+- FB-068 auto-merge REVERTED (needs PRD). 18 new tests, deploy SUCCESS
+
+## Session 111c: Proposals Page Rebuild + Triage Fixes (2026-03-17) — v0.99.17
+- Proposals page rebuilt with face thumbnails, confidence tiers, action buttons
+- FB-039/055/067 fixed, speed-run lazy-load enrichment, Next Cluster button
+- Deploy SUCCESS
+
+## Session 111/111b: Community Prefix Sweep + UX Fix Sprint (2026-03-16) — v0.99.16
+- 80+ community prefix gaps fixed across 11 route files (3 parallel worktree subagents)
+- Regression test `test_community_prefix_audit.py` prevents future gaps
+- FB-026 suggestions sorted by embedding distance, FB-052 confirm merge context, FB-059 discovery skeleton
+- COMMUNITY-015 substantially resolved. 4519 tests pass, deploy SUCCESS
+
+## Session 109/109b: Cross-Batch Clustering — PRD-049 (2026-03-16) — v0.99.15
+- `core/cross_batch_matching.py` compares new faces against ALL existing identities
+- Wired into upload pipeline, admin recluster, and post-confirm
+- 1355 cross-batch matches, 1130 proposals written to production
+- Recluster Supabase writes, community filter fix, CI green
+- AD-226. 20 tests, deploy SUCCESS
+
+## Session 108b: Bug Fix Sprint (2026-03-16) — v0.99.13
+- FB-013 Compare button on person page fixed, FB-014 "View Photo" link prominent, FB-015 sidebar photo search
+- Collage override NameError fix
+- 8 new tests, deploy SUCCESS
+
+## Session 108: Gap Closure + Data Integrity Fix + Deploy (2026-03-16) — v0.99.12
+- 25 unpushed commits deployed (Sessions 106b-107b)
+- 13 orphan faces repaired (9 James Fields + 4 pre-existing)
+- Startup orphan detection auto-repair, embeddings sync endpoint, data health endpoint
+- Push verification in stop-gate.sh. Lessons 146-148. 8 new tests, deploy SUCCESS
+
+## Session 107b: Community Middleware Audit + Approvals UX (2026-03-16) — v0.99.11
+- Community explicit flag, upload community override, approval timestamps, auto-confirm
+- Annotation provenance, person page name provenance, pending upload auto-expiry
+- Hook system redesign (3 modes). 23 new tests
+
+## Session 106b: Triage Fix Sprint (2026-03-16) — v0.99.10
+- 7 P1 feedback items fixed from Session 106 user triage
+- FB-007 photo filename search, FB-001 match view community prefix, FB-002 source photo thumbnails
+- FB-003 View Photo/Person links, FB-006 Same Person loading state, FB-008 reciprocal rank indicator
+- FB-011 prominent compare context. 11 new tests, deploy SUCCESS
+
 ## Session 105/105b: Write-Through Data Integrity (2026-03-15) — v0.99.9
 - P0: DATA_SOURCE split-brain — write paths diverged from read paths causing face tagging, photo visibility, identity sync failures
 - Write-through architecture (AD-225): Supabase writes synchronous with strict=True, JSON always-written backup

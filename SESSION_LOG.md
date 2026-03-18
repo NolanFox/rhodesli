@@ -1,30 +1,26 @@
-# Session 92 Log — Ship Everything
+# Session 114 Log — Data Stability Completion + Harness Gaps + Test Performance
 
-## Mission: Close All Gaps, Deploy, Verify, Harden
-## Started: 2026-03-08
-## Version: v0.95.0
-## Predecessor: Session 91b (v0.94.1)
+**Date:** 2026-03-17
+**Predecessor:** [Session 113](docs/assessments/session-113-assessment.md)
+**Prompt:** [docs/prompts/session-114-prompt.md](docs/prompts/session-114-prompt.md)
+**Version:** v0.99.23 (target)
 
-Full session log archived at: `docs/session_logs/session-92-log.md`
+## Baseline
+- Tests: 3146 passed, 6 skipped in 86.72s
+- Both test suites: app + ML
 
-### Summary
-- 6 parallel worktree tracks, all merged cleanly
-- Observability shipped (Sentry + PostHog)
-- Bell icon sidebar fix
-- Email notifications via Resend
-- 10 P1/P2 UX fixes (D1-D10) with full test coverage (D6-D9 added in gap closure)
-- Leon's Restaurant → Asheville, NC (AD-210, GEDCOM business owner context)
-- Full Gemini API call logging (prompt_text, full_response, gedcom_context)
-- Multi-pass + active learning + NL query foundations
-- CI/CD (.github/workflows/test.yml)
-- 3 PRDs + 3 architecture docs
-- Supabase migration: 3,483 rows across 8 tables
-- Postgres read paths with JSON fallback
-- Notification E2E verified in production browser
-- Test speed optimized: 72s → 22s (under 30s target)
-- Leon's re-analyzed in production: now shows "Asheville, North Carolina" (high confidence)
+## Phase Checklist
+- [ ] Phase 0: Harness Gap Closure (SESSION_HISTORY backfill, SESSION_LOG reset, stop hook improvement)
+- [ ] Phase 1: PRD-051 Phase 2A — Proposals to Supabase reads
+- [ ] Phase 2: PRD-051 Phase 2B — Annotations + Relationships + GEDCOM matches
+- [ ] Phase 3: PRD-051 Phase 4 — Deploy pipeline cleanup + DATA-009 reconciliation
+- [ ] Phase 4: Test performance (profile, fix flaky test, optimize)
+- [ ] Phase 5: Deploy + production verification
+- [ ] Phase 6: Harness outputs (assessment, changelog, roadmap)
 
-### Test Results
-- App: 3717 passed, 4 skipped, 0 failures, 0 xfails
-- ML: 566 passed
-- make test-fast: 22s (target <30s met)
+## Progress Notes
+
+### Phase 0
+- SESSION_HISTORY.md backfilled with Sessions 106b-113 (12 entries)
+- SESSION_LOG.md reset for Session 114
+- Stop hook: added SESSION_HISTORY check (advisory, exit 0)

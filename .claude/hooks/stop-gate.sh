@@ -77,6 +77,11 @@ if [ -n "$DIRTY" ]; then
     exit 2
 fi
 
+# Check SESSION_HISTORY.md was updated with this session (advisory, not blocking)
+if ! grep -q "Session ${S}" docs/roadmap/SESSION_HISTORY.md 2>/dev/null; then
+    echo "WARNING: Session ${S} not found in docs/roadmap/SESSION_HISTORY.md — update before ending." >&2
+fi
+
 # Session 108 (Lesson 148): Warn if commits haven't been pushed to remote.
 # Don't block (might be intentional for worktree/parallel sessions), but warn clearly.
 AHEAD=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
