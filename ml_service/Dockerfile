@@ -21,12 +21,15 @@ fa.prepare(ctx_id=-1, det_size=(640, 640)); \
 print('buffalo_l model downloaded successfully')"
 
 # Copy application code
-COPY . .
+# When rootDirectory=ml_service, build context is ml_service/
+# COPY . . puts files at /app/ (config.py, main.py, detect.py, etc.)
+COPY . /app/ml_service/
 
 # Performance tuning for single-threaded inference
 ENV OMP_NUM_THREADS=1
 ENV OPENBLAS_NUM_THREADS=1
 ENV EXECUTION_ENVIRONMENT=railway_ml_service
+ENV PYTHONPATH=/app
 
 EXPOSE 5002
 
