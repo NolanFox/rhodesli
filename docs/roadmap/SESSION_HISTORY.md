@@ -14,6 +14,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 115: Community Routing Safety + ML Service Extraction Phase 1 (2026-03-18) — v0.99.25
+- PRD-052: Community routing audit — 120+ POST routes classified, 95+ admin-guarded, 27 safety tests
+- TOOLS-002 Phase 1: Standalone FastAPI ML service (detect endpoint, Dockerfile, bearer auth, 9 tests)
+- AD-228: ml_runs provenance schema (execution_environment, model_versions, community_id, scope_filter)
+- core/ml_run_logger.py: Standardized ML run tracking with MLRunContext context manager, 18 tests
+- core/ml_client.py: Async HTTP client stub for web app → ML service (Session 116 wiring)
+- Supabase migration applied: 4 new columns on ml_runs, verified end-to-end
+- 47 new tests (27 + 9 + 18), 3214 app tests pass, deploy SUCCESS
+
 ## Session 114: Data Stability Completion (2026-03-17) — v0.99.23
 - PRD-051 Phase 2: proposals, annotations, relationships, GEDCOM matches all read from Supabase with TTL caches
 - PRD-051 Phase 4: deploy pipeline cleaned (REQUIRED_DATA_FILES = embeddings.npy only), Supabase health check at startup

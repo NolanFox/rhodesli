@@ -46,9 +46,9 @@
 
 ## Phase 3 Migration Status
 - SQL file: `scripts/migrations/alter_ml_runs_add_provenance.sql`
-- **NOT YET APPLIED** — Supabase direct DB connection failed (pooler hostname issue)
-- Must run in Supabase SQL Editor
-- Logger handles missing columns gracefully (returns None)
+- **APPLIED** — Connected via psycopg2 with explicit params (DATABASE_URL password contains `@` breaking urlparse)
+- All 13 columns confirmed in information_schema
+- End-to-end verified: insert test row with provenance → read back → delete. All fields populated correctly.
 
 ## Test Counts
 - Phase 0 baseline: 3167 passed
@@ -58,6 +58,10 @@
 - ML service: 9 passed (separate suite)
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] git log origin/main..HEAD is empty
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed (all 12 checks PASS)
+- [x] git log origin/main..HEAD is empty (after final push)
+- [x] Supabase migration applied and verified end-to-end
+- [x] BACKLOG.md updated (COMMUNITY-017 → HARDENED)
+- [x] SESSION_HISTORY.md updated (Session 115 entry)
+- [x] tasks/todo.md updated (TOOLS-002, PERF-001)

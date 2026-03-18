@@ -17,7 +17,7 @@ Last updated: 2026-03-09 (Post-Session 93, planning)
 - [x] main.py refactored: 26,100 → 9,346 lines (Session 91b)
 
 ## Immediate (Housekeeping)
-- [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
+- [x] PERF-001: Test speed <30s — achieved 28s (Session 114)
 - [ ] OPS-001: Custom SMTP for branded email (code ready, needs RESEND_API_KEY config)
 - [ ] BACKLOG-FLAKY-001: 8 order-dependent tests marked xfail (route loading order)
 - [ ] ML-100: Merge or close stranded session-82c/gemini-rerun branch (14 commits)
@@ -26,8 +26,8 @@ Last updated: 2026-03-09 (Post-Session 93, planning)
 See `docs/prds/034_standalone_tool_suite.md` for master plan.
 
 - [ ] TOOLS-001: Date + Location Estimator Standalone — engine ready, zero blockers, 2-3 sessions
-- [ ] TOOLS-002: ML Service Extraction — remove laptop dependency, automate pipeline, 3-4 sessions
-      See `docs/architecture/ML_SERVICE.md` — pipeline runs only 6x in 4 months (all manual)
+- [-] TOOLS-002: ML Service Extraction — Phase 1 (skeleton) DONE (Session 115). Phase 2 (deploy+wire) next.
+      See `docs/architecture/ML_SERVICE.md` + `ml_service/` directory
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002, 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, 3-5 sessions
 

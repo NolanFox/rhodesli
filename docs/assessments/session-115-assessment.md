@@ -22,7 +22,7 @@
 
 ## Deferred
 
-- **Supabase schema migration**: The `alter_ml_runs_add_provenance.sql` migration could not be run programmatically (psycopg2 pooler hostname issue). Must be applied manually via Supabase SQL Editor. BACKLOG: not needed — this is a one-time manual step.
+- ~~**Supabase schema migration**~~: APPLIED. psycopg2 connected via explicit params (DATABASE_URL password contains `@` which broke urlparse). All 4 columns verified with real Supabase insert/read/delete test.
 
 - **ML service Railway deployment**: The ML service exists locally but is NOT deployed to Railway. This is by design — Session 116 scope. BACKLOG: TOOLS-002 Phase 2.
 
@@ -40,11 +40,10 @@
 
 ## Next Session Should Verify
 
-1. **Run the ml_runs schema migration** in Supabase SQL Editor — SQL file ready at `scripts/migrations/alter_ml_runs_add_provenance.sql`
-2. **Deploy the ML service to Railway** as a separate internal service (TOOLS-002 Phase 2)
-3. **Wire web app to ML service** via `ML_SERVICE_URL` env var and `core/ml_client.py`
-4. **Verify deploy completed** — check Railway dashboard for SUCCESS status with DOCKERFILE builder
-5. **Browser verify** the new deploy shows no regressions
+1. **Deploy the ML service to Railway** as a separate internal service (TOOLS-002 Phase 2)
+2. **Wire web app to ML service** via `ML_SERVICE_URL` env var and `core/ml_client.py`
+3. **Verify community routing** on production — upload path, Fox Family, tools all working
+4. **Browser verify** the new deploy shows no regressions
 
 ## Metrics
 
