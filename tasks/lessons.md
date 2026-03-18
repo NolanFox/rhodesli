@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-150 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+152 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -145,6 +145,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 147 | **Local-production data divergence — 7th occurrence, embeddings sync-back missing** |
 | 149 | **NEVER click action buttons on production — browser automation is READ-ONLY. Session 111d: clicked Merge, corrupted two identities** |
 | 150 | **Three-source data (local JSON, Railway volume, Supabase) causes recurring split-brain — 8th occurrence. Direct Supabase fix doesn't update Railway volume cache. Need single source of truth.** |
+| 151 | **Never cache failure states that disable security/scoping boundaries — cached None for 120s leaked cross-community data** |
+| 152 | **Deployed Supabase queries must match actual schema — mock tests don't catch column mismatches (see also 105)** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
