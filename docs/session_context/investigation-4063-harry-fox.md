@@ -8,7 +8,7 @@
 
 ## Summary
 
-Person 4063 is an unidentified Fox family member with 3 beach photos from the Charles Fox Dayton Ohio Collection. The investigation confirmed Person 4063 is neither Albert Fox nor Harry Fox, and revealed that Harry Fox's own cluster has quality concerns (3 of 4 Dayton faces are closer to Albert than to Harry's ground truth). Several platform gaps were uncovered, most critically the absence of audit logging for identity mutations.
+Person 4063 is an unidentified Fox family member with 3 beach photos from the Charles Fox Dayton Ohio Collection. Initial investigation (Session 113) concluded 4063 was neither Albert nor Harry. **Revised analysis (post-Session 114):** Person 4063's cluster is likely contaminated — the beach close-up with Esther (P2) is probably Albert Fox (same Florida trip as definitive Albert+Esther bench photo), while the other two faces (P1, P3) appearing alongside Albert are likely Harry Fox. Confidence is moderate — the Fox siblings genuinely looked very similar. Harry Fox cluster quality concern (CLUSTER-QUALITY-001) resolved: Dayton photos ARE Harry, ML distances misleading due to sibling resemblance.
 
 ---
 
@@ -192,19 +192,33 @@ This explains the weak internal distances: P1-P3 is 1.24 and P2-P3 is 1.25 — t
 
 ### What This Means for CLUSTER-QUALITY-001
 
-The Session 113 finding (3/4 Harry Dayton faces closer to Albert) now has a plausible explanation: **some of those faces may actually BE Albert, not Harry.** The ML was arguably correct — the cluster was contaminated with both brothers. The biological resemblance between Albert and Harry Fox at similar ages is genuine and confirmed by David Fox. This is not an ML failure but a fundamental limitation of appearance-only face matching for closely related people.
+The Session 113 finding (3/4 Harry Dayton faces closer to Albert) is **resolved as an expected biological limitation**, not a cluster quality issue. The Dayton photos ARE Harry — Nolan can tell by dating the photos via Charlie's age and comparing against known Albert photos from the same era. The ML distances are misleading because Harry and Albert genuinely looked nearly identical at certain life stages. The cluster is correct; the distance metric simply lacks discriminative power for this sibling pair.
+
+### Disambiguation Methods Used (Human vs ML)
+
+| Method | Source | What it resolved |
+|--------|--------|-----------------|
+| Couple body language | David Fox + Nolan | Beach photo with Esther = Albert (couple, not brother-in-law) |
+| Same-trip inference | Nolan | Beach photo same Florida trip as Hialeah bench photo (definitive Albert+Esther) |
+| Age-dating via Charlie | Nolan | Dayton photos datable by Charlie's age → compare against Albert at that era → doesn't match → Harry |
+| Process of elimination | Nolan | If Albert is the other man in the white t-shirt, the shirtless man can't also be Albert |
+| Family testimony | David Fox | "Resembles Poppy" confirms the siblings looked alike; "those are my grandparents" for bench photo |
+
+**None of these methods are available to the embedding model.** The ML is measuring geometric face similarity, which genuinely cannot distinguish these siblings. This is not a bug to fix but a boundary to design around.
 
 ### ML Lessons
 
-1. **Family resemblance is a real ML boundary.** Father/son and sibling pairs can be indistinguishable by embedding distance alone. This is a known limitation of face recognition (not a bug).
-2. **Contextual reasoning breaks ties that ML cannot.** The identification here required: same-trip inference, couple vs sibling body language, clothing matching across photos, process of elimination (if A is in the photo, the other person isn't A).
-3. **Contaminated clusters are expected for close relatives.** The system should surface "close family" as a distinct ML signal, not just "same person."
-4. **David Fox's confirmation method:** gut reaction ("Resembles Poppy") = high-signal even when ML distances are ambiguous. Community knowledge is irreplaceable ground truth.
+1. **Family resemblance is a real ML boundary.** Sibling pairs can be indistinguishable by embedding distance alone. This is a known limitation of face recognition, not a bug.
+2. **Temporal context is the primary human disambiguation tool.** Dating a photo via the age of other people in it (Charlie's age → era → what Albert looked like then) is a reasoning chain ML cannot replicate with embeddings alone.
+3. **Co-occurrence is high-signal.** If person A is confirmed in a photo, the other person cannot also be A. The system should make co-occurrence data more prominent during triage.
+4. **Community knowledge provides irreplaceable ground truth.** David Fox's gut reaction ("Resembles Poppy") is high-signal even when ML distances are ambiguous. But note: David wouldn't know his uncle Harry well — his value was specifically about identifying Albert (his grandfather).
+5. **"Close family" should be a distinct ML signal.** When embedding distance is ambiguous between confirmed relatives, surface this as "close family match" rather than forcing a binary same/different decision.
 
 ### Action Items
-- [ ] Split Person 4063: P2 → merge into Albert Fox; P1+P3 → new identity (likely Harry Fox, pending further confirmation)
-- [ ] Update CLUSTER-QUALITY-001: resolved — contaminated cluster, not ML quality issue
+- [ ] Split Person 4063: P2 (beach close-up with Esther) → merge into Albert Fox; P1+P3 → new identity (likely Harry Fox)
+- [x] CLUSTER-QUALITY-001: resolved — Dayton photos ARE Harry. ML distances misleading due to sibling resemblance, not cluster contamination.
 - [ ] Consider: "close family match" indicator in the UI when embedding distance is ambiguous between confirmed relatives
+- [ ] Consider: age-estimation context in triage UI — show estimated era for each photo alongside face crops to help disambiguation
 
 ## Breadcrumbs
 
