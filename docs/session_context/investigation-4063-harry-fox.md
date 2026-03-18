@@ -287,19 +287,97 @@ This is a compelling case for multi-signal fusion: InsightFace alone would rejec
 ### UX Gap Discovered
 - **No cluster-splitting UI exists.** Cannot break up a contaminated cluster (e.g., Person 4063 with faces of both Albert and Harry). Must use detach + manual reassignment. This was a core Google Photos pain point that motivated building Rhodesli. Needs PRD.
 
+---
+
+## Gemini 3.1 Pro Comparison WITH Face Coordinates (2026-03-18)
+
+The first Gemini 3.1 Pro run (without bounding boxes) produced a WRONG result — it analyzed the wrong person in the group photo and said "different." Adding face bounding box coordinates fixed this.
+
+### Comparison 1: Person 2491 vs Harry Fox — `very_likely_same` (HIGH)
+
+**gemini_api_calls id: `0c85dcc3-ac29-4085-91d5-9e9cfd6f33e7`**
+
+Key findings:
+- Broad nasal bridge, wide bi-zygomatic breadth, and hooded upper eyelids consistent across ~30-year age gap
+- Protruding ears consistent
+- Co-occurrence with Albert+Irving eliminates sibling confusion
+- Age gap: Photo A ~55yo, Photos B/C ~25yo
+- "Skeletal features like the broad nasal bridge, wide bi-zygomatic breadth, and heavy upper eyelids are consistent across all three photos."
+
+### Comparison 2: Person 4063 (remaining 2 faces) vs Harry Fox — `unlikely_same` (HIGH)
+
+**gemini_api_calls id: `dff31bd8-0f7d-4706-bdbe-d63d80ea5007`**
+
+Key findings:
+- Narrower jawline, more aquiline nose, more elongated cranial shape — inconsistent with Harry
+- Estimated age ~70 in beach photos (older than Harry in naturalization form)
+- ML distance (1.35-1.40) corroborates visual discrepancies
+- "Person 4063 is likely a distinct, unidentified individual rather than Harry or Albert."
+
+### Model Comparison Table (All Gemini Runs)
+
+| Run | Model | Bbox? | Subject | Verdict | Confidence | DB ID |
+|-----|-------|-------|---------|---------|------------|-------|
+| 1 | gemini-2.5-pro | No | 2491 vs Harry | very_likely_same | high | (first logged call) |
+| 2 | gemini-3.1-pro-preview | No | 2491 vs Harry | different | high | `6596a8cc` |
+| 3 | gemini-3.1-pro-preview | YES | 2491 vs Harry | very_likely_same | high | `0c85dcc3` |
+| 4 | gemini-3.1-pro-preview | YES | 4063 vs Harry | unlikely_same | high | `dff31bd8` |
+
+**Key lesson:** Run 2 was WRONG because Gemini analyzed the wrong person in the group photo. Bounding box coordinates are MANDATORY for group photos. Run 3 (with bbox) and Run 1 (2.5 Pro) agree: Person 2491 is very likely Harry Fox.
+
+---
+
+## Data Changes Executed (2026-03-18)
+
+### Person 4063 Cluster Split
+- **Detached:** face `inbox_d8dabd3ca5e5` (beach close-up with Esther, photo `dbc16e6d973cc900`) from Person 4063
+- **Merged into:** Albert Fox (85546ebf) — now has 163 anchors
+- **Person 4063 remaining:** 2 anchors (`inbox_d9c2bb8d5fa6`, `inbox_fb4b65ccecfe`)
+- **Audit log:** cluster_split_detach + cluster_split_receive, actor=nolanfox@gmail.com
+- **Reason:** Same Florida beach trip as definitive Albert+Esther Hialeah bench photo. David Fox confirmed.
+
+### Pending Actions (for Nolan to execute in app)
+- [ ] Confirm Person 2491 as Harry Fox (merge into Harry Fox identity d74cb556)
+- [ ] Tag Hialeah bench photo (`21e2734bdd25dc53`) faces as Albert Fox + Esther Burd Fox
+- [ ] Person 4063 (remaining 2 faces) stays unidentified — Gemini says unlikely Harry, likely a distinct older individual
+
+---
+
+## UX Gaps Discovered During Investigation
+
+| ID | Gap | Priority | First Occurrence |
+|----|-----|----------|-----------------|
+| UX-130 | No cluster-splitting UI | P1 | Person 4063 split (had to use Supabase script). Core Google Photos pain point. |
+| UX-131 | No in-app identity comparison tool | P2 | Person 2491 vs Harry (required CLI scripts + manual embedding sync) |
+| — | Face coordinates mandatory for Gemini group photo analysis | — | Run 2 analyzed wrong person without bbox. See memory `feedback_gemini_face_coordinates.md` |
+| — | Always use latest Gemini model | — | Run 1 fell back to 2.5 Pro silently. See memory `feedback_gemini_model_version.md` |
+
 ## Breadcrumbs
 
 - AUDIT-001: `ROADMAP.md` (Near-Term -- Infrastructure) — DONE (Session 113)
 - PRD-051: `docs/prds/` — Phases 1+2+4 DONE (Sessions 112-114)
 - CLUSTER-QUALITY-001: `docs/BACKLOG.md` — RESOLVED
-- Harry Fox identity: d74cb556-6d44-4288-ade3-1cc8fa2b45a6
-- Person 4063 identity: f1fa51b2-323c-493c-8bdd-f3f99254eb72
-- Person 2491 identity: b38fef24-858d-4b5f-95c0-c52c09a111f0
-- Albert Fox identity: 85546ebf-75b9-4971-a9d4-b2ce2271bc19
-- David Fox conversation: 2026-03-17, iMessage
-- Gemini API call: gemini_api_calls table, 2026-03-18, call_type="face_comparison"
-- Hialeah bench photo: `21e2734bdd25dc53`
-- Beach photo (same trip): `dbc16e6d973cc900`
-- Person 2491 photo with Albert+Irving: `91b6f6b296e93a60`
-- Cluster splitting UX gap: memory `feedback_cluster_splitting_ux.md`
-- Comparison workflow feedback: memory `feedback_comparison_workflow.md`
+- Identity IDs:
+  - Harry Fox: `d74cb556-6d44-4288-ade3-1cc8fa2b45a6`
+  - Person 4063: `f1fa51b2-323c-493c-8bdd-f3f99254eb72`
+  - Person 2491: `b38fef24-858d-4b5f-95c0-c52c09a111f0`
+  - Albert Fox: `85546ebf-75b9-4971-a9d4-b2ce2271bc19`
+- Photo IDs:
+  - Hialeah bench (Albert+Esther): `21e2734bdd25dc53`
+  - Beach with 4063+Esther (now Albert): `dbc16e6d973cc900`
+  - Person 2491 with Albert+Irving: `91b6f6b296e93a60`
+  - Person 2491 photo 2: `02068_p_13akf5twbc3600.jpg`
+  - Person 4063 beach group: `01843_p_13akf5twbc3222.jpg`
+  - Person 4063 three men: `01775_p_13akf5twbc1766.jpg`
+- Gemini API calls (gemini_api_calls table):
+  - 2491 vs Harry (2.5 Pro, no bbox): first logged call
+  - 2491 vs Harry (3.1 Pro, no bbox): `6596a8cc-c639-4523-aa9c-2ee27613a5a8`
+  - 2491 vs Harry (3.1 Pro, WITH bbox): `0c85dcc3-ac29-4085-91d5-9e9cfd6f33e7`
+  - 4063 vs Harry (3.1 Pro, WITH bbox): `dff31bd8-0f7d-4706-bdbe-d63d80ea5007`
+- David Fox conversation: 2026-03-17, iMessage (screenshots in session context)
+- Memory files:
+  - `feedback_cluster_splitting_ux.md` — UX-130
+  - `feedback_comparison_workflow.md` — UX-131
+  - `feedback_gemini_face_coordinates.md` — bbox mandatory
+  - `feedback_gemini_model_version.md` — always latest model
+  - `project_fox_sibling_resemblance.md` — ML case study
