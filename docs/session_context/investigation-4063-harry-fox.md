@@ -388,17 +388,22 @@ Key findings:
 
 ## Data Changes Executed (2026-03-18)
 
-### Person 4063 Cluster Split
-- **Detached:** face `inbox_d8dabd3ca5e5` (beach close-up with Esther, photo `dbc16e6d973cc900`) from Person 4063
+### Person 4063 Cluster Split (CORRECTED)
+
+**First attempt (WRONG):** Detached `inbox_d8dabd3ca5e5` (photo 01612) instead of `inbox_fb4b65ccecfe` (photo 01775 = `dbc16e6d973cc900`). Root cause: assumed face-to-photo mapping from description without verifying SHA256 hash. See memory `feedback_face_photo_mapping.md`.
+
+**Corrected split:**
+- **Detached:** face `inbox_fb4b65ccecfe` (photo 01775 = `dbc16e6d973cc900`, beach with Esther) from Person 4063
 - **Merged into:** Albert Fox (85546ebf) — now has 163 anchors
-- **Person 4063 remaining:** 2 anchors (`inbox_d9c2bb8d5fa6`, `inbox_fb4b65ccecfe`)
-- **Audit log:** cluster_split_detach + cluster_split_receive, actor=nolanfox@gmail.com
+- **Person 4063 remaining:** 2 anchors (`inbox_d9c2bb8d5fa6` photo 01843, `inbox_d8dabd3ca5e5` photo 01612)
+- **Both `identities` AND `identity_overrides` tables updated** (learned the hard way — see implementation details above)
+- **Audit log:** cluster_split_detach + cluster_split_receive + cluster_split_fix
 - **Reason:** Same Florida beach trip as definitive Albert+Esther Hialeah bench photo. David Fox confirmed.
 
 ### Pending Actions (for Nolan to execute in app)
 - [ ] Confirm Person 2491 as Harry Fox (merge into Harry Fox identity d74cb556)
 - [ ] Tag Hialeah bench photo (`21e2734bdd25dc53`) faces as Albert Fox + Esther Burd Fox
-- [ ] Person 4063 (remaining 2 faces) stays unidentified — Gemini says unlikely Harry, likely a distinct older individual
+- [x] Person 4063 (remaining 2 faces) stays unidentified — confirmed NOT Harry by both ML distance and Gemini 3.1 Pro
 
 ---
 
@@ -435,8 +440,45 @@ Key findings:
   - 4063 vs Harry (3.1 Pro, WITH bbox): `dff31bd8-0f7d-4706-bdbe-d63d80ea5007`
 - David Fox conversation: 2026-03-17, iMessage (screenshots in session context)
 - Memory files:
-  - `feedback_cluster_splitting_ux.md` — UX-130
+  - `feedback_cluster_splitting_ux.md` — UX-130 + implementation difficulties
   - `feedback_comparison_workflow.md` — UX-131
-  - `feedback_gemini_face_coordinates.md` — bbox mandatory
+  - `feedback_gemini_face_coordinates.md` — bbox mandatory for group photos
   - `feedback_gemini_model_version.md` — always latest model
+  - `feedback_face_photo_mapping.md` — verify SHA256 hash before mutations
   - `project_fox_sibling_resemblance.md` — ML case study
+
+---
+
+## Final Comparison: Person 4063 vs All 7 Harry Fox Faces (2026-03-18)
+
+After splitting the cluster and confirming Person 2491 as likely Harry, we have 7 faces believed to be Harry Fox. Final check: could Person 4063 be Harry after all?
+
+### Distance Matrix
+
+```
+                           H-nat     H1      H2      H3      H4      H5      H6
+                          (nat)   (01811) (01632) (01810) (02071) (2491a) (2491b)
+P1 (01843 beach group)   1.395   1.318   1.341   1.269   1.261   1.386   1.378
+P2 (01612 close-up)      1.346   1.362   1.393   1.303   1.370   1.364   1.383
+```
+
+### Analysis
+
+- **No matches under 1.10** — all distances are 1.26-1.40, well outside same-person range
+- **Closest pair:** P1 ↔ H4 at 1.261 (still very far)
+- **Harry internal range:** 0.629-1.432 (mean 1.162) — even Harry's loosest pair is comparable to 4063's closest
+- **Person 4063 internal:** P1-P2 = 0.889 (tight — these two ARE the same person)
+
+### Conclusion
+
+**Person 4063 is definitively NOT Harry Fox.** All 14 cross-distances (2 × 7) are above 1.26. Combined with Gemini 3.1 Pro's "unlikely_same" (high confidence) verdict, there is no evidence supporting a Harry identification. Person 4063 remains an unidentified Fox family member — possibly a more distant relative or family friend who appeared in beach photos with the Fox siblings.
+
+### Complete Investigation Status
+
+| Entity | Status | Evidence |
+|--------|--------|----------|
+| Person 2491 | **Very likely Harry Fox** | Gemini 3.1 Pro "very_likely_same" (high), family testimony, co-occurrence with Albert+Irving |
+| Person 4063 P3 (beach with Esther) | **Confirmed Albert Fox** | Split to Albert. Same Florida trip as Hialeah bench photo. David Fox confirmed. |
+| Person 4063 P1+P2 (remaining) | **Unidentified** | NOT Harry (all distances >1.26, Gemini "unlikely_same"). NOT Albert (co-occurrence). Unknown Fox family member. |
+| Harry Fox cluster (Dayton) | **Correct** | CLUSTER-QUALITY-001 resolved. ML distances closer to Albert due to sibling resemblance, not mislabeling. |
+| Albert/Harry sibling resemblance | **Confirmed biological limitation** | David Fox confirms. ML embeddings cannot distinguish. Temporal context + co-occurrence are the only disambiguation tools. |
