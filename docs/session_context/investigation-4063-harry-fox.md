@@ -215,12 +215,71 @@ The Session 113 finding (3/4 Harry Dayton faces closer to Albert) is **resolved 
 5. **"Close family" should be a distinct ML signal.** When embedding distance is ambiguous between confirmed relatives, surface this as "close family match" rather than forcing a binary same/different decision.
 
 ### Action Items
-- [ ] Split Person 4063: P2 (beach close-up with Esther, photo `dbc16e6d973cc900`) → merge into Albert Fox; P1+P3 → keep as separate cluster (likely Harry Fox, pending further research)
+- [x] Split Person 4063: P2 (beach close-up with Esther, photo `dbc16e6d973cc900`) → merged into Albert Fox; P1+P3 → remain as Person 4063 (likely not Harry per Gemini 3.1 Pro)
 - [x] CLUSTER-QUALITY-001: resolved — Dayton photos ARE Harry. ML distances misleading due to sibling resemblance, not cluster contamination.
 - [ ] Tag Hialeah bench photo (`21e2734bdd25dc53`) faces as Albert Fox + Esther Burd Fox
+- [ ] Confirm Person 2491 as Harry Fox (merge into Harry Fox identity d74cb556)
 - [ ] Consider: "close family match" indicator in the UI when embedding distance is ambiguous between confirmed relatives
 - [ ] Consider: age-estimation context in triage UI — show estimated era for each photo alongside face crops to help disambiguation
 - [ ] **CRITICAL UX GAP**: No way to split clusters in the app. Need PRD for cluster-splitting workflow. See memory: `feedback_cluster_splitting_ux.md`
+
+---
+
+## Cluster Split Implementation Details (for future UX development)
+
+### What Was Required to Split Person 4063
+
+**Operation:** Move face `inbox_d8dabd3ca5e5` from Person 4063 → Albert Fox
+
+**Tables that needed updating (discovered through debugging):**
+1. `identities` table — remove face from Person 4063's `anchor_ids`, add to Albert Fox's `anchor_ids`
+2. `identity_overrides` table — **CRITICAL: this shadow table overrides the identities table on every `load_from_postgres()` call.** If not updated, the split is silently reverted. Lines 1914-1919 in `core/registry.py`.
+3. `audit_log` table — log both detach and receive operations
+
+**Tables that did NOT need updating (but should be verified):**
+- `photo_faces` — face→photo mapping unchanged (face still belongs to same photo)
+- `identity_communities` — no row for Person 4063
+- `ml_proposals` — no active proposals for this identity
+
+### Time to diagnose: ~30 minutes
+
+**Timeline:**
+1. Updated `identities` table — verified correct via direct Supabase query
+2. Production page still showed 3 faces (expected: 2)
+3. Waited for TTL cache expiry (120s) — still 3
+4. Waited for deploy restart — still 3
+5. Tried incognito browser — still 3
+6. Simulated `load_from_postgres()` locally — returned 3!
+7. Found `identity_overrides` table was overwriting with old 3-anchor data
+8. Updated `identity_overrides` — verified `load_from_postgres()` now returns 2
+9. Waited for production TTL — page now shows 2
+
+### Root Cause: `identity_overrides` Shadow Table
+
+`load_from_postgres()` in `core/registry.py` has a TWO-PHASE load:
+```python
+# Phase 1: Load from identities table (correct: 2 anchors)
+for row in all_rows:
+    registry._identities[identity_id] = identity
+
+# Phase 2: Apply overrides (OVERWRITES with old 3-anchor data!)
+overrides = load_identity_overrides_from_supabase() or {}
+for identity_id, override in overrides.items():
+    merged = dict(registry._identities.get(identity_id, {}))
+    merged.update(override)  # <-- This clobbers anchor_ids
+    registry._identities[identity_id] = merged
+```
+
+**Any programmatic identity mutation MUST update both `identities` AND `identity_overrides` tables.** The in-app `save_registry()` path handles this correctly (it writes to both). Direct Supabase writes to `identities` only are silently overridden.
+
+### Implications for Cluster Splitting UX (UX-130)
+
+When building the cluster split feature:
+1. Use `save_registry()` path, NOT direct Supabase writes
+2. Or create a dedicated `/api/admin/identity/split` endpoint that handles both tables + cache invalidation + audit logging
+3. The `identity_overrides` table should probably be deprecated — it creates a shadow write problem. Consider: merge all overrides into `identities` table and remove the override layer.
+4. Need a `/api/admin/cache/invalidate` endpoint for forced cache refresh without deploy
+5. All split operations need: backup before, audit log, verification after
 
 ---
 
