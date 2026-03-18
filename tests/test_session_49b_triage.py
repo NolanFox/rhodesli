@@ -13,6 +13,7 @@ from unittest.mock import patch
 from datetime import datetime, timezone, timedelta
 
 
+@pytest.mark.slow
 class TestSortLinksPreserveViewMode:
     """Sort controls must include &view=browse when rendered in browse mode.
 
@@ -25,23 +26,23 @@ class TestSortLinksPreserveViewMode:
         response = client.get("/?section=to_review&view=browse")
         assert response.status_code == 200
         # Each sort link should preserve view=browse
-        assert "sort_by=name&amp;view=browse" in response.text or \
-               "sort_by=name&view=browse" in response.text, \
-               "Sort link for 'name' missing view=browse"
-        assert "sort_by=faces&amp;view=browse" in response.text or \
-               "sort_by=faces&view=browse" in response.text, \
-               "Sort link for 'faces' missing view=browse"
-        assert "sort_by=newest&amp;view=browse" in response.text or \
-               "sort_by=newest&view=browse" in response.text, \
-               "Sort link for 'newest' missing view=browse"
+        assert "sort_by=name&amp;view=browse" in response.text or "sort_by=name&view=browse" in response.text, (
+            "Sort link for 'name' missing view=browse"
+        )
+        assert "sort_by=faces&amp;view=browse" in response.text or "sort_by=faces&view=browse" in response.text, (
+            "Sort link for 'faces' missing view=browse"
+        )
+        assert "sort_by=newest&amp;view=browse" in response.text or "sort_by=newest&view=browse" in response.text, (
+            "Sort link for 'newest' missing view=browse"
+        )
 
     def test_sort_links_include_view_browse_in_confirmed_section(self, client, auth_disabled):
         """Confirmed section sort links must also include view=browse."""
         response = client.get("/?section=confirmed")
         assert response.status_code == 200
-        assert "sort_by=name&amp;view=browse" in response.text or \
-               "sort_by=name&view=browse" in response.text, \
-               "Confirmed sort link for 'name' missing view=browse"
+        assert "sort_by=name&amp;view=browse" in response.text or "sort_by=name&view=browse" in response.text, (
+            "Confirmed sort link for 'name' missing view=browse"
+        )
 
     def test_sort_by_actually_changes_order_in_browse_mode(self, client, auth_disabled):
         """Different sort_by values should produce different orderings."""
@@ -123,7 +124,7 @@ class TestUploadStatusTimeout:
             (inbox_dir / "test-job.log").write_text(
                 "ImportError: No module named 'insightface'\n"
                 "Traceback (most recent call last):\n"
-                "  File \"/app/core/ingest_inbox.py\", line 10\n"
+                '  File "/app/core/ingest_inbox.py", line 10\n'
             )
             response = client.get("/upload/status/test-job")
 

@@ -730,9 +730,11 @@ class TestInitRailwayVolumeSyncList:
         assert "ancestry_links.json" not in OPTIONAL_SYNC_FILES
 
     def test_ml_data_still_in_sync_list(self):
-        """ML-generated files must still be in sync list."""
+        """Static reference files must still be in sync list (PRD-051 Session 114)."""
         from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
 
-        assert "proposals.json" in OPTIONAL_SYNC_FILES
+        # proposals.json removed — now reads from Supabase ml_proposals table
+        assert "proposals.json" not in OPTIONAL_SYNC_FILES
+        # Static reference data remains
         assert "date_labels.json" in OPTIONAL_SYNC_FILES
         assert "birth_year_estimates.json" in OPTIONAL_SYNC_FILES

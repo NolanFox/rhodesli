@@ -232,6 +232,7 @@ class TestAdminReclusterEndpoint:
         response = client.post("/api/admin/recluster")
         assert response.status_code in (401, 403)
 
+    @pytest.mark.slow
     @pytest.mark.timeout(120)
     def test_recluster_dry_run_returns_results(self, client, admin_user):
         """Recluster dry run returns proposal and group counts.

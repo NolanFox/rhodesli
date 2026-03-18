@@ -313,6 +313,7 @@ class TestFindCrossBatchMatches:
 class TestReclusterIncludesCrossBatch:
     """Test that recluster endpoint returns cross_batch_matches."""
 
+    @pytest.mark.slow
     @pytest.mark.timeout(120)
     def test_recluster_response_has_cross_batch_key(self, client, admin_user):
         """Recluster dry run should include cross_batch_matches in response.
