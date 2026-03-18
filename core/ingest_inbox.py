@@ -383,6 +383,88 @@ def get_hybrid_models():
     return _hybrid_detector, _hybrid_recognizer
 
 
+def detect_faces(filepath: Path, prefer_hybrid: bool = False) -> tuple:
+    """Detect faces using ML service with automatic local fallback.
+
+    Tries the external ML service first (if ML_SERVICE_URL is configured).
+    On any failure (timeout, connection error, format error), falls back
+    to local InsightFace detection via extract_faces().
+
+    Returns same tuple as extract_faces(): (faces_list, width, height)
+
+    Feature flag: ML_SERVICE_URL env var. Empty/unset = local only.
+    Added Session 117 (TOOLS-002 Phase 3).
+    """
+    import numpy as np
+
+    from core.ml_client import get_ml_client
+    from core.pfe import create_pfe
+
+    client = get_ml_client()
+
+    if client.is_configured:
+        try:
+            import asyncio
+            import time
+
+            start = time.time()
+
+            # Run async client in sync context (background thread)
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Already in async context — can't use run_until_complete
+                    # Fall back to local detection
+                    raise RuntimeError("Cannot call async from running loop")
+                result = loop.run_until_complete(client.detect_and_embed(str(filepath)))
+            except RuntimeError:
+                # No event loop or loop is running — create new one
+                result = asyncio.run(client.detect_and_embed(str(filepath)))
+
+            elapsed_ms = int((time.time() - start) * 1000)
+
+            # Transform ML service response to PFE format
+            faces = []
+            w, h = result.get("image_size", [0, 0])
+            image_shape = (h, w)
+
+            for face_data_raw in result.get("faces", []):
+                embedding = np.array(face_data_raw["embedding"], dtype=np.float32)
+                raw_norm = float(np.linalg.norm(embedding))
+                # Normalize embedding (same as InsightFace's normed_embedding)
+                normed = embedding / raw_norm if raw_norm > 0 else embedding
+
+                face_data = {
+                    "filename": filepath.name,
+                    "filepath": str(filepath),
+                    "embedding": normed,
+                    "quality": raw_norm,
+                    "det_score": float(face_data_raw["det_score"]),
+                    "bbox": face_data_raw["bbox"],
+                }
+
+                pfe = create_pfe(face_data, image_shape)
+                faces.append(pfe)
+
+            logging.info(
+                "[ml-service] %d face(s) in %dms from %s",
+                len(faces),
+                elapsed_ms,
+                filepath.name,
+            )
+            return faces, w, h
+
+        except Exception as e:
+            logging.warning(
+                "[ml-service] Failed for %s, falling back to local: %s",
+                filepath.name,
+                e,
+            )
+
+    # Fallback: local InsightFace detection
+    return extract_faces(filepath, prefer_hybrid=prefer_hybrid)
+
+
 def extract_faces(filepath: Path, prefer_hybrid: bool = False) -> list[dict]:
     """
     Extract faces from an image using InsightFace.
@@ -694,8 +776,8 @@ def process_single_image(
                 "existing_face_ids": existing["face_ids"],
             }
 
-    # Extract faces
-    result = extract_faces(filepath, prefer_hybrid=prefer_hybrid)
+    # Extract faces — tries ML service first, falls back to local (Session 117)
+    result = detect_faces(filepath, prefer_hybrid=prefer_hybrid)
     if isinstance(result, tuple):
         faces, image_width, image_height = result
     else:
