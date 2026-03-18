@@ -10794,6 +10794,8 @@ _annotations_cache = engagement_routes._annotations_cache
 # Backward-compat: relationship route helpers accessed via _main_mod
 _gedcom_matches_cache = relationship_routes._gedcom_matches_cache
 _gedcom_face_links_cache = relationship_routes._gedcom_face_links_cache
+invalidate_gedcom_matches_cache = relationship_routes.invalidate_gedcom_matches_cache
+invalidate_relationship_cache = relationship_routes.invalidate_relationship_cache
 
 # Backward-compat: page route cache variables accessed by tests via main_mod
 _comparison_results_cache = page_routes._comparison_results_cache

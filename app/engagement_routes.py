@@ -505,20 +505,27 @@ def post(source_id: str, proposal_id: str, sess=None, request=None):
 
 
 _annotations_cache = None
+_annotations_cache_ts: float = 0.0
+_ANNOTATIONS_CACHE_TTL: float = 120.0
 
 
 def _load_annotations() -> dict:
-    """Load annotations from data file.
+    """Load annotations.
 
-    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
-    When DATA_SOURCE=json (default), loads from JSON file.
+    When DATA_SOURCE=postgres (default), reads from Supabase annotations table.
+    When DATA_SOURCE=json (rollback), reads from annotations.json.
+    Uses a 120-second TTL cache (PRD-051 Phase 2, Session 114).
 
-    Returns default empty structure if file is missing or corrupted,
-    so the server never crashes on bad annotation data.
+    Returns default empty structure if source is unavailable.
     """
-    global _annotations_cache
-    if _annotations_cache is not None:
+    global _annotations_cache, _annotations_cache_ts
+    import time as _time
+
+    now = _time.time()
+    if _annotations_cache is not None and (now - _annotations_cache_ts) < _ANNOTATIONS_CACHE_TTL:
         return _annotations_cache
+
+    default = {"schema_version": 1, "annotations": {}}
 
     if _main_mod.DATA_SOURCE == "postgres":
         try:
@@ -528,13 +535,17 @@ def _load_annotations() -> dict:
             if result is not None:
                 logging.info(f"Loaded {len(result.get('annotations', {}))} annotations from Postgres")
                 _annotations_cache = result
+                _annotations_cache_ts = now
                 return _annotations_cache
-            logging.warning("Postgres annotations load returned None, falling back to JSON")
+            logging.warning("Postgres annotations load returned None, returning empty")
         except Exception as e:
-            logging.warning(f"Postgres annotations load failed, falling back to JSON: {e}")
+            logging.warning(f"Postgres annotations load failed: {e}")
+        _annotations_cache = default
+        _annotations_cache_ts = now
+        return _annotations_cache
 
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     ann_path = _main_mod.data_path / "annotations.json"
-    default = {"schema_version": 1, "annotations": {}}
     if ann_path.exists():
         import json as _json
 
@@ -546,6 +557,7 @@ def _load_annotations() -> dict:
             _annotations_cache = default
     else:
         _annotations_cache = default
+    _annotations_cache_ts = now
     return _annotations_cache
 
 
@@ -577,8 +589,9 @@ def _save_annotations(data: dict):
 
 def _invalidate_annotations_cache():
     """Clear annotations cache after write."""
-    global _annotations_cache
+    global _annotations_cache, _annotations_cache_ts
     _annotations_cache = None
+    _annotations_cache_ts = 0.0
 
 
 def _create_merge_suggestion(

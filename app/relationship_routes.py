@@ -39,34 +39,124 @@ _GEDCOM_RICH_FIELDS = (
 )
 
 
+_gedcom_matches_cache_ts: float = 0.0
+_GEDCOM_MATCHES_CACHE_TTL: float = 300.0
+
+
 def _load_gedcom_matches():
-    """Load GEDCOM match proposals from data/gedcom_matches.json."""
-    global _gedcom_matches_cache
-    if _gedcom_matches_cache is not None:
+    """Load GEDCOM match proposals.
+
+    When DATA_SOURCE=postgres (default), reads from Supabase gedcom_matches table.
+    When DATA_SOURCE=json (rollback), reads from gedcom_matches.json.
+    Uses a 300-second TTL cache — GEDCOM links change only during manual linking.
+    PRD-051 Phase 2, Session 114.
+    """
+    global _gedcom_matches_cache, _gedcom_matches_cache_ts
+    import time as _time
+
+    now = _time.time()
+    if _gedcom_matches_cache is not None and (now - _gedcom_matches_cache_ts) < _GEDCOM_MATCHES_CACHE_TTL:
         return _gedcom_matches_cache
 
+    default = {"schema_version": 1, "matches": [], "source_file": ""}
+
+    if _main_mod.DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import get_supabase_client
+
+            sb = get_supabase_client()
+            if sb:
+                resp = sb.table("gedcom_matches").select("data").execute()
+                rows = resp.data or []
+                matches = [r["data"] for r in rows if r.get("data")]
+                result = {"schema_version": 1, "matches": matches, "source_file": "supabase"}
+                _gedcom_matches_cache = result
+                _gedcom_matches_cache_ts = now
+                logging.debug("gedcom_matches_cache_populated source=postgres count=%d", len(matches))
+                return result
+        except Exception as e:
+            logging.error("gedcom_matches: Supabase read failed: %s", e)
+
+    # JSON mode or Supabase fallback
     matches_path = _main_mod.data_path / "gedcom_matches.json"
     if not matches_path.exists():
-        _gedcom_matches_cache = {"schema_version": 1, "matches": [], "source_file": ""}
+        _gedcom_matches_cache = default
+        _gedcom_matches_cache_ts = now
         return _gedcom_matches_cache
 
     try:
         _gedcom_matches_cache = json.loads(matches_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, ValueError):
-        _gedcom_matches_cache = {"schema_version": 1, "matches": [], "source_file": ""}
-
+        _gedcom_matches_cache = default
+    _gedcom_matches_cache_ts = now
     return _gedcom_matches_cache
 
 
+def invalidate_gedcom_matches_cache():
+    """Clear GEDCOM matches cache after writes."""
+    global _gedcom_matches_cache, _gedcom_matches_cache_ts
+    _gedcom_matches_cache = None
+    _gedcom_matches_cache_ts = 0.0
+
+
+_relationship_graph_cache = None
+_relationship_graph_cache_ts: float = 0.0
+_RELATIONSHIP_GRAPH_CACHE_TTL: float = 300.0
+
+
 def _load_relationship_graph():
-    """Load relationship graph from data/relationships.json."""
+    """Load relationship graph.
+
+    When DATA_SOURCE=postgres (default), reads from Supabase relationships table.
+    When DATA_SOURCE=json (rollback), reads from relationships.json.
+    Uses a 300-second TTL cache — relationships change only on GEDCOM import.
+    PRD-051 Phase 2, Session 114.
+    """
+    global _relationship_graph_cache, _relationship_graph_cache_ts
+    import time as _time
+
+    now = _time.time()
+    if _relationship_graph_cache is not None and (now - _relationship_graph_cache_ts) < _RELATIONSHIP_GRAPH_CACHE_TTL:
+        return _relationship_graph_cache
+
+    default = {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+
+    if _main_mod.DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import get_supabase_client
+
+            sb = get_supabase_client()
+            if sb:
+                resp = sb.table("relationships").select("data").execute()
+                rows = resp.data or []
+                relationships = [r["data"] for r in rows if r.get("data")]
+                result = {"schema_version": 1, "relationships": relationships, "gedcom_imports": []}
+                _relationship_graph_cache = result
+                _relationship_graph_cache_ts = now
+                logging.debug("relationship_graph_cache_populated source=postgres count=%d", len(relationships))
+                return result
+        except Exception as e:
+            logging.error("relationships: Supabase read failed: %s", e)
+
+    # JSON mode or Supabase fallback
     rel_path = _main_mod.data_path / "relationships.json"
     if not rel_path.exists():
-        return {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+        _relationship_graph_cache = default
+        _relationship_graph_cache_ts = now
+        return _relationship_graph_cache
     try:
-        return json.loads(rel_path.read_text(encoding="utf-8"))
+        _relationship_graph_cache = json.loads(rel_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, ValueError):
-        return {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+        _relationship_graph_cache = default
+    _relationship_graph_cache_ts = now
+    return _relationship_graph_cache
+
+
+def invalidate_relationship_cache():
+    """Clear relationship cache after writes."""
+    global _relationship_graph_cache, _relationship_graph_cache_ts
+    _relationship_graph_cache = None
+    _relationship_graph_cache_ts = 0.0
 
 
 def _save_relationship_graph(graph: dict):
@@ -80,6 +170,8 @@ def _save_relationship_graph(graph: dict):
         sync_relationships(graph.get("relationships", []))
     except Exception as e:
         logging.warning(f"Supabase relationship sync failed (degraded mode): {e}")
+    # Invalidate cache after write (PRD-051 Session 114)
+    invalidate_relationship_cache()
 
 
 @rt("/api/relationship/add")

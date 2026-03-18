@@ -3788,7 +3788,7 @@ def post(sess=None):
                 filepath=str(_main_mod.data_path / "gedcom_matches.json"),
                 source_file=filename,
             )
-            _main_mod._gedcom_matches_cache = None
+            _main_mod.invalidate_gedcom_matches_cache()
 
             # Sync to Supabase
             try:
@@ -3913,7 +3913,7 @@ def post(xref: str, sess=None):
         _main_mod.save_registry(registry)
 
     # Invalidate caches
-    _main_mod._gedcom_matches_cache = None
+    _main_mod.invalidate_gedcom_matches_cache()
     _main_mod._birth_year_cache = None
 
     # Sync GEDCOM matches to Supabase (AD-135)
@@ -3953,7 +3953,7 @@ def post(xref: str, sess=None):
         if m.get("gedcom_xref") == xref:
             match = m
             break
-    _main_mod._gedcom_matches_cache = None
+    _main_mod.invalidate_gedcom_matches_cache()
 
     # Sync GEDCOM matches to Supabase (AD-135)
     try:
@@ -3986,7 +3986,7 @@ def post(xref: str, sess=None):
         gedcom_xref=xref,
         status="skipped",
     )
-    _main_mod._gedcom_matches_cache = None
+    _main_mod.invalidate_gedcom_matches_cache()
 
     # Sync GEDCOM matches to Supabase (AD-135)
     try:
