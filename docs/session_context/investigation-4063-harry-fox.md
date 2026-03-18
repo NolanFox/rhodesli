@@ -166,6 +166,46 @@ The pre-sync analysis is **confirmed exactly** with the full production embeddin
 
 ---
 
+## Update: Revised Analysis (2026-03-17, post-Session 114)
+
+**New evidence:** David Fox conversation + contextual photo analysis by Nolan.
+
+### David Fox's Input (Albert's grandson)
+- Shown Harry Fox's naturalization form: "Resembles Poppy [Albert]"
+- Shown beach photo with 4063 + Esther: "Those are my grandparents, Albert and Esther"
+- Rationale: "They look like a couple, not a brother and sister in law"
+- Confirmed: the Fox siblings genuinely looked nearly identical — "enough that it confuses ML models"
+
+### Nolan's Revised Reasoning
+1. **Photo `21e2734bdd25dc53`** (Hialeah bench): definitively Albert + Esther. David confirms. Couple body language. Hialeah, FL location.
+2. **Photo `dbc16e6d973cc900`** (beach): same Florida beach trip as the Hialeah bench photo. Same era, consistent clothing/age.
+3. **Therefore:** Person 4063 in the beach photo with Esther = **Albert** (he's with his wife on the same trip).
+4. **The other two 4063 photos** (01843, 01775) show a man in a white t-shirt alongside Albert — that man **cannot** be Albert. Given Fox family context and resemblance, likely **Harry**.
+
+### Revised Conclusion: Person 4063 Is Likely TWO People
+
+The 4063 cluster is a **contaminated cluster** containing faces of both Albert and Harry:
+- **P2 (01612, beach close-up with Esther)** = Albert Fox (same trip as definitive Albert+Esther bench photo)
+- **P1 (01843) and P3 (01775)** = likely Harry Fox (appears alongside Albert in white t-shirt)
+
+This explains the weak internal distances: P1-P3 is 1.24 and P2-P3 is 1.25 — these are cross-person distances, not same-person variation.
+
+### What This Means for CLUSTER-QUALITY-001
+
+The Session 113 finding (3/4 Harry Dayton faces closer to Albert) now has a plausible explanation: **some of those faces may actually BE Albert, not Harry.** The ML was arguably correct — the cluster was contaminated with both brothers. The biological resemblance between Albert and Harry Fox at similar ages is genuine and confirmed by David Fox. This is not an ML failure but a fundamental limitation of appearance-only face matching for closely related people.
+
+### ML Lessons
+
+1. **Family resemblance is a real ML boundary.** Father/son and sibling pairs can be indistinguishable by embedding distance alone. This is a known limitation of face recognition (not a bug).
+2. **Contextual reasoning breaks ties that ML cannot.** The identification here required: same-trip inference, couple vs sibling body language, clothing matching across photos, process of elimination (if A is in the photo, the other person isn't A).
+3. **Contaminated clusters are expected for close relatives.** The system should surface "close family" as a distinct ML signal, not just "same person."
+4. **David Fox's confirmation method:** gut reaction ("Resembles Poppy") = high-signal even when ML distances are ambiguous. Community knowledge is irreplaceable ground truth.
+
+### Action Items
+- [ ] Split Person 4063: P2 → merge into Albert Fox; P1+P3 → new identity (likely Harry Fox, pending further confirmation)
+- [ ] Update CLUSTER-QUALITY-001: resolved — contaminated cluster, not ML quality issue
+- [ ] Consider: "close family match" indicator in the UI when embedding distance is ambiguous between confirmed relatives
+
 ## Breadcrumbs
 
 - AUDIT-001: `ROADMAP.md` (Near-Term -- Infrastructure)
@@ -173,3 +213,6 @@ The pre-sync analysis is **confirmed exactly** with the full production embeddin
 - PRD-051: `docs/prds/` (embeddings in Supabase)
 - Harry Fox identity: d74cb556-6d44-4288-ade3-1cc8fa2b45a6
 - Person 4063 identity: f1fa51b2-323c-493c-8bdd-f3f99254eb72
+- David Fox conversation: 2026-03-17, iMessage (screenshots in session context)
+- Hialeah bench photo: `21e2734bdd25dc53`
+- Beach photo (same trip): `dbc16e6d973cc900`
