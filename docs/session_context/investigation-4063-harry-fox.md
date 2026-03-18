@@ -103,12 +103,12 @@ User explicitly said: *"With so many actions on the app we need good logging so 
 
 ---
 
-## Decisions and Next Steps
+## Decisions and Next Steps (Original, Session 113)
 
-1. **AUDIT-001 is now P0** -- every identity mutation needs an audit_log row with: action, entity_id, user_email (or "system"), old_value, new_value, metadata (route, distance, session)
-2. **Session 113** should address PRD-051 Phases 2-3 (embeddings in Supabase)
-3. **Harry Fox cluster** needs human visual review of H2, H3, H4 against naturalization form
-4. **Person 4063** remains unidentified -- likely a Fox family member but not Harry and not Albert
+1. **AUDIT-001 is now P0** -- every identity mutation needs an audit_log row — DONE (Session 113)
+2. **Session 113** should address PRD-051 Phases 2-3 — Phase 2 DONE (Session 114)
+3. ~~**Harry Fox cluster** needs human visual review~~ — RESOLVED (see post-Session 114 update)
+4. ~~**Person 4063** remains unidentified~~ — RESOLVED (see post-Session 114 update)
 
 ---
 
@@ -215,18 +215,91 @@ The Session 113 finding (3/4 Harry Dayton faces closer to Albert) is **resolved 
 5. **"Close family" should be a distinct ML signal.** When embedding distance is ambiguous between confirmed relatives, surface this as "close family match" rather than forcing a binary same/different decision.
 
 ### Action Items
-- [ ] Split Person 4063: P2 (beach close-up with Esther) → merge into Albert Fox; P1+P3 → new identity (likely Harry Fox)
+- [ ] Split Person 4063: P2 (beach close-up with Esther, photo `dbc16e6d973cc900`) → merge into Albert Fox; P1+P3 → keep as separate cluster (likely Harry Fox, pending further research)
 - [x] CLUSTER-QUALITY-001: resolved — Dayton photos ARE Harry. ML distances misleading due to sibling resemblance, not cluster contamination.
+- [ ] Tag Hialeah bench photo (`21e2734bdd25dc53`) faces as Albert Fox + Esther Burd Fox
 - [ ] Consider: "close family match" indicator in the UI when embedding distance is ambiguous between confirmed relatives
 - [ ] Consider: age-estimation context in triage UI — show estimated era for each photo alongside face crops to help disambiguation
+- [ ] **CRITICAL UX GAP**: No way to split clusters in the app. Need PRD for cluster-splitting workflow. See memory: `feedback_cluster_splitting_ux.md`
+
+---
+
+## Gemini Face Comparison: Person 2491 vs Harry Fox (2026-03-18)
+
+**Purpose:** Independent AI assessment of whether Person 2491 (b38fef24) is Harry Fox.
+**Model:** gemini-2.5-pro | **Cost:** $0.0053 | **Tokens:** 2,335 | **Latency:** 27s
+**Logged:** gemini_api_calls table, call_type="face_comparison"
+
+### Photos Compared
+- Photo A: Harry Fox naturalization form (IMG_2570.jpeg) — ground truth
+- Photo B: Person 2491 photo 1 (01659) — standing with Albert Fox and Irving Fox
+- Photo C: Person 2491 photo 2 (02068)
+
+### Gemini Verdict: **VERY LIKELY SAME — HIGH CONFIDENCE**
+
+### Key Findings
+
+**Skeletal markers (all consistent):**
+- Orbital shape: deep-set eyes, similar spacing, similarly prominent brow ridge
+- Nasal bridge: broad and straight in all photos, nose tip shape consistent
+- Jaw/chin: strong square jaw, prominent chin, differences attributable to age
+- Cranial proportions: consistent head shape, high forehead
+- **Ears: HIGHLY CONSISTENT — key matching feature.** Detached lobe and prominent antihelix fold visible in both Photo A and Photo B. Called out as strongest evidence.
+
+**Age estimates:** Photo A ~45yo, Photos B/C ~35yo, ~10 year gap
+
+**Sibling confusion assessment:** "The risk of confusion with brother Albert Fox is mitigated by powerful contextual evidence. Photo B shows Person 2491 standing next to Albert Fox. Since an individual cannot be in two places in a single photograph, Person 2491 cannot be Albert."
+
+**Synthesis:** "The conclusion is based on two pillars of evidence: consistent unique morphology and definitive photo context. The skeletal markers, especially the highly distinctive left ear structure, are a strong match between Photo A and Photo B. Critically, the contextual evidence of Person 2491 being photographed with his lookalike brother Albert effectively rules out the possibility that he is Albert, making it almost certain that he is Harry Fox."
+
+### ML vs Gemini Comparison
+
+| Signal | ML (InsightFace) | Gemini |
+|--------|-----------------|--------|
+| 2491 → Harry nat form | 1.42 (far) | very_likely_same |
+| 2491 → Albert centroid | 1.15 (closer to Albert) | "cannot be Albert — appears in same photo" |
+| Method | Geometric embedding distance | Skeletal feature analysis + contextual reasoning |
+| Key insight | Cannot distinguish siblings | Ear morphology + co-occurrence logic |
+
+This is a compelling case for multi-signal fusion: InsightFace alone would reject this match, but Gemini's contextual reasoning + skeletal analysis correctly identifies it.
+
+---
+
+## Nolan's Final Decisions (2026-03-18)
+
+### Person 4063 (f1fa51b2) — SPLIT REQUIRED
+- **P2 (face inbox_d8dabd3ca5e5, beach close-up with Esther, photo dbc16e6d973cc900):** → Detach from 4063, merge into Albert Fox. Same Florida beach trip as definitive Albert+Esther Hialeah bench photo.
+- **P1 (inbox_d9c2bb8d5fa6, photo 01843) + P3 (inbox_fb4b65ccecfe, photo 01775):** → Keep as separate cluster. Likely Harry Fox (appears alongside Albert in both photos), but needs further research before confirming.
+- **Rationale:** 2/3 photos show 4063 alongside Albert (co-occurrence = not Albert). The 3rd photo (Esther close-up) is from the same Florida trip where Albert+Esther are definitively identified.
+- **Confidence:** Moderate. The Fox siblings genuinely looked very similar; Nolan's identification is based on dating photos via Charlie's age + comparing against Albert photos from the same era.
+
+### Person 2491 (b38fef24) — LIKELY HARRY FOX
+- Family relative identified as Harry in photo with Albert and Irving
+- Gemini confirms: very_likely_same, high confidence (ear morphology + co-occurrence)
+- ML distance (1.42) is far, but Harry's within-person variation is already 0.96-1.12
+- **Action:** Nolan to confirm in app, then merge into Harry Fox identity
+- If confirmed, this gives Harry Fox a second anchor face (currently only naturalization form)
+
+### Hialeah Photos
+- Bench photo (`21e2734bdd25dc53`): Tag as Albert Fox + Esther Burd Fox (David Fox confirms)
+- Beach photo (`dbc16e6d973cc900`): Part of same Florida trip
+
+### UX Gap Discovered
+- **No cluster-splitting UI exists.** Cannot break up a contaminated cluster (e.g., Person 4063 with faces of both Albert and Harry). Must use detach + manual reassignment. This was a core Google Photos pain point that motivated building Rhodesli. Needs PRD.
 
 ## Breadcrumbs
 
-- AUDIT-001: `ROADMAP.md` (Near-Term -- Infrastructure)
-- Lesson 147: `tasks/lessons.md` (local-production data divergence)
-- PRD-051: `docs/prds/` (embeddings in Supabase)
+- AUDIT-001: `ROADMAP.md` (Near-Term -- Infrastructure) — DONE (Session 113)
+- PRD-051: `docs/prds/` — Phases 1+2+4 DONE (Sessions 112-114)
+- CLUSTER-QUALITY-001: `docs/BACKLOG.md` — RESOLVED
 - Harry Fox identity: d74cb556-6d44-4288-ade3-1cc8fa2b45a6
 - Person 4063 identity: f1fa51b2-323c-493c-8bdd-f3f99254eb72
-- David Fox conversation: 2026-03-17, iMessage (screenshots in session context)
+- Person 2491 identity: b38fef24-858d-4b5f-95c0-c52c09a111f0
+- Albert Fox identity: 85546ebf-75b9-4971-a9d4-b2ce2271bc19
+- David Fox conversation: 2026-03-17, iMessage
+- Gemini API call: gemini_api_calls table, 2026-03-18, call_type="face_comparison"
 - Hialeah bench photo: `21e2734bdd25dc53`
 - Beach photo (same trip): `dbc16e6d973cc900`
+- Person 2491 photo with Albert+Irving: `91b6f6b296e93a60`
+- Cluster splitting UX gap: memory `feedback_cluster_splitting_ux.md`
+- Comparison workflow feedback: memory `feedback_comparison_workflow.md`
