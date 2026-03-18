@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.27] — 2026-03-18 (Session 117: Upload Pipeline Wired to ML Service)
+
+### Upload Pipeline Integration (TOOLS-002 Phase 3)
+- **detect_faces() wrapper**: New function in `core/ingest_inbox.py` that tries ML service first, falls back to local InsightFace on any error. Transforms ML service response to PFE format.
+- **One-line call site change**: `process_single_image()` now calls `detect_faces()` instead of `extract_faces()`.
+- **Feature flag**: `ML_SERVICE_URL` env var. Empty/unset = local only (no behavior change for existing deployments).
+- **10 new tests**: Feature flag, fallback, PFE format, normalization, dimensions, multi-face, zero-face.
+
 ## [v0.99.26] — 2026-03-18 (Session 116: ML Service Railway Deployment)
 
 ### ML Service Deployment (TOOLS-002 Phase 2)

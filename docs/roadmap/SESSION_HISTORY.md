@@ -14,6 +14,13 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 117: Upload Pipeline Wired to ML Service (2026-03-18) — v0.99.27
+- TOOLS-002 Phase 3: detect_faces() wrapper with ML service + local fallback
+- One-line call site change in process_single_image()
+- Feature flag: ML_SERVICE_URL env var (empty = local only)
+- PFE format transformation from ML service response
+- 10 new tests, 3231 app tests pass
+
 ## Session 116: ML Service Railway Deployment (2026-03-18) — v0.99.26
 - TOOLS-002 Phase 2: ML service deployed to Railway as internal service (rootDirectory monorepo pattern)
 - Railway GraphQL API for service config (rootDirectory, dockerfilePath, healthcheck, configFile disconnect)
