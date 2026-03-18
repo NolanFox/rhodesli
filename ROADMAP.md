@@ -127,6 +127,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Planned Sessions
 
+- [-] **Session 114**: Data Stability Completion — PRD-051 Phases 2+4 (proposals/annotations/relationships/gedcom to Supabase reads, deploy pipeline cleanup), harness gap closure (SESSION_HISTORY backfill, stop hook improvement), test performance (flaky test fix, profiling). Prompt: `docs/prompts/session-114-prompt.md`
+
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
