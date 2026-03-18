@@ -155,9 +155,9 @@ Write tests covering:
 
 ---
 
-## Phase 3: PRD-051 Phase 4 — Deploy Pipeline Cleanup (15 min)
+## Phase 3: PRD-051 Phase 4 — Deploy Pipeline Cleanup + Stale Row Reconciliation (25 min)
 
-With Phases 1-2 done, production no longer reads any JSON files except embeddings.npy and static reference data. Clean up the deploy pipeline.
+With Phases 1-2 done, production no longer reads any JSON files except embeddings.npy and static reference data. Clean up the deploy pipeline and reconcile stale Supabase rows.
 
 ### 3A: init_railway_volume.py
 
@@ -181,13 +181,30 @@ With Phases 1-2 done, production no longer reads any JSON files except embedding
 2. Keep embeddings.npy COPY
 3. Keep static reference files
 
-### 3D: Tests
+### 3D: DATA-009 — Stale Row Reconciliation
+
+Now that Supabase is the single read source, stale rows from old shadow syncs are no longer hidden — they're actively served. This is the right moment to clean them up.
+
+1. Read `app/supabase_data.py` to understand the current sync patterns (additive-only, no pruning)
+2. Write a reconciliation script `scripts/reconcile_supabase.py` with two modes:
+   - `--dry-run`: Compare Supabase row counts against canonical sources. Report stale rows (identities with no matching face data, photos with no face_to_photo entry, orphaned photo_faces rows, proposals for non-existent identities). Output a JSON diff artifact before any changes.
+   - `--execute`: After dry-run review, prune stale rows with logged deletions
+3. The script must:
+   - Always produce a machine-readable diff artifact (`data/reconciliation_YYYY-MM-DD.json`) BEFORE any deletes (Lesson 124)
+   - Log every deletion to `audit_log` table with action="reconcile_prune"
+   - Never delete rows that have `provenance="human"` — only system-generated stale data
+   - Support `--table` flag to target specific tables (identities, photos, photo_faces, ml_proposals)
+4. Run `--dry-run` and log the output in the session log. Do NOT run `--execute` in this session — the dry-run report is the deliverable. Nolan will review before any actual pruning.
+
+### 3E: Tests
 
 - Test that `init_railway_volume.py` only requires embeddings.npy
 - Test startup health check logs warning on Supabase failure
 - Verify deploy safety tests (`TestDockerfileModuleCoverage`) still pass
+- Test reconciliation dry-run produces correct diff artifact format
+- Test that `--execute` without prior `--dry-run` is blocked (safety gate)
 
-**Commit:** `feat(deploy): PRD-051 phase 4 — remove JSON from deploy pipeline, add Supabase health check (session 114)`
+**Commit:** `feat(deploy): PRD-051 phase 4 — deploy cleanup + DATA-009 reconciliation script (session 114)`
 **/clear**
 
 ---
@@ -288,7 +305,7 @@ Write `docs/assessments/session-114-assessment.md`:
 
 1. **CHANGELOG.md**: Add v0.99.23 entry
 2. **ROADMAP.md**: Check off DATA-025 (Phase 2), DATA-026 (Phase 4), PERF-001 (if <30s achieved). Add to "Recently Completed"
-3. **BACKLOG.md**: Update DATA-025, DATA-026, PERF-001 status
+3. **BACKLOG.md**: Update DATA-009, DATA-025, DATA-026, PERF-001 status
 4. **SESSION_HISTORY.md**: Add Session 114 entry (the stop hook should remind you)
 5. **SESSION_LOG.md**: Archive to `docs/session_logs/session-114-log.md`
 6. **PRD-051**: Update status — Phase 1 DONE (Session 112), Phase 2 DONE (Session 114), Phase 4 DONE (Session 114). Phase 3 DEFERRED (ML pipeline, local-only, no prod split-brain risk).
@@ -320,6 +337,8 @@ Before declaring done, re-read this prompt and verify:
 | TTL caches on new Supabase reads? | grep for cache decorators/TTL | Present on proposals, annotations, relationships, gedcom |
 | init_railway_volume.py cleaned? | `grep "identities.json" scripts/init_railway_volume.py` | NOT in REQUIRED_DATA_FILES |
 | Supabase health check exists? | grep for startup health check | Present |
+| Reconciliation script exists? | `ls scripts/reconcile_supabase.py` | Exists |
+| Dry-run produces diff artifact? | `python scripts/reconcile_supabase.py --dry-run` | JSON artifact written |
 | Flaky test fixed? | `pytest tests/test_my_contributions_page_accessible -x -q` | PASS |
 | Test speed improved? | `time make test-fast` | <30s or documented reason |
 | Both test suites pass? | `make test-fast && make test-ml` | PASS |

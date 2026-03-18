@@ -56,10 +56,12 @@ Every new Supabase read path adds egress. Current TTL caches (120s registry, 30s
 1. Harness gap fixes (SESSION_HISTORY backfill, SESSION_LOG reset, stop hook improvement)
 2. PRD-051 Phase 2: Wire proposals, annotations, relationships, gedcom_matches to Supabase reads
 3. PRD-051 Phase 4: Remove JSON from deploy pipeline, add Supabase health check
-4. Test speed investigation + fix (profile, fix flaky test, optimize if possible)
+4. DATA-009: Stale row reconciliation script (dry-run only — produces diff artifact for human review before any pruning)
+5. Test speed investigation + fix (profile, fix flaky test, optimize if possible)
 
 ### Out of Scope
 - PRD-051 Phase 3 (ML pipeline Supabase reads) — local-only scripts, no production split-brain risk
+- DATA-009 `--execute` mode — dry-run only in this session, Nolan reviews before pruning
 - CLUSTER-QUALITY-001 (Harry Fox visual review) — needs human eyes, not code
 - AUDIT-001 Phase 2 (timeline UI) — UX feature, not data stability
 - Supabase Pro upgrade decision — monitoring only until April 13
