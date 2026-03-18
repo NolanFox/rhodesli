@@ -661,8 +661,9 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
 
     photo_ids = load_photos_for_community(community_id)
     if photo_ids is None:
-        _community_photo_ids_cache[community_id] = None
-        _community_ids_cache_ts = now
+        # DO NOT cache None — transient Supabase errors would disable community
+        # filtering for the full TTL (120s), causing cross-community data leakage.
+        # Return None (caller decides whether to fail-open or fail-closed).
         return None
 
     result = set(photo_ids)
@@ -715,6 +716,18 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
     # Photo-derived identity set: get all identities with faces in community photos
     community_photo_ids = _get_community_photo_ids(community)
     if community_photo_ids is None:
+        # Fail-closed for non-Rhodes communities: return empty set so no
+        # cross-community data leaks. For Rhodes (default), return None
+        # to show all data as fallback.
+        community_slug = community.get("slug", "")
+        if community_slug and community_slug != "rhodes":
+            import logging as _scope_log
+
+            _scope_log.warning(
+                "Community photo IDs unavailable for %s — failing closed (empty set)",
+                community_slug,
+            )
+            return set()  # Show nothing rather than leak other community data
         return None
 
     if not community_photo_ids:
@@ -1671,7 +1684,7 @@ def _load_proposals() -> dict:
 
             resp = (
                 sb.table("ml_proposals")
-                .select("source_identity_id,target_identity_id,score,tier,status,run_id,created_at")
+                .select("source_identity_id,target_identity_id,score,tier,status,run_id")
                 .eq("status", "pending")
                 .execute()
             )

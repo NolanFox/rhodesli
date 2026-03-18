@@ -124,7 +124,9 @@ class TestGetCommunityPhotoIds:
 
     @patch("app.supabase_data.get_supabase_client")
     @patch("app.supabase_data.load_photos_for_community")
-    def test_supabase_failure_is_cached(self, mock_load, mock_client):
+    def test_supabase_failure_is_not_cached(self, mock_load, mock_client):
+        """Transient Supabase failures should NOT be cached — they would disable
+        community filtering for the full TTL, causing cross-community data leakage."""
         import app.main
 
         app.main._community_photo_ids_cache = {}
@@ -136,7 +138,8 @@ class TestGetCommunityPhotoIds:
 
         assert app.main._get_community_photo_ids(community) is None
         assert app.main._get_community_photo_ids(community) is None
-        mock_load.assert_called_once_with("test-uuid-cache")
+        # Called TWICE because failures are not cached — each call retries Supabase
+        assert mock_load.call_count == 2
 
 
 # ============================================================================
@@ -190,7 +193,8 @@ class TestGetCommunityIdentityIds:
                         result = app.main._get_community_identity_ids(community)
                         assert result == {"id1", "id2"}
 
-    def test_photo_scope_failure_returns_none(self):
+    def test_photo_scope_failure_fails_closed_for_non_rhodes(self):
+        """When photo scope unavailable, non-Rhodes communities fail closed (empty set)."""
         import app.main
 
         app.main._community_identity_ids_cache = {}
@@ -198,7 +202,20 @@ class TestGetCommunityIdentityIds:
 
         with patch.object(app.main, "_get_community_photo_ids", return_value=None):
             community = {"slug": "fox-family", "id": "test-uuid-def"}
-            assert app.main._get_community_identity_ids(community) is None
+            result = app.main._get_community_identity_ids(community)
+            assert result == set()  # Empty set = show nothing, not None = show everything
+
+    def test_photo_scope_failure_returns_none_for_rhodes(self):
+        """When photo scope unavailable, Rhodes falls back to None (show all)."""
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+
+        with patch.object(app.main, "_get_community_photo_ids", return_value=None):
+            community = {"slug": "rhodes", "id": "rhodes-uuid"}
+            result = app.main._get_community_identity_ids(community)
+            assert result is None  # None = no filtering = show everything
 
 
 # ============================================================================
