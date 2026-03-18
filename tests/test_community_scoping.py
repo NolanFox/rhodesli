@@ -291,29 +291,24 @@ class TestComputeSidebarCountsCommunity:
     def test_proposals_json_counted_for_community(
         self, mock_build, mock_pending, mock_photo_ids, mock_id_ids, mock_ann, mock_disc, tmp_path
     ):
-        """COMMUNITY-010: proposals.json entries should be counted in sidebar."""
+        """COMMUNITY-010: ML proposals should be counted in sidebar (via unified reader)."""
         import app.main
-        import json
 
         app.main._photo_cache = {"p1": {}}
         registry = self._make_registry_mock()
 
-        # Write a proposals.json with community-scoped entries
-        proposals_file = tmp_path / "proposals.json"
-        proposals_file.write_text(
-            json.dumps(
-                {
-                    "proposals": [
-                        {"source_identity_id": "fox1", "target_identity_id": "roland", "distance": 0.8},
-                        {"source_identity_id": "fox2", "target_identity_id": "roland", "distance": 0.9},
-                        {"source_identity_id": "other1", "target_identity_id": "other2", "distance": 0.7},
-                    ]
-                }
-            )
-        )
+        # Mock _load_proposals (unified reader — Supabase or JSON, PRD-051 Session 114)
+        mock_proposals = {
+            "proposals": [
+                {"source_identity_id": "fox1", "target_identity_id": "roland", "distance": 0.8},
+                {"source_identity_id": "fox2", "target_identity_id": "roland", "distance": 0.9},
+                {"source_identity_id": "other1", "target_identity_id": "other2", "distance": 0.7},
+            ],
+            "generated_at": "2026-03-17",
+        }
 
         community = {"slug": "fox-family", "id": "test-uuid"}
-        with patch.dict(os.environ, {"DATA_DIR": str(tmp_path)}):
+        with patch.object(app.main, "_load_proposals", return_value=mock_proposals):
             counts = app.main._compute_sidebar_counts(registry, community=community)
         # Only 2 proposals match community identity set (fox1, fox2)
         assert counts["proposals"] == 2

@@ -925,6 +925,8 @@ async def post(request, sess):
             with open(proposals_path, "w") as f:
                 _json_rc.dump(proposals_data, f, indent=2)
             results["proposals_written"] = len(suggestions)
+            # Invalidate proposals cache (PRD-051 Session 114)
+            _main_mod.invalidate_proposals_cache()
 
         # Step 2: Group similar INBOX faces
         photo_reg = None
@@ -1085,6 +1087,8 @@ async def post(request, sess):
                         results["supabase_proposals_written"] = len(rows)
                 except Exception as sb_err:
                     results["supabase_write_error"] = str(sb_err)
+                # Invalidate proposals cache after cross-batch writes (PRD-051 Session 114)
+                _main_mod.invalidate_proposals_cache()
         except Exception as xb_err:
             results["cross_batch_error"] = str(xb_err)
 
@@ -1213,16 +1217,14 @@ def get(request, sess):
         else:
             report["embeddings"] = {"count": 0, "photo_faces_count": len(all_photo_faces), "match": False}
 
-        # Stale proposals check
-        proposals_path = data_path / "proposals.json"
-        if proposals_path.exists():
-            with open(proposals_path) as f:
-                proposals = _json_health.load(f)
+        # Proposals count — unified reader (Supabase or JSON, PRD-051 Session 114)
+        try:
+            proposals = _main_mod._load_proposals()
             report["proposals"] = {
                 "count": len(proposals.get("proposals", [])),
                 "generated_at": proposals.get("generated_at", "unknown"),
             }
-        else:
+        except Exception:
             report["proposals"] = {"count": 0, "generated_at": None}
 
         # Identity stats

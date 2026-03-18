@@ -69,14 +69,8 @@ def invalidate_cluster_review_caches(changed_ids=None):
 
 
 def _load_proposals():
-    """Load proposals.json to find auto-clustered matches."""
-    _storage = os.getenv("STORAGE_DIR")
-    _data_dir = os.path.join(_storage, "data") if _storage else os.getenv("DATA_DIR", "data")
-    proposals_path = Path(_data_dir) / "proposals.json"
-    if not proposals_path.exists():
-        return []
-    with open(proposals_path) as f:
-        data = json.load(f)
+    """Load proposals via unified reader (Supabase with TTL cache, PRD-051 Session 114)."""
+    data = _main_mod._load_proposals()
     return data.get("proposals", [])
 
 

@@ -1124,6 +1124,8 @@ async def post(
                         except Exception as e:
                             print(f"[upload] Cross-batch Supabase logging error: {e}")
 
+                    # Invalidate proposals cache after upload pipeline writes (PRD-051 Session 114)
+                    _main_mod.invalidate_proposals_cache()
                     print(
                         f"[upload] Cross-batch matching for job {job_id}: "
                         f"{len(cross_matches)} matches, {len(new_proposals) if cross_matches else 0} new proposals"

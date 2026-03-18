@@ -208,11 +208,8 @@ def post(
                     from datetime import datetime as _dt, timezone as _tz
 
                     proposals_path = data_path / "proposals.json"
-                    existing_proposals = []
-                    if proposals_path.exists():
-                        with open(proposals_path) as f:
-                            pdata = json.load(f)
-                            existing_proposals = pdata.get("proposals", [])
+                    # Read existing proposals via unified reader (Supabase or JSON, PRD-051)
+                    existing_proposals = _main_mod._load_proposals().get("proposals", [])
 
                     existing_pairs = {
                         (p.get("source_identity_id"), p.get("target_identity_id")) for p in existing_proposals
@@ -247,6 +244,8 @@ def post(
                         }
                         with open(proposals_path, "w") as f:
                             json.dump(proposals_data, f, indent=2)
+                        # Invalidate proposals cache so new proposals are visible (PRD-051)
+                        _main_mod.invalidate_proposals_cache()
                         logger.info(
                             "Post-confirm re-match for %s: %d new proposals",
                             iid[:8],
