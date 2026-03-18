@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.22 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
+Current: v0.99.23 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -47,7 +47,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] 2026-03-08: DATA-007 — Postgres migration complete (Session 93)
 - [x] 2026-03-08: Batch GEDCOM re-analyze — 67/72 photos, AD-211, report (Session 93)
 - [x] 2026-03-08: Observability verified — Sentry, PostHog, Resend all confirmed (Session 93)
-- [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
+- [x] 2026-03-17: PERF-001: Test speed <30s — achieved 28s (Session 114, marked 3 slow integration tests)
 - [x] 2026-03-10: DATA-008: Comprehensive data integrity audit + fixes (Session 96e-cont10)
 
 ### Near-Term — Standalone Tool Suite (PRD-034)
@@ -127,11 +127,13 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Planned Sessions
 
-- [-] **Session 114**: Data Stability Completion — PRD-051 Phases 2+4 (proposals/annotations/relationships/gedcom to Supabase reads, deploy pipeline cleanup), harness gap closure (SESSION_HISTORY backfill, stop hook improvement), test performance (flaky test fix, profiling). Prompt: `docs/prompts/session-114-prompt.md`
+All planned sessions through 114 are COMPLETE. See Recently Completed below and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details.
 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-17: **v0.99.23 — Session 114**: Data Stability Completion (PRD-051 Phases 2+4). Proposals, annotations, relationships, GEDCOM matches all read from Supabase with TTL caches. Deploy pipeline cleaned (only embeddings.npy required). Supabase health check at startup. DATA-009 reconciliation script (dry-run mode). PERF-001 achieved: make test-fast 87s → 28s. SESSION_HISTORY backfilled. 30 new tests. 3166 app tests, 590 ML tests pass. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.22 — Session 113**: Audit Logging + Embeddings Sync. AUDIT-001 (P0): 22 audit_log calls across identity_routes, match_facecompare_routes, cluster_review_routes. New app/audit.py. Production embeddings synced (2957 entries, +85 from web uploads). Harry Fox cluster verification: 3/4 Dayton faces closer to Albert than naturalization form ground truth. CLUSTER-QUALITY-001 logged. 16 new tests. Deploy SUCCESS.
 

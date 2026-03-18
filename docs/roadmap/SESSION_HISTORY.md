@@ -14,6 +14,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 114: Data Stability Completion (2026-03-17) — v0.99.23
+- PRD-051 Phase 2: proposals, annotations, relationships, GEDCOM matches all read from Supabase with TTL caches
+- PRD-051 Phase 4: deploy pipeline cleaned (REQUIRED_DATA_FILES = embeddings.npy only), Supabase health check at startup
+- DATA-009: reconciliation script with --dry-run/--execute modes for Supabase internal consistency
+- PERF-001: make test-fast 87s → 28s (3 slow integration tests marked @pytest.mark.slow)
+- SESSION_HISTORY backfilled (Sessions 106b-113), stop hook SESSION_HISTORY check
+- 30 new tests, 3166 app + 590 ML pass, deploy SUCCESS
+
 ## Session 113: Audit Logging + Embeddings Sync (2026-03-17) — v0.99.22
 - AUDIT-001: 22 audit_log calls across identity_routes, match_facecompare_routes, cluster_review_routes. New app/audit.py helper.
 - Production embeddings synced (2957 entries, +85 from web uploads)

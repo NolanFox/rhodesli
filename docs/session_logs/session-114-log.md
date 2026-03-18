@@ -16,7 +16,7 @@
 - [x] Phase 3: PRD-051 Phase 4 — Deploy pipeline cleanup + DATA-009 reconciliation (8 new tests)
 - [x] Phase 4: Test performance — 87s → 28s (marked 3 slow integration tests, PERF-001 met)
 - [x] Phase 5: Deploy (DOCKERFILE, DEPLOYING) + production verification (5/5 pages PASS)
-- [x] Phase 6: Harness outputs (assessment, changelog, roadmap, SESSION_HISTORY, PRD-051 status)
+- [ ] Phase 6: Harness outputs (assessment, changelog, roadmap)
 
 ## Progress Notes
 

@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.23] — 2026-03-17 (Session 114: Data Stability Completion)
+
+### Architecture (PRD-051 Phases 2 + 4)
+- **Proposals read from Supabase**: `_load_proposals()` reads `ml_proposals` table with 120s TTL cache. Removed duplicate reader in `cluster_review_routes.py`. Sidebar counts use unified reader. Cache invalidation wired to recluster, upload, and confirm paths.
+- **Annotations TTL cache**: Added 120s TTL to existing Supabase read path. Removed JSON fallback in postgres mode.
+- **Relationships from Supabase**: New read path from `relationships.data` column with 300s TTL cache. Write-through invalidation.
+- **GEDCOM matches from Supabase**: New read path from `gedcom_matches.data` column with 300s TTL cache. Admin write invalidation.
+- **Deploy pipeline cleaned**: `REQUIRED_DATA_FILES` reduced to `embeddings.npy` only. `identities.json`, `photo_index.json`, `proposals.json` removed from push list.
+- **Supabase health check**: Startup probe verifies connectivity, logs warning if unavailable.
+- **DATA-009 reconciliation**: `--dry-run`/`--execute` modes for Supabase internal consistency (orphaned refs, stale proposals).
+
+### Performance
+- **Test speed**: `make test-fast` 87s → 28s by marking 3 slow integration tests as `@pytest.mark.slow`.
+- PERF-001 target (<30s) achieved.
+
+### Harness
+- SESSION_HISTORY.md backfilled with Sessions 106b-113 (12 entries).
+- Stop hook now checks SESSION_HISTORY.md was updated (advisory).
+
+### Tests
+- 30 new tests across 3 test files (proposals, phase2b, deploy cleanup).
+- 3166 app tests pass, 590 ML tests pass.
+
 ## [v0.99.22] — 2026-03-17 (Session 113: Audit Logging + Embeddings Sync)
 
 ### Added

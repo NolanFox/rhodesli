@@ -38,7 +38,7 @@ Make **Supabase Postgres the single source of truth** for all structured data. E
 
 ## Phase Plan
 
-### Phase 1: Eliminate dual-read for identities and photos (1 session)
+### Phase 1: Eliminate dual-read for identities and photos (1 session) — DONE (Session 112)
 **Goal:** Production never reads from JSON for identities or photos.
 
 1. Remove all `if DATA_SOURCE == "json"` branches from read paths
@@ -48,20 +48,20 @@ Make **Supabase Postgres the single source of truth** for all structured data. E
 5. Set `DATA_SOURCE=postgres` in local `.env` so dev matches production
 6. Tests: verify all read paths go through Supabase, not JSON
 
-### Phase 2: Wire remaining JSON-only reads to Supabase (1-2 sessions)
+### Phase 2: Wire remaining JSON-only reads to Supabase (1-2 sessions) — DONE (Session 114)
 1. `proposals.json` → read from `ml_proposals` table
 2. `annotations.json` → read from `annotations` table
 3. `relationships.json` → read from `relationships` table
 4. `gedcom_matches.json` → read from `gedcom_matches` table
 5. `photo_search_index.json` → Supabase full-text search or keep as static
 
-### Phase 3: Refactor ML pipeline for Supabase reads (1 session)
+### Phase 3: Refactor ML pipeline for Supabase reads (1 session) — DEFERRED (local-only, no prod risk)
 1. `cluster_new_faces.py`: Use `IdentityRegistry.load_from_postgres()` instead of `json.load()`
 2. `ingest_inbox.py`: Write identities/photos to Supabase directly
 3. Simplify `push_to_production.py` — only needed for `embeddings.npy` + crops
 4. Add `load_dotenv()` to all ML scripts
 
-### Phase 4: Remove JSON from deploy pipeline (1 session)
+### Phase 4: Remove JSON from deploy pipeline (1 session) — DONE (Session 114)
 1. Remove `identities.json` and `photo_index.json` from `REQUIRED_DATA_FILES`
 2. Update `init_railway_volume.py` — only require `embeddings.npy`
 3. Remove JSON fallback code from all load functions
