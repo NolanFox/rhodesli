@@ -139,6 +139,18 @@ class TestSidebarCommunityScoping(unittest.TestCase):
         html = repr(result)
         assert "/c/fox-family/?section=photos" in html
 
+    def test_fox_family_shows_dismissed_section(self):
+        """All communities show Dismissed nav item — not just Rhodes (Session 114 fix)."""
+        from app.main import sidebar
+
+        counts = _default_counts()
+        counts["rejected"] = 5
+        community = {"name": "Fox Family Archive", "slug": "fox-family"}
+        result = sidebar(counts, community_slug="fox-family", community=community)
+        html = repr(result)
+        assert "Dismissed" in html
+        assert "section=rejected" in html
+
     def test_fox_family_hides_advanced_browse(self):
         from app.main import sidebar
 
@@ -310,9 +322,9 @@ class TestCommunityScopedHelpers(unittest.TestCase):
             )
         )
 
-        assert '/c/fox-family/?section=to_review&amp;view=focus' in html
-        assert '/c/fox-family/?section=to_review&amp;view=browse' in html
-        assert '/c/fox-family/?section=to_review&amp;view=match' in html
+        assert "/c/fox-family/?section=to_review&amp;view=focus" in html
+        assert "/c/fox-family/?section=to_review&amp;view=browse" in html
+        assert "/c/fox-family/?section=to_review&amp;view=match" in html
 
     def test_identity_card_mini_uses_nav_prefix(self):
         from app.main import identity_card_mini
@@ -324,7 +336,7 @@ class TestCommunityScopedHelpers(unittest.TestCase):
         ):
             html = repr(identity_card_mini(identity, {"face-a.jpg"}, clickable=True, nav_prefix="/c/fox-family"))
 
-        assert '/c/fox-family/?section=to_review&amp;view=focus&amp;current=id-roland' in html
+        assert "/c/fox-family/?section=to_review&amp;view=focus&amp;current=id-roland" in html
 
     @patch("app.main._identity_annotations_section", return_value=None)
     @patch("app.main._identity_metadata_display", return_value=None)
@@ -346,13 +358,13 @@ class TestCommunityScopedHelpers(unittest.TestCase):
 
         html = repr(identity_card_expanded(identity, {"face-a.jpg"}, nav_prefix="/c/fox-family"))
 
-        assert '/c/fox-family/inbox/id-roland/confirm?from_focus=true' in html
-        assert '/c/fox-family/identity/id-roland/skip?from_focus=true' in html
-        assert '/c/fox-family/api/identity/id-roland/neighbors?from_focus=true' in html
-        assert '/c/fox-family/person/id-roland' in html
-        assert '/c/fox-family/photo/photo-1/partial?face=face-a&amp;identity_id=id-roland' in html
-        assert '/c/fox-family/api/annotations/submit' in html
-        assert '/c/fox-family/api/identity/id-roland/notes' in html
+        assert "/c/fox-family/inbox/id-roland/confirm?from_focus=true" in html
+        assert "/c/fox-family/identity/id-roland/skip?from_focus=true" in html
+        assert "/c/fox-family/api/identity/id-roland/neighbors?from_focus=true" in html
+        assert "/c/fox-family/person/id-roland" in html
+        assert "/c/fox-family/photo/photo-1/partial?face=face-a&amp;identity_id=id-roland" in html
+        assert "/c/fox-family/api/annotations/submit" in html
+        assert "/c/fox-family/api/identity/id-roland/notes" in html
 
     def test_skipped_focus_actions_use_nav_prefix(self):
         from app.main import _build_skipped_focus_actions
@@ -363,10 +375,10 @@ class TestCommunityScopedHelpers(unittest.TestCase):
         ):
             html = repr(_build_skipped_focus_actions("id-source", "SKIPPED", nav_prefix="/c/fox-family"))
 
-        assert '/c/fox-family/api/identity/id-match/merge/id-source?from_focus=true&amp;focus_section=skipped' in html
-        assert '/c/fox-family/api/skipped/id-source/reject-suggestion?suggestion_id=id-match' in html
-        assert '/c/fox-family/api/skipped/id-source/focus-skip' in html
-        assert '/c/fox-family/api/identity/id-source/unreject/id-match' in html
+        assert "/c/fox-family/api/identity/id-match/merge/id-source?from_focus=true&amp;focus_section=skipped" in html
+        assert "/c/fox-family/api/skipped/id-source/reject-suggestion?suggestion_id=id-match" in html
+        assert "/c/fox-family/api/skipped/id-source/focus-skip" in html
+        assert "/c/fox-family/api/identity/id-source/unreject/id-match" in html
 
     def test_neighbors_sidebar_uses_nav_prefix_for_actions(self):
         from app.main import neighbors_sidebar
@@ -401,18 +413,18 @@ class TestCommunityScopedHelpers(unittest.TestCase):
                 )
             )
 
-        assert '/c/fox-family/api/identity/id-source/compare/id-match' in html
-        assert '/c/fox-family/api/identity/id-source/merge/id-match' in html
-        assert '/c/fox-family/api/identity/id-source/reject/id-match' in html
-        assert '/c/fox-family/identify/id-source/match/id-match' in html
-        assert '/c/fox-family/api/identity/id-source/search' in html
+        assert "/c/fox-family/api/identity/id-source/compare/id-match" in html
+        assert "/c/fox-family/api/identity/id-source/merge/id-match" in html
+        assert "/c/fox-family/api/identity/id-source/reject/id-match" in html
+        assert "/c/fox-family/identify/id-source/match/id-match" in html
+        assert "/c/fox-family/api/identity/id-source/search" in html
 
     def test_name_display_uses_nav_prefix(self):
         from app.main import name_display
 
         html = repr(name_display("id-roland", "Roland Fox", nav_prefix="/c/fox-family"))
 
-        assert '/c/fox-family/api/identity/id-roland/rename-form' in html
+        assert "/c/fox-family/api/identity/id-roland/rename-form" in html
 
     def test_triage_bar_uses_nav_prefix(self):
         from app.main import _build_triage_bar
@@ -423,13 +435,16 @@ class TestCommunityScopedHelpers(unittest.TestCase):
         ]
 
         with (
-            patch("app.main._compute_triage_counts", return_value={"ready_to_confirm": 1, "rediscovered": 1, "unmatched": 1}),
+            patch(
+                "app.main._compute_triage_counts",
+                return_value={"ready_to_confirm": 1, "rediscovered": 1, "unmatched": 1},
+            ),
         ):
             html = repr(_build_triage_bar(to_review, "browse", nav_prefix="/c/fox-family"))
 
-        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=ready' in html
-        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=rediscovered' in html
-        assert '/c/fox-family/?section=to_review&amp;view=browse&amp;filter=unmatched' in html
+        assert "/c/fox-family/?section=to_review&amp;view=browse&amp;filter=ready" in html
+        assert "/c/fox-family/?section=to_review&amp;view=browse&amp;filter=rediscovered" in html
+        assert "/c/fox-family/?section=to_review&amp;view=browse&amp;filter=unmatched" in html
 
 
 class TestUploadRouteRequest(unittest.TestCase):

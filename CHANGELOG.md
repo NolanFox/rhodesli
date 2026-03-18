@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.24] — 2026-03-17 (Session 114 hotfix: Dismissed sidebar for all communities)
+
+### Fixed
+- **COMMUNITY-015**: Dismissed nav item was gated behind `is_rhodes` — now shows for all communities. Fox Family Archive was missing the Dismissed section entirely.
+
 ## [v0.99.23] — 2026-03-17 (Session 114: Data Stability Completion)
 
 ### Architecture (PRD-051 Phases 2 + 4)

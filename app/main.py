@@ -5399,9 +5399,7 @@ def sidebar(
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
                 nav_item(f"{prefix}/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
-                nav_item(f"{prefix}/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray")
-                if is_rhodes
-                else None,
+                nav_item(f"{prefix}/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
                 cls="mb-3",
             ),
             # Browse Section (photo-centric)
