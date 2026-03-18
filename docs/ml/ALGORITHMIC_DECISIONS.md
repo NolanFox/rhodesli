@@ -2658,3 +2658,13 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Alternatives rejected**: (1) Keep fallback with logging — logging doesn't prevent data corruption. (2) Remove JSON writes entirely — too risky without stability period.
 - **Affects**: `app/main.py` (load_registry, load_photo_registry, _build_caches, _load_photo_dimensions_cache), `tests/conftest.py`
 - **PRD**: docs/prds/051_single_source_of_truth.md
+
+### AD-228: ML Run Provenance — Environment + Scope Tracking (2026-03-18)
+- **Date**: 2026-03-18 | **Session**: 115
+- **Context**: Moving ML pipeline from local laptop to cloud ML service (TOOLS-002). Need to track which environment executed each run and compare outputs during migration. Also need community-scoped runs as we scale to dozens of communities.
+- **Decision**: Add 4 columns to ml_runs: `execution_environment` (TEXT), `model_versions` (JSONB), `community_id` (UUID), `scope_filter` (JSONB). All nullable with sensible defaults. New `core/ml_run_logger.py` with `log_ml_run()`, `complete_ml_run()`, `fail_ml_run()`, and `MLRunContext` context manager.
+- **Rationale**: Environment tracking enables quality comparison during local→cloud migration. Community scoping enables per-archive ML runs without processing the full population. `scope_filter` enables fine-grained targeting (batch, photo set, identity set) for debugging and incremental processing.
+- **Implementation**: `scripts/migrations/alter_ml_runs_add_provenance.sql` (additive ALTER TABLE). `core/ml_run_logger.py` with runtime model version detection. `MLRunContext` for automatic timing + error handling. 18 tests.
+- **Scale path**: With dozens of communities, each run targets `community_id`. Global runs (calibration) use NULL. `scope_filter` enables subset targeting without per-community overhead.
+- **Rollback**: Columns are nullable with defaults — existing code unaffected. Remove columns if approach changes.
+- **Affects**: `scripts/migrations/`, `core/ml_run_logger.py`, all future ML pipeline callers

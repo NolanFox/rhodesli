@@ -133,6 +133,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [-] 2026-03-18: **v0.99.25 — Session 115**: Community Routing Safety + ML Service Extraction Phase 1. PRD-052 community routing audit (120+ routes classified, 27 safety tests). TOOLS-002 Phase 1: standalone FastAPI ML service skeleton with detect endpoint + Dockerfile + 9 tests. ML client HTTP stub. AD-228: ml_runs provenance schema (execution_environment, model_versions, community_id, scope_filter) + run logger + 18 tests. 3214 app tests pass.
+
 - [x] 2026-03-17: **v0.99.23 — Session 114**: Data Stability Completion (PRD-051 Phases 2+4). Proposals, annotations, relationships, GEDCOM matches all read from Supabase with TTL caches. Deploy pipeline cleaned (only embeddings.npy required). Supabase health check at startup. DATA-009 reconciliation script (dry-run mode). PERF-001 achieved: make test-fast 87s → 28s. SESSION_HISTORY backfilled. 30 new tests. 3166 app tests, 590 ML tests pass. Deploy SUCCESS.
 
 - [x] 2026-03-17: **v0.99.22 — Session 113**: Audit Logging + Embeddings Sync. AUDIT-001 (P0): 22 audit_log calls across identity_routes, match_facecompare_routes, cluster_review_routes. New app/audit.py. Production embeddings synced (2957 entries, +85 from web uploads). Harry Fox cluster verification: 3/4 Dayton faces closer to Albert than naturalization form ground truth. CLUSTER-QUALITY-001 logged. 16 new tests. Deploy SUCCESS.

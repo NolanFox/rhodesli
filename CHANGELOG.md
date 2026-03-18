@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.25] — 2026-03-18 (Session 115: Community Routing Safety + ML Service Extraction Phase 1)
+
+### Community Routing Safety (PRD-052, COMMUNITY-017)
+- **Comprehensive route audit**: All ~120 POST/PUT/DELETE routes classified by auth guard type. 95+ admin routes properly guarded, 5 intentionally public routes documented.
+- **27 safety tests**: New `test_community_routing_safety.py` covering middleware behavior, upload community assignment, admin route guards, platform root neutrality, and data assignment invariants.
+- **Upload path verified**: Hidden `upload_community` form field + `is_community_explicit()` guard confirmed working end-to-end.
+
+### ML Service Extraction (TOOLS-002 Phase 1)
+- **Standalone FastAPI ML service**: New `ml_service/` directory with face detection endpoint (`POST /api/v1/detect-and-embed`), health check, bearer token auth, and separate Dockerfile.
+- **ML client stub**: New `core/ml_client.py` async HTTP client for web app→ML service communication (wired in Session 116).
+- **9 ML service tests**: Health endpoint + face detection with mocked InsightFace.
+- **Separate Dockerfile**: `ml_service/Dockerfile` with pre-downloaded buffalo_l model, 5002 port.
+
+### ML Run Provenance (AD-228)
+- **Schema migration**: 4 new columns on `ml_runs`: `execution_environment`, `model_versions`, `community_id`, `scope_filter`. All nullable, additive-only.
+- **Run logger**: New `core/ml_run_logger.py` with `log_ml_run()`, `complete_ml_run()`, `fail_ml_run()`, and `MLRunContext` context manager. Runtime model version detection.
+- **18 logger tests**: Full coverage of success/failure/scoped/global paths.
+
 ## [v0.99.24] — 2026-03-17 (Session 114 hotfix: Dismissed sidebar for all communities)
 
 ### Fixed
