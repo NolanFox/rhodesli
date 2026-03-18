@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.26] — 2026-03-18 (Session 116: ML Service Railway Deployment)
+
+### ML Service Deployment (TOOLS-002 Phase 2)
+- **Railway internal service**: `ml-service` deployed with rootDirectory monorepo pattern. Dockerfile builds InsightFace + buffalo_l model. Uvicorn on port 5002.
+- **Railway GraphQL API**: Used to configure service (rootDirectory, dockerfilePath, healthcheck, configFile disconnect). Documented in memory.
+- **ML client completed**: `core/ml_client.py` with singleton factory, 60s timeout, feature flag, 10 tests.
+- **Web service configured**: `ML_SERVICE_URL` and `ML_SERVICE_TOKEN` env vars set on rhodesli web service.
+
 ## [v0.99.25] — 2026-03-18 (Session 115: Community Routing Safety + ML Service Extraction Phase 1)
 
 ### Community Routing Safety (PRD-052, COMMUNITY-017)

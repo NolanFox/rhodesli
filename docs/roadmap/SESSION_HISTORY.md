@@ -14,6 +14,13 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 116: ML Service Railway Deployment (2026-03-18) — v0.99.26
+- TOOLS-002 Phase 2: ML service deployed to Railway as internal service (rootDirectory monorepo pattern)
+- Railway GraphQL API for service config (rootDirectory, dockerfilePath, healthcheck, configFile disconnect)
+- ML client completed: singleton factory, 60s timeout, feature flag, 10 tests
+- Upload pipeline wiring deferred (process_directory refactor needed)
+- ML service: Uvicorn running on port 5002, health check OK
+
 ## Session 115: Community Routing Safety + ML Service Extraction Phase 1 (2026-03-18) — v0.99.25
 - PRD-052: Community routing audit — 120+ POST routes classified, 95+ admin-guarded, 27 safety tests
 - TOOLS-002 Phase 1: Standalone FastAPI ML service (detect endpoint, Dockerfile, bearer auth, 9 tests)

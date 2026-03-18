@@ -54,7 +54,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
 
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
-- [-] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (Extract skeleton) in Session 115. Phase 2-4 in Sessions 116-117. See `docs/architecture/ML_SERVICE.md`.
+- [-] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116. Phase 3 (wire upload pipeline) next. See `docs/architecture/ML_SERVICE.md`.
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
@@ -133,7 +133,9 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
-- [-] 2026-03-18: **v0.99.25 — Session 115**: Community Routing Safety + ML Service Extraction Phase 1. PRD-052 community routing audit (120+ routes classified, 27 safety tests). TOOLS-002 Phase 1: standalone FastAPI ML service skeleton with detect endpoint + Dockerfile + 9 tests. ML client HTTP stub. AD-228: ml_runs provenance schema (execution_environment, model_versions, community_id, scope_filter) + run logger + 18 tests. 3214 app tests pass.
+- [-] 2026-03-18: **v0.99.26 — Session 116**: ML Service Railway Deployment (TOOLS-002 Phase 2). ML service deployed as separate Railway internal service. rootDirectory monorepo pattern. ML client completed with 10 tests. Upload pipeline wiring deferred (requires process_directory refactor).
+
+- [x] 2026-03-18: **v0.99.25 — Session 115**: Community Routing Safety + ML Service Extraction Phase 1. PRD-052 community routing audit (120+ routes classified, 27 safety tests). TOOLS-002 Phase 1: standalone FastAPI ML service skeleton with detect endpoint + Dockerfile + 9 tests. ML client HTTP stub. AD-228: ml_runs provenance schema (execution_environment, model_versions, community_id, scope_filter) + run logger + 18 tests. 3214 app tests pass.
 
 - [x] 2026-03-17: **v0.99.23 — Session 114**: Data Stability Completion (PRD-051 Phases 2+4). Proposals, annotations, relationships, GEDCOM matches all read from Supabase with TTL caches. Deploy pipeline cleaned (only embeddings.npy required). Supabase health check at startup. DATA-009 reconciliation script (dry-run mode). PERF-001 achieved: make test-fast 87s → 28s. SESSION_HISTORY backfilled. 30 new tests. 3166 app tests, 590 ML tests pass. Deploy SUCCESS.
 
