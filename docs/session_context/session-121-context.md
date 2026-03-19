@@ -95,3 +95,212 @@ UX-208 touches main.py which UX-211 also touches — but UX-211 only touches CSS
 - WORKSPACE-001: `docs/prds/036_workspace_onboarding.md`
 - Session 120 assessment: `docs/assessments/session-120-assessment.md`
 - Lesson 149: Browser READ-ONLY on production
+
+---
+
+## WORKSPACE-001: Personal Archive Auto-Creation — Implementation Plan
+
+### Overview
+
+PRD-036 defines the vision for self-service onboarding. WORKSPACE-001 is the first
+deliverable: when a user signs up, automatically create a personal community archive
+for them. This enables the funnel: standalone tools -> signup -> personal archive ->
+community discovery.
+
+### 1. Supabase Schema Changes
+
+**communities table — 3 new columns:**
+```sql
+ALTER TABLE communities ADD COLUMN owner_id UUID REFERENCES auth.users(id);
+ALTER TABLE communities ADD COLUMN is_personal BOOLEAN DEFAULT false;
+ALTER TABLE communities ADD COLUMN privacy TEXT DEFAULT 'public'
+    CHECK (privacy IN ('private', 'unlisted', 'public'));
+
+-- Index for owner lookup
+CREATE INDEX idx_communities_owner_id ON communities(owner_id);
+
+-- Unique constraint: one personal archive per user
+CREATE UNIQUE INDEX idx_communities_personal_owner
+    ON communities(owner_id) WHERE is_personal = true;
+```
+
+**community_members table (new):**
+```sql
+CREATE TABLE IF NOT EXISTS community_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES communities(id),
+    user_id UUID NOT NULL REFERENCES auth.users(id),
+    role TEXT NOT NULL DEFAULT 'viewer'
+        CHECK (role IN ('viewer', 'member', 'admin')),
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    invited_by UUID REFERENCES auth.users(id),
+    UNIQUE(community_id, user_id)
+);
+CREATE INDEX idx_community_members_user ON community_members(user_id);
+CREATE INDEX idx_community_members_community ON community_members(community_id);
+```
+
+**Migration script:** `scripts/sql/session_NNN_workspace_schema.sql`
+- Run via Supabase SQL editor (no automated migration runner yet)
+- Backfill existing communities: `owner_id = NULL`, `is_personal = false`, `privacy = 'public'`
+
+### 2. Auth Signup Hook Location
+
+**File:** `app/auth_routes.py` line 253-260 (`POST /signup`)
+
+Current flow:
+```
+validate_invite_code(code) -> signup_with_supabase(email, password) -> set session -> redirect
+```
+
+New flow after signup success:
+```
+validate_invite_code(code)
+-> signup_with_supabase(email, password)
+-> create_personal_archive(user_id, email)   # NEW
+-> set session
+-> redirect to personal archive
+```
+
+**Implementation:**
+
+New function in `app/supabase_data.py`:
+```python
+async def create_personal_archive(user_id: str, email: str) -> dict | None:
+    """Create a personal community archive for a new user.
+
+    Returns the created community dict, or None if creation fails.
+    Idempotent: if personal archive already exists, returns it.
+    """
+    # Extract name from email (e.g., "nolan" from "nolan@gmail.com")
+    name_part = email.split("@")[0].replace(".", " ").title()
+    slug = f"personal-{user_id[:8]}"
+
+    # Check if already exists (idempotent)
+    existing = supabase.table("communities").select("*") \
+        .eq("owner_id", user_id).eq("is_personal", True).execute()
+    if existing.data:
+        return existing.data[0]
+
+    # Create community
+    community = supabase.table("communities").insert({
+        "slug": slug,
+        "name": f"{name_part}'s Archive",
+        "description": "Personal photo archive",
+        "admin_emails": [email],
+        "r2_prefix": f"personal/{user_id[:8]}",
+        "owner_id": user_id,
+        "is_personal": True,
+        "privacy": "private",
+        "config": {"auto_created": True},
+    }).execute()
+
+    # Add owner as admin member
+    if community.data:
+        supabase.table("community_members").insert({
+            "community_id": community.data[0]["id"],
+            "user_id": user_id,
+            "role": "admin",
+        }).execute()
+
+    return community.data[0] if community.data else None
+```
+
+**R2 prefix note:** Personal archives use `personal/{user_id_prefix}/` in R2.
+This keeps them isolated from community archives (`rhodes/`, `fox-family/`).
+
+### 3. UI Changes Needed
+
+**A. Sidebar — community indicator (app/main.py ~line 564-630)**
+- Currently shows community name from `request.state.community`
+- Add: "Your Archive" label when viewing personal community
+- Add: photo count, identity count for personal archive
+- No ML features initially (no proposals, no discoveries for personal archives)
+
+**B. Community switcher (app/page_routes.py)**
+- Currently: admin dropdown shows Rhodes, Fox Family
+- Add: personal archive as first option in the dropdown
+- Personal archive marked with a distinct icon/label ("Personal")
+- Sort: personal first, then communities alphabetically
+- File: `app/page_routes.py` (community switcher function ~line 620-640)
+
+**C. Post-signup redirect**
+- Currently: redirects to `/` (landing page)
+- Change: redirect to `/c/{personal_slug}/` (personal archive)
+- Show welcome state: "Welcome! Upload your first photo to get started."
+- File: `app/auth_routes.py` (signup POST handler, line 253+)
+
+**D. Empty state for personal archive**
+- New personal archives have 0 photos
+- Show: upload CTA, link to Compare/Estimate tools, link to `/communities`
+- Reuse existing empty state pattern from admin upload page
+- File: `app/page_routes.py` (landing page handler)
+
+**E. Navigation — "My Archive" link**
+- Add to top nav when user is logged in
+- Points to `/c/{personal_slug}/`
+- File: `app/main.py` (`_public_nav_links()`)
+
+### 4. Session Estimates Per Phase
+
+| Phase | Effort | Description | Files |
+|-------|--------|-------------|-------|
+| Schema + migration | 0.5 session | SQL migration, backfill, tests | `scripts/sql/`, `app/supabase_data.py` |
+| Signup hook | 0.5 session | Auto-create on signup, idempotency, tests | `app/auth_routes.py`, `app/supabase_data.py` |
+| Community switcher | 0.5 session | Personal archive in dropdown, sort order | `app/page_routes.py`, `app/main.py` |
+| Empty state + redirect | 0.5 session | Post-signup UX, upload CTA, welcome state | `app/page_routes.py`, `app/auth_routes.py` |
+| **Total** | **2 sessions** | Conservative estimate; could compress to 1.5 |
+
+### 5. Parallelization — Agent Team Decomposition
+
+WORKSPACE-001 is tagged as an agent team candidate in ROADMAP.md. Here is the
+file dependency analysis:
+
+| Agent | Files | Dependencies |
+|-------|-------|-------------|
+| Agent A: Schema | `scripts/sql/`, `app/supabase_data.py` (new functions) | None |
+| Agent B: Auth hook | `app/auth_routes.py`, `app/auth.py` | Needs Agent A schema |
+| Agent C: UI/Sidebar | `app/main.py` (nav), `app/page_routes.py` (switcher, empty state) | Needs Agent A schema |
+
+**Verdict: Partially parallelizable.**
+- Agent A (schema) must go first
+- Agents B and C can run in parallel after A completes
+- B and C touch different files (auth_routes vs main.py/page_routes)
+- Use worktrees for B and C
+
+**Worktree strategy:**
+```
+main:           Agent A (schema migration + supabase_data functions)
+worktree-auth:  Agent B (signup hook + redirect)
+worktree-ui:    Agent C (sidebar + switcher + empty state)
+merge:          ./scripts/merge.sh worktree-auth worktree-ui
+```
+
+### 6. Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| R2 prefix collision | Data loss | Unique slug via user_id prefix; idempotent creation |
+| Supabase schema migration breaks existing communities | P0 | ALTER TABLE ADD COLUMN with defaults; no existing data changes |
+| Invite code removal needed for organic signup | Blocks adoption | Separate decision: keep invite codes for now, remove in WORKSPACE-004 |
+| Community cache invalidation | Stale UI | Invalidate `load_communities()` TTL cache on community creation |
+| Personal archives pollute admin views | UX confusion | Filter `is_personal=true` from admin community lists |
+
+### 7. What This Does NOT Include
+
+Per PRD-036 scope:
+- WORKSPACE-002 (sharing mode UX) — depends on WORKSPACE-001
+- WORKSPACE-003 (add photos to community) — depends on WORKSPACE-001
+- WORKSPACE-004 (anonymous contributions) — independent
+- WORKSPACE-005 (community discovery page) — independent
+- WORKSPACE-006 (per-community permissions) — depends on community_members table from this phase
+
+### Breadcrumbs
+
+- PRD: `docs/prds/036_workspace_onboarding.md`
+- Schema SQL: `scripts/sql/create_communities.sql` (existing table definition)
+- Auth signup: `app/auth_routes.py:253` (POST /signup handler)
+- Community middleware: `app/main.py:477` (CommunityMiddleware class)
+- Community switcher: `app/page_routes.py:620` (load_communities usage)
+- Supabase data layer: `app/supabase_data.py` (community CRUD functions)
+- ROADMAP: WORKSPACE-001 tagged as agent team candidate
