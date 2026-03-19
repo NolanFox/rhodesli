@@ -526,14 +526,15 @@ def get(request, sess=None):
     community_id = community.get("id") if community else None
     pending_items = [u for u in pending["uploads"].values() if u["status"] in ("pending", "staged")]
     if community_id:
-        pending_items = [u for u in pending_items if u.get("community") == community_id]
+        # Show uploads for this community + uploads with no community (pre-community data)
+        pending_items = [u for u in pending_items if not u.get("community") or u.get("community") == community_id]
     # Sort by submitted_at descending (newest first)
     pending_items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
 
     # Also show recently reviewed items
     reviewed_items = [u for u in pending["uploads"].values() if u["status"] in ("approved", "rejected")]
     if community_id:
-        reviewed_items = [u for u in reviewed_items if u.get("community") == community_id]
+        reviewed_items = [u for u in reviewed_items if not u.get("community") or u.get("community") == community_id]
     reviewed_items.sort(key=lambda x: x.get("reviewed_at", x.get("submitted_at", "")), reverse=True)
     reviewed_items = reviewed_items[:10]  # Show last 10
 
