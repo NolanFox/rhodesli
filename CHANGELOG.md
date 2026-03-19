@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.30] — 2026-03-19 (Session 120: ML Comparison Script + UX Fix Sprint)
+
+### ML Tools
+- **Embedding comparison script** (`scripts/compare_ml_embeddings.py`): Compare local InsightFace vs ML service embeddings per face with cosine similarity. `--local-only` mode, IoU face matching, exit code for CI.
+
+### Bug Fixes
+- **P0 Sentry alert fix**: "POST-SYNC VALIDATION FAILED" root cause — upload grouping step loaded from Supabase (stale) instead of JSON (fresh). Cross-batch matching photo registry had same issue. Both fixed.
+- **FB-009**: Confirm button disabled for unidentified persons in 3 surfaces (photo modal, person page, review buttons) with gray styling + tooltip "Name this person first"
+
+### UX Improvements
+- **FB-008**: Cross-batch match notifications after upload — bell badge shows face count, match count, top match name
+- **FB-001**: Always-visible "Search to Merge" in Focus/New Matches view — type-ahead search without needing to click "Find Similar"
+- **FB-011**: Community filter on Similar Identities — same-community sorted first, dropdown filter (same/all/specific community)
+
+### Tests
+- 44 new tests (19 ML compare, 9 FB-009, 3 Sentry fix, 3 notifications, 2 Focus search, 7 community filter, 1 structural)
+- 3278 app tests pass
+
 ## [v0.99.29] — 2026-03-19 (Session 119: ML Service End-to-End Verification)
 
 ### ML Service — First Production Upload

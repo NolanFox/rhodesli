@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 120: ML Comparison Script + UX Fix Sprint (2026-03-19) — v0.99.30
+- Embedding comparison script (scripts/compare_ml_embeddings.py) for local-vs-cloud AD-229 verification
+- Sentry POST-SYNC VALIDATION root cause fixed: grouping step loaded from Supabase (stale) instead of JSON (fresh)
+- FB-009: Confirm button disabled for unidentified persons in 3 surfaces
+- FB-008: Cross-batch match notifications after upload
+- FB-001: Always-visible merge search in Focus/New Matches view
+- FB-011: Community filter on Similar Identities (same-community-first sort + dropdown)
+- 4 parallel worktrees, all merges clean
+- 44 new tests, 3278 app tests pass
+
 ## Session 119: ML Service End-to-End Verification (2026-03-19) — v0.99.29
 - FIRST real production upload through ML service — 14 faces from Terry Yanishefsky family photo
 - Embedding quality validated: 3/3 cross-batch matches correct (Fanny Burd Yanishefsky, Irving Yanishefsky, Sarah/Edith Gukaylo sisters)
