@@ -1219,6 +1219,7 @@ def post(job_id: str, sess=None):
             upload_collection = upload.get("collection", "")
             uploader_email = upload.get("uploader_email", "")
             submitted_at = upload.get("submitted_at", "")
+            source_url = upload.get("source_url", "")
             admin_email = user.email if user else "admin"
 
             def _bg_approve_ingest():
@@ -1232,7 +1233,7 @@ def post(job_id: str, sess=None):
 
                     from core.ingest_inbox import process_directory
 
-                    process_directory(
+                    ingest_result = process_directory(
                         directory=uploads_dir,
                         job_id=job_id,
                         data_dir=_main_mod.data_path,
@@ -1242,6 +1243,15 @@ def post(job_id: str, sess=None):
                         uploaded_by=uploader_email,
                         upload_date=submitted_at,
                     )
+
+                    # Session 121 (UX-212): Set source_url on photos from this upload
+                    if source_url and ingest_result.get("photo_ids"):
+                        from core.photo_registry import PhotoRegistry
+
+                        photo_reg = PhotoRegistry.load(_main_mod.data_path / "photo_index.json")
+                        for pid in ingest_result["photo_ids"]:
+                            photo_reg.set_source_url(pid, source_url)
+                        photo_reg.save(_main_mod.data_path / "photo_index.json")
 
                     # Auto-confirm all INBOX identities created for this job so
                     # detected faces appear in the main photo browse immediately.
