@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.31] — 2026-03-19 (Session 121: Upload Verification + UX Fix Sprint + Feature Planning)
+
+### ML Tools
+- **Admin compare endpoint** (`/api/admin/ml-compare`): Proxies photo to ML service for face detection + embedding extraction. Admin-only, no DB writes. Temp file cleanup in finally block.
+- **Compare script `--url` flag**: `scripts/compare_ml_embeddings.py --url <base_url>` routes through web app admin endpoint instead of requiring direct ML service access.
+
+### UX Fixes
+- **UX-207**: Approvals page community-scoped — pending and reviewed uploads filtered by current community context. Includes uploads with no community field (pre-community data).
+- **UX-208**: Community badge always visible on suggestion cards — same-community gets muted badge, cross-community gets bright badge.
+- **UX-211**: Face overlay buttons minimum 28px size — prevents misclicks on group photos with many faces.
+- **UX-212**: Source URL preserved through upload approval — `source_url` field now set on photos during approval via `PhotoRegistry.set_source_url()`.
+
+### Documentation
+- **PRD-053**: TOOLS-003 Face Compare Real-Time product requirements document.
+- **WORKSPACE-001**: Analysis and planning for personal archive auto-creation.
+
+### Tests
+- 14 new tests (5 ml-compare, 3 approvals, 2 source URL, 2 badge, 2 overlay)
+- 3293 app tests pass
+
+### Security
+- Full audit of all changed files: clean. See `docs/session_context/session-121-security-audit.md`.
+
 ## [v0.99.30] — 2026-03-19 (Session 120: ML Comparison Script + UX Fix Sprint)
 
 ### ML Tools

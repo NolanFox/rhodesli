@@ -14,6 +14,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 121: Upload Verification + UX Fix Sprint + Feature Planning (2026-03-19) — v0.99.31
+- Admin compare endpoint `/api/admin/ml-compare` for AD-229 cosine similarity verification via web app
+- Compare script `--url` flag to proxy through admin endpoint instead of direct ML service
+- UX-207: Approvals page community-scoped (pending + reviewed items filtered)
+- UX-208: Community badge always visible (muted same-community, bright cross-community)
+- UX-211: Face overlay minimum 28px size on group photos
+- UX-212: Source URL preserved through upload approval pipeline
+- PRD-053: TOOLS-003 Face Compare Real-Time product requirements
+- Security audit: all changed files clean
+- 14 new tests, 3293 app tests pass
+
 ## Session 120: ML Comparison Script + UX Fix Sprint (2026-03-19) — v0.99.30
 - Embedding comparison script (scripts/compare_ml_embeddings.py) for local-vs-cloud AD-229 verification
 - Sentry POST-SYNC VALIDATION root cause fixed: grouping step loaded from Supabase (stale) instead of JSON (fresh)

@@ -133,6 +133,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-03-19: **v0.99.31 — Session 121**: Upload Verification + UX Fix Sprint + Feature Planning. Admin compare endpoint (`/api/admin/ml-compare`) for AD-229 verification. 4 UX fixes: UX-207 approvals community-scoped, UX-208 always-show community badge, UX-211 face overlay minimum size, UX-212 source URL persisted. PRD-053 (TOOLS-003 Face Compare Real-Time). Security audit clean. 14 new tests. 3293 app tests pass.
+
 - [x] 2026-03-19: **v0.99.30 — Session 120**: ML Comparison Script + UX Fix Sprint. Embedding comparison script (`scripts/compare_ml_embeddings.py`) for local-vs-cloud AD-229 verification. Sentry POST-SYNC VALIDATION root cause fixed (grouping loaded Supabase instead of JSON). 4 UX fixes: FB-009 confirm button disabled for unidentified (3 surfaces), FB-008 cross-batch match notifications, FB-001 merge search in Focus view, FB-011 community filter on Similar Identities. 4 parallel worktrees. 44 new tests. 3278 app tests pass.
 
 - [x] 2026-03-19: **v0.99.29 — Session 119**: ML Service End-to-End Verification (Interactive). FIRST real production upload through ML service — 14 faces from Terry Yanishefsky family photo. Embedding quality validated: 3/3 cross-batch matches correct (Fanny Burd, Irving Yanishefsky, Sarah/Edith Gukaylo sisters). Pre-warm endpoint `/api/v1/warm` + admin `/api/admin/ml-warm`. Event loop fix for admin API endpoints. 11 interactive feedback items (FB-001 through FB-011). AD-229: 1/4 criteria met (first successful upload). 3 new tests. Deploy SUCCESS.
