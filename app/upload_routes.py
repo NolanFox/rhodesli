@@ -573,8 +573,12 @@ async def post(
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     community = getattr(request.state, "community", None) if request else None
 
-    # Override with explicit form field if provided (takes precedence over middleware)
-    if upload_community and upload_community != community_slug:
+    # Override with explicit form field if provided — ADMIN ONLY (Codex audit Session 118)
+    # Non-admin users must use the community from the URL prefix to prevent
+    # cross-community writes via hidden field tampering.
+    user = _main_mod.get_current_user(sess or {}) if sess else None
+    is_admin = user and user.is_admin if user else False
+    if upload_community and upload_community != community_slug and is_admin:
         from app.supabase_data import get_community_by_slug
 
         explicit_community = get_community_by_slug(upload_community)
@@ -582,10 +586,17 @@ async def post(
             community_slug = upload_community
             community = explicit_community
             logger.info(
-                "Upload community override: middleware=%s, form=%s",
+                "Upload community override (admin): middleware=%s, form=%s",
                 getattr(request.state, "community_slug", "rhodes") if request else "rhodes",
                 upload_community,
             )
+    elif upload_community and upload_community != community_slug and not is_admin:
+        logger.warning(
+            "Non-admin attempted upload community override: user=%s, attempted=%s, forced=%s",
+            user.email if user else "unknown",
+            upload_community,
+            community_slug,
+        )
     elif _main_mod.is_community_explicit(request):
         pass  # Middleware set it from /c/{slug}/ prefix — good
     else:

@@ -206,3 +206,79 @@ class TestTransformMLResponse:
             faces, _, _ = detect_faces(Path("/fake/image.jpg"))
 
         assert faces[0]["bbox"] == [10, 20, 100, 150]
+
+
+class TestMLHealthEndpoint:
+    """Test the /api/admin/ml-health endpoint."""
+
+    def test_ml_health_not_configured(self):
+        """Returns not_configured when ML_SERVICE_URL is empty."""
+        from app.main import app as fasthtml_app
+        from starlette.testclient import TestClient
+
+        mock_client = MagicMock()
+        mock_client.is_configured = False
+
+        with (
+            patch("app.admin_routes._main_mod._check_admin", return_value=None),
+            patch("core.ml_client.get_ml_client", return_value=mock_client),
+        ):
+            client = TestClient(fasthtml_app)
+            resp = client.get("/api/admin/ml-health")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["status"] == "not_configured"
+
+    def test_ml_health_connected(self):
+        """Returns connected when ML service responds."""
+        from app.main import app as fasthtml_app
+        from starlette.testclient import TestClient
+
+        mock_client = MagicMock()
+        mock_client.is_configured = True
+        mock_client.health = AsyncMock(return_value={"status": "ok", "version": "0.1.0"})
+
+        with (
+            patch("app.admin_routes._main_mod._check_admin", return_value=None),
+            patch("core.ml_client.get_ml_client", return_value=mock_client),
+        ):
+            client = TestClient(fasthtml_app)
+            resp = client.get("/api/admin/ml-health")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["status"] == "connected"
+            assert data["ml_service"]["status"] == "ok"
+
+    def test_ml_health_unreachable(self):
+        """Returns unreachable when ML service is down."""
+        from app.main import app as fasthtml_app
+        from starlette.testclient import TestClient
+
+        mock_client = MagicMock()
+        mock_client.is_configured = True
+        mock_client.health = AsyncMock(side_effect=Exception("Connection refused"))
+
+        with (
+            patch("app.admin_routes._main_mod._check_admin", return_value=None),
+            patch("core.ml_client.get_ml_client", return_value=mock_client),
+        ):
+            client = TestClient(fasthtml_app)
+            resp = client.get("/api/admin/ml-health")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["status"] == "unreachable"
+            assert "Connection refused" in data["error"]
+
+    def test_ml_health_requires_admin(self):
+        """Non-admin users should be denied."""
+        from app.main import app as fasthtml_app
+        from starlette.testclient import TestClient
+        from starlette.responses import Response
+
+        with patch(
+            "app.admin_routes._main_mod._check_admin",
+            return_value=Response("Forbidden", status_code=403),
+        ):
+            client = TestClient(fasthtml_app)
+            resp = client.get("/api/admin/ml-health")
+            assert resp.status_code == 403

@@ -41,6 +41,34 @@ logger = logging.getLogger(__name__)
 _gedcom_upload_preview = None
 
 
+@rt("/api/admin/ml-health")
+def get(sess=None):
+    """Admin-only ML service health check. Returns ML service status."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+    from core.ml_client import get_ml_client
+    import asyncio
+
+    client = get_ml_client()
+    if not client.is_configured:
+        return Response(
+            json.dumps({"status": "not_configured", "ml_service_url": ""}),
+            media_type="application/json",
+        )
+    try:
+        result = asyncio.run(client.health())
+        return Response(
+            json.dumps({"status": "connected", "ml_service": result}),
+            media_type="application/json",
+        )
+    except Exception as e:
+        return Response(
+            json.dumps({"status": "unreachable", "error": str(e)}),
+            media_type="application/json",
+        )
+
+
 @rt("/api/admin/disk-usage")
 def get(request, sess=None):
     """Admin-only disk usage diagnostic. Shows volume contents and sizes.
