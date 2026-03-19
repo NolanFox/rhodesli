@@ -425,7 +425,11 @@ def detect_faces(filepath: Path, prefer_hybrid: bool = False) -> tuple:
 
             # Transform ML service response to PFE format
             faces = []
-            w, h = result.get("image_size", [0, 0])
+            img_size = result.get("image_size", {})
+            if isinstance(img_size, dict):
+                w, h = img_size.get("width", 0), img_size.get("height", 0)
+            else:
+                w, h = img_size[0], img_size[1]
             image_shape = (h, w)
 
             for face_data_raw in result.get("faces", []):

@@ -66,7 +66,7 @@ class TestTransformMLResponse:
             )
         return {
             "faces": faces,
-            "image_size": [640, 480],
+            "image_size": {"width": 640, "height": 480},
             "processing_time_ms": 150,
         }
 
@@ -162,7 +162,7 @@ class TestTransformMLResponse:
         """Should handle empty faces list."""
         from core.ingest_inbox import detect_faces
 
-        ml_response = {"faces": [], "image_size": [640, 480], "processing_time_ms": 50}
+        ml_response = {"faces": [], "image_size": {"width": 640, "height": 480}, "processing_time_ms": 50}
 
         mock_client = MagicMock()
         mock_client.is_configured = True

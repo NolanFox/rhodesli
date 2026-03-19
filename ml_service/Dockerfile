@@ -35,4 +35,5 @@ ENV PYTHONPATH=/app
 
 EXPOSE 5002
 
-CMD ["uvicorn", "ml_service.main:app", "--host", "0.0.0.0", "--port", "5002"]
+# Railway assigns PORT dynamically — service MUST listen on $PORT
+CMD ["sh", "-c", "uvicorn ml_service.main:app --host 0.0.0.0 --port ${PORT:-5002}"]
