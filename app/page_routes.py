@@ -4007,23 +4007,37 @@ def photo_view_content(
             quick_actions = None
             if is_admin and face_identity_id and state in ("INBOX", "PROPOSED", "SKIPPED"):
                 action_btns = []
-                # Confirm button
-                action_btns.append(
-                    Button(
-                        "\u2713",
-                        cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs "
-                        "flex items-center justify-center",
-                        hx_post=(
-                            f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
-                            f"&action=confirm&photo_id={photo_id}{action_context_suffix}{seq_param}"
-                        ),
-                        hx_target="#photo-modal-content",
-                        hx_swap="innerHTML",
-                        title="Confirm",
-                        type="button",
-                        **{"_": "on click halt the event's bubbling"},
+                # Confirm button — disabled for unidentified persons (FB-009)
+                _has_real_name = raw_name and not raw_name.startswith("Unidentified Person ")
+                if _has_real_name:
+                    action_btns.append(
+                        Button(
+                            "\u2713",
+                            cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs "
+                            "flex items-center justify-center",
+                            hx_post=(
+                                f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                                f"&action=confirm&photo_id={photo_id}{action_context_suffix}{seq_param}"
+                            ),
+                            hx_target="#photo-modal-content",
+                            hx_swap="innerHTML",
+                            title="Confirm",
+                            type="button",
+                            **{"_": "on click halt the event's bubbling"},
+                        )
                     )
-                )
+                else:
+                    action_btns.append(
+                        Button(
+                            "\u2713",
+                            cls="w-6 h-6 rounded-full bg-gray-400 cursor-not-allowed text-white text-xs "
+                            "flex items-center justify-center opacity-50",
+                            title="Name this person first",
+                            type="button",
+                            disabled=True,
+                            **{"_": "on click halt the event's bubbling"},
+                        )
+                    )
                 # Skip button (not for SKIPPED state)
                 if state in ("INBOX", "PROPOSED"):
                     action_btns.append(
