@@ -69,6 +69,47 @@ The screenshots show an active conversation where:
 - **BACKLOG:** UX-134 (new)
 - **Effort:** 2-3 hours — need to detect annotation-merge overlap and wire auto-resolution
 
+### FB-005: Upload Form Needs Annotation/Notes Field (P2)
+- **Severity:** P2
+- **Context:** User uploaded Terry Yanishefsky family photo. Had a detailed email caption identifying every person (back row L-R: aunt Mary, husband Sam Barnett, aunt Ruth, grandmother, grandfather, father Solomon, uncle Joe; front row L-R: cousins Sidney and Beatrice, aunt Fannie and uncle Irving, uncle Bernard and aunt Jenny holding cousin Milton). No way to attach this caption to the upload — it lives only in email.
+- **Expected:** An optional "Notes" or "Caption" field on the upload form where you can paste context about the photo. This context should be visible on the photo page and potentially feed into Gemini analysis.
+- **Root cause:** Upload form only has Collection, Source, and Source URL fields. No free-text annotation.
+- **Fix:** Add optional "Notes" textarea to upload form. Store in photo metadata. Display on photo page.
+- **BACKLOG:** UX-135 (new)
+- **Effort:** 1 hour
+
+### FB-006: Face Overlay Buttons Too Small/Crowded on Group Photos (P1)
+- **Severity:** P1
+- **Context:** Terry Yanishefsky family photo has 14 people. Face overlay buttons (confirm/skip/reject) are tiny and overlap each other on small faces. User repeatedly misclicked — accidentally hitting decline/skip when trying to view a person. Speed Loop mode has the same issue with the "Type name to tag..." box overlapping faces.
+- **Expected:** Larger click targets, or a different interaction model for dense group photos (e.g., click face to select, then choose action from a panel, rather than tiny overlay buttons).
+- **Root cause:** Face overlay buttons scale with face bounding box size. On group photos with 10+ people, faces are small → buttons are too small to reliably target.
+- **Fix:** Needs design thinking. Options: (a) click-to-select then panel actions, (b) minimum button size regardless of face size, (c) zoom-on-hover, (d) list-based tagging mode instead of overlay-based.
+- **BACKLOG:** UX-136 (new)
+- **Effort:** PRD needed — this is a significant interaction redesign
+
+### FB-007: Source URL Not Saved During Upload (P2)
+- **Severity:** P2
+- **Context:** User entered a Google Photos URL as Source URL during upload. After upload completed, the Source URL field on the photo page was empty.
+- **Expected:** Source URL should persist from upload form to photo metadata.
+- **Root cause:** Upload pipeline may not be passing source_url through to the photo record.
+- **Fix:** Trace upload form → _background_ingest() → photo record creation. Verify source_url is passed and saved.
+- **BACKLOG:** UX-137 (new)
+- **Effort:** 30 min — likely a missing field in the pipeline
+
+### FB-008: Cross-Batch Matches Should Generate Notifications (P1)
+- **Severity:** P1
+- **Context:** After uploading the Terry Yanishefsky photo, 118 cross-batch matches were found. The #1 match for Person b34ba944 was Fannie Burd Yanishefsky at distance 1.08 (44% match) — correct identification. The #1 match for Person 79991b6a was Irving Yanishefsky at distance 1.13 (39% match) — also correct. But neither generated a notification or proposal visible to the admin. The admin bar showed "Proposals (0)".
+- **Expected:** After upload, admin should see a notification like "New upload: 14 faces found, 2 high-confidence matches to existing people" with direct links to review. Even at 39-44% confidence, these are worth flagging because:
+  1. The top match was correct in both cases
+  2. The distance gap to the next candidate was significant (+8.3% for Fanny, meaningful)
+  3. Admin already has context (just uploaded the photo, knows who's in it)
+- **Current thresholds (AD-179):** Tier 1 auto-merge <0.85, Tier 2 proposal 0.85-1.10. Both matches (1.08 and 1.13) are at or above Tier 2 boundary.
+- **The system did the right thing** not auto-merging — siblings/cousins at similar distances (Mary Yanishefsky Barnett, Esther Burd Fox) prove that auto-merge would be dangerous here. But the lack of ANY notification means the admin has to manually browse each new face to find matches.
+- **Real-world example:** Irving Yanishefsky at distance 1.13 = correct match. Person 359c4b67 at distance 1.13 = different person (same photo, "Seen together"). Same distance, different answers. This validates conservative thresholds but demands better notification.
+- **Fix:** After cross-batch matching, generate a "review digest" notification: "N faces with potential matches found. Top: [Person X] → [Match Y] at N% confidence." Surface in Notifications sidebar with direct review links.
+- **BACKLOG:** UX-138 (new) — relates to PRD-049 (cross-batch matching), notification UX (feedback_notification_ux.md)
+- **Effort:** 2-3 hours for basic notification; full notification redesign needs PRD per feedback_notification_ux.md
+
 ---
 
 ## Disposition
@@ -79,5 +120,9 @@ The screenshots show an active conversation where:
 | FB-002 | P1 | No | BACKLOG UX-132 — community badge on approvals |
 | FB-003 | P2 | No | BACKLOG UX-133 — always show community badge |
 | FB-004 | P2 | No | BACKLOG UX-134 — auto-resolve annotation after merge |
+| FB-005 | P2 | No | BACKLOG UX-135 — upload annotation/notes field |
+| FB-006 | P1 | No | BACKLOG UX-136 — face overlay buttons too small on group photos (needs PRD) |
+| FB-007 | P2 | No | BACKLOG UX-137 — source URL not saved during upload |
+| FB-008 | P1 | No | BACKLOG UX-138 — cross-batch match notifications |
 
-**Recommendation:** These are all follow-up items. FB-001 (merge search) is the highest impact — it directly blocks the admin workflow when community members provide identifications. Should be a near-term session (1-2 hours).
+**Recommendation:** FB-008 (notifications after cross-batch matching) and FB-006 (group photo tagging UX) are the highest-impact items. FB-008 directly addresses the gap between "ML found correct matches" and "admin knows about them." FB-001 (merge search) remains important for the WhatsApp-to-merge workflow.
