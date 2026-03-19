@@ -567,10 +567,16 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
     if not communities:
         return None
 
-    # First check if identity belongs to current community — if so, no badge needed
+    # Session 121 (UX-208): Always show community badge, even for same community.
+    # Same-community gets a subtle muted badge; cross-community gets bright badge.
     current_ids = _get_community_identity_ids(current_community)
+    current_name = current_community.get("name", current_slug.replace("-", " ").title())
     if current_ids and identity_id in current_ids:
-        return None  # Identity is in current community, no cross-community badge
+        return Span(
+            current_name,
+            cls="text-xs px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/30",
+            title=f"From {current_name}",
+        )
 
     for comm in communities:
         comm_slug = comm.get("slug", "")
