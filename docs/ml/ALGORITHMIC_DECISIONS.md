@@ -2682,3 +2682,17 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Dockerfile changes when ready**: Remove lines 27-43 (model downloads), remove `g++` from apt-get, remove `COPY rhodesli_ml/` (if ML imports also removed). Expected savings: ~5min build time, ~1GB image size.
 - **Rollback**: Re-add model downloads to Dockerfile. Local detection code stays in codebase regardless.
 - **Affects**: `Dockerfile`, `core/ingest_inbox.py` (fallback path), deploy pipeline
+
+## AD-230: Real-Time Face Comparison via ML Service (TOOLS-003)
+- **Date**: 2026-03-19
+- **Session**: 122
+- **Context**: PRD-053 — users need to upload a photo and get instant matches against the archive, not just compare pre-computed embeddings.
+- **Decision**: New `POST /api/compare/realtime` endpoint. Accepts uploaded photo, calls ML service `detect-and-embed`, feeds 512-dim embeddings directly into `find_similar_faces()` for archive comparison. Returns top 10 matches per face with calibrated confidence scores.
+- **Rationale**: ML service already deployed (TOOLS-002). `find_similar_faces()` already accepts raw embeddings. No format conversion needed — ML service returns L2-normalized 512-dim vectors, same as archive. AD-110 compliance: no heavy ML on web requests (ML service handles it).
+- **Key design choices**:
+  1. Admin-only initially (opens to public after validation)
+  2. Ephemeral — uploaded photo is NOT persisted to archive (compare-only)
+  3. No database writes during comparison
+  4. Graceful degradation when ML service unavailable
+- **Gap/Risk**: Not yet production-verified. Needs browser test with real upload. ML service cold start (~17s) could timeout on first request after idle.
+- **Affects**: `app/compare_routes.py`, PRD-053

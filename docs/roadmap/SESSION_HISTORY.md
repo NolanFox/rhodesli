@@ -14,6 +14,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 122: TOOLS-003 Real-Time Compare + Performance + WORKSPACE Schema (2026-03-19) — v0.99.32
+- TOOLS-003: Real-time face compare endpoint (`POST /api/compare/realtime`) — upload photo, ML service detects faces, compare against archive via find_similar_faces. Admin-only. AD-230.
+- Performance: Speed-run cache TTL 30s → 120s. _build_caches investigation: already O(N), no fix needed.
+- WORKSPACE-001 Phase 1: SQL migration (owner_id, is_personal, privacy columns) + create_personal_archive() function. 16 tests.
+- 3 parallel worktrees. 26 new tests.
+
 ## Session 121: Upload Verification + UX Fix Sprint + Feature Planning (2026-03-19) — v0.99.31
 - Admin compare endpoint `/api/admin/ml-compare` for AD-229 cosine similarity verification via web app
 - Compare script `--url` flag to proxy through admin endpoint instead of direct ML service
