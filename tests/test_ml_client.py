@@ -63,17 +63,21 @@ class TestMLServiceClientIsAvailable:
         import asyncio
 
         client = MLServiceClient(base_url="")
-        result = asyncio.get_event_loop().run_until_complete(client.is_available())
+        result = asyncio.run(client.is_available())
         assert result is False
 
     def test_not_available_on_connection_error(self):
         from core.ml_client import MLServiceClient
         import asyncio
 
-        client = MLServiceClient(base_url="http://127.0.0.1:59999")
-        result = asyncio.get_event_loop().run_until_complete(client.is_available())
+        async def _check():
+            client = MLServiceClient(base_url="http://127.0.0.1:59999")
+            result = await client.is_available()
+            await client.close()
+            return result
+
+        result = asyncio.run(_check())
         assert result is False
-        asyncio.get_event_loop().run_until_complete(client.close())
 
 
 class TestMLServiceClientWarm:
@@ -99,7 +103,7 @@ class TestMLServiceClientWarm:
         mock_http.get = AsyncMock(return_value=mock_response)
         client._client = mock_http
 
-        result = asyncio.get_event_loop().run_until_complete(client.warm())
+        result = asyncio.run(client.warm())
         mock_http.get.assert_called_once_with("/api/v1/warm")
         assert result["status"] == "warm"
         assert result["model"] == "buffalo_l"
