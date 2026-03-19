@@ -95,6 +95,7 @@ class TestMLServiceClientWarm:
         mock_response.raise_for_status = MagicMock()
 
         mock_http = AsyncMock()
+        mock_http.is_closed = False
         mock_http.get = AsyncMock(return_value=mock_response)
         client._client = mock_http
 

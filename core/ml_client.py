@@ -53,6 +53,15 @@ class MLServiceClient:
         return bool(self.base_url)
 
     async def _get_client(self) -> httpx.AsyncClient:
+        # Don't cache across event loops — asyncio.run() closes the loop
+        # and any client bound to it becomes invalid
+        if self._client is not None:
+            try:
+                # Check if the underlying transport is still usable
+                if self._client.is_closed:
+                    self._client = None
+            except Exception:
+                self._client = None
         if self._client is None:
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
