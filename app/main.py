@@ -5809,6 +5809,25 @@ def identity_card_expanded(
                         else {}
                     ),
                 ),
+                # FB-001: Always-visible merge search in Focus view (admin only)
+                Div(
+                    H5("Search to Merge", cls="text-sm font-semibold text-slate-300 mb-2"),
+                    Input(
+                        type="text",
+                        name="q",
+                        placeholder="Search by name to merge...",
+                        cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder-slate-500",
+                        hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
+                        hx_trigger="keyup changed delay:300ms",
+                        hx_target=f"#focus-search-results-{identity_id}",
+                        hx_include="this",
+                    ),
+                    Div(id=f"focus-search-results-{identity_id}", cls="mt-2"),
+                    cls="mt-4 pt-3 border-t border-slate-700",
+                    data_testid="focus-merge-search",
+                )
+                if is_admin
+                else None,
                 actions,
                 # Suggest Name form (hidden by default, shown via Hyperscript toggle)
                 _suggest_name_form(identity_id, nav_prefix=nav_prefix),

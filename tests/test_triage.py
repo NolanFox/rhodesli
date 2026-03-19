@@ -16,8 +16,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-def make_identity(identity_id, state="INBOX", name=None, promoted_from=None,
-                  promotion_reason=None, promotion_context=None):
+def make_identity(
+    identity_id, state="INBOX", name=None, promoted_from=None, promotion_reason=None, promotion_context=None
+):
     """Create a minimal identity dict for triage tests."""
     now = datetime.now(timezone.utc).isoformat()
     identity = {
@@ -65,8 +66,7 @@ class TestTriageCategories:
 
         mock_ids.return_value = set()  # No proposals
 
-        to_review = [make_identity("id1", promoted_from="SKIPPED",
-                                    promotion_reason="new_face_match")]
+        to_review = [make_identity("id1", promoted_from="SKIPPED", promotion_reason="new_face_match")]
         counts = _compute_triage_counts(to_review)
 
         assert counts["ready_to_confirm"] == 0
@@ -93,10 +93,12 @@ class TestTriageCategories:
         from app.main import _compute_triage_counts
 
         mock_ids.return_value = {"id1", "id2"}
+
         def best_proposal(iid):
             if iid == "id1":
                 return {"distance": 0.7, "confidence": "VERY HIGH"}
             return {"distance": 1.1, "confidence": "MODERATE"}
+
         mock_best.side_effect = best_proposal
 
         to_review = [
@@ -163,6 +165,7 @@ class TestTriageBar:
         assert bar is not None
         # Render to string to check content
         from starlette.testclient import TestClient
+
         html = str(bar)
         assert "Ready to Confirm" in html
         assert "Unmatched" in html
@@ -304,8 +307,7 @@ class TestPromotionBadge:
     def test_badge_for_new_face_match(self):
         from app.main import _promotion_badge
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="new_face_match")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="new_face_match")
         badge = _promotion_badge(identity)
 
         assert badge is not None
@@ -315,8 +317,7 @@ class TestPromotionBadge:
     def test_badge_for_confirmed_match(self):
         from app.main import _promotion_badge
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="confirmed_match")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="confirmed_match")
         badge = _promotion_badge(identity)
 
         assert badge is not None
@@ -336,8 +337,7 @@ class TestPromotionBanner:
     def test_banner_for_new_face_match(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="new_face_match")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="new_face_match")
         banner = _promotion_banner(identity)
 
         assert banner is not None
@@ -347,8 +347,7 @@ class TestPromotionBanner:
     def test_banner_for_confirmed_match(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="confirmed_match")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="confirmed_match")
         banner = _promotion_banner(identity)
 
         assert banner is not None
@@ -358,8 +357,7 @@ class TestPromotionBanner:
     def test_banner_for_group_discovery(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="group_discovery")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="group_discovery")
         banner = _promotion_banner(identity)
 
         assert banner is not None
@@ -382,8 +380,7 @@ class TestFocusOrdering:
         identities = [
             make_identity("id1"),  # unmatched
             make_identity("id2"),  # has VH proposal
-            make_identity("id3", promoted_from="SKIPPED",
-                           promotion_reason="confirmed_match"),  # confirmed match
+            make_identity("id3", promoted_from="SKIPPED", promotion_reason="confirmed_match"),  # confirmed match
         ]
 
         # The confirmed_match promotion should be "rediscovered" category
@@ -402,8 +399,7 @@ class TestUpNextFilterPreservation:
         from app.main import identity_card_mini
 
         identity = make_identity("abc123def456")
-        card = identity_card_mini(identity, crop_files=set(), clickable=True,
-                                   triage_filter="rediscovered")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True, triage_filter="rediscovered")
         html = str(card)
         assert "filter=rediscovered" in html
         assert "current=abc123def456" in html
@@ -413,8 +409,7 @@ class TestUpNextFilterPreservation:
         from app.main import identity_card_mini
 
         identity = make_identity("abc123def456")
-        card = identity_card_mini(identity, crop_files=set(), clickable=True,
-                                   triage_filter="")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True, triage_filter="")
         html = str(card)
         assert "filter=" not in html
 
@@ -423,8 +418,7 @@ class TestUpNextFilterPreservation:
         from app.main import identity_card_mini
 
         identity = make_identity("abc123def456", state="INBOX")
-        card = identity_card_mini(identity, crop_files=set(), clickable=True,
-                                   triage_filter="ready")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True, triage_filter="ready")
         html = str(card)
         assert "section=to_review" in html
         assert "view=focus" in html
@@ -437,9 +431,12 @@ class TestPromotionContextPopulated:
     def test_banner_shows_custom_context_for_group_discovery(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="group_discovery",
-                                  promotion_context="Groups with Person 033, Person 034")
+        identity = make_identity(
+            "id1",
+            promoted_from="SKIPPED",
+            promotion_reason="group_discovery",
+            promotion_context="Groups with Person 033, Person 034",
+        )
         banner = _promotion_banner(identity)
         html = str(banner)
         assert "Groups with Person 033, Person 034" in html
@@ -448,9 +445,12 @@ class TestPromotionContextPopulated:
     def test_banner_shows_custom_context_for_new_face_match(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="new_face_match",
-                                  promotion_context="Matches with Person 088 from recently uploaded photos")
+        identity = make_identity(
+            "id1",
+            promoted_from="SKIPPED",
+            promotion_reason="new_face_match",
+            promotion_context="Matches with Person 088 from recently uploaded photos",
+        )
         banner = _promotion_banner(identity)
         html = str(banner)
         assert "Matches with Person 088" in html
@@ -459,9 +459,12 @@ class TestPromotionContextPopulated:
     def test_banner_shows_custom_context_for_confirmed_match(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="confirmed_match",
-                                  promotion_context="Matches Victoria Capuano at distance 0.612 (VERY HIGH)")
+        identity = make_identity(
+            "id1",
+            promoted_from="SKIPPED",
+            promotion_reason="confirmed_match",
+            promotion_context="Matches Victoria Capuano at distance 0.612 (VERY HIGH)",
+        )
         banner = _promotion_banner(identity)
         html = str(banner)
         assert "Matches Victoria Capuano" in html
@@ -470,8 +473,7 @@ class TestPromotionContextPopulated:
     def test_banner_falls_back_to_generic_without_context(self):
         from app.main import _promotion_banner
 
-        identity = make_identity("id1", promoted_from="SKIPPED",
-                                  promotion_reason="group_discovery")
+        identity = make_identity("id1", promoted_from="SKIPPED", promotion_reason="group_discovery")
         banner = _promotion_banner(identity)
         html = str(banner)
         assert "groups with another face" in html
@@ -485,8 +487,7 @@ class TestExpandedCardFilterPropagation:
         from app.main import identity_card_expanded, to_xml
 
         identity = make_identity("abc123", state="INBOX")
-        card = identity_card_expanded(identity, crop_files=set(), is_admin=True,
-                                       triage_filter="ready")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True, triage_filter="ready")
         html = to_xml(card)
         assert "filter=ready" in html
         assert "/identity/abc123/skip?from_focus=true&amp;filter=ready" in html
@@ -496,8 +497,7 @@ class TestExpandedCardFilterPropagation:
         from app.main import identity_card_expanded, to_xml
 
         identity = make_identity("abc123", state="INBOX")
-        card = identity_card_expanded(identity, crop_files=set(), is_admin=True,
-                                       triage_filter="rediscovered")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True, triage_filter="rediscovered")
         html = to_xml(card)
         assert "filter=rediscovered" in html
         assert "/inbox/abc123/confirm?from_focus=true&amp;filter=rediscovered" in html
@@ -507,8 +507,7 @@ class TestExpandedCardFilterPropagation:
         from app.main import identity_card_expanded, to_xml
 
         identity = make_identity("abc123", state="INBOX")
-        card = identity_card_expanded(identity, crop_files=set(), is_admin=True,
-                                       triage_filter="unmatched")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True, triage_filter="unmatched")
         html = to_xml(card)
         assert "filter=unmatched" in html
         assert "/inbox/abc123/reject?from_focus=true&amp;filter=unmatched" in html
@@ -518,11 +517,39 @@ class TestExpandedCardFilterPropagation:
         from app.main import identity_card_expanded, to_xml
 
         identity = make_identity("abc123", state="INBOX")
-        card = identity_card_expanded(identity, crop_files=set(), is_admin=True,
-                                       triage_filter="")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True, triage_filter="")
         html = to_xml(card)
         assert "filter=" not in html
         assert "/identity/abc123/skip?from_focus=true" in html
+
+
+class TestFocusMergeSearch:
+    """Tests that Focus view renders merge search input (FB-001)."""
+
+    @patch("app.main._get_identities_with_proposals")
+    def test_focus_card_has_merge_search_for_admin(self, mock_proposals):
+        """Focus card renders search-to-merge input for admin users."""
+        from app.main import identity_card_expanded, to_xml
+
+        mock_proposals.return_value = set()
+        identity = make_identity("abc123", state="INBOX")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True)
+        html = to_xml(card)
+        assert "Search to Merge" in html
+        assert "focus-search-results-abc123" in html
+        assert "/api/identity/abc123/search" in html
+
+    @patch("app.main._get_identities_with_proposals")
+    def test_focus_card_no_merge_search_for_nonadmin(self, mock_proposals):
+        """Focus card does not render search-to-merge for non-admin users."""
+        from app.main import identity_card_expanded, to_xml
+
+        mock_proposals.return_value = set()
+        identity = make_identity("abc123", state="INBOX")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=False)
+        html = to_xml(card)
+        assert "Search to Merge" not in html
+        assert "focus-search-results-abc123" not in html
 
 
 class TestGetNextFocusCardFilter:
@@ -533,8 +560,7 @@ class TestGetNextFocusCardFilter:
     @patch("app.main.save_registry")
     @patch("app.main.load_registry")
     @patch("app.main.get_crop_files")
-    def test_filter_limits_results(self, mock_crops, mock_load, mock_save,
-                                    mock_best, mock_ids):
+    def test_filter_limits_results(self, mock_crops, mock_load, mock_save, mock_best, mock_ids):
         """get_next_focus_card with filter=unmatched excludes items with proposals."""
         from app.main import get_next_focus_card
 
@@ -550,11 +576,12 @@ class TestGetNextFocusCardFilter:
         mock_reg.list_identities.side_effect = lambda state: {
             "INBOX": [ready_id, unmatched_id],
             "PROPOSED": [],
-        }.get(state.value if hasattr(state, 'value') else state, [])
+        }.get(state.value if hasattr(state, "value") else state, [])
         mock_load.return_value = mock_reg
 
         result = get_next_focus_card(triage_filter="unmatched")
         from app.main import to_xml
+
         html = to_xml(result)
         # Should NOT show the identity with proposal (id1)
         # Should show the unmatched identity (id2)
@@ -565,8 +592,7 @@ class TestGetNextFocusCardFilter:
     @patch("app.main.save_registry")
     @patch("app.main.load_registry")
     @patch("app.main.get_crop_files")
-    def test_filter_passes_to_up_next(self, mock_crops, mock_load, mock_save,
-                                       mock_best, mock_ids):
+    def test_filter_passes_to_up_next(self, mock_crops, mock_load, mock_save, mock_best, mock_ids):
         """get_next_focus_card passes triage_filter to Up Next mini cards."""
         from app.main import get_next_focus_card
 
@@ -578,11 +604,12 @@ class TestGetNextFocusCardFilter:
         mock_reg.list_identities.side_effect = lambda state: {
             "INBOX": items,
             "PROPOSED": [],
-        }.get(state.value if hasattr(state, 'value') else state, [])
+        }.get(state.value if hasattr(state, "value") else state, [])
         mock_load.return_value = mock_reg
 
         result = get_next_focus_card(triage_filter="unmatched")
         from app.main import to_xml
+
         html = to_xml(result)
         assert "filter=unmatched" in html
         assert "+2 more" in html
@@ -592,8 +619,7 @@ class TestGetNextFocusCardFilter:
     @patch("app.main.save_registry")
     @patch("app.main.load_registry")
     @patch("app.main.get_crop_files")
-    def test_empty_state_when_filtered_results_empty(self, mock_crops, mock_load,
-                                                      mock_save, mock_best, mock_ids):
+    def test_empty_state_when_filtered_results_empty(self, mock_crops, mock_load, mock_save, mock_best, mock_ids):
         """get_next_focus_card returns empty state when filter excludes all items."""
         from app.main import get_next_focus_card
 
@@ -607,12 +633,13 @@ class TestGetNextFocusCardFilter:
         mock_reg.list_identities.side_effect = lambda state: {
             "INBOX": items,
             "PROPOSED": [],
-        }.get(state.value if hasattr(state, 'value') else state, [])
+        }.get(state.value if hasattr(state, "value") else state, [])
         mock_load.return_value = mock_reg
 
         # Filter for "unmatched" should exclude this identity
         result = get_next_focus_card(triage_filter="unmatched")
         from app.main import to_xml
+
         html = to_xml(result)
         assert "All caught up" in html
 
@@ -625,10 +652,11 @@ class TestPhotoNavBoundaryIndicators:
         from app.main import photo_view_content, to_xml
         from unittest.mock import patch
 
-        with patch("app.main.get_photo_metadata") as mock_meta, \
-             patch("app.main.get_photo_dimensions") as mock_dims, \
-             patch("app.main.load_registry") as mock_reg:
-
+        with (
+            patch("app.main.get_photo_metadata") as mock_meta,
+            patch("app.main.get_photo_dimensions") as mock_dims,
+            patch("app.main.load_registry") as mock_reg,
+        ):
             mock_meta.return_value = {
                 "filename": "test.jpg",
                 "faces": [],
@@ -639,9 +667,12 @@ class TestPhotoNavBoundaryIndicators:
             mock_reg.return_value = MagicMock()
 
             result = photo_view_content(
-                "photo1", is_partial=True,
-                prev_id=None, next_id="photo2",
-                nav_idx=0, nav_total=5,
+                "photo1",
+                is_partial=True,
+                prev_id=None,
+                next_id="photo2",
+                nav_idx=0,
+                nav_total=5,
             )
             html = to_xml(*result)
             assert "First photo" in html
@@ -652,10 +683,11 @@ class TestPhotoNavBoundaryIndicators:
         from app.main import photo_view_content, to_xml
         from unittest.mock import patch
 
-        with patch("app.main.get_photo_metadata") as mock_meta, \
-             patch("app.main.get_photo_dimensions") as mock_dims, \
-             patch("app.main.load_registry") as mock_reg:
-
+        with (
+            patch("app.main.get_photo_metadata") as mock_meta,
+            patch("app.main.get_photo_dimensions") as mock_dims,
+            patch("app.main.load_registry") as mock_reg,
+        ):
             mock_meta.return_value = {
                 "filename": "test.jpg",
                 "faces": [],
@@ -666,9 +698,12 @@ class TestPhotoNavBoundaryIndicators:
             mock_reg.return_value = MagicMock()
 
             result = photo_view_content(
-                "photo1", is_partial=True,
-                prev_id="photo0", next_id=None,
-                nav_idx=4, nav_total=5,
+                "photo1",
+                is_partial=True,
+                prev_id="photo0",
+                next_id=None,
+                nav_idx=4,
+                nav_total=5,
             )
             html = to_xml(*result)
             assert "Last photo" in html
@@ -679,10 +714,11 @@ class TestPhotoNavBoundaryIndicators:
         from app.main import photo_view_content, to_xml
         from unittest.mock import patch
 
-        with patch("app.main.get_photo_metadata") as mock_meta, \
-             patch("app.main.get_photo_dimensions") as mock_dims, \
-             patch("app.main.load_registry") as mock_reg:
-
+        with (
+            patch("app.main.get_photo_metadata") as mock_meta,
+            patch("app.main.get_photo_dimensions") as mock_dims,
+            patch("app.main.load_registry") as mock_reg,
+        ):
             mock_meta.return_value = {
                 "filename": "test.jpg",
                 "faces": [],
@@ -693,9 +729,12 @@ class TestPhotoNavBoundaryIndicators:
             mock_reg.return_value = MagicMock()
 
             result = photo_view_content(
-                "photo1", is_partial=True,
-                prev_id="photo0", next_id="photo2",
-                nav_idx=2, nav_total=5,
+                "photo1",
+                is_partial=True,
+                prev_id="photo0",
+                next_id="photo2",
+                nav_idx=2,
+                nav_total=5,
             )
             html = to_xml(*result)
             assert "First photo" not in html
