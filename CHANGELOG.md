@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.32] — 2026-03-19 (Session 122: TOOLS-003 Real-Time Compare + WORKSPACE Schema)
+
+### Features
+- **TOOLS-003: Real-time face compare** (`POST /api/compare/realtime`): Upload a photo, ML service detects faces and returns embeddings, compared against archive via `find_similar_faces()`. Top 10 matches per face with calibrated confidence. Admin-only.
+- **WORKSPACE-001 Phase 1**: SQL migration for personal archives (`owner_id`, `is_personal`, `privacy` columns). `create_personal_archive()` function in supabase_data.py — idempotent, cache-invalidating.
+
+### Tests
+- 16 new tests (WORKSPACE schema validation, create function, idempotency)
+
 ## [v0.99.31] — 2026-03-19 (Session 121: Upload Verification + UX Fix Sprint + Feature Planning)
 
 ### ML Tools

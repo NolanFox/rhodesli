@@ -7,9 +7,9 @@ Prompt: docs/prompts/session-122-prompt.md
 - Mode: implementation
 
 ## Phase Checklist
-- [ ] Phase 0: Orient
-- [ ] Phase 1: TOOLS-003 — Real-Time Face Compare
-- [ ] Phase 2: Performance — Speed-Run Cache Fix
-- [ ] Phase 3: WORKSPACE-001 Schema + Function
-- [ ] Phase 4: Browser Verify Session 121
-- [ ] Phase 5: Security Audit + Harness Outputs
+- [x] Phase 0: Orient — baseline 3293 tests
+- [x] Phase 1: TOOLS-003 — Real-Time Face Compare — POST /api/compare/realtime, +202 lines (worktree)
+- [-] Phase 2: Performance — Investigation done, fix deferred (PERF-011)
+- [x] Phase 3: WORKSPACE-001 Schema + Function — SQL migration + create_personal_archive + 16 tests (worktree)
+- [x] Phase 4: Browser Verify — UX-207 verified on production
+- [x] Phase 5: Assessment created, harness outputs

@@ -55,7 +55,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
 - [x] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116, Phase 3 (wire pipeline) Session 117, Phase 4 (clustering automation — verified already wired, Session 118). ML service deployed on Railway, upload pipeline wired with fallback. Session 118: fixed critical port mismatch, ML service first healthy deploy. Remaining: Phase 5 (remove local ML deps — deferred per AD-229).
-- [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
+- [x] 2026-03-19: TOOLS-003: Face Compare Real-Time — POST /api/compare/realtime endpoint (Session 122). Needs tests + production verification.
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-19: **v0.99.32 — Session 122**: TOOLS-003 Real-Time Compare + WORKSPACE Schema. Real-time face compare endpoint (`POST /api/compare/realtime`) — upload photo, ML service detects, compare against archive. WORKSPACE-001 Phase 1: SQL migration + `create_personal_archive()`. Performance investigation (PERF-011 logged). 16 new tests. 3 parallel worktrees.
 
 - [x] 2026-03-19: **v0.99.31 — Session 121**: Upload Verification + UX Fix Sprint + Feature Planning. Admin compare endpoint (`/api/admin/ml-compare`) for AD-229 verification. 4 UX fixes: UX-207 approvals community-scoped, UX-208 always-show community badge, UX-211 face overlay minimum size, UX-212 source URL persisted. PRD-053 (TOOLS-003 Face Compare Real-Time). Security audit clean. 14 new tests. 3293 app tests pass.
 
