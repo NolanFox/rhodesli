@@ -45,34 +45,28 @@ Create session log. Verify baseline tests pass. Record count.
 
 ## Phase 1: ML Embedding Comparison Script (20 min)
 
-### 1A: Create admin compare endpoint
+### 1A: Create comparison script (NO admin endpoint needed)
 
-Add `POST /api/admin/ml-compare` to `app/admin_routes.py`:
-- Accepts multipart image upload
-- Calls ML service `detect_and_embed()` via `_run_ml_client_async()`
-- Returns raw JSON response (faces, embeddings, image_size)
-- NO database writes, NO identity creation
-- Admin-only auth
+The ML service `/api/v1/detect-and-embed` already returns embeddings as JSON with zero DB writes. Create `scripts/compare_ml_embeddings.py`:
 
-### 1B: Create comparison script
-
-Create `scripts/compare_ml_embeddings.py`:
-- Takes `--photo` (local path) and `--url` (production URL, default localhost)
-- Runs local InsightFace detection via `core/ingest_inbox.extract_faces()`
-- Calls `/api/admin/ml-compare` with the same photo
-- Matches faces by bounding box IoU (>0.5 = same face)
+- Takes `--photo` (local path)
+- Runs local InsightFace via `core/ingest_inbox.extract_faces()` → returns PFE dicts with `mu` key (normed 512-dim embedding)
+- Calls ML service via `MLServiceClient.detect_and_embed()` → returns `embedding` key (also normed 512-dim)
+- Matches faces by detection order (same model, same det_size → same order) with IoU fallback
 - Reports cosine similarity per matched face pair
 - Exit code 0 if all pairs ≥ 0.999, exit code 1 otherwise
-- `--dry-run` flag that only runs local detection (no ML service call)
+- `--local-only` flag that only runs local detection (no ML service call)
+- Requires ML_SERVICE_URL + ML_SERVICE_TOKEN env vars for ML service path
 
-### 1C: Tests
+**Key detail:** Both paths return L2-normalized embeddings. Cosine similarity of normed vectors = dot product.
 
-- Test admin endpoint returns embeddings (mocked ML service)
-- Test admin endpoint rejects non-admin
-- Test admin endpoint rejects non-image files
-- Test comparison script with mocked local + remote detection
+### 1B: Tests
 
-**Commit:** `feat(ml): session 120 phase 1 — embedding comparison script + admin endpoint`
+- Test script local-only mode with a test image
+- Test comparison logic with synthetic embeddings (identical → 1.0, different → <1.0)
+- Test face matching by IoU
+
+**Commit:** `feat(ml): session 120 phase 1 — embedding comparison script`
 **/clear**
 
 ---
@@ -235,9 +229,14 @@ Screenshots of:
 
 ## Parallelization
 
-Recommended parallel execution:
-- **Worktree A:** Phase 3 (FB-009) — only page_routes.py
-- **Worktree B:** Phase 1 (ML compare) — admin_routes.py + new script
-- **Sequential on main:** Phase 0 → Phase 2 → Phase 4 (upload_routes.py)
-- **After merge A+B:** Phase 5 → Phase 6 (identity rendering, may overlap)
-- **Last:** Phase 7 (harness)
+**4 parallel worktrees possible** (research confirmed no file overlaps):
+
+- **Worktree A:** Phase 3 (FB-009) — page_routes.py + person_routes.py
+- **Worktree B:** Phase 1 (ML compare) — scripts/compare_ml_embeddings.py (new file only)
+- **Worktree C:** Phase 5 (FB-001) — main.py only (identity_card_expanded ~line 5812)
+- **Worktree D:** Phase 6 (FB-011) — identity_routes.py only (neighbors handler ~line 540)
+- **Sequential on main:** Phase 0 → Phase 2 → Phase 4 (both touch upload_routes.py)
+- **Last:** Phase 7 (harness) — after all worktrees merged
+
+Merge order: docs-only first, then code. Run tests after each merge.
+Use `./scripts/merge.sh` for canonical merging.

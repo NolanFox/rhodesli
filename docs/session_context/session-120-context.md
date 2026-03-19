@@ -137,6 +137,61 @@ OR if FB-001 and FB-011 touch different functions:
 - Browser verify: FB-009 (Speed Loop), FB-001 (Focus view), FB-011 (person page)
 - Script verify: Phase 1 comparison script output
 
+## Research Findings (from Session 119 agents)
+
+### ML Comparison: No Admin Endpoint Needed
+The ML service `/api/v1/detect-and-embed` already returns embeddings as JSON with zero DB writes. A standalone script can call local InsightFace directly via `core/ingest_inbox.extract_faces()` and the ML service via `MLServiceClient.detect_and_embed()`. No new admin endpoint required — simpler than the context file originally proposed.
+
+**Key detail:** `extract_faces()` returns PFE dicts with `mu` key (normed embedding). ML service returns `embedding` key (also normed). Both are 512-dim L2-normalized. Cosine similarity = dot product.
+
+### Sentry Alert: Registry Source Conflict (NOT a false positive)
+The post-sync validation fires because the **grouping step overwrites identities.json** with Supabase-origin data that lacks the just-ingested faces:
+1. `process_directory()` writes 14 new identities to `identities.json`
+2. Grouping loads from Supabase (misses new faces) → if any merges → `save_registry()` **overwrites JSON** with Supabase data, erasing the 14 new faces
+3. Validation finds them missing → orphan repair recreates them
+
+**Fix:** Load from JSON (not Supabase) in the grouping step at `upload_routes.py:998`. Also use `_collect_registry_face_ids()` for type-safe face ID normalization in the validation check.
+
+### FB-009: Three Surfaces Need Fix
+Confirm button appears in THREE places:
+1. **Photo modal quick-action** (`page_routes.py:4008-4026`) — primary. `raw_name` is in scope at line 3800.
+2. **Person detail page** (`person_routes.py:1330-1341`) — `display_name` in scope.
+3. **main.py:6761** — lower priority modal.
+
+Fix: Check `_is_real_name(name)` before rendering. Render as disabled (gray, cursor-not-allowed, tooltip) not hidden.
+
+### FB-008: Notification Infrastructure Already Exists
+- Supabase `notifications` table is live with full CRUD
+- `_create_notification()` helper in `notification_routes.py` handles DB write + optional email
+- `create_discovery_notification()` exists but is NEVER CALLED — close analog
+- Bell badge polls every 30s via `/api/notifications/count`
+- **Risk:** Need admin `user_id` UUID for notification. Existing pattern uses `"00000000..."` placeholder.
+
+### FB-001: Search Box Exists but Hidden Behind "Find Similar"
+- `manual_search_section` (main.py:9255) renders the search box
+- It only appears AFTER clicking "Find Similar" to load `neighbors_sidebar`
+- In Focus view, if no proposals exist, the search is invisible
+- **Fix:** Add `manual_search_section` directly to `identity_card_expanded` (main.py:~5812) so it's always visible
+
+### FB-011: Community Sort Already Has a Pattern
+- `find_nearest_neighbors_fast` returns all communities (neighbors.py FROZEN)
+- `current_community` IS available in the route handler at `request.state.community`
+- `_get_community_identity_ids(community)` already exists and is used in cluster-review search (identity_routes.py:1142-1154)
+- **Fix:** Post-process neighbors results to sort same-community first. Apply in identity_routes.py:~540-575.
+
+### Updated Parallelization (based on research)
+
+| Track | Files | Can Parallelize? |
+|-------|-------|-----------------|
+| FB-009 | page_routes.py, person_routes.py | YES — worktree A |
+| ML compare script | scripts/compare_ml_embeddings.py (new) | YES — worktree B |
+| Sentry fix | upload_routes.py | Sequential with FB-008 |
+| FB-008 | upload_routes.py, notification_routes.py | Sequential after Sentry |
+| FB-001 | main.py | YES — worktree C |
+| FB-011 | identity_routes.py | YES — worktree D |
+
+**4 parallel worktrees possible!** FB-001 and FB-011 touch different files (main.py vs identity_routes.py). Only Sentry + FB-008 must be sequential (both touch upload_routes.py).
+
 ## Breadcrumbs
 - AD-229: ML service stability criteria (docs/ml/ALGORITHMIC_DECISIONS.md)
 - Session 119 feedback: docs/feedback/session-119-feedback.md
