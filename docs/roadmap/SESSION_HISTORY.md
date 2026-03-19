@@ -14,6 +14,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 119: ML Service End-to-End Verification (2026-03-19) — v0.99.29
+- FIRST real production upload through ML service — 14 faces from Terry Yanishefsky family photo
+- Embedding quality validated: 3/3 cross-batch matches correct (Fanny Burd Yanishefsky, Irving Yanishefsky, Sarah/Edith Gukaylo sisters)
+- Pre-warm endpoint /api/v1/warm + admin /api/admin/ml-warm
+- Event loop fix (asyncio.run() + singleton client)
+- 11 interactive feedback items (FB-001 through FB-011)
+- AD-229: 1/4 criteria met for local ML removal
+- 3 new tests, deploy SUCCESS
+
 ## Session 118: ML Service Fix + Codex Audit + Security Hardening (2026-03-18) — v0.99.28
 - CRITICAL: Fixed ML service port mismatch — never deployed successfully before (PORT hardcoded vs Railway dynamic)
 - Fixed image_size format mismatch (dict vs list) in detect_faces() wrapper
