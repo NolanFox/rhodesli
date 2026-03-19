@@ -130,6 +130,38 @@ async def extract_remote_faces(photo_path: Path) -> list[dict]:
     return faces
 
 
+def extract_remote_faces_via_url(photo_path: Path, base_url: str) -> list[dict]:
+    """Call admin compare endpoint for face detection. No ML_SERVICE_URL needed.
+
+    Session 121: Allows running comparison from local machine by proxying
+    through the web app's /api/admin/ml-compare endpoint.
+    """
+    import requests
+
+    url = f"{base_url.rstrip('/')}/api/admin/ml-compare"
+    with open(photo_path, "rb") as f:
+        resp = requests.post(url, files={"file": (photo_path.name, f, "image/jpeg")}, timeout=180)
+    resp.raise_for_status()
+    result = resp.json()
+
+    if "error" in result:
+        raise RuntimeError(f"Admin compare endpoint error: {result['error']}")
+
+    faces = result.get("faces", [])
+    image_size = result.get("image_size", {})
+    processing_time = result.get("processing_time_ms", "?")
+
+    if isinstance(image_size, dict):
+        w, h = image_size.get("width", 0), image_size.get("height", 0)
+    elif isinstance(image_size, list) and len(image_size) >= 2:
+        w, h = image_size[0], image_size[1]
+    else:
+        w, h = 0, 0
+
+    logger.info(f"Remote (via {base_url}): {len(faces)} face(s) in {photo_path.name} ({w}x{h}, {processing_time}ms)")
+    return faces
+
+
 def compare_embeddings(
     local_faces: list[dict],
     remote_faces: list[dict],
@@ -188,6 +220,13 @@ def main():
         action="store_true",
         help="Only run local detection (no ML service call)",
     )
+    parser.add_argument(
+        "--url",
+        type=str,
+        default=None,
+        help="Base URL of the web app (e.g., https://rhodesli.nolanandrewfox.com). "
+        "Uses /api/admin/ml-compare endpoint instead of direct ML service.",
+    )
     args = parser.parse_args()
 
     if not args.photo.exists():
@@ -208,8 +247,11 @@ def main():
             )
         sys.exit(0)
 
-    # Remote detection
-    remote_faces = asyncio.run(extract_remote_faces(args.photo))
+    # Remote detection — via admin endpoint or direct ML service
+    if args.url:
+        remote_faces = extract_remote_faces_via_url(args.photo, args.url)
+    else:
+        remote_faces = asyncio.run(extract_remote_faces(args.photo))
 
     # Compare
     results = compare_embeddings(local_faces, remote_faces)

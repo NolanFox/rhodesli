@@ -118,6 +118,61 @@ def post(sess=None):
         )
 
 
+@rt("/api/admin/ml-compare")
+async def post(request, sess=None):
+    """Admin-only: detect faces and return embeddings for a photo. No DB writes.
+
+    Proxies to ML service detect-and-embed endpoint. Used by
+    scripts/compare_ml_embeddings.py for AD-229 cosine similarity verification.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    base_url = os.getenv("ML_SERVICE_URL", "")
+    if not base_url:
+        return Response(
+            json.dumps({"error": "ML_SERVICE_URL not configured"}),
+            media_type="application/json",
+            status_code=503,
+        )
+
+    # Read uploaded file
+    form = await request.form()
+    upload = form.get("file")
+    if not upload:
+        return Response(
+            json.dumps({"error": "No file uploaded. Send as multipart with field 'file'."}),
+            media_type="application/json",
+            status_code=400,
+        )
+
+    import tempfile
+
+    # Save to temp file and forward to ML service
+    file_bytes = await upload.read()
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(file_bytes)
+        tmp_path = tmp.name
+
+    try:
+        result = _run_ml_client_async(lambda c: c.detect_and_embed(tmp_path))
+        return Response(
+            json.dumps(result),
+            media_type="application/json",
+        )
+    except Exception as e:
+        return Response(
+            json.dumps({"error": str(e)}),
+            media_type="application/json",
+            status_code=502,
+        )
+    finally:
+        import pathlib
+
+        pathlib.Path(tmp_path).unlink(missing_ok=True)
+
+
 @rt("/api/admin/disk-usage")
 def get(request, sess=None):
     """Admin-only disk usage diagnostic. Shows volume contents and sizes.
