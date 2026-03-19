@@ -7,6 +7,8 @@ Shared helpers (caches, social graph, evidence sections) remain in app.main.
 
 import json
 import logging
+import os
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -5864,3 +5866,203 @@ def get(
             cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700",
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Real-time face comparison via ML service (TOOLS-003)
+# ---------------------------------------------------------------------------
+
+
+def _run_ml_client_async(coro_fn):
+    """Run an async ML client method in a sync context.
+
+    asyncio.run() destroys the event loop after completion, which invalidates
+    any httpx.AsyncClient bound to it. We create a fresh client each time
+    to avoid "Event loop is closed" errors on subsequent calls.
+    """
+    import asyncio
+    from core.ml_client import MLServiceClient
+
+    client = MLServiceClient(
+        base_url=os.getenv("ML_SERVICE_URL", ""),
+        token=os.getenv("ML_SERVICE_TOKEN", "dev-token"),
+    )
+    try:
+        return asyncio.run(coro_fn(client))
+    finally:
+        # Client is bound to the now-closed event loop, discard it
+        pass
+
+
+@rt("/api/compare/realtime")
+def post(file: UploadFile = None, sess=None):
+    """Real-time face comparison: upload a photo, detect faces via ML service,
+    and compare each detected face against the full archive.
+
+    Admin-only. Requires ML_SERVICE_URL to be configured.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if file is None or not hasattr(file, "read"):
+        return Div(
+            P("No file uploaded.", cls="text-red-400"),
+            cls="p-4",
+        )
+
+    # Save upload to temp file
+    tmp_path = None
+    try:
+        suffix = Path(file.filename or "upload.jpg").suffix or ".jpg"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(file.read())
+            tmp_path = tmp.name
+
+        # Check ML service availability
+        ml_url = os.getenv("ML_SERVICE_URL", "")
+        if not ml_url:
+            return Div(
+                P(
+                    "Real-time comparison requires the ML service. Set ML_SERVICE_URL to enable.",
+                    cls="text-red-400",
+                ),
+                cls="p-4",
+            )
+
+        # Detect faces via ML service
+        try:
+            ml_result = _run_ml_client_async(lambda client: client.detect_and_embed(tmp_path))
+        except Exception as e:
+            logger.error("ML service detect_and_embed failed: %s", e)
+            return Div(
+                P(
+                    f"Real-time comparison requires the ML service. Error: {e}",
+                    cls="text-red-400",
+                ),
+                cls="p-4",
+            )
+
+        faces = ml_result.get("faces", [])
+        if not faces:
+            return Div(
+                P("No faces detected in the uploaded image.", cls="text-yellow-400"),
+                cls="p-4",
+            )
+
+        # Load archive data for comparison
+        _main_mod._build_caches()
+        face_data = _main_mod.get_face_data()
+        registry = _main_mod.load_registry()
+        crop_files = _main_mod.get_crop_files()
+
+        # Compare each detected face against archive
+        from core.neighbors import find_similar_faces
+
+        sections = []
+        for i, face in enumerate(faces):
+            embedding = face.get("embedding")
+            if not embedding:
+                continue
+
+            det_score = face.get("det_score", 0.0)
+            query_emb = np.array(embedding, dtype=np.float32)
+
+            matches = find_similar_faces(query_emb, face_data, registry=registry, limit=10)
+
+            # Build match cards
+            match_cards = []
+            for m in matches:
+                identity_name = ensure_utf8_display(m.get("identity_name", "Unknown"))
+                confidence_pct = m.get("confidence_pct", 0)
+                tier = m.get("tier", "WEAK")
+                identity_id = m.get("identity_id", "")
+                face_id = m.get("face_id", "")
+                distance = m.get("distance", 999.0)
+
+                # Resolve crop URL for match
+                crop_url = _resolve_crop_url(face_id, crop_files)
+
+                # Tier color
+                if tier in ("VERY_HIGH", "STRONG"):
+                    tier_color = "text-green-400"
+                    bg_color = "bg-green-900/20 border-green-700"
+                elif tier in ("HIGH", "POSSIBLE"):
+                    tier_color = "text-yellow-400"
+                    bg_color = "bg-yellow-900/20 border-yellow-700"
+                else:
+                    tier_color = "text-slate-400"
+                    bg_color = "bg-slate-800 border-slate-700"
+
+                card_children = []
+                if crop_url:
+                    card_children.append(
+                        Img(
+                            src=crop_url,
+                            alt=identity_name,
+                            cls="w-16 h-16 rounded-lg object-cover",
+                        )
+                    )
+                card_children.append(
+                    Div(
+                        Span(identity_name, cls="font-medium text-white text-sm"),
+                        Span(
+                            f"{confidence_pct}% confidence",
+                            cls=f"text-xs {tier_color}",
+                        ),
+                        Span(
+                            f"Distance: {distance:.3f}",
+                            cls="text-xs text-slate-500",
+                        ),
+                        cls="flex flex-col gap-0.5",
+                    )
+                )
+                if identity_id:
+                    card_children.append(
+                        A(
+                            "View Person",
+                            href=f"/person/{identity_id}",
+                            cls="text-xs text-indigo-400 hover:underline ml-auto",
+                        )
+                    )
+
+                match_cards.append(
+                    Div(
+                        *card_children,
+                        cls=f"flex items-center gap-3 p-3 rounded-lg border {bg_color}",
+                    )
+                )
+
+            if not match_cards:
+                match_cards = [P("No matches found in archive.", cls="text-slate-500 text-sm")]
+
+            sections.append(
+                Div(
+                    H3(
+                        f"Face {i + 1}",
+                        Span(
+                            f" (detection score: {det_score:.2f})",
+                            cls="text-sm text-slate-500 font-normal",
+                        ),
+                        cls="text-lg font-semibold text-white mb-3",
+                    ),
+                    Div(*match_cards, cls="flex flex-col gap-2"),
+                    cls="p-4 bg-slate-900 rounded-xl border border-slate-700",
+                )
+            )
+
+        return Div(
+            H2(
+                f"Real-Time Results: {len(faces)} face(s) detected",
+                cls="text-xl font-bold text-white mb-4",
+            ),
+            *sections,
+            cls="flex flex-col gap-4",
+        )
+    finally:
+        # Clean up temp file
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
