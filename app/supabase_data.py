@@ -1713,6 +1713,54 @@ def create_community(data: dict) -> dict | None:
         return None
 
 
+def create_personal_archive(user_id: str, email: str) -> dict | None:
+    """Create a personal community archive for a new user.
+
+    Returns the created community dict, or None if creation fails.
+    Idempotent: if personal archive already exists, returns it.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    # Extract display name from email
+    name_part = email.split("@")[0].replace(".", " ").replace("_", " ").title()
+    slug = f"personal-{user_id[:8]}"
+
+    try:
+        # Idempotency check
+        existing = sb.table("communities").select("*").eq("owner_id", user_id).eq("is_personal", True).execute()
+        if existing.data:
+            return existing.data[0]
+
+        # Create personal archive
+        result = (
+            sb.table("communities")
+            .insert(
+                {
+                    "slug": slug,
+                    "name": f"{name_part}'s Archive",
+                    "description": "Personal photo archive",
+                    "admin_emails": [email],
+                    "r2_prefix": f"personal/{user_id[:8]}",
+                    "owner_id": user_id,
+                    "is_personal": True,
+                    "privacy": "private",
+                    "config": {"auto_created": True, "workspace_version": 1},
+                }
+            )
+            .execute()
+        )
+
+        if result.data:
+            _invalidate_community_cache()
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Failed to create personal archive for {email}: {e}")
+        return None
+
+
 def update_community(community_id: str, data: dict) -> dict | None:
     """Update a community by ID. Returns updated row or None."""
     sb = get_supabase_client()
