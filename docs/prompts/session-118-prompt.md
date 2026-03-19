@@ -1,20 +1,32 @@
-# Session 118 — ML Service Verification + Remaining TOOLS-002 + Codex Audit Trial
+# Session 118 — Codex Audit → ML Verification → TOOLS-002 Completion
 
 @docs/session_context/session-118-context.md
 @tasks/lessons.md
 
 ## Goal
 
-Verify the ML service works end-to-end in production, complete remaining TOOLS-002 phases, run a Codex CLI audit trial to evaluate cross-AI review, and close all harness gaps from Sessions 115-117. This is a verification-first session — no new features until existing work is confirmed working.
+Audit-first session: run Codex CLI against Sessions 115-117 work to catch issues before building more, verify the ML service end-to-end in production, complete remaining TOOLS-002 phases, and close all harness gaps. The Codex audit is an experimental strategy trial — evaluate whether cross-AI review adds value to the Rhodesli workflow.
+
+## Strategy: Codex-First, Then Build
+
+```
+Step 1: Codex audits Sessions 115-117 code (ML service, community routing, pipeline wiring)
+Step 2: Triage findings → fix CRITICAL/HIGH → adjust remaining phases if needed
+Step 3: ML service verification (health check + local vs cloud comparison)
+Step 4: TOOLS-002 Phase 4-5 (if verification passes)
+Step 5: Codex audits Session 118 work (evaluate the strategy)
+Step 6: Decision: adopt Codex auditing into harness or not (HD-NNN)
+```
 
 ## CRITICAL CONSTRAINTS
 
-1. **VERIFICATION FIRST** — Phases 1-2 must pass before any new code. If ML service is broken, fix it before proceeding.
-2. **ZERO REGRESSIONS** — `make test-fast` before every commit. Both test suites before deploy.
-3. **Browser automation is READ-ONLY on production** (Lesson 149).
-4. **/clear between phases** — commit first, then /clear immediately.
-5. **DO NOT remove local InsightFace** until ML service is verified stable for 24h+ in production.
-6. **DO NOT touch**: `core/neighbors.py` (frozen), `core/pfe.py`, `app/perf_cache.py`.
+1. **AUDIT FIRST** — Run Codex before any new code. Fix findings before proceeding.
+2. **VERIFICATION BEFORE FEATURES** — ML service must be verified before Phase 4-5.
+3. **ZERO REGRESSIONS** — `make test-fast` before every commit.
+4. **Browser automation is READ-ONLY on production** (Lesson 149).
+5. **/clear between phases** — commit first, then /clear immediately.
+6. **DO NOT remove local InsightFace** until ML service is verified stable for 24h+.
+7. **DO NOT touch**: `core/neighbors.py` (frozen), `core/pfe.py`, `app/perf_cache.py`.
 
 ## Pre-Requisites
 
@@ -25,35 +37,111 @@ source venv/bin/activate
 make test-fast  # Baseline — record count and time
 ```
 
-Read these files to orient:
+Read:
 - `docs/session_context/session-118-context.md`
 - `docs/assessments/session-117-assessment.md`
-- `docs/assessments/session-116-assessment.md`
 - `core/ingest_inbox.py:386-465` (detect_faces wrapper)
 - `core/ml_client.py`
 
 ---
 
-## Phase 0: Orient + ML Service Health Check (15 min)
+## Phase 0: Orient + Session Log (5 min)
 
-### 0A: Check ML Service Deploy Status
+### 0A: Create session log, verify baseline tests pass
+### 0B: Check ML service deploy status via Railway MCP
+### 0C: Check web app health
+
+**Commit:** `docs: session 118 phase 0 — orient`
+**/clear**
+
+---
+
+## Phase 1: Codex Audit of Sessions 115-117 (25 min)
+
+### 1A: Audit ML Service Integration
+
+Run Codex in non-interactive mode to audit the core ML service work:
 
 ```bash
-# Check Railway deploy status
-mcp__railway-mcp-server__list-deployments (service: ml-service, limit: 2)
+codex exec "You are auditing code in a heritage photo archive (Rhodesli). Review these files for bugs, edge cases, data corruption risks, and security issues:
 
-# Check web app health
-curl -s https://rhodesli.nolanandrewfox.com/health | python3 -m json.tool
+1. core/ingest_inbox.py — Focus on the detect_faces() function (search for 'def detect_faces'). Check:
+   - Async/sync boundary handling (asyncio.run vs run_until_complete)
+   - PFE embedding transformation correctness
+   - Error handling completeness — can any exception cause data corruption?
+   - Silent failure modes that could cause embeddings to be wrong
+
+2. core/ml_client.py — The HTTP client for the ML service. Check:
+   - Timeout handling
+   - Auth token security
+   - Connection pooling / resource leaks
+   - Thread safety of the singleton
+
+3. ml_service/detect.py — The ML service detection endpoint. Check:
+   - Input validation (what happens with corrupted images?)
+   - Response format consistency
+   - Model loading reliability
+   - Memory leaks from repeated requests
+
+4. core/ml_run_logger.py — ML run provenance logger. Check:
+   - Supabase error handling
+   - Thread safety
+   - Any path that could block the main request
+
+Report as: SEVERITY (CRITICAL/HIGH/MEDIUM/LOW) | FILE:LINE | DESCRIPTION | SUGGESTED FIX
+
+Only report real issues, not style preferences."
 ```
 
-### 0B: Check ML Service Health From Web App
+### 1B: Audit Community Routing Safety
 
-The web app has `ML_SERVICE_URL=http://ml-service.railway.internal:5002` configured.
-Test if the web app can reach the ML service:
+```bash
+codex exec "Review the community routing safety implementation in this heritage photo archive:
 
-1. Add a temporary health check endpoint to the web app:
+1. tests/test_community_routing_safety.py — Are these tests comprehensive enough? What's missing?
+
+2. app/main.py — Search for 'class CommunityMiddleware'. Check:
+   - Can the community_slug be manipulated via URL crafting?
+   - Are there any routes that bypass the middleware?
+   - Can community_explicit be spoofed?
+
+3. app/upload_routes.py — Search for 'def post' (the upload handler). Check:
+   - Can the upload_community hidden field be tampered with?
+   - What happens if community_slug doesn't match upload_community?
+   - Is there a race condition between community validation and file save?
+
+Report only CRITICAL and HIGH findings with specific file:line references."
+```
+
+### 1C: Triage Results
+
+For each Codex finding:
+1. **Verify**: Is this a real issue? Read the code Codex references.
+2. **Classify**: CRITICAL (fix now) / HIGH (fix now) / MEDIUM (BACKLOG) / LOW (skip) / FALSE POSITIVE
+3. **Fix or Log**: Fix CRITICAL/HIGH immediately. MEDIUM → BACKLOG with breadcrumb.
+
+Log ALL findings and dispositions in the session log, even false positives.
+
+### 1D: Adjust Remaining Phases
+
+If Codex found CRITICAL issues:
+- Phase 2 (verification) must wait until fixes are deployed
+- Add fix tasks to Phase 2
+
+If Codex found nothing actionable:
+- Proceed as planned
+
+**Commit:** `fix/docs: session 118 phase 1 — Codex audit findings + fixes`
+**/clear**
+
+---
+
+## Phase 2: ML Service Health + End-to-End Verification (25 min)
+
+### 2A: Add ML Health Endpoint
+
+Add a `/api/admin/ml-health` endpoint to the web app (admin-only):
 ```python
-# In app/sync_routes.py or similar admin-only route file
 @rt("/api/admin/ml-health")
 def get(sess=None):
     denied = _main_mod._check_admin(sess)
@@ -71,304 +159,162 @@ def get(sess=None):
         return {"status": "unreachable", "error": str(e)}
 ```
 
-2. Deploy and test: `curl https://rhodesli.nolanandrewfox.com/api/admin/ml-health`
+### 2B: Deploy and Check ML Service
 
-### 0C: If ML Service Is Down
+```bash
+git push origin main
+# Wait for deploy
+curl -s https://rhodesli.nolanandrewfox.com/api/admin/ml-health
+```
 
-If the ml-service is not running or unreachable:
-1. Check Railway logs: `mcp__railway-mcp-server__get-logs (service: ml-service, logType: deploy)`
-2. Check if it was scaled down by Railway (hobby plan sleep)
-3. Redeploy if needed: `railway service redeploy --service ml-service --yes`
-4. Document the issue in session log
+### 2C: Local vs Cloud Detection Comparison
 
-### 0D: Set Up Session Log
+Since Railway internal networking is not accessible from local, create a comparison
+endpoint or script that runs on Railway:
 
-Create `docs/session_logs/session-118-log.md` with phase checklist.
+**Option A — Admin endpoint (preferred):**
+Add `/api/admin/detect-compare` that:
+1. Takes a photo_id parameter
+2. Runs `extract_faces()` (local) on the photo
+3. Runs `detect_faces()` (ML service) on the same photo
+4. Returns face count, embedding cosine similarity, bbox differences
 
-**Commit:** `docs: session 118 phase 0 — orient + ML service health check`
+**Option B — Log-based verification:**
+1. Upload a test photo via the web UI
+2. Check Railway logs for `[ml-service]` prefix (ML service was used)
+3. OR check for `[ml-service] Failed, falling back` (service was down)
+4. Verify the photo appears correctly with detected faces in the UI
+
+### 2D: Document Results
+
+In session log, record:
+- ML service health status
+- Detection path used (ML service or local fallback?)
+- If comparison done: face count match, cosine similarity values
+- PASS/FAIL verdict for ML service end-to-end
+
+**Commit:** `feat(admin): session 118 phase 2 — ML health endpoint + verification results`
 **/clear**
 
 ---
 
-## Phase 1: Local vs Cloud Detection Comparison (25 min)
+## Phase 3: TOOLS-002 Phase 4 — Auto-Clustering Verification (15 min)
 
-This is the critical verification: same image, same model, same results?
+### 3A: Check If Already Wired
 
-### 1A: Select Test Image
-
-Choose a photo from the existing archive with known face count:
-```bash
-# Find a photo with known faces (e.g., 3+ faces for a good test)
-python3 -c "
-from dotenv import load_dotenv; load_dotenv()
-from core.photo_registry import PhotoRegistry
-reg = PhotoRegistry.load()
-# Find a photo with 3+ faces
-for pid, photo in reg.photos.items():
-    if len(photo.get('face_ids', [])) >= 3:
-        print(f'{pid}: {photo[\"path\"]} — {len(photo[\"face_ids\"])} faces')
-        break
-"
-```
-
-### 1B: Run Local Detection
-
-```python
-from core.ingest_inbox import extract_faces
-from pathlib import Path
-
-# Run LOCAL detection (bypasses ML service)
-faces_local, w_local, h_local = extract_faces(Path("raw_photos/TEST_IMAGE.jpg"))
-print(f"Local: {len(faces_local)} faces, {w_local}x{h_local}")
-for i, f in enumerate(faces_local):
-    print(f"  Face {i}: bbox={f['bbox']}, det_score={f['det_score']:.4f}, quality={f['quality']:.4f}")
-    print(f"    mu[:5]={f['mu'][:5].tolist()}")
-```
-
-### 1C: Run ML Service Detection
-
-```python
-from core.ml_client import MLServiceClient
-import asyncio
-
-client = MLServiceClient(base_url="http://ml-service.railway.internal:5002", token="...")
-# OR: test from local against Railway's internal URL (won't work locally)
-# Instead, test via the detect_faces wrapper:
-
-from core.ingest_inbox import detect_faces
-# Force ML service path by setting env var temporarily
-import os
-os.environ["ML_SERVICE_URL"] = "http://ml-service.railway.internal:5002"
-faces_ml, w_ml, h_ml = detect_faces(Path("raw_photos/TEST_IMAGE.jpg"))
-```
-
-**Alternative for local testing:** If the ML service isn't reachable from local machine (internal Railway networking), run the comparison via a script deployed to Railway, or add a `/api/admin/detect-compare` endpoint that runs both paths and returns the diff.
-
-### 1D: Compare Results
-
-```python
-import numpy as np
-
-assert len(faces_local) == len(faces_ml), f"Face count mismatch: {len(faces_local)} vs {len(faces_ml)}"
-assert w_local == w_ml and h_local == h_ml, "Image size mismatch"
-
-for i, (fl, fm) in enumerate(zip(faces_local, faces_ml)):
-    # Compare embeddings
-    cosine_sim = np.dot(fl['mu'], fm['mu']) / (np.linalg.norm(fl['mu']) * np.linalg.norm(fm['mu']))
-    print(f"Face {i}: cosine_sim={cosine_sim:.6f}, bbox_diff={np.abs(np.array(fl['bbox']) - np.array(fm['bbox'])).sum():.1f}")
-    assert cosine_sim > 0.999, f"Embedding mismatch on face {i}: cosine_sim={cosine_sim}"
-```
-
-### 1E: Document Results
-
-Log comparison results in session log:
-- Face count: local vs ML service
-- Embedding cosine similarity per face
-- Bbox differences
-- PASS/FAIL verdict
-
-### 1F: Tests
-
-No new tests needed — this is a verification phase, not code change.
-Verify existing tests still pass: `make test-fast`
-
-**Commit:** `docs: session 118 phase 1 — local vs cloud detection comparison results`
-**/clear**
-
----
-
-## Phase 2: Codex CLI Audit Trial (20 min)
-
-### 2A: Rationale
-
-The Codex CLI (OpenAI) provides a "second opinion" perspective on code quality.
-Per the user's multi-agent strategy (Sessions 97-100 memory), Codex catches different
-issues than Claude — particularly data integrity problems, edge cases, and silent failures.
-
-This is an EXPERIMENTAL trial to evaluate whether Codex auditing adds value to the Rhodesli workflow.
-
-### 2B: Run Codex Audit
-
-```bash
-# Audit the ML service integration code specifically
-codex "Review the ML service integration in core/ingest_inbox.py (the detect_faces function at line 386-465) and core/ml_client.py. Focus on:
-1. Edge cases in the async/sync boundary handling
-2. Data format correctness (PFE embedding transformation)
-3. Error handling completeness
-4. Silent failure modes that could cause data corruption
-5. Any security concerns with the HTTP client
-Report findings as: CRITICAL / HIGH / MEDIUM / LOW with specific line numbers."
-```
-
-### 2C: Run Codex Audit on Community Routing
-
-```bash
-codex "Review tests/test_community_routing_safety.py and the CommunityMiddleware in app/main.py:477-536. Check:
-1. Are there any data-modifying routes that bypass the community guard?
-2. Can the upload route be tricked into assigning photos to wrong community?
-3. Are there HTMX POST endpoints missing community prefix?
-4. Any XSS or injection risks in community slug handling?
-Report findings with specific file:line references."
-```
-
-### 2D: Evaluate Codex Results
-
-In session log, document:
-- What Codex found that we didn't catch
-- What Codex flagged that was already addressed
-- False positives (things Codex flagged that aren't real issues)
-- **Verdict**: Is Codex auditing worth adding to the regular workflow?
-
-If Codex finds actionable issues:
-- Fix CRITICAL/HIGH issues in this session
-- Log MEDIUM/LOW to BACKLOG
-
-### 2E: Decision: Adopt or Skip
-
-Based on results, make a harness decision (HD-NNN):
-- If valuable: add Codex audit step to `.claude/rules/` as a post-implementation check
-- If not valuable: document why and skip
-- If mixed: define specific scopes where Codex adds value (e.g., data integrity only)
-
-**Commit:** `docs: session 118 phase 2 — Codex audit trial results + HD-NNN decision`
-**/clear**
-
----
-
-## Phase 3: TOOLS-002 Phase 4 — Auto-Clustering After Detection (25 min)
-
-**Only proceed if Phase 1 passes (ML service verified working).**
-
-### 3A: Current State
-
-After `process_directory()` runs face detection:
-1. Faces are saved to embeddings.npy ✓
-2. Photos registered in photo_registry ✓
-3. Crops generated ✓
-4. INBOX identities created ✓
-5. **Cross-batch matching NOT triggered** — this is the gap
-
-### 3B: Wire Cross-Batch Matching
-
-In `app/upload_routes.py` `_background_ingest()`, after `process_directory()` returns:
-
-```python
-# After line ~924 (community tagging), add:
-if result.get("face_ids"):
-    try:
-        from core.cross_batch_matching import find_cross_batch_matches
-        from core.ml_run_logger import MLRunContext
-
-        # Get Supabase client for logging
-        supabase_client = _get_supabase_client()  # implement this helper
-
-        with MLRunContext(supabase_client, "cross_batch",
-                         triggered_by="upload_webhook",
-                         community_id=upload_community_id) as run:
-            matches = find_cross_batch_matches(
-                new_face_ids=result["face_ids"],
-                identities=registry.identities,
-                face_data=face_data_cache,
-                photo_registry=photo_registry,
-                community_id=upload_community_id,
-            )
-            run.set_result({"matches": len(matches), "proposals_written": 0})
-
-        if matches:
-            # Write to ml_proposals Supabase table
-            _write_proposals_to_supabase(supabase_client, matches, run_id=run.run_id)
-
-        logging.info("[upload] Cross-batch matching: %d matches for %d new faces",
-                    len(matches), len(result["face_ids"]))
-    except Exception as e:
-        logging.error("[upload] Cross-batch matching failed: %s", e)
-```
-
-### 3C: Verify Cross-Batch Already Exists
-
-**Check first**: `core/cross_batch_matching.py` might already be wired into the upload pipeline
-(Session 109). Grep for it in upload_routes.py before adding duplicate code.
+Cross-batch matching may already be triggered in the upload pipeline (Session 109).
 
 ```bash
 grep -n "cross_batch" app/upload_routes.py
 ```
 
-### 3D: Tests
+If already wired: verify it works with community_id and ml_runs logging. Skip to Phase 4.
+If not wired: add the integration per the context file.
 
-- Test: after upload, cross-batch matching is triggered
-- Test: ML run is logged with correct pipeline_type and community_id
-- Test: proposals are written to Supabase
+### 3B: Wire or Verify
 
-**Commit:** `feat(upload): session 118 phase 3 — auto-clustering after detection (TOOLS-002 Phase 4)`
+If wiring needed, add cross-batch matching trigger in `_background_ingest()` after
+`process_directory()` returns. Use `MLRunContext` for provenance logging.
+
+### 3C: Tests
+
+- Verify existing cross-batch tests still pass
+- Add test for community-scoped cross-batch matching if missing
+
+**Commit:** `feat/docs: session 118 phase 3 — cross-batch clustering verification`
 **/clear**
 
 ---
 
-## Phase 4: TOOLS-002 Phase 5 — Evaluate Local ML Removal (15 min)
+## Phase 4: TOOLS-002 Phase 5 — Local ML Removal Evaluation (10 min)
 
-**Only proceed if Phase 1 confirms ML service is stable.**
+### 4A: Evaluate Stability
 
-### 4A: Evaluate (DO NOT IMPLEMENT YET)
+Based on Phase 2 results:
+- Is ML service reachable from web app? → Required for Phase 5
+- Has it been running without crashes? → Check deploy history
+- Is Railway billing acceptable? → Check or ask user
 
-The goal is to remove InsightFace model downloads from the web Dockerfile to shrink the image.
-But this makes the ML service a hard dependency — if it's down, uploads fail.
+### 4B: AD-229 Decision
 
-**Decision criteria:**
-- Has the ML service been running for 24h+ without issues? → Proceed
-- Has it crashed or restarted? → Defer
-- Is Railway billing acceptable with two services? → Check
+Write AD-229: ML Service as Mandatory Dependency
+- If stable: recommend removing model downloads from web Dockerfile in next session
+- If not stable: defer with specific stability criteria
 
-### 4B: If Proceeding — Plan Only
+### 4C: Plan (Don't Implement)
 
-Create a detailed plan for Phase 5 implementation in the session log:
-1. What to remove from Dockerfile (model downloads, InsightFace deps)
-2. What to keep (`extract_faces()` code stays as dead fallback)
-3. What to add (health gate: uploads blocked if ML service down and no local models)
-4. Estimated image size reduction
-5. Risk assessment
+If proceeding, document the exact Dockerfile changes needed:
+- Lines to remove (model downloads, InsightFace system deps)
+- Expected image size reduction
+- Fallback behavior when ML service is down
 
-### 4C: Decision
-
-AD-229: ML service as mandatory dependency — evaluate and decide.
-If the ML service has been stable, create the AD entry recommending Phase 5.
-If not stable, document the stability issues and defer.
-
-**Commit:** `docs: session 118 phase 4 — TOOLS-002 Phase 5 evaluation (AD-229)`
+**Commit:** `docs: session 118 phase 4 — AD-229 ML service stability evaluation`
 **/clear**
 
 ---
 
-## Phase 5: Harness Cleanup + Final Documentation (15 min)
+## Phase 5: Post-Work Codex Audit (15 min)
 
-### 5A: Fix Remaining Harness Gaps
+### 5A: Audit Session 118 Changes
 
-From the Session 115-117 audit:
-1. Update BACKLOG.md COMMUNITY-017 entry with PRD-052 breadcrumb
-2. Update BACKLOG.md version header to current date
-3. Verify Session 117 context file has post-session planning section
-
-### 5B: Deploy + Browser Verification
+Run Codex against the code written in this session:
 
 ```bash
-git push origin main
+# Get the diff of what changed
+git diff HEAD~N..HEAD --name-only  # N = number of commits this session
+
+codex exec "Review the changes made in the last session to this heritage photo archive.
+Focus on: [list the specific files changed].
+Check for: bugs, edge cases, data corruption risks, regressions.
+Compare to the existing test coverage — are there gaps?
+Report CRITICAL/HIGH findings only."
 ```
 
-Browser verification (READ-ONLY):
-1. Health endpoint: `/api/health`
-2. ML health endpoint: `/api/admin/ml-health` (new)
-3. Root landing: neutral platform page
-4. Fox Family: `/c/fox-family/` with correct prefixes
-5. Upload page loads (do NOT actually upload)
-6. Person detail page with face crops
+### 5B: Evaluate Codex Strategy
 
-### 5C: Harness Outputs
+In the session log, document:
+1. **Phase 1 findings**: How many real issues did Codex catch?
+2. **Phase 5 findings**: How many real issues in new code?
+3. **False positive rate**: What percentage of findings were not real?
+4. **Time cost**: How long did each audit take?
+5. **Verdict**: Is this worth adding to the regular workflow?
+
+### 5C: HD Decision
+
+Write HD-NNN: Codex CLI Audit Strategy
+- **If valuable**: Add to `.claude/rules/codex-audit.md` with trigger conditions
+- **If mixed**: Define specific scopes (e.g., only for data-layer changes)
+- **If not valuable**: Document why and close
+
+**Commit:** `docs: session 118 phase 5 — Codex strategy evaluation + HD-NNN`
+**/clear**
+
+---
+
+## Phase 6: Harness Outputs (10 min)
+
+### 6A: Fix Remaining Gaps
+
+1. BACKLOG.md: Add PRD-052 breadcrumb to COMMUNITY-017, update version header
+2. Verify all session logs exist (115, 116, 117, 118)
+3. Verify all assessments exist
+
+### 6B: Final Documentation
 
 1. Assessment: `docs/assessments/session-118-assessment.md`
 2. CHANGELOG: v0.99.28
-3. ROADMAP: update TOOLS-002 status
+3. ROADMAP: TOOLS-002 Phase 4 status
 4. SESSION_HISTORY: Session 118 entry
-5. Session log archive
-6. BACKLOG updates
+5. Session log: `docs/session_logs/session-118-log.md`
+
+### 6C: Browser Verification (READ-ONLY)
+
+Screenshots of:
+1. `/api/admin/ml-health` response
+2. Root landing page
+3. Fox Family landing page
+4. Upload page (no actual upload)
+5. Person detail with face crops
 
 **Commit:** `docs: session 118 harness outputs — assessment, changelog, roadmap`
 
@@ -378,21 +324,20 @@ Browser verification (READ-ONLY):
 
 | Check | Method | Expected |
 |-------|--------|----------|
-| ML service health? | `/api/admin/ml-health` | status: connected |
-| Local vs cloud detection? | Session log comparison | cosine_sim > 0.999 |
-| Codex audit done? | Session log verdict | Documented |
-| Cross-batch wiring? | `grep "cross_batch" app/upload_routes.py` | Present (or already existed) |
-| Phase 5 evaluated? | AD-229 in ALGORITHMIC_DECISIONS.md | Present |
-| Harness gaps fixed? | BACKLOG breadcrumbs, todo.md | Updated |
+| Codex Phase 1 audit done? | Session log has findings table | Documented |
+| ML health endpoint exists? | `curl .../api/admin/ml-health` | Returns status |
+| Detection comparison done? | Session log has results | PASS or documented issues |
+| Cross-batch verified? | `grep "cross_batch" app/upload_routes.py` | Present |
+| AD-229 documented? | `grep "AD-229" docs/ml/ALGORITHMIC_DECISIONS.md` | Present |
+| Codex strategy decided? | HD-NNN in HARNESS_DECISIONS.md | Present |
 | All tests pass? | `make test-fast` | PASS |
 | Assessment exists? | `ls docs/assessments/session-118-assessment.md` | Exists |
+| All session logs exist? | `ls docs/session_logs/session-11{5,6,7,8}-log.md` | All 4 exist |
 | `git log origin/main..HEAD` empty? | git log | Empty |
 
 ## Parallelization
 
-- Phase 1 (verification) and Phase 2 (Codex audit) are independent and CAN run in parallel
-- Phase 3 depends on Phase 1 passing
-- Phase 4 depends on Phase 1 + Phase 3
-- Phase 5 is independent (harness cleanup)
-
-**Recommendation:** Run Phase 1 and Phase 2 in parallel (different files, no conflicts). Then sequential for Phase 3-5.
+**Phase 1** (Codex audit) can run both audit commands in parallel (independent scopes).
+**Phase 2** (ML verification) and **Phase 5** (post-work audit) are sequential.
+**Phase 3** (clustering) depends on Phase 2 passing.
+**Phase 6** (harness) is independent of Phase 3-5.
