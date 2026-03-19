@@ -1,6 +1,6 @@
 # Rhodesli Active Todo
 
-Last updated: 2026-03-09 (Post-Session 93, planning)
+Last updated: 2026-03-18 (Post-Session 117)
 
 ## Done (Sessions 92-93)
 - [x] Deploy v0.95.0 → v0.96.0 to Railway + browser verify
@@ -26,7 +26,8 @@ Last updated: 2026-03-09 (Post-Session 93, planning)
 See `docs/prds/034_standalone_tool_suite.md` for master plan.
 
 - [ ] TOOLS-001: Date + Location Estimator Standalone — engine ready, zero blockers, 2-3 sessions
-- [-] TOOLS-002: ML Service Extraction — Phase 1 (skeleton) DONE (Session 115). Phase 2 (deploy+wire) next.
+- [x] TOOLS-002: ML Service Extraction — Phase 1 (skeleton, Session 115), Phase 2 (deploy, Session 116), Phase 3 (wire pipeline, Session 117) DONE.
+      Remaining: Phase 4 (clustering automation), Phase 5 (remove local ML deps from web Dockerfile).
       See `docs/architecture/ML_SERVICE.md` + `ml_service/` directory
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002, 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, 3-5 sessions
