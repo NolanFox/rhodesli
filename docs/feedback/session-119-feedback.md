@@ -132,6 +132,25 @@ The screenshots show an active conversation where:
   - Gukaylo sisters married into Fox/Yanishefsky families
   - Mary Yanishefsky Barnett was Irving's sister
 
+### FB-011: Similar Identities Need Community/Collection Filter (P1)
+- **Severity:** P1
+- **Context:** User was trying to find Solomon Suchaar Yanishefsky in Charles Fox's photos. Historical context: Terry Yanishefsky mentioned the family lived in Ohio in the 1940s and spent time with Albert and Esther Burd Fox. So Solomon might appear in Fox family photos. But the Similar Identities list for Solomon is dominated by:
+  1. Same-photo faces (3 "Seen together" matches at top — useless for this task)
+  2. Rhodes community people (Person 344, Person 374 with "Jewish Community of Rhodes" badges at 29-31% match)
+  3. Albert Fox at position #4 (33%, dist 1.21) — the only plausible Fox Family match
+  The Rhodes matches are almost certainly noise — these were distinct communities in the 1930s-40s with no overlap. But they're mixed in with same-community results, hiding potentially meaningful Fox Family matches.
+- **Expected:** A filter on Similar Identities to scope by community or collection. E.g., "Show only Fox Family" or "Show only Charles Fox Collection." Default should prioritize same-community matches, with cross-community available on demand.
+- **The nuanced version (for scale):**
+  - Strong cross-community matches (dist <1.0) should always be surfaced — these are genuinely interesting
+  - Weak cross-community matches (dist >1.1) are almost always noise and should be hidden by default
+  - Admin should be able to toggle "Show all communities" to see everything
+  - As communities scale (5+), the noise problem will get much worse
+- **Root cause:** Similar Identities panel queries all identities globally, ranked only by embedding distance. No community filtering or prioritization beyond the badge.
+- **Fix:** Add community filter dropdown to Similar Identities panel. Default to "Same community first" with option to show all. Consider a two-tier display: same-community matches first, then "Also found in other communities" expandable section.
+- **BACKLOG:** UX-140 (new) — relates to COMMUNITY-004 ("shared person" indicator), FB-003 (community badges)
+- **Effort:** 2-3 hours for basic filter; full design with tiered display needs PRD
+- **Real example:** Solomon Yanishefsky → Albert Fox at #4. If filtered to Fox Family only, Albert would be #1 (and worth investigating). Instead he's buried under noise.
+
 ---
 
 ## Disposition
@@ -148,5 +167,6 @@ The screenshots show an active conversation where:
 | FB-008 | P1 | No | BACKLOG UX-138 — cross-batch match notifications |
 | FB-009 | P0 | No | BACKLOG UX-139 — confirm button silently fails for unidentified persons |
 | FB-010 | Info | N/A | ML embedding quality validated — 3/3 correct family matches |
+| FB-011 | P1 | No | BACKLOG UX-140 — community/collection filter on Similar Identities |
 
 **Recommendation:** FB-008 (notifications after cross-batch matching) and FB-006 (group photo tagging UX) are the highest-impact items. FB-008 directly addresses the gap between "ML found correct matches" and "admin knows about them." FB-001 (merge search) remains important for the WhatsApp-to-merge workflow.
