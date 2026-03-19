@@ -60,6 +60,15 @@ The screenshots show an active conversation where:
 
 **Key insight:** The growth loop is working (Find -> Share -> Click -> Recognize -> Respond), but the admin merge workflow is the bottleneck. When community members identify people via WhatsApp/Help Identify, the admin needs a fast way to merge — not scroll through ML suggestions.
 
+### FB-004: Skip-After-Merge Doesn't Acknowledge Community Contribution (P2)
+- **Severity:** P2
+- **Context:** User merged Eva Deber Shane's clusters (applied the community member's identification from maalot20@outlook.com). After merge, the annotation still showed as "pending" and the only option was Skip. Skipping doesn't inform the contributor that their identification was accepted — it looks like it was ignored.
+- **Expected:** When admin merges/confirms based on a community annotation, the annotation should auto-resolve as "Applied" or there should be an "Accept" option that both applies the name AND acknowledges the contributor.
+- **Root cause:** Approvals workflow and merge workflow are decoupled. Merging identities doesn't resolve the pending annotation that prompted it.
+- **Fix:** When admin confirms/merges an identity that has a pending name annotation matching the merge target, auto-approve the annotation. Or add "Approve + Merge" combined action.
+- **BACKLOG:** UX-134 (new)
+- **Effort:** 2-3 hours — need to detect annotation-merge overlap and wire auto-resolution
+
 ---
 
 ## Disposition
@@ -69,5 +78,6 @@ The screenshots show an active conversation where:
 | FB-001 | P1 | No | BACKLOG UX-131 — needs PRD for merge search |
 | FB-002 | P1 | No | BACKLOG UX-132 — community badge on approvals |
 | FB-003 | P2 | No | BACKLOG UX-133 — always show community badge |
+| FB-004 | P2 | No | BACKLOG UX-134 — auto-resolve annotation after merge |
 
 **Recommendation:** These are all follow-up items. FB-001 (merge search) is the highest impact — it directly blocks the admin workflow when community members provide identifications. Should be a near-term session (1-2 hours).
