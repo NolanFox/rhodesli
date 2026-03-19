@@ -496,7 +496,7 @@ class TestExpandedCardFilterPropagation:
         """Confirm button URL in focus mode includes filter parameter."""
         from app.main import identity_card_expanded, to_xml
 
-        identity = make_identity("abc123", state="INBOX")
+        identity = make_identity("abc123", state="INBOX", name="John Smith")
         card = identity_card_expanded(identity, crop_files=set(), is_admin=True, triage_filter="rediscovered")
         html = to_xml(card)
         assert "filter=rediscovered" in html
@@ -550,6 +550,36 @@ class TestFocusMergeSearch:
         html = to_xml(card)
         assert "Search to Merge" not in html
         assert "focus-search-results-abc123" not in html
+
+
+class TestFocusConfirmDisabled:
+    """FB-009: Confirm button disabled for unidentified persons in Focus view."""
+
+    @patch("app.main._get_identities_with_proposals")
+    def test_focus_confirm_disabled_for_unidentified(self, mock_proposals):
+        """Focus view confirm button is disabled when name is unidentified."""
+        from app.main import identity_card_expanded, to_xml
+
+        mock_proposals.return_value = set()
+        identity = make_identity("abc123", state="INBOX")  # default: "Unidentified Person abc12345"
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True)
+        html = to_xml(card)
+        assert "bg-gray-400" in html, "Confirm should be gray for unidentified"
+        assert "cursor-not-allowed" in html, "Confirm should show not-allowed cursor"
+        assert "disabled" in html, "Confirm should be disabled"
+        assert "Name this person first" in html, "Tooltip should explain why disabled"
+
+    @patch("app.main._get_identities_with_proposals")
+    def test_focus_confirm_active_for_named(self, mock_proposals):
+        """Focus view confirm button is active when identity has a real name."""
+        from app.main import identity_card_expanded, to_xml
+
+        mock_proposals.return_value = set()
+        identity = make_identity("abc123", state="INBOX", name="Eva Shane")
+        card = identity_card_expanded(identity, crop_files=set(), is_admin=True)
+        html = to_xml(card)
+        assert "bg-green-500" in html, "Confirm should be green for named person"
+        assert "/inbox/abc123/confirm" in html, "Confirm should have hx-post URL"
 
 
 class TestGetNextFocusCardFilter:

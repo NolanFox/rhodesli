@@ -667,6 +667,19 @@ PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 
 ---
 
+### Session 119-120 Feedback (UX-206 through UX-215)
+
+- [x] **UX-206**: Merge search in Focus/New Matches view (P1) — DONE Session 120. Always-visible search box. Source: Session 119 FB-001.
+- [ ] **UX-207**: Approvals page not community-scoped (P1) — Same annotation shows on both Rhodes and Fox Family admin. Source: Session 119 FB-002.
+- [ ] **UX-208**: Always show community badge on suggestion cards (P2) — Not just cross-community matches. Source: Session 119 FB-003.
+- [ ] **UX-209**: Skip-after-merge doesn't acknowledge contributor (P2) — Auto-resolve annotation when admin merges matching identity. Source: Session 119 FB-004.
+- [ ] **UX-210**: Upload form needs annotation/notes field (P2) — Paste caption context for Gemini analysis. Source: Session 119 FB-005.
+- [ ] **UX-211**: Face overlay buttons too small on group photos (P1) — 14-person photo: buttons overlap, misclicks. Needs PRD. Source: Session 119 FB-006.
+- [ ] **UX-212**: Source URL not saved during upload (P2) — Pipeline drops source_url field. Source: Session 119 FB-007.
+- [x] **UX-213**: Cross-batch match notifications (P1) — DONE Session 120. Bell badge after upload. Source: Session 119 FB-008.
+- [x] **UX-214**: Confirm button silently fails for unidentified (P0) — DONE Session 120. Disabled in 3 surfaces. Source: Session 119 FB-009.
+- [x] **UX-215**: Community filter on Similar Identities (P1) — DONE Session 120. Same-community-first sort + dropdown. Source: Session 119 FB-011.
+
 ## Sub-Files
 
 | File | Content |

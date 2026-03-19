@@ -5674,8 +5674,19 @@ def identity_card_expanded(
         reject_url = f"{base_reject_url}?from_focus=true{_filter_suffix}"
         skip_url = f"{nav_prefix}/identity/{identity_id}/skip?from_focus=true{_filter_suffix}"
 
-        actions = Div(
-            Button(
+        # FB-009 Session 120: Disable confirm for unidentified persons in Focus view
+        _is_unidentified = name.startswith("Unidentified Person")
+        if _is_unidentified:
+            _confirm_btn = Button(
+                "✓ Confirm",
+                cls="px-4 py-2 bg-gray-400 cursor-not-allowed text-white font-medium rounded-lg opacity-50 min-h-[44px]",
+                title="Name this person first",
+                type="button",
+                id="focus-btn-confirm",
+                disabled=True,
+            )
+        else:
+            _confirm_btn = Button(
                 "✓ Confirm",
                 cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
                 hx_post=confirm_url,
@@ -5684,7 +5695,10 @@ def identity_card_expanded(
                 hx_push_url="false",
                 type="button",
                 id="focus-btn-confirm",
-            ),
+            )
+
+        actions = Div(
+            _confirm_btn,
             Button(
                 "⏸ Skip",
                 cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors min-h-[44px]",
