@@ -13,12 +13,14 @@ from unittest.mock import patch, MagicMock
 # Face overlay status color tests
 # ---------------------------------------------------------------------------
 
+
 class TestFaceOverlayStatusColors:
     """Face overlays must use status-based colors, not all-green."""
 
     def _get_photo_response(self, client):
         """Get a photo partial response with face overlays."""
         from app.main import load_embeddings_for_photos
+
         photos = load_embeddings_for_photos()
         if not photos:
             pytest.skip("No embeddings available for testing")
@@ -32,13 +34,16 @@ class TestFaceOverlayStatusColors:
         text = response.text
         assert "face-overlay" in text
         # At least one of the status colors should be present
-        has_status_color = any(c in text for c in [
-            "border-emerald-500",  # CONFIRMED
-            "border-amber-500",    # SKIPPED
-            "border-red-500",      # REJECTED
-            "border-indigo-400",   # PROPOSED
-            "border-dashed",       # INBOX/unassigned
-        ])
+        has_status_color = any(
+            c in text
+            for c in [
+                "border-emerald-500",  # CONFIRMED
+                "border-amber-500",  # SKIPPED
+                "border-red-500",  # REJECTED
+                "border-indigo-400",  # PROPOSED
+                "border-dashed",  # INBOX/unassigned
+            ]
+        )
         assert has_status_color, "Face overlays should use status-based colors"
 
     def test_confirmed_face_has_green_border(self, client):
@@ -56,19 +61,23 @@ class TestFaceOverlayStatusColors:
         # The old pattern was: border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20
         # With hover:border-amber-400 as the only differentiator
         # New: hover color matches state, not always amber
-        assert "hover:border-amber-400" not in text, \
+        assert "hover:border-amber-400" not in text, (
             "Old all-green hover style should be replaced with status-based hovers"
+        )
 
     def test_overlay_has_status_badge(self, client):
         """CONFIRMED/SKIPPED/REJECTED faces should have a status badge icon."""
         response = self._get_photo_response(client)
         text = response.text
         # Check for badge unicode chars used in the status badges
-        has_badge = any(c in text for c in [
-            "\u2713",   # ✓ check mark (confirmed)
-            "\u23ed",   # ⏭ skip (skipped)
-            "\u2717",   # ✗ cross (rejected)
-        ])
+        has_badge = any(
+            c in text
+            for c in [
+                "\u2713",  # ✓ check mark (confirmed)
+                "\u23ed",  # ⏭ skip (skipped)
+                "\u2717",  # ✗ cross (rejected)
+            ]
+        )
         # Not all photos will have badges, so this test is conditional
         if "border-emerald-500" in text or "border-amber-500" in text or "border-red-500" in text:
             assert has_badge, "Status-colored overlays should include badge icons"
@@ -85,6 +94,7 @@ class TestFaceOverlayStatusColors:
 # ---------------------------------------------------------------------------
 # Photo completion badge tests
 # ---------------------------------------------------------------------------
+
 
 class TestPhotoCompletionBadges:
     """Photo grid cards show completion status (confirmed/total faces)."""
@@ -128,12 +138,14 @@ class TestPhotoCompletionBadges:
 # Overlay tooltip tests (pre-existing but verify still works)
 # ---------------------------------------------------------------------------
 
+
 class TestOverlayTooltips:
     """Face overlays show name tooltips on hover."""
 
     def test_overlay_has_name_display(self, client):
         """Face overlays include name display — hover tooltip or always-visible label."""
         from app.main import load_embeddings_for_photos
+
         photos = load_embeddings_for_photos()
         if not photos:
             pytest.skip("No embeddings available for testing")
@@ -154,6 +166,7 @@ class TestFaceOverlayLegend:
     def test_overlay_legend_present(self, client):
         """Photo view has a legend showing Identified / Help Identify / New."""
         from app.main import load_embeddings_for_photos
+
         photos = load_embeddings_for_photos()
         if not photos:
             pytest.skip("No embeddings available for testing")
@@ -173,13 +186,15 @@ class TestMLSuggestionsRedesign:
         """Skip hints use confidence tier labels (Very High/High/Moderate/Low)."""
         # Find a skipped identity with hints
         from app.main import load_registry
+
         try:
             registry = load_registry()
         except Exception:
             pytest.skip("No registry available")
 
         skipped = [
-            iid for iid, ident in registry._identities.items()
+            iid
+            for iid, ident in registry._identities.items()
             if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
         ]
         if not skipped:
@@ -190,21 +205,22 @@ class TestMLSuggestionsRedesign:
         text = response.text
         if "No similar" not in text:
             # Should have confidence labels, not raw distances
-            has_confidence = any(label in text for label in
-                                ["Very High", "High", "Moderate", "Low"])
+            has_confidence = any(label in text for label in ["Very High", "High", "Moderate", "Low"])
             assert has_confidence, "Hints should use confidence tier labels"
             assert "AI suggestions" in text, "Section should be labeled 'AI suggestions'"
 
     def test_skip_hints_have_compare_button(self, client):
         """Skip hints include a Compare button for each suggestion."""
         from app.main import load_registry
+
         try:
             registry = load_registry()
         except Exception:
             pytest.skip("No registry available")
 
         skipped = [
-            iid for iid, ident in registry._identities.items()
+            iid
+            for iid, ident in registry._identities.items()
             if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
         ]
         if not skipped:
@@ -218,13 +234,15 @@ class TestMLSuggestionsRedesign:
     def test_skip_hints_no_raw_distance(self, client):
         """Skip hints should NOT show raw distance values to users."""
         from app.main import load_registry
+
         try:
             registry = load_registry()
         except Exception:
             pytest.skip("No registry available")
 
         skipped = [
-            iid for iid, ident in registry._identities.items()
+            iid
+            for iid, ident in registry._identities.items()
             if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
         ]
         if not skipped:
@@ -235,3 +253,80 @@ class TestMLSuggestionsRedesign:
         if "AI suggestions" in text:
             assert "dist " not in text, "Raw distance should not be shown"
             assert "gap)" not in text, "Gap percentage should not be shown"
+
+
+# ---------------------------------------------------------------------------
+# UX-211: Face overlay minimum click target size
+# ---------------------------------------------------------------------------
+
+
+class TestFaceOverlayMinimumSize:
+    """UX-211: Face overlays must have minimum 44x44px click targets."""
+
+    def test_admin_overlay_css_has_min_width(self, client):
+        """Admin photo viewer face-overlay CSS includes min-width: 44px."""
+        from app.main import load_embeddings_for_photos
+
+        photos = load_embeddings_for_photos()
+        if not photos:
+            pytest.skip("No embeddings available for testing")
+        photo_id = next(iter(photos.keys()))
+        # Full page includes the Style block with CSS
+        response = client.get(f"/photo/{photo_id}")
+        assert response.status_code == 200
+        text = response.text
+        assert "min-width: 44px" in text, "Admin overlay CSS must include min-width: 44px"
+        assert "min-height: 44px" in text, "Admin overlay CSS must include min-height: 44px"
+
+    def test_admin_overlay_hover_has_scale(self, client):
+        """Admin photo viewer face-overlay hover includes scale transform."""
+        from app.main import load_embeddings_for_photos
+
+        photos = load_embeddings_for_photos()
+        if not photos:
+            pytest.skip("No embeddings available for testing")
+        photo_id = next(iter(photos.keys()))
+        # Full page includes the Style block with CSS
+        response = client.get(f"/photo/{photo_id}")
+        assert response.status_code == 200
+        text = response.text
+        assert "scale(1.2)" in text, "Overlay hover should scale up for visibility"
+
+    def test_public_overlay_css_has_min_size(self, client):
+        """Public photo page face-overlay-box CSS includes min-width/min-height."""
+        from app.main import load_embeddings_for_photos
+
+        photos = load_embeddings_for_photos()
+        if not photos:
+            pytest.skip("No embeddings available for testing")
+        photo_id = next(iter(photos.keys()))
+        # Public photo page
+        response = client.get(f"/photo/{photo_id}")
+        assert response.status_code == 200
+        text = response.text
+        if "face-overlay-box" in text:
+            assert "min-width: 44px" in text, "Public overlay CSS must include min-width: 44px"
+            assert "min-height: 44px" in text, "Public overlay CSS must include min-height: 44px"
+
+    def test_landing_page_face_box_has_min_size(self, client):
+        """Landing page .face-box CSS includes minimum click target size."""
+        response = client.get("/")
+        assert response.status_code == 200
+        text = response.text
+        if "face-box" in text:
+            assert "min-width: 44px" in text, "Landing page face-box CSS must include min-width: 44px"
+            assert "min-height: 44px" in text, "Landing page face-box CSS must include min-height: 44px"
+
+    def test_overlay_hover_z_index_raised(self, client):
+        """Face overlay hover raises z-index to prevent overlap issues."""
+        from app.main import load_embeddings_for_photos
+
+        photos = load_embeddings_for_photos()
+        if not photos:
+            pytest.skip("No embeddings available for testing")
+        photo_id = next(iter(photos.keys()))
+        # Full page includes the Style block with CSS
+        response = client.get(f"/photo/{photo_id}")
+        assert response.status_code == 200
+        text = response.text
+        assert "z-index: 50" in text, "Hover should raise z-index to 50"

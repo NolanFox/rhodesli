@@ -1019,6 +1019,18 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             border: 2px solid rgba(251, 191, 36, 0.8);
             border-radius: 3px;
             box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+            min-width: 44px;
+            min-height: 44px;
+            /* Center around face when bbox is smaller than minimum */
+            transform: translate(
+                min(0px, calc((100% - 44px) / 2)),
+                min(0px, calc((100% - 44px) / 2))
+            );
+        }
+        .face-box:hover {
+            transform: scale(1.2);
+            z-index: 50;
+            transition: transform 0.15s ease;
         }
         .face-label {
             position: absolute;
@@ -4437,9 +4449,13 @@ def photo_view_content(
     style = Style("""
         .face-overlay {
             box-sizing: border-box;
+            min-width: 44px;
+            min-height: 44px;
         }
         .face-overlay:hover {
-            z-index: 10;
+            z-index: 50;
+            transform: scale(1.2);
+            transition: transform 0.15s ease;
         }
     """)
     back_href = (
@@ -11955,9 +11971,19 @@ def public_photo_page(
         .photo-flip-inner.is-flipped .photo-flip-front {
             pointer-events: none;
         }
+        /* Face overlay minimum click target + hover enhancement */
+        .face-overlay-box {
+            min-width: 44px;
+            min-height: 44px;
+        }
+        .face-overlay-box:hover {
+            transform: scale(1.2);
+            z-index: 50;
+            transition: transform 0.15s ease;
+        }
         /* Face overlays fade out during flip */
         .photo-flip-inner .face-overlay-box {
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.15s ease;
         }
         .photo-flip-inner.is-flipped .face-overlay-box {
             opacity: 0;
