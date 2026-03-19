@@ -8402,7 +8402,9 @@ def inbox_badge(count: int) -> A:
     )
 
 
-def review_action_buttons(identity_id: str, state: str, is_admin: bool = True, nav_prefix: str = "") -> Div:
+def review_action_buttons(
+    identity_id: str, state: str, is_admin: bool = True, nav_prefix: str = "", identity_name: str = ""
+) -> Div:
     """
     Unified action buttons based on identity state.
     Only rendered for admin users.
@@ -8414,22 +8416,36 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True, n
 
     # Confirm button - available for reviewable and skipped states
     if state in ("INBOX", "PROPOSED", "SKIPPED"):
+        # FB-009: Disable confirm for unidentified persons
+        _has_real_name = identity_name and not identity_name.startswith("Unidentified Person ")
         # Use different endpoint for INBOX vs PROPOSED/SKIPPED
         confirm_url = (
             f"{nav_prefix}/inbox/{identity_id}/confirm" if state == "INBOX" else f"{nav_prefix}/confirm/{identity_id}"
         )
-        buttons.append(
-            Button(
-                "\u2713 Confirm",
-                cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
-                hx_post=confirm_url,
-                hx_target=f"#identity-{identity_id}",
-                hx_swap="outerHTML",
-                hx_indicator=f"#loading-{identity_id}",
-                aria_label="Confirm this identity",
-                type="button",
+        if _has_real_name:
+            buttons.append(
+                Button(
+                    "\u2713 Confirm",
+                    cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
+                    hx_post=confirm_url,
+                    hx_target=f"#identity-{identity_id}",
+                    hx_swap="outerHTML",
+                    hx_indicator=f"#loading-{identity_id}",
+                    aria_label="Confirm this identity",
+                    type="button",
+                )
             )
-        )
+        else:
+            buttons.append(
+                Button(
+                    "\u2713 Confirm",
+                    cls="px-3 py-1.5 text-sm font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50 min-h-[44px]",
+                    title="Name this person first",
+                    aria_label="Name this person before confirming",
+                    type="button",
+                    disabled=True,
+                )
+            )
 
     # Skip button - available for reviewable states only
     if state in ("INBOX", "PROPOSED"):
@@ -10063,7 +10079,9 @@ def identity_card(
             Div(
                 Div(
                     sort_dropdown,
-                    review_action_buttons(identity_id, state, is_admin=is_admin, nav_prefix=nav_prefix),
+                    review_action_buttons(
+                        identity_id, state, is_admin=is_admin, nav_prefix=nav_prefix, identity_name=name
+                    ),
                     cls="flex flex-wrap items-center gap-2",
                 ),
                 _identity_metadata_display(identity, is_admin=is_admin),

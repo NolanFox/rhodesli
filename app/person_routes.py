@@ -1327,15 +1327,26 @@ def public_person_page(
                         # FB-017: Use from_person_page=true so handler returns status, not full card
                         # FB-016/FB-024: Loading indicators via hx_disabled_elt
                         Div(
-                            Button(
-                                "\u2713 Confirm",
-                                cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
-                                hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}?from_person_page=true",
-                                hx_target="#person-admin-actions",
-                                hx_swap="outerHTML",
-                                hx_disabled_elt="this",
-                                type="button",
-                                **{"_": "on click put 'Confirming...' into me"},
+                            # FB-009: Disable confirm for unidentified persons
+                            (
+                                Button(
+                                    "\u2713 Confirm",
+                                    cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
+                                    hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}?from_person_page=true",
+                                    hx_target="#person-admin-actions",
+                                    hx_swap="outerHTML",
+                                    hx_disabled_elt="this",
+                                    type="button",
+                                    **{"_": "on click put 'Confirming...' into me"},
+                                )
+                                if raw_name and not raw_name.startswith("Unidentified Person ")
+                                else Button(
+                                    "\u2713 Confirm",
+                                    cls="px-3 py-1.5 text-xs font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50",
+                                    title="Name this person first",
+                                    type="button",
+                                    disabled=True,
+                                )
                             )
                             if state in ("INBOX", "PROPOSED", "SKIPPED")
                             else None,
