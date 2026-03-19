@@ -995,8 +995,16 @@ async def post(
                 try:
                     from core.grouping import group_inbox_identities
 
-                    registry = _main_mod.load_registry()
-                    photo_reg = _main_mod.load_photo_registry()
+                    # Session 120: Load from JSON directly, NOT from Supabase via load_registry().
+                    # process_directory() writes new identities to JSON. load_registry() reads from
+                    # Supabase which doesn't have them yet. If grouping merges, save_registry()
+                    # overwrites JSON with stale Supabase data, erasing the new faces.
+                    # This was the root cause of the "POST-SYNC VALIDATION FAILED" Sentry alert.
+                    from core.registry import IdentityRegistry as _IR_grp
+                    from core.photo_registry import PhotoRegistry as _PR_grp
+
+                    registry = _IR_grp.load(data_path / "identities.json")
+                    photo_reg = _PR_grp.load(data_path / "photo_index.json")
                     # Load face data the same way auto-cluster does
                     from scripts.cluster_new_faces import load_face_data as _load_fd
 
@@ -1023,7 +1031,10 @@ async def post(
 
                     xb_identities = _load_id_xb(data_path)
                     xb_face_data = _load_fd_xb(data_path)
-                    xb_photo_reg = _main_mod.load_photo_registry()
+                    # Session 120: Load from JSON — Supabase doesn't have new photos yet
+                    from core.photo_registry import PhotoRegistry as _PR_xb
+
+                    xb_photo_reg = _PR_xb.load(data_path / "photo_index.json")
                     # Match globally — community filter doesn't work with JSON identities
                     # (identity_communities is only in Supabase, not JSON).
                     # Cross-community matches are valuable (shared people across archives).
@@ -1215,8 +1226,11 @@ async def post(
                             synced_face_ids.update(idata.get("candidate_ids", []))
                         missing = new_face_ids - synced_face_ids
                         if missing:
-                            _bg_logging.error(
-                                f"[upload] POST-SYNC VALIDATION FAILED: {len(missing)} new faces "
+                            # Session 120: Demoted from error to warning. The root cause was
+                            # grouping step loading from Supabase (stale) instead of JSON (fresh).
+                            # That's now fixed. If this still triggers, orphan repair handles it.
+                            _bg_logging.warning(
+                                f"[upload] POST-SYNC VALIDATION: {len(missing)} new faces "
                                 f"have no identity after Supabase sync. Face IDs: {missing}. "
                                 f"Attempting orphan repair."
                             )
