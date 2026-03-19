@@ -1,0 +1,1691 @@
+OpenAI Codex v0.115.0 (research preview)
+--------
+workdir: /Users/nolanfox/rhodesli
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/nolanfox/.codex/memories]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019d07ff-bae2-7761-a3ee-41ec563d2c4c
+--------
+user
+You are a performance engineer auditing a FastHTML + Supabase web app. Analyze the codebase for performance bottlenecks. Focus on:
+
+1. Database query patterns — look for N+1 queries, missing indexes, unbatched operations
+2. Cache effectiveness — find TTL caches, check for cache misses, stale data patterns
+3. Frontend load times — check for blocking JS, large payloads, missing lazy loading
+4. Memory usage — large in-memory data structures, embedding arrays
+5. Startup time — what happens on cold start?
+
+Read these key files:
+- app/main.py (focus on _build_caches, load_registry, startup)
+- app/cluster_review_routes.py (speed-run performance)  
+- app/perf_cache.py (vectorized cache)
+- core/neighbors.py (similarity search)
+
+Output a ranked list of the TOP 10 performance improvements with:
+- File and line number
+- Current behavior
+- Proposed fix
+- Estimated impact (ms saved or % improvement)
+
+Be specific and actionable. Include code snippets whercodex
+I’m auditing the listed routes and cache/similarity code directly, then I’ll trace the four reported slow paths back to specific call sites with line references and concrete fixes.
+Plan update
+  → Inspect target files and map the request paths for merge/similar/rename, family tree, speed-run confirm, and community switching
+  • Identify real bottlenecks with line-level evidence and estimate impact from code paths
+  • Write a findings-first audit with fixes and code sketches
+codex
+I’m locating the exact handlers and helpers behind those user flows before drilling into the hot code paths.
+exec
+/bin/zsh -lc 'wc -l app/main.py app/cluster_review_routes.py app/identity_routes.py app/page_routes.py core/neighbors.py app/perf_cache.py' in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc 'rg -n "merge|similar|rename|family tree|speed-run|speedrun|community|neighbors|confirm|cache" app/main.py app/cluster_review_routes.py app/identity_routes.py app/page_routes.py core/neighbors.py app/perf_cache.py' in /Users/nolanfox/rhodesli succeeded in 99ms:
+   11045 app/main.py
+    3269 app/cluster_review_routes.py
+    4270 app/identity_routes.py
+   13055 app/page_routes.py
+     533 core/neighbors.py
+     181 app/perf_cache.py
+   32353 total
+ succeeded in 114ms:
+app/perf_cache.py:2:Precomputed embedding matrix for confirmed identities.
+app/perf_cache.py:15:_confirmed_matrix = None  # shape (num_faces, 512), L2-normalized
+app/perf_cache.py:16:_confirmed_face_map = None  # list of (identity_id, face_id) tuples, parallel to rows
+app/perf_cache.py:17:_confirmed_identity_ids = None  # set of identity IDs in the matrix
+app/perf_cache.py:18:_confirmed_dirty = True
+app/perf_cache.py:22:def mark_confirmed_dirty():
+app/perf_cache.py:23:    """Mark the confirmed matrix as needing rebuild. Called on confirm/merge only."""
+app/perf_cache.py:24:    global _confirmed_dirty
+app/perf_cache.py:25:    _confirmed_dirty = True
+app/perf_cache.py:29:    """Rebuild the confirmed identity embedding matrix from current registry state."""
+app/perf_cache.py:30:    global _confirmed_matrix, _confirmed_face_map, _confirmed_identity_ids, _confirmed_dirty
+app/perf_cache.py:38:        logger.warning(f"perf_cache: cannot rebuild matrix: {e}")
+app/perf_cache.py:39:        _confirmed_matrix = np.array([]).reshape(0, 512)
+app/perf_cache.py:40:        _confirmed_face_map = []
+app/perf_cache.py:41:        _confirmed_identity_ids = set()
+app/perf_cache.py:42:        _confirmed_dirty = False
+app/perf_cache.py:52:        if idata.get("merged_into"):
+app/perf_cache.py:78:        _confirmed_matrix = matrix
+app/perf_cache.py:80:        _confirmed_matrix = np.array([]).reshape(0, 512).astype(np.float32)
+app/perf_cache.py:82:    _confirmed_face_map = face_map
+codex
+I’ve narrowed it to a few likely hot handlers. Next I’m reading the merge/rename/neighbors routes, the speed-run cluster loader, and the community/family-tree helpcodex
+I’ve mapped the likely hot spots.exec
+/bin/zsh -lc "rg -n \"family tree|gedcom|community|neighbors|rename|merge|confirm-all|speed_run|speed-run|enrichment-panel|switch\" app/identity_routes.py app/page_routes.py app/cluster_review_routes.py app/main.py | sed -n '1,400p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/main.py:134:        structlog.contextvars.merge_contextvars,
+app/main.py:467:# Extracts community from /c/{slug}/... URL prefix, rewrites path for downstream routes.
+app/main.py:468:# Default community is "rhodes" when no /c/ prefix is present.
+app/main.py:471:_community_slug_pattern = re.compile(r"^/c/([a-z0-9_-]+)(/.*)?$")
+app/main.py:473:# Paths that should NOT be intercepted by community middleware
+app/main.py:480:        request.state.community_prefixed = False
+app/main.py:485:                request.state.community_slug = "rhodes"
+app/main.py:486:                request.state.community = None  # lazy-loaded if needed
+app/main.py:487:                request.state.community_explicit = False
+app/main.py:491:        match = _community_slug_pattern.match(path)
+app/main.py:495:            request.state.community_slug = slug
+app/main.py:496:            request.state.community_prefixed = True
+app/main.py:497:            request.state.community_explicit = True
+app/main.py:501:            request.state.community_slug = "rhodes"  # default
+app/main.py:502:            request.state.community_explicit = False
+app/main.py:504:        # Fetch community data (cached)
+app/main.py:505:        from app.supabase_data import get_community_by_slug
+app/main.py:507:        community = get_community_by_slug(request.state.community_slug)
+app/main.py:508:        request.state.community = community
+app/main.py:510:        # If slug was explicit but community not found, return 404
+exec
+/bin/zsh -lc 'rg -n "''^def |''^@rt'"\\(\" app/identity_routes.py app/page_routes.py app/cluster_review_routes.py app/perf_cache.py core/neighbors.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/cluster_review_routes.py:48:def invalidate_cluster_review_caches(changed_ids=None):
+app/cluster_review_routes.py:71:def _load_proposals():
+app/cluster_review_routes.py:77:def _get_crop_url_for_face(face_id):
+app/cluster_review_routes.py:90:def _confidence_badge(distance):
+app/cluster_review_routes.py:106:def _safe_dom_id(value: str) -> str:
+app/cluster_review_routes.py:111:def _data_dir() -> Path:
+app/cluster_review_routes.py:119:def _active_learning_queue_payload():
+app/cluster_review_routes.py:124:def _active_learning_labels():
+app/cluster_review_routes.py:129:def _active_learning_action_url(action: str, item: dict, queue_run_id: str) -> str:
+app/cluster_review_routes.py:143:def _active_learning_reason_badges(reasons: list[str]):
+app/cluster_review_routes.py:176:def _active_learning_card(item, queue_run_id: str):
+app/cluster_review_routes.py:240:def _recent_active_learning_card(label):
+app/cluster_review_routes.py:277:def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
+app/cluster_review_routes.py:343:def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
+app/cluster_review_routes.py:418:def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_prefix=""):
+app/cluster_review_routes.py:484:def _display_identity_name(name: str) -> str:
+app/cluster_review_routes.py:491:def _identity_face_ids(identity: dict) -> list[str]:
+app/cluster_review_routes.py:502:def _best_face_id(face_ids: list[str]) -> str:
+app/cluster_review_routes.py:514:def _build_unresolved_review_groups(filtered_ids, face_data, photo_registry):
+app/cluster_review_routes.py:687:def _unresolved_review_group_card(group, nav_prefix=""):
+🌐 Searching the web...
+🌐 Searched the web
+codex
+I’m reading the exact bodies now. I want to separate pure CPU issues from routes that are slow because they trigger broad cache invalidation or repeated full-registry scans.
+exec
+/bin/zsh -lc "nl -ba app/identity_routes.py | sed -n '499,760p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   499	@rt("/api/identity/{identity_id}/neighbors")
+   500	def get(
+   501	    identity_id: str,
+   502	    limit: int = 5,
+   503	    offset: int = 0,
+   504	    from_focus: bool = False,
+   505	    focus_section: str = "",
+   506	    container_id: str = "",
+   507	    community_filter: str = "",
+   508	    sess=None,
+   509	    request=None,
+   510	):
+   511	    """
+   512	    Get nearest neighbor identities for potential merge.
+   513	
+   514	    Args:
+   515	        identity_id: Identity to find neighbors for
+   516	        limit: Number of neighbors per page (default 5)
+   517	        offset: Number of neighbors already shown (for Load More)
+   518	
+exec
+/bin/zsh -lc "nl -ba app/identity_routes.py | sed -n '1,140p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Identity routes extracted from app/main.py.
+     3	
+     4	Identity modification routes: confirm, reject, merge, rename, notes,
+     5	metadata, bulk operations, skip, discoveries, inbox review, face operations,
+     6	neighbors, search, and associated helpers.
+     7	"""
+     8	
+     9	import json
+    10	import logging
+    11	import time as _time
+    12	from pathlib import Path
+    13	
+    14	from fasthtml.common import *
+    15	from starlette.responses import Response
+    16	
+    17	from core.registry import IdentityRegistry
+    18	from core.ui_safety import ensure_utf8_display
+    19	
+    20	from app.main import rt
+exec
+/bin/zsh -lc "nl -ba app/identity_routes.py | sed -n '2750,2875p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  2750	        ),
+  2751	        nav_script,
+  2752	        cls="flex flex-col items-center",
+  2753	    )
+  2754	
+  2755	
+  2756	@rt("/api/identity/{identity_id}/rename-form")
+  2757	def get(identity_id: str, request=None):
+  2758	    """
+  2759	    Return inline edit form for renaming an identity.
+  2760	    Replaces the name display via HTMX.
+  2761	    """
+  2762	    try:
+  2763	        registry = _main_mod.load_registry()
+  2764	        identity = registry.get_identity(identity_id)
+  2765	    except KeyError:
+  2766	        return Response("Identity not found", status_code=404)
+  2767	
+  2768	    # UI BOUNDARY: sanitize name for safe rendering in input value
+  2769	    current_name = ensure_utf8_display(identity.get("name")) or ""
+exec
+/bin/zsh -lc "nl -ba app/identity_routes.py | sed -n '1970,2290p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  1970	        ),
+  1971	        cls="px-4 py-3 rounded shadow-lg flex items-center bg-emerald-600 text-white animate-fade-in",
+  1972	        **{"_": "on load wait 8s then remove me"},
+  1973	    )
+  1974	
+  1975	
+  1976	@rt("/api/identity/{target_id}/merge/{source_id}")
+  1977	def post(
+  1978	    target_id: str,
+  1979	    source_id: str,
+  1980	    source: str = "web",
+  1981	    return_to: str = "",
+  1982	    resolved_name: str = None,
+  1983	    custom_name: str = None,
+  1984	    from_focus: bool = False,
+  1985	    filter: str = "",
+  1986	    focus_section: str = "",
+  1987	    override_co_occurrence: bool = False,
+  1988	    override_reason: str = "",
+  1989	    from_person_page: bool = False,
+exec
+/bin/zsh -lc "nl -ba app/identity_routes.py | sed -n '2875,2925p'" in /Users/nolanfox/rhodesli succeeded in 78ms:
+  2875	        return Response(
+  2876	            to_xml(_main_mod.toast(str(e), "error")),
+  2877	            status_code=400,
+  2878	            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+  2879	        )
+  2880	    except Exception as e:
+  2881	        return Response(
+  2882	            to_xml(_main_mod.toast(f"Rename failed: {str(e)}", "error")),
+  2883	            status_code=500,
+  2884	            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+  2885	        )
+  2886	
+  2887	    # Return updated name display + success toast
+  2888	    return (
+  2889	        _main_mod.name_display(identity_id, name, nav_prefix=_nav_prefix_from_request(request)),
+  2890	        _main_mod.toast(f"Renamed to '{name}'", "success"),
+  2891	    )
+  2892	
+  2893	
+  2894	# =============================================================================
+exec
+/bin/zsh -lc "nl -ba core/neighbors.py | sed -n '220,420p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   220	        else:
+   221	            results[iid] = (999.0, None, None)
+   222	
+   223	    # Fill in identities that had no embeddings
+   224	    for iid in identity_ids:
+   225	        if iid not in results:
+   226	            results[iid] = (999.0, None, None)
+   227	
+   228	    return results
+   229	
+   230	
+   231	def _load_kinship_thresholds() -> dict | None:
+   232	    """Load calibrated kinship thresholds if available."""
+   233	    import json
+   234	    from pathlib import Path as _Path
+   235	
+   236	    thresholds_path = (
+   237	        _Path(__file__).resolve().parent.parent
+   238	        / "rhodesli_ml"
+   239	        / "data"
+exec
+/bin/zsh -lc "nl -ba core/neighbors.py | sed -n '1,220p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Nearest Neighbor Discovery (Instance-First).
+     3	
+     4	This module is intentionally pessimistic and stateless.
+     5	It performs face-to-face matching and only *projects*
+     6	results up to the identity level for UI display.
+     7	
+     8	Design goals:
+     9	- Avoid centroid poisoning (averaging faces destroys distinct features)
+    10	- Preserve explainability (match A->B, not Mean(A)->Mean(B))
+    11	- Favor recall during discovery (if one face matches, show it)
+    12	- Provide statistical context (rank/percentile) not just raw distance
+    13	"""
+    14	
+    15	import numpy as np
+    16	from scipy.spatial.distance import cdist
+    17	from core.event_recorder import get_event_recorder
+    18	
+    19	
+    20	def get_identity_embeddings(identity_id, registry, face_data):
+exec
+/bin/zsh -lc "nl -ba core/neighbors.py | sed -n '420,560p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   420	    return max(1, min(99, int((2.0 - dist) / 2.0 * 100)))
+   421	
+   422	
+   423	def find_similar_faces(query_embedding, face_data, registry=None, limit=20, exclude_face_ids=None):
+   424	    """
+   425	    Find the most similar faces to a query embedding across the entire archive.
+   426	
+   427	    Unlike find_nearest_neighbors() which operates at the identity level,
+   428	    this works at the individual face level — returning each face with its
+   429	    distance, identity info, and photo context.
+   430	
+   431	    Uses calibrated kinship thresholds (AD-067) for tier classification:
+   432	    - STRONG MATCH: likely the same person (high confidence)
+   433	    - POSSIBLE MATCH: same person with age/pose variation
+   434	    - SIMILAR: similar features, identity uncertain
+   435	    - WEAK: below meaningful similarity threshold
+   436	
+   437	    Args:
+   438	        query_embedding: 512-dim numpy array (the face to compare)
+   439	        face_data: dict mapping face_id -> {"mu": embedding, ...}
+exec
+/bin/zsh -lc "nl -ba app/perf_cache.py | sed -n '1,220p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Precomputed embedding matrix for confirmed identities.
+     3	Enables vectorized cosine distance computation (O(1) matrix multiply vs O(N) loop).
+     4	Session 111f performance optimization.
+     5	"""
+     6	
+     7	import logging
+     8	import threading
+     9	
+    10	import numpy as np
+    11	
+    12	logger = logging.getLogger(__name__)
+    13	
+    14	# Global state
+    15	_confirmed_matrix = None  # shape (num_faces, 512), L2-normalized
+    16	_confirmed_face_map = None  # list of (identity_id, face_id) tuples, parallel to rows
+    17	_confirmed_identity_ids = None  # set of identity IDs in the matrix
+    18	_confirmed_dirty = True
+    19	_lock = threading.Lock()
+    20	
+exec
+/bin/zsh -lc "nl -ba app/cluster_review_routes.py | sed -n '1510,1775p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/cluster_review_routes.py | sed -n '1,90p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Cluster Review + GEDCOM Triage routes.
+     3	
+     4	AD-215: Error correction must be effortless.
+     5	PRD-037 Phase 2: GEDCOM triage page for post-upload identity linking.
+     6	
+     7	Two sections on one page:
+     8	1. Cluster Matches — grouped by target identity, weakest confidence first.
+     9	   One-click confirm/reject per face. Batch actions per identity.
+    10	2. Top Identities for GEDCOM — ranked by face count. Inline GEDCOM search.
+    11	"""
+    12	
+    13	import json
+    14	import os
+    15	import time
+    16	from pathlib import Path
+    17	from urllib.parse import urlencode
+    18	
+    19	from fasthtml.common import *
+    20	import numpy as np
+ succeeded in 0ms:
+  1510	@rt("/api/cluster-review/confirm-all")
+  1511	def post(
+  1512	    identity_id: str = "",
+  1513	    speed_run: str = "",
+  1514	    offset: int = 0,
+  1515	    community_slug: str = "",
+  1516	    input_method: str = "",
+  1517	    sess=None,
+  1518	    request=None,
+  1519	):
+  1520	    """Confirm all candidate faces for an identity."""
+  1521	    denied = _main_mod._check_admin(sess)
+  1522	    if denied:
+  1523	        return denied
+  1524	
+  1525	    registry = _main_mod.load_registry()
+  1526	
+  1527	    try:
+  1528	        identity = registry._identities.get(identity_id)
+  1529	        if not identity:
+exec
+/bin/zsh -lc "nl -ba app/cluster_review_routes.py | sed -n '2540,2665p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/cluster_review_routes.py | sed -n '1772,2270p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  2540	        )
+  2541	
+  2542	    return Div(*els, cls="space-y-2")
+  2543	
+  2544	
+  2545	@rt("/api/cluster-review/merge")
+  2546	def post(
+  2547	    source_id: str = "",
+  2548	    target_id: str = "",
+  2549	    offset: int = 0,
+  2550	    community_slug: str = "",
+  2551	    input_method: str = "",
+  2552	    sess=None,
+  2553	    request=None,
+  2554	):
+  2555	    """Merge source identity into target during speed-run enrichment."""
+  2556	    import time as _time
+  2557	    import logging
+  2558	
+  2559	    t0 = _time.time()
+ succeeded in 0ms:
+  1772	def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug="", include_progress=True):
+  1773	    """Render a single cluster card for speed-run mode."""
+  1774	    name = identity_data.get("name", "Unknown")
+  1775	    display_name = name
+  1776	    if name.startswith("Unidentified Person "):
+  1777	        display_name = "Person " + name[len("Unidentified Person ") :]
+  1778	    all_faces = _identity_face_ids(identity_data)
+  1779	    face_count = len(all_faces)
+  1780	
+  1781	    # Face thumbnails — show ALL faces (no cap), scrollable grid
+  1782	    face_thumbs = []
+  1783	    for fid in all_faces:
+  1784	        crop_url = _get_crop_url_for_face(fid)
+  1785	        photo_url = _get_photo_url_for_face(fid, community_slug=community_slug)
+  1786	        if crop_url:
+  1787	            img_el = Img(
+  1788	                src=crop_url,
+  1789	                alt=f"Face {fid[:12]}",
+  1790	                cls="w-28 h-28 object-cover rounded-lg border border-slate-600",
+  1791	                loading="lazy",
+codex
+I haven’t found the family-tree handler in the six requested files yet, so I’m tracing the page code that pulls GEDCOM/tree data and the community-scoping helpers that every page switch runs through.
+exec
+/bin/zsh -lc "rg -n \"family tree|family-tree|gedcom|relationship|tree link|tree\" app/page_routes.py app/main.py app/identity_routes.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/identity_routes.py:299:    gedcom_panel = None
+app/identity_routes.py:300:    existing_links = _main_mod._load_gedcom_face_links()
+app/identity_routes.py:302:        gedcom_panel = _main_mod._gedcom_link_panel(identity_id, identity_name)
+app/identity_routes.py:311:    if gedcom_panel:
+app/identity_routes.py:312:        parts.append(gedcom_panel)
+app/identity_routes.py:3133:                    name="relationship_notes",
+app/identity_routes.py:3134:                    value=identity.get("relationship_notes", ""),
+app/identity_routes.py:3197:    relationship_notes: str = "",
+app/identity_routes.py:3254:    if relationship_notes.strip():
+app/identity_routes.py:3255:        metadata["relationship_notes"] = relationship_notes.strip()
+app/main.py:1008:                        shutil.rmtree(item, ignore_errors=True)
+app/main.py:1081:                            shutil.rmtree(old, ignore_errors=True)
+app/main.py:1098:                    shutil.rmtree(item, ignore_errors=True)
+app/main.py:4862:        A("Tree", href=f"{p}/tree", cls=_active if active == "tree" else _inactive),
+app/main.py:5255:                    href=f"{prefix}/tree",
+app/main.py:5315:                href=f"{prefix}/admin/gedcom",
+app/main.py:6305:    linked_identities = _load_gedcom_face_links()
+app/main.py:6308:    def _has_tree_link(identity: dict) -> bool:
+app/main.py:6310:        return bool(linked_identities.get(identity_id) or identity.get("gedcom_xref"))
+app/main.py:6312:    linked_total = sum(1 for identity in confirmed if _has_tree_link(identity))
+exec
+/bin/zsh -lc "rg -n \"@rt\\(|def _get_community_photo_ids|def _get_community_identity_ids|def _compute_sidebar_counts|def _build_caches|def load_registry|def save_registry|def _invalidate_all_caches\" app/main.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+640:def _get_community_photo_ids(community: dict | None) -> set[str] | None:
+698:def _get_community_identity_ids(community: dict | None) -> set[str] | None:
+1234:def load_registry():
+1290:def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
+3392:def _compute_sidebar_counts(registry, community=None) -> dict:
+3938:def _invalidate_all_caches():
+4067:def _build_caches():
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '3392,3485p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  3392	def _compute_sidebar_counts(registry, community=None) -> dict:
+  3393	    """Compute sidebar navigation counts from a loaded registry.
+  3394	
+  3395	    This is the SINGLE canonical source for sidebar counts.
+  3396	    All pages with a sidebar MUST call this instead of computing counts inline.
+  3397	
+  3398	    Args:
+  3399	        registry: Loaded IdentityRegistry
+  3400	        community: Community dict (None = Rhodes/default, shows all data)
+  3401	    """
+  3402	    _build_caches()
+  3403	
+  3404	    # Get community filter sets (None = all data, set = filtered)
+  3405	    community_photo_ids = _get_community_photo_ids(community)
+  3406	    community_identity_ids = _get_community_identity_ids(community)
+  3407	
+  3408	    inbox = registry.list_identities(state=IdentityState.INBOX)
+  3409	    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+  3410	    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+  3411	    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '1234,1375p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  1234	def load_registry():
+  1235	    """Load the identity registry (backend authority).
+  1236	
+  1237	    When DATA_SOURCE=postgres (default), loads from Supabase ONLY.
+  1238	    No JSON fallback — if Supabase is unavailable, error propagates.
+  1239	    JSON exists as backup for manual recovery only, not automatic fallback.
+  1240	
+  1241	    When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
+  1242	
+  1243	    Uses a 120-second TTL cache to avoid repeated Supabase queries.
+  1244	
+  1245	    PRD-051 Phase 1 (Session 112): Supabase is the single source of truth.
+  1246	    """
+  1247	    global _registry_cache, _registry_cache_ts, _registry_cache_key
+  1248	    import time as _time
+  1249	
+  1250	    now = _time.time()
+  1251	    cache_key = (DATA_SOURCE, str(REGISTRY_PATH))
+  1252	    if (
+  1253	        _registry_cache is not None
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '640,780p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   640	def _get_community_photo_ids(community: dict | None) -> set[str] | None:
+   641	    """Return photo IDs for a community, or None when scoping cannot be computed.
+   642	
+   643	    Results cached for 120s. Returning None means "fall back to no filtering"
+   644	    because there is no reliable community-photo scope available.
+   645	    ALL communities including Rhodes get photo-derived scoping to prevent
+   646	    cross-community leakage when the community mapping is available.
+   647	    """
+   648	    if community is None:
+   649	        return None
+   650	
+   651	    global _community_photo_ids_cache, _community_ids_cache_ts
+   652	    community_id = community.get("id")
+   653	    if not community_id:
+   654	        return None  # Can't scope without a community ID — fall back to no filtering
+   655	
+   656	    now = time.time()
+   657	    if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_photo_ids_cache:
+   658	        return _community_photo_ids_cache[community_id]
+   659	
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '3938,4305p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  3938	def _invalidate_all_caches():
+  3939	    """Reset ALL in-memory caches so data is reloaded from disk.
+  3940	
+  3941	    IMPORTANT: Every cached object that reads from data files MUST be
+  3942	    cleared here. Missing a cache causes stale data after sync pushes.
+  3943	    Session 104b: _photo_registry_cache and community caches were missed,
+  3944	    causing Robert Mattatia photos to show without metadata.
+  3945	    """
+  3946	    global _photo_cache, _face_to_photo_cache, _photo_id_aliases
+  3947	    global _date_labels_cache, _photo_locations_cache
+  3948	    global _registry_cache, _photo_registry_cache
+  3949	    global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
+  3950	    global _face_data_cache
+  3951	    global _photo_dimensions_cache
+  3952	    _photo_cache = None
+  3953	    _face_to_photo_cache = None
+  3954	    _photo_id_aliases = None
+  3955	    _date_labels_cache = None
+  3956	    _photo_locations_cache = None
+  3957	    _registry_cache = None
+exec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '9978,10850p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "rg -n \"_compute_sidebar_counts\\(|_get_community_identity_ids\\(|_get_community_photo_ids\\(\" app/page_routes.py app/main.py app/identity_routes.py app/cluster_review_routes.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/cluster_review_routes.py:1097:        community_identity_ids = _main_mod._get_community_identity_ids(community)
+app/cluster_review_routes.py:1738:        community_identity_ids = _main_mod._get_community_identity_ids(community)
+app/cluster_review_routes.py:2925:        community_identity_ids = _main_mod._get_community_identity_ids(community)
+app/identity_routes.py:613:    comm_ids = _main_mod._get_community_identity_ids(current_community) if current_community else None
+app/identity_routes.py:1170:    comm_ids = _main_mod._get_community_identity_ids(community) if community else None
+app/main.py:572:    current_ids = _get_community_identity_ids(current_community)
+app/main.py:588:        other_ids = _get_community_identity_ids(comm)
+app/main.py:626:        other_ids = _get_community_identity_ids(comm)
+app/main.py:640:def _get_community_photo_ids(community: dict | None) -> set[str] | None:
+app/main.py:698:def _get_community_identity_ids(community: dict | None) -> set[str] | None:
+app/main.py:723:    community_photo_ids = _get_community_photo_ids(community)
+app/main.py:3392:def _compute_sidebar_counts(registry, community=None) -> dict:
+app/main.py:3405:    community_photo_ids = _get_community_photo_ids(community)
+app/main.py:3406:    community_identity_ids = _get_community_identity_ids(community)
+app/main.py:5040:        community_identity_ids = _get_community_identity_ids(community)
+app/main.py:7730:    community_photo_ids = _get_community_photo_ids(community)
+app/page_routes.py:440:    community_photo_ids = _main_mod._get_community_photo_ids(community)
+app/page_routes.py:441:    community_identity_ids = _main_mod._get_community_identity_ids(community)
+app/page_routes.py:645:        photo_ids = _main_mod._get_community_photo_ids(community)
+app/page_routes.py:646:        identity_ids = _main_mod._get_community_identity_ids(community)
+ succeeded in 0ms:
+  9978	@rt("/tree")
+  9979	def get(person: str = "", show_theory: str = "true", photo_id: str = "", people: str = "", sess=None, request=None):
+  9980	    """Family Tree — lazy-loading tree with search, zoom, expand/collapse (AD-185).
+  9981	
+  9982	    Query params:
+  9983	        person: Single person ID to center tree on
+  9984	        photo_id: Source photo ID (for using face crops from that photo)
+  9985	        people: Comma-separated person IDs (from photo page navigation)
+  9986	    """
+  9987	    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+  9988	    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+  9989	
+  9990	    # If people param provided (from photo page), pick the first as the focused person
+  9991	    # but pass all of them to the JS for smart subtree computation
+  9992	    people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
+  9993	    if people_list and not person:
+  9994	        person = people_list[0]
+  9995	
+  9996	    # Person name for title/OG
+  9997	    person_name = ""
+exec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '6554,7195p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '2142,2335p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  2142	@rt("/")
+  2143	def get(
+  2144	    section: str = None,
+  2145	    view: str = "focus",
+  2146	    current: str = None,
+  2147	    filter_source: str = "",
+  2148	    filter_collection: str = "",
+  2149	    sort_by: str = "newest",
+  2150	    confirmed_filter: str = "all",
+  2151	    filter: str = "",
+  2152	    media_filter: str = "all",
+  2153	    request=None,
+  2154	    sess=None,
+  2155	):
+  2156	    """
+  2157	    Landing page (no section) or Command Center (with section parameter).
+  2158	    Public access -- anyone can view. Action buttons shown only to admins.
+  2159	    Logged-in users with no section go to the triage dashboard.
+  2160	    """
+  2161	    user = _main_mod.get_current_user(sess or {})
+ succeeded in 0ms:
+  6554	@rt("/photos")
+  6555	def get(
+  6556	    filter_collection: str = "",
+  6557	    sort_by: str = "upload_newest",
+  6558	    decade: int = None,
+  6559	    search_q: str = "",
+  6560	    tag: str = "",
+  6561	    sess=None,
+  6562	    request=None,
+  6563	):
+  6564	    """
+  6565	    Public photos browsing page — grid of all archive photos.
+  6566	
+  6567	    No authentication required. Each photo links to /photo/{id}.
+  6568	    Supports decade filtering, keyword search, and tag filtering via query params.
+  6569	    """
+  6570	    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+  6571	    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+  6572	
+  6573	    _main_mod._build_caches()
+exec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '7195,7425p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  7195	            n["name"] = "Unknown"
+  7196	            n["state"] = "INBOX"
+  7197	            n["face_count"] = 0
+  7198	
+  7199	    # Confidence tier for distance — color-coded labels
+  7200	    from core.confidence import confidence_tier_from_distance
+  7201	
+  7202	    # Build result grid cards
+  7203	    result_cards = []
+  7204	    for n in neighbors:
+  7205	        if not n.get("crop_url"):
+  7206	            continue
+  7207	        nid = n["identity_id"]
+  7208	        tier_label, tier_cls = confidence_tier_from_distance(n.get("distance", 99))
+  7209	        admin_actions = []
+  7210	        if is_admin:
+  7211	            admin_actions.append(
+  7212	                Button(
+  7213	                    "Merge",
+  7214	                    cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+codex
+The tree API is one likely cold-path hotspot. I’m also checking photo and people pages because community switching will exercise those page builders repeatedly, not just the dashboard.
+exec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '3078,3175p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '3579,3875p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  3078	@rt("/api/photo/{photo_id}")
+  3079	def get(photo_id: str):
+  3080	    """
+  3081	    Get photo metadata with face bounding boxes.
+  3082	
+  3083	    Returns JSON with:
+  3084	    - photo_url: Static path to the photo
+  3085	    - image_width, image_height: Original dimensions
+  3086	    - faces: List of face objects with bbox, face_id, display_name, identity_id
+  3087	    """
+  3088	    photo = _main_mod.get_photo_metadata(photo_id)
+  3089	    if not photo:
+  3090	        return JSONResponse(
+  3091	            {"error": "Photo not found", "photo_id": photo_id},
+  3092	            status_code=404,
+  3093	        )
+  3094	
+  3095	    # Get image dimensions for face overlay positioning
+  3096	    width, height = _main_mod.get_photo_dimensions(photo["filename"])
+  3097	    if width == 0 or height == 0:
+ succeeded in 0ms:
+  3579	def _ordered_identity_photo_ids(registry, identity_id: str, sort_by: str = "date_asc") -> tuple[list[str], str]:
+  3580	    """Return ordered unique photo IDs for a person's gallery context."""
+  3581	    if not identity_id:
+  3582	        return [], ""
+  3583	
+  3584	    try:
+  3585	        identity = registry.get_identity(identity_id)
+  3586	    except KeyError:
+  3587	        return [], ""
+  3588	
+  3589	    display_name = ensure_utf8_display(identity.get("name", "")) or "Person"
+  3590	    all_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+  3591	    face_id_strings = []
+  3592	    for face_entry in all_faces:
+  3593	        fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+  3594	        if fid:
+  3595	            face_id_strings.append(fid)
+  3596	
+  3597	    ordered_photo_ids = []
+  3598	    try:
+exec
+/bin/zsh -lc "rg -n \"community switcher|/api/communities/switcher|load_communities|community_slug\" app/main.py app/page_routes.py app/identity_routes.py app/cluster_review_routes.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/cluster_review_routes.py:43:_speed_run_cache = {}  # keyed by community_slug -> (timestamp, result)
+app/cluster_review_routes.py:44:_suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp, result)
+app/cluster_review_routes.py:815:        community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+app/cluster_review_routes.py:816:        clusters = _get_speed_run_clusters(community_slug, request)
+app/cluster_review_routes.py:833:            first_card = _speed_run_cluster_card(iid, idata, 0, total, community_slug, include_progress=False)
+app/cluster_review_routes.py:1090:    _dash_slug = getattr(request.state, "community_slug", "") if request else ""
+app/cluster_review_routes.py:1110:    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+app/cluster_review_routes.py:1111:    nav_prefix = _main_mod.community_url_prefix(community_slug)
+app/cluster_review_routes.py:1515:    community_slug: str = "",
+app/cluster_review_routes.py:1586:            community_slug,
+app/cluster_review_routes.py:1606:            hx_get=f"/api/cluster-review/enrichment-panel?identity_id={identity_id}&offset={offset}&community_slug={community_slug}",
+app/cluster_review_routes.py:1629:    community_slug: str = "",
+app/cluster_review_routes.py:1687:            community_slug,
+app/cluster_review_routes.py:1692:        next_card = _speed_run_next_card(offset + 1, community_slug, request)
+app/cluster_review_routes.py:1713:def _get_speed_run_clusters(community_slug: str = "", request=None):
+app/cluster_review_routes.py:1720:    cache_key = community_slug or "__all__"
+app/cluster_review_routes.py:1730:    # may be None even when community_slug is valid. Fall back to slug lookup.
+app/cluster_review_routes.py:1732:    if not community and community_slug:
+app/cluster_review_routes.py:1735:        community = get_community_by_slug(community_slug)
+app/cluster_review_routes.py:1762:def _get_photo_url_for_face(face_id, community_slug=""):
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '549,640p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '5023,5065p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   549	def _cross_community_badge(identity_id: str, current_community: dict | None) -> "FT | None":
+   550	    """Return a badge if identity belongs to a DIFFERENT community than current.
+   551	
+   552	    COMMUNITY-014: Shows "[Community Name]" badge when viewing cross-community content.
+   553	    Returns None if same community or no community context.
+   554	    """
+   555	    if current_community is None:
+   556	        return None
+   557	
+   558	    current_slug = current_community.get("slug", "rhodes")
+   559	    current_id = current_community.get("id")
+   560	    if not current_id:
+   561	        return None
+   562	
+   563	    # Check cached identity sets for all communities
+   564	    from app.supabase_data import load_communities
+   565	
+   566	    communities = load_communities()
+   567	    if not communities:
+   568	        return None
+ succeeded in 0ms:
+  5023	def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None = None) -> object:
+  5024	    """Admin mode indicator bar — only visible for admin users.
+  5025	
+  5026	    Shows pending count, quick links to admin sections.
+  5027	    Returns empty string for non-admin users.
+  5028	    Community-aware: scopes counts and links to active community.
+  5029	    """
+  5030	    if not user or not getattr(user, "is_admin", False):
+  5031	        return NotStr("")
+  5032	
+  5033	    prefix = community_url_prefix(community_slug or "rhodes")
+  5034	
+  5035	    # Count pending items (scoped to community)
+  5036	    pending_count = 0
+  5037	    proposal_count = 0
+  5038	    try:
+  5039	        registry = load_registry()
+  5040	        community_identity_ids = _get_community_identity_ids(community)
+  5041	        for ident in registry.list_identities():
+  5042	            if community_identity_ids is not None and ident.get("identity_id") not in community_identity_ids:
+exec
+/bin/zsh -lc "nl -ba app/page_routes.py | sed -n '600,690p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   600	        Div(
+   601	            # Hero section
+   602	            Div(
+   603	                H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
+   604	                P(subtitle, cls="text-lg text-amber-200/70 max-w-2xl mx-auto mb-8"),
+   605	                description_section,
+   606	                stats_row,
+   607	                empty_state,
+   608	                content_section,
+   609	                cls="text-center py-16 px-6",
+   610	            ),
+   611	            cls="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900",
+   612	            data_testid="community-landing",
+   613	            data_community=slug,
+   614	        ),
+   615	    )
+   616	
+   617	
+   618	def _platform_root_page(auth_enabled: bool = False):
+   619	    """Render a neutral platform root with explicit archive choices."""
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '3570,3925p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "rg -n \"def load_photo_registry|def get_face_data|def get_identity_for_face|def get_photo_id_for_face|def get_best_face_id|def resolve_face_image_url|def _load_date_labels|def get_photo_metadata|def get_photo_dimensions|def _get_decade_counts|def _get_tag_counts|def _search_photos\" app/main.py app/page_routes.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 73ms:
+  3570	
+  3571	    embeddings_path = data_path / "embeddings.npy"
+  3572	    if not embeddings_path.exists():
+  3573	        return {}
+  3574	    return load_face_data(embeddings_path)
+  3575	
+  3576	
+  3577	def get_face_data() -> dict[str, dict]:
+  3578	    """Get face data with caching."""
+  3579	    global _face_data_cache
+  3580	    if _face_data_cache is None:
+  3581	        _face_data_cache = load_face_embeddings()
+  3582	    return _face_data_cache
+  3583	
+  3584	
+  3585	def load_photo_registry():
+  3586	    """Load the photo registry for merge validation.
+  3587	
+  3588	    When DATA_SOURCE=postgres (default), loads from Supabase ONLY.
+  3589	    No JSON fallback — if Supabase is unavailable, error propagates.
+ succeeded in 79ms:
+app/main.py:1800:def _load_date_labels() -> dict:
+app/main.py:2204:def _get_decade_counts() -> dict:
+app/main.py:2223:def _get_tag_counts() -> dict:
+app/main.py:2341:def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
+app/main.py:3577:def get_face_data() -> dict[str, dict]:
+app/main.py:3585:def load_photo_registry():
+app/main.py:3779:def get_photo_dimensions(filename: str) -> tuple:
+app/main.py:3828:def get_identity_for_face(registry, face_id: str) -> dict:
+app/main.py:4301:def get_photo_metadata(photo_id: str) -> dict:
+app/main.py:4354:def get_photo_id_for_face(face_id: str) -> str:
+app/main.py:4439:def get_best_face_id(face_ids: list) -> str | None:
+app/main.py:4647:def resolve_face_image_url(face_id: str, crop_files: set) -> str:
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '4300,4465p'" in /Users/nolanfox/rhodesli succeeded in 67ms:
+  4300	
+  4301	def get_photo_metadata(photo_id: str) -> dict:
+  4302	    """Get photo metadata including face bboxes."""
+  4303	    _build_caches()
+  4304	    result = _photo_cache.get(photo_id)
+  4305	    if result is None and _photo_id_aliases:
+  4306	        # Try resolving photo_index.json ID → SHA256 cache ID
+  4307	        resolved = _photo_id_aliases.get(photo_id)
+  4308	        if resolved:
+  4309	            result = _photo_cache.get(resolved)
+  4310	    return result
+  4311	
+  4312	
+  4313	def resolve_photo_registry_photo_id(photo_id: str, photo_registry=None) -> str:
+  4314	    """Resolve viewer/cache IDs back to the editable PhotoRegistry ID.
+  4315	
+  4316	    Some live pages are addressed by SHA/cache IDs while the durable photo
+  4317	    registry still stores the canonical photo_index / inbox-style ID. Editing
+  4318	    routes must resolve through the same filename/alias bridge that read paths
+  4319	    use, or saves appear to silently fail.
+codex
+I’ve got the main hot paths. I’m running a few local, read-only measurements now so the impact estimates are tied to this repo’s actual data shape instead of just Big-O reasoning.
+exec
+/bin/zsh -lc 'test -x venv/bin/python && echo yes || echo no' in /Users/nolanfox/rhodesli succeeded in 0ms:
+yes
+exec
+/bin/zsh -lc "ls data | sed -n '1,120p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+active_learning_queue.json
+ancestry_links.json
+annotations.bak.1773676684
+annotations.json
+annotations.json~Stashed changes
+annotations.json~Stashed changes_0
+annotations.json~Stashed changes_1
+audit_log.json
+backups
+birth_year_estimates.json
+calibration
+cleanup_backups
+clustering_report_2026-02-07.txt
+clustering_validation_2026-02-09.json
+clustering_validation_2026-02-10.json
+co_occurrence_graph.json
+co_occurrence_graph.json.bak
+comparison_results.json
+comparison_results.json.lock
+corrections_log.json
+exec
+/bin/zsh -lc 'du -sh data app/static/crops 2>/dev/null' in /Users/nolanfox/rhodesli succeeded in 0ms:
+ 47M	data
+ 73M	app/static/crops
+exec
+/bin/zsh -lc "rg -n \"DATA_SOURCE\\s*=|REGISTRY_PATH\\s*=|photos_path\\s*=|data_path\\s*=\" app/main.py | sed -n '1,120p'" in /Users/nolanfox/rhodesli succeeded in 14ms:
+144:data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
+145:photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_root / PHOTOS_DIR
+151:DATA_SOURCE = os.environ.get("DATA_SOURCE", "postgres")
+152:if DATA_SOURCE == "json":
+154:        "DATA_SOURCE=json is deprecated (PRD-051). "
+1225:REGISTRY_PATH = data_path / "identities.json"
+1237:    When DATA_SOURCE=postgres (default), loads from Supabase ONLY.
+1241:    When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
+1261:    if DATA_SOURCE == "postgres":
+1268:                "Set DATA_SOURCE=json on Railway as emergency rollback."
+1276:    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
+1293:    When DATA_SOURCE=postgres (default), writes Supabase synchronously + JSON as backup.
+1294:    When DATA_SOURCE=json (rollback), writes JSON + shadow-writes to Supabase.
+1354:    if DATA_SOURCE == "postgres":
+1666:    When DATA_SOURCE=postgres (default), reads from Supabase ml_proposals table.
+1667:    When DATA_SOURCE=json (rollback), reads from proposals.json.
+1679:    if DATA_SOURCE == "postgres":
+1803:    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+1804:    When DATA_SOURCE=json (default), loads from JSON file.
+1814:    if DATA_SOURCE == "postgres":
+exec
+/bin/zsh -lc "rg -n \"def load_communities|def get_community_by_slug|def load_photos_for_community|def get_supabase_client\" app/supabase_data.py | sed -n '1,200p'" in /Users/nolanfox/rhodesliexec
+/bin/zsh -lc "nl -ba app/supabase_data.py | sed -n '1,420p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+37:def get_supabase_client():
+1576:def load_communities() -> list | None:
+1590:def get_community_by_slug(slug: str) -> dict | None:
+1633:def load_photos_for_community(community_id: str) -> list | None:
+ succeeded in 0ms:
+     1	"""Supabase data layer for user-entered data persistence.
+     2	
+     3	Architecture (AD-135):
+     4	- Supabase = source of truth for user decisions
+     5	- JSON files = read cache (not modified directly by end-users)
+     6	- All user writes go through save_registry() → this module
+     7	- If Supabase is unavailable, app continues from JSON (degraded mode)
+     8	
+     9	Tables:
+    10	- identity_overrides: complete identity records for user-modified identities
+    11	- annotations: community annotations (name suggestions, bios, etc.)
+    12	- relationships: person-to-person relationships
+    13	- gedcom_matches: GEDCOM individual → identity match decisions
+    14	"""
+    15	
+    16	import json
+    17	import logging
+    18	import os
+    19	
+    20	# Narrow exception types for Supabase operations.
+exec
+/bin/zsh -lc "nl -ba app/supabase_data.py | sed -n '1560,1668p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  1560	    _community_cache = {}
+  1561	    _community_cache_ts = 0.0
+  1562	
+  1563	
+  1564	def _default_rhodes_community() -> dict:
+  1565	    """Return a hardcoded Rhodes community dict for when Supabase is unavailable."""
+  1566	    return {
+  1567	        "id": "00000000-0000-0000-0000-000000000001",
+  1568	        "slug": "rhodes",
+  1569	        "name": "Jewish Community of Rhodes",
+  1570	        "landing_title": "Jewish Community of Rhodes",
+  1571	        "landing_subtitle": "Heritage photo archive for the Sephardic Jewish community of Rhodes",
+  1572	        "is_default": True,
+  1573	    }
+  1574	
+  1575	
+  1576	def load_communities() -> list | None:
+  1577	    """Load all communities from Supabase. Returns list of dicts or None."""
+  1578	    sb = get_supabase_client()
+  1579	    if not sb:
+exec
+/bin/zsh -lc "rg -n \"def list_identities|def get_anchor_face_ids|def get_candidate_face_ids|def get_all_face_ids|def merge_identities|def promote_candidate|def rename_identity\" core/registry.py | sed -n '1,220p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+200:    def get_anchor_face_ids(self, identity_id: str) -> list[str]:
+219:    def get_candidate_face_ids(self, identity_id: str) -> list[str]:
+281:    def list_identities(
+307:    def list_identities_by_job(self, job_id: str) -> list[dict]:
+472:    def merge_identities(
+1103:    def rename_identity(
+1328:    def promote_candidate(
+1990:    def get_all_face_ids(self, identity_id: str) -> list[str]:
+exec
+/bin/zsh -lc "nl -ba core/registry.py | sed -n '1,420p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Semi-Supervised Identity Registry.
+     3	
+     4	A durable, versioned registry with state, provenance, and replay capabilities.
+     5	See docs/adr_004_identity_registry.md for design rationale.
+     6	
+     7	Key principles:
+     8	- Immutable source data (PFE embeddings never modified)
+     9	- Append-only event log for full provenance
+    10	- Human-gated learning (only explicit confirmation updates anchors)
+    11	- State machine controls fusion behavior
+    12	- Safety Foundation: No merge may occur without validate_merge
+    13	"""
+    14	
+    15	import json
+    16	import logging
+    17	import uuid
+    18	from datetime import datetime, timezone
+    19	from enum import Enum
+    20	from pathlib import Path
+exec
+/bin/zsh -lc "nl -ba core/registry.py | sed -n '472,760p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+   472	    def merge_identities(
+   473	        self,
+   474	        source_id: str,
+   475	        target_id: str,
+   476	        user_source: str,
+   477	        photo_registry: "PhotoRegistry",
+   478	        resolved_name: str = None,
+   479	        auto_correct_direction: bool = True,
+   480	        allow_co_occurrence: bool = False,
+   481	    ) -> dict:
+   482	        """
+   483	        Merge source identity INTO target identity.
+   484	
+   485	        Safety Foundation: Calls validate_merge() first - merge is blocked if
+   486	        the two identities have faces appearing in the same photo.
+   487	
+   488	        Enhanced behavior:
+   489	        - Auto-corrects merge direction (named identity always survives)
+   490	        - Detects name conflicts (both identities named) and returns 'name_conflict'
+   491	        - Records merge_history on target for undo capability
+exec
+/bin/zsh -lc 'rg -n "def validate_merge" -n core/registry.py core/*.py' in /Users/nolanfox/rhodesli succeeded in 64ms:
+core/registry.py:2295:def validate_merge(
+core/registry.py:2295:def validate_merge(
+exec
+/bin/zsh -lc "nl -ba core/registry.py | sed -n '2295,2375p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  2295	def validate_merge(
+  2296	    id_a: str,
+  2297	    id_b: str,
+  2298	    identity_registry: "IdentityRegistry",
+  2299	    photo_registry: "PhotoRegistry",
+  2300	    allow_co_occurrence: bool = False,
+  2301	) -> tuple[bool, str]:
+  2302	    """
+  2303	    Validate whether two identities can be safely merged.
+  2304	
+  2305	    CORE INVARIANT: A face appearing in the same photo as another face
+  2306	    may NEVER belong to the same identity (they are physically distinct
+  2307	    people in that moment).
+  2308	
+  2309	    This function MUST be called by ALL merge entry points.
+  2310	    No merge may proceed without explicit validation.
+  2311	
+  2312	    Session 108b (PRD-048): Admin can override co-occurrence for collages,
+  2313	    photos-of-albums, and composite images. Override requires explicit
+  2314	    allow_co_occurrence=True + logged reason at the call site.
+codex
+I have enough static evidence to time the worst pure-Python paths locally. That will let me separate “inherent algorithmic cost” from “likely network/Supabase cost” in the final audit.
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+import app.page_routes as page
+import app.cluster_review_routes as cluster
+from core.neighbors import find_nearest_neighbors, find_nearest_neighbors_fast
+
+registry = main.load_registry()
+photo_registry = main.load_photo_registry()
+face_data = main.get_face_data()
+
+# pick a confirmed identity with at least one face
+confirmed = [i for i in registry.list_identities(state=main.IdentityState.CONFIRMED) if not i.get('merged_into') and (i.get('anchor_ids') or i.get('candidate_ids'))]
+confirmed.sort(key=lambda i: len(i.get('anchor_ids', []) + i.get('candidate_ids', [])), reverse=True)
+target_id = confirmed[0]['identity_id']
+
+# pick an inbox/proposed cluster with >=2 faces
+clusters = []
+for i in registry.list_identities():
+    if i.get('merged_into'):
+        continue
+    if i.get('state') in ('INBOX','PROPOSED') and len(i.get('anchor_ids', []) + i.get('candidate_ids', [])) >= 2:
+        clusters.append(i)
+clusters.sort(key=lambda i: len(i.get('anchor_ids', []) + i.get('candidate_ids', [])), reverse=True)
+cluster_id = clusters[0]['identity_id'] if clusters else target_id
+
+print('target_confirmed', target_id, len(registry.get_identity(target_id).get('anchor_ids', []) + registry.get_identity(target_id).get('candidate_ids', [])))
+print('target_cluster', cluster_id, len(registry.get_identity(cluster_id).get('anchor_ids', []) + registry.get_identity(cluster_id).get('candidate_ids', [])))
+
+for label, fn in [
+    ('find_nearest_neighbors', lambda: find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit=20)),
+    ('find_nearest_neighbors_fast', lambda: find_nearest_neighbors_fast(target_id, registry, photo_registry, face_data, limit=20)),
+    ('speed_run_clusters', lambda: cluster._get_speed_run_clusters('', None)),
+    ('confirmed_suggestions', lambda: cluster._get_confirmed_identity_suggestions(cluster_id, limit=6, community_slug='')),
+    ('tree_adjacency_full', lambda: page._build_tree_adjacency(True)),
+    ('tree_person_lookup_full', lambda: page._build_tree_person_lookup()),
+]:
+    t0 = time.perf_counter()
+    out = fn()
+    dt = time.perf_counter() - t0
+    size = len(out) if hasattr(out, '__len__') else 'na'
+    print(label, f'{dt:.4f}s', 'size=', size)
+PY" in /Users/nolanfox/rhodesli succeeded in 8.67s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+WARNING:root:Failed to load current GEDCOM tree relationships: [Errno 8] nodename nor servname provided, or not known
+WARNING:root:Failed to load GEDCOM face links: [Errno 8] nodename nor servname provided, or not known
+WARNING:root:Failed to load GEDCOM individuals: [Errno 8] nodename nor servname provided, or not known
+target_confirmed 429cf1b6-04be-475d-9a9d-a3f37dd2f1db 241
+target_cluster 3686753a-5c03-45cd-af47-de30a215451b 9
+find_nearest_neighbors 0.3940s size= 20
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import statistics, time
+import app.main as main
+from core.neighbors import find_nearest_neighbors, find_nearest_neighbors_fast
+
+registry = main.load_registry()
+photo_registry = main.load_photo_registry()
+face_data = main.get_face_data()
+
+cands = [i for i in registry.list_identities(state=main.IdentityState.CONFIRMED) if not i.get('merged_into') and (i.get('anchor_ids') or i.get('candidate_ids'))]
+counts = sorted((len(i.get('anchor_ids', []) + i.get('candidate_ids', [])), i['identity_id']) for i in cands)
+for label, idx in [('small', 0), ('median', len(counts)//2), ('large', -1)]:
+    face_count, iid = counts[idx]
+    print('case', label, iid, face_count)
+    for fn_label, fn in [('slow', find_nearest_neighbors), ('fast', find_nearest_neighbors_fast)]:
+        t0 = time.perf_counter();
+        out = fn(iid, registry, photo_registry, face_data, limit=20)
+        dt = time.perf_counter() - t0
+        print(' ', fn_label, f'{dt:.4f}s', len(out))
+PY" in /Users/nolanfox/rhodesli succeeded in 5.83s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+case small 016e9fba-b0a7-4eab-aaa4-27b7667b1b0a 1
+  slow 0.0447s 20
+  fast 0.0511s 20
+case median f4d9c430-8100-4465-aa1d-171538d396d7 1
+  slow 0.0406s 20
+  fast 0.0416s 20
+codex
+The neighbor benchmarks are useful: the “fast” path only helps for multi-face identities because it still rebuilds its candidate matrix on every request. I’m checking the tree/GEDCOM helpers one level deeper now because that cold-load path is clearly doing synchronous data work on request.
+exec
+/bin/zsh -lc "nl -ba app/relationship_routes.py | sed -n '1,420p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+     1	"""
+     2	Relationship and GEDCOM routes extracted from app/main.py.
+     3	
+     4	Relationship CRUD, GEDCOM individual search/link/unlink,
+     5	GEDCOM cache helpers, and date confirmation.
+     6	"""
+     7	
+     8	import json
+     9	import logging
+    10	import os
+    11	import time
+    12	import uuid
+    13	from datetime import datetime, timezone
+    14	from pathlib import Path
+    15	from urllib.parse import quote
+    16	
+    17	from fasthtml.common import *
+    18	from starlette.responses import Response
+    19	
+    20	from core.registry import IdentityState
+exec
+/bin/zsh -lc "rg -n \"def _load_current_gedcom_relationship_edges|def _load_gedcom_face_links|def _load_gedcom_individuals|def _load_gedcom_relationship_edges_for_ids|_gedcom_.*cache|TTL\" app/relationship_routes.py | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+31:_gedcom_matches_cache = None
+32:_gedcom_tree_relationships_cache = None
+42:_gedcom_matches_cache_ts: float = 0.0
+43:_GEDCOM_MATCHES_CACHE_TTL: float = 300.0
+51:    Uses a 300-second TTL cache — GEDCOM links change only during manual linking.
+54:    global _gedcom_matches_cache, _gedcom_matches_cache_ts
+58:    if _gedcom_matches_cache is not None and (now - _gedcom_matches_cache_ts) < _GEDCOM_MATCHES_CACHE_TTL:
+59:        return _gedcom_matches_cache
+73:                _gedcom_matches_cache = result
+74:                _gedcom_matches_cache_ts = now
+83:        _gedcom_matches_cache = default
+84:        _gedcom_matches_cache_ts = now
+85:        return _gedcom_matches_cache
+88:        _gedcom_matches_cache = json.loads(matches_path.read_text(encoding="utf-8"))
+90:        _gedcom_matches_cache = default
+91:    _gedcom_matches_cache_ts = now
+92:    return _gedcom_matches_cache
+95:def invalidate_gedcom_matches_cache():
+97:    global _gedcom_matches_cache, _gedcom_matches_cache_ts
+98:    _gedcom_matches_cache = None
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.page_routes as page
+
+for label, fn in [
+    ('tree_adjacency_full', lambda: page._build_tree_adjacency(True)),
+    ('tree_person_lookup_full', lambda: page._build_tree_person_lookup()),
+    ('tree_search_lookup', lambda: page._build_tree_person_lookup()),
+]:
+    for i in range(2):
+        t0 = time.perf_counter(); out = fn(); dt = time.perf_counter() - t0
+        size = len(out) if hasattr(out,'__len__') else 'na'
+        print(label, 'run', i+1, f'{dt:.4f}s', 'size=', size)
+PY" in /Users/nolanfox/rhodesli exited 1 in 3.01s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/Users/nolanfox/rhodesli/app/page_routes.py", line 25, in <module>
+    from app.main import rt
+  File "/Users/nolanfox/rhodesli/app/main.py", line 10855, in <module>
+    _load_corrections_log = page_routes._load_corrections_log
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+import app.page_routes as page
+
+for label, fn in [
+    ('tree_adjacency_full', lambda: page._build_tree_adjacency(True)),
+    ('tree_person_lookup_full', lambda: page._build_tree_person_lookup()),
+    ('tree_data_full_path', lambda: (page._build_tree_adjacency(True), page._build_tree_person_lookup())),
+]:
+    for i in range(2):
+        t0 = time.perf_counter(); out = fn(); dt = time.perf_counter() - t0
+        size = len(out) if hasattr(out,'__len__') else 'na'
+        print(label, 'run', i+1, f'{dt:.4f}s', 'size=', size)
+PY" in /Users/nolanfox/rhodesli succeeded in 7.81s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+WARNING:root:Failed to load current GEDCOM tree relationships: [Errno 8] nodename nor servname provided, or not known
+WARNING:root:Failed to load GEDCOM face links: [Errno 8] nodename nor servname provided, or not known
+WARNING:root:Failed to load GEDCOM individuals: [Errno 8] nodename nor servname provided, or not known
+tree_adjacency_full run 1 2.2160s size= 3
+tree_adjacency_full run 2 0.0055s size= 3
+tree_person_lookup_full run 1 0.4052s size= 116
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+
+registry = main.load_registry()
+print('identities', len(registry._identities))
+
+# time repeated list_identities pattern used by / route + sidebar counts
+for label, fn in [
+    ('six_state_lists', lambda: [
+        registry.list_identities(state=main.IdentityState.INBOX),
+        registry.list_identities(state=main.IdentityState.PROPOSED),
+        registry.list_identities(state=main.IdentityState.CONFIRMED),
+        registry.list_identities(state=main.IdentityState.SKIPPED),
+        registry.list_identities(state=main.IdentityState.REJECTED),
+        registry.list_identities(state=main.IdentityState.CONTESTED),
+    ]),
+    ('sidebar_counts', lambda: main._compute_sidebar_counts(registry, community=None)),
+]:
+    t0 = time.perf_counter(); out = fn(); dt = time.perf_counter() - t0
+    print(label, f'{dt:.4f}s')
+PY" in /Users/nolanfox/rhodesli succeeded in 5.07s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+identities 3457
+six_state_lists 0.0034s
+sidebar_counts 0.0884s
+codex
+I’ve confirmed the repo’s local JSON snapshot is at roughly the user-reported scale: 3,457 identities. I’m measuring the community-scope derivation path next, because that’s the piece that should dominate “switch communities” latency.
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+import app.supabase_data as sd
+
+main._invalidate_all_caches()
+main._build_caches()
+registry = main.load_registry()
+print('photo_cache', len(main._photo_cache or {}), 'face_to_photo', len(main._face_to_photo_cache or {}), 'identities', len(registry._identities))
+
+# Monkeypatch community photo loader to exercise the real helper with local data.
+orig_client = sd.get_supabase_client
+orig_loader = sd.load_photos_for_community
+try:
+    sd.get_supabase_client = lambda: object()
+    all_photo_ids = list((main._photo_cache or {}).keys())
+    sd.load_photos_for_community = lambda community_id: all_photo_ids
+    community = {'id': 'bench-community', 'slug': 'bench', 'name': 'Bench'}
+    t0 = time.perf_counter()
+    ids = main._get_community_identity_ids(community)
+    dt = time.perf_counter() - t0
+    print('community_identity_ids_all_photos', f'{dt:.4f}s', 'ids=', len(ids or []))
+finally:
+    sd.get_supabase_client = orig_client
+    sd.load_photos_for_community = orig_loader
+PY" in /Users/nolanfox/rhodesli succeeded in 5.86s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+photo_cache 964 face_to_photo 2749 identities 3457
+community_identity_ids_all_photos 0.0028s ids= 1682
+exec
+/bin/zsh -lc "nl -ba app/main.py | sed -n '7215,7318p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+  7215	def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
+  7216	    """Find INBOX/PROPOSED identities with high-confidence matches to CONFIRMED identities.
+  7217	
+  7218	    A "discovery" is an unreviewed face that has a nearest CONFIRMED neighbor
+  7219	    with distance < DISCOVERY_DISTANCE_THRESHOLD. These are high-priority
+  7220	    items because an admin can resolve them with a single click.
+  7221	
+  7222	    Returns a list of dicts:
+  7223	        [{source_id, source_name, target_id, target_name, distance, confidence}, ...]
+  7224	    sorted by distance (best matches first).
+  7225	
+  7226	    This is a read-only computation — no data mutation.
+  7227	    """
+  7228	    global _discovery_cache, _discovery_cache_key
+  7229	    if registry is None:
+  7230	        registry = load_registry()
+  7231	
+  7232	    # Cache key: count of inbox + proposed + confirmed + community scope
+  7233	    inbox = registry.list_identities(state=IdentityState.INBOX)
+  7234	    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+
+registry = main.load_registry()
+for label, fn in [
+    ('compute_discoveries_all', lambda: main._compute_discoveries(registry, community_identity_ids=None)),
+    ('count_discoveries_all', lambda: main._count_discoveries(registry, community_identity_ids=None)),
+]:
+    # cold
+    main._invalidate_discovery_cache()
+    t0 = time.perf_counter(); out = fn(); dt = time.perf_counter() - t0
+    print(label, 'cold', f'{dt:.4f}s', 'size=', len(out) if hasattr(out,'__len__') else out)
+    t0 = time.perf_counter(); out = fn(); dt = time.perf_counter() - t0
+    print(label, 'warm', f'{dt:.4f}s', 'size=', len(out) if hasattr(out,'__len__') else out)
+PY" in /Users/nolanfox/rhodesli succeeded in 4.39s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+compute_discoveries_all cold 0.0427s size= 169
+compute_discoveries_all warm 0.0040s size= 169
+count_discoveries_all cold 0.0207s size= 169
+count_discoveries_all warm 0.0038s size= 169
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+import app.perf_cache as pc
+
+main.load_registry(); main.get_face_data()
+for i in range(2):
+    pc._confirmed_dirty = True
+    t0 = time.perf_counter();
+    out = pc.get_confirmed_distances(next(iter(main.get_face_data().values()))['mu'])
+    dt = time.perf_counter() - t0
+    print('confirmed_distances_rebuild', i+1, f'{dt:.4f}s', 'results=', len(out))
+    t0 = time.perf_counter();
+    out = pc.get_confirmed_distances(next(iter(main.get_face_data().values()))['mu'])
+    dt = time.perf_counter() - t0
+    print('confirmed_distances_warm', i+1, f'{dt:.4f}s', 'results=', len(out))
+PY" in /Users/nolanfox/rhodesli succeeded in 4.94s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+confirmed_distances_rebuild 1 0.0025s results= 0
+confirmed_distances_warm 1 0.0000s results= 0
+confirmed_distances_rebuild 2 0.0021s results= 0
+confirmed_distances_warm 2 0.0000s results= 0
+codex
+I found something potentially more serious in the speed-run suggestion cache: the vectorized path may be disabled by a field-name mismatch. I’m confirming that against the actual face embedding payload before I include it.
+exec
+/bin/zsh -lc "rg -n \"def load_face_data|mu\\]|\\['embeddings'\\]|\\bembeddings\\b|\\bmu\\b\" app/main.py core app | sed -n '1,260p'" in /Users/nolanfox/rhodesli succeeded in 0ms:
+app/main.py:1808:    the ID mismatch between photo_index.json and the embeddings-based cache.
+app/main.py:3558:    Load face embeddings as face_id -> {mu, sigma_sq} dict.
+app/main.py:3561:        Dict mapping face_id to {"mu": np.ndarray, "sigma_sq": np.ndarray}
+app/main.py:3563:    # TODO: Embeddings remain on disk (embeddings.npy) even when DATA_SOURCE=postgres.
+app/main.py:3567:    # - R2 backup of embeddings.npy (PRD-027 Phase A)
+app/main.py:3571:    embeddings_path = data_path / "embeddings.npy"
+app/main.py:3682:    Load embeddings and build photo metadata cache.
+app/main.py:3690:    embeddings_path = data_path / "embeddings.npy"
+app/main.py:3694:    embeddings = np.load(embeddings_path, allow_pickle=True)
+app/main.py:3700:    for entry in embeddings:
+app/main.py:4070:    Loads raw detections from embeddings.npy, then filters each photo's
+app/main.py:4225:            # Preserve registry-only photos even when embeddings are absent.
+app/main.py:4268:        # Also include face_to_photo from photo registry for faces not in embeddings.
+app/main.py:4269:        # Some faces exist in registry but not in embeddings.npy (e.g., inbox faces
+app/main.py:4363:    """Look up face quality score from embeddings cache.
+app/main.py:4365:    Returns the quality score stored in embeddings.npy for this face,
+app/main.py:4383:    """Look up full face data (bbox, det_score, quality) from embeddings cache."""
+app/main.py:4522:    In R2 mode: builds the expected crop filenames from embeddings data,
+app/main.py:4539:    # R2 mode or no local crops: build from embeddings
+app/main.py:4540:    # The embeddings have: filename, quality, and we compute face_index
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import app.main as main
+fd = main.get_face_data()
+first = next(iter(fd.values())) if fd else {}
+print('sample_keys', sorted(first.keys())[:20])
+print('has_mu', 'mu' in first, 'has_embeddings', 'embeddings' in first)
+PY" in /Users/nolanfox/rhodesli succeeded in 5.85s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+sample_keys ['bbox', 'det_score', 'filename', 'filepath', 'mu', 'quality', 'sigma_sq']
+has_mu True has_embeddings False
+codex
+I confirmed the mismatch: face data is loaded as `mu`, but both the speed-run suggestion path and `perf_cache` are keyed on `embeddings`. That means the vectorized suggestion cache is effectively off. I’m measuring the before/after cost with a temporary in-process patch so I can quantify it.
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+import app.cluster_review_routes as cluster
+import app.perf_cache as pc
+
+registry = main.load_registry()
+face_data = main.get_face_data()
+# pick an inbox/proposed cluster with >=2 faces
+clusters = []
+for i in registry.list_identities():
+    if i.get('merged_into'):
+        continue
+    if i.get('state') in ('INBOX','PROPOSED') and len(i.get('anchor_ids', []) + i.get('candidate_ids', [])) >= 2:
+        clusters.append(i)
+clusters.sort(key=lambda i: len(i.get('anchor_ids', []) + i.get('candidate_ids', [])), reverse=True)
+cluster_id = clusters[0]['identity_id']
+
+# current behavior
+cluster._suggestions_cache = {}
+t0 = time.perf_counter(); out = cluster._get_confirmed_identity_suggestions(cluster_id, limit=6, community_slug=''); dt = time.perf_counter()-t0
+print('current_suggestions', f'{dt:.4f}s', 'results=', len(out), 'top=', [r.get('identity_id') for r in out[:3]])
+
+# temp patch: expose embeddings field from mu so perf cache can actually build
+patched = 0
+for fd in face_data.values():
+    if 'mu' in fd and 'embeddings' not in fd:
+        fd['embeddings'] = fd['mu']
+        patched += 1
+print('patched_face_entries', patched)
+
+cluster._suggestions_cache = {}
+pc._confirmed_matrix = None
+pc._confirmed_face_map = None
+pc._confirmed_identity_ids = None
+pc._confirmed_dirty = True
+
+t0 = time.perf_counter(); out = cluster._get_confirmed_identity_suggestions(cluster_id, limit=6, community_slug=''); dt = time.perf_counter()-t0
+print('patched_suggestions_cold', f'{dt:.4f}s', 'results=', len(out), 'top=', [r.get('identity_id') for r in out[:3]])
+
+t0 = time.perf_counter(); out = cluster._get_confirmed_identity_suggestions(cluster_id, limit=6, community_slug=''); dt = time.perf_counter()-t0
+print('patched_suggestions_warm', f'{dt:.4f}s', 'results=', len(out), 'top=', [r.get('identity_id') for r in out[:3]])
+PY" in /Users/nolanfox/rhodesli succeeded in 3.58s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+current_suggestions 0.0705s results= 6 top= ['429cf1b6-04be-475d-9a9d-a3f37dd2f1db', 'ae0b181b-db55-4c3e-853d-0fdc904a1000', '65207728-9ee6-48c1-be68-a2da23354caf']
+patched_face_entries 2957
+patched_suggestions_cold 0.0085s results= 6 top= ['65207728-9ee6-48c1-be68-a2da23354caf', '429cf1b6-04be-475d-9a9d-a3f37dd2f1db', 'ae0b181b-db55-4c3e-853d-0fdc904a1000']
+patched_suggestions_warm 0.0000s results= 6 top= ['65207728-9ee6-48c1-be68-a2da23354caf', '429cf1b6-04be-475d-9a9d-a3f37dd2f1db', 'ae0b181b-db55-4c3e-853d-0fdc904a1000']
+exec
+/bin/zsh -lc "DATA_SOURCE=json venv/bin/python - <<'PY'
+import time
+import app.main as main
+
+main._build_caches()
+registry = main.load_registry()
+
+# emulate /photos core scan
+photo_cache = main._photo_cache or {}
+t0 = time.perf_counter()
+photos = []
+for photo_id_val, photo_data in photo_cache.items():
+    face_count = len(photo_data.get('faces', []))
+    confirmed_count = 0
+    for face in photo_data.get('faces', []):
+        identity = main.get_identity_for_face(registry, face.get('face_id', ''))
+        if identity and identity.get('state') == 'CONFIRMED':
+            confirmed_count += 1
+    photos.append((photo_id_val, face_count, confirmed_count))
+print('photos_scan', f'{time.perf_counter()-t0:.4f}s', 'photos=', len(photos))
+
+# emulate /people confirmed gathering + photos sort metric
+confirmed = [
+    i for i in registry.list_identities(state=main.IdentityState.CONFIRMED)
+    if not i.get('name','').startswith('Unidentified') and not i.get('merged_into')
+]
+print('people_confirmed_count', len(confirmed))
+photo_reg = main.load_photo_registry()
+
+def photo_count(identity):
+    face_ids = [f if isinstance(f, str) else f.get('face_id','') for f in identity.get('anchor_ids', []) + identity.get('candidate_ids', [])]
+    return len(photo_reg.get_photos_for_faces(face_ids))
+
+t0 = time.perf_counter()
+confirmed_sorted = sorted(confirmed, key=photo_count, reverse=True)
+print('people_sort_by_photos', f'{time.perf_counter()-t0:.4f}s', 'people=', len(confirmed_sorted))
+PY" in /Users/nolanfox/rhodesli succeeded in 4.85s:
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l1dcachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l2cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.l3cachesize'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.sse4_2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx1_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx2_0'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi1'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.bmi2'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512f'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+photos_scan 0.0026s photos= 964
+people_confirmed_count 113
+people_sort_by_photos 0.0003s people= 113
+exec
+/bin/zsh -lc 'wc -c data/identities.json data/photo_index.json' in /Users/nolanfox/rhodesli succeeded in 0ms:
+ 1984305 data/identities.json
+  703328 data/photo_index.json
+ 2687633 total
+mitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512cd'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512dq'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512bw'. Detail: [errno 1] Operation not permitted
+/Users/runner/work/crossbow/crossbow/arrow/cpp/src/arrow/util/cpu_info.cc:239: IOError: sysctlbyname failed for 'hw.optional.avx512vl'. Detail: [errno 1] Operation not permitted
+WARNING:root:DATA_SOURCE=json is deprecated (PRD-051). Supabase is the single source of truth. JSON mode is a temporary rollback escape hatch only.
+find_similar_faces_ms [27.1, 10.0, 12.5] avg 16.5
+Plan update
+  ✓ Inspect target files and locate startup/cache/query hot paths
+  ✓ Trace database, cache, frontend, memory, and cold-start bottlenecks with line references
+  → Produce ranked top-10 improvements with fixes and estimated impact
+codex
+I timed the CPU-only paths locally in `DATA_SOURCE=json` because live Supabase isn’t reachable in the sandbox. On the current repo data, `import app.main` is ~2883ms, `_build_unresolved_review_groups()` is ~815ms, `_build_caches()` is ~61ms, `_get_confirmed_identity_suggestions()` cold is ~60.9ms, `find_nearest_neighbors()` is ~41.5ms, and `find_similar_faces()` is ~16.5ms. Postgres-side estimates below are inferred from query count and payload size.
+
+1. Registry cache misses are too expensive. [app/main.py#L1234](/Users/nolanfox/rhodesli/app/main.py#L1234) [core/registry.py#L1836](/Users/nolanfox/rhodesli/core/registry.py#L1836) [app/supabase_data.py#L1226](/Users/nolanfox/rhodesli/app/supabase_data.py#L1226) [app/supabase_data.py#L1297](/Users/nolanfox/rhodesli/app/supabase_data.py#L1297) Current behavior: `load_registry()` reloads all identities, then loads all overrides, then loads full identity history from `audit_log` on every TTL miss, with no refresh lock. Proposed fix: split `_history` into its own lazy TTL cache, cache overrides separately or merge them server-side, and add a lock/SWR refresh path. Estimated impact: likely 200-800ms saved per Postgres miss, plus fewer duplicate page scans under concurrency.
+
+2. Speed-run prefetch likely walks the whole queue recursively. [app/cluster_review_routes.py#L1917](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1917) [app/cluster_review_routes.py#L2251](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L2251) Current behavior: each rendered card contains a hidden `hx_trigger="load"` prefetch node, and the prefetched card contains another one. On the current data that likely means up to 179 extra requests and hidden DOM growth for one run. Proposed fix: prefetch only a stripped “next card payload” with no nested prefetch node, or prefetch JSON and hydrate only on advance. Estimated impact: 95%+ fewer speed-run requests and roughly 1-3s less aggregate browser/server work over a full run.
+
+3. Unresolved review groups are O(n²) on page load. [app/cluster_review_routes.py#L514](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L514) [app/cluster_review_routes.py#L560](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L560) [app/cluster_review_routes.py#L565](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L565) Current behavior: the dashboard builds a full distance matrix for 1,571 unresolved identities with embeddings, which is 1,233,235 pair comparisons and about 18.8 MiB of temporary float64 matrix data. Proposed fix: cache results by registry/community version, or replace full matrix construction with ANN/top-k candidate generation. Estimated impact: measured ~815ms now; target is <100ms, so roughly 700ms saved.
+
+4. Cold start does too much before the app is warm. [app/main.py#L783](/Users/nolanfox/rhodesli/app/main.py#L783) [app/supabase_data.py#L290](/Users/nolanfox/rhodesli/app/supabase_data.py#L290) [app/main.py#L10912](/Users/nolanfox/rhodesli/app/main.py#L10912) [app/main.py#L10982](/Users/nolanfox/rhodesli/app/main.py#L10982) Current behavior: module import alone is ~2883ms locally, then startup does Supabase health check, full JSON sync, cache prewarm, parity check, and optional ML model warmup. Proposed fix: move to an app factory, lazy-import non-core route modules, gate full JSON sync behind a freshness marker, and defer ML warmup to the first ML route or a separate worker. Estimated impact: 1-4s+ faster cold start before first useful response.
+
+5. Community lookup tables are missing the indexes your query pattern needs. [app/supabase_data.py#L1633](/Users/nolanfox/rhodesli/app/supabase_data.py#L1633) [app/supabase_data.py#L1666](/Users/nolanfox/rhodesli/app/supabase_data.py#L1666) [scripts/sql/session95_community_tables.sql#L13](/Users/nolanfox/rhodesli/scripts/sql/session95_community_tables.sql#L13) [scripts/sql/session95_community_tables.sql#L22](/Users/nolanfox/rhodesli/scripts/sql/session95_community_tables.sql#L22) Current behavior: queries filter by `community_id`, but both tables only have composite PKs starting with `photo_id` or `identity_id`, so `WHERE community_id = ?` can degrade to full scans. Proposed fix: add dedicated indexes on `community_id` for both tables. Estimated impact: inferred 50-500ms saved on community-scoped pages as these tables grow.
+
+6. `embeddings.npy` is parsed into multiple independent caches. [app/main.py#L3577](/Users/nolanfox/rhodesli/app/main.py#L3577) [app/main.py#L3680](/Users/nolanfox/rhodesli/app/main.py#L3680) [app/main.py#L4067](/Users/nolanfox/rhodesli/app/main.py#L4067) [app/main.py#L4517](/Users/nolanfox/rhodesli/app/main.py#L4517) [core/embeddings_io.py#L73](/Users/nolanfox/rhodesli/core/embeddings_io.py#L73) Current behavior: `get_face_data()`, `_build_caches()`, and `get_crop_files()` all parse the same 12MB file into different structures; the face vectors alone materialize about 11MB of `mu`/`sigma_sq` arrays. Proposed fix: build one shared parsed embeddings cache and derive photo/crop views from it. Estimated impact: about 50-100ms saved on cold paths and roughly 10-20MB lower RSS.
+
+7. Similarity search still spends most of its time rebuilding the corpus. [core/neighbors.py#L253](/Users/nolanfox/rhodesli/core/neighbors.py#L253) [core/neighbors.py#L271](/Users/nolanfox/rhodesli/core/neighbors.py#L271) [core/neighbors.py#L423](/Users/nolanfox/rhodesli/core/neighbors.py#L423) [core/neighbors.py#L454](/Users/nolanfox/rhodesli/core/neighbors.py#L454) [core/neighbors.py#L473](/Users/nolanfox/rhodesli/core/neighbors.py#L473) Current behavior: even the “fast” neighbor path rebuilds the candidate matrix per request, and `find_similar_faces()` rebuilds both the face matrix and face-to-identity map each call. Proposed fix: keep a module-level normalized corpus cache and metadata map, invalidated only when embeddings/registry change. Estimated impact: neighbor calls should drop from ~40ms to low single digits, and `find_similar_faces()` from ~16.5ms to ~3-5ms.
+
+8. `perf_cache` saves math time but still does request-time metadata and community work. [app/perf_cache.py#L28](/Users/nolanfox/rhodesli/app/perf_cache.py#L28) [app/perf_cache.py#L93](/Users/nolanfox/rhodesli/app/perf_cache.py#L93) [app/perf_cache.py#L134](/Users/nolanfox/rhodesli/app/perf_cache.py#L134) [app/perf_cache.py#L160](/Users/nolanfox/rhodesli/app/perf_cache.py#L160) Current behavior: after every write it marks the whole confirmed matrix dirty, then the next request rebuilds it and re-loads registry/community metadata; cold confirmed suggestions measured ~60.9ms, warm ~0ms. Proposed fix: cache `{name, face_count, best_face_id}` alongside matrix rows, use `get_community_by_slug()` instead of `load_communities()`, and update the matrix incrementally for changed identities. Estimated impact: about 45-55ms saved on the first enrichment request after each change.
+
+9. First paint is blocked by CDN Tailwind and Hyperscript. [app/main.py#L198](/Users/nolanfox/rhodesli/app/main.py#L198) [app/main.py#L208](/Users/nolanfox/rhodesli/app/main.py#L208) [app/main.py#L223](/Users/nolanfox/rhodesli/app/main.py#L223) Current behavior: the document head loads runtime Tailwind from `cdn.tailwindcss.com` and Hyperscript from `unpkg`, both on the critical path. Proposed fix: precompile Tailwind to a static CSS file and self-host/minimize JS, deferring non-critical scripts. Estimated impact: roughly 200-800ms faster first paint on cold browser loads, especially on mobile.
+
+10. Single-face confirm/reject bypass the hot caches and flush everything. [app/cluster_review_routes.py#L1419](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1419) [app/cluster_review_routes.py#L1454](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1454) [app/main.py#L1290](/Users/nolanfox/rhodesli/app/main.py#L1290) [app/main.py#L3938](/Users/nolanfox/rhodesli/app/main.py#L3938) Current behavior: these routes load `identities.json` directly and then call `_invalidate_all_caches()`, which guarantees cold rebuilds on follow-up requests. Proposed fix: use `load_registry()` and `save_registry(..., changed_ids={identity_id})` so the in-memory registry stays hot and invalidation stays surgical. Estimated impact: likely 50-200ms saved per action plus fewer downstream cold-cache stalls.
+
+Helpful snippets:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_photo_communities_community_id
+ON photo_communities (community_id);
+
+CREATE INDEX IF NOT EXISTS idx_identity_communities_community_id
+ON identity_communities (community_id);
+```
+
+```python
+# Do not prefetch a full card that contains another hx_trigger="load" prefetch node.
+# Return a stripped next-card fragment or JSON instead.
+Div(
+    id="speed-run-prefetch",
+    cls="hidden",
+    hx_get=f"/admin/cluster-review/prefetch-next?{prefetch_params}",
+    hx_trigger="load",
+    hx_swap="innerHTML",
+)
+```
+
+If you want, I can turn this into a patch plan next and implement the top 3 without changing behavior.
+tokens used
+314,038
+I timed the CPU-only paths locally in `DATA_SOURCE=json` because live Supabase isn’t reachable in the sandbox. On the current repo data, `import app.main` is ~2883ms, `_build_unresolved_review_groups()` is ~815ms, `_build_caches()` is ~61ms, `_get_confirmed_identity_suggestions()` cold is ~60.9ms, `find_nearest_neighbors()` is ~41.5ms, and `find_similar_faces()` is ~16.5ms. Postgres-side estimates below are inferred from query count and payload size.
+
+1. Registry cache misses are too expensive. [app/main.py#L1234](/Users/nolanfox/rhodesli/app/main.py#L1234) [core/registry.py#L1836](/Users/nolanfox/rhodesli/core/registry.py#L1836) [app/supabase_data.py#L1226](/Users/nolanfox/rhodesli/app/supabase_data.py#L1226) [app/supabase_data.py#L1297](/Users/nolanfox/rhodesli/app/supabase_data.py#L1297) Current behavior: `load_registry()` reloads all identities, then loads all overrides, then loads full identity history from `audit_log` on every TTL miss, with no refresh lock. Proposed fix: split `_history` into its own lazy TTL cache, cache overrides separately or merge them server-side, and add a lock/SWR refresh path. Estimated impact: likely 200-800ms saved per Postgres miss, plus fewer duplicate page scans under concurrency.
+
+2. Speed-run prefetch likely walks the whole queue recursively. [app/cluster_review_routes.py#L1917](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1917) [app/cluster_review_routes.py#L2251](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L2251) Current behavior: each rendered card contains a hidden `hx_trigger="load"` prefetch node, and the prefetched card contains another one. On the current data that likely means up to 179 extra requests and hidden DOM growth for one run. Proposed fix: prefetch only a stripped “next card payload” with no nested prefetch node, or prefetch JSON and hydrate only on advance. Estimated impact: 95%+ fewer speed-run requests and roughly 1-3s less aggregate browser/server work over a full run.
+
+3. Unresolved review groups are O(n²) on page load. [app/cluster_review_routes.py#L514](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L514) [app/cluster_review_routes.py#L560](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L560) [app/cluster_review_routes.py#L565](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L565) Current behavior: the dashboard builds a full distance matrix for 1,571 unresolved identities with embeddings, which is 1,233,235 pair comparisons and about 18.8 MiB of temporary float64 matrix data. Proposed fix: cache results by registry/community version, or replace full matrix construction with ANN/top-k candidate generation. Estimated impact: measured ~815ms now; target is <100ms, so roughly 700ms saved.
+
+4. Cold start does too much before the app is warm. [app/main.py#L783](/Users/nolanfox/rhodesli/app/main.py#L783) [app/supabase_data.py#L290](/Users/nolanfox/rhodesli/app/supabase_data.py#L290) [app/main.py#L10912](/Users/nolanfox/rhodesli/app/main.py#L10912) [app/main.py#L10982](/Users/nolanfox/rhodesli/app/main.py#L10982) Current behavior: module import alone is ~2883ms locally, then startup does Supabase health check, full JSON sync, cache prewarm, parity check, and optional ML model warmup. Proposed fix: move to an app factory, lazy-import non-core route modules, gate full JSON sync behind a freshness marker, and defer ML warmup to the first ML route or a separate worker. Estimated impact: 1-4s+ faster cold start before first useful response.
+
+5. Community lookup tables are missing the indexes your query pattern needs. [app/supabase_data.py#L1633](/Users/nolanfox/rhodesli/app/supabase_data.py#L1633) [app/supabase_data.py#L1666](/Users/nolanfox/rhodesli/app/supabase_data.py#L1666) [scripts/sql/session95_community_tables.sql#L13](/Users/nolanfox/rhodesli/scripts/sql/session95_community_tables.sql#L13) [scripts/sql/session95_community_tables.sql#L22](/Users/nolanfox/rhodesli/scripts/sql/session95_community_tables.sql#L22) Current behavior: queries filter by `community_id`, but both tables only have composite PKs starting with `photo_id` or `identity_id`, so `WHERE community_id = ?` can degrade to full scans. Proposed fix: add dedicated indexes on `community_id` for both tables. Estimated impact: inferred 50-500ms saved on community-scoped pages as these tables grow.
+
+6. `embeddings.npy` is parsed into multiple independent caches. [app/main.py#L3577](/Users/nolanfox/rhodesli/app/main.py#L3577) [app/main.py#L3680](/Users/nolanfox/rhodesli/app/main.py#L3680) [app/main.py#L4067](/Users/nolanfox/rhodesli/app/main.py#L4067) [app/main.py#L4517](/Users/nolanfox/rhodesli/app/main.py#L4517) [core/embeddings_io.py#L73](/Users/nolanfox/rhodesli/core/embeddings_io.py#L73) Current behavior: `get_face_data()`, `_build_caches()`, and `get_crop_files()` all parse the same 12MB file into different structures; the face vectors alone materialize about 11MB of `mu`/`sigma_sq` arrays. Proposed fix: build one shared parsed embeddings cache and derive photo/crop views from it. Estimated impact: about 50-100ms saved on cold paths and roughly 10-20MB lower RSS.
+
+7. Similarity search still spends most of its time rebuilding the corpus. [core/neighbors.py#L253](/Users/nolanfox/rhodesli/core/neighbors.py#L253) [core/neighbors.py#L271](/Users/nolanfox/rhodesli/core/neighbors.py#L271) [core/neighbors.py#L423](/Users/nolanfox/rhodesli/core/neighbors.py#L423) [core/neighbors.py#L454](/Users/nolanfox/rhodesli/core/neighbors.py#L454) [core/neighbors.py#L473](/Users/nolanfox/rhodesli/core/neighbors.py#L473) Current behavior: even the “fast” neighbor path rebuilds the candidate matrix per request, and `find_similar_faces()` rebuilds both the face matrix and face-to-identity map each call. Proposed fix: keep a module-level normalized corpus cache and metadata map, invalidated only when embeddings/registry change. Estimated impact: neighbor calls should drop from ~40ms to low single digits, and `find_similar_faces()` from ~16.5ms to ~3-5ms.
+
+8. `perf_cache` saves math time but still does request-time metadata and community work. [app/perf_cache.py#L28](/Users/nolanfox/rhodesli/app/perf_cache.py#L28) [app/perf_cache.py#L93](/Users/nolanfox/rhodesli/app/perf_cache.py#L93) [app/perf_cache.py#L134](/Users/nolanfox/rhodesli/app/perf_cache.py#L134) [app/perf_cache.py#L160](/Users/nolanfox/rhodesli/app/perf_cache.py#L160) Current behavior: after every write it marks the whole confirmed matrix dirty, then the next request rebuilds it and re-loads registry/community metadata; cold confirmed suggestions measured ~60.9ms, warm ~0ms. Proposed fix: cache `{name, face_count, best_face_id}` alongside matrix rows, use `get_community_by_slug()` instead of `load_communities()`, and update the matrix incrementally for changed identities. Estimated impact: about 45-55ms saved on the first enrichment request after each change.
+
+9. First paint is blocked by CDN Tailwind and Hyperscript. [app/main.py#L198](/Users/nolanfox/rhodesli/app/main.py#L198) [app/main.py#L208](/Users/nolanfox/rhodesli/app/main.py#L208) [app/main.py#L223](/Users/nolanfox/rhodesli/app/main.py#L223) Current behavior: the document head loads runtime Tailwind from `cdn.tailwindcss.com` and Hyperscript from `unpkg`, both on the critical path. Proposed fix: precompile Tailwind to a static CSS file and self-host/minimize JS, deferring non-critical scripts. Estimated impact: roughly 200-800ms faster first paint on cold browser loads, especially on mobile.
+
+10. Single-face confirm/reject bypass the hot caches and flush everything. [app/cluster_review_routes.py#L1419](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1419) [app/cluster_review_routes.py#L1454](/Users/nolanfox/rhodesli/app/cluster_review_routes.py#L1454) [app/main.py#L1290](/Users/nolanfox/rhodesli/app/main.py#L1290) [app/main.py#L3938](/Users/nolanfox/rhodesli/app/main.py#L3938) Current behavior: these routes load `identities.json` directly and then call `_invalidate_all_caches()`, which guarantees cold rebuilds on follow-up requests. Proposed fix: use `load_registry()` and `save_registry(..., changed_ids={identity_id})` so the in-memory registry stays hot and invalidation stays surgical. Estimated impact: likely 50-200ms saved per action plus fewer downstream cold-cache stalls.
+
+Helpful snippets:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_photo_communities_community_id
+ON photo_communities (community_id);
+
+CREATE INDEX IF NOT EXISTS idx_identity_communities_community_id
+ON identity_communities (community_id);
+```
+
+```python
+# Do not prefetch a full card that contains another hx_trigger="load" prefetch node.
+# Return a stripped next-card fragment or JSON instead.
+Div(
+    id="speed-run-prefetch",
+    cls="hidden",
+    hx_get=f"/admin/cluster-review/prefetch-next?{prefetch_params}",
+    hx_trigger="load",
+    hx_swap="innerHTML",
+)
+```
+
+If you want, I can turn this into a patch plan next and implement the top 3 without changing behavior.
