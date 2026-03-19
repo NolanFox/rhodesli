@@ -110,6 +110,28 @@ The screenshots show an active conversation where:
 - **BACKLOG:** UX-138 (new) — relates to PRD-049 (cross-batch matching), notification UX (feedback_notification_ux.md)
 - **Effort:** 2-3 hours for basic notification; full notification redesign needs PRD per feedback_notification_ux.md
 
+### FB-009: Confirm Button Silently Fails for Unidentified Persons (P0)
+- **Severity:** P0
+- **Context:** On the photo overlay and Speed Loop, the green checkmark (confirm) button appears clickable for unidentified persons. Clicking it does nothing visible — the endpoint returns a 409 with toast "Name this person first, then confirm" but the toast doesn't render in the Speed Loop/overlay context.
+- **Expected:** Either (a) hide/disable the confirm button for unidentified persons, or (b) ensure the error toast is visible in Speed Loop and photo overlay contexts.
+- **Root cause:** `identity_routes.py:1452-1458` — FB-066 pre-check returns 409 targeting `#toast-container`, which doesn't exist or is hidden in Speed Loop modal. The button is always rendered for INBOX/PROPOSED/SKIPPED states regardless of name.
+- **Fix:** Simplest: add `disabled` attribute + gray styling when `_is_real_name()` is False. Or render the button differently (e.g., "Name first" tooltip).
+- **BACKLOG:** UX-139 (new)
+- **Effort:** 30 min
+
+### FB-010: ML Service Embedding Quality Validated — Family Matching Working (Info)
+- **Severity:** Info (positive signal)
+- **Context:** Three real-world test cases from Terry Yanishefsky upload, all correct:
+  1. Person b34ba944 → **Fannie Burd Yanishefsky** (44%, dist 1.08) — correct, this IS Fanny
+  2. Person 79991b6a → **Irving Yanishefsky** (39%, dist 1.13) — correct, this IS Irving
+  3. Person c49b9f50 → **Edith Judith Gukaylo Burd** (32%, dist 1.21) — correct family: Sarah Gukaylo Yanishefsky is Edith's sister
+- **Key insight:** ML consistently finds family relationships (sisters, cousins) at distances 1.08-1.21. These are NOT false positives — they're genuine family resemblance. The conservative auto-merge threshold (0.85) is correct because siblings/cousins at similar distances could be confused, but the ranking is consistently correct (right person is #1).
+- **Family tree context (for future ML work):**
+  - Fanny Burd Yanishefsky and Irving Yanishefsky were cousins
+  - Sarah Gukaylo Yanishefsky and Edith Gukaylo Burd were sisters
+  - Gukaylo sisters married into Fox/Yanishefsky families
+  - Mary Yanishefsky Barnett was Irving's sister
+
 ---
 
 ## Disposition
@@ -124,5 +146,7 @@ The screenshots show an active conversation where:
 | FB-006 | P1 | No | BACKLOG UX-136 — face overlay buttons too small on group photos (needs PRD) |
 | FB-007 | P2 | No | BACKLOG UX-137 — source URL not saved during upload |
 | FB-008 | P1 | No | BACKLOG UX-138 — cross-batch match notifications |
+| FB-009 | P0 | No | BACKLOG UX-139 — confirm button silently fails for unidentified persons |
+| FB-010 | Info | N/A | ML embedding quality validated — 3/3 correct family matches |
 
 **Recommendation:** FB-008 (notifications after cross-batch matching) and FB-006 (group photo tagging UX) are the highest-impact items. FB-008 directly addresses the gap between "ML found correct matches" and "admin knows about them." FB-001 (merge search) remains important for the WhatsApp-to-merge workflow.
