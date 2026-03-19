@@ -76,6 +76,34 @@ class TestMLServiceClientIsAvailable:
         asyncio.get_event_loop().run_until_complete(client.close())
 
 
+class TestMLServiceClientWarm:
+    """Test model warm-up method."""
+
+    def test_warm_calls_correct_endpoint(self):
+        from core.ml_client import MLServiceClient
+        import asyncio
+
+        client = MLServiceClient(base_url="http://ml-service:5002")
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "status": "warm",
+            "model": "buffalo_l",
+            "load_time_seconds": 0.01,
+            "already_loaded": True,
+        }
+        mock_response.raise_for_status = MagicMock()
+
+        mock_http = AsyncMock()
+        mock_http.get = AsyncMock(return_value=mock_response)
+        client._client = mock_http
+
+        result = asyncio.get_event_loop().run_until_complete(client.warm())
+        mock_http.get.assert_called_once_with("/api/v1/warm")
+        assert result["status"] == "warm"
+        assert result["model"] == "buffalo_l"
+
+
 class TestGetMlClient:
     """Test singleton client factory."""
 

@@ -57,7 +57,7 @@ class MLServiceClient:
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 headers={"Authorization": f"Bearer {self.token}"},
-                timeout=60.0,  # Face detection can take 10-30s for large images
+                timeout=180.0,  # Model lazy-loads on first request (30-60s), detection 10-30s
             )
         return self._client
 
@@ -65,6 +65,13 @@ class MLServiceClient:
         """Check ML service health. Returns response JSON."""
         client = await self._get_client()
         resp = await client.get("/health")
+        resp.raise_for_status()
+        return resp.json()
+
+    async def warm(self) -> dict:
+        """Pre-load the face detection model on the ML service."""
+        client = await self._get_client()
+        resp = await client.get("/api/v1/warm")
         resp.raise_for_status()
         return resp.json()
 

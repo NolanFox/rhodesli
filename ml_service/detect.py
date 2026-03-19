@@ -51,6 +51,20 @@ def is_model_loaded() -> bool:
     return _face_analyzer is not None
 
 
+@router.get("/warm")
+async def warm_model(_token: str = Depends(verify_token)):
+    """Pre-load the face detection model so first real request doesn't timeout."""
+    start = time.time()
+    analyzer = get_face_analyzer()
+    elapsed = time.time() - start
+    return {
+        "status": "warm",
+        "model": "buffalo_l",
+        "load_time_seconds": round(elapsed, 2),
+        "already_loaded": elapsed < 0.1,
+    }
+
+
 @router.post("/detect-and-embed")
 async def detect_and_embed(
     file: UploadFile = File(...),

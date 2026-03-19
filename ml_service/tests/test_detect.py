@@ -31,6 +31,28 @@ def _make_mock_face(bbox=None, det_score=0.95, embedding_dim=512):
     return face
 
 
+@patch("ml_service.detect.get_face_analyzer")
+def test_warm_endpoint_loads_model(mock_analyzer, client, auth_headers):
+    """Warm endpoint should trigger model load and return status."""
+    mock_fa = MagicMock()
+    mock_analyzer.return_value = mock_fa
+
+    resp = client.get("/api/v1/warm", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "warm"
+    assert data["model"] == "buffalo_l"
+    assert "load_time_seconds" in data
+    assert "already_loaded" in data
+    mock_analyzer.assert_called_once()
+
+
+def test_warm_returns_401_without_auth(client):
+    """Warm endpoint requires bearer token."""
+    resp = client.get("/api/v1/warm")
+    assert resp.status_code in (401, 403)
+
+
 def test_detect_returns_401_without_auth(client):
     """Endpoint requires bearer token authentication."""
     img_buf = _create_test_image()
