@@ -3871,23 +3871,17 @@ def post(
 
     _main_mod._build_caches()
 
-    # Compute distance between the two faces
-    source_emb = None
-    target_emb = None
-    embs = np.load(_main_mod.data_path / "embeddings.npy", allow_pickle=True)
-    from app.utils import generate_face_id as _gen_fid
+    # Session 123 (PERF-A): Use cached get_face_data() instead of raw np.load
+    face_data = _main_mod.get_face_data()
+    source_entry = face_data.get(source_face_id)
+    target_entry = face_data.get(target_face_id)
 
-    for e in embs:
-        fid = e.get("face_id", "")
-        if not fid:
-            fid = _gen_fid(e.get("filename", ""), e.get("bbox", ""))
-        mu = e.get("mu")
-        if mu is not None:
-            flat = np.array(mu, dtype=np.float32).flatten()
-            if fid == source_face_id:
-                source_emb = flat
-            elif fid == target_face_id:
-                target_emb = flat
+    source_emb = (
+        np.array(source_entry["mu"], dtype=np.float32).flatten() if source_entry and "mu" in source_entry else None
+    )
+    target_emb = (
+        np.array(target_entry["mu"], dtype=np.float32).flatten() if target_entry and "mu" in target_entry else None
+    )
 
     if source_emb is None or target_emb is None:
         return JSONResponse({"error": "One or both face IDs not found in embeddings"}, status_code=404)
