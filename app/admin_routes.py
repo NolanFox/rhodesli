@@ -69,6 +69,34 @@ def get(sess=None):
         )
 
 
+@rt("/api/admin/ml-warm")
+def post(sess=None):
+    """Admin-only: pre-load ML model so first detection doesn't timeout."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+    from core.ml_client import get_ml_client
+    import asyncio
+
+    client = get_ml_client()
+    if not client.is_configured:
+        return Response(
+            json.dumps({"status": "not_configured"}),
+            media_type="application/json",
+        )
+    try:
+        result = asyncio.run(client.warm())
+        return Response(
+            json.dumps({"status": "success", "ml_service": result}),
+            media_type="application/json",
+        )
+    except Exception as e:
+        return Response(
+            json.dumps({"status": "error", "error": str(e)}),
+            media_type="application/json",
+        )
+
+
 @rt("/api/admin/disk-usage")
 def get(request, sess=None):
     """Admin-only disk usage diagnostic. Shows volume contents and sizes.
