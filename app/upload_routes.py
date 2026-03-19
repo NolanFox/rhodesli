@@ -1148,6 +1148,34 @@ async def post(
 
                     # Invalidate proposals cache after upload pipeline writes (PRD-051 Session 114)
                     _main_mod.invalidate_proposals_cache()
+
+                    # Session 120 (FB-008): Generate notification for cross-batch matches
+                    if cross_matches:
+                        try:
+                            from app.notification_routes import _create_notification
+
+                            n_faces = len(result.get("face_ids", []))
+                            n_matches = len(cross_matches)
+                            # Find top match by distance
+                            best = min(cross_matches, key=lambda m: m["distance"])
+                            best_name = best.get("target_identity_name", "Unknown")
+                            best_dist = best["distance"]
+                            body_parts = [
+                                f"Upload complete: {n_faces} face{'s' if n_faces != 1 else ''} detected, "
+                                f"{n_matches} potential match{'es' if n_matches != 1 else ''} found.",
+                            ]
+                            if best_name and best_name != "Unknown":
+                                body_parts.append(f"Top match: {best_name} (distance {best_dist:.2f}).")
+                            _create_notification(
+                                user_id="00000000-0000-0000-0000-000000000000",
+                                notification_type="upload_matches",
+                                title=f"Upload: {n_matches} potential match{'es' if n_matches != 1 else ''} found",
+                                body=" ".join(body_parts),
+                                photo_id=result.get("photo_ids", [None])[0],
+                            )
+                        except Exception as e:
+                            print(f"[upload] Notification creation error: {e}")
+
                     print(
                         f"[upload] Cross-batch matching for job {job_id}: "
                         f"{len(cross_matches)} matches, {len(new_proposals) if cross_matches else 0} new proposals"
