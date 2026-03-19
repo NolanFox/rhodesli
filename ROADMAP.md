@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.28 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
+Current: v0.99.29 · ~3828 tests · 966 photos · 3536 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-19: **v0.99.29 — Session 119**: ML Service End-to-End Verification (Interactive). FIRST real production upload through ML service — 14 faces from Terry Yanishefsky family photo. Embedding quality validated: 3/3 cross-batch matches correct (Fanny Burd, Irving Yanishefsky, Sarah/Edith Gukaylo sisters). Pre-warm endpoint `/api/v1/warm` + admin `/api/admin/ml-warm`. Event loop fix for admin API endpoints. 11 interactive feedback items (FB-001 through FB-011). AD-229: 1/4 criteria met (first successful upload). 3 new tests. Deploy SUCCESS.
 
 - [x] 2026-03-18: **v0.99.28 — Session 118**: ML Service Fix + Codex Audit + Security Hardening. CRITICAL: Fixed ML service port mismatch (never deployed successfully before). Fixed image_size format mismatch. Codex CLI cross-AI audit (HD-028): mixed value, adopt for security scopes only. Upload community override security fix (Codex finding). ML health endpoint `/api/admin/ml-health`. AD-229: defer local ML removal. TOOLS-002 Phase 4 verified (already wired). 6 new tests. Deploy SUCCESS for both services.
 

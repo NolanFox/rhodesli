@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.29] — 2026-03-19 (Session 119: ML Service End-to-End Verification)
+
+### ML Service — First Production Upload
+- **First real detection through ML service**: Terry Yanishefsky family photo → 14 faces detected, 118 cross-batch matches
+- **Embedding quality validated**: 3/3 matches correct (Fanny Burd Yanishefsky #1, Irving Yanishefsky #1, Sarah→Edith Gukaylo sisters #1)
+- **Pre-warm endpoint**: `GET /api/v1/warm` on ML service, `POST /api/admin/ml-warm` admin route
+- **Client timeout**: 60s → 180s for model lazy-load safety
+
+### Bug Fixes
+- **Event loop fix**: `asyncio.run()` destroys event loop, invalidating singleton httpx.AsyncClient. Admin routes now create fresh client per call.
+- **Test isolation**: ML client tests use `asyncio.run()` instead of `get_event_loop()` to prevent parallel xdist interference.
+
+### Interactive Feedback (11 items)
+- P0: Confirm button silently fails for unidentified persons (UX-139)
+- P1: Merge search (UX-131), community badge on approvals (UX-132), face overlay too small (UX-136), cross-batch notifications (UX-138), community filter on Similar Identities (UX-140)
+- P2: Always show community badges (UX-133), annotation workflow (UX-134), upload notes (UX-135), source URL (UX-137)
+
+### Tests
+- 3 new tests (warm endpoint client, warm endpoint service, warm auth)
+- 3238 app tests + 590 ML tests pass
+
 ## [v0.99.28] — 2026-03-18 (Session 118: ML Service Fix + Codex Audit + Security Hardening)
 
 ### ML Service Fix (CRITICAL)
