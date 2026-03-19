@@ -2668,3 +2668,17 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Scale path**: With dozens of communities, each run targets `community_id`. Global runs (calibration) use NULL. `scope_filter` enables subset targeting without per-community overhead.
 - **Rollback**: Columns are nullable with defaults — existing code unaffected. Remove columns if approach changes.
 - **Affects**: `scripts/migrations/`, `core/ml_run_logger.py`, all future ML pipeline callers
+
+### AD-229: ML Service Stability Evaluation — Defer Local ML Removal (2026-03-18)
+- **Date**: 2026-03-18 | **Session**: 118
+- **Context**: ML service deployed on Railway (Session 116) but had NEVER successfully passed healthcheck due to hardcoded port (fixed this session). Now healthy, but zero real detection requests have gone through it in production. The web Dockerfile still downloads buffalo_l + buffalo_sc (~600MB combined), adding ~5min build time and ~1.2GB image size.
+- **Decision**: DEFER removing local InsightFace from web Dockerfile. Keep fallback path. Revisit after 24h+ of stable ML service operation AND at least one successful upload through the ML service path.
+- **Rationale**: (1) ML service has been running for <1 hour since first successful deploy. (2) No real upload has tested the detection path end-to-end. (3) The fallback is free insurance — local detection works identically. (4) Docker image size is not a blocking concern at current deploy frequency (~2-3/day).
+- **Stability criteria for Phase 5 (remove local ML)**:
+  1. ML service healthy for 24h+ continuous (check via `/api/admin/ml-health`)
+  2. At least 3 successful uploads through ML service path (check Railway logs for `[ml-service]`)
+  3. Embedding cosine similarity ≥0.999 between local and cloud detection on same image
+  4. Railway billing for ml-service ≤ $5/month (hobby plan)
+- **Dockerfile changes when ready**: Remove lines 27-43 (model downloads), remove `g++` from apt-get, remove `COPY rhodesli_ml/` (if ML imports also removed). Expected savings: ~5min build time, ~1GB image size.
+- **Rollback**: Re-add model downloads to Dockerfile. Local detection code stays in codebase regardless.
+- **Affects**: `Dockerfile`, `core/ingest_inbox.py` (fallback path), deploy pipeline

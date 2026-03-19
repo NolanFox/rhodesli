@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.23 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
+Current: v0.99.28 · ~4600 tests · 965 photos · 3522 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -54,7 +54,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
 
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
-- [x] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116, Phase 3 (wire pipeline) Session 117. ML service deployed on Railway, upload pipeline wired with fallback. Remaining: Phase 4 (clustering automation), Phase 5 (remove local ML deps from web Dockerfile).
+- [x] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116, Phase 3 (wire pipeline) Session 117, Phase 4 (clustering automation — verified already wired, Session 118). ML service deployed on Railway, upload pipeline wired with fallback. Session 118: fixed critical port mismatch, ML service first healthy deploy. Remaining: Phase 5 (remove local ML deps — deferred per AD-229).
 - [ ] TOOLS-003: Face Compare Real-Time — depends on TOOLS-002 (ML service), 1-2 sessions after
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-18: **v0.99.28 — Session 118**: ML Service Fix + Codex Audit + Security Hardening. CRITICAL: Fixed ML service port mismatch (never deployed successfully before). Fixed image_size format mismatch. Codex CLI cross-AI audit (HD-028): mixed value, adopt for security scopes only. Upload community override security fix (Codex finding). ML health endpoint `/api/admin/ml-health`. AD-229: defer local ML removal. TOOLS-002 Phase 4 verified (already wired). 6 new tests. Deploy SUCCESS for both services.
 
 - [x] 2026-03-18: **v0.99.27 — Session 117**: Upload Pipeline Wired to ML Service (TOOLS-002 Phase 3). detect_faces() wrapper with ML service + local fallback. One-line call site change. 10 tests. Feature flag via ML_SERVICE_URL.
 

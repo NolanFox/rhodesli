@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 118: ML Service Fix + Codex Audit + Security Hardening (2026-03-18) — v0.99.28
+- CRITICAL: Fixed ML service port mismatch — never deployed successfully before (PORT hardcoded vs Railway dynamic)
+- Fixed image_size format mismatch (dict vs list) in detect_faces() wrapper
+- Codex CLI cross-AI audit experiment (HD-028): mixed value, adopt for security scopes only
+- Upload community override security fix — non-admin hidden field tampering blocked (Codex finding)
+- ML health endpoint: /api/admin/ml-health (admin-only)
+- AD-229: Defer local ML removal from web Dockerfile (stability criteria defined)
+- TOOLS-002 Phase 4 verified already wired (Session 109 cross-batch matching)
+- 6 new tests (4 ML health, 2 upload safety), both services deployed SUCCESS
+
 ## Session 117: Upload Pipeline Wired to ML Service (2026-03-18) — v0.99.27
 - TOOLS-002 Phase 3: detect_faces() wrapper with ML service + local fallback
 - One-line call site change in process_single_image()

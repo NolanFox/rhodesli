@@ -628,3 +628,33 @@ This means:
 **Rationale:** Ephemeral state files (.claude/commits_since_clear.txt, .claude/session_mode.txt) are conversation-scoped, not project-scoped. Resetting them at session end ensures the next conversation inherits clean defaults rather than stale state from a previous session. The stop hook is the closest available proxy for "conversation end" in Claude Code's hook system.
 
 **Breadcrumbs:** `.claude/hooks/stop-gate.sh`, `.claude/settings.json` (UserPromptSubmit hook), `.claude/rules/session-protocol.md`, `memory/feedback_hook_modes.md`
+
+## HD-028: Codex CLI Cross-AI Audit Strategy — Mixed Value, Scope-Limited Adoption
+
+**Date:** 2026-03-18 | **Session:** 118
+
+**Context:** Tested Codex CLI (v0.115.0, gpt-5.4) as a cross-AI code auditor for Sessions 115-117 work (ML service integration, community routing safety). Two audits run: ML service code audit and community routing safety audit.
+
+**Results:**
+- **ML audit (timed out after ~5min):** Codex read all target files + tests, identified 4 partial findings before timeout (async singleton lifecycle, no upload size limit, default dev-token, no threading protection). None were CRITICAL. Codex was thorough in exploration but too slow to produce a final report.
+- **Community routing audit (completed):** Found a HIGH-severity issue — upload_community hidden field is client-controlled and can override server-side community assignment. This is a real security gap. Also correctly identified that test suite is string-presence checks, not behavioral tests.
+- **False positive rate:** 0% — all findings were real (though varying severity).
+- **Time cost:** ~5 min per audit (ML timed out, community completed).
+- **Real bugs found that Claude missed:** 1 (upload community override was not flagged by the original Session 115 implementation).
+
+**Decision:** MIXED VALUE — adopt for security-sensitive scopes only, not routine use.
+
+**When to use Codex audit:**
+1. After implementing new auth/permission logic
+2. After implementing new data-write paths (especially cross-community)
+3. After implementing new API endpoints that accept user input
+4. NOT for documentation, harness changes, or ML algorithm work
+
+**Alternatives considered:**
+- **Always run Codex:** Too slow (~5min per audit), cost adds up, diminishing returns on non-security code
+- **Never run Codex:** Would have missed the upload community override issue
+- **Run Codex in background only:** Reasonable for long sessions, but findings need triage before building more
+
+**Rationale:** Codex's value is as a "second pair of eyes" specifically for security boundaries. It caught a real cross-community write issue that human + Claude review missed. But for general code quality, the overhead (5 min + triage time) exceeds the benefit. Scope to security-sensitive changes where the cost of a miss is high.
+
+**Breadcrumbs:** Session 118 log, `.claude/rules/` (no new rule file — trigger is manual per decision)

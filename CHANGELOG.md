@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.28] — 2026-03-18 (Session 118: ML Service Fix + Codex Audit + Security Hardening)
+
+### ML Service Fix (CRITICAL)
+- **Port fix**: ML service had NEVER passed Railway healthcheck. Root cause: Dockerfile CMD hardcoded port 5002, Railway assigns dynamic PORT. Fixed to use `${PORT:-5002}`. Set `PORT=5002` env var.
+- **image_size format fix**: `detect_faces()` expected `[w, h]` list but ML service returns `{"width": w, "height": h}` dict. Now handles both formats.
+- **First successful ML service deployment**: Both services healthy, web app communicates with ML service.
+
+### Codex CLI Cross-AI Audit (Experimental — HD-028)
+- Ran Codex CLI (gpt-5.4) against Sessions 115-117 code. ML audit timed out with 4 partial findings. Community routing audit completed with 1 HIGH finding.
+- **Decision**: Mixed value. Adopt for security-sensitive scopes only, not routine use.
+
+### Security Hardening
+- **Upload community override**: Non-admin users can no longer override the `upload_community` hidden field to write photos to wrong community. Admin-only guard added. (Codex finding)
+- **ML health endpoint**: New `/api/admin/ml-health` admin-only endpoint shows ML service connection status.
+
+### ML Evaluation (AD-229)
+- **DEFER removing local InsightFace** from web Dockerfile. Stability criteria defined: 24h uptime, 3 successful uploads, embedding cosine similarity ≥0.999.
+
+### Tests
+- 6 new tests (4 ML health endpoint, 2 upload safety behavioral tests)
+- Cross-batch clustering verified wired (Session 109)
+
 ## [v0.99.27] — 2026-03-18 (Session 117: Upload Pipeline Wired to ML Service)
 
 ### Upload Pipeline Integration (TOOLS-002 Phase 3)
