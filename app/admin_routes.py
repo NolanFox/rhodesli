@@ -521,13 +521,19 @@ def get(request, sess=None):
     counts = _main_mod._compute_sidebar_counts(registry, community=community)
 
     # Load pending uploads (both contributor "pending" and admin "staged")
+    # Session 121 (UX-207): Filter by community if in community context
     pending = _main_mod._load_pending_uploads()
+    community_id = community.get("id") if community else None
     pending_items = [u for u in pending["uploads"].values() if u["status"] in ("pending", "staged")]
+    if community_id:
+        pending_items = [u for u in pending_items if u.get("community") == community_id]
     # Sort by submitted_at descending (newest first)
     pending_items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
 
     # Also show recently reviewed items
     reviewed_items = [u for u in pending["uploads"].values() if u["status"] in ("approved", "rejected")]
+    if community_id:
+        reviewed_items = [u for u in reviewed_items if u.get("community") == community_id]
     reviewed_items.sort(key=lambda x: x.get("reviewed_at", x.get("submitted_at", "")), reverse=True)
     reviewed_items = reviewed_items[:10]  # Show last 10
 
@@ -673,10 +679,27 @@ def get(request, sess=None):
                 )
             preview_row = Div(*preview_thumbs, cls="flex gap-2 mt-3 flex-wrap") if preview_thumbs else None
 
+            # Session 121 (UX-207): Community badge on approval cards
+            item_community = item.get("community", "")
+            community_badge = (
+                Span(
+                    item_community if isinstance(item_community, str) and len(item_community) > 20 else item_community,
+                    cls="px-1.5 py-0.5 text-[10px] font-medium rounded bg-indigo-900/50 text-indigo-300 border border-indigo-700/50",
+                )
+                if item_community
+                else None
+            )
+
             card_row = Div(
                 batch_checkbox if batch_checkbox else Div(cls="w-4"),
                 Div(
-                    P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
+                    Div(
+                        P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
+                        community_badge,
+                        cls="flex items-center gap-2",
+                    )
+                    if community_badge
+                    else P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
                     P(detail_line, cls="text-slate-400 text-xs"),
                     P(
                         f"Submitted: {item.get('submitted_at', 'Unknown')[:19].replace('T', ' ')}",
