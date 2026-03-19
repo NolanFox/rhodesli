@@ -9288,6 +9288,7 @@ def neighbors_sidebar(
     container_id: str = "",
     current_community: dict | None = None,
     nav_prefix: str = "",
+    community_filter: str = "",
 ) -> Div:
     # container_id allows targeting the browse expansion panel or the focus sidebar
     _target_id = container_id or f"neighbors-{identity_id}"
@@ -9325,6 +9326,29 @@ def neighbors_sidebar(
             ),
             manual_search_section(identity_id, nav_prefix=nav_prefix),
             cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600 overflow-hidden",
+        )
+
+    # FB-011: Community filter dropdown (only show when community scoping is available)
+    _community_filter_dropdown = None
+    if current_community is not None:
+        _focus_section_p = f"&focus_section={focus_section}" if focus_section else ""
+        _container_p = f"&container_id={container_id}" if container_id else ""
+        _focus_p = f"&from_focus=true{_focus_section_p}" if from_focus else ""
+        _target_el = container_id or f"neighbors-{identity_id}"
+        _community_filter_dropdown = Div(
+            Select(
+                Option("Same community first", value="", selected=community_filter == ""),
+                Option("Same community only", value="same", selected=community_filter == "same"),
+                Option("Cross-community only", value="cross", selected=community_filter == "cross"),
+                Option("All (by distance)", value="all", selected=community_filter == "all"),
+                name="community_filter",
+                cls="text-xs bg-slate-600 text-slate-200 border border-slate-500 rounded px-2 py-1 w-full",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset=0{_focus_p}{_container_p}",
+                hx_target=f"#{_target_el}",
+                hx_swap="innerHTML",
+                hx_include="this",
+            ),
+            cls="mb-3",
         )
 
     # Mergeable neighbors get checkboxes for bulk operations
@@ -9455,6 +9479,7 @@ def neighbors_sidebar(
             cls="flex items-center justify-between mb-3",
         ),
         Div(
+            _community_filter_dropdown,
             bulk_actions,
             Div(*cards),
             Div(load_more, cls="mt-3") if load_more else None,

@@ -504,6 +504,7 @@ def get(
     from_focus: bool = False,
     focus_section: str = "",
     container_id: str = "",
+    community_filter: str = "",
     sess=None,
     request=None,
 ):
@@ -607,12 +608,35 @@ def get(
     # These show as Dist ~0.00 with co-occurrence (seen together in same photo)
     neighbors = [n for n in neighbors if not (n.get("distance", 1.0) < 0.1 and n.get("co_occurrence", 0) > 0)]
 
+    # FB-011: Community-aware sorting/filtering for Similar Identities
+    current_community = getattr(request.state, "community", None) if request else None
+    comm_ids = _main_mod._get_community_identity_ids(current_community) if current_community else None
+    if comm_ids is not None:
+        # Tag each neighbor with community membership for sorting
+        for n in neighbors:
+            n["_same_community"] = n["identity_id"] in comm_ids
+
+        if community_filter == "same":
+            # Show only same-community matches
+            neighbors = [n for n in neighbors if n.get("_same_community", False)]
+        elif community_filter == "cross":
+            # Show only cross-community matches
+            neighbors = [n for n in neighbors if not n.get("_same_community", False)]
+        elif community_filter == "all":
+            # Keep original distance order — no reordering
+            pass
+        else:
+            # Default: sort same-community first, preserve distance order within groups
+            neighbors.sort(key=lambda n: (0 if n.get("_same_community", False) else 1, n.get("distance", 999)))
+
     # Count rejected identities for contextual recovery indicator
     identity = registry.get_identity(identity_id)
     rejected_count = sum(1 for neg in identity.get("negative_ids", []) if neg.startswith("identity:"))
 
     target_name = ensure_utf8_display(identity.get("name", "")) or ""
-    current_community = getattr(request.state, "community", None) if request else None
+    # current_community already set above for FB-011 community sorting
+    if current_community is None:
+        current_community = getattr(request.state, "community", None) if request else None
     nav_prefix = _nav_prefix_from_request(request)
 
     # FB-038: When Load More is clicked (offset > 0), return only the NEW cards
@@ -638,6 +662,7 @@ def get(
         # Build new Load More button (or nothing if no more)
         _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
         _container_param = f"&container_id={container_id}" if container_id else ""
+        _community_filter_param = f"&community_filter={community_filter}" if community_filter else ""
         focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
         next_offset = offset + limit
         _load_more_id = f"load-more-{identity_id}"
@@ -646,7 +671,7 @@ def get(
                 Button(
                     "Load More",
                     cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={next_offset}{focus_param}{_container_param}",
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={next_offset}{focus_param}{_container_param}{_community_filter_param}",
                     hx_target=f"#{_load_more_id}",
                     hx_swap="outerHTML",
                 ),
@@ -672,6 +697,7 @@ def get(
         container_id=container_id,
         current_community=current_community,
         nav_prefix=nav_prefix,
+        community_filter=community_filter,
     )
 
 
