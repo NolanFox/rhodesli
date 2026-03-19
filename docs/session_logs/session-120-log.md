@@ -80,3 +80,8 @@ Prompt: docs/prompts/session-120-prompt.md
 - HTMX dropdown re-fetches panel with ?community_filter param
 - Does NOT modify frozen core/neighbors.py
 - 7 tests
+
+### Gap Review + Fix
+- **FB-009 Focus view gap found**: Browser verification revealed confirm button still green/active in Focus view. Root cause: `identity_card_expanded()` has its own confirm button at main.py:5678, separate from `review_action_buttons()`. Fixed + 2 new tests.
+- **BACKLOG gap**: Session 119 feedback items (FB-001 through FB-011) never added to BACKLOG. IDs UX-131-140 were taken. Added as UX-206 through UX-215 with correct statuses.
+- **Browser verification**: All 4 features verified on production (FB-009 via JS inspection, FB-001/FB-011 via screenshots, FB-008 code-only — can't upload on production)
