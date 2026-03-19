@@ -216,12 +216,9 @@ class TestMLHealthEndpoint:
         from app.main import app as fasthtml_app
         from starlette.testclient import TestClient
 
-        mock_client = MagicMock()
-        mock_client.is_configured = False
-
         with (
             patch("app.admin_routes._main_mod._check_admin", return_value=None),
-            patch("core.ml_client.get_ml_client", return_value=mock_client),
+            patch.dict(os.environ, {"ML_SERVICE_URL": ""}, clear=False),
         ):
             client = TestClient(fasthtml_app)
             resp = client.get("/api/admin/ml-health")
@@ -234,13 +231,13 @@ class TestMLHealthEndpoint:
         from app.main import app as fasthtml_app
         from starlette.testclient import TestClient
 
-        mock_client = MagicMock()
-        mock_client.is_configured = True
-        mock_client.health = AsyncMock(return_value={"status": "ok", "version": "0.1.0"})
-
         with (
             patch("app.admin_routes._main_mod._check_admin", return_value=None),
-            patch("core.ml_client.get_ml_client", return_value=mock_client),
+            patch.dict(os.environ, {"ML_SERVICE_URL": "http://ml:5002"}, clear=False),
+            patch(
+                "app.admin_routes._run_ml_client_async",
+                return_value={"status": "ok", "version": "0.1.0"},
+            ),
         ):
             client = TestClient(fasthtml_app)
             resp = client.get("/api/admin/ml-health")
@@ -254,13 +251,13 @@ class TestMLHealthEndpoint:
         from app.main import app as fasthtml_app
         from starlette.testclient import TestClient
 
-        mock_client = MagicMock()
-        mock_client.is_configured = True
-        mock_client.health = AsyncMock(side_effect=Exception("Connection refused"))
-
         with (
             patch("app.admin_routes._main_mod._check_admin", return_value=None),
-            patch("core.ml_client.get_ml_client", return_value=mock_client),
+            patch.dict(os.environ, {"ML_SERVICE_URL": "http://ml:5002"}, clear=False),
+            patch(
+                "app.admin_routes._run_ml_client_async",
+                side_effect=Exception("Connection refused"),
+            ),
         ):
             client = TestClient(fasthtml_app)
             resp = client.get("/api/admin/ml-health")

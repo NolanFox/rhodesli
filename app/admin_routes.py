@@ -41,23 +41,45 @@ logger = logging.getLogger(__name__)
 _gedcom_upload_preview = None
 
 
+def _run_ml_client_async(coro_fn):
+    """Run an async ML client method in a sync context.
+
+    asyncio.run() destroys the event loop after completion, which invalidates
+    any httpx.AsyncClient bound to it. We create a fresh client each time
+    to avoid "Event loop is closed" errors on subsequent calls.
+    """
+    import asyncio
+    from core.ml_client import MLServiceClient
+    import os
+
+    client = MLServiceClient(
+        base_url=os.getenv("ML_SERVICE_URL", ""),
+        token=os.getenv("ML_SERVICE_TOKEN", "dev-token"),
+    )
+    try:
+        return asyncio.run(coro_fn(client))
+    finally:
+        # Client is bound to the now-closed event loop, discard it
+        pass
+
+
 @rt("/api/admin/ml-health")
 def get(sess=None):
     """Admin-only ML service health check. Returns ML service status."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
-    from core.ml_client import get_ml_client
-    import asyncio
+    from core.ml_client import MLServiceClient
+    import os
 
-    client = get_ml_client()
-    if not client.is_configured:
+    base_url = os.getenv("ML_SERVICE_URL", "")
+    if not base_url:
         return Response(
             json.dumps({"status": "not_configured", "ml_service_url": ""}),
             media_type="application/json",
         )
     try:
-        result = asyncio.run(client.health())
+        result = _run_ml_client_async(lambda c: c.health())
         return Response(
             json.dumps({"status": "connected", "ml_service": result}),
             media_type="application/json",
@@ -75,17 +97,16 @@ def post(sess=None):
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
-    from core.ml_client import get_ml_client
-    import asyncio
+    import os
 
-    client = get_ml_client()
-    if not client.is_configured:
+    base_url = os.getenv("ML_SERVICE_URL", "")
+    if not base_url:
         return Response(
             json.dumps({"status": "not_configured"}),
             media_type="application/json",
         )
     try:
-        result = asyncio.run(client.warm())
+        result = _run_ml_client_async(lambda c: c.warm())
         return Response(
             json.dumps({"status": "success", "ml_service": result}),
             media_type="application/json",
