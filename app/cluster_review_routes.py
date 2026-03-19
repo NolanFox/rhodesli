@@ -42,7 +42,7 @@ UNRESOLVED_REVIEW_MEMBER_LIMIT = 6
 # Performance caches — Session 111e
 _speed_run_cache = {}  # keyed by community_slug -> (timestamp, result)
 _suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp, result)
-_CACHE_TTL = 30  # seconds
+_CACHE_TTL = 120  # seconds — user-driven workflow, data doesn't change fast (Session 122)
 
 
 def invalidate_cluster_review_caches(changed_ids=None):
@@ -1715,7 +1715,7 @@ def _get_speed_run_clusters(community_slug: str = "", request=None):
 
     Returns list of (identity_id, identity_data) tuples, sorted by face count descending.
     Filters to multi-face INBOX identities, community-scoped if applicable.
-    Cached for 30s, invalidated on confirm/merge/skip/reject.
+    Cached for 120s, invalidated on confirm/merge/skip/reject.
     """
     cache_key = community_slug or "__all__"
     cached = _speed_run_cache.get(cache_key)

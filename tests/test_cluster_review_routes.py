@@ -1138,6 +1138,50 @@ class TestClusterReviewCaches:
         assert cr_mod._speed_run_cache == {}
         assert cr_mod._suggestions_cache == {}
 
+    def test_speed_run_cache_ttl_is_120s(self):
+        """Session 122: TTL increased from 30s to 120s for user-driven workflow."""
+        from app.cluster_review_routes import _CACHE_TTL
+
+        assert _CACHE_TTL == 120, f"Expected _CACHE_TTL=120, got {_CACHE_TTL}"
+
+    def test_speed_run_clusters_accepts_community_parameter(self):
+        """Session 122: _get_speed_run_clusters accepts community_slug without request."""
+        from app.cluster_review_routes import (
+            _get_speed_run_clusters,
+            invalidate_cluster_review_caches,
+        )
+
+        identities = {
+            "id-1": _make_identity("A", state="INBOX", n_candidates=3),
+        }
+        invalidate_cluster_review_caches()
+        with _mock_registry(identities):
+            # Call with community_slug but no request — should not raise
+            result = _get_speed_run_clusters(community_slug="rhodes", request=None)
+            assert isinstance(result, list)
+
+    def test_speed_run_cache_expired_recomputes(self):
+        """Session 122: Expired cache entries are recomputed, not returned stale."""
+        import app.cluster_review_routes as cr_mod
+        from app.cluster_review_routes import _get_speed_run_clusters
+        import time as _time
+
+        identities = {
+            "id-1": _make_identity("A", state="INBOX", n_candidates=3),
+        }
+
+        # Seed cache with an expired entry (200s ago, > 120s TTL)
+        cr_mod._speed_run_cache["__all__"] = (_time.time() - 200, [("stale-id", {})])
+        with _mock_registry(identities):
+            result = _get_speed_run_clusters(community_slug="", request=None)
+            # Should recompute, not return stale
+            ids = [iid for iid, _ in result]
+            assert "stale-id" not in ids
+            assert "id-1" in ids
+
+        # Cleanup
+        cr_mod._speed_run_cache = {}
+
 
 class TestConfirmUnidentifiedPersonPage:
     """FB-077: Confirm button shows inline error for unidentified persons."""
