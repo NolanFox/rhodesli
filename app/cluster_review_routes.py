@@ -102,7 +102,7 @@ def _confidence_badge(distance):
         label, color = "Low", "bg-red-600/80 text-white"
     return Span(
         f"{label} ({distance:.2f})",
-        cls=f"px-2 py-0.5 rounded-full text-xs font-medium {color}",
+        cls=f"px-2 py-1 rounded-full text-xs font-medium {color}",
     )
 
 
@@ -146,7 +146,7 @@ def _active_learning_action_url(action: str, item: dict, queue_run_id: str) -> s
 def _active_learning_reason_badges(reasons: list[str]):
     """Render compact reason badges for one queue item."""
     if not reasons:
-        return Span("General coverage", cls="px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-200")
+        return Span("General coverage", cls="px-2 py-1 rounded-full text-xs bg-slate-700 text-slate-200")
 
     tone = {
         "boundary_distance": "bg-amber-600/80 text-black",
@@ -168,7 +168,7 @@ def _active_learning_reason_badges(reasons: list[str]):
         *[
             Span(
                 labels.get(reason, reason.replace("_", " ").title()),
-                cls=f"px-2 py-0.5 rounded-full text-xs font-medium {tone.get(reason, 'bg-slate-700 text-slate-200')}",
+                cls=f"px-2 py-1 rounded-full text-xs font-medium {tone.get(reason, 'bg-slate-700 text-slate-200')}",
             )
             for reason in reasons
         ],
@@ -432,9 +432,9 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
         anchor_crop_url = _get_crop_url_for_face(first_anchor)
 
     gedcom_status = (
-        Span("Linked", cls="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-600 text-white")
+        Span("Linked", cls="px-2 py-1 rounded-full text-xs font-medium bg-emerald-600 text-white")
         if has_gedcom
-        else Span("Not linked", cls="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-600 text-slate-300")
+        else Span("Not linked", cls="px-2 py-1 rounded-full text-xs font-medium bg-slate-600 text-slate-300")
     )
 
     face_word = "face" if face_count == 1 else "faces"
@@ -694,15 +694,15 @@ def _unresolved_review_group_card(group, nav_prefix=""):
 
     def _state_badge(state: str):
         if state == "SKIPPED":
-            return Span("Dismissed", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-600/80 text-black")
+            return Span("Dismissed", cls="px-2 py-1 rounded-full text-[10px] font-medium bg-amber-600/80 text-black")
         if state == "PROPOSED":
-            return Span("Proposed", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-700 text-white")
-        return Span("Inbox", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-700 text-slate-200")
+            return Span("Proposed", cls="px-2 py-1 rounded-full text-[10px] font-medium bg-sky-700 text-white")
+        return Span("Inbox", cls="px-2 py-1 rounded-full text-[10px] font-medium bg-slate-700 text-slate-200")
 
     member_tiles = []
     for member in group["members"]:
         badge = (
-            Span("Primary", cls="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-600 text-white")
+            Span("Primary", cls="px-2 py-1 rounded-full text-[10px] font-medium bg-indigo-600 text-white")
             if member["is_primary"]
             else None
         )
@@ -3085,7 +3085,7 @@ def _batch_card(identity_id, identity_data, face_count):
         Div(
             Span(
                 f"{face_count} face{'s' if face_count != 1 else ''}",
-                cls="text-xs font-medium text-white bg-slate-700 px-2 py-0.5 rounded-full",
+                cls="text-xs font-medium text-white bg-slate-700 px-2 py-1 rounded-full",
             ),
             P(display_name, cls="text-xs text-slate-400 mt-1 truncate"),
             P(identity_id[:12] + "...", cls="text-[10px] text-slate-600 mt-0.5 truncate"),

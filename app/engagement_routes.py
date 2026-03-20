@@ -290,7 +290,7 @@ def get(request=None, community_slug: str = "", page: int = 1):
                     ),
                     Span(
                         tier_label,
-                        cls=f"text-sm font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
+                        cls=f"text-sm font-semibold px-3 py-1.5 rounded-full border {badge_cls}",
                         data_testid="proposal-confidence-label",
                     ),
                     compare_link,
@@ -330,13 +330,13 @@ def get(request=None, community_slug: str = "", page: int = 1):
         page_links = []
         for pg in range(1, pages + 1):
             if pg == page:
-                page_links.append(Span(str(pg), cls="px-2 py-1 bg-indigo-600 text-white rounded text-xs"))
+                page_links.append(Span(str(pg), cls="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs"))
             else:
                 page_links.append(
                     A(
                         str(pg),
                         href=f"?page={pg}",
-                        cls="px-2 py-1 bg-slate-700 text-slate-300 rounded text-xs hover:bg-slate-600",
+                        cls="px-3 py-1.5 bg-slate-700 text-slate-300 rounded text-xs hover:bg-slate-600",
                         hx_get=f"/api/proposed-matches?community_slug={community_slug}&page={pg}",
                         hx_target="#proposed-matches-list",
                         hx_swap="innerHTML",
@@ -1388,7 +1388,7 @@ def get(request=None, sess=None):
             Div(
                 Div(
                     Span(a["type"].replace("_", " ").title(), cls="text-sm font-medium text-white"),
-                    Span(status.upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
+                    Span(status.upper(), cls=f"text-xs px-3 py-1 rounded ml-2 {status_cls}"),
                     cls="flex items-center",
                 ),
                 P(f'"{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
@@ -1426,7 +1426,7 @@ def get(request=None, sess=None):
             Div(
                 Div(
                     Span(f"{file_count} photo{'s' if file_count != 1 else ''}", cls="text-sm font-medium text-white"),
-                    Span(status.upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
+                    Span(status.upper(), cls=f"text-xs px-3 py-1 rounded ml-2 {status_cls}"),
                     cls="flex items-center",
                 ),
                 P(f"Source: {source}", cls="text-sm text-slate-300 mt-1") if source else None,
