@@ -10,13 +10,15 @@
 - [x] Phase 6: Harness outputs — CHANGELOG v0.99.36, this assessment, session log
 
 ## Deferred
-- Antigravity visual polish (masonry gallery, lightbox, shimmer, empty states): Antigravity session reported success but commit was not recorded on the branch. No code changes found. BACKLOG note for next session.
-- SQL indexes execution on production: Endpoint deployed, needs curl call after deploy completes
-- Touch target P2 fixes from audit: Small badges `py-0.5` in cluster_review, pagination in engagement_routes
-- Accessibility P2: SVG aria-labels across multiple route files
+- SQL indexes execution on production: Endpoint deployed, needs curl call after deploy completes — BACKLOG OPS-126-001
+- Touch target P2 fixes from audit: Small badges `py-0.5` in cluster_review, pagination in engagement_routes — BACKLOG UX-AUDIT-001
+- Accessibility P2: SVG aria-labels across multiple route files — BACKLOG UX-AUDIT-002
+
+## Antigravity Status (CORRECTED)
+Initially thought Antigravity's work was lost (0 commits on branch). Investigation found commit `7dd6cb0` was committed directly to main, not to the branch. All Antigravity deliverables shipped: lightbox dialog, hover scale transitions, tracking-tight typography, tabular-nums, active:scale-95, italic captions. The branch was never updated but the work is deployed.
 
 ## Red Flags
-- [LOW] Antigravity commit lost — session claimed completion but branch has 0 new commits. Antigravity may have run `git commit` in wrong directory or commit failed silently. Need investigation of Antigravity workflow reliability.
+- [LOW] Antigravity committed to main instead of its designated branch — harness violation but no data loss. Antigravity prompt said "commit to branch session-126/antigravity-delight" but it committed to main. Need stricter branch enforcement in Antigravity prompts.
 - [LOW] `test_confirmed_anchors_in_face_to_photo` still fails in some orderings — pre-existing, not caused by this session
 
 ## Next Session Should Verify
