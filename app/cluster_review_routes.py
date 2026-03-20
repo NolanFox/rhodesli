@@ -1769,7 +1769,9 @@ def _get_photo_url_for_face(face_id, community_slug=""):
     return None
 
 
-def _speed_run_cluster_card(identity_id, identity_data, offset, total, community_slug="", include_progress=True):
+def _speed_run_cluster_card(
+    identity_id, identity_data, offset, total, community_slug="", include_progress=True, prefetched=False
+):
     """Render a single cluster card for speed-run mode."""
     name = identity_data.get("name", "Unknown")
     display_name = name
@@ -1857,7 +1859,8 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
     prefetch_offset = offset + 1
     prefetch_params = urlencode({"offset": prefetch_offset, "community_slug": community_slug})
 
-    return Div(
+    # Build card children
+    card_children = [
         progress_div,
         # Cluster card
         Div(
@@ -1913,14 +1916,24 @@ def _speed_run_cluster_card(identity_id, identity_data, offset, total, community
             ),
             cls="p-8 bg-slate-900/60 border border-slate-700 rounded-xl",
         ),
-        # Hidden pre-fetch container for next card
-        Div(
-            id="speed-run-prefetch",
-            cls="hidden",
-            hx_get=f"/admin/cluster-review/next?{prefetch_params}",
-            hx_trigger="load",
-            hx_swap="innerHTML",
-        ),
+    ]
+
+    # Only add prefetch div if this card was NOT itself prefetched.
+    # This prevents cascading prefetch: initial card prefetches the next one,
+    # but the prefetched card does NOT prefetch further.
+    if not prefetched:
+        card_children.append(
+            Div(
+                id="speed-run-prefetch",
+                cls="hidden",
+                hx_get=f"/admin/cluster-review/next?{prefetch_params}",
+                hx_trigger="load",
+                hx_swap="innerHTML",
+            )
+        )
+
+    return Div(
+        *card_children,
         id="speed-run-card",
     )
 
@@ -2248,7 +2261,7 @@ def _speed_run_done_card(offset, total):
     )
 
 
-def _speed_run_next_card(offset, community_slug, request):
+def _speed_run_next_card(offset, community_slug, request, prefetched=False):
     """Get the next cluster card for speed-run auto-advance."""
     clusters = _get_speed_run_clusters(community_slug, request)
     total = len(clusters)
@@ -2257,7 +2270,7 @@ def _speed_run_next_card(offset, community_slug, request):
         return _speed_run_done_card(offset, total)
 
     iid, idata = clusters[offset]
-    return _speed_run_cluster_card(iid, idata, offset, total, community_slug)
+    return _speed_run_cluster_card(iid, idata, offset, total, community_slug, prefetched=prefetched)
 
 
 def _speed_run_undo_button(undo_state, oob=False):
@@ -2330,7 +2343,7 @@ def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
     if denied:
         return denied
 
-    return _speed_run_next_card(offset, community_slug, request)
+    return _speed_run_next_card(offset, community_slug, request, prefetched=True)
 
 
 @rt("/api/cluster-review/skip")

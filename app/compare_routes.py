@@ -5889,7 +5889,7 @@ def _run_ml_client_async(coro_fn):
 
 
 @rt("/api/compare/realtime")
-def post(file: UploadFile = None, sess=None):
+def post(file: UploadFile = None, sess=None, request=None):
     """Real-time face comparison: upload a photo, detect faces via ML service,
     and compare each detected face against the full archive.
 
@@ -5898,6 +5898,9 @@ def post(file: UploadFile = None, sess=None):
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    nav_prefix = _main_mod.community_url_prefix(community_slug)
 
     if file is None or not hasattr(file, "read"):
         return Div(
@@ -6015,7 +6018,7 @@ def post(file: UploadFile = None, sess=None):
                     card_children.append(
                         A(
                             "View Person",
-                            href=f"/person/{identity_id}",
+                            href=f"{nav_prefix}/person/{identity_id}",
                             cls="text-xs text-indigo-400 hover:underline ml-auto",
                         )
                     )
