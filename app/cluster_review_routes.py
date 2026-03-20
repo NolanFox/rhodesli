@@ -871,6 +871,42 @@ def get(sess=None, request=None, mode: str = ""):
             })();
         """)
 
+        # FB-161: JS-side reviewed_ids accumulation — prevents skipped/acted items from reappearing
+        reviewed_ids_js = Script("""
+            (function() {
+                window._reviewedIds = [];
+                // Inject reviewed_ids into all speed-run action requests
+                document.body.addEventListener('htmx:configRequest', function(evt) {
+                    var el = evt.detail.elt;
+                    if (!el) return;
+                    var action = el.getAttribute('data-action');
+                    if (!action) return;
+                    var speedActions = ['speed-confirm', 'speed-reject', 'speed-skip', 'speed-dismiss', 'speed-enrich-skip'];
+                    if (speedActions.indexOf(action) === -1) return;
+                    if (window._reviewedIds.length > 0) {
+                        evt.detail.parameters['reviewed_ids'] = window._reviewedIds.join(',');
+                    }
+                });
+                // After a speed-run action, record the identity_id
+                document.body.addEventListener('htmx:afterRequest', function(evt) {
+                    var el = evt.detail.elt;
+                    if (!el) return;
+                    var action = el.getAttribute('data-action');
+                    if (!action) return;
+                    var speedActions = ['speed-confirm', 'speed-reject', 'speed-skip', 'speed-dismiss'];
+                    if (speedActions.indexOf(action) === -1) return;
+                    var url = el.getAttribute('hx-post') || el.getAttribute('hx_post') || '';
+                    var match = url.match(/identity_id=([^&]*)/);
+                    if (match) {
+                        var iid = decodeURIComponent(match[1]);
+                        if (window._reviewedIds.indexOf(iid) === -1) {
+                            window._reviewedIds.push(iid);
+                        }
+                    }
+                });
+            })();
+        """)
+
         recent_actions_js = Script("""
             (function() {
                 window._speedRunActions = [];
@@ -1079,6 +1115,7 @@ def get(sess=None, request=None, mode: str = ""):
                     style="display:none",
                 ),
                 keyboard_js,
+                reviewed_ids_js,
                 recent_actions_js,
                 cls="max-w-3xl mx-auto px-4 py-8",
             ),
@@ -1522,6 +1559,7 @@ def post(
     offset: int = 0,
     community_slug: str = "",
     input_method: str = "",
+    reviewed_ids: str = "",
     sess=None,
     request=None,
 ):
@@ -1636,6 +1674,7 @@ def post(
     offset: int = 0,
     community_slug: str = "",
     input_method: str = "",
+    reviewed_ids: str = "",
     sess=None,
     request=None,
 ):
@@ -1697,7 +1736,8 @@ def post(
             identity_name=iname,
             face_count=len(all_faces),
         )
-        next_card = _speed_run_next_card(offset + 1, community_slug, request)
+        new_reviewed = f"{reviewed_ids},{identity_id}" if reviewed_ids else identity_id
+        next_card = _speed_run_next_card(offset + 1, community_slug, request, reviewed_ids=new_reviewed)
         undo_btn = _speed_run_undo_button(undo_state, oob=True)
         return next_card, undo_btn
 
@@ -2375,13 +2415,13 @@ def _build_undo_state(identity_id, action, offset, community_slug, face_data=Non
 
 
 @rt("/admin/cluster-review/next")
-def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
+def get(offset: int = 0, community_slug: str = "", reviewed_ids: str = "", sess=None, request=None):
     """Return the next cluster card for speed-run mode (HTMX partial)."""
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
 
-    return _speed_run_next_card(offset, community_slug, request, prefetched=True)
+    return _speed_run_next_card(offset, community_slug, request, prefetched=True, reviewed_ids=reviewed_ids)
 
 
 @rt("/api/cluster-review/skip")
@@ -2436,6 +2476,7 @@ def post(
     community_slug: str = "",
     speed_run: str = "",
     input_method: str = "",
+    reviewed_ids: str = "",
     sess=None,
     request=None,
 ):
@@ -2470,7 +2511,8 @@ def post(
         identity_name=iname,
         face_count=len(all_faces),
     )
-    next_card = _speed_run_next_card(offset + 1, community_slug, request)
+    new_reviewed = f"{reviewed_ids},{identity_id}" if reviewed_ids else identity_id
+    next_card = _speed_run_next_card(offset + 1, community_slug, request, reviewed_ids=new_reviewed)
     undo_btn = _speed_run_undo_button(undo_state, oob=True)
     return next_card, undo_btn
 
