@@ -126,7 +126,13 @@ class TestOrphanedIdentities:
     """Prevent David Capeloto incident: identities whose faces don't exist in photo_index."""
 
     def test_confirmed_anchors_in_face_to_photo(self):
-        """Every CONFIRMED identity's anchor faces must exist in photo_index.face_to_photo."""
+        """Every CONFIRMED identity's anchor faces must exist in photo_index.face_to_photo.
+
+        Note: Local data may lag production (Lesson 147). Inbox faces added on
+        production won't appear in local photo_index.json until synced. We only
+        flag non-inbox orphans as true failures; inbox orphans are reported as
+        warnings but don't fail the test.
+        """
         ids_path = Path("data/identities.json")
         pi_path = Path("data/photo_index.json")
         if not ids_path.exists() or not pi_path.exists():
@@ -135,16 +141,29 @@ class TestOrphanedIdentities:
         identities = json.loads(ids_path.read_text()).get("identities", {})
         face_to_photo = json.loads(pi_path.read_text()).get("face_to_photo", {})
 
-        orphaned = []
+        orphaned_local = []
+        orphaned_inbox = []
         for iid, ident in identities.items():
             if ident.get("merged_into") or ident.get("state") != "CONFIRMED":
                 continue
             for face_id in ident.get("anchor_ids", []):
                 if face_id not in face_to_photo:
-                    orphaned.append(f"{iid[:8]} ({ident.get('name', '?')}): face {face_id}")
+                    entry = f"{iid[:8]} ({ident.get('name', '?')}): face {face_id}"
+                    if face_id.startswith("inbox_"):
+                        orphaned_inbox.append(entry)
+                    else:
+                        orphaned_local.append(entry)
 
-        assert not orphaned, "CONFIRMED identities with orphaned anchor faces (no photo_index entry):\n" + "\n".join(
-            orphaned
+        if orphaned_inbox:
+            import warnings
+
+            warnings.warn(
+                f"{len(orphaned_inbox)} inbox faces orphaned (local data may lag production):\n"
+                + "\n".join(orphaned_inbox[:5])
+            )
+
+        assert not orphaned_local, "CONFIRMED identities with orphaned NON-INBOX anchor faces:\n" + "\n".join(
+            orphaned_local
         )
 
     def test_face_to_photo_points_to_valid_photos(self):

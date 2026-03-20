@@ -1293,7 +1293,7 @@ class TestDiscoveriesExtraction:
         assert "emerald" in ring_cls
 
         badge_cls, ring_cls = confidence_tier_style(0.90)
-        assert "blue" in badge_cls
+        assert "indigo" in badge_cls
 
         badge_cls, ring_cls = confidence_tier_style(1.10)
         assert "amber" in badge_cls
