@@ -1190,13 +1190,23 @@ def get(
             else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
         )
         name = ensure_utf8_display(r["name"]) or "Unnamed"
+        cross_badge = _main_mod._cross_community_badge(r["identity_id"], community) if community else None
+        name_row = (
+            Div(
+                Span(name, cls="text-sm text-slate-200 truncate"),
+                cross_badge,
+                cls="flex items-center gap-1",
+            )
+            if cross_badge
+            else Span(name, cls="text-sm text-slate-200 truncate")
+        )
 
         if user_is_admin:
             # Admin: direct merge
             btn = Button(
                 thumb,
                 Div(
-                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    name_row,
                     Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
                     cls="flex flex-col min-w-0 text-left",
                 ),
@@ -1211,7 +1221,7 @@ def get(
             btn = Button(
                 thumb,
                 Div(
-                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    name_row,
                     Span("Suggest match", cls="text-xs text-indigo-400"),
                     cls="flex flex-col min-w-0 text-left",
                 ),
