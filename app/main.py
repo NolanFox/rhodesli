@@ -797,36 +797,34 @@ async def startup_event():
     # AD-162: Clean up temp files from previous runs to prevent disk exhaustion.
     _startup_disk_cleanup(data_path)
 
-    # PRD-051: Verify Supabase connection on startup (Session 114).
-    # Log warning if unavailable — JSON backup exists for emergency recovery.
-    try:
-        from app.supabase_data import get_supabase_client
-
-        sb = get_supabase_client()
-        if sb:
-            sb.table("identities").select("identity_id").limit(1).execute()
-            logging.info("Supabase health check: OK")
-        else:
-            logging.warning("Supabase health check: client unavailable — JSON backup mode")
-    except Exception as e:
-        logging.warning(f"Supabase health check failed: {e} — JSON backup available")
-
-    # AD-135: Sync user data from Supabase on startup.
-    # This ensures deploys can never lose user-entered data —
-    # even if the Docker bundle has stale JSON, Supabase has the truth.
-    try:
-        from app.supabase_data import sync_from_supabase_on_startup
-
-        sync_from_supabase_on_startup(data_path)
-    except Exception as e:
-        logging.warning(f"Supabase startup sync failed (using existing JSON): {e}")
-
-    # Prewarm UI caches in a background thread so server starts accepting
-    # requests immediately. Caches are built lazily on first access if the
-    # background thread hasn't finished yet.
+    # Session 125 PERF #4: Cold start optimization.
+    # Supabase health check, sync, and cache prewarm ALL run in background.
+    # Server accepts requests immediately — lazy loading handles missing caches.
     import threading
 
     def _prewarm_caches():
+        # PRD-051: Verify Supabase connection (Session 114).
+        try:
+            from app.supabase_data import get_supabase_client
+
+            sb = get_supabase_client()
+            if sb:
+                sb.table("identities").select("identity_id").limit(1).execute()
+                logging.info("Supabase health check: OK")
+            else:
+                logging.warning("Supabase health check: client unavailable — JSON backup mode")
+        except Exception as e:
+            logging.warning(f"Supabase health check failed: {e} — JSON backup available")
+
+        # AD-135: Sync user data from Supabase on startup.
+        try:
+            from app.supabase_data import sync_from_supabase_on_startup
+
+            sync_from_supabase_on_startup(data_path)
+        except Exception as e:
+            logging.warning(f"Supabase startup sync failed (using existing JSON): {e}")
+
+        # Prewarm UI caches
         try:
             t0 = time.perf_counter()
             _build_caches()
