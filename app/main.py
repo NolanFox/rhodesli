@@ -4538,6 +4538,38 @@ def compute_face_quality_score(face_id: str) -> float:
     return round(score, 1)
 
 
+# Sequential display name mapping for unidentified persons
+# Maps UUID-fragment suffixes to sequential integers at render time
+_unidentified_seq_map: dict[str, int] = {}
+_unidentified_seq_counter: int = 0
+
+
+def _sequential_display_name(name: str) -> str:
+    """Convert UUID-fragment unidentified names to sequential numbers.
+
+    'Unidentified Person efb4d153' -> 'Unidentified Person 1043'
+
+    Only converts names where the suffix is a hex string (UUID fragment).
+    Names already using numeric suffixes pass through unchanged.
+    """
+    global _unidentified_seq_counter
+    if not name or not name.startswith("Unidentified Person "):
+        return name
+    suffix = name[len("Unidentified Person ") :]
+    # If already numeric, pass through
+    if suffix.isdigit():
+        return name
+    # If it's a hex UUID fragment, map to sequential number
+    try:
+        int(suffix, 16)
+    except (ValueError, TypeError):
+        return name
+    if suffix not in _unidentified_seq_map:
+        _unidentified_seq_counter += 1
+        _unidentified_seq_map[suffix] = _unidentified_seq_counter
+    return f"Unidentified Person {_unidentified_seq_map[suffix]}"
+
+
 def get_best_face_id(face_ids: list) -> str | None:
     """Pick the highest-quality face from a list of face IDs.
 
@@ -5215,23 +5247,36 @@ def sidebar(
     def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):
         """Single navigation item with badge. Adapts to collapsed state."""
         is_active = current_section == section_key
+        is_zero = count == 0
 
         if is_active:
             container_cls = "bg-amber-900/40 text-amber-100 shadow-inner border border-amber-700/50 ui99-nav-active"
             badge_cls = "bg-amber-500 text-amber-950 shadow-sm"
+        elif is_zero:
+            container_cls = (
+                "text-slate-600 hover:bg-[#1a1714] hover:text-slate-400 border border-transparent ui99-nav-inactive"
+            )
+            badge_cls = ""
         else:
             container_cls = (
                 "text-slate-400 hover:bg-[#1a1714] hover:text-slate-200 border border-transparent ui99-nav-inactive"
             )
             badge_cls = f"bg-{color}-500/20 text-{color}-400"
 
+        # Hide badge when count is 0
+        badge = (
+            Span(str(count), cls=f"sidebar-label ml-auto px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}")
+            if not is_zero
+            else None
+        )
+
         return A(
             # Icon always visible
             Span(icon, cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
             # Label shown when expanded
             Span(label, cls="sidebar-label ml-2 whitespace-nowrap"),
-            # Badge shown when expanded
-            Span(str(count), cls=f"sidebar-label ml-auto px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}"),
+            # Badge shown when expanded (hidden for zero counts)
+            badge,
             href=href,
             title=f"{label} ({count})",
             onclick="closeSidebar()",
@@ -5714,7 +5759,7 @@ def identity_card_expanded(
     """
     identity_id = identity["identity_id"]
     raw_name = ensure_utf8_display(identity.get("name"))
-    name = raw_name or "Unidentified Person"
+    name = _sequential_display_name(raw_name or "Unidentified Person")
     state = identity["state"]
 
     # Get all faces
@@ -6847,7 +6892,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     """
     identity_id = identity["identity_id"]
     raw_name = ensure_utf8_display(identity.get("name"))
-    name = raw_name or "Unidentified Person"
+    name = _sequential_display_name(raw_name or "Unidentified Person")
     state = identity["state"]
 
     # Get all faces
@@ -9042,7 +9087,7 @@ def neighbor_card(
 ) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
-    name = ensure_utf8_display(neighbor["name"])
+    name = _sequential_display_name(ensure_utf8_display(neighbor["name"]))
     # For "Unidentified Person NNNN", show "Person NNNN" to prevent truncation
     if name.startswith("Unidentified Person "):
         name = "Person " + name[len("Unidentified Person ") :]
@@ -9802,7 +9847,7 @@ def identity_card(
     identity_id = identity["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     raw_name = ensure_utf8_display(identity.get("name"))
-    name = raw_name or f"Identity {identity_id[:8]}..."
+    name = _sequential_display_name(raw_name or f"Identity {identity_id[:8]}...")
     state = identity["state"]
 
     # Combine anchors (confirmed) and candidates (proposed) for display
