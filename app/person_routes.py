@@ -441,8 +441,10 @@ def public_person_page(
                             P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
                             if source_label
                             else None,
-                            cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end"
-                        ) if source_label else None,
+                            cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end",
+                        )
+                        if source_label
+                        else None,
                         cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
                     ),
                     href=_person_photo_href(face_photo_id),
@@ -1111,7 +1113,7 @@ def public_person_page(
                         Img(
                             src=avatar_url,
                             alt=display_name,
-                            cls="w-32 h-32 rounded-full object-cover border-4 border-emerald-500/30 shadow-lg shadow-emerald-500/10",
+                            cls="w-32 h-32 rounded-2xl object-cover border-4 border-emerald-500/30 shadow-lg shadow-emerald-500/10",
                             onerror="this.style.display='none'",
                         )
                         if avatar_url
@@ -1120,7 +1122,7 @@ def public_person_page(
                                 display_name[0].upper() if display_name else "?",
                                 cls="text-4xl font-serif text-slate-400",
                             ),
-                            cls="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center",
+                            cls="w-32 h-32 rounded-2xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center",
                         ),
                         cls="flex justify-center mb-6",
                     ),
@@ -1268,7 +1270,7 @@ def public_person_page(
                                 hx_target=f"#{similar_container_id}",
                                 hx_swap="innerHTML",
                                 hx_disabled_elt="this",
-                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors disabled:opacity-50",
+                                cls="text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors disabled:opacity-50",
                                 type="button",
                                 **{"_": "on click put 'Searching...' into me"},
                             )
@@ -1276,15 +1278,15 @@ def public_person_page(
                             else A(
                                 "Find Similar",
                                 href=f"{nav_prefix}/people/{person_id}/similar",
-                                cls="text-xs px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
+                                cls="text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
                             ),
                             A(
                                 "Tree Linked" if has_tree_link else "Needs Tree Link",
                                 href="#gedcom",
                                 cls=(
-                                    "text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-colors"
+                                    "text-xs px-2.5 py-2 rounded-full bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-colors"
                                     if has_tree_link
-                                    else "text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors"
+                                    else "text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors"
                                 ),
                                 data_testid="jump-to-gedcom-link",
                             )
@@ -1293,7 +1295,7 @@ def public_person_page(
                             A(
                                 f"Review Proposals ({len(target_proposals)})",
                                 href=f"{nav_prefix}/admin/upload-review#identity-group-{person_id}",
-                                cls="text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors",
+                                cls="text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors",
                                 data_testid="review-proposals-link",
                             )
                             if target_proposals
@@ -1406,28 +1408,28 @@ def public_person_page(
                         A(
                             "Timeline",
                             href=f"{nav_prefix}/timeline?person={person_id}",
-                            cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Map",
                             href=f"{nav_prefix}/map?person={person_id}",
-                            cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                             data_testid="person-map-link",
                         ),
                         A(
                             "Family Tree",
                             href=f"{nav_prefix}/tree?person={person_id}",
-                            cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Connections",
                             href=f"{nav_prefix}/connect?person_a={person_id}",
-                            cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Compare with a photo",
                             href=f"{nav_prefix}/compare?person_id={person_id}",
-                            cls="px-3 py-1.5 text-xs rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
+                            cls="px-3 py-2 text-sm rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
                             data_testid="compare-cta",
                         ),
                         cls="flex flex-wrap justify-center gap-2 mb-8",
@@ -1752,11 +1754,16 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                             if context_conflict
                             else None,
                             Div(
-                                P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
+                                P(
+                                    source_label,
+                                    cls="text-[10px] text-white/90 text-center truncate w-full leading-snug",
+                                )
                                 if source_label
                                 else None,
-                                cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end"
-                            ) if source_label else None,
+                                cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end",
+                            )
+                            if source_label
+                            else None,
                             cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
                         ),
                         href=_person_photo_href(face_photo_id),

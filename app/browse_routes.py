@@ -871,7 +871,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                         Span("Sort:", cls="text-sm text-slate-400 mr-2"),
                         Select(
                             *sort_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2.5",
                             onchange=f"window.location.href='{nav_prefix}/people?sort_by=' + this.value",
                         ),
                         cls="flex items-center gap-2 mb-6",

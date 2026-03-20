@@ -755,7 +755,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, r
                     P("Face Comparison Tool", cls="text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "AI-powered face matching for historical photo archives",
-                        cls="text-[10px] text-slate-600 italic",
+                        cls="text-xs text-slate-500 italic",
                     ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
@@ -2116,7 +2116,11 @@ def get(q: str = "", job_id: str = "", sess=None):
         cards.append(
             Button(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
+                    Img(
+                        src=crop_url,
+                        cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600",
+                        alt=name,
+                    )
                     if crop_url
                     else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                     Div(
@@ -2393,7 +2397,11 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
                 Div(
                     # Face crop
                     A(
-                        Img(src=crop_url, cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600", alt=fname)
+                        Img(
+                            src=crop_url,
+                            cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600",
+                            alt=fname,
+                        )
                         if crop_url
                         else Div(cls="w-14 h-14 aspect-square rounded-lg bg-slate-700"),
                         href=person_link,
@@ -2601,7 +2609,11 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             crop_url = _resolve_crop_url(fid, crop_files)
             if crop_url:
                 face_thumbs.append(
-                    Img(src=crop_url, cls="w-12 h-12 aspect-square rounded-lg object-cover border border-slate-600", alt="Face")
+                    Img(
+                        src=crop_url,
+                        cls="w-12 h-12 aspect-square rounded-lg object-cover border border-slate-600",
+                        alt="Face",
+                    )
                 )
         if face_thumbs:
             parts.append(Div(*face_thumbs, cls="flex gap-2 justify-center mb-4"))
@@ -2804,7 +2816,11 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             Div(
                 Div(
                     A(
-                        Img(src=crop_url, cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600", alt=fname)
+                        Img(
+                            src=crop_url,
+                            cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600",
+                            alt=fname,
+                        )
                         if crop_url
                         else Div(cls="w-14 h-14 aspect-square rounded-lg bg-slate-700"),
                         href=person_link_face,
@@ -2961,7 +2977,11 @@ def get(q: str = "", photo_id: str = "", sess=None, request=None):
         cards.append(
             A(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
+                    Img(
+                        src=crop_url,
+                        cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600",
+                        alt=name,
+                    )
                     if crop_url
                     else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                     Div(
@@ -4135,7 +4155,7 @@ def get(sess=None, request=None):
                     P("Face Comparison Tool", cls="text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "AI-powered face matching for historical photo archives",
-                        cls="text-[10px] text-slate-600 italic",
+                        cls="text-xs text-slate-500 italic",
                     ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
@@ -4505,9 +4525,9 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 cls="w-full max-w-xs mx-auto bg-slate-700 rounded-full h-2 mb-4",
             ),
             Div(
-                P(f"Euclidean distance: {distance:.3f}", cls="text-[10px] text-slate-600"),
-                P(f"Cosine similarity: {cosine_sim:.4f}", cls="text-[10px] text-slate-600"),
-                P("Confidence", cls="text-[10px] text-slate-600"),
+                P(f"Euclidean distance: {distance:.3f}", cls="text-xs text-slate-500"),
+                P(f"Cosine similarity: {cosine_sim:.4f}", cls="text-xs text-slate-500"),
+                P("Confidence", cls="text-xs text-slate-500"),
                 cls="text-center",
             ),
             Button(
@@ -5257,7 +5277,11 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
                 results_html.append(
                     Div(
-                        Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
+                        Img(
+                            src=crop_url,
+                            cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600",
+                            alt=name,
+                        )
                         if crop_url
                         else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                         Div(
