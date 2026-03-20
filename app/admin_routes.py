@@ -173,6 +173,42 @@ async def post(request, sess=None):
         pathlib.Path(tmp_path).unlink(missing_ok=True)
 
 
+@rt("/api/admin/run-migrations")
+def post(sess=None):
+    """Admin-only: run pending SQL migrations (indexes, schema changes)."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    from app.supabase_data import get_supabase_client
+
+    sb = get_supabase_client()
+    if not sb:
+        return Response(
+            json.dumps({"status": "error", "error": "Supabase not configured"}),
+            media_type="application/json",
+            status_code=503,
+        )
+
+    migrations = [
+        "CREATE INDEX IF NOT EXISTS idx_photo_communities_community_id ON photo_communities (community_id)",
+        "CREATE INDEX IF NOT EXISTS idx_identity_communities_community_id ON identity_communities (community_id)",
+    ]
+
+    results = []
+    for sql in migrations:
+        try:
+            sb.rpc("exec_sql", {"query": sql}).execute()
+            results.append({"sql": sql, "status": "ok"})
+        except Exception as e:
+            results.append({"sql": sql, "status": "error", "error": str(e)})
+
+    return Response(
+        json.dumps({"status": "complete", "migrations": results}),
+        media_type="application/json",
+    )
+
+
 @rt("/api/admin/disk-usage")
 def get(request, sess=None):
     """Admin-only disk usage diagnostic. Shows volume contents and sizes.
@@ -578,7 +614,9 @@ def get(request, sess=None):
             # Pending items (contributor uploads) show approve/reject buttons
             if is_staged:
                 actions = Div(
-                    Span("Staged", cls="px-2 py-1 bg-indigo-600/30 text-indigo-300 text-xs font-bold rounded uppercase"),
+                    Span(
+                        "Staged", cls="px-2 py-1 bg-indigo-600/30 text-indigo-300 text-xs font-bold rounded uppercase"
+                    ),
                     Button(
                         "Mark Processed",
                         hx_post=f"/admin/pending/{job_id}/mark-processed",
