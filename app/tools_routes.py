@@ -33,7 +33,7 @@ def tools_nav_bar(active_tool=None):
     links = []
     for label, href, key in tools:
         cls = _active_cls if key == active_tool else _inactive_cls
-        links.append(A(label, href=href, cls=f"text-sm {cls}"))
+        links.append(A(label, href=href, cls=f"text-sm py-3 {cls}"))
 
     return Div(
         *links,
