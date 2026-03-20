@@ -6,7 +6,7 @@
 
 ## Goal
 
-Complete all remaining Codex performance findings (#1, #4, #6, #8, #10) and ship 15+ UX quick wins. Three parallel tracks: you handle complex perf, Codex handles contained fixes, Antigravity handles CSS/template. You are the orchestrator — merge their output, run tests, deploy, verify.
+Complete all remaining Codex performance findings (#1, #4, #6, #8, #10) and ship 15+ UX quick wins. Two parallel tracks: you handle ALL code changes (complex perf via sequential phases, contained fixes via worktree subagents), Antigravity handles CSS/template design audit. You are the orchestrator — do your own work, merge Antigravity's output, run tests, deploy, verify. Fix any bugs encountered — do not defer.
 
 ## CRITICAL CONSTRAINTS
 
@@ -14,7 +14,7 @@ Complete all remaining Codex performance findings (#1, #4, #6, #8, #10) and ship
 2. **DO NOT touch**: `core/neighbors.py` (frozen), `core/pfe.py`, `data/*` files.
 3. **Every change gets tests** — happy path + failure + regression.
 4. **/clear between phases** — commit first, then /clear immediately.
-5. **File ownership**: You own `app/main.py` and `app/cluster_review_routes.py`. Codex owns `app/perf_cache.py`, `app/browse_routes.py`, `app/identity_routes.py`. Antigravity owns `app/page_routes.py`, `app/person_routes.py`. Do NOT touch files owned by others.
+5. **File ownership**: You own ALL code files EXCEPT `app/page_routes.py` and `app/person_routes.py` (Antigravity owns those). Use worktree subagents to parallelize fixes in different files safely.
 6. **Safety first**: If a perf optimization seems risky, skip it and log to BACKLOG. No regressions.
 7. **No data issues**: Never modify JSON data files. Supabase writes only through existing save functions.
 8. **Gap check**: Re-read this prompt at end. Auto-fix any gaps.
@@ -169,33 +169,49 @@ Four co-located fixes in the same file:
 
 ---
 
-## Phase 5: UX-080 — 404 Page Styling (5 min)
+## Phase 5: Contained Fixes via Worktree Subagents (30 min)
+
+Launch these as PARALLEL worktree subagents — they touch different files:
+
+### Subagent A: PERF #8 (app/perf_cache.py)
+- After `_rebuild_matrix()` loads registry, `get_confirmed_distances()` calls `load_registry()` AGAIN
+- Fix: Cache `_confirmed_metadata` dict during rebuild, use it in get_confirmed_distances
+- Test: _confirmed_metadata populated after rebuild
+
+### Subagent B: UX-114 + FB-157 + FB-158 (app/browse_routes.py)
+- UX-114: Remove fragile `onfocus="this.select()"`, use placeholder instead
+- FB-157: Add clickable person links to identity cards (`A()` wrapping name/thumbnail)
+- FB-158: Add distance/confidence display to manual search results if distance data available
+- Tests for each fix
+
+### Subagent C: FB-163 (app/identity_routes.py)
+- Add community badge to tag-search result rows
+- Use community lookup pattern from existing code in the file
+- Test: community badge renders in tag search results
+
+After all subagents complete: merge their worktree branches, run `make test-fast`.
+
+**Commit:** `fix: session 125 phase 5 — contained fixes (PERF #8, UX-114, FB-157, FB-158, FB-163)`
+**/clear**
+
+---
+
+## Phase 6: UX-080 — 404 Page Styling (5 min)
 
 - Find the 404 handler in main.py
 - Add Tailwind classes for consistent dark theme styling
 - Include a "Back to Home" link
 
-**Commit:** `fix(ux): session 125 phase 5 — styled 404 page (UX-080)`
+**Commit:** `fix(ux): session 125 phase 6 — styled 404 page (UX-080)`
 **/clear**
 
 ---
 
-## Phase 6: Merge Codex + Antigravity + Verify (60 min)
+## Phase 7: Merge Antigravity + Final Verification (60 min)
 
-This phase is the most important. Antigravity is doing a comprehensive app-wide design overhaul. Codex is fixing contained perf/UX items. You must:
+This phase is the most important. Antigravity is doing a comprehensive app-wide design overhaul. You must carefully review and merge their work.
 
-### 6A: Check for Codex output
-- Look for branch `session-125/codex-fixes` or uncommitted Codex changes
-- If Codex committed: review the diff carefully for:
-  - No data/ file changes
-  - No auth guard removals
-  - No logic bugs introduced
-  - Tests exist for each change
-- Merge: `./scripts/merge.sh session-125/codex-fixes`
-- Run `make test-fast` — must pass
-- If no Codex output: note in assessment, items go to BACKLOG
-
-### 6B: Check for Antigravity output
+### 7A: Check for Antigravity output
 Antigravity is doing a COMPREHENSIVE design audit + implementation across all route files. This is the big one.
 - Look for branch `session-125/antigravity-ux`
 - Read `docs/session_context/session-125-antigravity-full-audit.md` for their findings
@@ -210,12 +226,12 @@ Antigravity is doing a COMPREHENSIVE design audit + implementation across all ro
 - If issues found: cherry-pick only the safe changes, log rejected changes to BACKLOG
 - **NO FUNCTIONALITY LOSS** — if Antigravity removed a feature or button, restore it
 
-### 6C: Post-merge verification
+### 7B: Post-merge verification
 ```bash
 make test-fast  # Must pass with ALL merged changes
 ```
 
-### 6D: Deploy + Comprehensive browser verify
+### 7C: Deploy + Comprehensive browser verify
 - `git push origin main`
 - Wait for Railway deploy SUCCESS
 - Browser verify EVERY major surface:
@@ -228,7 +244,7 @@ make test-fast  # Must pass with ALL merged changes
   7. **404 page** — styled with back link
   8. **About page** — navbar present
 
-### 6E: Functionality smoke test (READ-ONLY on production)
+### 7D: Functionality smoke test (READ-ONLY on production)
 Verify these features still work by reading the DOM (NOT clicking action buttons):
 - Search box returns results
 - Face cards render on person pages
@@ -237,10 +253,10 @@ Verify these features still work by reading the DOM (NOT clicking action buttons
 - Community prefix is present in URLs
 - Mobile nav drawer opens
 
-### 6F: Security audit
+### 7E: Security audit
 Review all changed files for auth guards, injection, XSS.
 
-### 6G: Harness outputs
+### 7F: Harness outputs
 1. Assessment: `docs/assessments/session-125-assessment.md`
 2. CHANGELOG: v0.99.35
 3. ROADMAP + SESSION_HISTORY
@@ -248,6 +264,18 @@ Review all changed files for auth guards, injection, XSS.
 
 **Commit:** `docs: session 125 harness outputs`
 **Push to origin main**
+
+---
+
+## Phase 8: Codex Audit Pass (optional, if time permits)
+
+After everything is deployed and verified, run Codex as a REVIEWER of the final state. Give it a prompt like:
+
+> "Audit the codebase for UX consistency, visual bugs, and design issues. Read all route files. Write findings to docs/session_context/session-125-codex-design-audit.md. Do NOT modify any code — read-only audit."
+
+Review Codex's findings. If any are high-impact and quick to fix, implement them. If they need more work, add to BACKLOG. You may do multiple rounds of this audit-and-fix cycle until satisfied.
+
+The user has explicitly asked for this: Codex audits, you review and decide what's valuable, iterate until the app is at a good place.
 
 ---
 
