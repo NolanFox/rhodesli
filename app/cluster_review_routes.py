@@ -1438,8 +1438,7 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
 
     try:
         registry.promote_candidate(identity_id, face_id, user_source="admin/cluster-review")
-        registry.save(data_path / "identities.json")
-        _main_mod._invalidate_all_caches()
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _log_audit(
             "confirm",
             entity_id=identity_id,
@@ -1495,8 +1494,7 @@ def post(identity_id: str = "", face_id: str = "", sess=None):
             # Only face — just reject
             registry.reject_candidate(identity_id, face_id, user_source="admin/cluster-review")
 
-        registry.save(data_path / "identities.json")
-        _main_mod._invalidate_all_caches()
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _log_audit(
             "reject",
             entity_id=identity_id,
@@ -2040,12 +2038,12 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
         )
         sug_name_row = (
             Div(
-                Span(sug["name"], cls="text-sm font-medium text-white"),
+                Span(sug["name"], cls="text-sm font-medium text-white truncate", title=sug["name"]),
                 cross_badge,
-                cls="flex items-center gap-2",
+                cls="flex items-center gap-2 min-w-0",
             )
             if cross_badge
-            else Span(sug["name"], cls="text-sm font-medium text-white")
+            else Span(sug["name"], cls="text-sm font-medium text-white truncate", title=sug["name"])
         )
         suggestion_els.append(
             Div(
@@ -2291,9 +2289,19 @@ def _speed_run_done_card(offset, total):
     )
 
 
-def _speed_run_next_card(offset, community_slug, request, prefetched=False):
-    """Get the next cluster card for speed-run auto-advance."""
+def _speed_run_next_card(offset, community_slug, request, prefetched=False, reviewed_ids=None):
+    """Get the next cluster card for speed-run auto-advance.
+
+    Session 125 FB-161: reviewed_ids tracks identity IDs acted on this session.
+    Skipped/dismissed items are filtered so they don't reappear.
+    """
     clusters = _get_speed_run_clusters(community_slug, request)
+
+    # FB-161: Filter out already-reviewed identities
+    if reviewed_ids:
+        reviewed_set = set(reviewed_ids.split(",")) if isinstance(reviewed_ids, str) else set(reviewed_ids)
+        clusters = [(iid, idata) for iid, idata in clusters if iid not in reviewed_set]
+
     total = len(clusters)
 
     if offset >= total:
@@ -2378,7 +2386,13 @@ def get(offset: int = 0, community_slug: str = "", sess=None, request=None):
 
 @rt("/api/cluster-review/skip")
 def post(
-    identity_id: str = "", offset: int = 0, community_slug: str = "", input_method: str = "", sess=None, request=None
+    identity_id: str = "",
+    offset: int = 0,
+    community_slug: str = "",
+    input_method: str = "",
+    reviewed_ids: str = "",
+    sess=None,
+    request=None,
 ):
     """Skip a cluster (no data change) and auto-advance with undo support."""
     denied = _main_mod._check_admin(sess)
@@ -2399,6 +2413,9 @@ def post(
         **({"input_method": input_method} if input_method else {}),
     )
 
+    # FB-161: Accumulate reviewed IDs so skipped items don't reappear
+    new_reviewed = f"{reviewed_ids},{identity_id}" if reviewed_ids else identity_id
+
     undo_state = _build_undo_state(
         identity_id,
         "skip",
@@ -2407,7 +2424,7 @@ def post(
         identity_name=iname,
         face_count=len(all_faces),
     )
-    next_card = _speed_run_next_card(offset + 1, community_slug, request)
+    next_card = _speed_run_next_card(offset + 1, community_slug, request, reviewed_ids=new_reviewed)
     undo_btn = _speed_run_undo_button(undo_state, oob=True)
     return next_card, undo_btn
 
