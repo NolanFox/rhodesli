@@ -590,7 +590,7 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
             comm_name = comm.get("name", comm_slug.replace("-", " ").title())
             return Span(
                 comm_name,
-                cls="text-xs px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/30",
+                cls="text-xs px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30",
                 title=f"This person appears in the {comm_name} archive",
             )
 
@@ -4954,7 +4954,7 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
         ("Help Identify", skipped, "/?section=skipped", "text-amber-300"),
     ]
     if proposals > 0:
-        stat_items.append(("Proposals", proposals, "/admin/proposals", "text-blue-400"))
+        stat_items.append(("Proposals", proposals, "/admin/proposals", "text-indigo-400"))
 
     stats_row = [
         A(
@@ -5717,7 +5717,7 @@ def _proposal_banner(identity_id: str):
 
     color_cls = {
         "VERY HIGH": "bg-emerald-900/30 border-emerald-500/50 text-emerald-300",
-        "HIGH": "bg-blue-900/30 border-blue-500/50 text-blue-300",
+        "HIGH": "bg-indigo-900/30 border-indigo-500/50 text-indigo-300",
         "MODERATE": "bg-amber-900/30 border-amber-500/50 text-amber-300",
     }.get(confidence, "bg-slate-700/30 border-slate-500/50 text-slate-300")
 
@@ -5756,7 +5756,7 @@ def _proposal_badge_inline(identity_id: str):
 
     color_cls = {
         "VERY HIGH": "bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
-        "HIGH": "bg-blue-600/30 text-blue-300 border-blue-500/30",
+        "HIGH": "bg-indigo-600/30 text-indigo-300 border-indigo-500/30",
         "MODERATE": "bg-amber-600/30 text-amber-300 border-amber-500/30",
     }.get(confidence, "bg-slate-600/30 text-slate-300 border-slate-500/30")
 
@@ -6005,7 +6005,7 @@ def identity_card_expanded(
                         type="text",
                         name="q",
                         placeholder="Search by name to merge...",
-                        cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder-slate-500",
+                        cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-slate-500",
                         hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
                         hx_trigger="keyup changed delay:300ms",
                         hx_target=f"#focus-search-results-{identity_id}",
@@ -7362,8 +7362,8 @@ def _confidence_tier(distance: float) -> str:
     return _label_to_tier.get(conf["short_label"], "LOW")
 
 
-_CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-blue-400", "MODERATE": "ring-amber-400"}
-_CONFIDENCE_COLOR = {"VERY HIGH": "text-emerald-300", "HIGH": "text-blue-300", "MODERATE": "text-amber-300"}
+_CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-indigo-400", "MODERATE": "ring-amber-400"}
+_CONFIDENCE_COLOR = {"VERY HIGH": "text-emerald-300", "HIGH": "text-indigo-300", "MODERATE": "text-amber-300"}
 _CONFIDENCE_LABEL = {
     "VERY HIGH": "Strong match",
     "HIGH": "Good match",
@@ -8604,9 +8604,9 @@ def inbox_badge(count: int) -> A:
     return A(
         Span("\U0001f4e5", cls="mr-2"),
         "New Matches",
-        Span(f"({count})", cls="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"),
+        Span(f"({count})", cls="bg-indigo-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"),
         href="#inbox-lane",
-        cls="text-slate-300 hover:text-blue-400 text-sm font-medium",
+        cls="text-slate-300 hover:text-indigo-400 text-sm font-medium",
     )
 
 
@@ -8726,7 +8726,7 @@ def state_badge(state: str) -> Span:
     UX Intent: Instant state recognition via color coding.
     """
     colors = {
-        "INBOX": "bg-blue-600 text-white",
+        "INBOX": "bg-indigo-600 text-white",
         "CONFIRMED": "bg-emerald-600 text-white",
         "PROPOSED": "bg-amber-500 text-white",
         "CONTESTED": "bg-red-600 text-white",
@@ -9226,7 +9226,7 @@ def neighbor_card(
             _merge_btn_attrs["hx_confirm"] = _confirm_msg
         merge_btn = Button(
             _merge_label,
-            cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-50",
+            cls="px-3 py-1 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50",
             **_merge_btn_attrs,
             **{"_": "on click put 'Merging...' into me"},
         )
@@ -9268,7 +9268,7 @@ def neighbor_card(
     checkbox = (
         Input(
             type="checkbox",
-            cls="visible-bulk-cb w-4 h-4 rounded border-slate-500 bg-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
+            cls="visible-bulk-cb w-4 h-4 rounded border-slate-500 bg-slate-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
             **{"_": f"on change set #bulk-{neighbor_id}.checked to my.checked"},
         )
         if (show_checkbox and can_merge)
@@ -9288,7 +9288,7 @@ def neighbor_card(
         _nav_prefix = nav_prefix or community_url_prefix(_community_slug)
 
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
-    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-indigo-400 to target then wait 1.5s then remove .ring-2 .ring-indigo-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
 
     return Div(
         Div(
@@ -9304,7 +9304,7 @@ def neighbor_card(
                     A(
                         name,
                         href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
-                        cls="font-medium text-slate-200 hover:text-blue-400 hover:underline cursor-pointer text-sm leading-tight",
+                        cls="font-medium text-slate-200 hover:text-indigo-400 hover:underline cursor-pointer text-sm leading-tight",
                         **{"_": nav_script},
                     ),
                     Span(
@@ -9415,7 +9415,7 @@ def search_result_card(
         )
         merge_btn = Button(
             "Merge",
-            cls="px-2 py-1 text-xs font-bold border border-blue-500/50 text-blue-400 rounded hover:bg-blue-500/20",
+            cls="px-2 py-1 text-xs font-bold border border-indigo-500/50 text-indigo-400 rounded hover:bg-indigo-500/20",
             hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
             hx_target=f"#identity-{target_identity_id}",
             hx_swap="outerHTML",
@@ -9424,7 +9424,7 @@ def search_result_card(
         )
 
     # Navigation hyperscript (same as neighbor_card)
-    nav_script = f"on click set target to #identity-{result_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
+    nav_script = f"on click set target to #identity-{result_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-indigo-400 to target then wait 1.5s then remove .ring-2 .ring-indigo-400 from target"
 
     return Div(
         Div(
@@ -9438,7 +9438,7 @@ def search_result_card(
                 A(
                     name,
                     href=f"#identity-{result_id}",
-                    cls="font-medium text-slate-200 truncate text-sm hover:text-blue-400 hover:underline cursor-pointer",
+                    cls="font-medium text-slate-200 truncate text-sm hover:text-indigo-400 hover:underline cursor-pointer",
                     **{"_": nav_script},
                 ),
                 Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400 ml-2"),
@@ -9487,7 +9487,7 @@ def manual_search_section(identity_id: str, nav_prefix: str = "") -> Div:
             type="text",
             name="q",
             placeholder="Search by name...",
-            cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder-slate-500",
+            cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-slate-500",
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
             hx_trigger="keyup changed delay:300ms",
             hx_target=f"#search-results-{identity_id}",
@@ -9629,7 +9629,7 @@ def neighbors_sidebar(
             # Hidden inputs for each mergeable neighbor (checkboxes)
             Div(
                 Label(
-                    Input(type="checkbox", cls="mr-2 accent-blue-500", **{"_": select_all_script}),
+                    Input(type="checkbox", cls="mr-2 accent-indigo-500", **{"_": select_all_script}),
                     Span("Select All", cls="text-xs text-slate-400"),
                     cls="flex items-center cursor-pointer mb-2",
                 ),
@@ -9656,7 +9656,7 @@ def neighbors_sidebar(
                     hx_include="closest form",
                     hx_target=f"#{_target_id}",
                     hx_swap="innerHTML",
-                    cls="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+                    cls="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
                 ),
                 Button(
                     "Not Same Selected",
@@ -9889,7 +9889,7 @@ def identity_card(
         return None
 
     border_colors = {
-        "blue": "border-l-blue-500",
+        "blue": "border-l-indigo-500",
         "emerald": "border-l-emerald-500",
         "amber": "border-l-amber-500",
         "red": "border-l-red-500",
@@ -10478,7 +10478,7 @@ def login_modal() -> Div:
                 Button(
                     "Sign In",
                     type="submit",
-                    cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium",
+                    cls="w-full p-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-medium",
                 ),
                 Div(id="login-modal-error", cls="text-red-400 text-sm mt-2"),
                 hx_post="/login/modal",
@@ -10508,10 +10508,10 @@ def login_modal() -> Div:
             if google_url
             else None,
             Div(
-                P(A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"), cls="text-sm"),
+                P(A("Forgot password?", href="/forgot-password", cls="text-indigo-400 hover:underline"), cls="text-sm"),
                 P(
                     "No account? ",
-                    A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
+                    A("Sign up with invite code", href="/signup", cls="text-indigo-400 hover:underline"),
                     cls="text-sm text-slate-400",
                 ),
                 cls="mt-4 text-center space-y-1",
@@ -10579,7 +10579,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                 Button(
                     "Sign in to save",
                     type="submit",
-                    cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium",
+                    cls="w-full p-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-medium",
                 ),
                 P("Track your contributions with your account.", cls="text-xs text-slate-500 mt-1 text-center"),
                 hx_post="/api/annotations/stash-and-login",
@@ -10724,7 +10724,7 @@ def lane_section(
             cards.append(card)
 
     bg_colors = {
-        "blue": "bg-blue-900/20",
+        "blue": "bg-indigo-900/20",
         "emerald": "bg-emerald-900/20",
         "amber": "bg-amber-900/20",
         "red": "bg-red-900/20",

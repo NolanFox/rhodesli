@@ -997,9 +997,9 @@ class TestSearchResultCardCompare:
         }
 
         html = to_xml(search_result_card(result, "target-id-456", set(), user_role="admin"))
-        # Merge should use border/outline style, not filled bg-blue-600
-        assert "bg-blue-600" not in html
-        assert "border-blue-500" in html
+        # Merge should use border/outline style, not filled bg-indigo-600
+        assert "bg-indigo-600" not in html
+        assert "border-indigo-500" in html
 
     def test_search_result_card_compare_before_merge(self):
         """Compare button appears before Merge button in HTML order."""

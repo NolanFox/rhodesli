@@ -22,7 +22,7 @@ class TestCommunityBadgeAlways:
         idx = source.index("def _cross_community_badge")
         func = source[idx : idx + 2500]
 
-        assert "bg-blue-600/30" in func, "Cross-community badge should use bright blue styling"
+        assert "bg-indigo-600/30" in func, "Cross-community badge should use bright blue styling"
 
     def test_same_and_cross_have_different_styles(self):
         """Same-community and cross-community badges must be visually distinct."""
@@ -32,5 +32,5 @@ class TestCommunityBadgeAlways:
 
         # Both should exist
         has_slate = "bg-slate-700" in func
-        has_blue = "bg-blue-600/30" in func
+        has_blue = "bg-indigo-600/30" in func
         assert has_slate and has_blue, "Must have both muted (same) and bright (cross) badge styles"
