@@ -515,7 +515,7 @@ def _community_landing_page(community: dict, slug: str):
                     "Upload Photos",
                     href=f"{nav_prefix}/upload",
                     cls="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg "
-                    "font-medium transition-colors mr-3",
+                    "font-medium transition-all active:scale-95 mr-3",
                     data_testid="upload-cta",
                 ),
                 cls="text-center py-12",
@@ -572,7 +572,7 @@ def _community_landing_page(community: dict, slug: str):
                     A(
                         "Browse Photos",
                         href=f"{nav_prefix}/photos",
-                        cls="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-all active:scale-95",
                     ),
                     A(
                         "People",
@@ -701,7 +701,7 @@ def _platform_root_page(auth_enabled: bool = False):
                     ),
                     cls="flex flex-wrap gap-3",
                 ),
-                cls="rounded-2xl border border-slate-700/70 bg-slate-900/55 p-6",
+                cls="rounded-2xl border border-slate-700/70 bg-slate-900/55 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-slate-600",
                 data_testid="archive-card",
                 data_archive_slug=slug,
             )
@@ -7717,7 +7717,7 @@ def get(sess=None, request=None):
                 P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-xs text-slate-400"),
                 P(face_line, cls="text-xs text-slate-500 mt-0.5"),
                 href=f"{nav_prefix}/collection/{slug}",
-                cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                 data_testid="collection-card",
             )
         )
@@ -7762,8 +7762,14 @@ def get(sess=None, request=None):
                 P(
                     f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive",
                     cls="text-slate-400 mb-8",
+                ) if collections else None,
+                Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4")
+                if collections else Div(
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'),
+                    H3("No Collections Created", cls="text-xl font-serif text-slate-400 mb-2"),
+                    P("Collections will appear here once photos are grouped.", cls="text-sm text-slate-500"),
+                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center"
                 ),
-                Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
             cls="min-h-screen bg-slate-900",
@@ -7874,7 +7880,7 @@ def get(slug: str, sess=None, request=None):
                 A(
                     p_name,
                     href=f"{nav_prefix}/person/{pid}",
-                    cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                    cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                 )
             )
         people_section = Div(
@@ -8855,7 +8861,7 @@ def get(
                             conf_bar,
                             cls="p-3",
                         ),
-                        cls="bg-slate-800/70 rounded-lg border border-slate-700/50 hover:border-amber-700/30 transition-colors w-full",
+                        cls="bg-slate-800/70 rounded-lg border border-slate-700/50 hover:border-amber-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg w-full",
                     ),
                     href=f"{nav_prefix}/photo/{entry['photo_id']}",
                     cls="block",
@@ -9067,12 +9073,19 @@ def get(
                     ),
                     # Empty state
                     Div(
-                        P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
-                        A(
-                            "View full timeline",
-                            href=f"{nav_prefix}/timeline",
-                            cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2",
+                        Div(
+                            Div(cls="w-2 h-2 rounded-full bg-slate-600 mt-1"),
+                            Div(cls="w-px h-16 border-l-2 border-dashed border-slate-700 my-2"),
+                            Div(cls="w-2 h-2 rounded-full bg-slate-600 mb-6"),
+                            cls="flex flex-col items-center"
                         ),
+                        P("No photos or events match your filters.", cls="text-slate-500 text-center text-sm font-medium"),
+                        A(
+                            "Clear filters and view full timeline \u2192",
+                            href=f"{nav_prefix}/timeline",
+                            cls="text-indigo-400 hover:text-indigo-300 text-xs block text-center mt-3 transition-colors active:scale-95",
+                        ),
+                        cls="flex flex-col items-center justify-center py-16"
                     )
                     if not decade_sections
                     else None,

@@ -228,7 +228,7 @@ def _person_comments_section(person_id: str, is_admin: bool = False):
     )
 
     return Div(
-        H3(f"Comments ({len(visible_comments)})", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+        H3(f"Comments ({len(visible_comments)})", cls="text-3xl font-serif tracking-tight text-white mb-6"),
         Div(*comment_items, id="person-comments-list")
         if comment_items
         else Div(
@@ -441,14 +441,15 @@ def public_person_page(
                             P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
                             if source_label
                             else None,
-                            cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end",
+                            cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end z-20",
                         )
                         if source_label
                         else None,
-                        cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
+                        cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:z-30 hover:ring-2 hover:ring-indigo-400/50 shadow-sm bg-slate-800",
                     ),
                     href=_person_photo_href(face_photo_id),
-                    cls="flex flex-col group block",
+                    onclick="event.preventDefault(); window.openLightbox(this.href, this.querySelector('img').src);",
+                    cls="flex flex-col group block outline-none",
                     title=f"View photo of {display_name}",
                     data_testid="person-gallery-item-conflicted" if context_conflict else None,
                 ),
@@ -475,7 +476,7 @@ def public_person_page(
                         Img(
                             src=photo_url(filename),
                             alt=f"Photo featuring {display_name}",
-                            cls="w-full h-48 sm:h-56 object-cover rounded-lg",
+                            cls="w-full h-auto rounded-lg shadow-sm",
                             loading="lazy",
                         ),
                         Span(
@@ -489,15 +490,16 @@ def public_person_page(
                     ),
                     P(
                         "Conflicting face assignment",
-                        cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
+                        cls="text-[10px] text-rose-300 mt-2 text-center leading-snug",
                     )
                     if context_conflict
                     else None,
-                    P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug")
+                    P(collection_label, cls="text-sm italic text-slate-400 mt-2 text-center leading-snug")
                     if collection_label
                     else None,
                     href=_person_photo_href(pid),
-                    cls="flex flex-col group",
+                    onclick="event.preventDefault(); window.openLightbox(this.href, this.querySelector('img').src);",
+                    cls="flex flex-col group mb-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:z-30 cursor-pointer outline-none",
                     title=f"View photo of {display_name}",
                     data_testid="person-gallery-item-conflicted" if context_conflict else None,
                 ),
@@ -555,7 +557,7 @@ def public_person_page(
                 Img(
                     src=companion["crop_url"],
                     alt=companion["name"],
-                    cls="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover cursor-pointer group-hover:ring-2 group-hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
+                    cls="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover cursor-pointer group-hover:ring-2 transition-all duration-300 group-hover:scale-[1.05] group-hover:shadow-lg group-hover:ring-2 group-hover:ring-indigo-400/50 shadow-sm bg-slate-800",
                     onerror="this.style.display='none'",
                 )
                 if companion["crop_url"]
@@ -581,7 +583,7 @@ def public_person_page(
                 Span(f"+{len(appears_with) - 8} more", cls="text-xs text-slate-500 self-center ml-2")
             )
         appears_with_section = Div(
-            H3("Often appears with", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+            H3("Often appears with", cls="text-3xl font-serif tracking-tight text-white mb-6"),
             Div(*companion_cards, cls="flex flex-wrap gap-4 sm:gap-6 items-start"),
             cls="mt-10 pt-8 border-t border-slate-800",
         )
@@ -644,7 +646,7 @@ def public_person_page(
                     ),
                 )
                 family_section = Div(
-                    H3("Family", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                    H3("Family", cls="text-3xl font-serif tracking-tight text-white mb-6"),
                     *family_items,
                     cls="mt-10 pt-8 border-t border-slate-800",
                 )
@@ -716,7 +718,7 @@ def public_person_page(
                     )
                 )
                 connections_section = Div(
-                    H3("Connections", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                    H3("Connections", cls="text-3xl font-serif tracking-tight text-white mb-6"),
                     *conn_items,
                     cls="mt-10 pt-8 border-t border-slate-800",
                     data_testid="connections-section",
@@ -761,7 +763,7 @@ def public_person_page(
                     )
                 )
             annotations_section = Div(
-                H3("Community Notes", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                H3("Community Notes", cls="text-3xl font-serif tracking-tight text-white mb-6"),
                 *ann_items,
                 cls="mt-10 pt-8 border-t border-slate-800",
             )
@@ -834,11 +836,11 @@ def public_person_page(
     )
 
     sort_select = Select(
-        Option("Earliest First", value="date_asc", selected=(sort_by == "date_asc")),
-        Option("Earliest Last", value="date_desc", selected=(sort_by == "date_desc")),
-        Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
-        Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
-        cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
+        Option("Earliest First \u2191", value="date_asc", selected=(sort_by == "date_asc")),
+        Option("Earliest Last \u2193", value="date_desc", selected=(sort_by == "date_desc")),
+        Option("Newest Uploads \u2191", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
+        Option("Oldest Uploads \u2193", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
+        cls="bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-white font-medium text-sm rounded-lg px-4 py-2 cursor-pointer focus:ring-2 focus:ring-indigo-400/50 transition-colors shadow-sm active:scale-95",
         hx_get=f"{workstation_prefix}/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
         hx_target="#person-gallery-container",
         hx_swap="innerHTML",
@@ -852,9 +854,9 @@ def public_person_page(
     gallery_items = face_gallery_items if faces_active else photo_gallery_items
     gallery_count = len(gallery_items)
     gallery_grid_cls = (
-        "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2"
+        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4"
         if faces_active
-        else "grid grid-cols-2 sm:grid-cols-3 gap-4"
+        else "columns-2 sm:columns-3 lg:columns-4 gap-4 sm:gap-6 space-y-4 sm:space-y-6"
     )
 
     if gallery_items:
@@ -868,13 +870,13 @@ def public_person_page(
     if is_state_confirmed:
         badge = Span(
             "Confirmed",
-            cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20",
+            cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
             title="This person has been confirmed by an admin",
         )
     else:
         badge = Span(
             "Under Review",
-            cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 cursor-help",
+            cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 cursor-help transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
             title="This identity is awaiting admin review",
         )
 
@@ -1064,13 +1066,49 @@ def public_person_page(
         body { background-color: #0f172a; }
     """)
 
+    # --- Lightbox JS and Dialog ---
+    lightbox_js = Script("""
+        window.openLightbox = function(href, src) {
+            const d = document.getElementById('lightbox-dialog');
+            d.querySelector('img').src = src;
+            d.querySelector('a').href = href;
+            d.classList.remove('hidden');
+            d.showModal();
+        };
+        window.closeLightbox = function() {
+            const d = document.getElementById('lightbox-dialog');
+            d.classList.add('hidden');
+            d.close();
+            d.querySelector('img').src = '';
+        };
+    """)
+    lightbox_dialog = Dialog(
+        Div(
+            Button(
+                "✕",
+                onclick="window.closeLightbox()",
+                cls="absolute top-4 right-4 text-white hover:text-amber-400 bg-black/50 hover:bg-black/80 rounded-full w-10 h-10 flex items-center justify-center transition-colors text-xl font-bold z-50 focus:outline-none",
+                type="button"
+            ),
+            Img(src="", alt="Enlarged photo view", cls="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg shadow-2xl"),
+            Div(
+                A("View Photo Details \u2192", href="#", cls="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors active:scale-95"),
+                cls="text-center"
+            ),
+            cls="relative p-2 md:p-6"
+        ),
+        id="lightbox-dialog",
+        cls="hidden backdrop:bg-slate-950/90 backdrop:backdrop-blur-sm bg-transparent border-0 fixed inset-0 m-auto max-w-5xl w-full p-4 outline-none",
+        onclick="if(event.target === this) window.closeLightbox()"
+    )
+
     # --- Share button ---
     share_btn = Button(
         NotStr(
             '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
         ),
         "Share",
-        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center active:scale-95",
         type="button",
         data_action="share-photo",
         data_share_url=og_page_url,
@@ -1082,6 +1120,8 @@ def public_person_page(
         Title(f"{display_name} — Rhodesli Heritage Archive"),
         *og_meta_tags,
         page_style,
+        lightbox_js,
+        lightbox_dialog,
         Main(
             # Top navigation bar
             Nav(
@@ -1128,7 +1168,7 @@ def public_person_page(
                     ),
                     # Name + badge
                     Div(
-                        H1(display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3"),
+                        H1(display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3 tracking-tight"),
                         badge,
                         _name_provenance_line(person_id, is_admin),
                         cls="text-center mb-3",
@@ -1150,7 +1190,7 @@ def public_person_page(
                     if not is_confirmed
                     else None,
                     # Stats line
-                    P(stats_line, cls="text-slate-400 text-sm text-center mb-4") if stats_line else None,
+                    P(stats_line, cls="text-slate-400 text-sm text-center mb-4 tabular-nums") if stats_line else None,
                     # Life details (birth/death/place with prompts for unknowns)
                     life_details_section,
                     # Admin: ML birth year suggestion card (Gatekeeper pattern)
@@ -1313,7 +1353,7 @@ def public_person_page(
                             Button(
                                 "Rename",
                                 type="submit",
-                                cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded disabled:opacity-50",
+                                cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded disabled:opacity-50 active:scale-95 transition-transform",
                                 **{"_": "on click put 'Saving...' into me"},
                             ),
                             Span(id=f"rename-status-{person_id}", cls="text-xs text-emerald-400 ml-1"),
