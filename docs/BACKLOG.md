@@ -328,15 +328,27 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 - **COMMUNITY-002: Workspace switcher UX** — Admin users who manage multiple communities need a way to switch between them from within the app. Like Slack's workspace sidebar or Notion's workspace dropdown. Should show in the sidebar/nav: current workspace name + dropdown to switch. Notifications should be cross-workspace (user-level, not community-level). **Priority: P1** — blocks practical multi-community admin workflow. Source: Nolan feedback post-Session 95. See: PRD-035 (`docs/prds/035_multi_community_platform.md`).
 
-### P2 — Touch Targets Below 44px (UX-AUDIT-001)
-- Cluster review status badges `px-2 py-0.5` (16px height) — should be `py-1` minimum. Source: Session 126 UX audit.
-- Engagement routes pagination `px-2 py-1` (28px height). Source: Session 126 UX audit.
+### ~~P2 — Touch Targets Below 44px (UX-AUDIT-001)~~ DONE Session 127
+- ~~Cluster review status badges `px-2 py-0.5` (16px height) — should be `py-1` minimum.~~ Fixed: 10 badges py-0.5→py-1.
+- ~~Engagement routes pagination `px-2 py-1` (28px height).~~ Fixed: px-3 py-1.5.
 
-### P2 — SVG Accessibility Labels (UX-AUDIT-002)
-- ~20 SVG icon elements across tools_routes, main.py, discoveries_routes lack `aria-label`. Source: Session 126 UX audit. See `docs/session_context/session-126-codex-ux-audit.md`.
+### ~~P2 — SVG Accessibility Labels (UX-AUDIT-002)~~ DONE Session 127
+- ~~~20 SVG icon elements across tools_routes, main.py, discoveries_routes lack `aria-label`.~~ Fixed: 33 aria attributes added.
 
 ### P3 — SQL Indexes Execution (OPS-126-001)
-- `/api/admin/run-migrations` endpoint deployed but not yet called on production. Need to curl it to create `idx_photo_communities_community_id` and `idx_identity_communities_community_id`. Source: Session 126 Phase 0.
+- `/api/admin/run-migrations` endpoint uses `exec_sql` RPC which doesn't exist on Supabase. Need to create indexes via **Supabase SQL Editor** manually, or create the `exec_sql` function first. Source: Session 126 Phase 0, Session 127 Phase 0.
+
+### P1 — CSRF Protection (SEC-127-001)
+- No CSRF tokens on any POST route. All state-changing requests rely solely on session cookies. Partial mitigation: SameSite=Strict. Full fix: CSRF middleware or Origin/Referer header check. Source: Session 127 security audit.
+
+### P2 — Public Upload Rate Limiting (SEC-127-002)
+- 6 public upload endpoints (`/api/compare/upload`, `/api/estimate/upload`, etc.) accept file uploads with no rate limiting. Can be abused for storage DOS. Source: Session 127 security audit.
+
+### P3 — Duplicate Route Definitions (SEC-127-003)
+- 3 duplicate routes across browse_routes.py/identity_routes.py/page_routes.py/photo_routes.py. Winner depends on import order. Source: Session 127 audit dead code section.
+
+### P3 — Dead Code Cleanup (DEAD-127-001)
+- `compare_v2_routes.py` — entire file is 501 stubs. `app/audit_notes.md` and `app/ui_spec.md` should be in `docs/`. Stale sys.path insertion. Source: Session 127 audit.
 
 ---
 
