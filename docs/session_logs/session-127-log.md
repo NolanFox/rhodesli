@@ -3,11 +3,11 @@ Started: 2026-03-20
 Prompt: docs/prompts/session-127-prompt.md
 
 ## Phase Checklist
-- [ ] Phase 0: Orient + SQL Indexes + Flaky Tests
-- [ ] Phase 1: Accessibility + Touch Targets (worktree subagents)
-- [ ] Phase 2: Person Page Polish (worktree subagents)
-- [ ] Phase 3: Codex Security + Accessibility Audit
-- [ ] Phase 4: Merge Antigravity + Deploy + Verify
+- [x] Phase 0: Orient + SQL Indexes + Flaky Tests
+- [x] Phase 1: Accessibility + Touch Targets (worktree subagents)
+- [x] Phase 2: Person Page Polish (worktree subagents)
+- [-] Phase 3: Security + Accessibility Audit (running as subagent)
+- [x] Phase 4: Deploy + Verify — SUCCESS, health 200, all pages verified
 - [ ] Phase 5: Harness Outputs
 
 ## Verification Gate

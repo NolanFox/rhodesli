@@ -14,6 +14,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 127: Accessibility + Polish (2026-03-20) — v0.99.37
+- 33 SVG aria attributes across 3 route files (decorative hidden, icon-only labeled)
+- Touch targets: 10 cluster review badges py-0.5→py-1, engagement pagination px-3 py-1.5
+- Confidence tier labels (Strong/Good/Possible/Weak match) next to ML distance numbers
+- Person page "Can you help?" CTA for CONFIRMED people with unknown birth/death/place
+- Merge confirmation gate for CONFIRMED people (inline, no JS dialogs)
+- Face crop fallback: global JS error handler replaces broken crops with SVG silhouette
+- 2 stale test assertions fixed (blue→indigo, inbox orphan tolerance)
+- Security + accessibility audit
+- 76 new tests, 3473 total pass
+- Deploy SUCCESS
+
 ## Session 126: Polish Sprint + UX Audit (2026-03-20) — v0.99.36
 - SQL migration endpoint `/api/admin/run-migrations` (admin-only, Supabase RPC)
 - 2 flaky test fixes: _raw_embeddings_cache split, stale landing page assertion

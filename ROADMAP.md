@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.35 · ~4880 tests · 966 photos · 3536 identities · 95 confirmed
+Current: v0.99.37 · ~3473 tests · 968 photos · 1660 identities · 89 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-20: **v0.99.37 — Session 127**: Accessibility + Polish. 33 SVG aria attributes (decorative hidden, icon-only labeled). Touch targets: 10 badges py-0.5→py-1, pagination px-3 py-1.5. Confidence tier labels (Strong/Good/Possible/Weak) next to ML distances. Person page "Can you help?" CTA for CONFIRMED with unknown fields. Merge confirmation gate for CONFIRMED people. Face crop fallback (global JS error handler → SVG silhouette). 2 stale test assertions fixed. Security audit. 76 new tests. 3473 app tests pass.
 
 - [x] 2026-03-20: **v0.99.36 — Session 126**: Polish Sprint + UX Audit. SQL migration endpoint. 2 flaky test fixes (cache split, stale assertion). Speed-run reviewed_ids end-to-end wiring (JS + 5 server endpoints). P3 UX: sidebar dimming, sequential display names, compare button, 404 nav, people grid subtitle, share button. UX audit: 100+ blue→indigo, 45 gray→slate across 10 route files. 11 new tests. 3394 app tests pass.
 

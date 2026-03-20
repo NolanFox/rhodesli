@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.37] — 2026-03-20 (Session 127: Accessibility + Polish)
+
+### Accessibility
+- **SVG aria labels**: 33 new aria attributes across main.py, discoveries_routes.py, tools_routes.py — `aria-hidden="true"` on decorative icons, `aria-label` on icon-only buttons
+- **Touch targets**: 10 cluster review badges upgraded `py-0.5` → `py-1`; engagement pagination `px-2 py-1` → `px-3 py-1.5`
+- **Confidence tier labels**: Human-readable "Strong/Good/Possible/Weak match" badges next to raw ML distances
+
+### UX Polish
+- **Person page "Can you help?" CTA**: CONFIRMED people with unknown birth/death/place get community contribution prompt
+- **Merge confirmation gate**: CONFIRMED people require inline confirmation before merge (no JS dialogs)
+- **Face crop fallback**: Global JS error handler replaces broken crop images with SVG silhouette placeholder
+
+### Bug Fixes
+- **Stale test assertions**: `test_confidence_tier_styles` blue→indigo; `test_confirmed_anchors_in_face_to_photo` inbox orphan tolerance
+
+### Tests
+- 76 new tests across 5 new test files
+- 3473 tests pass, 0 failures
+
 ## [v0.99.36] — 2026-03-20 (Session 126: Polish Sprint + UX Audit)
 
 ### Infrastructure
