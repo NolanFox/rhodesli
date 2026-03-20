@@ -69,14 +69,17 @@ All items are in files Claude Code does NOT touch. Can run fully in parallel.
 | FB-158 | app/browse_routes.py | Add distance/confidence to manual search results |
 | FB-163 | app/identity_routes.py | Add community badge to tag-search results |
 
-### Track C: Antigravity (owns page_routes.py, person_routes.py ONLY)
-CSS/template changes only. No logic. No data.
+### Track C: Antigravity (COMPREHENSIVE app-wide design audit)
+CSS/template changes only. No logic. No data. No core files.
 
-| Fix | File | Description |
-|-----|------|-------------|
-| UX-081 | app/page_routes.py | About page navbar consistency |
-| UX-106 | app/page_routes.py | Unify CTA phrasing |
-| UX-107 | app/person_routes.py | Add tooltip to "Identified" badge |
+Antigravity reviews EVERY route file and implements design improvements:
+- **PRIORITY 1**: Face card grid redesign on person pages (the #1 user complaint)
+- **PRIORITY 2**: Component consistency across all route files (badges, cards, buttons, hover states)
+- **PRIORITY 3**: External tools consistency (compare, estimate)
+- Plus original quick wins: UX-081, UX-106, UX-107
+
+Antigravity writes a full audit to `docs/session_context/session-125-antigravity-full-audit.md`.
+Claude Code reviews the audit, cherry-picks safe changes, rejects anything that breaks functionality.
 
 ## File Ownership (CRITICAL — prevents merge conflicts)
 

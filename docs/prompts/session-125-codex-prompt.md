@@ -54,3 +54,42 @@ git commit -m "perf+fix: session 125 codex — PERF #8, UX-114, FB-157, FB-158, 
 ```
 
 DO NOT push to main. Leave on the `session-125/codex-fixes` branch.
+
+---
+
+## Part 2: Design Audit Review (after fixes above)
+
+After completing the 5 fixes, do a design/UX audit of the codebase. Read through the route files and write your findings to `docs/session_context/session-125-codex-design-audit.md`.
+
+For each route file, evaluate:
+1. **Visual consistency** — Do face cards, badges, buttons look the same across different views?
+2. **Information hierarchy** — Is the most important info (photos, names) prominent? Is metadata secondary?
+3. **Mobile usability** — Are touch targets large enough? Any horizontal overflow risks?
+4. **Dead ends** — Can users always navigate forward/backward? Any orphan pages?
+5. **Admin vs public** — Is it clear what's admin-only? Are admin tools cluttering public views?
+
+Files to review:
+- `app/page_routes.py` (landing, browse, about)
+- `app/person_routes.py` (person detail, face gallery)
+- `app/compare_routes.py` (face compare tool)
+- `app/cluster_review_routes.py` (speed-run triage)
+- `app/admin_routes.py` (admin dashboard)
+- `app/browse_routes.py` (browse/search)
+
+Output format for each file:
+```markdown
+## [filename]
+### Good
+- [what works well]
+### Issues (ranked by impact)
+1. [P1] [issue] — suggested fix: [specific CSS/HTML change]
+2. [P2] [issue] — suggested fix: [specific change]
+### Consistency gaps
+- [element X in this file doesn't match element X in other_file.py]
+```
+
+Add this audit file to your commit:
+```bash
+git add docs/session_context/session-125-codex-design-audit.md
+git commit --amend --no-edit
+```

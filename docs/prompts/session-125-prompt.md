@@ -180,37 +180,67 @@ Four co-located fixes in the same file:
 
 ---
 
-## Phase 6: Merge Codex + Antigravity + Final Verification (30 min)
+## Phase 6: Merge Codex + Antigravity + Verify (60 min)
+
+This phase is the most important. Antigravity is doing a comprehensive app-wide design overhaul. Codex is fixing contained perf/UX items. You must:
 
 ### 6A: Check for Codex output
 - Look for branch `session-125/codex-fixes` or uncommitted Codex changes
-- If Codex committed: `./scripts/merge.sh session-125/codex-fixes`
-- If Codex made direct changes: review diff, run tests, commit
+- If Codex committed: review the diff carefully for:
+  - No data/ file changes
+  - No auth guard removals
+  - No logic bugs introduced
+  - Tests exist for each change
+- Merge: `./scripts/merge.sh session-125/codex-fixes`
+- Run `make test-fast` — must pass
 - If no Codex output: note in assessment, items go to BACKLOG
 
 ### 6B: Check for Antigravity output
-- Look for branch `session-125/antigravity-ux` or file changes in page_routes.py/person_routes.py
-- If found: review diff, run tests, merge/commit
-- If no output: note in assessment
+Antigravity is doing a COMPREHENSIVE design audit + implementation across all route files. This is the big one.
+- Look for branch `session-125/antigravity-ux`
+- Read `docs/session_context/session-125-antigravity-full-audit.md` for their findings
+- **CRITICAL REVIEW CHECKLIST** before merging:
+  1. `git diff session-125/antigravity-ux -- data/` — must be EMPTY (no data changes)
+  2. `git diff session-125/antigravity-ux -- core/` — must be EMPTY (no core changes)
+  3. Grep for removed `_check_admin` calls — must be ZERO
+  4. Grep for changed route paths (`@rt(`) — must be ZERO
+  5. Grep for changed Supabase queries — must be ZERO
+  6. Run full test suite on the branch: `git stash && git checkout session-125/antigravity-ux && make test-fast && git checkout main && git stash pop`
+- If tests pass and review clean: merge
+- If issues found: cherry-pick only the safe changes, log rejected changes to BACKLOG
+- **NO FUNCTIONALITY LOSS** — if Antigravity removed a feature or button, restore it
 
-### 6C: Full test suite
+### 6C: Post-merge verification
 ```bash
-make test-fast  # Must pass with all merged changes
+make test-fast  # Must pass with ALL merged changes
 ```
 
-### 6D: Deploy + Browser verify
+### 6D: Deploy + Comprehensive browser verify
 - `git push origin main`
 - Wait for Railway deploy SUCCESS
-- Browser verify:
-  1. Speed-run page (no recursive prefetch, reviewed items filtered)
-  2. Landing page (CTAs, mobile)
-  3. Person page (tooltips)
-  4. 404 page (styled)
+- Browser verify EVERY major surface:
+  1. **Landing page** — CTAs, mobile viewport, warm design
+  2. **Person page** — face gallery grid, status badges with tooltips
+  3. **Speed-run page** — buttons, keyboard shortcuts, reviewed item filtering
+  4. **Compare tool** — upload, results, consistency
+  5. **Browse/People view** — identity cards, community badges
+  6. **Admin approvals** — card layout, face thumbnails
+  7. **404 page** — styled with back link
+  8. **About page** — navbar present
 
-### 6E: Security audit
+### 6E: Functionality smoke test (READ-ONLY on production)
+Verify these features still work by reading the DOM (NOT clicking action buttons):
+- Search box returns results
+- Face cards render on person pages
+- Similar panel loads
+- Sidebar navigation links are correct
+- Community prefix is present in URLs
+- Mobile nav drawer opens
+
+### 6F: Security audit
 Review all changed files for auth guards, injection, XSS.
 
-### 6F: Harness outputs
+### 6G: Harness outputs
 1. Assessment: `docs/assessments/session-125-assessment.md`
 2. CHANGELOG: v0.99.35
 3. ROADMAP + SESSION_HISTORY
