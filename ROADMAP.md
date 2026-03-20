@@ -133,6 +133,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-03-19: **v0.99.33 — Session 123**: Performance + UX + Upload Audit. PERF-A (cached embeddings), PERF-B (save_registry changed_ids). Landing page CTAs for visitors. Upload pipeline audit: HEALTHY, no regressions. 3 new tests.
+
 - [x] 2026-03-19: **v0.99.32 — Session 122**: TOOLS-003 Real-Time Compare + WORKSPACE Schema. Real-time face compare endpoint (`POST /api/compare/realtime`) — upload photo, ML service detects, compare against archive. WORKSPACE-001 Phase 1: SQL migration + `create_personal_archive()`. Performance investigation (PERF-011 logged). 16 new tests. 3 parallel worktrees.
 
 - [x] 2026-03-19: **v0.99.31 — Session 121**: Upload Verification + UX Fix Sprint + Feature Planning. Admin compare endpoint (`/api/admin/ml-compare`) for AD-229 verification. 4 UX fixes: UX-207 approvals community-scoped, UX-208 always-show community badge, UX-211 face overlay minimum size, UX-212 source URL persisted. PRD-053 (TOOLS-003 Face Compare Real-Time). Security audit clean. 14 new tests. 3293 app tests pass.

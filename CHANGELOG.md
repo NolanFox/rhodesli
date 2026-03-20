@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.33] — 2026-03-19 (Session 123: Performance + UX + Upload Audit)
+
+### Performance
+- **PERF-A**: compare_routes face distance uses cached `get_face_data()` instead of raw `np.load()` (~50ms saved per call)
+- **PERF-B**: identity_routes `save_registry()` callers now pass `changed_ids` — reduces Supabase writes from ~3500 to 1-5 rows per operation
+
+### UX
+- **Landing page CTAs**: "Help Identify Someone", "Compare a Face", "Explore the Archive" buttons for non-admin visitors. Mobile-friendly, dark theme.
+- **Enrichment panel**: Verified already correctly ordered (merge search → name → GEDCOM)
+
+### Infrastructure
+- **Upload pipeline audit**: All 6 previous regression fixes verified in place. Pipeline HEALTHY.
+
+### Tests
+- 3 new tests (embeddings dedup)
+
 ## [v0.99.32] — 2026-03-19 (Session 122: TOOLS-003 Real-Time Compare + WORKSPACE Schema)
 
 ### Features

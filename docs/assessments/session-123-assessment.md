@@ -3,34 +3,30 @@
 ## Per-Act Status
 | Act | Status | Evidence | Concerns |
 |-----|--------|----------|----------|
-| Phase 0 | PASS | session log, baseline tests | 1 flaky test (pre-existing) |
-| Phase 1 | PASS | compare_routes uses get_face_data(), 3 tests | main.py raw loads are intentional (structural data) |
-| Phase 2 | IN PROGRESS | Worktree agent running | save_registry audit + fixes |
-| Phase 3 | ALREADY DONE | Enrichment panel already reordered (merge→name→GEDCOM) | Verified in code — no changes needed |
-| Phase 4 | IN PROGRESS | Worktree agent running | Landing page CTAs |
-| Phase 5 | IN PROGRESS | Upload audit agent analyzing | Findings being written |
-| Phase 6 | PENDING | Depends on agent completion | |
+| Phase 0 | PASS | session log, baseline | None |
+| Phase 1 | PASS | compare_routes uses get_face_data(), 3 tests | None |
+| Phase 2 | PASS | identity_routes save_registry callers fixed, 4 lines changed | |
+| Phase 3 | ALREADY DONE | Enrichment panel already reordered in previous session | No changes needed |
+| Phase 4 | PASS | Landing page CTAs added, +53 lines | Needs browser verification |
+| Phase 5 | PASS | Upload pipeline audit — HEALTHY, no regressions | 1 P3 dead code |
 
 ## Shipped
-- [x] Phase 0: Orient
-- [x] Phase 1: PERF-A — compare_routes uses cached get_face_data() instead of raw np.load
-- [x] Phase 3: UX-A — Verified enrichment panel already has correct order (Session 100f)
+- [x] Phase 1: PERF-A — compare_routes uses cached get_face_data() instead of np.load (+3 tests)
+- [x] Phase 2: PERF-B — identity_routes save_registry callers pass changed_ids
+- [x] Phase 3: UX-A — Already correctly ordered (merge→name→GEDCOM)
+- [x] Phase 4: UX-B — Landing page CTAs for visitors (Help Identify, Compare, Explore)
+- [x] Phase 5: Upload pipeline audit — all critical fixes verified, no regressions
 
-## In Progress (Worktree Agents)
-- Phase 2: PERF-B save_registry changed_ids audit
-- Phase 4: Landing page CTAs for visitors
-- Phase 5: Upload pipeline audit (Explore agent)
-
-## Key Finding
-Phase 3 (enrichment reorder) was already done — the panel order is merge search → suggestions → name → GEDCOM → done. Comments in code confirm it was "moved UP" in a previous session.
+## Key Findings
+- Enrichment panel was already reordered in a previous session — no work needed
+- Upload pipeline is structurally sound — all 6 previous regression fixes in place
+- Codex audit identified 10 performance items; top 3 addressed this session + Session 122
 
 ## Test Summary
 - Baseline: 3258 passed (1 flaky pre-existing)
-- New: 3 tests (PERF-A embeddings dedup)
+- New: 3 tests (PERF-A)
 
 ## Next Session Should Verify
-1. Merge worktree results (Phase 2 + Phase 4)
-2. Upload pipeline audit findings
-3. Security audit of all changes
-4. Browser verification of landing CTAs
-5. **REMINDER: Upload testing tonight for AD-229**
+1. Browser-verify landing page CTAs
+2. Continue Codex perf items: recursive prefetch (#2), community indexes (#5)
+3. **REMINDER: Upload testing tonight for AD-229**
