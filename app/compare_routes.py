@@ -681,7 +681,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, r
             Button(
                 "Compare against all archive",
                 data_action="compare-all-archive",
-                cls="w-full px-3 py-2 bg-slate-700/50 text-slate-300 text-sm rounded-lg hover:bg-slate-600 transition-colors border border-slate-600/50",
+                cls="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors",
                 data_testid="compare-all-archive",
             ),
         ),

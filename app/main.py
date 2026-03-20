@@ -1203,10 +1203,34 @@ async def custom_404_handler(request, exc):
                         Span("404", cls="text-6xl font-bold text-slate-700 block mb-4"),
                         H1("Page not found", cls="text-2xl font-serif font-bold text-white mb-3"),
                         P("The page you're looking for doesn't exist.", cls="text-slate-400 mb-8"),
-                        A(
-                            "Explore the Archive",
-                            href="/",
-                            cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
+                        Div(
+                            A(
+                                "Explore the Archive",
+                                href="/",
+                                cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
+                            ),
+                            cls="flex flex-wrap gap-3 justify-center mb-4",
+                        ),
+                        Div(
+                            A(
+                                "Photos",
+                                href="/photos",
+                                cls="text-slate-400 hover:text-indigo-400 transition-colors text-sm underline underline-offset-2",
+                            ),
+                            Span("·", cls="text-slate-600"),
+                            A(
+                                "People",
+                                href="/people",
+                                cls="text-slate-400 hover:text-indigo-400 transition-colors text-sm underline underline-offset-2",
+                            ),
+                            Span("·", cls="text-slate-600"),
+                            A(
+                                "Go back",
+                                href="#",
+                                onclick="history.back(); return false;",
+                                cls="text-slate-400 hover:text-indigo-400 transition-colors text-sm underline underline-offset-2",
+                            ),
+                            cls="flex gap-3 justify-center items-center",
                         ),
                         cls="text-center",
                     ),
