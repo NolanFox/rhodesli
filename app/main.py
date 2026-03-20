@@ -9042,6 +9042,28 @@ def face_card(
     )
 
 
+def _confidence_tier_label(distance: float) -> "Span":
+    """Map a distance value to a human-readable confidence tier pill.
+
+    Tiers:
+      < 0.80  → Strong match (emerald)
+      0.80–0.99 → Good match (indigo)
+      1.00–1.19 → Possible match (amber)
+      >= 1.20 → Weak match (slate)
+    """
+    if distance < 0.80:
+        text, cls_color = "Strong match", "text-emerald-300 bg-emerald-900/40 border-emerald-700/40"
+    elif distance < 1.00:
+        text, cls_color = "Good match", "text-indigo-300 bg-indigo-900/40 border-indigo-700/40"
+    elif distance < 1.20:
+        text, cls_color = "Possible match", "text-amber-300 bg-amber-900/40 border-amber-700/40"
+    else:
+        text, cls_color = "Weak match", "text-slate-400 bg-slate-700/40 border-slate-600/40"
+    return Span(
+        text, cls=f"text-[10px] font-medium px-1.5 py-0.5 rounded border {cls_color}", data_testid="confidence-tier"
+    )
+
+
 def match_info_bar(
     distance: float,
     confidence_gap: float = 0.0,
@@ -9074,7 +9096,9 @@ def match_info_bar(
 
     details = []
     if show_distance:
+        tier_label = _confidence_tier_label(distance)
         details.append(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 bg-slate-700 px-1 rounded"))
+        details.append(tier_label)
     if confidence_gap > 0:
         details.append(
             Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded")
@@ -9319,6 +9343,7 @@ def neighbor_card(
                     Span(
                         f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"
                     ),
+                    _confidence_tier_label(distance),
                     Span(
                         f"+{confidence_gap}% gap",
                         cls="text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded",
