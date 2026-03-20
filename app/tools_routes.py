@@ -27,8 +27,8 @@ def tools_nav_bar(active_tool=None):
         ("Date Estimator", "/tools/estimate", "estimate"),
         ("Face Compare", "/tools/compare", "compare"),
     ]
-    _active_cls = "font-bold text-blue-400 border-b-2 border-blue-400 pb-1"
-    _inactive_cls = "text-slate-400 hover:text-blue-400 transition-colors"
+    _active_cls = "font-bold text-indigo-400 border-b-2 border-indigo-400 pb-1"
+    _inactive_cls = "text-slate-400 hover:text-indigo-400 transition-colors"
 
     links = []
     for label, href, key in tools:
