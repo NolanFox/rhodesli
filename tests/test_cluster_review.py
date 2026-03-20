@@ -282,6 +282,10 @@ class TestUploadReviewPage:
         assert "GEDCOM Triage" in html
 
     def test_page_shows_potential_review_groups(self):
+        # Clear review groups cache to ensure mock is called (Session 124)
+        from app.cluster_review_routes import invalidate_cluster_review_caches
+
+        invalidate_cluster_review_caches()
         client = _get_test_client()
         unresolved_groups = [
             {
@@ -341,6 +345,10 @@ class TestUploadReviewPage:
         assert "Dismissed" in html
 
     def test_page_shows_empty_potential_review_groups_message(self):
+        # Clear review groups cache to ensure mock is called (Session 124)
+        from app.cluster_review_routes import invalidate_cluster_review_caches
+
+        invalidate_cluster_review_caches()
         client = _get_test_client()
         with ExitStack() as stack:
             stack.enter_context(_admin_session())

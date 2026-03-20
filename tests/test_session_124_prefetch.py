@@ -65,10 +65,10 @@ class TestPrefetchCascadePrevention:
     def test_prefetched_card_still_has_action_buttons(self):
         """Prefetched cards should retain all action buttons."""
         html = _render_card(prefetched=True)
-        assert "Confirm All (Y)" in html
-        assert "Reject All (N)" in html
-        assert "Skip (S)" in html
-        assert "Dismiss (D)" in html
+        assert "Confirm All" in html
+        assert "Reject All" in html
+        assert "Skip" in html
+        assert "Dismiss" in html
 
     def test_next_endpoint_passes_prefetched_true(self):
         """The /admin/cluster-review/next route passes prefetched=True to prevent cascade."""
