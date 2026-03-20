@@ -778,13 +778,13 @@ def get(identity_id: str, request=None):
         tier_label, tier_color, tier_dots = confidence_tier_with_dots(dist)
 
         # Face thumbnail — use enriched anchor/candidate face IDs (same pattern as neighbor_card)
-        thumb = Div(cls="w-10 h-10 rounded-full bg-slate-600 flex-shrink-0")
+        thumb = Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-600 flex-shrink-0")
         all_face_ids = n.get("anchor_face_ids", []) + n.get("candidate_face_ids", [])
         for fid in all_face_ids:
             face_url = _main_mod.resolve_face_image_url(fid, crop_files)
             if face_url:
                 thumb = Img(
-                    src=face_url, cls="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-slate-600"
+                    src=face_url, cls="w-10 h-10 aspect-square rounded-lg object-cover flex-shrink-0 border border-slate-600"
                 )
                 break
 
@@ -1951,7 +1951,7 @@ def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_so
                     Button(
                         "Merge",
                         type="submit",
-                        cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+                        cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
                     ),
                     cls="flex justify-end gap-3",
                 ),
@@ -2714,7 +2714,7 @@ def get(identity_id: str, index: int = 0, request=None):
     prev_btn = (
         Button(
             Span("\u25c0", cls="text-xl"),
-            cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
+            cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 aspect-square rounded-lg flex items-center justify-center transition-colors z-10",
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={index - 1}",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
@@ -2727,7 +2727,7 @@ def get(identity_id: str, index: int = 0, request=None):
     next_btn = (
         Button(
             Span("\u25b6", cls="text-xl"),
-            cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
+            cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 aspect-square rounded-lg flex items-center justify-center transition-colors z-10",
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={index + 1}",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",

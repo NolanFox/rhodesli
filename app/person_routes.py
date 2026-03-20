@@ -427,7 +427,7 @@ def public_person_page(
                         Img(
                             src=crop_url,
                             alt=f"{display_name}",
-                            cls="w-full aspect-[1/1] rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                            cls="w-full aspect-square object-cover",
                             onerror="this.style.display='none'",
                         ),
                         Span(
@@ -437,19 +437,16 @@ def public_person_page(
                         )
                         if context_conflict
                         else None,
-                        cls="relative",
+                        Div(
+                            P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
+                            if source_label
+                            else None,
+                            cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end"
+                        ) if source_label else None,
+                        cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
                     ),
-                    P(
-                        "Conflicting face assignment",
-                        cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
-                    )
-                    if context_conflict
-                    else None,
-                    P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
-                    if source_label
-                    else None,
                     href=_person_photo_href(face_photo_id),
-                    cls="flex flex-col items-center group",
+                    cls="flex flex-col group block",
                     title=f"View photo of {display_name}",
                     data_testid="person-gallery-item-conflicted" if context_conflict else None,
                 ),
@@ -556,12 +553,12 @@ def public_person_page(
                 Img(
                     src=companion["crop_url"],
                     alt=companion["name"],
-                    cls="w-12 h-12 rounded-full object-cover border-2 border-slate-700",
+                    cls="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover cursor-pointer group-hover:ring-2 group-hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
                     onerror="this.style.display='none'",
                 )
                 if companion["crop_url"]
                 else Div(
-                    cls="w-12 h-12 rounded-full bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70",
+                    cls="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70 cursor-pointer group-hover:ring-2 group-hover:ring-amber-400 transition-all",
                 )
             )
             companion_cards.append(
@@ -569,11 +566,11 @@ def public_person_page(
                     crop_el,
                     Span(
                         companion["name"],
-                        cls="text-xs text-slate-400 mt-1 text-center truncate max-w-[140px]",
+                        cls="text-[10px] sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
                         title=companion["name"],
                     ),
                     href=f"{nav_prefix}/person/{companion['id']}",
-                    cls="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity",
+                    cls="flex flex-col items-center gap-1 group w-16 sm:w-20",
                     title=f"View {companion['name']}",
                 )
             )
@@ -583,7 +580,7 @@ def public_person_page(
             )
         appears_with_section = Div(
             H3("Often appears with", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
-            Div(*companion_cards, cls="flex flex-wrap gap-4 items-start"),
+            Div(*companion_cards, cls="flex flex-wrap gap-4 sm:gap-6 items-start"),
             cls="mt-10 pt-8 border-t border-slate-800",
         )
 
@@ -853,7 +850,7 @@ def public_person_page(
     gallery_items = face_gallery_items if faces_active else photo_gallery_items
     gallery_count = len(gallery_items)
     gallery_grid_cls = (
-        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4"
+        "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2"
         if faces_active
         else "grid grid-cols-2 sm:grid-cols-3 gap-4"
     )
@@ -875,7 +872,8 @@ def public_person_page(
     else:
         badge = Span(
             "Under Review",
-            cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20",
+            cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 cursor-help",
+            title="This identity is awaiting admin review",
         )
 
     # --- Birth year (Gatekeeper: public sees confirmed only, admin sees ML estimates) ---
@@ -1248,7 +1246,7 @@ def public_person_page(
                         Div(
                             Span(
                                 state,
-                                cls="text-xs px-2 py-0.5 rounded-full font-medium "
+                                cls="text-xs px-2 py-0.5 rounded-full font-medium cursor-help "
                                 + (
                                     "bg-emerald-500/20 text-emerald-400"
                                     if state == "CONFIRMED"
@@ -1256,6 +1254,7 @@ def public_person_page(
                                     if state in ("INBOX", "PROPOSED")
                                     else "bg-slate-500/20 text-slate-400"
                                 ),
+                                title=f"This identity is {state.lower()}",
                             ),
                             A(
                                 "Edit in Admin",
@@ -1741,7 +1740,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                             Img(
                                 src=crop_url,
                                 alt=display_name,
-                                cls="w-full aspect-[1/1] rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                                cls="w-full aspect-square object-cover",
                                 loading="lazy",
                                 onerror="this.style.display='none'",
                             ),
@@ -1752,26 +1751,24 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                             )
                             if context_conflict
                             else None,
-                            cls="relative",
+                            Div(
+                                P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
+                                if source_label
+                                else None,
+                                cls="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent pt-6 pb-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-end"
+                            ) if source_label else None,
+                            cls="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all shadow-sm bg-slate-800",
                         ),
-                        P(
-                            "Conflicting face assignment",
-                            cls="text-[10px] text-rose-300 mt-1 text-center leading-snug",
-                        )
-                        if context_conflict
-                        else None,
-                        P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]")
-                        if source_label
-                        else None,
                         href=_person_photo_href(face_photo_id),
-                        cls="flex flex-col items-center group",
+                        cls="flex flex-col group block",
+                        title=f"View photo of {display_name}",
                         data_testid="person-gallery-item-conflicted" if context_conflict else None,
                     ),
                 }
             )
         face_entries.sort(key=lambda e: e["sort_key"])
         gallery_items = [e["item"] for e in face_entries]
-        grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4"
+        grid_cls = "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2"
     else:
         photo_entries = []
         for entry in ordered_photo_entries:

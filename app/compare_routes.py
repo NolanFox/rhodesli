@@ -404,11 +404,11 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, r
             // Show skeleton loading UI
             area.innerHTML = '<div class="space-y-4">' +
                 '<div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">' +
-                  '<div class="flex items-center gap-3 mb-3"><div class="skeleton-block w-14 h-14 rounded-full"></div><div class="skeleton-block h-4 w-24"></div></div>' +
-                  '<div class="space-y-2"><div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 rounded-full"></div><div class="flex-1"><div class="skeleton-block h-3 w-32 mb-2"></div><div class="skeleton-block h-2 w-full"></div></div></div></div>' +
+                  '<div class="flex items-center gap-3 mb-3"><div class="skeleton-block w-14 h-14 aspect-square rounded-lg"></div><div class="skeleton-block h-4 w-24"></div></div>' +
+                  '<div class="space-y-2"><div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 aspect-square rounded-lg"></div><div class="flex-1"><div class="skeleton-block h-3 w-32 mb-2"></div><div class="skeleton-block h-2 w-full"></div></div></div></div>' +
                 '</div>' +
                 '<div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30 opacity-60" style="animation-delay:100ms">' +
-                  '<div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 rounded-full"></div><div class="flex-1"><div class="skeleton-block h-3 w-28 mb-2"></div><div class="skeleton-block h-2 w-3/4"></div></div></div>' +
+                  '<div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 aspect-square rounded-lg"></div><div class="flex-1"><div class="skeleton-block h-3 w-28 mb-2"></div><div class="skeleton-block h-2 w-3/4"></div></div></div>' +
                 '</div>' +
                 '<p class="text-slate-500 text-xs text-center">Computing comparisons...</p>' +
               '</div>';
@@ -797,8 +797,8 @@ def _compare_result_card(result: dict, crop_files: set, index: int, nav_prefix: 
             "ring": "ring-1 ring-amber-500/20",
         },
         "SIMILAR": {
-            "border": "border-blue-700/30 hover:border-blue-500/30",
-            "badge_cls": "text-blue-400 bg-blue-900/30 border-blue-700/50",
+            "border": "border-indigo-700/30 hover:border-indigo-500/30",
+            "badge_cls": "text-indigo-400 bg-indigo-900/30 border-indigo-700/50",
             "ring": "",
         },
         "WEAK": {
@@ -924,8 +924,8 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "", n
         "SIMILAR": {
             "title": "Similar Faces",
             "subtitle": "Some resemblance — may be related",
-            "icon": "text-blue-400",
-            "border": "border-blue-800/20",
+            "icon": "text-indigo-400",
+            "border": "border-indigo-800/20",
             "testid": "tier-similar",
         },
         "WEAK": {
@@ -1059,9 +1059,9 @@ def _compare_summary_section(
             border_cls = "border-amber-700/50"
             conf_label = "Strong match"
         elif pct >= 50:
-            badge_bg = "bg-blue-600"
+            badge_bg = "bg-indigo-600"
             badge_text = "text-white"
-            border_cls = "border-blue-700/50"
+            border_cls = "border-indigo-700/50"
             conf_label = "Possible match"
         else:
             badge_bg = "bg-slate-600"
@@ -1407,8 +1407,8 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None, request=
                 bar_color = "bg-amber-500"
                 label_color = "text-amber-400"
             elif m_pct >= 50:
-                bar_color = "bg-blue-500"
-                label_color = "text-blue-400"
+                bar_color = "bg-indigo-500"
+                label_color = "text-indigo-400"
             else:
                 bar_color = "bg-slate-600"
                 label_color = "text-slate-400"
@@ -1900,7 +1900,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         hx_trigger="every 2s",
         hx_swap="outerHTML",
         id=result_id,
-        cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
+        cls="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-lg",
         data_testid="compare-processing",
     )
 
@@ -2012,7 +2012,7 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None, request=None)
             hx_trigger="every 2s",
             hx_swap="outerHTML",
             id=result_id,
-            cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-center gap-2",
+            cls="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-lg flex items-center gap-2",
         )
 
     with open(status_path) as f:
@@ -2062,7 +2062,7 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None, request=None)
             hx_trigger="every 2s",
             hx_swap="outerHTML",
             id=result_id,
-            cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
+            cls="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-lg",
         )
 
     # SUCCESS — ingest complete, build comparison results
@@ -2116,9 +2116,9 @@ def get(q: str = "", job_id: str = "", sess=None):
         cards.append(
             Button(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                    Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
                     if crop_url
-                    else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                     Div(
                         Span(name, cls="text-sm text-white font-medium"),
                         state_badge if state_badge else None,
@@ -2306,11 +2306,11 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
                 A(
                     Img(
                         src=ref_crop_url,
-                        cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                        cls="w-24 h-24 aspect-square rounded-lg object-cover border-2 border-indigo-500 mx-auto",
                         alt=ref_name,
                     )
                     if ref_crop_url
-                    else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                    else Div(cls="w-24 h-24 aspect-square rounded-lg bg-slate-700 mx-auto"),
                     href=ref_person_link,
                 ),
                 P(
@@ -2345,9 +2345,9 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
             label_color = "text-amber-400"
             border_color = "border-amber-700/50"
         elif pct >= 50:
-            bar_color = "bg-blue-500"
-            label_color = "text-blue-400"
-            border_color = "border-blue-700/50"
+            bar_color = "bg-indigo-500"
+            label_color = "text-indigo-400"
+            border_color = "border-indigo-700/50"
         else:
             bar_color = "bg-slate-600"
             label_color = "text-slate-400"
@@ -2393,9 +2393,9 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
                 Div(
                     # Face crop
                     A(
-                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600", alt=fname)
+                        Img(src=crop_url, cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600", alt=fname)
                         if crop_url
-                        else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                        else Div(cls="w-14 h-14 aspect-square rounded-lg bg-slate-700"),
                         href=person_link,
                     ),
                     # Score info
@@ -2601,7 +2601,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             crop_url = _resolve_crop_url(fid, crop_files)
             if crop_url:
                 face_thumbs.append(
-                    Img(src=crop_url, cls="w-12 h-12 rounded-full object-cover border border-slate-600", alt="Face")
+                    Img(src=crop_url, cls="w-12 h-12 aspect-square rounded-lg object-cover border border-slate-600", alt="Face")
                 )
         if face_thumbs:
             parts.append(Div(*face_thumbs, cls="flex gap-2 justify-center mb-4"))
@@ -2729,11 +2729,11 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
                 A(
                     Img(
                         src=ref_crop_url,
-                        cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                        cls="w-24 h-24 aspect-square rounded-lg object-cover border-2 border-indigo-500 mx-auto",
                         alt=ref_name,
                     )
                     if ref_crop_url
-                    else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                    else Div(cls="w-24 h-24 aspect-square rounded-lg bg-slate-700 mx-auto"),
                     href=ref_person_link,
                 ),
                 P(
@@ -2763,7 +2763,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
         elif pct >= 70:
             bar_color, label_color, border_color = "bg-amber-500", "text-amber-400", "border-amber-700/50"
         elif pct >= 50:
-            bar_color, label_color, border_color = "bg-blue-500", "text-blue-400", "border-blue-700/50"
+            bar_color, label_color, border_color = "bg-indigo-500", "text-indigo-400", "border-indigo-700/50"
         else:
             bar_color, label_color, border_color = "bg-slate-600", "text-slate-400", "border-slate-700/50"
 
@@ -2804,9 +2804,9 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             Div(
                 Div(
                     A(
-                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600", alt=fname)
+                        Img(src=crop_url, cls="w-14 h-14 aspect-square rounded-lg object-cover border border-slate-600", alt=fname)
                         if crop_url
-                        else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                        else Div(cls="w-14 h-14 aspect-square rounded-lg bg-slate-700"),
                         href=person_link_face,
                     ),
                     Div(
@@ -2961,9 +2961,9 @@ def get(q: str = "", photo_id: str = "", sess=None, request=None):
         cards.append(
             A(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                    Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
                     if crop_url
-                    else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                     Div(
                         Span(name, cls="text-sm text-white font-medium"),
                         state_badge if state_badge else None,
@@ -3502,7 +3502,7 @@ def get(result_id: str, sess=None, request=None):
         elif hero_match_pct >= 70:
             badge_cls = "bg-amber-600 text-white"
         elif hero_match_pct >= 50:
-            badge_cls = "bg-blue-600 text-white"
+            badge_cls = "bg-indigo-600 text-white"
         else:
             badge_cls = "bg-slate-600 text-slate-200"
 
@@ -3626,8 +3626,8 @@ def get(result_id: str, sess=None, request=None):
             bar_color = "bg-amber-500"
         elif pct >= 50:
             label = "Possible match -- worth a look"
-            color = "text-blue-400"
-            bar_color = "bg-blue-500"
+            color = "text-indigo-400"
+            bar_color = "bg-indigo-500"
         else:
             label = "Some similarity"
             color = "text-slate-400"
@@ -4369,7 +4369,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
 
     _tier_ui = {
         "STRONG MATCH": ("Very Likely Match", "text-green-400 border-green-500/30 bg-green-900/20", "bg-green-500"),
-        "POSSIBLE MATCH": ("Strong Match", "text-blue-400 border-blue-500/30 bg-blue-900/20", "bg-blue-500"),
+        "POSSIBLE MATCH": ("Strong Match", "text-indigo-400 border-indigo-500/30 bg-indigo-900/20", "bg-indigo-500"),
         "SIMILAR": ("Possible Match", "text-amber-400 border-amber-500/30 bg-amber-900/20", "bg-amber-500"),
         "WEAK": ("Unlikely Match", "text-slate-400 border-slate-500/30 bg-slate-800", "bg-slate-500"),
     }
@@ -4484,7 +4484,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             H3("Comparison Result", cls="text-lg font-serif text-white mb-4 text-center"),
             Div(
                 Div(
-                    Img(src=crop_a_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-slate-600"),
+                    Img(src=crop_a_url, cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600"),
                     P("Photo A", cls="text-xs text-slate-400 mt-2"),
                     cls="flex flex-col items-center",
                 ),
@@ -4494,7 +4494,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                     cls="flex flex-col items-center justify-center px-6",
                 ),
                 Div(
-                    Img(src=crop_b_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-slate-600"),
+                    Img(src=crop_b_url, cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600"),
                     P("Photo B", cls="text-xs text-slate-400 mt-2"),
                     cls="flex flex-col items-center",
                 ),
@@ -4943,8 +4943,8 @@ def post(
                 label_color = "text-amber-400"
                 bar_glow = "bar-glow-amber"
             elif pct >= 50:
-                bar_color = "bg-blue-500"
-                label_color = "text-blue-400"
+                bar_color = "bg-indigo-500"
+                label_color = "text-indigo-400"
                 bar_glow = "bar-glow-blue"
             else:
                 bar_color = "bg-slate-600"
@@ -5257,9 +5257,9 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
                 results_html.append(
                     Div(
-                        Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                        Img(src=crop_url, cls="w-10 h-10 aspect-square rounded-lg object-cover border border-slate-600", alt=name)
                         if crop_url
-                        else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                        else Div(cls="w-10 h-10 aspect-square rounded-lg bg-slate-700"),
                         Div(
                             Span(ensure_utf8_display(name), cls="text-sm text-white font-medium truncate block"),
                             Div(
@@ -5717,7 +5717,7 @@ def get(
         )
         m_btn = Button(
             "Merge",
-            cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+            cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
             hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}",
             hx_target=f"#identity-{target_id}",
             hx_swap="outerHTML",

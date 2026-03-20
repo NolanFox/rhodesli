@@ -794,13 +794,13 @@ def get(sort_by: str = "name", sess=None, request=None):
             Img(
                 src=crop_url,
                 alt=name,
-                cls="w-24 h-24 rounded-full object-cover border-3 border-emerald-500/30",
+                cls="w-24 h-24 aspect-square rounded-lg object-cover border-3 border-emerald-500/30",
                 onerror="this.style.display='none'",
             )
             if crop_url
             else Div(
                 Span(name[0].upper() if name else "?", cls="text-2xl font-serif text-slate-400"),
-                cls="w-24 h-24 rounded-full bg-slate-800 border-3 border-slate-700 flex items-center justify-center",
+                cls="w-24 h-24 aspect-square rounded-lg bg-slate-800 border-3 border-slate-700 flex items-center justify-center",
             )
         )
 
@@ -1350,7 +1350,7 @@ def get(identity_id: str, sess=None, request=None):
         if dist < 0.80:
             return ("Very High", "bg-emerald-600 text-white")
         elif dist < 1.05:
-            return ("High", "bg-blue-600 text-white")
+            return ("High", "bg-indigo-600 text-white")
         elif dist < 1.15:
             return ("Moderate", "bg-amber-500 text-white")
         elif dist < 1.30:
@@ -1393,7 +1393,7 @@ def get(identity_id: str, sess=None, request=None):
                 tile_actions.append(
                     Button(
                         "Merge",
-                        cls="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
+                        cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
                         hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}",
                         hx_target=f"#expand-{css_id}",
                         hx_swap="innerHTML",
@@ -1844,7 +1844,7 @@ def get(slug: str, sess=None, request=None):
                         href=f"{nav_prefix}/help",
                         cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4",
                     ),
-                    cls="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",
+                    cls="bg-indigo-900/20 border border-indigo-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",
                     data_testid="help-identify-banner",
                 )
                 if col["unidentified_count"] > 0

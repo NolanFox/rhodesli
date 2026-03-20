@@ -565,7 +565,7 @@ def _community_landing_page(community: dict, slug: str):
                 ),
                 Div(
                     A(
-                        "Help Identify Faces",
+                        "Do you recognize anyone?",
                         href=f"{nav_prefix}/help",
                         cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95",
                     ),
@@ -690,7 +690,7 @@ def _platform_root_page(auth_enabled: bool = False):
                         cls="inline-flex items-center justify-center px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
                     ),
                     A(
-                        "Help Identify",
+                        "Do you recognize anyone?",
                         href=help_href,
                         cls="inline-flex items-center justify-center px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg border border-slate-700 font-medium transition-colors",
                     ),
@@ -934,7 +934,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
         A("Compare", href="/tools/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
         A(
-            "Help Identify",
+            "Recognize Anyone?",
             href=f"{nav_prefix}/help",
             cls="text-amber-400 hover:text-amber-300 font-serif font-medium text-sm md:text-base transition-colors border border-amber-800/50 hover:bg-amber-900/20 px-3 py-1 rounded-sm ml-2",
         ),
@@ -1406,7 +1406,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                             # CTA buttons
                             Div(
                                 A("Start Exploring", href="/photos", cls="btn-ui99-primary"),
-                                A("Help Identify", href="/help", cls="btn-ui99-secondary"),
+                                A("Do you recognize anyone?", href="/help", cls="btn-ui99-secondary"),
                                 cls="mt-10 flex flex-wrap gap-5 justify-center",
                             ),
                             cls="text-center animate-fade-in-up",
@@ -1526,9 +1526,9 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     Div(
                         A(
                             Div(
-                                Div("Help Identify Someone", cls="text-lg font-semibold font-serif"),
+                                Div("Do you recognize anyone?", cls="text-lg font-semibold font-serif"),
                                 P(
-                                    "Recognize someone in these photos? Your knowledge preserves irreplaceable history.",
+                                    "Your knowledge preserves irreplaceable history.",
                                     cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
                                 ),
                                 cls="text-center",
@@ -1680,7 +1680,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     if mystery_faces
                     else None,
                     Div(
-                        A("Help Identify People", href="/help", cls="btn-ui99-primary mt-8 inline-block"),
+                        A("Do you recognize anyone?", href="/help", cls="btn-ui99-primary mt-8 inline-block"),
                         A(
                             f"See all {stats['needs_help']} →",
                             href="/help",
@@ -7975,7 +7975,7 @@ def get(slug: str, sess=None, request=None):
                         cls="text-sm text-slate-300",
                     ),
                     A(
-                        "Help Identify →",
+                        "Do you recognize anyone? →",
                         href=f"{nav_prefix}/help",
                         cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4",
                     ),
@@ -11737,7 +11737,7 @@ def public_photo_page(
             card_title = f"View {fi['display_name']}'s page"
         elif fi["identity_id"]:
             card_href = f"{nav_prefix}/identify/{fi['identity_id']}"
-            card_title = "Help identify this person"
+            card_title = "Do you recognize this person?"
         else:
             card_href = None
             card_title = None
@@ -12772,7 +12772,7 @@ def public_photo_page(
                     ),
                     Div(
                         A(
-                            "I Can Help Identify",
+                            "Do you recognize anyone?",
                             href=(
                                 f"{nav_prefix}/identify/{first_unidentified_id}"
                                 if first_unidentified_id

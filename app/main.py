@@ -3606,29 +3606,70 @@ async def _notify_admin_upload(uploader_email: str, job_id: str, file_count: int
 # FACE DATA & PHOTO REGISTRY LOADERS
 # =============================================================================
 
+# Unified embeddings cache — loads embeddings.npy ONCE, derives all views.
+# Session 125 PERF #6: Previously parsed 3 separate times.
+_raw_embeddings_cache = None  # list[dict] from np.load
 _face_data_cache = None
 _photo_registry_cache = None
+
+
+def _load_raw_embeddings() -> list:
+    """Load raw embeddings list from disk, with caching.
+
+    Session 125 PERF #6: Single np.load for all consumers.
+    """
+    global _raw_embeddings_cache
+    if _raw_embeddings_cache is not None:
+        return _raw_embeddings_cache
+
+    embeddings_path = data_path / "embeddings.npy"
+    if not embeddings_path.exists():
+        _raw_embeddings_cache = []
+        return _raw_embeddings_cache
+
+    _raw_embeddings_cache = list(np.load(embeddings_path, allow_pickle=True))
+    return _raw_embeddings_cache
 
 
 def load_face_embeddings() -> dict[str, dict]:
     """
     Load face embeddings as face_id -> {mu, sigma_sq} dict.
 
-    Returns:
-        Dict mapping face_id to {"mu": np.ndarray, "sigma_sq": np.ndarray}
-
-    # TODO: Embeddings remain on disk (embeddings.npy) even when DATA_SOURCE=postgres.
-    # NumPy arrays are not efficiently stored in Postgres. Future options:
-    # - pgvector extension for embedding storage + similarity search
-    # - Keep .npy on disk as performance-optimized cache
-    # - R2 backup of embeddings.npy (PRD-027 Phase A)
+    Session 125: Uses unified raw embeddings cache instead of separate np.load.
     """
-    from core.embeddings_io import load_face_data
+    from core.embeddings_io import _extract_face_vectors, generate_face_id
 
-    embeddings_path = data_path / "embeddings.npy"
-    if not embeddings_path.exists():
+    raw = _load_raw_embeddings()
+    if not raw:
         return {}
-    return load_face_data(embeddings_path)
+
+    face_data = {}
+    filename_face_counts = {}
+
+    for entry in raw:
+        filename = entry.get("filename")
+        if not filename:
+            continue
+
+        face_index = filename_face_counts.get(filename, 0)
+        filename_face_counts[filename] = face_index + 1
+
+        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
+        mu, sigma_sq = _extract_face_vectors(entry)
+        if mu is None or sigma_sq is None:
+            continue
+
+        face_data[face_id] = {
+            "mu": mu,
+            "sigma_sq": sigma_sq,
+            "bbox": entry.get("bbox"),
+            "det_score": entry.get("det_score"),
+            "quality": entry.get("quality"),
+            "filename": filename,
+            "filepath": entry.get("filepath"),
+        }
+
+    return face_data
 
 
 def get_face_data() -> dict[str, dict]:
@@ -3738,23 +3779,23 @@ def load_embeddings_for_photos():
     """
     Load embeddings and build photo metadata cache.
 
+    Session 125: Uses unified raw embeddings cache instead of separate np.load.
+
     Returns:
         dict mapping photo_id -> {
             "filename": str,
             "faces": list of {face_id, bbox, face_index}
         }
     """
-    embeddings_path = data_path / "embeddings.npy"
-    if not embeddings_path.exists():
+    raw = _load_raw_embeddings()
+    if not raw:
         return {}
-
-    embeddings = np.load(embeddings_path, allow_pickle=True)
 
     # Group faces by photo_id
     photos = {}
     filename_face_counts = {}
 
-    for entry in embeddings:
+    for entry in raw:
         filename = entry["filename"]
 
         # Track face index per filename
@@ -4004,8 +4045,8 @@ def _invalidate_all_caches():
     global _date_labels_cache, _photo_locations_cache
     global _registry_cache, _registry_cache_ts, _registry_cache_key, _photo_registry_cache
     global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
-    global _face_data_cache
-    global _photo_dimensions_cache
+    global _face_data_cache, _raw_embeddings_cache
+    global _photo_dimensions_cache, _crop_files_cache
     _photo_cache = None
     _face_to_photo_cache = None
     _photo_id_aliases = None
@@ -4016,7 +4057,9 @@ def _invalidate_all_caches():
     _registry_cache_key = None
     _photo_registry_cache = None
     _face_data_cache = None
+    _raw_embeddings_cache = None
     _photo_dimensions_cache = None
+    _crop_files_cache = None
     _community_photo_ids_cache = {}
     _community_identity_ids_cache = {}
     _community_ids_cache_ts = 0.0
@@ -4595,18 +4638,16 @@ def get_crop_files():
             _crop_files_cache = crop_files
             return _crop_files_cache
 
-    # R2 mode or no local crops: build from embeddings
-    # The embeddings have: filename, quality, and we compute face_index
-    # by tracking order of faces within each unique filename
+    # R2 mode or no local crops: build from unified embeddings cache
+    # Session 125 PERF #6: Uses shared cache instead of separate np.load
     crop_files = set()
 
-    embeddings_path = Path(DATA_DIR) / "embeddings.npy"
-    if embeddings_path.exists():
+    raw = _load_raw_embeddings()
+    if raw:
         try:
-            embeddings = np.load(embeddings_path, allow_pickle=True)
             filename_face_counts = {}
 
-            for entry in embeddings:
+            for entry in raw:
                 if not isinstance(entry, dict):
                     continue
 

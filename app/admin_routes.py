@@ -578,7 +578,7 @@ def get(request, sess=None):
             # Pending items (contributor uploads) show approve/reject buttons
             if is_staged:
                 actions = Div(
-                    Span("Staged", cls="px-2 py-1 bg-blue-600/30 text-blue-300 text-xs font-bold rounded uppercase"),
+                    Span("Staged", cls="px-2 py-1 bg-indigo-600/30 text-indigo-300 text-xs font-bold rounded uppercase"),
                     Button(
                         "Mark Processed",
                         hx_post=f"/admin/pending/{job_id}/mark-processed",
@@ -1919,7 +1919,7 @@ def _stat_card(label: str, value: str, color: str) -> Div:
     color_map = {
         "emerald": "border-emerald-500 text-emerald-400",
         "amber": "border-amber-500 text-amber-400",
-        "blue": "border-blue-500 text-blue-400",
+        "blue": "border-indigo-500 text-indigo-400",
         "red": "border-red-500 text-red-400",
         "slate": "border-slate-500 text-slate-300",
         "indigo": "border-indigo-500 text-indigo-400",
@@ -2152,7 +2152,7 @@ def get(request, sess=None):
                                 hx_post=f"/admin/approvals/{ann_id}/approve",
                                 hx_target=f"#annotation-{ann_id}",
                                 hx_swap="outerHTML",
-                                cls="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-500",
+                                cls="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-500",
                             ),
                             Button(
                                 "Compare",
