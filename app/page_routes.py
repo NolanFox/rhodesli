@@ -1518,6 +1518,59 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                 id="stats",
                 cls="py-12 md:py-16 px-4 md:px-6",
             ),
+            # Get Involved CTAs — prominent action buttons for visitors
+            Section(
+                Div(
+                    Div(cls="ornament mb-6"),
+                    H2("Get Involved", cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-8"),
+                    Div(
+                        A(
+                            Div(
+                                Div("Help Identify Someone", cls="text-lg font-semibold font-serif"),
+                                P(
+                                    "Recognize someone in these photos? Your knowledge preserves irreplaceable history.",
+                                    cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
+                                ),
+                                cls="text-center",
+                            ),
+                            href=f"{nav_prefix}/help",
+                            cls="block px-8 py-6 bg-gradient-to-br from-amber-700/40 to-amber-900/30 hover:from-amber-700/60 hover:to-amber-800/40 text-amber-50 rounded-xl text-center transition-all duration-300 border border-amber-700/30 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20 hover:-translate-y-0.5",
+                            data_testid="cta-help-identify",
+                        ),
+                        A(
+                            Div(
+                                Div("Compare a Face", cls="text-lg font-semibold font-serif"),
+                                P(
+                                    "Upload a photo and let AI find matches across the archive.",
+                                    cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
+                                ),
+                                cls="text-center",
+                            ),
+                            href="/tools/compare",
+                            cls="block px-8 py-6 bg-gradient-to-br from-amber-700/40 to-amber-900/30 hover:from-amber-700/60 hover:to-amber-800/40 text-amber-50 rounded-xl text-center transition-all duration-300 border border-amber-700/30 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20 hover:-translate-y-0.5",
+                            data_testid="cta-compare-face",
+                        ),
+                        A(
+                            Div(
+                                Div("Explore the Archive", cls="text-lg font-semibold font-serif"),
+                                P(
+                                    "Browse photos, people, and collections from over nine decades.",
+                                    cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
+                                ),
+                                cls="text-center",
+                            ),
+                            href=f"{nav_prefix}/people",
+                            cls="block px-8 py-6 bg-gradient-to-br from-amber-700/40 to-amber-900/30 hover:from-amber-700/60 hover:to-amber-800/40 text-amber-50 rounded-xl text-center transition-all duration-300 border border-amber-700/30 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20 hover:-translate-y-0.5",
+                            data_testid="cta-explore-archive",
+                        ),
+                        cls="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto",
+                    ),
+                    cls="max-w-5xl mx-auto",
+                    data_testid="visitor-cta-section",
+                ),
+                id="get-involved",
+                cls="py-12 md:py-16 px-4 md:px-6 bg-gradient-to-b from-transparent via-amber-900/8 to-transparent",
+            ),
             # Feature entry points — clear paths to explore the archive
             Section(
                 Div(
