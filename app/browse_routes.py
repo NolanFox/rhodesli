@@ -758,10 +758,21 @@ def get(sort_by: str = "name", sess=None, request=None):
         if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
     ]
 
+    # Count awaiting identification (non-confirmed, non-merged)
+    all_identities = registry.list_identities()
+    awaiting_count = len([i for i in all_identities if i.get("state") != "CONFIRMED" and not i.get("merged_into")])
+
     # Filter by community if available
     community_ids = _main_mod._get_community_identity_ids(community)
     if community_ids is not None:
         confirmed = [i for i in confirmed if i["identity_id"] in community_ids]
+        awaiting_count = len(
+            [
+                i
+                for i in all_identities
+                if i.get("state") != "CONFIRMED" and not i.get("merged_into") and i["identity_id"] in community_ids
+            ]
+        )
 
     # Sort
     if sort_by == "photos":
@@ -851,7 +862,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                         H1("People", cls="text-3xl font-serif font-bold text-white mb-2"),
                         _main_mod.share_button(
                             url=f"{nav_prefix}/people",
-                            style="link",
+                            style="button",
                             label="Share",
                             title="People — Rhodesli",
                             text="Browse identified people in the Rhodes heritage archive",
@@ -860,6 +871,12 @@ def get(sort_by: str = "name", sess=None, request=None):
                     ),
                     P(
                         f"{len(confirmed)} identified {'person' if len(confirmed) == 1 else 'people'} in the archive",
+                        Span(
+                            f" \u00b7 {awaiting_count} awaiting identification",
+                            cls="text-slate-500",
+                        )
+                        if awaiting_count > 0
+                        else "",
                         cls="text-slate-400 text-sm",
                     ),
                     cls="max-w-6xl mx-auto px-6 pt-10 pb-6",
