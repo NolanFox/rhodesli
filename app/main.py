@@ -1225,10 +1225,55 @@ async def custom_404_handler(request, exc):
 REGISTRY_PATH = data_path / "identities.json"
 
 # Registry TTL cache — avoids reloading 2500+ identities from Supabase on every request
+import threading as _registry_threading
+
 _registry_cache = None
 _registry_cache_ts: float = 0.0
 _registry_cache_key: tuple[str, str] | None = None
 _REGISTRY_CACHE_TTL: float = 120.0
+# Session 125 PERF #1: SWR — serve stale, refresh in background
+_registry_refresh_lock = _registry_threading.Lock()
+
+
+def _background_registry_refresh(cache_key):
+    """Refresh registry cache in background thread (SWR pattern).
+
+    Session 125 PERF #1: Stale-while-revalidate — requests never block on
+    Supabase reload. Only one thread refreshes at a time.
+    """
+    global _registry_cache, _registry_cache_ts, _registry_cache_key
+    import time as _time
+
+    if not _registry_refresh_lock.acquire(blocking=False):
+        # Another thread is already refreshing — skip
+        return
+
+    try:
+        if DATA_SOURCE == "postgres":
+            registry = IdentityRegistry.load_from_postgres()
+            if registry is not None:
+                _registry_cache = registry
+                _registry_cache_ts = _time.time()
+                _registry_cache_key = cache_key
+                logging.debug(
+                    "registry_swr_refresh_complete source=postgres count=%d",
+                    len(registry._identities),
+                )
+            else:
+                logging.warning("registry_swr_refresh_failed: Supabase returned None")
+        else:
+            if REGISTRY_PATH.exists():
+                try:
+                    registry = IdentityRegistry.load(REGISTRY_PATH)
+                    _registry_cache = registry
+                    _registry_cache_ts = _time.time()
+                    _registry_cache_key = cache_key
+                except (ValueError, OSError) as e:
+                    logging.warning(f"registry_swr_refresh_failed: {e}")
+    except Exception as e:
+        logging.warning(f"registry_swr_refresh_error: {e}")
+    finally:
+        _registry_refresh_lock.release()
 
 
 def load_registry():
@@ -1240,7 +1285,10 @@ def load_registry():
 
     When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
 
-    Uses a 120-second TTL cache to avoid repeated Supabase queries.
+    Uses a 120-second TTL cache with stale-while-revalidate (Session 125 PERF #1):
+    - Fresh (within TTL): return cached immediately
+    - Stale (TTL expired, cache exists): return stale, refresh in background
+    - Cold start (no cache): block on load (unavoidable)
 
     PRD-051 Phase 1 (Session 112): Supabase is the single source of truth.
     """
@@ -1249,6 +1297,8 @@ def load_registry():
 
     now = _time.time()
     cache_key = (DATA_SOURCE, str(REGISTRY_PATH))
+
+    # Fresh cache — return immediately
     if (
         _registry_cache is not None
         and _registry_cache_key == cache_key
@@ -1257,10 +1307,19 @@ def load_registry():
         logging.debug("registry_cache_hit ttl_remaining=%.1fs", _REGISTRY_CACHE_TTL - (now - _registry_cache_ts))
         return _registry_cache
 
+    # Stale cache — return stale, refresh in background (SWR)
+    if _registry_cache is not None and _registry_cache_key == cache_key:
+        logging.debug("registry_swr_stale age=%.1fs", now - _registry_cache_ts)
+        _registry_threading.Thread(
+            target=_background_registry_refresh,
+            args=(cache_key,),
+            daemon=True,
+        ).start()
+        return _registry_cache
+
+    # Cold start — must block
     logging.debug("registry_cache_miss source=%s", DATA_SOURCE)
     if DATA_SOURCE == "postgres":
-        # PRD-051: Supabase is the ONLY source. No JSON fallback.
-        # If Supabase fails, let the error propagate (500 page is better than 0 identities).
         registry = IdentityRegistry.load_from_postgres()
         if registry is None:
             raise RuntimeError(
@@ -3945,7 +4004,7 @@ def _invalidate_all_caches():
     """
     global _photo_cache, _face_to_photo_cache, _photo_id_aliases
     global _date_labels_cache, _photo_locations_cache
-    global _registry_cache, _photo_registry_cache
+    global _registry_cache, _registry_cache_ts, _registry_cache_key, _photo_registry_cache
     global _community_photo_ids_cache, _community_identity_ids_cache, _community_ids_cache_ts
     global _face_data_cache
     global _photo_dimensions_cache
@@ -3955,6 +4014,8 @@ def _invalidate_all_caches():
     _date_labels_cache = None
     _photo_locations_cache = None
     _registry_cache = None
+    _registry_cache_ts = 0.0
+    _registry_cache_key = None
     _photo_registry_cache = None
     _face_data_cache = None
     _photo_dimensions_cache = None
