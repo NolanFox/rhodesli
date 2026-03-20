@@ -831,7 +831,7 @@ async def post(
             A(
                 "View in Pending Uploads \u2192",
                 href="/admin/pending",
-                cls="inline-block text-blue-400 hover:text-blue-300 text-sm mt-2 underline",
+                cls="inline-block text-indigo-400 hover:text-indigo-300 text-sm mt-2 underline",
             ),
             P(f"Reference: {job_id}", cls="text-slate-500 text-xs mt-2 font-mono"),
             cls="p-3 bg-green-900/20 border border-green-500/30 rounded",
@@ -1344,7 +1344,7 @@ async def post(
         hx_get=f"/upload/status/{job_id}",
         hx_trigger="every 2s",
         hx_swap="outerHTML",
-        cls="p-2 bg-blue-900/30 border border-blue-500/30 rounded flex items-center gap-2",
+        cls="p-2 bg-indigo-900/30 border border-indigo-500/30 rounded flex items-center gap-2",
     )
 
 
@@ -1370,7 +1370,7 @@ def get(job_id: str, request=None):
             hx_get=f"/upload/status/{job_id}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            cls="p-2 bg-blue-900/30 border border-blue-500/30 rounded flex items-center gap-2",
+            cls="p-2 bg-indigo-900/30 border border-indigo-500/30 rounded flex items-center gap-2",
         )
 
     with open(status_path) as f:
@@ -1425,7 +1425,7 @@ def get(job_id: str, request=None):
             hx_get=f"/upload/status/{job_id}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            cls="p-2 bg-blue-900/30 border border-blue-500/30 rounded flex items-center gap-2",
+            cls="p-2 bg-indigo-900/30 border border-indigo-500/30 rounded flex items-center gap-2",
         )
 
     if status["status"] == "processing":
@@ -1487,7 +1487,7 @@ def get(job_id: str, request=None):
                 P(progress_text, cls="text-slate-300 text-sm"),
                 # Real progress bar based on actual completion
                 Div(
-                    Div(cls="h-1 bg-blue-500 rounded", style=f"width: {pct}%"),
+                    Div(cls="h-1 bg-indigo-500 rounded", style=f"width: {pct}%"),
                     cls="w-full bg-slate-700 rounded h-1 mt-1",
                 ),
             ]
@@ -1506,7 +1506,7 @@ def get(job_id: str, request=None):
             hx_get=f"/upload/status/{job_id}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            cls="p-2 bg-blue-900/30 border border-blue-500/30 rounded",
+            cls="p-2 bg-indigo-900/30 border border-indigo-500/30 rounded",
         )
 
     if status["status"] == "error":

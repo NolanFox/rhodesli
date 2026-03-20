@@ -784,7 +784,8 @@ def get(identity_id: str, request=None):
             face_url = _main_mod.resolve_face_image_url(fid, crop_files)
             if face_url:
                 thumb = Img(
-                    src=face_url, cls="w-10 h-10 aspect-square rounded-lg object-cover flex-shrink-0 border border-slate-600"
+                    src=face_url,
+                    cls="w-10 h-10 aspect-square rounded-lg object-cover flex-shrink-0 border border-slate-600",
                 )
                 break
 
@@ -2785,7 +2786,7 @@ def get(identity_id: str, request=None):
             name="name",
             value=current_name,
             placeholder="Enter name...",
-            cls="border border-slate-600 bg-slate-700 text-slate-200 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-400",
+            cls="border border-slate-600 bg-slate-700 text-slate-200 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-400",
             autofocus=True,
         ),
         Button(

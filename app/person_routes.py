@@ -683,7 +683,9 @@ def public_person_page(
                 elif edge_type == "photographed_with":
                     photo_ct = conn.get("photo_count", 0)
                     photo_label = f"{photo_ct} shared photo{'s' if photo_ct != 1 else ''}" if photo_ct else "Photos"
-                    badge = Span(photo_label, cls="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-400 ml-2")
+                    badge = Span(
+                        photo_label, cls="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-400 ml-2"
+                    )
                 else:
                     steps = conn.get("path_length", 0)
                     badge = Span(
@@ -1429,7 +1431,7 @@ def public_person_page(
                                 hx_get=f"/api/identity/{person_id}/search-merge",
                                 hx_trigger="keyup changed delay:300ms",
                                 hx_target=f"#merge-search-results-{person_id}",
-                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-blue-400 focus:outline-none",
+                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
                             ),
                             Div(id=f"merge-search-results-{person_id}"),
                             cls="flex flex-col items-center gap-1 mb-3",

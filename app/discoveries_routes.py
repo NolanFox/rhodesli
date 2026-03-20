@@ -61,8 +61,8 @@ def confidence_tier_style(distance: float) -> tuple[str, str]:
         )
     elif distance < 1.00:
         return (
-            "bg-blue-500/20 text-blue-400 border-blue-500/30",
-            "ring-2 ring-blue-400/50",
+            "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+            "ring-2 ring-indigo-400/50",
         )
     elif distance < 1.20:
         return (
@@ -230,7 +230,7 @@ def get(sess=None, request=None):
                             else None,
                             Span(
                                 f"{tier_2_count} suggestion{'s' if tier_2_count != 1 else ''}",
-                                cls="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30",
+                                cls="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30",
                             )
                             if tier_2_count > 0
                             else None,
@@ -541,19 +541,19 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
                                 NotStr(
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
                                 ),
-                                cls="text-blue-400",
+                                cls="text-indigo-400",
                             ),
-                            H3("Suggested Matches", cls="text-lg font-semibold text-blue-400"),
+                            H3("Suggested Matches", cls="text-lg font-semibold text-indigo-400"),
                             cls="flex items-center gap-2",
                         ),
                         P(
                             f"{len(tier_2_cards)} potential match{'es' if len(tier_2_cards) != 1 else ''} — newest first",
                             cls="text-xs text-slate-400 mt-1",
                         ),
-                        cls="mb-3 pb-3 border-b border-blue-500/20",
+                        cls="mb-3 pb-3 border-b border-indigo-500/20",
                     ),
                     Div(*tier_2_cards, cls="space-y-3"),
-                    cls="mb-8 p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl",
+                    cls="mb-8 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl",
                     data_testid="section-suggested-matches",
                 )
             )
@@ -743,7 +743,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                             A(
                                 co_name,
                                 href=f"{nav_prefix}/person/{co_id}",
-                                cls=f"text-xs {state_color} hover:text-blue-300",
+                                cls=f"text-xs {state_color} hover:text-indigo-300",
                             )
                         )
                     context_parts.append(
@@ -757,7 +757,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     A(
                         "View photo",
                         href=f"{nav_prefix}/photo/{photo_id}",
-                        cls="text-xs text-blue-400 hover:text-blue-300 underline",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                         data_testid="discovery-photo-link",
                     )
                 )
@@ -888,7 +888,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
         )
 
     # Tier indicator border
-    tier_border = "border-l-2 border-l-emerald-500" if tier == 1 else "border-l-2 border-l-blue-500"
+    tier_border = "border-l-2 border-l-emerald-500" if tier == 1 else "border-l-2 border-l-indigo-500"
 
     # Compare link — opens compare workspace with source and target pre-filled
     compare_link = A(
@@ -906,7 +906,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
         ),
         Span("Compare"),
         href=f"{nav_prefix}/compare?face_id={face_id_encoded}&person_id={target_id}",
-        cls="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-300 transition-colors",
+        cls="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-300 transition-colors",
         title="Compare side-by-side",
         data_testid="discovery-compare-link",
     )
@@ -928,7 +928,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     A(
                         source_name,
                         href=f"{nav_prefix}/person/{source_id}",
-                        cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                        cls="text-sm font-medium text-white hover:text-indigo-300 truncate max-w-[200px] block",
                         title=source_name,
                         data_testid="discovery-source-name-link",
                     ),
@@ -973,7 +973,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     A(
                         target_name,
                         href=f"{nav_prefix}/person/{target_id}",
-                        cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                        cls="text-sm font-medium text-white hover:text-indigo-300 truncate max-w-[200px] block",
                         title=target_name,
                         data_testid="discovery-target-name-link",
                     ),

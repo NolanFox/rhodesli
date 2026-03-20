@@ -95,7 +95,7 @@ def _confidence_badge(distance):
     if distance < 0.85:
         label, color = "Very High", "bg-emerald-600 text-white"
     elif distance < 0.95:
-        label, color = "High", "bg-blue-600 text-white"
+        label, color = "High", "bg-indigo-600 text-white"
     elif distance < 1.05:
         label, color = "Medium", "bg-yellow-600 text-black"
     else:
@@ -309,7 +309,7 @@ def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
             A(
                 "View photo",
                 href=f"{nav_prefix}/photo/{photo_id}" if photo_id else "#",
-                cls="text-xs text-blue-400 hover:text-blue-300 underline",
+                cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
                 target="_blank",
             )
             if photo_id
@@ -379,7 +379,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
                     A(
                         identity_name,
                         href=f"{nav_prefix}/person/{identity_id}?from=admin",
-                        cls="text-white hover:text-blue-400 transition-colors",
+                        cls="text-white hover:text-indigo-400 transition-colors",
                     ),
                     cls="text-base font-semibold",
                 ),
@@ -455,7 +455,7 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
                     A(
                         identity_name,
                         href=f"{nav_prefix}/person/{identity_id}?from=admin",
-                        cls="text-white hover:text-blue-400 transition-colors",
+                        cls="text-white hover:text-indigo-400 transition-colors",
                     ),
                     cls="text-sm font-semibold",
                 ),
@@ -469,7 +469,7 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
         Div(
             Button(
                 "Link to Family Tree",
-                cls="px-3 py-1.5 text-xs font-medium bg-blue-700 hover:bg-blue-600 "
+                cls="px-3 py-1.5 text-xs font-medium bg-indigo-700 hover:bg-indigo-600 "
                 "text-white rounded transition-colors mt-3",
                 hx_get=f"/api/cluster-review/gedcom-panel?identity_id={identity_id}&name={identity_name}",
                 hx_target=f"#gedcom-slot-{identity_id}",
@@ -2159,7 +2159,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
                 name="q",
                 placeholder="Search confirmed identities to merge...",
                 cls="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white "
-                "placeholder-slate-400 focus:outline-none focus:border-blue-500",
+                "placeholder-slate-400 focus:outline-none focus:border-indigo-500",
                 hx_get=f"/api/cluster-review/search-identities?source_id={identity_id}&offset={offset}&community_slug={community_slug}",
                 hx_target="#enrichment-search-results",
                 hx_swap="innerHTML",
