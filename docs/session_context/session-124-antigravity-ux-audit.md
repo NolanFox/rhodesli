@@ -1,51 +1,115 @@
 # Antigravity UX Audit — Session 124
 
-## Priority 1: Mobile Touch Target Violations (File: `app/main.py`, Line: 415)
-**Problem:** The mobile drawer hamburger / close buttons use `p-1 w-6 h-6`, resulting in ~32x32px hit areas. This is significantly below the 44px minimum touch target threshold for iOS/Android, making navigation difficult for mobile visitors clicking from Facebook.
-**Fix:** Update the padding and negative margins to artificially inflate the touch area while preserving visual alignment: `cls="p-3 w-6 h-6 -mr-2 -mt-2 text-slate-400 hover:text-white"`.
-**Impact:** Eliminates interaction frustration and mis-clicks for the most critical demographic.
+## Priority 1: Mobile Touch Target Violations (`app/main.py:414-415`)
+**Problem:** The mobile drawer close button is only ~32x32px, failing the 44px minimum touch target threshold for iOS/Android, leading to frustrating mis-clicks for users from Facebook.
+**Fix:** Inflate the touch area using padding and negative margins to keep visual balance.
+```python
+# Before
+'<button onclick="closeMobileNav()" class="text-slate-400 hover:text-white p-1" type="button" aria-label="Close menu">' +
+'<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" ...'
 
-## Priority 1: Triage Action Buttons Unusable on Mobile (File: `app/cluster_review_routes.py`, Line: 321)
-**Problem:** The admin "Confirm" and "Reject" buttons use `py-1.5` globally. On high-density phone displays, these targets are too short (under 30px height), leading to mis-clicks during intense scrolling.
-**Fix:** Implement responsive padding classes so buttons are dense on desktop but touch-safe on mobile: `cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium..."`.
-**Impact:** Fixes a critical accessibility bottleneck, making mobile curation viable for admins reviewing 472 matches on-the-go.
+# After
+'<button onclick="closeMobileNav()" class="text-slate-400 hover:text-white p-3 -mr-2 -mt-2" type="button" aria-label="Close menu">' +
+'<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" ...'
+```
 
-## Priority 2: Missing Clear Value Proposition on Landing (File: `app/page_routes.py`, Line: 605)
-**Problem:** The core landing page subtitle merely says "A heritage photo archive". A new user doesn't immediately grasp that the platform desperately needs *their help* to actively identify faces.
-**Fix:** Inject an actionable secondary value proposition block directly below the title: `P("We need your help identifying faces in the Jewish Community of Rhodes. Select a photo below and tell us who you recognize.", cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10")`.
-**Impact:** Converts passive photo browsers into active contributors within the critical first 3 seconds of page load.
+## Priority 1: Triage Action Buttons Unusable on Mobile (`app/cluster_review_routes.py:321`)
+**Problem:** The admin individual face "Confirm" and "Reject" buttons use `py-1.5` globally. On phones, these are under 30px high, making them impossible to tap reliably.
+**Fix:** Apply responsive padding making them touch-friendly (44px) on mobile but dense on desktop.
+```python
+# Before
+cls="px-3 py-1.5 text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
 
-## Priority 2: Primary CTA Blending (File: `app/page_routes.py`, Line: 570)
-**Problem:** "Help Identify Faces" uses a standard flat amber background. In a dense environment of statistics and other buttons, it doesn't command the visual hierarchy.
-**Fix:** Add elevation, ring focus, and a micro-interaction scale to make it tactile and un-ignorable: `cls="... bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all"`.
-**Impact:** Draws the eye immediately, doubling the click-through rate into the core identification loop.
+# After 
+cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
+```
 
-## Priority 3: No Keyboard Shortcuts for Speed-Run Verification (File: `app/cluster_review_routes.py`, Line: 318)
-**Problem:** Admins performing triage must physically mouse-click hundreds of "Confirm" and "Reject" buttons, representing an anti-pattern for triage UI.
-**Fix:** Inject keyboard shortcuts via HTMX (`hx-trigger="click, keyup[key=='y'] from:body"`) and add visual hints `<kbd class="hidden sm:inline ml-2 opacity-50 font-mono text-[9px] border border-white/20 px-1 rounded pb-[1px]">Y</kbd>` inside the verification button text.
-**Impact:** Reduces decision friction, completely eliminating mouse travel time and increasing processing speed by up to 60%.
+## Priority 2: Missing Clear Value Proposition on Landing (`app/page_routes.py:604`)
+**Problem:** The hero subtitle "A heritage photo archive" is passive and doesn't instruct visitors what to do or why they are there.
+**Fix:** Replace the static title with an actionable directive.
+```python
+# Before
+P(subtitle, cls="text-lg text-amber-200/70 max-w-2xl mx-auto mb-8"),
 
-## Priority 3: Excessive Facial Thumbnails Scrolling (File: `app/cluster_review_routes.py`, Line: 290)
-**Problem:** Thumbnails in the review queue are set at `w-20 h-20` (80px), pushing the list off-screen quickly when multiple faces cluster tightly.
-**Fix:** Add a dense mode limit by modifying the crop size for speed-run layouts: `cls="w-14 h-14 sm:w-16 sm:h-16 rounded object-cover shadow-inner"`.
-**Impact:** Increases above-the-fold information density, allowing 3-4 side-by-side cluster evaluations to remain visible simultaneously without scrolling.
+# After
+P("We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.", 
+  cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10"),
+```
 
-## Priority 4: Disorganized Person Detail Grids (File: `app/person_routes.py`, Line: 428)
-**Problem:** Face crops are rendered using basic list flow with `w-28 sm:w-32` fixed sizes. If an individual has dozens of identified faces, this creates ragged, unanchored masonry that looks broken on some viewport widths.
-**Fix:** Migrate the container to a strict CSS grid relying on aspect ratios: `Div(*face_gallery_items, cls="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 mt-4")` with inner images set to `cls="w-full aspect-[1/1] object-cover rounded-lg"`.
-**Impact:** Creates a satisfying, geometric architecture that scales flawlessly on any device width without breaking margins.
+## Priority 2: Primary CTA Blending (`app/page_routes.py:570`)
+**Problem:** "Help Identify Faces" blends in with secondary buttons. It needs to command visual attention to drive the core interaction loop.
+**Fix:** Add hover scaling and an ambient glow to signal interactivity.
+```python
+# Before
+cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
 
-## Priority 4: Missing Emptystate for Unidentified Anchors (File: `app/person_routes.py`, Line: 564)
-**Problem:** When displaying the "Often appears with" network graph, faces lacking visual crops fall back to rendering a bare `?` inside a slate circle, looking like a missing image link.
-**Fix:** Replace the text node with a subtle SVG silhouette, paired with: `cls="w-12 h-12 rounded-full bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70"`.
-**Impact:** Calms visual anxiety by explicitly clarifying that the system safely lacks metadata, rather than experiencing a broken load state.
+# After
+cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95",
+```
 
-## Priority 5: Over-reliance on "Developer Tool" Slate Colors (File: `app/main.py`, Line: 757)
-**Problem:** The global body background `linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%)` and heavy `slate` classes feel like a SaaS admin dashboard. This contradicts the solemn, historical weight of a 1920s heritage archive.
-**Fix:** Shift the structural palette to Tailwind `stone` (warm grays): Replace global backgrounds with `bg-[linear-gradient(180deg,#1c1917_0%,#292524_48%,#1c1917_100%)]` and replace bulk `slate-400` body text with warmer `stone-300` text alongside `amber-900/10` overlays.
-**Impact:** Restores dignity and organic warmth, aligning the emotional design of the platform with the gravitas of historical preservation and family trees.
+## Priority 3: Keyboard Shortcuts Lack Discoverability (`app/cluster_review_routes.py:1884`)
+**Problem:** Speed-run triage already supports keyboard shortcuts internally (e.g. `actionMap = {'y': 'speed-confirm'}`) and appends "(Y)" to button text. However, plain text parens blend in, making users think they must click. 
+**Fix:** Wrap the shortcut hint in a distinct `<kbd>` styling element so it explicitly looks like a keyboard input.
+```python
+# Before
+"Confirm All (Y)",
 
-## Priority 5: Lack of Micro-animations on Triage Confirmations (File: `app/cluster_review_routes.py`, Line: 325)
-**Problem:** During triage, clicking a merge action instantly deletes the DOM element (`hx_swap="outerHTML"`). This sudden collapse is jarring and causes adjacent elements to snap violently.
-**Fix:** Leverage HTMX transitions by appending `class="... htmx-swapping:opacity-0 htmx-swapping:scale-[0.98] transition-all duration-300 ease-out"` to the parent match card container.
-**Impact:** Provides kinesthetic reward and gracefully morphs the layout, significantly reducing visual exhaustion when processing large volumes.
+# After
+Span("Confirm All ", NotStr("<kbd class='ml-1 px-1.5 py-0.5 rounded border border-white/20 bg-white/10 text-[10px] font-mono'>Y</kbd>")),
+```
+
+## Priority 3: Excessive Facial Thumbnails Scrolling (`app/person_routes.py:428`)
+**Problem:** Thumbnails are fixed at `w-32 h-32` on desktop, which restricts horizontal density and forces long scroll lengths. 
+**Fix:** Convert to responsive aspect-ratio blocks within a CSS grid instead of fixed-width elements.
+```python
+# Before
+cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+
+# After
+cls="w-full aspect-[1/1] rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+```
+
+## Priority 4: Disorganized Person Detail Grids (`app/person_routes.py:461`)
+**Problem:** Face crops are rendered in an unstructured layout using flex layout heuristics. For identities with 50+ faces, this causes jagged misalignment across rows.
+**Fix:** Apply strict CSS Grid cols formatting to the outer container. (Note: Assuming `Div(*face_gallery_items...)` is built later in the response, apply this to the wrapper).
+```python
+# Before (Implicit flex parent/div array wrap)
+Div(*face_gallery_items, cls="flex flex-wrap gap-4 mt-4")
+
+# After
+Div(*face_gallery_items, cls="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mt-4")
+```
+
+## Priority 4: Missing Emptystate for Unidentified Anchors (`app/person_routes.py:564`)
+**Problem:** When rendering the social graph "Often appears with", profiles missing a photo render a harsh `?` that mimics a corrupted image link.
+**Fix:** Calm the UI by indicating intentional metadata absence using a dashed silhouette.
+```python
+# Before
+Div(Span("?", cls="text-lg text-slate-500"), cls="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center")
+
+# After
+Div(cls="w-12 h-12 rounded-full bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70")
+```
+
+## Priority 5: Over-reliance on "Developer Tool" Slate Colors (`app/page_routes.py:757`)
+**Problem:** The platform root background gradient uses harsh slate/blue tones (`#08111f`, `#0c1630`), evoking SaaS dashboard aesthetics instead of the emotional warmth required for a genealogy web archive.
+**Fix:** Swap out the cool blues for deep, warm stone/sepia tones.
+```python
+# Before
+body { background: linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%); overflow-x: hidden; }
+
+# After
+body { background: linear-gradient(180deg, #1c1917 0%, #292524 48%, #1c1917 100%); overflow-x: hidden; }
+```
+
+## Priority 5: Lack of Micro-animations on Triage Confirmations (`app/cluster_review_routes.py:325`)
+**Problem:** HTMX out-of-band swaps instantly vaporize elements from the DOM (`hx_swap="outerHTML"`). In speed-run, this creates harsh flashing snapping effects causing cognitive strain over hundreds of decisions.
+**Fix:** Smooth the deletion morphologically using HTMX swapping classes native to the library.
+```python
+# Before
+hx_swap="outerHTML",
+
+# After
+hx_swap="outerHTML swap:300ms",
+cls="... htmx-swapping:opacity-0 htmx-swapping:scale-95 transition-all duration-300"
+```

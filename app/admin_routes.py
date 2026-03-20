@@ -2222,7 +2222,7 @@ def get(request, sess=None):
                         photo_thumb,
                         cls="flex gap-2 items-start flex-shrink-0",
                     )
-                    if face_thumb
+                    if a["target_type"] == "identity"
                     else None,
                     # Details on the right
                     Div(

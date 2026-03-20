@@ -427,7 +427,7 @@ def public_person_page(
                         Img(
                             src=crop_url,
                             alt=f"{display_name}",
-                            cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                            cls="w-full aspect-[1/1] rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
                             onerror="this.style.display='none'",
                         ),
                         Span(
@@ -561,8 +561,7 @@ def public_person_page(
                 )
                 if companion["crop_url"]
                 else Div(
-                    Span("?", cls="text-lg text-slate-500"),
-                    cls="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center",
+                    cls="w-12 h-12 rounded-full bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70",
                 )
             )
             companion_cards.append(
@@ -854,7 +853,7 @@ def public_person_page(
     gallery_items = face_gallery_items if faces_active else photo_gallery_items
     gallery_count = len(gallery_items)
     gallery_grid_cls = (
-        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"
+        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4"
         if faces_active
         else "grid grid-cols-2 sm:grid-cols-3 gap-4"
     )
@@ -1742,7 +1741,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                             Img(
                                 src=crop_url,
                                 alt=display_name,
-                                cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                                cls="w-full aspect-[1/1] rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
                                 loading="lazy",
                                 onerror="this.style.display='none'",
                             ),
@@ -1772,7 +1771,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             )
         face_entries.sort(key=lambda e: e["sort_key"])
         gallery_items = [e["item"] for e in face_entries]
-        grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"
+        grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4"
     else:
         photo_entries = []
         for entry in ordered_photo_entries:

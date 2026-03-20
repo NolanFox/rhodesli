@@ -567,7 +567,7 @@ def _community_landing_page(community: dict, slug: str):
                     A(
                         "Help Identify Faces",
                         href=f"{nav_prefix}/help",
-                        cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-colors",
+                        cls="inline-flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-semibold transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95",
                     ),
                     A(
                         "Browse Photos",
@@ -601,7 +601,7 @@ def _community_landing_page(community: dict, slug: str):
             # Hero section
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
-                P(subtitle, cls="text-lg text-amber-200/70 max-w-2xl mx-auto mb-8"),
+                P("We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.", cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10"),
                 description_section,
                 stats_row,
                 empty_state,
@@ -754,7 +754,7 @@ def _platform_root_page(auth_enabled: bool = False):
         Style(
             """
             html, body { margin: 0; min-height: 100%; }
-            body { background: linear-gradient(180deg, #08111f 0%, #0c1630 48%, #0a1222 100%); overflow-x: hidden; }
+            body { background: linear-gradient(180deg, #1c1917 0%, #292524 48%, #1c1917 100%); overflow-x: hidden; }
             .landing-container { overflow-x: hidden; max-width: 100vw; }
             .landing-container * { box-sizing: border-box; }
             .landing-container img { max-width: 100%; }
