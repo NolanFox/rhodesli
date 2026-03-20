@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 _confirmed_matrix = None  # shape (num_faces, 512), L2-normalized
 _confirmed_face_map = None  # list of (identity_id, face_id) tuples, parallel to rows
 _confirmed_identity_ids = None  # set of identity IDs in the matrix
+_confirmed_metadata = None  # dict of identity_id -> {"name": str, "face_count": int}
 _confirmed_dirty = True
 _lock = threading.Lock()
 
@@ -27,7 +28,7 @@ def mark_confirmed_dirty():
 
 def _rebuild_matrix():
     """Rebuild the confirmed identity embedding matrix from current registry state."""
-    global _confirmed_matrix, _confirmed_face_map, _confirmed_identity_ids, _confirmed_dirty
+    global _confirmed_matrix, _confirmed_face_map, _confirmed_identity_ids, _confirmed_metadata, _confirmed_dirty
 
     import app.main as _main_mod
 
@@ -39,6 +40,7 @@ def _rebuild_matrix():
         _confirmed_matrix = np.array([]).reshape(0, 512)
         _confirmed_face_map = []
         _confirmed_identity_ids = set()
+        _confirmed_metadata = {}
         _confirmed_dirty = False
         return
 
@@ -47,6 +49,7 @@ def _rebuild_matrix():
     face_map = []
     embeddings = []
     identity_ids = set()
+    metadata = {}  # identity_id -> {"name": str, "face_count": int}
 
     for iid, idata in identities.items():
         if idata.get("merged_into"):
@@ -58,6 +61,18 @@ def _rebuild_matrix():
 
         # Get all face IDs (anchors + candidates)
         all_face_entries = list(idata.get("anchor_ids", [])) + list(idata.get("candidate_ids", []))
+
+        # Cache metadata for get_confirmed_distances() to avoid redundant load_registry()
+        face_ids_for_meta = []
+        for entry in all_face_entries:
+            fid = entry if isinstance(entry, str) else entry.get("face_id")
+            if fid:
+                face_ids_for_meta.append(fid)
+        metadata[iid] = {
+            "name": idata.get("name", "Unknown"),
+            "face_count": len(face_ids_for_meta),
+        }
+
         for entry in all_face_entries:
             fid = entry if isinstance(entry, str) else entry.get("face_id")
             if not fid:
@@ -81,6 +96,7 @@ def _rebuild_matrix():
 
     _confirmed_face_map = face_map
     _confirmed_identity_ids = identity_ids
+    _confirmed_metadata = metadata
     _confirmed_dirty = False
 
     logger.info(
@@ -130,27 +146,15 @@ def get_confirmed_distances(target_embedding, community_slug=None):
         if iid not in identity_best or d < identity_best[iid][0]:
             identity_best[iid] = (d, fid)
 
-    # Build result list with metadata
-    import app.main as _main_mod
-
-    registry = _main_mod.load_registry()
-    identities = registry._identities if hasattr(registry, "_identities") else {}
-
+    # Build result list with cached metadata (avoids redundant load_registry())
     results = []
     for iid, (dist, best_fid) in identity_best.items():
-        idata = identities.get(iid, {})
-        all_faces = list(idata.get("anchor_ids", [])) + list(idata.get("candidate_ids", []))
-        face_ids = []
-        for entry in all_faces:
-            fid = entry if isinstance(entry, str) else entry.get("face_id")
-            if fid:
-                face_ids.append(fid)
-
+        meta = (_confirmed_metadata or {}).get(iid, {})
         results.append(
             {
                 "identity_id": iid,
-                "name": idata.get("name", "Unknown"),
-                "face_count": len(face_ids),
+                "name": meta.get("name", "Unknown"),
+                "face_count": meta.get("face_count", 0),
                 "best_face_id": best_fid,
                 "distance": dist,
             }
@@ -159,6 +163,7 @@ def get_confirmed_distances(target_embedding, community_slug=None):
     # Community scoping
     if community_slug:
         try:
+            import app.main as _main_mod
             from app.supabase_data import load_communities
 
             communities = load_communities()
