@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.29 · ~3828 tests · 966 photos · 3536 identities · 95 confirmed
+Current: v0.99.35 · ~4880 tests · 966 photos · 3536 identities · 95 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-20: **v0.99.35 — Session 125**: Performance Completion + UX Quick Wins. PERF #1 (registry SWR), PERF #4 (cold start to background), PERF #6 (unified embeddings parse), PERF #8 (perf_cache metadata), PERF #10 (surgical cache invalidation). FB-161 (speed-run skip tracking), FB-151 (suggestion name truncation), FB-163 (community badge in tag search). Antigravity CSS merge (blue→indigo, rounded-2xl avatar, aspect-square). P2 UX review fixes (touch targets, contrast). 34 new tests. 4880 app tests pass.
 
 - [x] 2026-03-19: **v0.99.34 — Session 124**: Performance Blitz + UX Design Audit. Recursive prefetch fix (Codex #2 — 179 cascading requests eliminated). Community indexes SQL (Codex #5). Review groups O(n^2) cache (Codex #3 — 815ms → 0ms). Mobile touch targets + responsive button padding from Antigravity audit. Community prefix fix in real-time compare. 14 new tests. 3348 app tests pass.
 

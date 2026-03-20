@@ -14,6 +14,21 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 125: Performance Completion + UX Quick Wins (2026-03-20) — v0.99.35
+- PERF #1: Registry SWR — stale-while-revalidate, no blocking on TTL miss
+- PERF #4: Cold start — Supabase health/sync moved to background prewarm thread
+- PERF #6: Unified embeddings — embeddings.npy loaded once via _load_raw_embeddings()
+- PERF #8: perf_cache metadata cached during rebuild, no redundant load_registry()
+- PERF #10: Surgical cache invalidation in cluster review (changed_ids)
+- FB-161: Speed-run reviewed_ids tracking (skipped items don't reappear)
+- FB-151: Suggestion name truncation with title tooltip
+- FB-163: Community badge in tag-search results
+- Antigravity CSS merge: blue→indigo, rounded-2xl avatar, aspect-square
+- P2 UX review: avatar shape, touch targets, contrast fixes
+- 34 new tests. 4880 app tests pass. 2 deploys.
+
+---
+
 ## Session 124: Performance Blitz + UX Design Audit (2026-03-20) — v0.99.34
 - PERF: Recursive speed-run prefetch fix (Codex #2) — 179 cascading requests eliminated. Prefetched cards no longer contain nested prefetch divs.
 - PERF: Community indexes SQL (Codex #5) — `community_id` indexes on photo_communities and identity_communities.
