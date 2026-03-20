@@ -1614,7 +1614,7 @@ def post(
             }
         except Exception:
             pass  # Already confirmed, or other benign error
-    _main_mod.save_registry(registry, confirmed_identity_info=_notify)
+    _main_mod.save_registry(registry, confirmed_identity_info=_notify, changed_ids={identity_id})
     _main_mod.log_user_action(
         "RENAME_IDENTITY",
         identity_id=identity_id,
@@ -1863,7 +1863,7 @@ def post(source_id: str, target_id: str, sess=None, request=None):
 
     # Remove rejection
     registry.unreject_identity_pair(source_id, target_id, user_source="web")
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={source_id, target_id})
 
     # Log the action
     _main_mod.log_user_action(
@@ -2377,7 +2377,7 @@ def post(identity_id: str, sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={identity_id, result["source_id"]})
 
     _main_mod.log_user_action(
         "UNDO_MERGE",
@@ -2454,7 +2454,7 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
             failed_details.append((f"Person {source_id[:8]}", str(e)))
 
     if merged_count > 0:
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id} | set(bulk_ids))
         _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _log_audit(
             "merge",
@@ -2516,7 +2516,7 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
             pass
 
     if rejected_count > 0:
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id} | set(bulk_ids))
         _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _log_audit(
             "negative_match",
@@ -2853,7 +2853,7 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
 
     try:
         previous_name = registry.rename_identity(identity_id, name, user_source="web")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _main_mod.log_user_action(
             "RENAME_IDENTITY",
@@ -2967,7 +2967,7 @@ def post(identity_id: str, text: str = "", sess=None, request=None):
     try:
         registry = _main_mod.load_registry()
         registry.add_note(identity_id, text, author=user_email)
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
     except KeyError:
         return _main_mod.toast("Identity not found.", "error")
     except Exception as e:
@@ -3210,7 +3210,7 @@ def post(
         try:
             registry = _main_mod.load_registry()
             previous_name = registry.rename_identity(identity_id, display_name.strip(), user_source="admin_web")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id})
             user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
             _main_mod.log_user_action(
                 "RENAME_IDENTITY",
@@ -3263,7 +3263,7 @@ def post(
         registry = _main_mod.load_registry() if not renamed else registry
         if metadata:
             registry.set_metadata(identity_id, metadata, user_source="admin_web")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id})
         # Return updated display with success toast
         identity = registry.get_identity(identity_id)
         display = _main_mod._identity_metadata_display(identity, is_admin=True)
@@ -3571,7 +3571,7 @@ def post(face_id: str, sess=None, request=None):
         )
 
     # Save registry
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={identity_id, result["to_identity_id"]})
 
     # Log the action
     _main_mod.log_user_action(
