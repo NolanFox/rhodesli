@@ -348,6 +348,21 @@ app, rt = fast_app(
                 }
             }
         """),
+        # Global: face crop fallback — show silhouette placeholder when crop images fail to load
+        # Uses event delegation to catch errors on all img elements including HTMX-swapped content
+        Script("""
+            document.addEventListener('error', function(e) {
+                if (e.target.tagName !== 'IMG') return;
+                var src = e.target.src || '';
+                // Only handle crop images (R2 /crops/ or local /static/crops/)
+                if (src.indexOf('/crops/') === -1) return;
+                // Prevent infinite error loop
+                e.target.onerror = null;
+                // Replace with inline SVG silhouette placeholder
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e293b'/%3E%3Ccircle cx='50' cy='38' r='18' fill='%23475569'/%3E%3Cellipse cx='50' cy='80' rx='28' ry='22' fill='%23475569'/%3E%3C/svg%3E";
+                e.target.alt = 'Photo unavailable';
+            }, true);
+        """),
         # Mobile nav: inject hamburger menu on public pages that have hidden nav links
         # Triggers below md breakpoint (768px) — slides from right with scrim + ESC key
         Script("""
