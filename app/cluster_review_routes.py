@@ -42,6 +42,7 @@ UNRESOLVED_REVIEW_MEMBER_LIMIT = 6
 # Performance caches — Session 111e
 _speed_run_cache = {}  # keyed by community_slug -> (timestamp, result)
 _suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp, result)
+_review_groups_cache = {}  # keyed by community_slug -> (timestamp, result)  — Session 124
 _CACHE_TTL = 120  # seconds — user-driven workflow, data doesn't change fast (Session 122)
 
 
@@ -51,14 +52,16 @@ def invalidate_cluster_review_caches(changed_ids=None):
     When changed_ids is provided, only remove affected entries instead of full flush.
     This preserves cache for identities not involved in the action.
     """
-    global _speed_run_cache, _suggestions_cache
+    global _speed_run_cache, _suggestions_cache, _review_groups_cache
     if changed_ids is None:
         # Full flush for bulk operations
         _speed_run_cache = {}
         _suggestions_cache = {}
+        _review_groups_cache = {}
     else:
         # Surgical: remove entries for changed identities + speed-run (ordering may change)
         _speed_run_cache = {}  # speed-run depends on ordering, always invalidate
+        _review_groups_cache = {}  # review groups depend on identity state, always invalidate
         keys_to_remove = [k for k in _suggestions_cache if k[0] in changed_ids]
         for k in keys_to_remove:
             del _suggestions_cache[k]
@@ -1203,9 +1206,16 @@ def get(sess=None, request=None, mode: str = ""):
         )
 
     # --- Section 2: Potential Review Groups (unresolved but strongly similar) ---
-    photo_registry = _main_mod.load_photo_registry()
-    face_data = _main_mod.get_face_data()
-    unresolved_review_groups = _build_unresolved_review_groups(filtered_ids, face_data, photo_registry)
+    # TTL cache to avoid O(n²) distance matrix on every dashboard load (Session 124, Codex #3)
+    _cache_key = community_slug
+    _cached = _review_groups_cache.get(_cache_key)
+    if _cached and (time.time() - _cached[0]) < _CACHE_TTL:
+        unresolved_review_groups = _cached[1]
+    else:
+        photo_registry = _main_mod.load_photo_registry()
+        face_data = _main_mod.get_face_data()
+        unresolved_review_groups = _build_unresolved_review_groups(filtered_ids, face_data, photo_registry)
+        _review_groups_cache[_cache_key] = (time.time(), unresolved_review_groups)
 
     if unresolved_review_groups:
         unresolved_review_section = Div(
