@@ -36,20 +36,23 @@ class TestFaceIdPreservation:
         # Mock embeddings.npy to return our test entry
         mock_embeddings = np.array([mock_embedding], dtype=object)
 
+        import app.main
+
+        # Clear both caches to force reload (Session 125 split into raw + face caches)
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
+
         with patch("numpy.load", return_value=mock_embeddings):
             with patch("pathlib.Path.exists", return_value=True):
-                from app.main import load_face_embeddings
+                face_data = app.main.load_face_embeddings()
 
-                # Clear cache to force reload
-                import app.main
-                app.main._face_data_cache = None
-
-                face_data = load_face_embeddings()
+        # Restore caches to avoid polluting other tests
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
 
         # The key SHOULD be the stored face_id
         assert "inbox_test_123" in face_data, (
-            f"Expected 'inbox_test_123' in face_data keys. "
-            f"Got keys: {list(face_data.keys())}"
+            f"Expected 'inbox_test_123' in face_data keys. Got keys: {list(face_data.keys())}"
         )
 
         # The key should NOT be the regenerated legacy format
@@ -75,19 +78,21 @@ class TestFaceIdPreservation:
 
         mock_embeddings = np.array([mock_embedding], dtype=object)
 
+        import app.main
+
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
+
         with patch("numpy.load", return_value=mock_embeddings):
             with patch("pathlib.Path.exists", return_value=True):
-                from app.main import load_face_embeddings
+                face_data = app.main.load_face_embeddings()
 
-                import app.main
-                app.main._face_data_cache = None
-
-                face_data = load_face_embeddings()
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
 
         # Legacy format should be generated
         assert "Image_001:face0" in face_data, (
-            f"Expected 'Image_001:face0' for legacy entry. "
-            f"Got keys: {list(face_data.keys())}"
+            f"Expected 'Image_001:face0' for legacy entry. Got keys: {list(face_data.keys())}"
         )
 
     def test_plural_embeddings_key_is_supported(self):
@@ -103,14 +108,17 @@ class TestFaceIdPreservation:
 
         mock_embeddings = np.array([mock_embedding], dtype=object)
 
+        import app.main
+
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
+
         with patch("numpy.load", return_value=mock_embeddings):
             with patch("pathlib.Path.exists", return_value=True):
-                from app.main import load_face_embeddings
+                face_data = app.main.load_face_embeddings()
 
-                import app.main
-                app.main._face_data_cache = None
-
-                face_data = load_face_embeddings()
+        app.main._raw_embeddings_cache = None
+        app.main._face_data_cache = None
 
         assert "inbox_plural_123" in face_data
         assert face_data["inbox_plural_123"]["mu"].shape == (512,)
