@@ -14,6 +14,20 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 124: Performance Blitz + UX Design Audit (2026-03-20) — v0.99.34
+- PERF: Recursive speed-run prefetch fix (Codex #2) — 179 cascading requests eliminated. Prefetched cards no longer contain nested prefetch divs.
+- PERF: Community indexes SQL (Codex #5) — `community_id` indexes on photo_communities and identity_communities.
+- PERF: Unresolved review groups TTL cache (Codex #3) — O(n²) distance matrix cached 120s, invalidated on mutations. 815ms → 0ms on hit.
+- UX: Mobile touch targets (close button p-3), responsive button padding. Antigravity design audit.
+- UX (Antigravity): CTA glow, warm stone palette on platform root, denser face grids, admin thumbnail fix.
+- Fix: Community prefix audit failure in compare_routes.py real-time endpoint.
+- 14 new tests. 3348 app tests pass. Deploy SUCCESS.
+
+## Session 123: Performance + UX + Upload Audit (2026-03-19) — v0.99.33
+- PERF-A: compare_routes face distance uses cached get_face_data() (~50ms saved)
+- PERF-B: identity_routes save_registry() callers pass changed_ids — Supabase writes from ~3500 to 1-5 per op
+- Landing page CTAs for visitors. Upload pipeline audit: HEALTHY. 3 new tests.
+
 ## Session 122: TOOLS-003 Real-Time Compare + Performance + WORKSPACE Schema (2026-03-19) — v0.99.32
 - TOOLS-003: Real-time face compare endpoint (`POST /api/compare/realtime`) — upload photo, ML service detects faces, compare against archive via find_similar_faces. Admin-only. AD-230.
 - Performance: Speed-run cache TTL 30s → 120s. _build_caches investigation: already O(N), no fix needed.
