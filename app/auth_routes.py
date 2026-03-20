@@ -38,7 +38,7 @@ def get(sess, next: str = ""):
         Body(
             Div(
                 H1("Rhodesli", cls="text-2xl font-bold mb-2"),
-                P("Family Heritage Archive", cls="text-gray-400 mb-8"),
+                P("Family Heritage Archive", cls="text-slate-400 mb-8"),
                 Form(
                     Div(
                         Label("Email", fr="email", cls="block text-sm mb-1"),
@@ -47,7 +47,7 @@ def get(sess, next: str = ""):
                             name="email",
                             id="email",
                             required=True,
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -58,7 +58,7 @@ def get(sess, next: str = ""):
                             name="password",
                             id="password",
                             required=True,
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -72,9 +72,9 @@ def get(sess, next: str = ""):
                     cls="space-y-2",
                 ),
                 Div(
-                    Div(cls="flex-grow border-t border-gray-600"),
-                    Span("or", cls="px-4 text-gray-500 text-sm"),
-                    Div(cls="flex-grow border-t border-gray-600"),
+                    Div(cls="flex-grow border-t border-slate-600"),
+                    Span("or", cls="px-4 text-slate-500 text-sm"),
+                    Div(cls="flex-grow border-t border-slate-600"),
                     cls="flex items-center my-6",
                 )
                 if _main_mod.get_oauth_url("google")
@@ -99,11 +99,11 @@ def get(sess, next: str = ""):
                 P(
                     "Need an account? ",
                     A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
-                    cls="mt-2 text-gray-400 text-sm",
+                    cls="mt-2 text-slate-400 text-sm",
                 ),
-                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
             ),
-            cls="min-h-screen bg-gray-900 text-white",
+            cls="min-h-screen bg-slate-900 text-white",
         ),
     )
 
@@ -132,7 +132,7 @@ async def post(email: str, password: str, sess, next: str = ""):
                                 id="email",
                                 value=email,
                                 required=True,
-                                cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                                cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                             ),
                             cls="mb-4",
                         ),
@@ -143,7 +143,7 @@ async def post(email: str, password: str, sess, next: str = ""):
                                 name="password",
                                 id="password",
                                 required=True,
-                                cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                                cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                             ),
                             cls="mb-4",
                         ),
@@ -155,9 +155,9 @@ async def post(email: str, password: str, sess, next: str = ""):
                         method="post",
                         action="/login",
                     ),
-                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
                 ),
-                cls="min-h-screen bg-gray-900 text-white",
+                cls="min-h-screen bg-slate-900 text-white",
             ),
         )
     sess["auth"] = user
@@ -193,7 +193,7 @@ def get(sess):
         Body(
             Div(
                 H1("Join Rhodesli", cls="text-2xl font-bold mb-2"),
-                P("Invite-only registration", cls="text-gray-400 mb-8"),
+                P("Invite-only registration", cls="text-slate-400 mb-8"),
                 Form(
                     Div(
                         Label("Invite Code", fr="invite_code", cls="block text-sm mb-1"),
@@ -202,7 +202,7 @@ def get(sess):
                             name="invite_code",
                             id="invite_code",
                             required=True,
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -213,7 +213,7 @@ def get(sess):
                             name="email",
                             id="email",
                             required=True,
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -225,9 +225,9 @@ def get(sess):
                             id="password",
                             required=True,
                             minlength="8",
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
-                        P("Minimum 8 characters", cls="text-gray-500 text-xs mt-1"),
+                        P("Minimum 8 characters", cls="text-slate-500 text-xs mt-1"),
                         cls="mb-4",
                     ),
                     Button(
@@ -241,11 +241,11 @@ def get(sess):
                 P(
                     "Already have an account? ",
                     A("Sign in", href="/login", cls="text-blue-400 hover:underline"),
-                    cls="mt-4 text-gray-400 text-sm",
+                    cls="mt-4 text-slate-400 text-sm",
                 ),
-                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
             ),
-            cls="min-h-screen bg-gray-900 text-white",
+            cls="min-h-screen bg-slate-900 text-white",
         ),
     )
 
@@ -278,7 +278,7 @@ async def post(email: str, password: str, invite_code: str, sess):
                                 id="invite_code",
                                 value=invite_code,
                                 required=True,
-                                cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                                cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                             ),
                             cls="mb-4",
                         ),
@@ -290,7 +290,7 @@ async def post(email: str, password: str, invite_code: str, sess):
                                 id="email",
                                 value=email,
                                 required=True,
-                                cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                                cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                             ),
                             cls="mb-4",
                         ),
@@ -302,7 +302,7 @@ async def post(email: str, password: str, invite_code: str, sess):
                                 id="password",
                                 required=True,
                                 minlength="8",
-                                cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                                cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                             ),
                             cls="mb-4",
                         ),
@@ -314,9 +314,9 @@ async def post(email: str, password: str, invite_code: str, sess):
                         method="post",
                         action="/signup",
                     ),
-                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
                 ),
-                cls="min-h-screen bg-gray-900 text-white",
+                cls="min-h-screen bg-slate-900 text-white",
             ),
         )
     sess["auth"] = user
@@ -338,7 +338,7 @@ def get(sess):
         Body(
             Div(
                 H1("Reset Password", cls="text-2xl font-bold mb-2"),
-                P("Enter your email to receive a reset link", cls="text-gray-400 mb-6"),
+                P("Enter your email to receive a reset link", cls="text-slate-400 mb-6"),
                 Form(
                     Div(
                         Label("Email", fr="email", cls="block text-sm mb-1"),
@@ -347,7 +347,7 @@ def get(sess):
                             name="email",
                             id="email",
                             required=True,
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -360,9 +360,9 @@ def get(sess):
                     action="/forgot-password",
                 ),
                 P(A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"), cls="mt-6 text-center"),
-                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
             ),
-            cls="min-h-screen bg-gray-900 text-white",
+            cls="min-h-screen bg-slate-900 text-white",
         ),
     )
 
@@ -385,9 +385,9 @@ async def post(email: str, sess):
                 H1("Reset Password", cls="text-2xl font-bold mb-2"),
                 P(msg, cls="text-green-400 mb-6 text-sm"),
                 P(A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"), cls="mt-6 text-center"),
-                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
             ),
-            cls="min-h-screen bg-gray-900 text-white",
+            cls="min-h-screen bg-slate-900 text-white",
         ),
     )
 
@@ -457,9 +457,9 @@ def get(sess):
                             id="password",
                             required=True,
                             minlength="8",
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
-                        P("Minimum 8 characters", cls="text-gray-500 text-xs mt-1"),
+                        P("Minimum 8 characters", cls="text-slate-500 text-xs mt-1"),
                         cls="mb-4",
                     ),
                     Div(
@@ -470,7 +470,7 @@ def get(sess):
                             id="password_confirm",
                             required=True,
                             minlength="8",
-                            cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600",
+                            cls="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600",
                         ),
                         cls="mb-4",
                     ),
@@ -485,9 +485,9 @@ def get(sess):
                     style="display:none",
                 ),
                 P(A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"), cls="mt-6 text-center"),
-                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
             ),
-            cls="min-h-screen bg-gray-900 text-white",
+            cls="min-h-screen bg-slate-900 text-white",
         ),
     )
 
@@ -518,9 +518,9 @@ async def post(access_token: str, password: str, password_confirm: str, sess):
                         A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"),
                         cls="mt-4",
                     ),
-                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
                 ),
-                cls="min-h-screen bg-gray-900 text-white",
+                cls="min-h-screen bg-slate-900 text-white",
             ),
         )
 
@@ -542,9 +542,9 @@ async def post(access_token: str, password: str, password_confirm: str, sess):
                         href="/login",
                         cls="block w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium text-center",
                     ),
-                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
                 ),
-                cls="min-h-screen bg-gray-900 text-white",
+                cls="min-h-screen bg-slate-900 text-white",
             ),
         )
     else:
@@ -562,9 +562,9 @@ async def post(access_token: str, password: str, password_confirm: str, sess):
                         A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"),
                         cls="mt-4",
                     ),
-                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg",
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-slate-800 rounded-lg",
                 ),
-                cls="min-h-screen bg-gray-900 text-white",
+                cls="min-h-screen bg-slate-900 text-white",
             ),
         )
 
@@ -605,8 +605,8 @@ def get(sess):
         ),
         Body(
             Div(
-                P("Completing login...", cls="text-gray-400"),
-                cls="flex items-center justify-center min-h-screen bg-gray-900",
+                P("Completing login...", cls="text-slate-400"),
+                cls="flex items-center justify-center min-h-screen bg-slate-900",
             ),
         ),
     )
