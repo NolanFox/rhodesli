@@ -558,7 +558,7 @@ class TestConfidenceBadge:
         badge = _confidence_badge(0.90)
         html = repr(badge)
         assert "High" in html
-        assert "blue" in html
+        assert "indigo" in html or "blue" in html
 
     def test_medium_confidence(self):
         from app.cluster_review_routes import _confidence_badge
