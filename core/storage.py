@@ -105,6 +105,23 @@ def get_crop_url_by_filename(crop_filename: str) -> str:
 
 
 # =============================================================================
+# Crop image fallback placeholder
+# =============================================================================
+
+# Inline SVG silhouette placeholder for broken face crop images.
+# Used by the global JS error handler in app/main.py and available
+# for server-side onerror attributes via CROP_FALLBACK_ONERROR.
+CROP_FALLBACK_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+    "viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e293b'/%3E"
+    "%3Ccircle cx='50' cy='38' r='18' fill='%23475569'/%3E"
+    "%3Cellipse cx='50' cy='80' rx='28' ry='22' fill='%23475569'/%3E%3C/svg%3E"
+)
+
+CROP_FALLBACK_ONERROR = f"this.onerror=null;this.src='{CROP_FALLBACK_SVG}';this.alt='Photo unavailable'"
+
+
+# =============================================================================
 # R2 Write Operations (for upload persistence)
 # =============================================================================
 
@@ -123,6 +140,7 @@ def _get_r2_client():
         return _r2_client
 
     import boto3
+
     endpoint_url = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
     _r2_client = boto3.client(
         "s3",
