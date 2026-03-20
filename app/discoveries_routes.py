@@ -156,9 +156,11 @@ def get(sess=None, request=None):
                 fill="none",
                 stroke="currentColor",
                 viewBox="0 0 24 24",
+                aria_hidden="true",
             ),
             onclick="toggleSidebar()",
             cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center",
+            aria_label="Open sidebar menu",
         ),
         Span("Discoveries", cls="text-lg font-bold text-white"),
         cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30",
@@ -503,7 +505,7 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
                         Div(
                             Span(
                                 NotStr(
-                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                                 ),
                                 cls="text-emerald-400",
                             ),
@@ -539,7 +541,7 @@ def get(sess=None, request=None, photo_id: str = "", min_confidence: int = 0):
                         Div(
                             Span(
                                 NotStr(
-                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
                                 ),
                                 cls="text-indigo-400",
                             ),
@@ -820,6 +822,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     fill="none",
                     stroke="currentColor",
                     viewBox="0 0 24 24",
+                    aria_hidden="true",
                 ),
                 Span("Confirm"),
                 hx_post=f"/api/discovery/confirm?face_id={face_id_encoded}&target_id={target_id}&source_id={source_id}",
@@ -841,6 +844,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     fill="none",
                     stroke="currentColor",
                     viewBox="0 0 24 24",
+                    aria_hidden="true",
                 ),
                 Span("Undo"),
                 hx_post=f"/api/discovery/undo?face_id={face_id_encoded}&target_id={target_id}&source_id={source_id}",
@@ -860,6 +864,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     fill="none",
                     stroke="currentColor",
                     viewBox="0 0 24 24",
+                    aria_hidden="true",
                 ),
                 Span(f"Confirm as {target_name}", cls="truncate max-w-[200px]"),
                 hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={target_id}",
@@ -877,6 +882,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     fill="none",
                     stroke="currentColor",
                     viewBox="0 0 24 24",
+                    aria_hidden="true",
                 ),
                 Span("Not a match"),
                 hx_post=f"/api/discovery/reject?source_id={source_id}&target_id={target_id}",
@@ -903,6 +909,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
             fill="none",
             stroke="currentColor",
             viewBox="0 0 24 24",
+            aria_hidden="true",
         ),
         Span("Compare"),
         href=f"{nav_prefix}/compare?face_id={face_id_encoded}&person_id={target_id}",
@@ -950,6 +957,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2, current_community=Non
                     fill="none",
                     stroke="currentColor",
                     viewBox="0 0 24 24",
+                    aria_hidden="true",
                 ),
                 Span(
                     tier_label,
@@ -1072,7 +1080,7 @@ def _build_help_identify_section(registry, crop_files, max_faces=6, community_id
             Div(
                 Span(
                     NotStr(
-                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                     ),
                     cls="text-amber-400",
                 ),

@@ -59,7 +59,7 @@ def get(sess=None):
                 Div(
                     NotStr(
                         '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-amber-400" '
-                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">'
+                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">'
                         '<path stroke-linecap="round" stroke-linejoin="round" '
                         'd="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 '
                         "012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 "
@@ -78,7 +78,7 @@ def get(sess=None):
                     Span("Try it", cls="text-amber-400 text-sm font-medium"),
                     NotStr(
                         '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400 ml-1" '
-                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">'
+                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">'
                         '<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>'
                     ),
                     cls="flex items-center",
@@ -95,7 +95,7 @@ def get(sess=None):
                 Div(
                     NotStr(
                         '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-indigo-400" '
-                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">'
+                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">'
                         '<path stroke-linecap="round" stroke-linejoin="round" '
                         'd="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 '
                         "004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 "
@@ -116,7 +116,7 @@ def get(sess=None):
                     Span("Try it", cls="text-indigo-400 text-sm font-medium"),
                     NotStr(
                         '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 ml-1" '
-                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">'
+                        'fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">'
                         '<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>'
                     ),
                     cls="flex items-center",
