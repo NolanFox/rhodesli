@@ -1522,7 +1522,7 @@ def post(identity_id: str, neighbor_id: str, sess=None, request=None):
     # Record bidirectional negative pair
     try:
         registry.reject_identity_pair(identity_id, neighbor_id, user_source="admin_inline")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id, neighbor_id})
     except KeyError:
         pass  # Neighbor may have been merged/deleted
 

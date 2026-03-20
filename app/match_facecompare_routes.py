@@ -484,7 +484,7 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, f
                 photo_registry=photo_registry,
             )
             if result["success"]:
-                _main_mod.save_registry(registry)
+                _main_mod.save_registry(registry, changed_ids={identity_a, identity_b})
                 _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
                 _log_audit(
                     "merge",
@@ -516,7 +516,7 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, f
         try:
             registry = _main_mod.load_registry()
             registry.reject_identity_pair(identity_a, identity_b, user_source="match_mode")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_a, identity_b})
             _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
             _log_audit(
                 "negative_match",

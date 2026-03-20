@@ -3701,7 +3701,7 @@ def post(identity_id: str, sess=None, request=None):
 
     try:
         registry.move_to_proposed(identity_id, user_source="web")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
     except ValueError as e:
         return Response(
             to_xml(_main_mod.toast(str(e), "error")),
@@ -4071,7 +4071,7 @@ def post(identity_id: str, new_state: str, sess=None, request=None):
         user_source="admin_force_state",
         reason="data_integrity_fix",
     )
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={identity_id})
 
     import logging
 
@@ -4113,7 +4113,7 @@ def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
         try:
             registry = _main_mod.load_registry()
             registry.reject_identity_pair(identity_id, suggestion_id, user_source="skipped_focus")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id, suggestion_id})
             _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
             _log_audit(
                 "negative_match",
@@ -4178,6 +4178,7 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
                 "user_id": _user.id if _user else None,
                 "user_email": _user.email if _user else None,
             },
+            changed_ids={identity_id},
         )
     except (KeyError, ValueError) as e:
         return Response(
@@ -4241,7 +4242,7 @@ def post(identity_id: str, sess=None, request=None):
     _prev_state = _prev_identity.get("state", "INBOX")
     try:
         registry.reset_identity(identity_id, user_source="web_review")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
         _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _log_audit(
             "reset",

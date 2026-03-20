@@ -390,7 +390,7 @@ def post(identity_id: str, birth_year: str = "", source_detail: str = "", sess=N
 
     # Write to canonical identity metadata
     registry.set_metadata(identity_id, {"birth_year": by}, user_source="admin_ml_review")
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={identity_id})
 
     # Record review decision
     decisions = dict(_main_mod._load_ml_review_decisions())
@@ -1450,7 +1450,7 @@ def _cleanup_orphaned_identities_for_upload(upload: dict) -> list[str]:
 
     if changed:
         try:
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids=set(orphaned_ids))
         except Exception as exc:
             logger.warning(f"Failed to save registry after orphan cleanup: {exc}")
             return []
@@ -2556,7 +2556,7 @@ async def post(ann_id: str, request=None, sess=None, **kwargs):
                 photo_registry=photo_registry,
             )
             if result["success"]:
-                _main_mod.save_registry(registry)
+                _main_mod.save_registry(registry, changed_ids={s_id, t_id})
                 actual_target = result.get("actual_target_id") or t_id
                 _main_mod._merge_annotations(s_id, actual_target)
                 _main_mod.log_user_action(
@@ -3107,7 +3107,7 @@ def post(sess=None):
         )
         accepted_count += 1
 
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids={item["identity_id"] for item in high_confidence})
     _main_mod._save_ml_review_decisions(decisions)
 
     return Div(
@@ -4076,7 +4076,7 @@ def post(xref: str, sess=None):
 
     if updates:
         registry.set_metadata(identity_id, updates, user_source="gedcom")
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
 
     # Invalidate caches
     _main_mod.invalidate_gedcom_matches_cache()

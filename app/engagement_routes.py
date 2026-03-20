@@ -43,7 +43,7 @@ def post(identity_id: str, target_id: str, note: str = "", sess=None):
     try:
         registry = _main_mod.load_registry()
         proposal = registry.add_proposed_match(identity_id, target_id, note=note, author=user_email)
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
     except KeyError:
         return _main_mod.toast("Identity not found.", "error")
     except Exception as e:
@@ -434,7 +434,7 @@ def post(source_id: str, proposal_id: str, sess=None, request=None):
                     registry.resolve_proposed_match(source_id, proposal_id, "accepted")
                 except Exception:
                     pass
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={source_id, target_id})
             target_name = result.get("target_name", "")
             if not target_name:
                 target_identity = _main_mod._safe_get_identity(registry, target_id)
@@ -476,7 +476,7 @@ def post(source_id: str, proposal_id: str, sess=None, request=None):
         registry = _main_mod.load_registry()
         if not is_ml_proposal:
             registry.resolve_proposed_match(source_id, proposal_id, "rejected")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={source_id})
         # For ML proposals: just remove the card (no persistent reject yet)
     except Exception as e:
         return (

@@ -5408,7 +5408,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
                     }
                 except ValueError:
                     pass  # Already confirmed or invalid state transition
-            _main_mod.save_registry(registry, confirmed_identity_info=_notify)
+            _main_mod.save_registry(registry, confirmed_identity_info=_notify, changed_ids={person_id})
             _main_mod.log_user_action(
                 "RENAME_IDENTITY",
                 identity_id=person_id,

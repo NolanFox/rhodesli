@@ -1343,7 +1343,7 @@ def post(identity_id: str = "", gedcom_id: str = "", sess=None):
         if updates:
             registry.set_metadata(identity_id, updates, user_source="gedcom-link")
         if auto_named or updates:
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id})
 
         _main_mod._invalidate_gedcom_cache()
     except Exception as e:

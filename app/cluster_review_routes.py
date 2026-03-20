@@ -1550,7 +1550,7 @@ def post(
         identity["state"] = "CONFIRMED"
         identity["updated_at"] = _main_mod.datetime.now(_main_mod.timezone.utc).isoformat()
 
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
 
         _main_mod.log_user_action(
             "SPEED_RUN_CONFIRM",
@@ -1653,7 +1653,7 @@ def post(
             except ValueError:
                 pass
 
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
 
         _main_mod.log_user_action(
             "SPEED_RUN_REJECT",
@@ -2391,7 +2391,7 @@ def post(
     all_faces = _identity_face_ids(identity) if identity else []
     if identity:
         identity["state"] = "SKIPPED"
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={identity_id})
 
     _main_mod.log_user_action(
         "SPEED_RUN_DISMISS",
@@ -2434,7 +2434,7 @@ def post(
         registry = _main_mod.load_registry()
         try:
             registry.rename_identity(identity_id, new_name.strip(), user_source="admin/speed-run-enrichment")
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id})
             _main_mod.log_user_action(
                 "SPEED_RUN_NAME",
                 identity_id=identity_id,
@@ -2578,7 +2578,7 @@ def post(
             reason = result.get("reason", "unknown")
             return Div(P(f"Merge failed: {reason}", cls="text-red-400 text-sm"), cls="p-4")
 
-        _main_mod.save_registry(registry)
+        _main_mod.save_registry(registry, changed_ids={source_id, target_id})
         t4 = _time.time()
         logging.info(f"PERF merge: load={t2 - t1:.3f}s merge={t3 - t2:.3f}s save={t4 - t3:.3f}s total={t4 - t0:.3f}s")
         _main_mod.log_user_action(
@@ -2702,7 +2702,7 @@ def post(
             pass
 
         if action != "skip":
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={identity_id})
 
         _main_mod.log_user_action(
             "SPEED_RUN_UNDO",
@@ -3245,7 +3245,7 @@ def post(identity_ids: str = "", sess=None, request=None):
         except (ValueError, KeyError) as e:
             errors.append(f"Error with {identity_id[:12]}: {e}")
 
-    _main_mod.save_registry(registry)
+    _main_mod.save_registry(registry, changed_ids=set(ids))
 
     # Build summary response
     error_html = ""

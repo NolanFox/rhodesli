@@ -14,8 +14,7 @@ from starlette.testclient import TestClient
 class TestBulkMerge:
     """Tests for POST /api/identity/{identity_id}/bulk-merge."""
 
-    def _make_identity(self, identity_id, name=None, state="PROPOSED",
-                       anchor_ids=None, candidate_ids=None):
+    def _make_identity(self, identity_id, name=None, state="PROPOSED", anchor_ids=None, candidate_ids=None):
         """Helper: create a minimal identity dict matching the registry schema.
 
         Default name uses 'Unidentified Person ...' format so _is_real_name()
@@ -36,6 +35,7 @@ class TestBulkMerge:
     def _make_registry(self, identities_list):
         """Helper: build a real IdentityRegistry populated with test identities."""
         from core.registry import IdentityRegistry
+
         registry = IdentityRegistry()
         for ident in identities_list:
             registry._identities[ident["identity_id"]] = ident
@@ -53,11 +53,14 @@ class TestBulkMerge:
         source_id = "bbbb-source-2222"
 
         target = self._make_identity(
-            target_id, name="Leon Capeluto", state="CONFIRMED",
+            target_id,
+            name="Leon Capeluto",
+            state="CONFIRMED",
             anchor_ids=["face_t1", "face_t2"],
         )
         source = self._make_identity(
-            source_id, state="PROPOSED",
+            source_id,
+            state="PROPOSED",
             anchor_ids=["face_s1"],
             candidate_ids=["face_s2"],
         )
@@ -65,10 +68,11 @@ class TestBulkMerge:
         registry = self._make_registry([target, source])
         photo_reg = self._make_photo_registry()
 
-        with patch("app.main.load_registry", return_value=registry), \
-             patch("app.main.load_photo_registry", return_value=photo_reg), \
-             patch("app.main.save_registry") as mock_save:
-
+        with (
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.load_photo_registry", return_value=photo_reg),
+            patch("app.main.save_registry") as mock_save,
+        ):
             resp = client.post(
                 f"/api/identity/{target_id}/bulk-merge",
                 data={"bulk_ids": source_id},
@@ -76,7 +80,7 @@ class TestBulkMerge:
 
             assert resp.status_code == 200
             # save_registry should be called since at least one merge succeeded
-            mock_save.assert_called_once_with(registry)
+            mock_save.assert_called_once_with(registry, changed_ids={target_id, source_id})
 
             # Verify source is marked as merged
             source_after = registry._identities[source_id]
@@ -89,15 +93,19 @@ class TestBulkMerge:
         source2_id = "cccc-source-3333"
 
         target = self._make_identity(
-            target_id, name="Leon Capeluto", state="CONFIRMED",
+            target_id,
+            name="Leon Capeluto",
+            state="CONFIRMED",
             anchor_ids=["face_t1"],
         )
         source1 = self._make_identity(
-            source1_id, state="PROPOSED",
+            source1_id,
+            state="PROPOSED",
             anchor_ids=["face_s1a", "face_s1b"],
         )
         source2 = self._make_identity(
-            source2_id, state="PROPOSED",
+            source2_id,
+            state="PROPOSED",
             anchor_ids=["face_s2a"],
             candidate_ids=["face_s2b"],
         )
@@ -105,10 +113,11 @@ class TestBulkMerge:
         registry = self._make_registry([target, source1, source2])
         photo_reg = self._make_photo_registry()
 
-        with patch("app.main.load_registry", return_value=registry), \
-             patch("app.main.load_photo_registry", return_value=photo_reg), \
-             patch("app.main.save_registry"):
-
+        with (
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.load_photo_registry", return_value=photo_reg),
+            patch("app.main.save_registry"),
+        ):
             resp = client.post(
                 f"/api/identity/{target_id}/bulk-merge",
                 data={"bulk_ids": [source1_id, source2_id]},
@@ -137,11 +146,14 @@ class TestBulkMerge:
         source_id = "bbbb-source-2222"
 
         target = self._make_identity(
-            target_id, name="Leon Capeluto", state="CONFIRMED",
+            target_id,
+            name="Leon Capeluto",
+            state="CONFIRMED",
             anchor_ids=["face_t1"],
         )
         source = self._make_identity(
-            source_id, state="PROPOSED",
+            source_id,
+            state="PROPOSED",
             anchor_ids=["face_s1"],
             candidate_ids=["face_s2"],
         )
@@ -149,10 +161,11 @@ class TestBulkMerge:
         registry = self._make_registry([target, source])
         photo_reg = self._make_photo_registry()
 
-        with patch("app.main.load_registry", return_value=registry), \
-             patch("app.main.load_photo_registry", return_value=photo_reg), \
-             patch("app.main.save_registry"):
-
+        with (
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.load_photo_registry", return_value=photo_reg),
+            patch("app.main.save_registry"),
+        ):
             resp = client.post(
                 f"/api/identity/{target_id}/bulk-merge",
                 data={"bulk_ids": source_id},

@@ -1144,7 +1144,7 @@ def post(source_id: str, target_id: str, sess=None):
                 user_source="discovery_reject",
                 metadata={"rejected_identity_id": target_id, "context": "discovery"},
             )
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, changed_ids={source_id})
 
         # Log rejection to discovery_log for ML signal (AD-179)
         face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
@@ -1207,7 +1207,7 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None, request=N
                 metadata={"source_identity_id": source_id, "context": "discovery"},
             )
             if added:
-                _main_mod.save_registry(registry)
+                _main_mod.save_registry(registry, changed_ids={target_id})
 
         # Log confirmation to discovery_log
         _main_mod._update_discovery_log_entry(face_id, target_id, "confirmed")
@@ -1258,7 +1258,7 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
                 metadata={"source_identity_id": source_id, "context": "discovery"},
             )
             if removed:
-                _main_mod.save_registry(registry)
+                _main_mod.save_registry(registry, changed_ids={target_id})
 
         # Log undo to discovery_log — critical ML signal (false positive)
         _main_mod._update_discovery_log_entry(face_id, target_id, "undone")
