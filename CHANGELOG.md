@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.35] — 2026-03-20 (Session 125: Performance Completion + UX Quick Wins)
+
+### Performance
+- **PERF #6 — Unified embeddings parse**: embeddings.npy loaded ONCE via `_load_raw_embeddings()`, three consumers derive from shared cache (was 3 separate np.load calls)
+- **PERF #1 — Registry SWR**: Stale-while-revalidate for identity registry. TTL miss returns stale immediately, background thread refreshes. Lock prevents thundering herd.
+- **PERF #4 — Cold start**: Supabase health check + sync moved to background prewarm thread. Server accepts requests immediately.
+- **PERF #10 — Surgical invalidation**: Confirm/reject in cluster_review use `save_registry(changed_ids=)` instead of `_invalidate_all_caches()`
+- **PERF #8 — perf_cache metadata**: Cached confirmed identity metadata during rebuild, eliminating redundant `load_registry()` in `get_confirmed_distances()`
+
+### UX
+- **FB-161**: Speed-run reviewed_ids tracking — skipped/dismissed identities don't reappear in queue
+- **FB-151**: Suggestion names show full name on hover (title attribute + truncate)
+- **FB-163**: Community badge added to tag-search result rows
+- **Antigravity CSS merge**: blue→indigo, rounded-full→rounded-lg, aspect-square consistency across 6 route files
+
+### Tests
+- 29 new tests across 6 test files
+- Pre-existing confidence badge test fixed (blue→indigo)
+
 ## [v0.99.34] — 2026-03-19 (Session 124: Performance Blitz + UX Design Audit)
 
 ### Performance
