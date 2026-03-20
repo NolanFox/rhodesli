@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.34] — 2026-03-19 (Session 124: Performance Blitz + UX Design Audit)
+
+### Performance
+- **Recursive prefetch fix (Codex #2)**: Speed-run cards no longer cascade 179 prefetch requests — prefetched cards skip nested prefetch divs
+- **Community indexes SQL (Codex #5)**: Added `community_id` indexes on `photo_communities` and `identity_communities` tables
+- **Review groups cache (Codex #3)**: TTL cache (120s) for `_build_unresolved_review_groups()` O(n^2) distance matrix (815ms → 0ms on cache hit)
+
+### UX
+- **Mobile touch targets**: Close button p-1→p-3, active learning + batch action buttons responsive padding (44px on mobile, compact on desktop)
+- **Community prefix fix**: Real-time compare `/person/` links now use `nav_prefix`
+
+### Tests
+- 14 new tests (prefetch, cache, community indexes, UX)
+- Fixed test cache isolation for review groups
+
 ## [v0.99.33] — 2026-03-19 (Session 123: Performance + UX + Upload Audit)
 
 ### Performance
