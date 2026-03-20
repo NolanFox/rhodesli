@@ -133,6 +133,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-03-20: **v0.99.36 — Session 126**: Polish Sprint + UX Audit. SQL migration endpoint. 2 flaky test fixes (cache split, stale assertion). Speed-run reviewed_ids end-to-end wiring (JS + 5 server endpoints). P3 UX: sidebar dimming, sequential display names, compare button, 404 nav, people grid subtitle, share button. UX audit: 100+ blue→indigo, 45 gray→slate across 10 route files. 11 new tests. 3394 app tests pass.
+
 - [x] 2026-03-20: **v0.99.35 — Session 125**: Performance Completion + UX Quick Wins. PERF #1 (registry SWR), PERF #4 (cold start to background), PERF #6 (unified embeddings parse), PERF #8 (perf_cache metadata), PERF #10 (surgical cache invalidation). FB-161 (speed-run skip tracking), FB-151 (suggestion name truncation), FB-163 (community badge in tag search). Antigravity CSS merge (blue→indigo, rounded-2xl avatar, aspect-square). P2 UX review fixes (touch targets, contrast). 34 new tests. 4880 app tests pass.
 
 - [x] 2026-03-19: **v0.99.34 — Session 124**: Performance Blitz + UX Design Audit. Recursive prefetch fix (Codex #2 — 179 cascading requests eliminated). Community indexes SQL (Codex #5). Review groups O(n^2) cache (Codex #3 — 815ms → 0ms). Mobile touch targets + responsive button padding from Antigravity audit. Community prefix fix in real-time compare. 14 new tests. 3348 app tests pass.

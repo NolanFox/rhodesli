@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 126: Polish Sprint + UX Audit (2026-03-20) — v0.99.36
+- SQL migration endpoint `/api/admin/run-migrations` (admin-only, Supabase RPC)
+- 2 flaky test fixes: _raw_embeddings_cache split, stale landing page assertion
+- Speed-run reviewed_ids wired end-to-end: JS htmx:configRequest injection + 5 server endpoints
+- P3 UX: sidebar zero-count dimming, sequential display names, compare button, 404 nav, people grid subtitle, share button visibility
+- UX audit: 100+ blue→indigo, 45 gray→slate across 10 route files, rounded-lg on auth inputs
+- Antigravity: branch existed, 0 commits (session claimed success but commit lost)
+- 7 parallel worktree subagents across phases 3+4
+- 11 new tests. 3394 app tests pass. Deploy SUCCESS.
+
 ## Session 125: Performance Completion + UX Quick Wins (2026-03-20) — v0.99.35
 - PERF #1: Registry SWR — stale-while-revalidate, no blocking on TTL miss
 - PERF #4: Cold start — Supabase health/sync moved to background prewarm thread

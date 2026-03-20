@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.36] — 2026-03-20 (Session 126: Polish Sprint + UX Audit)
+
+### Infrastructure
+- **SQL migration endpoint**: `/api/admin/run-migrations` for DDL execution via Supabase RPC (community table indexes)
+
+### Bug Fixes
+- **Flaky tests fixed**: `_raw_embeddings_cache` not cleared alongside `_face_data_cache` (Session 125 cache split); stale landing page assertion
+- **Speed-run reviewed_ids wired end-to-end**: JS-side `htmx:configRequest` injection + server-side threading through all 5 speed-run endpoints (confirm-all, reject-all, skip, dismiss, next)
+
+### UX Polish
+- **P3 sidebar**: Zero-count items dimmed (`text-slate-600`), badge hidden when count=0
+- **Sequential display names**: "Unidentified Person efb4d153" → "Unidentified Person 1" (render-time mapping)
+- **Compare tool**: "Compare against all archive" button now primary indigo style; tools nav links get `py-3` padding
+- **404 page**: Photos/People nav links + "Go back" secondary link
+- **People grid**: "awaiting identification" count in subtitle; share button upgraded to visible indigo pill
+- **Color system sweep**: 100+ `blue-*` → `indigo-*` across 10 route files; 45 `gray-*` → `slate-*` in auth pages; `rounded` → `rounded-lg` on auth inputs
+
+### Tests
+- 11 new tests (migration endpoint, reviewed_ids wiring)
+- 2 flaky test fixes
+- 3394 tests pass, 0 failures
+
 ## [v0.99.35] — 2026-03-20 (Session 125: Performance Completion + UX Quick Wins)
 
 ### Performance
