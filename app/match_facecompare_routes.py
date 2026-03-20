@@ -8,9 +8,12 @@ plus match/facecompare-exclusive helpers.
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+_SAFE_UPLOAD_ID = re.compile(r"^[a-zA-Z0-9\-_]+$")
 
 import numpy as np
 from fasthtml.common import *
@@ -1614,6 +1617,9 @@ def post(upload_id: str = "", face_idx: int = 0):
     """Select a specific face from a multi-face upload for comparison."""
     from pathlib import Path as _Path
     import pickle
+
+    if not upload_id or not _SAFE_UPLOAD_ID.match(upload_id):
+        return Div(P("Invalid upload ID.", style="color: #ef4444; text-align: center; padding: 1rem;"), id="fc-results")
 
     # Load face data
     faces_path = _Path("uploads/facecompare") / f"{upload_id}_faces.pkl"

@@ -8,10 +8,13 @@ Shared helpers (caches, social graph, evidence sections) remain in app.main.
 import json
 import logging
 import os
+import re
 import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+_SAFE_UPLOAD_ID = re.compile(r"^[a-zA-Z0-9\-_]+$")
 
 import numpy as np
 from fasthtml.common import *
@@ -1609,8 +1612,10 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     job_dir = _main_mod.data_path / "staging" / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
 
-    # Sanitize and save file
-    safe_filename = original_filename.replace(" ", "_").replace("/", "_")
+    # Sanitize and save file — strip path components, handle traversal
+    safe_filename = Path(original_filename).name.replace(" ", "_").replace("/", "_").replace("\\", "_")
+    if not safe_filename or safe_filename.startswith("."):
+        safe_filename = f"upload_{uuid.uuid4().hex[:8]}.jpg"
     upload_path = job_dir / safe_filename
     with open(upload_path, "wb") as out:
         out.write(content)
@@ -3258,6 +3263,9 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None, request=None):
     import pickle
     from core.storage import can_write_r2, download_bytes_from_r2
 
+    if not upload_id or not _SAFE_UPLOAD_ID.match(upload_id):
+        return Div(P("Invalid upload ID.", cls="text-amber-500 text-center py-4"))
+
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_prefix = _main_mod.community_url_prefix(community_slug)
 
@@ -4352,6 +4360,9 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
 
     if not upload_a or not upload_b:
         return Div(P("Both photos must have a face selected.", cls="text-red-400 text-sm"))
+
+    if not _SAFE_UPLOAD_ID.match(upload_a) or not _SAFE_UPLOAD_ID.match(upload_b):
+        return Div(P("Invalid upload ID.", cls="text-red-400 text-sm"))
 
     # Load face embeddings for both uploads
     def _load_faces(uid):

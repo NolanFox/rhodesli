@@ -8,6 +8,7 @@ import io
 import json
 import logging
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -655,8 +656,10 @@ async def post(
     saved_files = []
     total_size = 0
     for f in valid_files:
-        # Sanitize filename
-        safe_filename = f.filename.replace(" ", "_").replace("/", "_")
+        # Sanitize filename — strip path components, handle traversal
+        safe_filename = Path(f.filename).name.replace(" ", "_").replace("/", "_").replace("\\", "_")
+        if not safe_filename or safe_filename.startswith("."):
+            safe_filename = f"upload_{uuid.uuid4().hex[:8]}.jpg"
         upload_path = job_dir / safe_filename
 
         # Read and check file size
