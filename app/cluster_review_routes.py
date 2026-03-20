@@ -219,14 +219,14 @@ def _active_learning_card(item, queue_run_id: str):
             Div(
                 Button(
                     "Same Person",
-                    cls="px-3 py-1.5 text-xs font-medium bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                    cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
                     hx_post=_active_learning_action_url("learn-same", item, queue_run_id),
                     hx_target=f"#active-learning-card-{pair_dom_id}",
                     hx_swap="outerHTML",
                 ),
                 Button(
                     "Different People",
-                    cls="px-3 py-1.5 text-xs font-medium bg-red-700/80 hover:bg-red-600 text-white rounded transition-colors ml-2",
+                    cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-red-700/80 hover:bg-red-600 text-white rounded transition-colors ml-2",
                     hx_post=_active_learning_action_url("learn-different", item, queue_run_id),
                     hx_target=f"#active-learning-card-{pair_dom_id}",
                     hx_swap="outerHTML",
@@ -293,7 +293,7 @@ def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
             Img(
                 src=crop_url,
                 alt=f"Face {face_id[:12]}",
-                cls="w-20 h-20 object-cover rounded",
+                cls="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded shadow-inner",
                 loading="lazy",
             ),
             cls="flex-shrink-0",
@@ -321,25 +321,25 @@ def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
             Button(
                 Span("\u2713", cls="mr-1"),
                 "Confirm",
-                cls="px-3 py-1.5 text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
+                cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
                 "text-white rounded transition-colors",
                 hx_post=f"/api/cluster-review/confirm?identity_id={identity_id}&face_id={face_id}",
                 hx_target=f"#match-card-{face_id.replace(':', '_')}",
-                hx_swap="outerHTML",
+                hx_swap="outerHTML swap:300ms",
             ),
             Button(
                 Span("\u2717", cls="mr-1"),
                 "Reject",
-                cls="px-3 py-1.5 text-xs font-medium bg-red-700/80 hover:bg-red-600 "
+                cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-red-700/80 hover:bg-red-600 "
                 "text-white rounded transition-colors ml-2",
                 hx_post=f"/api/cluster-review/reject?identity_id={identity_id}&face_id={face_id}",
                 hx_target=f"#match-card-{face_id.replace(':', '_')}",
-                hx_swap="outerHTML",
+                hx_swap="outerHTML swap:300ms",
             ),
             cls="flex-shrink-0 ml-3",
         ),
         id=f"match-card-{face_id.replace(':', '_')}",
-        cls="flex items-center p-3 bg-slate-800/60 border border-slate-700 rounded-lg",
+        cls="flex items-center p-3 bg-slate-800/60 border border-slate-700 rounded-lg htmx-swapping:opacity-0 htmx-swapping:scale-95 transition-all duration-300",
     )
 
 
@@ -390,7 +390,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
             Div(
                 Button(
                     "Confirm All",
-                    cls="px-3 py-1.5 text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
+                    cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-emerald-700 hover:bg-emerald-600 "
                     "text-white rounded transition-colors",
                     hx_post=f"/api/cluster-review/confirm-all?identity_id={identity_id}",
                     hx_target=f"#identity-group-{identity_id}",
@@ -398,7 +398,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
                 ),
                 Button(
                     "Reject All",
-                    cls="px-3 py-1.5 text-xs font-medium bg-red-700/80 hover:bg-red-600 "
+                    cls="px-4 py-3 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium bg-red-700/80 hover:bg-red-600 "
                     "text-white rounded transition-colors ml-2",
                     hx_post=f"/api/cluster-review/reject-all?identity_id={identity_id}",
                     hx_target=f"#identity-group-{identity_id}",
@@ -1891,7 +1891,12 @@ def _speed_run_cluster_card(
             # Action buttons
             Div(
                 Button(
-                    "Confirm All (Y)",
+                    Span(
+                        "Confirm All ",
+                        NotStr(
+                            "<kbd class='ml-1 px-1.5 py-0.5 rounded border border-white/20 bg-white/10 text-[10px] uppercase font-mono'>Y</kbd>"
+                        ),
+                    ),
                     cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors",
                     hx_post=f"/api/cluster-review/confirm-all?{common_params}",
                     hx_target="#speed-run-card",
@@ -1899,7 +1904,12 @@ def _speed_run_cluster_card(
                     data_action="speed-confirm",
                 ),
                 Button(
-                    "Reject All (N)",
+                    Span(
+                        "Reject All ",
+                        NotStr(
+                            "<kbd class='ml-1 px-1.5 py-0.5 rounded border border-white/20 bg-white/10 text-[10px] uppercase font-mono'>N</kbd>"
+                        ),
+                    ),
                     cls="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors",
                     hx_post=f"/api/cluster-review/reject-all?{common_params}",
                     hx_target="#speed-run-card",
@@ -1907,7 +1917,12 @@ def _speed_run_cluster_card(
                     data_action="speed-reject",
                 ),
                 Button(
-                    "Skip (S)",
+                    Span(
+                        "Skip ",
+                        NotStr(
+                            "<kbd class='ml-1 px-1.5 py-0.5 rounded border border-white/20 bg-white/10 text-[10px] uppercase font-mono'>S</kbd>"
+                        ),
+                    ),
                     cls="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-medium rounded-lg transition-colors",
                     hx_post=f"/api/cluster-review/skip?{common_params}",
                     hx_target="#speed-run-card",
@@ -1915,7 +1930,12 @@ def _speed_run_cluster_card(
                     data_action="speed-skip",
                 ),
                 Button(
-                    "Dismiss (D)",
+                    Span(
+                        "Dismiss ",
+                        NotStr(
+                            "<kbd class='ml-1 px-1.5 py-0.5 rounded border border-slate-600 bg-slate-800/50 text-[10px] uppercase font-mono text-slate-400'>D</kbd>"
+                        ),
+                    ),
                     cls="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-medium rounded-lg transition-colors border border-slate-600",
                     hx_post=f"/api/cluster-review/dismiss?{common_params}",
                     hx_target="#speed-run-card",

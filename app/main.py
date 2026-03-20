@@ -411,7 +411,7 @@ app, rt = fast_app(
                     '<div class="mobile-nav-panel absolute top-0 right-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto transition-transform duration-200" style="transform:translateX(100%)">' +
                     '<div class="flex items-center justify-between px-4 py-4 border-b border-slate-700">' +
                     '<span class="text-lg font-bold text-white">Rhodesli</span>' +
-                    '<button onclick="closeMobileNav()" class="text-slate-400 hover:text-white p-1" type="button" aria-label="Close menu">' +
+                    '<button onclick="closeMobileNav()" class="text-slate-400 hover:text-white p-3 -mr-2 -mt-2" type="button" aria-label="Close menu">' +
                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
                     '</button></div><div class="py-2 px-2" id="mobile-nav-links"></div></div>';
                 document.body.appendChild(overlay);
@@ -4968,7 +4968,7 @@ def _public_page_nav(
                 Span("Rhodesli", cls="text-lg font-display font-bold text-white"),
                 Button(
                     NotStr(close_svg),
-                    cls="text-slate-400 hover:text-white p-1",
+                    cls="text-slate-400 hover:text-white p-3 -mr-2 -mt-2",
                     onclick="closeMobileNav ? closeMobileNav() : document.getElementById('mobile-nav-overlay').classList.add('hidden');",
                     type="button",
                     aria_label="Close menu",
