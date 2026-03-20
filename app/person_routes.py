@@ -1062,6 +1062,39 @@ def public_person_page(
             data_testid="life-details",
         )
 
+    # --- "Can you help?" CTA for confirmed persons with unknown fields ---
+    can_you_help_cta = None
+    if is_confirmed and not is_admin:
+        unknown_fields = []
+        if not person_birth_year:
+            unknown_fields.append("when they were born")
+        if not death_year:
+            unknown_fields.append("when they passed away")
+        if not birth_place:
+            unknown_fields.append("where they were from")
+        if unknown_fields:
+            share_url = f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}"
+            can_you_help_cta = Div(
+                P(
+                    f"Do you know {', '.join(unknown_fields[:-1]) + ' or ' + unknown_fields[-1] if len(unknown_fields) > 1 else unknown_fields[0]}?",
+                    cls="text-slate-200 text-sm mb-1",
+                ),
+                P(
+                    f"Help us complete {display_name}'s record.",
+                    cls="text-slate-400 text-xs mb-3",
+                ),
+                A(
+                    "Share what you know",
+                    href=f"{nav_prefix}/person/{person_id}#annotations",
+                    cls="inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors",
+                    data_action="share-photo",
+                    data_share_url=share_url,
+                    data_share_title=f"Help us learn more about {display_name}",
+                ),
+                cls="text-center mb-5 bg-indigo-500/10 border border-indigo-500/30 rounded-xl px-5 py-4 max-w-md mx-auto",
+                data_testid="can-you-help-cta",
+            )
+
     # --- Page style ---
     page_style = Style("""
         html, body { margin: 0; }
@@ -1090,18 +1123,26 @@ def public_person_page(
                 "✕",
                 onclick="window.closeLightbox()",
                 cls="absolute top-4 right-4 text-white hover:text-amber-400 bg-black/50 hover:bg-black/80 rounded-full w-10 h-10 flex items-center justify-center transition-colors text-xl font-bold z-50 focus:outline-none",
-                type="button"
+                type="button",
             ),
-            Img(src="", alt="Enlarged photo view", cls="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg shadow-2xl"),
+            Img(
+                src="",
+                alt="Enlarged photo view",
+                cls="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg shadow-2xl",
+            ),
             Div(
-                A("View Photo Details \u2192", href="#", cls="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors active:scale-95"),
-                cls="text-center"
+                A(
+                    "View Photo Details \u2192",
+                    href="#",
+                    cls="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors active:scale-95",
+                ),
+                cls="text-center",
             ),
-            cls="relative p-2 md:p-6"
+            cls="relative p-2 md:p-6",
         ),
         id="lightbox-dialog",
         cls="hidden backdrop:bg-slate-950/90 backdrop:backdrop-blur-sm bg-transparent border-0 fixed inset-0 m-auto max-w-5xl w-full p-4 outline-none",
-        onclick="if(event.target === this) window.closeLightbox()"
+        onclick="if(event.target === this) window.closeLightbox()",
     )
 
     # --- Share button ---
@@ -1170,7 +1211,9 @@ def public_person_page(
                     ),
                     # Name + badge
                     Div(
-                        H1(display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3 tracking-tight"),
+                        H1(
+                            display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3 tracking-tight"
+                        ),
                         badge,
                         _name_provenance_line(person_id, is_admin),
                         cls="text-center mb-3",
@@ -1195,6 +1238,8 @@ def public_person_page(
                     P(stats_line, cls="text-slate-400 text-sm text-center mb-4 tabular-nums") if stats_line else None,
                     # Life details (birth/death/place with prompts for unknowns)
                     life_details_section,
+                    # "Can you help?" CTA for confirmed persons with unknown fields
+                    can_you_help_cta,
                     # Admin: ML birth year suggestion card (Gatekeeper pattern)
                     ml_suggestion_card,
                     # Admin: inline metadata editing
@@ -1422,7 +1467,7 @@ def public_person_page(
                         )
                         if state in ("INBOX", "PROPOSED", "SKIPPED")
                         else None,
-                        # Merge search
+                        # Merge search (with confirmation gate for CONFIRMED persons)
                         Div(
                             Input(
                                 name="q",
@@ -1433,7 +1478,77 @@ def public_person_page(
                                 hx_target=f"#merge-search-results-{person_id}",
                                 cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
                             ),
+                            # Confirmation warning for confirmed persons (hidden until merge attempt)
+                            Div(
+                                Div(
+                                    Span(
+                                        "\u26a0",
+                                        cls="text-amber-400 mr-2",
+                                    ),
+                                    Span(
+                                        "This person is confirmed. Are you sure you want to merge?",
+                                        cls="text-amber-300 text-xs",
+                                    ),
+                                    cls="flex items-center mb-2",
+                                ),
+                                Button(
+                                    "Yes, merge anyway",
+                                    type="button",
+                                    cls="px-3 py-1 text-xs font-bold bg-amber-600 text-white rounded hover:bg-amber-500 mr-2",
+                                    data_testid="confirm-merge-btn",
+                                    **{
+                                        "_": "on click "
+                                        "set el to my.closest('.merge-confirm-gate') "
+                                        "then set btn to el's @data-pending-btn "
+                                        "then if btn exists "
+                                        "set target to document.querySelector('[data-merge-id=\"' + btn + '\"]') "
+                                        "then if target exists trigger confirmed-merge on target "
+                                        "end "
+                                        "then add .hidden to el"
+                                    },
+                                ),
+                                Button(
+                                    "Cancel",
+                                    type="button",
+                                    cls="px-3 py-1 text-xs text-slate-400 hover:text-white rounded border border-slate-600",
+                                    **{"_": "on click add .hidden to my.closest('.merge-confirm-gate')"},
+                                ),
+                                cls="merge-confirm-gate hidden bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mb-2",
+                                id=f"merge-confirm-gate-{person_id}",
+                                data_testid="merge-confirm-gate",
+                            )
+                            if is_state_confirmed
+                            else None,
                             Div(id=f"merge-search-results-{person_id}"),
+                            # Hyperscript: intercept merge clicks for confirmed persons
+                            Script(f"""
+                                document.addEventListener('click', function(e) {{
+                                    var btn = e.target.closest('[hx-post*="/merge/"]');
+                                    if (!btn) return;
+                                    var container = document.getElementById('merge-search-results-{person_id}');
+                                    if (!container || !container.contains(btn)) return;
+                                    var gate = document.getElementById('merge-confirm-gate-{person_id}');
+                                    if (!gate) return;
+                                    if (btn.hasAttribute('data-merge-confirmed')) return;
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.stopImmediatePropagation();
+                                    var mergeId = 'merge-' + Date.now();
+                                    btn.setAttribute('data-merge-id', mergeId);
+                                    gate.setAttribute('data-pending-btn', mergeId);
+                                    gate.classList.remove('hidden');
+                                    var confirmBtn = gate.querySelector('[data-testid="confirm-merge-btn"]');
+                                    if (confirmBtn) {{
+                                        confirmBtn.onclick = function() {{
+                                            gate.classList.add('hidden');
+                                            btn.setAttribute('data-merge-confirmed', 'true');
+                                            btn.click();
+                                        }};
+                                    }}
+                                }}, true);
+                            """)
+                            if is_state_confirmed
+                            else None,
                             cls="flex flex-col items-center gap-1 mb-3",
                             data_testid="merge-search",
                         ),
