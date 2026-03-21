@@ -185,7 +185,12 @@ def _active_learning_card(item, queue_run_id: str):
     return Div(
         Div(
             Div(
-                Img(src=source_crop, alt=item["face_id_a"], cls="w-20 h-20 object-cover rounded", loading="lazy"),
+                Img(
+                    src=source_crop,
+                    alt=item["face_id_a"],
+                    cls="w-20 h-20 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-110",
+                    loading="lazy",
+                ),
                 P(item.get("source_identity_name", "Unknown"), cls="text-xs text-slate-300 mt-2"),
                 P(item["face_id_a"][:18], cls="text-[11px] text-slate-500"),
                 cls="flex-shrink-0",
@@ -203,7 +208,12 @@ def _active_learning_card(item, queue_run_id: str):
                 cls="px-3 text-center",
             ),
             Div(
-                Img(src=target_crop, alt=item["face_id_b"], cls="w-20 h-20 object-cover rounded", loading="lazy"),
+                Img(
+                    src=target_crop,
+                    alt=item["face_id_b"],
+                    cls="w-20 h-20 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-110",
+                    loading="lazy",
+                ),
                 P(item.get("target_identity_name", "Unknown"), cls="text-xs text-slate-300 mt-2"),
                 P(item["face_id_b"][:18], cls="text-[11px] text-slate-500"),
                 cls="flex-shrink-0",
@@ -250,8 +260,18 @@ def _recent_active_learning_card(label):
 
     return Div(
         Div(
-            Img(src=source_crop, alt=label["face_id_a"], cls="w-14 h-14 object-cover rounded", loading="lazy"),
-            Img(src=target_crop, alt=label["face_id_b"], cls="w-14 h-14 object-cover rounded ml-2", loading="lazy"),
+            Img(
+                src=source_crop,
+                alt=label["face_id_a"],
+                cls="w-14 h-14 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-110",
+                loading="lazy",
+            ),
+            Img(
+                src=target_crop,
+                alt=label["face_id_b"],
+                cls="w-14 h-14 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-110 ml-2",
+                loading="lazy",
+            ),
             cls="flex-shrink-0 flex",
         ),
         Div(
@@ -293,7 +313,7 @@ def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
             Img(
                 src=crop_url,
                 alt=f"Face {face_id[:12]}",
-                cls="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded shadow-inner",
+                cls="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-2xl shadow-inner transition-transform duration-300 group-hover:scale-110",
                 loading="lazy",
             ),
             cls="flex-shrink-0",
@@ -368,7 +388,7 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
             Img(
                 src=anchor_crop_url,
                 alt=identity_name,
-                cls="w-12 h-12 object-cover rounded-full border-2 border-slate-600",
+                cls="w-12 h-12 object-cover rounded-2xl border-2 border-slate-600",
             )
             if anchor_crop_url
             else Div(
@@ -445,7 +465,7 @@ def _gedcom_triage_card(identity_id, identity_name, face_count, has_gedcom, nav_
             Img(
                 src=anchor_crop_url,
                 alt=identity_name,
-                cls="w-14 h-14 object-cover rounded-lg border border-slate-600",
+                cls="w-14 h-14 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-110 border border-slate-600",
             )
             if anchor_crop_url
             else Div(cls="w-14 h-14 rounded-lg bg-slate-700"),
@@ -758,7 +778,7 @@ def _unresolved_review_group_card(group, nav_prefix=""):
                 Img(
                     src=primary["preview_crop_url"],
                     alt=primary["display_name"],
-                    cls="w-16 h-16 object-cover rounded-xl border border-slate-600",
+                    cls="w-16 h-16 object-cover rounded-2xl border border-slate-600 transition-transform duration-300 group-hover:scale-110",
                     loading="lazy",
                 )
                 if primary["preview_crop_url"]
@@ -1196,7 +1216,7 @@ def get(sess=None, request=None, mode: str = ""):
                         Img(
                             src=anchor_crop_url,
                             alt=display_name,
-                            cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
+                            cls="w-16 h-16 object-cover rounded-2xl border border-slate-600 transition-transform duration-300 group-hover:scale-110",
                             loading="lazy",
                         )
                         if anchor_crop_url
@@ -1837,7 +1857,7 @@ def _speed_run_cluster_card(
             img_el = Img(
                 src=crop_url,
                 alt=f"Face {fid[:12]}",
-                cls="w-28 h-28 object-cover rounded-lg border border-slate-600",
+                cls="w-28 h-28 object-cover rounded-2xl border border-slate-600 shadow-md",
                 loading="lazy",
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'",
             )
@@ -2070,7 +2090,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
             Img(
                 src=sug_crop,
                 alt=sug["name"],
-                cls="w-12 h-12 object-cover rounded-lg border border-slate-600",
+                cls="w-12 h-12 object-cover rounded-2xl border border-slate-600 transition-transform duration-300 group-hover:scale-110",
                 loading="lazy",
             )
             if sug_crop
@@ -2139,7 +2159,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
                 Img(
                     src=anchor_crop_url,
                     alt=display_name,
-                    cls="w-16 h-16 object-cover rounded-lg border border-slate-600",
+                    cls="w-16 h-16 object-cover rounded-2xl border border-slate-600 transition-transform duration-300 group-hover:scale-110",
                 )
                 if anchor_crop_url
                 else None,
@@ -2614,7 +2634,7 @@ def get(q: str = "", source_id: str = "", offset: int = 0, community_slug: str =
                 Img(
                     src=crop_url,
                     alt=r["name"],
-                    cls="w-10 h-10 object-cover rounded-lg border border-slate-600",
+                    cls="w-10 h-10 object-cover rounded-2xl border border-slate-600 transition-transform duration-300 group-hover:scale-110",
                     loading="lazy",
                 )
                 if crop_url
@@ -3072,7 +3092,7 @@ def _batch_card(identity_id, identity_data, face_count):
         Img(
             src=crop_url or "",
             alt=display_name,
-            cls="w-full aspect-square object-cover rounded-t-lg",
+            cls="w-full aspect-square object-cover rounded-t-xl transition-transform duration-300 group-hover:scale-110",
             loading="lazy",
             style="min-height:80px;min-width:80px;",
         )
