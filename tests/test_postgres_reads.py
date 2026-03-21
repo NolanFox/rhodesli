@@ -225,39 +225,25 @@ class TestIdentityRegistryPostgresLoad:
         assert registry._history == []
 
     @patch("core.registry.logger")
-    def test_load_merges_full_identity_override_payload(self, mock_logger):
+    def test_load_does_not_apply_identity_overrides(self, mock_logger):
+        """Session 129: identity_overrides was REMOVED because it overwrote
+        correct identities table data with stale snapshots, silently dropping
+        faces (36 faces lost across 4 identities). The identities table is
+        the single source of truth."""
         rows = _make_mock_supabase_identity_rows()
         mock_client = self._mock_client_with_rows(rows)
-        overrides = {
-            "aaaa-bbbb-cccc-dddd": {
-                "identity_id": "aaaa-bbbb-cccc-dddd",
-                "name": "Nace Capeluto",
-                "display_name": "Don Nace",
-                "state": "CONFIRMED",
-                "anchor_ids": ["face1", "face2"],
-                "candidate_ids": ["face3"],
-                "negative_ids": [],
-                "version_id": 4,
-                "metadata": {"birth_year": 1910},
-                "merge_history": [{"merge_event_id": "m1"}],
-                "provenance": {"job_id": "job-123"},
-                "created_at": "2026-01-01T00:00:00+00:00",
-                "updated_at": "2026-03-02T00:00:00+00:00",
-            }
-        }
 
         with (
             patch("app.supabase_data.get_supabase_client", return_value=mock_client),
-            patch("app.supabase_data.load_identity_overrides_from_supabase", return_value=overrides),
             patch("app.supabase_data.load_identity_history_from_supabase", return_value=None),
         ):
             registry = IdentityRegistry.load_from_postgres()
 
+        # Identity should have its ORIGINAL data from identities table, not overridden
         identity = registry._identities["aaaa-bbbb-cccc-dddd"]
-        assert identity["display_name"] == "Don Nace"
-        assert identity["merge_history"] == [{"merge_event_id": "m1"}]
-        assert identity["provenance"] == {"job_id": "job-123"}
-        assert identity["version_id"] == 4
+        assert identity["name"] == "Nace Capeluto"  # Original from identities table
+        assert identity["display_name"] == "Big Nace"  # Original from identities table
+        assert identity["anchor_ids"] == ["face1", "face2"]  # Original anchors, not clobbered
 
     @patch("core.registry.logger")
     def test_load_restores_identity_history_from_audit_log(self, mock_logger):

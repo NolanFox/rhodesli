@@ -1890,7 +1890,6 @@ class IdentityRegistry:
             from app.supabase_data import (
                 get_supabase_client,
                 load_identity_history_from_supabase,
-                load_identity_overrides_from_supabase,
             )
         except ImportError:
             logger.warning("supabase_data not available for Postgres load")
@@ -1955,12 +1954,11 @@ class IdentityRegistry:
                     identity["metadata"] = metadata
                 registry._identities[identity_id] = identity
 
-            overrides = load_identity_overrides_from_supabase() or {}
-            for identity_id, override in overrides.items():
-                merged = dict(registry._identities.get(identity_id, {}))
-                merged.update(override)
-                merged["identity_id"] = identity_id
-                registry._identities[identity_id] = merged
+            # NOTE: identity_overrides table REMOVED (Session 129).
+            # It was a legacy mechanism from the JSON-era data model that
+            # overwrote correct identities table data with stale snapshots,
+            # causing 36 faces to silently disappear across 4 identities.
+            # The identities table IS the source of truth — no overrides needed.
 
             registry._history = load_identity_history_from_supabase() or []
 

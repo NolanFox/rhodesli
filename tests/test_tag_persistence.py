@@ -94,7 +94,6 @@ class TestTagSavePath:
             patch("app.main.DATA_SOURCE", "postgres"),
             patch("app.main.time") as mock_time,
             patch("app.supabase_data.shadow_write_identities_batch") as mock_batch,
-            patch("app.supabase_data.sync_identity_overrides") as mock_overrides,
         ):
             mock_path.exists.return_value = True
             mock_time.time.return_value = 1000.0
@@ -102,12 +101,8 @@ class TestTagSavePath:
 
             result = save_registry(fake_registry, changed_ids={"id1", "id2"})
 
-        # sync_identity_overrides should receive only changed IDs
-        overrides_arg = mock_overrides.call_args[0][0]
-        assert set(overrides_arg.keys()) == {"id1", "id2"}
-        assert "id3" not in overrides_arg
-
-        # shadow_write_identities_batch should also receive only changed IDs
+        # Session 129: sync_identity_overrides REMOVED (caused stale data overwrites)
+        # shadow_write_identities_batch should receive only changed IDs
         batch_arg = mock_batch.call_args[0][0]
         batch_ids = {item["identity_id"] for item in batch_arg}
         assert batch_ids == {"id1", "id2"}

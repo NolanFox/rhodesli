@@ -1659,9 +1659,10 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     if DATA_SOURCE == "postgres":
         # Synchronous Supabase write — failures are visible (Session 105b)
         try:
-            from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
+            from app.supabase_data import shadow_write_identities_batch
 
-            sync_identity_overrides(identities_copy)
+            # NOTE: sync_identity_overrides REMOVED (Session 129).
+            # identity_overrides was a stale cache that overwrote correct data.
             items = [dict(v, identity_id=k) for k, v in identities_copy.items()]
             shadow_write_identities_batch(items, strict=True)
         except Exception as e:
@@ -1675,12 +1676,7 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
 
     # JSON mode: shadow-write to Supabase in background
     def _background_supabase_sync(identities_dict):
-        try:
-            from app.supabase_data import sync_identity_overrides
-
-            sync_identity_overrides(identities_dict)
-        except Exception as e:
-            logging.warning(f"Supabase identity sync failed (degraded mode): {e}")
+        # NOTE: sync_identity_overrides REMOVED (Session 129)
         try:
             from app.supabase_data import shadow_write_identities_batch
 

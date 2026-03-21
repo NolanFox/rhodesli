@@ -145,21 +145,20 @@ class TestSaveRegistryPreservesInvalidation:
     """Verify save_registry() preserves smart cache invalidation from Session 111f."""
 
     def test_save_registry_writes_to_supabase(self):
-        """When DATA_SOURCE=postgres, save_registry() writes synchronously to Supabase."""
+        """When DATA_SOURCE=postgres, save_registry() writes to Supabase.
+        Session 129: sync_identity_overrides removed — caused stale data overwrites."""
         import app.main as main_mod
 
         registry = IdentityRegistry()
         registry._identities = {"id1": {"name": "Test", "state": "CONFIRMED"}}
         registry._history = []
 
-        mock_sync = MagicMock()
         mock_shadow = MagicMock()
 
         with (
             patch.object(main_mod, "DATA_SOURCE", "postgres"),
             patch.object(registry, "save"),  # Mock JSON save
             patch("app.supabase_data.shadow_write_identities_batch", mock_shadow),
-            patch("app.supabase_data.sync_identity_overrides", mock_sync),
             patch("app.identity_routes.invalidate_neighbors_cache", MagicMock()),
             patch("app.cluster_review_routes.invalidate_cluster_review_caches", MagicMock()),
         ):
@@ -167,7 +166,6 @@ class TestSaveRegistryPreservesInvalidation:
 
         assert result is True
         mock_shadow.assert_called_once()
-        mock_sync.assert_called_once()
 
     def test_save_registry_surgical_invalidation_preserved(self):
         """Smart cache invalidation from Session 111f is called with changed_ids."""
