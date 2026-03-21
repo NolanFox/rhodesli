@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-152 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+153 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -147,6 +147,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 150 | **Three-source data (local JSON, Railway volume, Supabase) causes recurring split-brain — 8th occurrence. Direct Supabase fix doesn't update Railway volume cache. Need single source of truth.** |
 | 151 | **Never cache failure states that disable security/scoping boundaries — cached None for 120s leaked cross-community data** |
 | 152 | **Deployed Supabase queries must match actual schema — mock tests don't catch column mismatches (see also 105)** |
+| 153 | **Legacy data layers that "just sync" WILL silently corrupt production — 9th occurrence. identity_overrides overwrote correct anchor_ids with stale snapshots for 4 days. 36 faces lost. Fix: structural tests that fail if ANY override layer is re-introduced** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
