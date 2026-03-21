@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.38] — 2026-03-20 (Session 128: Security Hardening + Accessibility + Dead Code)
+
+### Security
+- **CSRF protection**: `SameSite=Strict` on session cookies + `_check_origin()` helper validates Origin/Referer on 11 dangerous POST routes (merge, confirm, reject, skip, rename, detach, approve, migrations)
+- **Rate limiting**: IP-based rate limiter (20 uploads/hour) on all 7 public upload endpoints + compare respond. New `app/rate_limit.py`
+- **ML token warning**: `logging.critical()` at startup if ML_SERVICE_URL set but token is default `"dev-token"`
+- **Duplicate routes removed**: 3 duplicate route handlers deleted (reject-match from browse_routes, correct-date and face-alignment from page_routes)
+- **SESSION_SECRET warning**: Critical log if default secret used in Railway environment
+
+### Accessibility
+- **Skip-to-content link**: SR-only link as first focusable element, reveals on focus
+- **Main landmark**: `<main id="main-content">` injected on all pages
+- **Focus indicators**: Global `focus-visible` CSS with indigo outline on all interactive elements
+- **Alt text**: 20+ `Img()` calls updated with meaningful alt text across 7 route files
+- **Aria labels**: 12+ icon-only buttons labeled (close, navigation, hamburger, toggle)
+
+### Cleanup
+- **Dead code removed**: `compare_v2_routes.py` (501 stubs) + stale test file
+- **Docs relocated**: `app/audit_notes.md` → `docs/`, `app/ui_spec.md` → `docs/`
+- **Duplicate sys.path**: Removed redundant insertion in main.py
+- **Label alignment**: Top bar "To Review" → "New Matches" (matches sidebar)
+- **CONTRIBUTOR_EMAILS**: Documented wiring status
+
+### Visual Polish (Antigravity)
+- **Cluster review**: `rounded-2xl` on all face crops, `group-hover:scale-110` animations, shadow upgrades
+
+### Tests
+- 87 new tests across 5 new test files (CSRF, rate limiting, duplicate routes, accessibility, alt text)
+- 3557 tests pass, 0 failures (1 pre-existing flaky xdist test)
+
 ## [v0.99.37] — 2026-03-20 (Session 127: Accessibility + Polish)
 
 ### Accessibility
