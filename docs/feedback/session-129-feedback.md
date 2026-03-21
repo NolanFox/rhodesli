@@ -22,6 +22,10 @@ Started: 2026-03-21
 | FB-014 | Identify Mode button green when not active | P3 | UX | BACKLOG |
 | FB-015 | "Back to Morris Shane" assumes navigation context | P3 | NAVIGATION | BACKLOG |
 | FB-016 | photo_faces uses inbox IDs, URLs use SHA256 IDs | P1 | DATA | BACKLOG |
+| FB-017 | Mobile — no easy way to switch communities | P1 | MOBILE | BACKLOG |
+| FB-018 | Compare Faces — "56 of 83" shows stale pre-merge count | P2 | DATA | BACKLOG |
+| FB-019 | Compare Faces modal — no merge/action buttons, dead-end UX | P2 | UX | BACKLOG |
+| FB-020 | Face count on person page doesn't reflect merged faces without embeddings | P2 | DATA | INVESTIGATING |
 
 ---
 
@@ -166,3 +170,38 @@ Started: 2026-03-21
 - **Context:** Batch-uploaded photos have inbox-style IDs in photo_faces (`inbox_fox-charlie-001_173_...`) but app generates SHA256 IDs for URLs (`10a7d40eb3bf94f7`). Face-to-identity lookup on photo pages uses SHA256 to query photo_faces, returns 0 results. This causes 10/18 faces on the Dayton Ohio group photo to appear orphaned.
 - **Root cause:** Upload pipeline writes inbox photo IDs to photo_faces. Photo page route generates SHA256 from filename. No mapping between formats.
 - **Fix:** BACKLOG — Either: (a) populate photo_faces with both ID formats, (b) add SHA256→inbox fallback lookup, or (c) migrate to consistent IDs. **Root cause of FB-002, FB-003, FB-006, FB-010.**
+
+### FB-017: Mobile — no easy way to switch communities
+- **Severity:** P1
+- **Category:** MOBILE
+- **Context:** On mobile, there's no visible community switcher. User has to tap the search icon (bottom right) to open sidebar, then find the "Switch" link. This is a multi-step discovery problem — new users would never find it.
+- **Device:** Mobile, Safari (iPhone)
+- **Screenshot:** N/A (user described workflow)
+- **Root cause:** Community switcher only exists in desktop sidebar. Mobile header/nav doesn't expose it.
+- **Fix:** BACKLOG — Add community switcher to mobile bottom nav or mobile header. Could be a dropdown in the top bar showing current community name, or a dedicated icon in the bottom nav bar.
+
+### FB-018: Compare Faces — "56 of 83" shows stale pre-merge count
+- **Severity:** P2
+- **Category:** DATA
+- **Context:** Compare Faces modal shows "56 of 83" pagination for Esther Burd Fox. After the merge (83+29=112), the count should be 112, not 83. The compare view is reading a cached or stale face count.
+- **Device:** Mobile, Safari
+- **Screenshot:** Screenshot 6:42 PM — Compare Faces modal showing "56 of 83"
+- **Root cause:** Compare Faces face count either: (a) was cached before the merge, or (b) only counts faces with valid embeddings/crops (which may be 83 if the 29 merged faces don't have crops).
+- **Fix:** BACKLOG — Ensure Compare Faces reads live anchor count from registry, not a cached value.
+
+### FB-019: Compare Faces modal — no merge/action buttons, dead-end UX
+- **Severity:** P2
+- **Category:** UX
+- **Context:** The Compare Faces modal shows "Unidentified Person d02660e1 vs Esther Burd Fox" with face crops and pagination. But there are NO action buttons — no "Merge", "Not Same", "Same Person" buttons. The user can compare visually but can't ACT on what they see. It's a dead-end: you compare, then close, then have to find the identity in a different view to take action.
+- **Device:** Mobile, Safari
+- **Screenshot:** Screenshot 6:42 PM
+- **Root cause:** Compare Faces modal was designed as read-only comparison. Action buttons were never added.
+- **Fix:** BACKLOG — Add "Same Person (Merge)" and "Not Same" action buttons at bottom of Compare Faces modal. After action, navigate to next comparison or close with success feedback.
+
+### FB-020: Face count on person page doesn't reflect merged faces without embeddings
+- **Severity:** P2
+- **Category:** DATA
+- **Context:** After merging Esther Burd Fox (83+29=112 anchors in Supabase), the person page shows ~83-86 faces, not 112. Supabase confirms 112 unique anchor_ids. The page renders ~87 crop images but labels it "83 faces". Some of the 29 merged faces likely don't have embeddings or crops in the production system.
+- **Device:** Desktop + Mobile
+- **Root cause:** The face count displayed on the person page is filtered by faces that have valid entries in the embeddings cache or photo_faces table, not the raw anchor_ids count. Faces from the merged identity (d4f29ffb) may not have been fully synced to all data layers.
+- **Fix:** INVESTIGATING — Need to verify which of the 29 merged faces have crops in R2 and entries in embeddings. The face count should either show all anchors or clearly indicate "X of Y faces have images".
