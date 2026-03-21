@@ -13,9 +13,9 @@ class TestAdminDashboardBanner:
         assert "admin-dashboard-banner" in response.text
 
     def test_banner_shows_to_review_count(self, client, auth_disabled):
-        """Banner should show the To Review count."""
+        """Banner should show the New Matches count (renamed from To Review)."""
         response = client.get("/?section=to_review")
-        assert "To Review" in response.text
+        assert "New Matches" in response.text
 
     def test_banner_shows_people_count(self, client, auth_disabled):
         """Banner should show the People count (renamed from Confirmed)."""
