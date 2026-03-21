@@ -1954,11 +1954,9 @@ class IdentityRegistry:
                     identity["metadata"] = metadata
                 registry._identities[identity_id] = identity
 
-            # NOTE: identity_overrides table REMOVED (Session 129).
-            # It was a legacy mechanism from the JSON-era data model that
-            # overwrote correct identities table data with stale snapshots,
-            # causing 36 faces to silently disappear across 4 identities.
-            # The identities table IS the source of truth — no overrides needed.
+            # NOTE: Session 129 removed a legacy override layer here that
+            # silently corrupted data by clobbering correct anchor_ids with
+            # stale snapshots. The identities table is the sole source of truth.
 
             registry._history = load_identity_history_from_supabase() or []
 

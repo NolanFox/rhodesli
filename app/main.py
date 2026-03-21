@@ -1661,7 +1661,7 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
         try:
             from app.supabase_data import shadow_write_identities_batch
 
-            # NOTE: sync_identity_overrides REMOVED (Session 129).
+            # NOTE: Stale override sync removed (Session 129).
             # identity_overrides was a stale cache that overwrote correct data.
             items = [dict(v, identity_id=k) for k, v in identities_copy.items()]
             shadow_write_identities_batch(items, strict=True)
@@ -1676,7 +1676,7 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
 
     # JSON mode: shadow-write to Supabase in background
     def _background_supabase_sync(identities_dict):
-        # NOTE: sync_identity_overrides REMOVED (Session 129)
+        # NOTE: Stale override sync removed (Session 129)
         try:
             from app.supabase_data import shadow_write_identities_batch
 
