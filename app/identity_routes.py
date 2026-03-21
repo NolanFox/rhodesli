@@ -17,6 +17,7 @@ from starlette.responses import Response
 from core.registry import IdentityRegistry
 from core.ui_safety import ensure_utf8_display
 
+from app.auth import _check_origin
 from app.main import rt
 from app.utils import photo_url, _section_for_state
 from app.audit import _log_audit
@@ -80,6 +81,9 @@ def post(
     Confirm an identity (move from PROPOSED to CONFIRMED).
     Requires admin.
     """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -323,6 +327,9 @@ def post(
     request=None,
 ):
     """Contest/reject an identity (move to CONTESTED). Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -2010,6 +2017,9 @@ def post(
     - Records merge_history on target for undo capability
     - Promotes target state if source had higher-trust state
     """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -2827,6 +2837,9 @@ def get(identity_id: str, request=None):
 @rt("/api/identity/{identity_id}/rename")
 def post(identity_id: str, name: str = "", sess=None, request=None):
     """Rename an identity. Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -3538,6 +3551,9 @@ def post(photo_ids: str = "[]", collection: str = "", source: str = "", source_u
 @rt("/api/face/{face_id:path}/detach")
 def post(face_id: str, sess=None, request=None):
     """Detach a face from its identity into a new identity. Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -3646,6 +3662,9 @@ def post(face_id: str, sess=None, request=None):
 @rt("/api/identity/{id}/skip")
 def post(id: str, sess=None, request=None):
     """Log the skip action. Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -3949,6 +3968,9 @@ def post(
 
     Works from INBOX or PROPOSED state -> SKIPPED.
     """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
