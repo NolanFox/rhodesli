@@ -90,7 +90,7 @@ class TestAllFacesRendered:
             html = repr(card)
 
             # Should have 12 img tags (one per face), not 8
-            assert html.count("object-cover rounded-lg") >= 12
+            assert html.count("object-cover rounded-2xl") >= 12
             # Should NOT have a "+N more" badge
             assert "+4" not in html
             assert "+more" not in html.lower().replace(" ", "")
