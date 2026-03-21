@@ -57,7 +57,7 @@ from starlette.responses import FileResponse, HTMLResponse
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
+# sys.path already inserted at line 25 — duplicate removed (Session 128)
 
 from core.registry import IdentityRegistry, IdentityState
 from core.config import (
@@ -4998,7 +4998,7 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     photo_count = counts.get("photo_count", 0)
 
     stat_items = [
-        ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-500"),
+        ("New Matches", to_review, "/?section=to_review&view=focus", "text-amber-500"),
         ("People", confirmed, "/?section=confirmed", "text-emerald-500"),
         ("Help Identify", skipped, "/?section=skipped", "text-amber-300"),
     ]

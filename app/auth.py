@@ -34,6 +34,9 @@ INVITE_CODES = [c.strip() for c in os.getenv("INVITE_CODES", "").split(",") if c
 ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
 # Contributor emails — users with these emails get contributor role
+# Wired: User.from_session() checks this set to assign role="contributor".
+# Currently no CONTRIBUTOR_EMAILS set in production (admin-only model).
+# When set, contributors get upload access but not identity mutation access.
 CONTRIBUTOR_EMAILS = {e.strip().lower() for e in os.getenv("CONTRIBUTOR_EMAILS", "").split(",") if e.strip()}
 
 # ROLE-003: Trusted contributor threshold — number of approved annotations
