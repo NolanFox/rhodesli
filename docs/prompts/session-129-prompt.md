@@ -5,9 +5,11 @@
 
 ## Goal
 
-Dual-track session: (A) collect and log every piece of UX feedback while Nolan triages the Fox Family archive, and (B) find and ship an order-of-magnitude performance improvement in parallel.
+Three parallel tracks: (A) collect and log every piece of UX feedback while Nolan triages the Fox Family archive, (B) find and ship an order-of-magnitude performance improvement, and (C) fix the P0 community scoping bug where Focus mode leaks to wrong community after actions.
 
 **Session mode: interactive** — User gives real-time feedback (screenshots, voice notes, text). Log EVERYTHING as FB-NNN per `.claude/rules/interactive-session-feedback.md`.
+
+**CRITICAL: Do not break existing functionality. Do not cause data issues. Run tests before every commit.**
 
 ---
 
@@ -91,13 +93,62 @@ Launch as a background worktree subagent with this prompt:
 
 ---
 
-## Phase 1: Merge Track B Results (when subagent completes)
+## Track C: Community Scoping Bug Fix (background subagent in worktree)
+
+**P0 BUG**: When triaging in Focus mode on `/c/fox-family/?section=to_review`, after performing an action (merge, skip, confirm, "not same"), the NEXT identity shown is from the wrong community (Rhodes instead of Fox Family). The URL still says `/c/fox-family/` but the content leaks to the global/Rhodes pool.
+
+Launch as a background worktree subagent:
+
+> You are fixing a P0 community scoping bug in the Rhodesli heritage photo archive.
+>
+> ### The Bug
+> On `/c/fox-family/?section=to_review` in Focus mode, after any action (merge, skip, confirm, reject), the next identity shown comes from the wrong community. The sidebar still shows "Fox Family Archive" but the main content shows Rhodes community people.
+>
+> ### Root Cause Investigation
+> 1. Find the Focus mode "next identity" endpoint — grep for `section=to_review`, `view=focus`, or `next` in `app/main.py` and `app/identity_routes.py`
+> 2. Check if the HTMX `hx-get` or `hx-post` on action buttons (Merge, Skip, Confirm, Not Same) passes the community slug
+> 3. Check if the endpoint that returns the next identity filters by community
+> 4. The community prefix `/c/fox-family/` should scope ALL queries. If the action endpoint redirects or returns a new identity without community filtering, that's the bug.
+> 5. Also check: does the `_get_next_focus_identity()` or equivalent function accept and use a community parameter?
+>
+> ### Known Context
+> - Community middleware sets `request.state.community` from the URL prefix
+> - Lesson 109: CommunityMiddleware /api/ skip creates dual-path problem — HTMX URLs must include /c/ prefix
+> - Lesson 112: Community-scoped pages must filter ALL sections
+> - Previous partial fix in Session 111 (community prefix sweep)
+> - This bug has been reported before and "fixed" but persists
+>
+> ### Fix
+> - Ensure ALL action endpoints (merge, skip, confirm, reject-match, not-same) pass community_slug to the next-identity lookup
+> - Ensure the next-identity lookup filters identities by community
+> - Write tests that verify: after a community-scoped action, the next identity is from the same community
+>
+> ### Rules
+> - `source venv/bin/activate` before tests
+> - `make test-fast` must pass
+> - Do NOT modify data/ or core/ files
+> - Write at least 3 tests for this fix
+> - Commit: `fix(community): session 129 — focus mode community scoping after actions`
+
+---
+
+## Phase 1: Merge Track B + C Results (when subagents complete)
 
 1. Review changes for safety
 2. Merge worktree to main
 3. Run tests
 4. Deploy
 5. Log before/after measurements
+
+---
+
+## Track D: Observability Audit (quick, can be done by orchestrator)
+
+User expects that admin actions (merge, skip, confirm, reject) are logged with enough detail to debug issues. Check:
+1. Are all identity mutation actions logged to `audit_log` table? (Session 113 added 22 calls)
+2. Are the logs queryable — can we see what the user did, when, and what identity was affected?
+3. If NOT: add structlog entries for every Focus mode action with: action type, identity_id, community_slug, timestamp, user email
+4. This feeds into the broader goal of understanding usage patterns and debugging UX issues
 
 ---
 
