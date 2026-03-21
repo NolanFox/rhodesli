@@ -120,7 +120,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                         f"{photo['confirmed_count']}/{photo['face_count']}"
                         if photo["confirmed_count"] > 0
                         else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
-                        cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
+                        cls=f"absolute top-2 right-2 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm {badge_cls}",
                     )
                     if photo["face_count"] > 0
                     else None,
@@ -130,7 +130,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                     style=aspect_style if aspect_style else None,
                 ),
                 Div(
-                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
+                    P(photo["collection"] or "", cls="text-sm sm:text-xs text-slate-500 leading-snug")
                     if photo["collection"]
                     else None,
                     P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight") if provenance else None,
@@ -349,7 +349,7 @@ def get(
         photo_cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
-                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                P("Loading more photos...", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
@@ -406,7 +406,7 @@ def get(
         A(
             "All",
             href=_filter_url(decade=""),
-            cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+            cls="px-3 py-1 text-sm sm:text-xs rounded-full transition-colors font-serif "
             + (
                 "bg-amber-700 text-white"
                 if not decade
@@ -420,7 +420,7 @@ def get(
             A(
                 f"{dec}s ({count})",
                 href=_filter_url(decade=str(dec)),
-                cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+                cls="px-3 py-1 text-sm sm:text-xs rounded-full transition-colors font-serif "
                 + (
                     "bg-amber-700 text-white"
                     if is_active
@@ -440,7 +440,7 @@ def get(
             A(
                 f"{display_name} ({tag_count})",
                 href=_filter_url(tag=tag_name if not is_active else ""),
-                cls="px-2.5 py-1 text-[11px] rounded-full transition-colors "
+                cls="px-4 py-3 sm:px-2.5 sm:py-1 text-[11px] rounded-full transition-colors "
                 + (
                     "bg-indigo-600 text-white"
                     if is_active
@@ -523,40 +523,40 @@ def get(
                                 name="search_q",
                                 value=search_q,
                                 placeholder="Search scenes, text, people...",
-                                cls="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 w-full sm:w-64 focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-slate-500",
+                                cls="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 w-full sm:w-64 focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-slate-500",
                                 data_testid="photo-search",
                                 onkeydown=f"if(event.key==='Enter')window.location.href='/photos?search_q='+encodeURIComponent(this.value)+'&decade={decade or ''}&tag={_url_quote(tag)}&filter_collection={_url_quote(filter_collection)}&sort_by={sort_by}'",
                             ),
                             cls="flex-shrink-0",
                         ),
                         # Tag pills
-                        Div(*tag_pills, cls="flex flex-wrap gap-1.5") if tag_pills else None,
+                        Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center") if tag_pills else None,
                         cls="flex flex-wrap items-center gap-3 mb-3",
                     ),
                     # Collection/sort/media dropdowns
                     Div(
                         Select(
                             *collection_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter={_url_quote(media_filter)}'",
                         ),
                         Select(
                             *sort_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value + '&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter={_url_quote(media_filter)}'",
                         ),
                         Div(
                             Span("Media:", cls="text-sm text-slate-400 mr-1"),
                             Select(
                                 *media_options,
-                                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                                 onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter=' + this.value",
                             ),
                             cls="flex items-center",
                         ),
                         Span(
                             f"{len(photos)} result{'s' if len(photos) != 1 else ''}",
-                            cls="text-xs text-slate-500 ml-auto",
+                            cls="text-sm sm:text-xs text-slate-500 ml-auto",
                         ),
                         cls="flex flex-wrap items-center gap-3 mb-6",
                     ),
@@ -597,7 +597,7 @@ def get(
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -718,7 +718,7 @@ def photos_more(
         cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
-                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                P("Loading more photos...", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
@@ -896,7 +896,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                     ),
                     Div(
                         *person_cards,
-                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
                     )
                     if person_cards
                     else Div(
@@ -911,7 +911,7 @@ def get(sort_by: str = "name", sess=None, request=None):
             # CTA
             Section(
                 Div(
-                    H3("Can you help identify someone?", cls="text-lg font-serif text-white mb-2"),
+                    H3("Can you help identify someone?", cls="text-xl sm:text-lg font-serif text-white mb-2"),
                     P("Browse the photos and let us know if you recognize anyone.", cls="text-slate-400 text-sm mb-4"),
                     A(
                         "Browse Photos",
@@ -925,7 +925,7 @@ def get(sort_by: str = "name", sess=None, request=None):
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -1035,7 +1035,7 @@ def get(identity_id: str, sess=None, request=None):
             admin_actions.append(
                 Button(
                     "Merge",
-                    cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
                     hx_post=(
                         f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}"
                         f"?source=similar_page&return_to={nav_prefix}/people/{identity_id}/similar"
@@ -1049,7 +1049,7 @@ def get(identity_id: str, sess=None, request=None):
             admin_actions.append(
                 Button(
                     "Not Same",
-                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-300 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-500 text-slate-300 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
                     hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
                     hx_target=f"#search-result-{nid}",
                     hx_swap="outerHTML",
@@ -1060,7 +1060,7 @@ def get(identity_id: str, sess=None, request=None):
                 A(
                     "Review in Queue",
                     href=f"{nav_prefix}/?section={neighbor_section}&view=browse#identity-{nid}",
-                    cls="text-xs px-2 py-1 border border-slate-600 text-slate-300 rounded hover:border-slate-500 hover:text-white transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-600 text-slate-300 rounded hover:border-slate-500 hover:text-white transition-colors",
                     data_testid="similar-review-queue-link",
                 )
             )
@@ -1082,8 +1082,8 @@ def get(identity_id: str, sess=None, request=None):
                     cls="flex items-center gap-1 flex-wrap mt-1",
                 ),
                 Div(
-                    Span(tier_label, cls=f"text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
-                    Span(f"{n.get('distance', 0):.2f}", cls="text-xs text-slate-500 ml-2") if is_admin else None,
+                    Span(tier_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
+                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2") if is_admin else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
                 P(
@@ -1104,7 +1104,7 @@ def get(identity_id: str, sess=None, request=None):
                 else None,
                 Span(
                     f"{n.get('face_count', 0)} face{'s' if n.get('face_count', 0) != 1 else ''}",
-                    cls="text-xs text-slate-400 mt-0.5 block",
+                    cls="text-sm sm:text-xs text-slate-400 mt-0.5 block",
                 )
                 if n.get("face_count", 0) > 1
                 else None,
@@ -1187,15 +1187,15 @@ def get(identity_id: str, sess=None, request=None):
                             Div(
                                 Span(
                                     f"{mergeable_count} mergeable",
-                                    cls="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20",
+                                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20",
                                 ),
                                 Span(
                                     f"{blocked_count} blocked",
-                                    cls="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20",
+                                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20",
                                 ),
                                 Span(
                                     f"{dismissed_count} dismissed/contested",
-                                    cls="text-xs px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600",
+                                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600",
                                 ),
                                 cls="flex flex-wrap gap-2 mb-4",
                                 data_testid="similar-admin-summary",
@@ -1206,7 +1206,7 @@ def get(identity_id: str, sess=None, request=None):
                                 "Use this page to review candidates, then jump straight back into the queue when you need more surrounding context."
                                 if is_admin
                                 else "",
-                                cls="text-xs text-slate-500 mb-4 max-w-xl",
+                                cls="text-sm sm:text-xs text-slate-500 mb-4 max-w-xl",
                             )
                             if is_admin
                             else None,
@@ -1392,7 +1392,7 @@ def get(identity_id: str, sess=None, request=None):
             tile_actions.append(
                 Button(
                     "Compare",
-                    cls="text-xs px-2 py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
                     hx_get=f"{nav_prefix}/api/identity/{identity_id}/compare/{nid}",
                     hx_target="#compare-modal-content",
                     hx_swap="innerHTML",
@@ -1411,7 +1411,7 @@ def get(identity_id: str, sess=None, request=None):
                 tile_actions.append(
                     Button(
                         "Merge",
-                        cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+                        cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
                         hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}",
                         hx_target=f"#expand-{css_id}",
                         hx_swap="innerHTML",
@@ -1423,7 +1423,7 @@ def get(identity_id: str, sess=None, request=None):
             tile_actions.append(
                 Button(
                     "Not Same",
-                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
                     hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
                     hx_target=f"#similar-tile-{make_css_id(nid)}",
                     hx_swap="outerHTML",
@@ -1496,12 +1496,12 @@ def get(identity_id: str, sess=None, request=None):
     hero_section = Div(
         Img(src=hero_url, alt=name, cls="w-20 h-20 rounded-lg object-cover flex-shrink-0") if hero_url else None,
         Div(
-            Span(name or "Unidentified", cls="text-lg font-semibold text-white block"),
+            Span(name or "Unidentified", cls="text-xl sm:text-lg font-semibold text-white block"),
             Span(f"{len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}", cls="text-sm text-slate-400"),
             A(
                 "View Profile",
                 href=f"{nav_prefix}/person/{identity_id}",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 block mt-1",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 block mt-1",
             ),
             cls="min-w-0",
         ),
@@ -1566,8 +1566,8 @@ def get(sess=None, request=None):
             A(
                 preview_grid,
                 H3(col_name, cls="text-white font-semibold text-sm mb-1 line-clamp-2"),
-                P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-xs text-slate-400"),
-                P(face_line, cls="text-xs text-slate-500 mt-0.5"),
+                P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400"),
+                P(face_line, cls="text-sm sm:text-xs text-slate-500 mt-0.5"),
                 href=f"{nav_prefix}/collection/{slug}",
                 cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                 data_testid="collection-card",
@@ -1727,7 +1727,7 @@ def get(slug: str, sess=None, request=None):
                 A(
                     p_name,
                     href=f"{nav_prefix}/person/{pid}",
-                    cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                    cls="inline-block px-4 py-3 sm:px-2.5 sm:py-1 text-sm sm:text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                 )
             )
         people_section = Div(
@@ -1800,7 +1800,7 @@ def get(slug: str, sess=None, request=None):
                         Button(
                             NotStr(_main_mod._SHARE_ICON_SVG),
                             " Share Collection",
-                            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
                             type="button",
                             data_action="share-photo",
                             data_share_url=share_url,
@@ -1813,7 +1813,7 @@ def get(slug: str, sess=None, request=None):
                         A(
                             "+ Add Photos",
                             href=f"{nav_prefix}/upload",
-                            cls="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3",
                         )
                         if (user and user.is_admin if _main_mod.is_auth_enabled() else False)
                         else None,
@@ -1838,7 +1838,7 @@ def get(slug: str, sess=None, request=None):
                 if col["unidentified_count"] > 0
                 else "",
                 # Photo grid
-                Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"),
+                Div(*photo_cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"),
                 # People section
                 people_section,
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",

@@ -550,7 +550,7 @@ def _community_landing_page(community: dict, slug: str):
     content_section = (
         Div(
             Div(
-                P("How you can help", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70 mb-3"),
+                P("How you can help", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70 mb-3"),
                 H3(
                     "Start with the archive, not a dead end",
                     cls="text-2xl md:text-3xl font-display text-white mb-3",
@@ -677,12 +677,12 @@ def _platform_root_page(auth_enabled: bool = False):
                 Div(
                     Div(
                         Span(str(photo_count), cls="block text-2xl font-semibold text-amber-200"),
-                        Span("photos", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                        Span("photos", cls="text-sm sm:text-xs uppercase tracking-[0.2em] text-slate-500"),
                         cls="rounded-lg border border-slate-700/70 bg-slate-900/50 px-4 py-3",
                     ),
                     Div(
                         Span(str(identity_count), cls="block text-2xl font-semibold text-amber-200"),
-                        Span("people", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                        Span("people", cls="text-sm sm:text-xs uppercase tracking-[0.2em] text-slate-500"),
                         cls="rounded-lg border border-slate-700/70 bg-slate-900/50 px-4 py-3",
                     ),
                     cls="grid grid-cols-2 gap-3 mb-6",
@@ -780,7 +780,7 @@ def _platform_root_page(auth_enabled: bool = False):
             Section(
                 Div(
                     Div(
-                        Span("Platform", cls="text-xs uppercase tracking-[0.32em] text-amber-300/80"),
+                        Span("Platform", cls="text-sm sm:text-xs uppercase tracking-[0.32em] text-amber-300/80"),
                         H1(
                             "Choose an archive, then help preserve it.",
                             cls="mt-4 text-4xl md:text-6xl font-display text-white leading-tight",
@@ -788,7 +788,7 @@ def _platform_root_page(auth_enabled: bool = False):
                         P(
                             "Rhodesli keeps platform, archive, and contribution contexts distinct. "
                             "Pick the archive you mean to explore so browsing, identifying, and sharing stay coherent.",
-                            cls="mt-5 max-w-3xl text-lg text-slate-300",
+                            cls="mt-5 max-w-3xl text-xl sm:text-lg text-slate-300",
                         ),
                         Div(
                             A(
@@ -806,15 +806,15 @@ def _platform_root_page(auth_enabled: bool = False):
                         Div(
                             Div(
                                 Span(str(len(archive_cards)), cls="block text-3xl font-semibold text-amber-200"),
-                                Span("archives", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                                Span("archives", cls="text-sm sm:text-xs uppercase tracking-[0.2em] text-slate-500"),
                             ),
                             Div(
                                 Span(str(total_photos), cls="block text-3xl font-semibold text-amber-200"),
-                                Span("photos", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                                Span("photos", cls="text-sm sm:text-xs uppercase tracking-[0.2em] text-slate-500"),
                             ),
                             Div(
                                 Span(str(total_identities), cls="block text-3xl font-semibold text-amber-200"),
-                                Span("people", cls="text-xs uppercase tracking-[0.2em] text-slate-500"),
+                                Span("people", cls="text-sm sm:text-xs uppercase tracking-[0.2em] text-slate-500"),
                             ),
                             cls="mt-10 grid grid-cols-3 gap-4 max-w-2xl",
                             id="stats",
@@ -824,7 +824,7 @@ def _platform_root_page(auth_enabled: bool = False):
                     Div(
                         Div(*showcase_cards, cls="grid platform-mosaic gap-4") if showcase_cards else None,
                         Div(
-                            P("Featured public archive", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                            P("Featured public archive", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70"),
                             H2("Jewish Community of Rhodes", cls="mt-3 text-2xl font-display text-white"),
                             P(
                                 "The Rhodes archive remains the clearest public example of the platform. "
@@ -843,7 +843,7 @@ def _platform_root_page(auth_enabled: bool = False):
             Section(
                 Div(
                     Div(
-                        Span("Archive directory", cls="text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                        Span("Archive directory", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70"),
                         H2("Enter the archive you actually mean to use.", cls="mt-3 text-3xl font-display text-white"),
                         P(
                             "This removes the old Rhodes-by-default ambiguity. Each archive keeps its own landing page, help flow, and share context.",
@@ -900,8 +900,8 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                 Div(*face_overlays, cls="face-overlay") if face_overlays else None,
                 # Face count badge
                 Div(
-                    Span(f"{p['face_count']} faces detected", cls="text-xs"),
-                    cls="absolute bottom-2 right-2 bg-black/70 text-amber-200 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                    Span(f"{p['face_count']} faces detected", cls="text-sm sm:text-xs"),
+                    cls="absolute bottom-2 right-2 bg-black/70 text-amber-200 px-4 py-3 sm:px-2 sm:py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300",
                 )
                 if p.get("face_count", 0) > 0
                 else None,
@@ -1379,7 +1379,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         ),
                         Span(
                             "Heritage Archive",
-                            cls="text-xs text-amber-500/80 ml-2 hidden md:inline tracking-[0.2em] uppercase font-mono",
+                            cls="text-sm sm:text-xs text-amber-500/80 ml-2 hidden md:inline tracking-[0.2em] uppercase font-mono",
                         ),
                         cls="flex items-baseline",
                     ),
@@ -1405,7 +1405,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                 "preserving ancient traditions, and filling the Juderia with life. In July 1944, nearly all were "
                                 "deported to Auschwitz. Only 151 survived. This archive uses face recognition to reconnect their "
                                 "descendants with the faces and stories that remain.",
-                                cls="text-lg md:text-xl text-amber-100/70 mt-8 max-w-3xl mx-auto leading-relaxed font-serif ui99-landing-body",
+                                cls="text-xl sm:text-lg md:text-xl text-amber-100/70 mt-8 max-w-3xl mx-auto leading-relaxed font-serif ui99-landing-body",
                             ),
                             # CTA buttons
                             Div(
@@ -1423,7 +1423,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         # Instruction hint
                         P(
                             "Hover over photos to reveal face detection",
-                            cls="text-center text-amber-400/40 text-xs mt-3 tracking-wide uppercase animate-gentle-pulse",
+                            cls="text-center text-amber-400/40 text-sm sm:text-xs mt-3 tracking-wide uppercase animate-gentle-pulse",
                         ),
                         cls="hero-frame animate-fade-in-up delay-1",
                     )
@@ -1437,7 +1437,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             # Names ticker -- confirmed identities scrolling
             Section(
                 Div(
-                    P("Identified so far", cls="text-center text-amber-400/50 text-xs tracking-widest uppercase mb-3"),
+                    P("Identified so far", cls="text-center text-amber-400/50 text-sm sm:text-xs tracking-widest uppercase mb-3"),
                     Div(
                         Div(
                             *[
@@ -1483,7 +1483,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     Div(
                         Span(
                             f"{min(100, int(stats['named_count'] / max(1, stats['total_faces']) * 100))}% complete",
-                            cls="text-amber-400/60 text-xs",
+                            cls="text-amber-400/60 text-sm sm:text-xs",
                         ),
                         cls="text-center mt-2",
                     ),
@@ -1530,7 +1530,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     Div(
                         A(
                             Div(
-                                Div("Do you recognize anyone?", cls="text-lg font-semibold font-serif"),
+                                Div("Do you recognize anyone?", cls="text-xl sm:text-lg font-semibold font-serif"),
                                 P(
                                     "Your knowledge preserves irreplaceable history.",
                                     cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
@@ -1543,7 +1543,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         ),
                         A(
                             Div(
-                                Div("Compare a Face", cls="text-lg font-semibold font-serif"),
+                                Div("Compare a Face", cls="text-xl sm:text-lg font-semibold font-serif"),
                                 P(
                                     "Upload a photo and let AI find matches across the archive.",
                                     cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
@@ -1556,7 +1556,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         ),
                         A(
                             Div(
-                                Div("Explore the Archive", cls="text-lg font-semibold font-serif"),
+                                Div("Explore the Archive", cls="text-xl sm:text-lg font-semibold font-serif"),
                                 P(
                                     "Browse photos, people, and collections from over nine decades.",
                                     cls="text-sm text-amber-200/60 mt-2 leading-relaxed",
@@ -1587,7 +1587,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>'
                                 ),
                                 H3("Browse Photos", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P(f"{stats['photo_count']} photos from 9 decades", cls="text-amber-100/40 text-xs"),
+                                P(f"{stats['photo_count']} photos from 9 decades", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/photos",
@@ -1599,7 +1599,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>'
                                 ),
                                 H3("People", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P(f"{stats['named_count']} identified people", cls="text-amber-100/40 text-xs"),
+                                P(f"{stats['named_count']} identified people", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/people",
@@ -1611,7 +1611,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>'
                                 ),
                                 H3("Map", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P("See where families settled", cls="text-amber-100/40 text-xs"),
+                                P("See where families settled", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/map",
@@ -1623,7 +1623,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>'
                                 ),
                                 H3("Timeline", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P("Watch the story unfold", cls="text-amber-100/40 text-xs"),
+                                P("Watch the story unfold", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href=f"{nav_prefix}/timeline",
@@ -1635,7 +1635,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>'
                                 ),
                                 H3("Family Tree", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P("Interactive genealogy", cls="text-amber-100/40 text-xs"),
+                                P("Interactive genealogy", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/tree",
@@ -1647,13 +1647,13 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>'
                                 ),
                                 H3("Compare", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P("Upload a photo, find matches", cls="text-amber-100/40 text-xs"),
+                                P("Upload a photo, find matches", cls="text-amber-100/40 text-sm sm:text-xs"),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/tools/compare",
                             cls="block",
                         ),
-                        cls="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4",
+                        cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4",
                     ),
                     cls="max-w-4xl mx-auto",
                     data_testid="feature-cards",
@@ -1707,7 +1707,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     Div(
                         Div(
                             Div(Span("01", cls="text-3xl font-bold text-amber-500/30"), cls="mb-3"),
-                            H3("Scan & Detect", cls="text-lg font-semibold text-amber-100 mb-2"),
+                            H3("Scan & Detect", cls="text-xl sm:text-lg font-semibold text-amber-100 mb-2"),
                             P(
                                 "Advanced face detection AI scans archival photographs, finding and isolating every face "
                                 "across decades of family photos.",
@@ -1717,7 +1717,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         ),
                         Div(
                             Div(Span("02", cls="text-3xl font-bold text-amber-500/30"), cls="mb-3"),
-                            H3("Match & Group", cls="text-lg font-semibold text-amber-100 mb-2"),
+                            H3("Match & Group", cls="text-xl sm:text-lg font-semibold text-amber-100 mb-2"),
                             P(
                                 "Facial embeddings connect the same person across different photos, even spanning decades. "
                                 "The system proposes identity clusters for human review.",
@@ -1727,7 +1727,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                         ),
                         Div(
                             Div(Span("03", cls="text-3xl font-bold text-amber-500/30"), cls="mb-3"),
-                            H3("Name & Preserve", cls="text-lg font-semibold text-amber-100 mb-2"),
+                            H3("Name & Preserve", cls="text-xl sm:text-lg font-semibold text-amber-100 mb-2"),
                             P(
                                 "Community members who recognize a face can name them, adding irreplaceable human knowledge. "
                                 "Every identification is preserved for future generations.",
@@ -1815,12 +1815,12 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     P("Rhodesli", cls="text-amber-200/40 text-sm text-center font-semibold tracking-wide"),
                     P(
                         "Preserving the photographic heritage of the Jewish Community of Rhodes",
-                        cls="text-amber-100/25 text-xs text-center mt-1",
+                        cls="text-amber-100/25 text-sm sm:text-xs text-center mt-1",
                     ),
                     P(
                         A("About Rhodesli", href="/about", cls="text-amber-200/40 hover:text-amber-200 underline"),
                         " · Built with care. No generative AI -- only forensic face matching.",
-                        cls="text-amber-100/20 text-xs text-center mt-3",
+                        cls="text-amber-100/20 text-sm sm:text-xs text-center mt-3",
                     ),
                     cls="max-w-6xl mx-auto px-6 py-8",
                 ),
@@ -1944,7 +1944,7 @@ def get(request=None):
                 H2("How to Help", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
                 Div(
                     Div(
-                        Span("1", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("1", cls="text-amber-400 font-bold text-xl sm:text-lg mr-3"),
                         Div(
                             Span("Browse and identify", cls="text-slate-200 font-medium"),
                             P(
@@ -1956,7 +1956,7 @@ def get(request=None):
                         cls="flex items-start mb-4",
                     ),
                     Div(
-                        Span("2", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("2", cls="text-amber-400 font-bold text-xl sm:text-lg mr-3"),
                         Div(
                             Span("Suggest names", cls="text-slate-200 font-medium"),
                             P(
@@ -1968,7 +1968,7 @@ def get(request=None):
                         cls="flex items-start mb-4",
                     ),
                     Div(
-                        Span("3", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("3", cls="text-amber-400 font-bold text-xl sm:text-lg mr-3"),
                         Div(
                             Span("Upload family photos", cls="text-slate-200 font-medium"),
                             P(
@@ -1980,7 +1980,7 @@ def get(request=None):
                         cls="flex items-start mb-4",
                     ),
                     Div(
-                        Span("4", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("4", cls="text-amber-400 font-bold text-xl sm:text-lg mr-3"),
                         Div(
                             Span("Add context", cls="text-slate-200 font-medium"),
                             P(
@@ -2106,7 +2106,7 @@ def get(request=None):
             Div(
                 P(
                     "Built with care. No generative AI \u2014 only forensic face matching.",
-                    cls="text-amber-100/30 text-xs text-center",
+                    cls="text-amber-100/30 text-sm sm:text-xs text-center",
                 ),
                 cls="about-section px-6 py-8 border-t border-amber-900/20",
             ),
@@ -2166,7 +2166,7 @@ def _personalized_discovery_banner(
                         alt=m["name"],
                         cls="w-12 h-12 rounded-full object-cover border-2 border-amber-400/50",
                     ),
-                    Span(m["name"].split()[0], cls="text-xs text-slate-400 mt-1 truncate w-14 text-center"),
+                    Span(m["name"].split()[0], cls="text-sm sm:text-xs text-slate-400 mt-1 truncate w-14 text-center"),
                     cls="flex flex-col items-center",
                 ),
                 href=f"{nav_prefix}/?section=confirmed&current={m['identity_id']}",
@@ -2181,7 +2181,7 @@ def _personalized_discovery_banner(
         Div(
             Div(
                 P(f"People from the {surnames_display}{more} families", cls="text-sm font-medium text-amber-200"),
-                P(f"{len(matches)} identified \u2014 can you help find more?", cls="text-xs text-slate-400"),
+                P(f"{len(matches)} identified \u2014 can you help find more?", cls="text-sm sm:text-xs text-slate-400"),
                 cls="flex-1",
             ),
             Div(*people_thumbs, cls="flex gap-3"),
@@ -2190,7 +2190,7 @@ def _personalized_discovery_banner(
         A(
             "View all \u2192",
             href=f"{nav_prefix}/?section=confirmed",
-            cls="text-xs text-amber-400 hover:text-amber-300 mt-2 inline-block",
+            cls="text-sm sm:text-xs text-amber-400 hover:text-amber-300 mt-2 inline-block",
         ),
         cls="bg-amber-900/20 border border-amber-700/30 rounded-lg p-4 mb-4",
     )
@@ -2629,7 +2629,7 @@ def get(
             cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center",
             aria_label="Toggle sidebar menu",
         ),
-        Span("Rhodesli", cls="text-lg font-bold text-white"),
+        Span("Rhodesli", cls="text-xl sm:text-lg font-bold text-white"),
         cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30",
     )
 
@@ -3778,7 +3778,7 @@ def photo_view_content(
             tag_search_input = Input(
                 type="text",
                 placeholder=tag_placeholder,
-                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                cls="w-full px-4 py-3 sm:px-2 sm:py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                 "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                 hx_get=(
                     f"{nav_prefix}/api/face/tag-search?face_id={face_id_encoded}{seq_param}{action_context_suffix}"
@@ -3794,7 +3794,7 @@ def photo_view_content(
             if seq_mode:
                 close_btn = Button(
                     "Done",
-                    cls="text-xs text-indigo-400 hover:text-indigo-300 ml-auto",
+                    cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 ml-auto",
                     hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
@@ -3803,7 +3803,7 @@ def photo_view_content(
             else:
                 close_btn = Button(
                     "Close",
-                    cls="text-xs text-slate-400 hover:text-slate-300 ml-auto",
+                    cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 ml-auto",
                     **{"_": f"on click add .hidden to #{tag_dropdown_id}"},
                     type="button",
                 )
@@ -3821,7 +3821,7 @@ def photo_view_content(
                 Div(
                     Button(
                         "Go to Face Card",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300",
                         **{
                             "_": f"on click add .hidden to #photo-modal then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{face_identity_id}'"
                         }
@@ -3835,7 +3835,7 @@ def photo_view_content(
                     A(
                         "View Person \u2192",
                         href=f"{nav_prefix}/person/{face_identity_id}",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300",
                         target="_blank",
                     )
                     if (face_identity_id and seq_mode)
@@ -3843,7 +3843,7 @@ def photo_view_content(
                     # UX-075: Skip button in sequential mode
                     Button(
                         "Ignore Stranger \u2192",
-                        cls="text-xs text-amber-400 hover:text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 hover:bg-amber-500/10",
+                        cls="text-sm sm:text-xs text-amber-400 hover:text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 hover:bg-amber-500/10",
                         hx_post=(
                             f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
                             f"&action=skip&photo_id={photo_id}&seq=1{action_context_suffix}"
@@ -3876,7 +3876,7 @@ def photo_view_content(
                     action_btns.append(
                         Button(
                             "\u2713",
-                            cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs "
+                            cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm sm:text-xs "
                             "flex items-center justify-center",
                             hx_post=(
                                 f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
@@ -3893,7 +3893,7 @@ def photo_view_content(
                     action_btns.append(
                         Button(
                             "\u2713",
-                            cls="w-6 h-6 rounded-full bg-gray-400 cursor-not-allowed text-white text-xs "
+                            cls="w-6 h-6 rounded-full bg-gray-400 cursor-not-allowed text-white text-sm sm:text-xs "
                             "flex items-center justify-center opacity-50",
                             title="Name this person first",
                             type="button",
@@ -3906,7 +3906,7 @@ def photo_view_content(
                     action_btns.append(
                         Button(
                             "\u23f8",
-                            cls="w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-xs "
+                            cls="w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-sm sm:text-xs "
                             "flex items-center justify-center",
                             hx_post=(
                                 f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
@@ -3923,7 +3923,7 @@ def photo_view_content(
                 action_btns.append(
                     Button(
                         "\u2717",
-                        cls="w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs "
+                        cls="w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-sm sm:text-xs "
                         "flex items-center justify-center",
                         hx_post=(
                             f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
@@ -3959,7 +3959,7 @@ def photo_view_content(
                 name_label = None
                 hover_tooltip = Span(
                     display_name,
-                    cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none",
+                    cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none",
                 )
 
             # In sequential mode, highlight the active face
@@ -4062,7 +4062,7 @@ def photo_view_content(
         back_to_compare = Div(
             Button(
                 "\u2190 Back to Compare",
-                cls="text-sm text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded border border-indigo-500/30 hover:border-indigo-400/50 transition-colors",
+                cls="text-sm text-indigo-400 hover:text-indigo-300 px-5 py-4 sm:px-3 sm:py-1.5 rounded border border-indigo-500/30 hover:border-indigo-400/50 transition-colors",
                 **{"_": "on click add .hidden to #photo-modal then remove .hidden from #compare-modal"},
                 type="button",
             ),
@@ -4075,7 +4075,7 @@ def photo_view_content(
         name_faces_banner = Div(
             Button(
                 f"Name These Faces ({len(unidentified_face_ids)} unidentified)",
-                cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors",
+                cls="text-sm px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors",
                 hx_get=_partial_photo_url(photo_id, seq_active=True),
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
@@ -4110,7 +4110,7 @@ def photo_view_content(
                 ),
                 Button(
                     "Done",
-                    cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
                     hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
@@ -4133,7 +4133,7 @@ def photo_view_content(
                 ),
                 Button(
                     "Open next photo now",
-                    cls="text-xs px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors ml-auto",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors ml-auto",
                     hx_get=next_seq_url,
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
@@ -4158,7 +4158,7 @@ def photo_view_content(
                 ),
                 Button(
                     "Done",
-                    cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors ml-auto",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2.5 sm:py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors ml-auto",
                     hx_get=_partial_photo_url(photo_id),
                     hx_target="#photo-modal-content",
                     hx_swap="innerHTML",
@@ -4175,7 +4175,7 @@ def photo_view_content(
         Div(
             f"Archived note: {missing_face_artifacts} face {missing_face_label} "
             f"{missing_face_verb} current overlay coordinates. The photo is intact; only the live overlay is unavailable.",
-            cls="mb-2 px-3 py-2 text-xs text-slate-300 bg-slate-900/60 border border-slate-700/60 rounded-lg",
+            cls="mb-2 px-3 py-2 text-sm sm:text-xs text-slate-300 bg-slate-900/60 border border-slate-700/60 rounded-lg",
         )
         if missing_face_artifacts
         else None,
@@ -4209,7 +4209,7 @@ def photo_view_content(
                 Span(
                     Button(
                         "Hide Faces" if is_admin else "Show Faces",
-                        cls="text-xs text-slate-400 hover:text-slate-200 transition-colors",
+                        cls="text-sm sm:text-xs text-slate-400 hover:text-slate-200 transition-colors",
                         type="button",
                         data_action="toggle-face-overlays",
                         id="face-overlay-toggle",
@@ -4239,9 +4239,9 @@ def photo_view_content(
             ),
             P(
                 f"{width} x {height} px" if has_dimensions else "Dimensions unavailable",
-                cls="text-slate-500 text-xs font-data",
+                cls="text-slate-500 text-sm sm:text-xs font-data",
             ),
-            P("(Face overlays require cached dimensions)", cls="text-slate-600 text-xs italic")
+            P("(Face overlays require cached dimensions)", cls="text-slate-600 text-sm sm:text-xs italic")
             if not has_dimensions and photo["faces"]
             else None,
             # Upload provenance (uploaded by / added to archive date)
@@ -4251,14 +4251,14 @@ def photo_view_content(
                 P(
                     Span("Collection: ", cls="text-slate-500"),
                     Span(photo.get("collection", ""), cls="text-slate-300"),
-                    cls="text-xs",
+                    cls="text-sm sm:text-xs",
                 )
                 if photo.get("collection")
                 else None,
                 P(
                     Span("Source: ", cls="text-slate-500"),
                     Span(photo.get("source", ""), cls="text-slate-300"),
-                    cls="text-xs",
+                    cls="text-sm sm:text-xs",
                 )
                 if photo.get("source")
                 else None,
@@ -4271,7 +4271,7 @@ def photo_view_content(
                         rel="noopener",
                         cls="text-indigo-400 hover:text-indigo-300 underline",
                     ),
-                    cls="text-xs",
+                    cls="text-sm sm:text-xs",
                 )
                 if photo.get("source_url")
                 else None,
@@ -4333,7 +4333,7 @@ def photo_view_content(
             ),
             "Back to Review Queue",
             href=f"{nav_prefix}/admin/upload-review?mode=speed",
-            cls="px-3 py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-purple-700 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors inline-flex items-center",
             data_testid="back-to-review-queue",
         )
 
@@ -4535,7 +4535,7 @@ def get(sess=None, request=None):
                         cls="aspect-square overflow-hidden",
                     ),
                     Div(
-                        P("Do you recognize this person?", cls="text-xs text-amber-300/80 font-medium mb-1"),
+                        P("Do you recognize this person?", cls="text-sm sm:text-xs text-amber-300/80 font-medium mb-1"),
                         P(item["collection"], cls="text-[10px] text-slate-500 leading-snug")
                         if item["collection"]
                         else None,
@@ -4607,7 +4607,7 @@ def get(sess=None, request=None):
                 Div(
                     Div(
                         *face_cards,
-                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
                     )
                     if face_cards
                     else empty_state,
@@ -4616,7 +4616,7 @@ def get(sess=None, request=None):
             ),
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -4708,7 +4708,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
         A(
             "View source photo \u2192",
             href=f"{nav_prefix}/photo/{_first_photo_id}",
-            cls="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block",
+            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block",
             data_testid="view-source-photo-link",
         )
         if _first_photo_id
@@ -4762,8 +4762,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     else None,
                     cls="relative",
                 ),
-                P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
-                P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
+                P(collection, cls="text-sm sm:text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                P("See full photo \u2192", cls="text-sm sm:text-xs text-indigo-400 mt-1"),
                 href=f"{nav_prefix}/photo/{face_photo_id}",
                 cls="block hover:opacity-80 transition-opacity",
                 data_testid="source-photo-card",
@@ -4783,8 +4783,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                 photo_cards.append(
                     A(
                         Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
-                        P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
-                        P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
+                        P(collection, cls="text-sm sm:text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                        P("See full photo \u2192", cls="text-sm sm:text-xs text-indigo-400 mt-1"),
                         href=f"{nav_prefix}/photo/{pid}",
                         cls="block hover:opacity-80 transition-opacity",
                         data_testid="source-photo-card",
@@ -4825,7 +4825,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                             ),
                             P(
                                 n_name if not n_name.startswith("Unidentified") else "Unknown",
-                                cls="text-xs text-slate-300 mt-1 text-center truncate w-20",
+                                cls="text-sm sm:text-xs text-slate-300 mt-1 text-center truncate w-20",
                             ),
                             href=f"{nav_prefix}/identify/{person_id}/match/{n_id}",
                             cls="flex flex-col items-center hover:opacity-80 transition-opacity",
@@ -4923,14 +4923,14 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     if submitted == "true":
         submission_banner = Div(
             Div(
-                P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+                P("Thank you!", cls="text-xl sm:text-lg font-semibold text-emerald-400 mb-1"),
                 P(
                     f'Your identification of this person as "{submitted_name}" has been submitted for review.'
                     if submitted_name
                     else "Your identification has been submitted for review.",
                     cls="text-slate-300 text-sm",
                 ),
-                P("An admin will review your suggestion shortly.", cls="text-slate-500 text-xs mt-2"),
+                P("An admin will review your suggestion shortly.", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                 cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
             ),
             id="submission-success-banner",
@@ -4948,13 +4948,13 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             "placeholder-slate-400 focus:outline-none focus:border-indigo-500"
         )
         admin_enrichment = Div(
-            H3("Admin Tools", cls="text-lg font-semibold text-indigo-300 mb-4"),
+            H3("Admin Tools", cls="text-xl sm:text-lg font-semibold text-indigo-300 mb-4"),
             # Current identity info
             Div(
                 P(f"Identity: {display_name}", cls="text-sm text-slate-300"),
                 P(
                     f"State: {state} \u00b7 {len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}",
-                    cls="text-xs text-slate-500 mt-1",
+                    cls="text-sm sm:text-xs text-slate-500 mt-1",
                 ),
                 cls="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-lg",
             ),
@@ -5093,7 +5093,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
     )
     explore_section = Div(
         compare_suggestion,
-        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4 mt-6"),
+        H3("Explore the Archive", cls="text-xl sm:text-lg font-serif font-semibold text-white text-center mb-4 mt-6"),
         P(
             f"Hundreds of photos from {community_name} await identification.",
             cls="text-sm text-slate-400 text-center mb-5",
@@ -5114,7 +5114,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             Nav(
                 Div(
                     A(
-                        Span("Rhodesli", cls="text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"),
+                        Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"),
                         href=f"{nav_prefix}/",
                     ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
@@ -5132,7 +5132,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     ),
                     P(
                         "The AI found this face in a heritage photo but couldn't determine their name.",
-                        cls="text-amber-500/70 text-xs font-mono uppercase tracking-[0.1em] text-center mb-2",
+                        cls="text-amber-500/70 text-sm sm:text-xs font-mono uppercase tracking-[0.1em] text-center mb-2",
                         data_testid="identify-ai-note",
                     ),
                     P(
@@ -5145,7 +5145,7 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                         A(
                             "View in Admin Queue",
                             href=f"{_main_mod.community_url_prefix(community_slug)}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{person_id}",
-                            cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
+                            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 underline",
                             data_testid="identify-admin-link",
                         ),
                         cls="text-center mb-6",
@@ -5218,7 +5218,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
             logging.info(f"[identify] Admin direct-named and confirmed {person_id} as '{name.strip()}'")
             return Div(
                 Div(
-                    P("Name applied and confirmed!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+                    P("Name applied and confirmed!", cls="text-xl sm:text-lg font-semibold text-emerald-400 mb-1"),
                     P(
                         f'This person has been named "{name.strip()}" and moved to People. ',
                         A(
@@ -5300,12 +5300,12 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
     _encoded_name = quote_plus(name.strip())
     return Div(
         Div(
-            P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+            P("Thank you!", cls="text-xl sm:text-lg font-semibold text-emerald-400 mb-1"),
             P(
                 f'Your identification of this person as "{name.strip()}" has been submitted for review.',
                 cls="text-slate-300 text-sm",
             ),
-            P("An admin will review your suggestion shortly.", cls="text-slate-500 text-xs mt-2"),
+            P("An admin will review your suggestion shortly.", cls="text-slate-500 text-sm sm:text-xs mt-2"),
             cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
         ),
         Script(
@@ -5336,12 +5336,12 @@ def _match_community_summary(person_a: str, person_b: str):
     if counts["total"] == 0:
         return None
     return Div(
-        Span("Community: ", cls="text-xs text-slate-500"),
-        Span(f"{counts['yes']} Yes", cls="text-xs text-emerald-400 font-medium"),
-        Span(" · ", cls="text-xs text-slate-600"),
-        Span(f"{counts['no']} No", cls="text-xs text-rose-400 font-medium"),
-        Span(" · ", cls="text-xs text-slate-600"),
-        Span(f"{counts['unsure']} Unsure", cls="text-xs text-slate-400 font-medium"),
+        Span("Community: ", cls="text-sm sm:text-xs text-slate-500"),
+        Span(f"{counts['yes']} Yes", cls="text-sm sm:text-xs text-emerald-400 font-medium"),
+        Span(" · ", cls="text-sm sm:text-xs text-slate-600"),
+        Span(f"{counts['no']} No", cls="text-sm sm:text-xs text-rose-400 font-medium"),
+        Span(" · ", cls="text-sm sm:text-xs text-slate-600"),
+        Span(f"{counts['unsure']} Unsure", cls="text-sm sm:text-xs text-slate-400 font-medium"),
         cls="text-center mt-3 py-2 px-3 bg-amber-900/20 border border-amber-800/30 rounded-lg",
     )
 
@@ -5387,9 +5387,9 @@ def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files
 
     meta_parts = []
     if collection:
-        meta_parts.append(Span(collection, cls="text-slate-400 text-xs"))
+        meta_parts.append(Span(collection, cls="text-slate-400 text-sm sm:text-xs"))
     if date_text:
-        meta_parts.append(Span(date_text, cls="text-slate-400 text-xs"))
+        meta_parts.append(Span(date_text, cls="text-slate-400 text-sm sm:text-xs"))
 
     # Build face chips for other faces in this photo
     face_chips_data = []
@@ -5441,7 +5441,7 @@ def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files
     bboxes_json = _json_fc.dumps(face_bboxes)
 
     return Div(
-        P(label, cls="text-xs text-slate-500 uppercase tracking-wider mb-2 font-medium"),
+        P(label, cls="text-sm sm:text-xs text-slate-500 uppercase tracking-wider mb-2 font-medium"),
         Div(
             Img(
                 src=photo_url,
@@ -5483,7 +5483,7 @@ def _match_face_chips_inline(chips_data, nav_prefix: str = ""):
                 if chip_url
                 else Div(
                     "?",
-                    cls="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs text-slate-400",
+                    cls="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-sm sm:text-xs text-slate-400",
                 ),
                 Span(short_name, cls="text-[10px] text-slate-400 block text-center truncate w-12 mt-0.5"),
                 href=href,
@@ -5570,7 +5570,7 @@ def _match_lightbox_script(nav_prefix: str = ""):
                 var link = document.createElement('a');
                 link.href = _navPfx + '/photo/' + photoId;
                 link.textContent = 'View Photo Page →';
-                link.className = 'text-xs text-indigo-400 hover:text-indigo-300 inline-block mt-1 transition-colors';
+                link.className = 'text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 inline-block mt-1 transition-colors';
                 lbMeta.appendChild(link);
             }
 
@@ -5581,7 +5581,7 @@ def _match_lightbox_script(nav_prefix: str = ""):
                 if (chips.length > 0) {
                     var heading = document.createElement('p');
                     heading.textContent = 'Also in this photo:';
-                    heading.className = 'text-xs text-slate-400 uppercase tracking-wider mb-2 text-center';
+                    heading.className = 'text-sm sm:text-xs text-slate-400 uppercase tracking-wider mb-2 text-center';
                     lbFaces.appendChild(heading);
                     var row = document.createElement('div');
                     row.className = 'flex flex-wrap justify-center gap-3';
@@ -5602,12 +5602,12 @@ def _match_lightbox_script(nav_prefix: str = ""):
                         } else {
                             var placeholder = document.createElement('div');
                             placeholder.textContent = '?';
-                            placeholder.className = 'w-10 h-10 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center text-xs text-slate-400';
+                            placeholder.className = 'w-10 h-10 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center text-sm sm:text-xs text-slate-400';
                             a.appendChild(placeholder);
                         }
                         var nameSpan = document.createElement('span');
                         nameSpan.textContent = shortName;
-                        nameSpan.className = 'text-xs text-slate-300 mt-1 text-center max-w-[60px] truncate';
+                        nameSpan.className = 'text-sm sm:text-xs text-slate-300 mt-1 text-center max-w-[60px] truncate';
                         a.appendChild(nameSpan);
                         row.appendChild(a);
                     });
@@ -5751,9 +5751,9 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         """Build a face card with optional carousel for multi-face identities."""
         meta_items = []
         if collection:
-            meta_items.append(P(collection, cls="text-xs text-slate-400 text-center"))
+            meta_items.append(P(collection, cls="text-sm sm:text-xs text-slate-400 text-center"))
         if date_text:
-            meta_items.append(P(date_text, cls="text-xs text-slate-500 text-center"))
+            meta_items.append(P(date_text, cls="text-sm sm:text-xs text-slate-500 text-center"))
         # Link to person page (CONFIRMED) or identify page (all others)
         person_href = f"{nav_prefix}/person/{pid}" if state == "CONFIRMED" else f"{nav_prefix}/identify/{pid}"
         profile_label = f"View {display_name}'s Profile" if state == "CONFIRMED" else f"Help Identify {display_name}"
@@ -5793,16 +5793,16 @@ def get(person_a: str, person_b: str, sess=None, request=None):
             carousel_el = Div(
                 Button(
                     NotStr("&#8249;"),
-                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-lg transition-colors",
+                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-xl sm:text-lg transition-colors",
                     data_action="face-carousel-prev",
                     data_target=pid,
                     type="button",
                     aria_label="Previous face",
                 ),
-                Span(f"1 of {len(face_data_list)}", id=f"face-counter-{pid}", cls="text-xs text-slate-400"),
+                Span(f"1 of {len(face_data_list)}", id=f"face-counter-{pid}", cls="text-sm sm:text-xs text-slate-400"),
                 Button(
                     NotStr("&#8250;"),
-                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-lg transition-colors",
+                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-xl sm:text-lg transition-colors",
                     data_action="face-carousel-next",
                     data_target=pid,
                     type="button",
@@ -5826,7 +5826,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
             A(
                 profile_label + " →",
                 href=person_href,
-                cls="text-xs text-indigo-400 hover:text-indigo-300 text-center mt-2 block transition-colors",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 text-center mt-2 block transition-colors",
             ),
             cls="flex flex-col items-center",
         )
@@ -5857,7 +5857,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
     # Response form with name/note fields
     respond_url = f"/api/identify/{person_a}/match/{person_b}/respond"
     response_area = Div(
-        H3("What do you think?", cls="text-lg font-serif font-semibold text-white text-center mb-2"),
+        H3("What do you think?", cls="text-xl sm:text-lg font-serif font-semibold text-white text-center mb-2"),
         P("Your knowledge helps preserve family history.", cls="text-sm text-slate-400 text-center mb-6"),
         # Vote buttons
         Div(
@@ -5893,7 +5893,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         # Optional name/note fields
         Div(
             Div(
-                Label("Your name (optional)", fr="responder_name", cls="text-xs text-slate-500 block mb-1"),
+                Label("Your name (optional)", fr="responder_name", cls="text-sm sm:text-xs text-slate-500 block mb-1"),
                 Input(
                     type="text",
                     name="responder_name",
@@ -5904,7 +5904,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                 cls="flex-1",
             ),
             Div(
-                Label("How do you know? (optional)", fr="responder_note", cls="text-xs text-slate-500 block mb-1"),
+                Label("How do you know? (optional)", fr="responder_note", cls="text-sm sm:text-xs text-slate-500 block mb-1"),
                 Input(
                     type="text",
                     name="responder_note",
@@ -5981,7 +5981,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         admin_summary = Div(
             P(
                 f"Community: {resp_counts['yes']} Yes, {resp_counts['no']} No, {resp_counts['unsure']} Unsure",
-                cls="text-xs text-amber-400 text-center",
+                cls="text-sm sm:text-xs text-amber-400 text-center",
             ),
             cls="bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2 mt-4",
         )
@@ -6019,7 +6019,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         ]
     )
     explore_section = Div(
-        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4"),
+        H3("Explore the Archive", cls="text-xl sm:text-lg font-serif font-semibold text-white text-center mb-4"),
         P(
             "There are hundreds more photos and faces waiting to be identified.",
             cls="text-sm text-slate-400 text-center mb-5",
@@ -6067,7 +6067,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
         Main(
             Nav(
                 Div(
-                    A(Span("Rhodesli", cls="text-lg font-serif font-bold text-white"), href="/"),
+                    A(Span("Rhodesli", cls="text-xl sm:text-lg font-serif font-bold text-white"), href="/"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
                     cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
@@ -6121,7 +6121,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                     ),
                     P(
                         "Help us identify people in the Rhodesli archive — your family knowledge matters.",
-                        cls="text-xs text-slate-500 text-center mb-4",
+                        cls="text-sm sm:text-xs text-slate-500 text-center mb-4",
                     ),
                     cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
                 ),
@@ -6230,7 +6230,7 @@ def post(
     count_text = f"{counts['total']} {'person has' if counts['total'] == 1 else 'people have'} weighed in so far."
     return Div(
         P(messages[answer], cls="text-emerald-400 text-sm text-center py-2"),
-        P(count_text, cls="text-slate-400 text-xs text-center mt-1"),
+        P(count_text, cls="text-slate-400 text-sm sm:text-xs text-center mt-1"),
     )
 
 
@@ -6377,7 +6377,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                         f"{photo['confirmed_count']}/{photo['face_count']}"
                         if photo["confirmed_count"] > 0
                         else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
-                        cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
+                        cls=f"absolute top-2 right-2 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm {badge_cls}",
                     )
                     if photo["face_count"] > 0
                     else None,
@@ -6386,7 +6386,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                     style=aspect_style if aspect_style else None,
                 ),
                 Div(
-                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug")
+                    P(photo["collection"] or "", cls="text-sm sm:text-xs text-slate-500 leading-snug")
                     if photo["collection"]
                     else None,
                     P(provenance["headline"], cls="text-[11px] text-slate-400 leading-tight") if provenance else None,
@@ -6505,7 +6505,7 @@ def get(
         photo_cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
-                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                P("Loading more photos...", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
@@ -6549,7 +6549,7 @@ def get(
         A(
             "All",
             href=_filter_url(decade=""),
-            cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+            cls="px-3 py-1 text-sm sm:text-xs rounded-full transition-colors font-serif "
             + (
                 "bg-amber-700 text-white"
                 if not decade
@@ -6563,7 +6563,7 @@ def get(
             A(
                 f"{dec}s ({count})",
                 href=_filter_url(decade=str(dec)),
-                cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+                cls="px-3 py-1 text-sm sm:text-xs rounded-full transition-colors font-serif "
                 + (
                     "bg-amber-700 text-white"
                     if is_active
@@ -6583,7 +6583,7 @@ def get(
             A(
                 f"{display_name} ({tag_count})",
                 href=_filter_url(tag=tag_name if not is_active else ""),
-                cls="px-2.5 py-1 text-[11px] rounded-full transition-colors "
+                cls="px-4 py-3 sm:px-2.5 sm:py-1 text-[11px] rounded-full transition-colors "
                 + (
                     "bg-indigo-600 text-white"
                     if is_active
@@ -6662,31 +6662,31 @@ def get(
                                 name="search_q",
                                 value=search_q,
                                 placeholder="Search scenes, text, people...",
-                                cls="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 w-full sm:w-64 focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-slate-500",
+                                cls="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 w-full sm:w-64 focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-slate-500",
                                 data_testid="photo-search",
                                 onkeydown=f"if(event.key==='Enter')window.location.href='/photos?search_q='+encodeURIComponent(this.value)+'&decade={decade or ''}&tag={_url_quote(tag)}&filter_collection={_url_quote(filter_collection)}&sort_by={sort_by}'",
                             ),
                             cls="flex-shrink-0",
                         ),
                         # Tag pills
-                        Div(*tag_pills, cls="flex flex-wrap gap-1.5") if tag_pills else None,
+                        Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center") if tag_pills else None,
                         cls="flex flex-wrap items-center gap-3 mb-3",
                     ),
                     # Collection/sort dropdowns
                     Div(
                         Select(
                             *collection_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
                         ),
                         Select(
                             *sort_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value + '&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
                         ),
                         Span(
                             f"{len(photos)} result{'s' if len(photos) != 1 else ''}",
-                            cls="text-xs text-slate-500 ml-auto",
+                            cls="text-sm sm:text-xs text-slate-500 ml-auto",
                         ),
                         cls="flex flex-wrap items-center gap-3 mb-6",
                     ),
@@ -6707,7 +6707,7 @@ def get(
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -6804,7 +6804,7 @@ def photos_more(
         cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
-                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                P("Loading more photos...", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                 id="photos-lazy-sentinel",
                 cls="flex flex-col items-center py-8",
                 style="break-inside: avoid; column-span: all;",
@@ -6946,14 +6946,14 @@ def get(sort_by: str = "name", sess=None, request=None):
                         Span("Sort:", cls="text-sm text-slate-400 mr-2"),
                         Select(
                             *sort_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             onchange=f"window.location.href='{nav_prefix}/people?sort_by=' + this.value",
                         ),
                         cls="flex items-center gap-2 mb-6",
                     ),
                     Div(
                         *person_cards,
-                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
                     )
                     if person_cards
                     else Div(
@@ -6968,7 +6968,7 @@ def get(sort_by: str = "name", sess=None, request=None):
             # CTA
             Section(
                 Div(
-                    H3("Can you help identify someone?", cls="text-lg font-serif text-white mb-2"),
+                    H3("Can you help identify someone?", cls="text-xl sm:text-lg font-serif text-white mb-2"),
                     P("Browse the photos and let us know if you recognize anyone.", cls="text-slate-400 text-sm mb-4"),
                     A(
                         "Browse Photos",
@@ -6982,7 +6982,7 @@ def get(sort_by: str = "name", sess=None, request=None):
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -7066,7 +7066,7 @@ def get(identity_id: str, sess=None, request=None):
             admin_actions.append(
                 Button(
                     "Merge",
-                    cls="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
                     hx_post=(
                         f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}"
                         f"?source=similar_page&return_to={nav_prefix}/people/{identity_id}/similar"
@@ -7080,7 +7080,7 @@ def get(identity_id: str, sess=None, request=None):
             admin_actions.append(
                 Button(
                     "Not Same",
-                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-300 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-500 text-slate-300 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
                     hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
                     hx_target=f"#search-result-{nid}",
                     hx_swap="outerHTML",
@@ -7096,13 +7096,13 @@ def get(identity_id: str, sess=None, request=None):
             Div(
                 Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
                 Div(
-                    Span(tier_label, cls=f"text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
-                    Span(f"{n.get('distance', 0):.2f}", cls="text-xs text-slate-500 ml-2") if is_admin else None,
+                    Span(tier_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
+                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2") if is_admin else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
                 Span(
                     f"{n.get('face_count', 0)} face{'s' if n.get('face_count', 0) != 1 else ''}",
-                    cls="text-xs text-slate-400 mt-0.5 block",
+                    cls="text-sm sm:text-xs text-slate-400 mt-0.5 block",
                 )
                 if n.get("face_count", 0) > 1
                 else None,
@@ -7348,7 +7348,7 @@ def get(identity_id: str, sess=None, request=None):
             tile_actions.append(
                 Button(
                     "Compare",
-                    cls="text-xs px-2 py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
                     hx_get=f"{nav_prefix}/api/identity/{identity_id}/compare/{nid}",
                     hx_target="#compare-modal-content",
                     hx_swap="innerHTML",
@@ -7367,7 +7367,7 @@ def get(identity_id: str, sess=None, request=None):
                 tile_actions.append(
                     Button(
                         "Merge",
-                        cls="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
+                        cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
                         hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{nid}",
                         hx_target=f"#expand-{css_id}",
                         hx_swap="innerHTML",
@@ -7379,7 +7379,7 @@ def get(identity_id: str, sess=None, request=None):
             tile_actions.append(
                 Button(
                     "Not Same",
-                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
                     hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject-match/{nid}",
                     hx_target=f"#similar-tile-{_main_mod.make_css_id(nid)}",
                     hx_swap="outerHTML",
@@ -7452,12 +7452,12 @@ def get(identity_id: str, sess=None, request=None):
     hero_section = Div(
         Img(src=hero_url, alt=name, cls="w-20 h-20 rounded-lg object-cover flex-shrink-0") if hero_url else None,
         Div(
-            Span(name or "Unidentified", cls="text-lg font-semibold text-white block"),
+            Span(name or "Unidentified", cls="text-xl sm:text-lg font-semibold text-white block"),
             Span(f"{len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}", cls="text-sm text-slate-400"),
             A(
                 "View Profile",
                 href=f"{nav_prefix}/person/{identity_id}",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 block mt-1",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 block mt-1",
             ),
             cls="min-w-0",
         ),
@@ -7517,8 +7517,8 @@ def get(sess=None, request=None):
             A(
                 preview_grid,
                 H3(col_name, cls="text-white font-semibold text-sm mb-1 line-clamp-2"),
-                P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-xs text-slate-400"),
-                P(face_line, cls="text-xs text-slate-500 mt-0.5"),
+                P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400"),
+                P(face_line, cls="text-sm sm:text-xs text-slate-500 mt-0.5"),
                 href=f"{nav_prefix}/collection/{slug}",
                 cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                 data_testid="collection-card",
@@ -7688,7 +7688,7 @@ def get(slug: str, sess=None, request=None):
                 A(
                     p_name,
                     href=f"{nav_prefix}/person/{pid}",
-                    cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
+                    cls="inline-block px-4 py-3 sm:px-2.5 sm:py-1 text-sm sm:text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                 )
             )
         people_section = Div(
@@ -7761,7 +7761,7 @@ def get(slug: str, sess=None, request=None):
                         Button(
                             NotStr(_main_mod._SHARE_ICON_SVG),
                             " Share Collection",
-                            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
                             type="button",
                             data_action="share-photo",
                             data_share_url=share_url,
@@ -7774,7 +7774,7 @@ def get(slug: str, sess=None, request=None):
                         A(
                             "+ Add Photos",
                             href=f"{nav_prefix}/upload",
-                            cls="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3",
                         )
                         if (user and user.is_admin if _main_mod.is_auth_enabled() else False)
                         else None,
@@ -7799,7 +7799,7 @@ def get(slug: str, sess=None, request=None):
                 if col["unidentified_count"] > 0
                 else "",
                 # Photo grid
-                Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"),
+                Div(*photo_cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"),
                 # People section
                 people_section,
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
@@ -8149,25 +8149,25 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
                         Select(
                             *collection_options,
                             name="collection",
-                            cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                            cls="bg-slate-800 text-slate-300 text-sm sm:text-xs rounded-lg px-4 py-3 sm:px-2 sm:py-1.5 border border-slate-700",
                             onchange="this.form.submit()",
                         ),
                         Select(
                             *person_options,
                             name="person",
-                            cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                            cls="bg-slate-800 text-slate-300 text-sm sm:text-xs rounded-lg px-4 py-3 sm:px-2 sm:py-1.5 border border-slate-700",
                             onchange="this.form.submit()",
                         ),
                         Select(
                             *decade_options,
                             name="decade",
-                            cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                            cls="bg-slate-800 text-slate-300 text-sm sm:text-xs rounded-lg px-4 py-3 sm:px-2 sm:py-1.5 border border-slate-700",
                             onchange="this.form.submit()",
                         ),
                         Button(
                             NotStr(_main_mod._SHARE_ICON_SVG),
                             " Share",
-                            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition-colors inline-flex items-center gap-1",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded-lg transition-colors inline-flex items-center gap-1",
                             type="button",
                             data_action="share-photo",
                             data_share_url=share_url,
@@ -8182,14 +8182,14 @@ def get(collection: str = "", person: str = "", people: str = "", decade: str = 
                 Div(id="map-container", data_testid="map-container"),
                 # Legend
                 Div(
-                    Span("Locations sized by photo count", cls="text-xs text-slate-500"),
+                    Span("Locations sized by photo count", cls="text-sm sm:text-xs text-slate-500"),
                     Span(" · ", cls="text-slate-700 mx-2"),
-                    Span("Click markers to see photos", cls="text-xs text-slate-500"),
+                    Span("Click markers to see photos", cls="text-sm sm:text-xs text-slate-500"),
                     Span(" · ", cls="text-slate-700 mx-2"),
                     A(
                         "View Timeline →",
                         href=f"{nav_prefix}/timeline",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300",
                     ),
                     cls="mt-3 text-center",
                 ),
@@ -8549,7 +8549,7 @@ def get(
         # Decade marker
         marker = Div(
             Div(
-                Span(f"{dec}s", cls="text-lg font-serif font-bold text-amber-400/80"),
+                Span(f"{dec}s", cls="text-xl sm:text-lg font-serif font-bold text-amber-400/80"),
                 cls="bg-slate-900 px-3 py-1 relative z-10",
             ),
             cls="flex items-center justify-center my-6",
@@ -8631,12 +8631,12 @@ def get(
                             parts.pop()  # remove trailing comma
                         if len(entry["people"]) > 4:
                             parts.append(f" +{len(entry['people']) - 4} more")
-                        people_line = P(*parts, cls="text-xs text-slate-400 mt-1 truncate")
+                        people_line = P(*parts, cls="text-sm sm:text-xs text-slate-400 mt-1 truncate")
                     else:
                         names = ", ".join(entry["people"][:4])
                         if len(entry["people"]) > 4:
                             names += f" +{len(entry['people']) - 4} more"
-                        people_line = P(names, cls="text-xs text-slate-400 mt-1 truncate")
+                        people_line = P(names, cls="text-sm sm:text-xs text-slate-400 mt-1 truncate")
 
                 card = A(
                     Div(
@@ -8659,7 +8659,7 @@ def get(
                         # Card details
                         Div(
                             Div(
-                                Span(f"c. {entry['year']}", cls="text-xs font-serif text-amber-400/80"),
+                                Span(f"c. {entry['year']}", cls="text-sm sm:text-xs font-serif text-amber-400/80"),
                                 age_badge,
                                 cls="flex items-center gap-2",
                             ),
@@ -8687,10 +8687,10 @@ def get(
                     Div(
                         Div(
                             Span(entry.get("title", ""), cls="text-sm font-medium text-indigo-200 leading-snug"),
-                            Span(str(entry["year"]), cls="text-xs font-serif text-indigo-400 ml-2"),
+                            Span(str(entry["year"]), cls="text-sm sm:text-xs font-serif text-indigo-400 ml-2"),
                             cls="flex items-center gap-1",
                         ),
-                        P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-1.5")
+                        P(entry["description"], cls="text-sm sm:text-xs text-slate-400 leading-relaxed mt-1.5")
                         if entry.get("description")
                         else None,
                         P(entry.get("location", ""), cls="text-[10px] text-slate-500 mt-1 italic")
@@ -8723,7 +8723,7 @@ def get(
                         Div(
                             Span(icon, cls="text-base"),
                             Div(
-                                Span(str(entry["year"]), cls="text-xs font-serif text-slate-300 font-medium"),
+                                Span(str(entry["year"]), cls="text-sm sm:text-xs font-serif text-slate-300 font-medium"),
                                 H3(
                                     entry["title"],
                                     cls="text-sm font-medium text-white leading-snug",
@@ -8733,7 +8733,7 @@ def get(
                             ),
                             cls="flex items-start gap-2.5",
                         ),
-                        P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-2"),
+                        P(entry["description"], cls="text-sm sm:text-xs text-slate-400 leading-relaxed mt-2"),
                         P(entry.get("source", ""), cls="text-[9px] text-slate-600 mt-2 italic")
                         if entry.get("source")
                         else None,
@@ -8817,7 +8817,7 @@ def get(
                         Span("Person:", cls="text-sm text-slate-400 mr-2"),
                         Select(
                             *person_options,
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             data_testid="person-filter",
                             onchange=f"window.location.href='{nav_prefix}/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}&collection=' + encodeURIComponent('{collection or ''}')",
                         ),
@@ -8829,7 +8829,7 @@ def get(
                         Select(
                             Option("All collections", value=""),
                             *[Option(c, value=c, selected=(collection == c)) for c in all_collections],
-                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5",
                             data_testid="collection-filter",
                             onchange=f"window.location.href='{nav_prefix}/timeline?collection=' + encodeURIComponent(this.value) + '&person={person or ''}&people={people or ''}&start={start or ''}&end={end or ''}&context={context}'",
                         ),
@@ -8841,7 +8841,7 @@ def get(
                     Div(
                         Button(
                             "\U0001f517 Share This Story",
-                            cls="px-3 py-1.5 text-sm bg-slate-800 text-slate-300 rounded-lg border border-slate-700 hover:border-amber-700/30 hover:text-white transition-colors",
+                            cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm bg-slate-800 text-slate-300 rounded-lg border border-slate-700 hover:border-amber-700/30 hover:text-white transition-colors",
                             data_action="share-story",
                             data_testid="share-story-btn",
                         ),
@@ -8849,7 +8849,7 @@ def get(
                         Div(
                             "",
                             id="timeline-toast",
-                            cls="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 ml-3",
+                            cls="opacity-0 transition-opacity duration-300 text-sm sm:text-xs text-emerald-400 ml-3",
                         ),
                         cls="flex items-center",
                     ),
@@ -8870,7 +8870,7 @@ def get(
                             Div(
                                 cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"
                             ),
-                            P("Loading more decades...", cls="text-slate-500 text-xs mt-2"),
+                            P("Loading more decades...", cls="text-slate-500 text-sm sm:text-xs mt-2"),
                             id="timeline-lazy-sentinel",
                             cls="flex flex-col items-center py-8",
                             hx_get=f"{nav_prefix}/api/timeline/more?offset={len(_tl_initial)}&person={_url_quote(person or '')}&people={_url_quote(people or '')}&start={start or ''}&end={end or ''}&context={context}&collection={_url_quote(collection or '')}",
@@ -8895,7 +8895,7 @@ def get(
                         A(
                             "Clear filters and view full timeline \u2192",
                             href=f"{nav_prefix}/timeline",
-                            cls="text-indigo-400 hover:text-indigo-300 text-xs block text-center mt-3 transition-colors active:scale-95",
+                            cls="text-indigo-400 hover:text-indigo-300 text-sm sm:text-xs block text-center mt-3 transition-colors active:scale-95",
                         ),
                         cls="flex flex-col items-center justify-center py-16",
                     )
@@ -8910,7 +8910,7 @@ def get(
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
@@ -9106,7 +9106,7 @@ def get(
         entries = decades_map[dec]
         marker = Div(
             Div(
-                Span(f"{dec}s", cls="text-lg font-serif font-bold text-amber-400/80"),
+                Span(f"{dec}s", cls="text-xl sm:text-lg font-serif font-bold text-amber-400/80"),
                 cls="bg-slate-900 px-3 py-1 relative z-10",
             ),
             cls="flex items-center justify-center my-6",
@@ -9151,7 +9151,7 @@ def get(
                                 P(entry.get("collection", ""), cls="text-[10px] text-slate-500")
                                 if entry.get("collection")
                                 else None,
-                                P(", ".join(entry.get("people", [])[:4]), cls="text-xs text-slate-400 mt-1")
+                                P(", ".join(entry.get("people", [])[:4]), cls="text-sm sm:text-xs text-slate-400 mt-1")
                                 if entry.get("people")
                                 else None,
                                 cls="p-3",
@@ -9179,7 +9179,7 @@ def get(
                                 Span(f" \u00b7 {entry['title']}", cls="text-sm text-slate-400"),
                                 cls="flex items-start gap-2.5",
                             ),
-                            P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-2"),
+                            P(entry["description"], cls="text-sm sm:text-xs text-slate-400 leading-relaxed mt-2"),
                             P(entry.get("source", ""), cls="text-[9px] text-slate-600 mt-2 italic")
                             if entry.get("source")
                             else None,
@@ -9219,7 +9219,7 @@ def _upload_stage_item(stage_id: str, label: str, status: str = "pending") -> ob
     return Div(
         NotStr(icons.get(status, icons["pending"])),
         Span(label, cls=f"ml-3 {text_cls.get(status, text_cls['pending'])}"),
-        Span("", cls="ml-auto text-xs text-slate-500", id=f"stage-detail-{stage_id}"),
+        Span("", cls="ml-auto text-sm sm:text-xs text-slate-500", id=f"stage-detail-{stage_id}"),
         cls="flex items-center",
         id=f"stage-{stage_id}",
         data_stage=stage_id,
@@ -9821,8 +9821,8 @@ def _connection_path_html(path_steps, registry, nav_prefix: str = ""):
             Div(
                 Div(
                     NotStr(edge_icon),
-                    Span(label, cls="text-xs"),
-                    cls=f"inline-flex items-center px-3 py-1 rounded-full border text-xs {edge_color}",
+                    Span(label, cls="text-sm sm:text-xs"),
+                    cls=f"inline-flex items-center px-3 py-1 rounded-full border text-sm sm:text-xs {edge_color}",
                 ),
                 Div("", cls="w-px h-3 bg-slate-700 mx-auto"),
                 cls="flex flex-col items-center my-1",
@@ -9961,7 +9961,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
                 Div(
                     # Search bar
                     Div(
-                        Label("Search", cls="text-xs text-slate-400 mb-1 block"),
+                        Label("Search", cls="text-sm sm:text-xs text-slate-400 mb-1 block"),
                         Div(
                             Input(
                                 type="text",
@@ -9994,7 +9994,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
                     Button(
                         NotStr(_main_mod._SHARE_ICON_SVG),
                         " Share",
-                        cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                        cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
                         type="button",
                         data_action="share-photo",
                         data_share_url=share_url,
@@ -10021,7 +10021,7 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
                         Span(
                             " — drag to see faces change through time",
                             id="timeline-hint",
-                            cls="text-xs text-slate-500 ml-2",
+                            cls="text-sm sm:text-xs text-slate-500 ml-2",
                         ),
                         cls="flex items-baseline mb-2",
                     ),
@@ -10788,7 +10788,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
         # Main path (any edges)
         path_sections.append(
             Div(
-                H3(f"{name_a} & {name_b}", cls="text-lg font-bold text-white mb-1"),
+                H3(f"{name_a} & {name_b}", cls="text-xl sm:text-lg font-bold text-white mb-1"),
                 P(degrees_text, cls="text-sm text-indigo-400 mb-4"),
                 _connection_path_html(paths["any"], registry, nav_prefix=nav_prefix),
                 cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
@@ -10803,7 +10803,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                     H4("Family path", cls="text-sm font-semibold text-amber-400 mb-2"),
                     P(
                         f"{len(paths['family'])} step{'s' if len(paths['family']) != 1 else ''} through family",
-                        cls="text-xs text-slate-500 mb-2",
+                        cls="text-sm sm:text-xs text-slate-500 mb-2",
                     ),
                     _connection_path_html(paths["family"], registry, nav_prefix=nav_prefix),
                     cls="bg-slate-800/30 rounded-lg p-4 border border-amber-900/30",
@@ -10817,7 +10817,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                     H4("Photo path", cls="text-sm font-semibold text-blue-400 mb-2"),
                     P(
                         f"{len(paths['photo'])} step{'s' if len(paths['photo']) != 1 else ''} through photos",
-                        cls="text-xs text-slate-500 mb-2",
+                        cls="text-sm sm:text-xs text-slate-500 mb-2",
                     ),
                     _connection_path_html(paths["photo"], registry, nav_prefix=nav_prefix),
                     cls="bg-slate-800/30 rounded-lg p-4 border border-blue-900/30",
@@ -10915,7 +10915,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                 Form(
                     Div(
                         Div(
-                            Label("Person A", cls="text-xs text-slate-400 mb-1 block"),
+                            Label("Person A", cls="text-sm sm:text-xs text-slate-400 mb-1 block"),
                             Select(
                                 *person_options,
                                 name="person_a",
@@ -10928,7 +10928,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                             cls="flex items-end pb-2",
                         ),
                         Div(
-                            Label("Person B", cls="text-xs text-slate-400 mb-1 block"),
+                            Label("Person B", cls="text-sm sm:text-xs text-slate-400 mb-1 block"),
                             Select(
                                 *person_b_options,
                                 name="person_b",
@@ -10953,7 +10953,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                     Button(
                         NotStr(_main_mod._SHARE_ICON_SVG),
                         " Share",
-                        cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                        cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
                         type="button",
                         data_action="share-photo",
                         data_share_url=share_url,
@@ -10967,7 +10967,7 @@ def get(person_a: str = "", person_b: str = "", sess=None, request=None):
                 # Graph visualization
                 Div(
                     Div(
-                        H3("Community Network", cls="text-lg font-semibold text-white"),
+                        H3("Community Network", cls="text-xl sm:text-lg font-semibold text-white"),
                         Div(
                             Div(Div(cls="legend-dot", style="background:#d97706"), Span("Family"), cls="legend-item"),
                             Div(Div(cls="legend-dot", style="background:#3b82f6"), Span("Photo"), cls="legend-item"),
@@ -11741,7 +11741,7 @@ def public_photo_page(
     photo_metadata_overlay = (
         Div(
             *_interleaved_meta,
-            cls="photo-info-overlay absolute top-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity pointer-events-none",
+            cls="photo-info-overlay absolute top-3 left-3 bg-black/70 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity pointer-events-none",
             data_testid="photo-metadata-overlay",
         )
         if overlay_meta_parts
@@ -12007,7 +12007,7 @@ def public_photo_page(
                     Span(
                         "Needs review" if (context_identity_conflict or context_identity_missing) else "Viewing",
                         cls=(
-                            "text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
+                            "text-[11px] font-semibold uppercase tracking-wide px-4 py-3 sm:px-2 sm:py-1 rounded-full"
                             + (
                                 " text-rose-200 bg-rose-500/15 border border-rose-500/30"
                                 if (context_identity_conflict or context_identity_missing)
@@ -12046,7 +12046,7 @@ def public_photo_page(
                                 )
                             ),
                             cls=(
-                                "text-xs leading-relaxed "
+                                "text-sm sm:text-xs leading-relaxed "
                                 + (
                                     "text-rose-100/80"
                                     if (context_identity_conflict or context_identity_missing)
@@ -12060,7 +12060,7 @@ def public_photo_page(
                         "Jump to current face",
                         href=f"#person-{identity_id}",
                         cls=(
-                            "text-xs rounded-lg px-3 py-2 inline-flex items-center justify-center transition-colors "
+                            "text-sm sm:text-xs rounded-lg px-3 py-2 inline-flex items-center justify-center transition-colors "
                             + (
                                 "bg-rose-500/15 text-rose-100 hover:bg-rose-500/25 border border-rose-500/25"
                                 if context_identity_conflict
@@ -12112,7 +12112,7 @@ def public_photo_page(
                                         cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"
                                     ),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="photo-info-overlay absolute top-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
+                                    cls="photo-info-overlay absolute top-3 right-3 bg-black/70 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 flex items-center gap-1 text-sm sm:text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
                                     id="face-overlay-legend-public",
                                     style=""
                                     if (is_admin or any(fi["is_identified"] for fi in face_info_list))
@@ -12123,7 +12123,7 @@ def public_photo_page(
                                 # Front label badge (only when back exists)
                                 Div(
                                     "Front",
-                                    cls="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm z-10",
+                                    cls="absolute top-3 left-3 bg-black/60 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm z-10",
                                     id="photo-side-label",
                                 )
                                 if has_back
@@ -12143,11 +12143,11 @@ def public_photo_page(
                                 # Back label badge
                                 Div(
                                     "Back",
-                                    cls="absolute top-3 left-3 bg-amber-600/80 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm z-10",
+                                    cls="absolute top-3 left-3 bg-amber-600/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm z-10",
                                 ),
                                 P(
                                     "Back of photograph",
-                                    cls="text-amber-700/60 text-xs text-center mt-2 italic font-serif",
+                                    cls="text-amber-700/60 text-sm sm:text-xs text-center mt-2 italic font-serif",
                                 ),
                                 P(
                                     back_transcription,
@@ -12184,7 +12184,7 @@ def public_photo_page(
                         else Span(cls="w-9"),
                         Span(
                             f"Photo {nav_position} of {nav_total}",
-                            cls="text-xs text-slate-400",
+                            cls="text-sm sm:text-xs text-slate-400",
                         )
                         if nav_total > 1
                         else None,
@@ -12345,7 +12345,7 @@ def public_photo_page(
                         "This photograph has writing on the back"
                         if back_transcription
                         else "Turn over to see the back of this photograph",
-                        cls="text-slate-500 text-xs text-center block mt-2",
+                        cls="text-slate-500 text-sm sm:text-xs text-center block mt-2",
                     )
                     if has_back
                     else None,
@@ -12353,25 +12353,25 @@ def public_photo_page(
                     # Admin: Upload back image (only shown to admin when no back image)
                     Div(
                         Div(
-                            P("Admin: Add a back image", cls="text-slate-400 text-xs font-medium mb-2"),
+                            P("Admin: Add a back image", cls="text-slate-400 text-sm sm:text-xs font-medium mb-2"),
                             Form(
                                 Input(
                                     type="file",
                                     name="file",
                                     accept=".jpg,.jpeg,.png,.webp",
-                                    cls="text-xs text-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-slate-600 file:text-white hover:file:bg-slate-500",
+                                    cls="text-sm sm:text-xs text-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-slate-600 file:text-white hover:file:bg-slate-500",
                                 ),
                                 Div(
                                     Input(
                                         type="text",
                                         name="back_transcription",
                                         placeholder="Transcribe writing on back (optional)...",
-                                        cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500",
+                                        cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white placeholder-slate-500",
                                     ),
                                     Button(
                                         "Upload",
                                         type="submit",
-                                        cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
+                                        cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
                                     ),
                                     cls="flex gap-2 mt-2",
                                 ),
@@ -12394,17 +12394,17 @@ def public_photo_page(
                                 name="back_transcription",
                                 placeholder="Transcribe writing on back...",
                                 value=back_transcription or "",
-                                cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500",
+                                cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white placeholder-slate-500",
                             ),
                             Button(
                                 "Save",
                                 type="submit",
-                                cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
+                                cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
                             ),
                             hx_post=f"/api/photo/{photo_id}/back-transcription",
                             hx_target="#transcription-result",
                             hx_swap="innerHTML",
-                            cls="flex gap-2",
+                            cls="flex flex-col sm:flex-row gap-3 sm:gap-2 w-full sm:w-auto",
                         ),
                         Div(id="transcription-result", cls="mt-1"),
                         cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
@@ -12416,7 +12416,7 @@ def public_photo_page(
                         _main_mod.image_transform_toolbar(photo_id, target="front"),
                         _main_mod.image_transform_toolbar(photo_id, target="back") if has_back else None,
                         Div(id="transform-result", cls="mt-1"),
-                        P(f"Current: {front_transform}", cls="text-xs text-slate-500 mt-1")
+                        P(f"Current: {front_transform}", cls="text-sm sm:text-xs text-slate-500 mt-1")
                         if front_transform
                         else None,
                         cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
@@ -12428,8 +12428,8 @@ def public_photo_page(
                         # Filename always visible for admin (user feedback: "can't find filename")
                         P(
                             Span("File: ", cls="text-slate-500"),
-                            Span(Path(filename).name, cls="text-slate-300 font-mono text-xs"),
-                            cls="text-xs mb-1",
+                            Span(Path(filename).name, cls="text-slate-300 font-mono text-sm sm:text-xs"),
+                            cls="text-sm sm:text-xs mb-1",
                         )
                         if is_admin
                         else None,
@@ -12438,12 +12438,12 @@ def public_photo_page(
                         P(
                             f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
                             f"{identified_count} identified",
-                            cls="text-slate-500 text-xs mt-1",
+                            cls="text-slate-500 text-sm sm:text-xs mt-1",
                         ),
                         P(
                             f"{missing_face_artifacts} archived face {missing_face_label} "
                             f"{missing_face_verb} preserved below without overlay coordinates.",
-                            cls="text-amber-300/80 text-xs mt-1",
+                            cls="text-amber-300/80 text-sm sm:text-xs mt-1",
                         )
                         if missing_face_artifacts
                         else None,
@@ -12453,7 +12453,7 @@ def public_photo_page(
                                 href=photo.get("source_url", ""),
                                 target="_blank",
                                 rel="noopener",
-                                cls="text-indigo-400/70 hover:text-indigo-300 text-xs underline",
+                                cls="text-indigo-400/70 hover:text-indigo-300 text-sm sm:text-xs underline",
                             ),
                             cls="mt-1",
                         )
@@ -12462,19 +12462,19 @@ def public_photo_page(
                         # Admin inline edit for collection/source
                         Div(
                             Form(
-                                Label("Collection:", cls="text-xs text-slate-500 mr-1"),
+                                Label("Collection:", cls="text-sm sm:text-xs text-slate-500 mr-1"),
                                 Input(
                                     type="text",
                                     name="collection",
                                     value=photo.get("collection", ""),
                                     placeholder="Select or type a collection",
-                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48 placeholder-slate-500",
+                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-48 placeholder-slate-500",
                                     list="photo-collections",
                                 ),
                                 Button(
                                     "Save",
                                     type="submit",
-                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1",
+                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded ml-1",
                                 ),
                                 Div(id=f"collection-status-{photo_id}", cls="inline ml-1"),
                                 hx_post=f"/api/photo/{photo_id}/collection",
@@ -12483,17 +12483,17 @@ def public_photo_page(
                                 cls="flex items-center gap-1 mb-1",
                             ),
                             Form(
-                                Label("Source:", cls="text-xs text-slate-500 mr-1"),
+                                Label("Source:", cls="text-sm sm:text-xs text-slate-500 mr-1"),
                                 Input(
                                     type="text",
                                     name="source",
                                     value=photo.get("source", ""),
-                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48",
+                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-48",
                                 ),
                                 Button(
                                     "Save",
                                     type="submit",
-                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1",
+                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded ml-1",
                                 ),
                                 Div(id=f"source-status-{photo_id}", cls="inline ml-1"),
                                 hx_post=f"/api/photo/{photo_id}/source",
@@ -12502,17 +12502,17 @@ def public_photo_page(
                                 cls="flex items-center gap-1 mb-1",
                             ),
                             Form(
-                                Label("Source URL:", cls="text-xs text-slate-500 mr-1"),
+                                Label("Source URL:", cls="text-sm sm:text-xs text-slate-500 mr-1"),
                                 Input(
                                     type="text",
                                     name="source_url",
                                     value=photo.get("source_url", ""),
-                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-56",
+                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-56",
                                 ),
                                 Button(
                                     "Save",
                                     type="submit",
-                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1",
+                                    cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded ml-1",
                                 ),
                                 Div(id=f"source-url-status-{photo_id}", cls="inline ml-1"),
                                 hx_post=f"/api/photo/{photo_id}/source-url",
@@ -12539,11 +12539,11 @@ def public_photo_page(
                     Div(
                         H2(
                             f"{'People' if total_faces != 1 else 'Person'} in this photo",
-                            cls="text-lg font-serif font-semibold text-white",
+                            cls="text-xl sm:text-lg font-serif font-semibold text-white",
                         ),
                         Span(
                             "Potential tag conflicts detected",
-                            cls="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-full",
+                            cls="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
                             data_testid="photo-face-conflict-banner",
                         )
                         if has_bbox_conflicts
@@ -12551,7 +12551,7 @@ def public_photo_page(
                         A(
                             "Compare faces",
                             href=f"{nav_prefix}/compare?photo_id={photo_id}",
-                            cls="text-xs text-indigo-400 hover:text-indigo-300 transition-colors",
+                            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 transition-colors",
                             data_testid="compare-photo-link",
                         ),
                         cls="flex items-center justify-between gap-3 flex-wrap mb-4",
@@ -12586,7 +12586,7 @@ def public_photo_page(
                     Div(
                         Span(
                             f"{unidentified_count} {'person' if unidentified_count == 1 else 'people'} awaiting identification",
-                            cls="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 block",
+                            cls="text-sm sm:text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 block",
                         ),
                         cls="",
                     )
@@ -12611,7 +12611,7 @@ def public_photo_page(
                                 else f"{nav_prefix}/help"
                             ),
                             cls=(
-                                "inline-block px-8 py-4 bg-amber-600 text-white font-semibold text-lg rounded-lg hover:bg-amber-500 transition-colors"
+                                "inline-block px-8 py-4 bg-amber-600 text-white font-semibold text-xl sm:text-lg rounded-lg hover:bg-amber-500 transition-colors"
                                 if identified_count == 0 and total_faces > 0
                                 else "inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"
                             ),
@@ -12650,11 +12650,11 @@ def public_photo_page(
                         cls="text-slate-500 text-sm",
                     ),
                     Div(
-                        A("Home", href=f"{nav_prefix}/", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Home", href=f"{nav_prefix}/", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("Photos", href=f"{nav_prefix}/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Photos", href=f"{nav_prefix}/photos", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("People", href=f"{nav_prefix}/people", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("People", href=f"{nav_prefix}/people", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         cls="flex items-center gap-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3",
@@ -12881,7 +12881,7 @@ def get(surnames: str = "", request=None):
 
     if not matches:
         return Div(
-            H3("No matches yet", cls="text-lg font-bold text-white mb-2"),
+            H3("No matches yet", cls="text-xl sm:text-lg font-bold text-white mb-2"),
             P(
                 "We don't have confirmed identities with those surnames yet, "
                 "but you can still help identify unknown faces!",
@@ -12910,7 +12910,7 @@ def get(surnames: str = "", request=None):
                         Span(m["name"], cls="text-sm font-medium text-white"),
                         Span(
                             f"{m['photo_count']} photo{'s' if m['photo_count'] != 1 else ''}",
-                            cls="text-xs text-slate-400",
+                            cls="text-sm sm:text-xs text-slate-400",
                         ),
                         cls="flex flex-col",
                     ),
@@ -12925,10 +12925,10 @@ def get(surnames: str = "", request=None):
     return Div(
         H3(
             f"We found {len(matches)} {'person' if len(matches) == 1 else 'people'} with those family names!",
-            cls="text-lg font-bold text-white mb-3",
+            cls="text-xl sm:text-lg font-bold text-white mb-3",
         ),
         Div(*people_cards, cls="space-y-1 mb-4 max-h-64 overflow-y-auto"),
-        P(f"{len(matches)} identified so far — can you help find more?", cls="text-xs text-slate-500 mb-3")
+        P(f"{len(matches)} identified so far — can you help find more?", cls="text-sm sm:text-xs text-slate-500 mb-3")
         if len(matches) > 6
         else None,
         Button(

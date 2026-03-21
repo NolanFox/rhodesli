@@ -222,6 +222,115 @@ app, rt = fast_app(
         """),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
+
+        Style('''
+            /* Mobile generic layout constraints */
+            body, .main-content {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+            
+            /* Responsive Utilities */
+            @media (max-width: 640px) {
+                .focus-card-mobile-stack {
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                    padding-left: 0.5rem; padding-right: 0.5rem;
+                }
+            }
+
+            /* HTMX Transition Classes */
+            .htmx-swapping {
+                opacity: 0;
+                transition: opacity 200ms ease-out;
+            }
+            .htmx-settling {
+                opacity: 1;
+                transition: opacity 200ms ease-in;
+            }
+            .htmx-added {
+                opacity: 0;
+                animation: fadeSlideIn 300ms ease-out forwards;
+            }
+            @keyframes fadeSlideIn {
+                from { opacity: 0; transform: translateY(8px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* Hardware Button Press */
+            button, [role="button"], a.btn {
+                transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            button:active, [role="button"]:active {
+                transform: scale(0.97);
+            }
+
+            /* Desktop Identity Hover */
+            .identity-card {
+                transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            @media (hover: hover) {
+                .identity-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px -5px rgba(0,0,0,0.3);
+                }
+            }
+
+            /* Loading Shimmer */
+            .htmx-indicator, .loading-skeleton {
+                background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s ease-in-out infinite;
+            }
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+            
+            /* Action Success Flow */
+            .action-success {
+                animation: slideOutFade 300ms ease-in forwards;
+            }
+            @keyframes slideOutFade {
+                to { opacity: 0; transform: translateX(30px) scale(0.95); }
+            }
+
+            /* Scroll Face Crop */
+            .face-crop-enter {
+                opacity: 0;
+                transform: scale(0.9);
+                transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .face-crop-enter.visible {
+                opacity: 1;
+                transform: scale(1);
+            }
+        '''),
+        Script('''
+            // Face Crop Intersection Observer
+            document.addEventListener('DOMContentLoaded', () => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        if (e.isIntersecting) {
+                            e.target.classList.add('visible');
+                            observer.unobserve(e.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                document.querySelectorAll('.face-crop-enter').forEach(el => observer.observe(el));
+            });
+            
+            // Success Action Extractor (Listens to HTMX afterRequest)
+            document.addEventListener('htmx:afterRequest', function(evt) {
+                if (evt.detail.successful) {
+                    let target = evt.detail.target;
+                    // Try targeting closest card to slide it away cleanly
+                    if(target && target.classList && target.classList.contains('identity-card')) {
+                         target.classList.add('action-success');
+                    }
+                }
+            });
+        '''),
         Style("""
             .person-card {
                 transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -467,7 +576,7 @@ app, rt = fast_app(
                     '<div onclick="closeMobileNav()" class="absolute inset-0 bg-black/50 transition-opacity"></div>' +
                     '<div class="mobile-nav-panel absolute top-0 right-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto transition-transform duration-200" style="transform:translateX(100%)">' +
                     '<div class="flex items-center justify-between px-4 py-4 border-b border-slate-700">' +
-                    '<span class="text-lg font-bold text-white">Rhodesli</span>' +
+                    '<span class="text-xl sm:text-lg font-bold text-white">Rhodesli</span>' +
                     '<button onclick="closeMobileNav()" class="text-slate-400 hover:text-white p-3 -mr-2 -mt-2" type="button" aria-label="Close menu">' +
                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
                     '</button></div><div class="py-2 px-2" id="mobile-nav-links"></div></div>';
@@ -656,7 +765,7 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
     if current_ids and identity_id in current_ids:
         return Span(
             current_name,
-            cls="text-xs px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/30",
+            cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/30",
             title=f"From {current_name}",
         )
 
@@ -672,7 +781,7 @@ def _cross_community_badge(identity_id: str, current_community: dict | None) -> 
             comm_name = comm.get("name", comm_slug.replace("-", " ").title())
             return Span(
                 comm_name,
-                cls="text-xs px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30",
+                cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30",
                 title=f"This person appears in the {comm_name} archive",
             )
 
@@ -1648,7 +1757,7 @@ def _build_upload_provenance_line(photo: dict):
     """Build the archive-entry/source line shown on photo pages."""
     provenance = _get_upload_provenance_display(photo)
     if provenance:
-        return Span(provenance["full_text"], cls="text-xs text-slate-500")
+        return Span(provenance["full_text"], cls="text-sm sm:text-xs text-slate-500")
 
     # Source is already shown in the Collection/Source/URL section of photo context modal.
     # Don't duplicate it here (BUG-5, Session 96e-cont6).
@@ -1728,9 +1837,9 @@ def _auth_disabled_warning():
     return Div(
         P(
             "Authentication is disabled. All admin features are publicly accessible.",
-            cls="text-amber-400 text-xs text-center",
+            cls="text-amber-400 text-sm sm:text-xs text-center",
         ),
-        cls="bg-amber-900/30 border border-amber-700/30 rounded px-3 py-1.5 mb-3",
+        cls="bg-amber-900/30 border border-amber-700/30 rounded px-5 py-4 sm:px-3 sm:py-1.5 mb-3",
         data_testid="auth-disabled-warning",
     )
 
@@ -2667,7 +2776,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 hx_target=f"#reanalyze-result-{safe_id}",
                 hx_swap="innerHTML",
                 hx_indicator=f"#reanalyze-spinner-{safe_id}",
-                cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-2 py-1 transition-colors cursor-pointer",
+                cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-4 py-3 sm:px-2 sm:py-1 transition-colors cursor-pointer",
                 data_testid="reanalyze-button",
                 title="Date, location, and scene analysis",
             ),
@@ -2686,8 +2795,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 Div(
                     Div(
                         Div(
-                            Span("\u2728", cls="text-lg mr-2"),
-                            H2("AI Analysis", cls="text-lg font-serif font-semibold text-white inline"),
+                            Span("\u2728", cls="text-xl sm:text-lg mr-2"),
+                            H2("AI Analysis", cls="text-xl sm:text-lg font-serif font-semibold text-white inline"),
                             cls="flex items-center",
                         ),
                         _build_reanalyze_controls(button_label="Run AI Analysis"),
@@ -2759,7 +2868,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         # Correction pencil button (visible to all, triggers form or login prompt)
         pencil_btn = Button(
             "\u270f\ufe0f",
-            cls="text-xs text-slate-500 hover:text-white transition-colors ml-2 px-1",
+            cls="text-sm sm:text-xs text-slate-500 hover:text-white transition-colors ml-2 px-1",
             data_testid="correct-date",
             data_action="toggle-date-correction",
             data_photo_id=photo_id,
@@ -2778,18 +2887,18 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                         min="1850",
                         max="2030",
                         placeholder=str(best_year or decade),
-                        cls="w-20 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white",
+                        cls="w-20 bg-slate-800 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm text-white",
                         data_testid="correction-year",
                     ),
                     Button(
                         "Submit",
-                        cls="ml-2 px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
+                        cls="ml-2 px-3 py-1 text-sm sm:text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
                         data_testid="correction-submit",
                         type="submit",
                     ),
                     Button(
                         "Cancel",
-                        cls="ml-1 px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors",
+                        cls="ml-1 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs text-slate-400 hover:text-white transition-colors",
                         type="button",
                         data_action="toggle-date-correction",
                     ),
@@ -2842,7 +2951,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             Div(
                 P(
                     f"circa {best_year}" if best_year else f"{decade}s",
-                    cls="text-lg font-serif text-amber-200 mb-1 inline",
+                    cls="text-xl sm:text-lg font-serif text-amber-200 mb-1 inline",
                 ),
                 pencil_btn,
                 cls="flex items-center",
@@ -2875,7 +2984,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             loc_label = location_name
             if location_region:
                 loc_label += f", {location_region}"
-            location_parts.append(P(loc_label, cls="text-lg font-serif text-amber-200 mb-1"))
+            location_parts.append(P(loc_label, cls="text-xl sm:text-lg font-serif text-amber-200 mb-1"))
         # Confidence badge
         if location_confidence:
             loc_conf_cls = {
@@ -2889,7 +2998,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         # Evidence text (Gemini's reasoning)
         if location_estimate:
             location_parts.append(
-                P(location_estimate, cls="text-slate-400 text-xs mt-2 italic", data_testid="location-evidence")
+                P(location_estimate, cls="text-slate-400 text-sm sm:text-xs mt-2 italic", data_testid="location-evidence")
             )
         # Admin: Correct Location button (simple text input)
         if is_admin:
@@ -2907,12 +3016,12 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                                 name="correction_location",
                                 id="correction-location-input",
                                 placeholder=location_name or "City, Country",
-                                cls="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48",
+                                cls="bg-slate-800 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm text-white w-48",
                                 data_testid="correction-location",
                             ),
                             Button(
                                 "Submit",
-                                cls="ml-2 px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
+                                cls="ml-2 px-3 py-1 text-sm sm:text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
                                 type="button",
                                 disabled=True,
                                 title="Location correction coming soon",
@@ -2964,7 +3073,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     # Visible text (OCR)
     visible_text = label.get("visible_text", "")
     if visible_text:
-        sections.append(_field("Visible Text", P(visible_text, cls="italic font-mono text-xs text-slate-400")))
+        sections.append(_field("Visible Text", P(visible_text, cls="italic font-mono text-sm sm:text-xs text-slate-400")))
 
     # Tags
     tags = label.get("controlled_tags") or (search_doc.get("controlled_tags") if search_doc else None)
@@ -2978,7 +3087,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             )
             for t in tags
         ]
-        sections.append(_field("Tags", Div(*tag_pills, cls="flex flex-wrap gap-1.5")))
+        sections.append(_field("Tags", Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center")))
 
     # Dating evidence — Photo Detective card layout
     detective_section = _detective_evidence_section(label)
@@ -3005,7 +3114,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                             Li(
                                 Span(cue_text, cls="text-slate-400"),
                                 Span(f" ({strength})", cls=f"text-[10px] {strength_cls}") if strength else None,
-                                cls="text-xs mb-1",
+                                cls="text-sm sm:text-xs mb-1",
                             )
                         )
             if evidence_items:
@@ -3032,8 +3141,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         Div(
             Div(
                 Div(
-                    Span("\u2728", cls="text-lg mr-2"),
-                    H2("AI Analysis", cls="text-lg font-serif font-semibold text-white inline"),
+                    Span("\u2728", cls="text-xl sm:text-lg mr-2"),
+                    H2("AI Analysis", cls="text-xl sm:text-lg font-serif font-semibold text-white inline"),
                     cls="flex items-center",
                 ),
                 reanalyze_btn,
@@ -3102,7 +3211,7 @@ def _build_ai_sections_list(photo_id: str, label: dict, is_admin: bool = False):
         }.get(confidence, "bg-slate-500/20 text-slate-400")
         date_text = f"circa {best_year}" if best_year else f"{decade}s"
         date_content = Div(
-            P(date_text, cls="text-lg font-serif text-amber-200 mb-1"),
+            P(date_text, cls="text-xl sm:text-lg font-serif text-amber-200 mb-1"),
             Span(confidence.capitalize(), cls=f"text-[10px] px-2 py-0.5 rounded-full {conf_badge_cls}"),
         )
         sections.append(_field("Date Estimate", date_content, field_key="date", expanded=True))
@@ -3115,7 +3224,7 @@ def _build_ai_sections_list(photo_id: str, label: dict, is_admin: bool = False):
         location_parts = [P(location_name, cls="text-white font-medium")]
         location_estimate = location_data.get("location_estimate", "")
         if location_estimate:
-            location_parts.append(P(location_estimate, cls="text-slate-400 text-xs mt-2 italic"))
+            location_parts.append(P(location_estimate, cls="text-slate-400 text-sm sm:text-xs mt-2 italic"))
         location_content = Div(*location_parts, data_testid="location-estimate")
         sections.append(_field("Location Estimate", location_content, expanded=True))
 
@@ -3157,12 +3266,12 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         if not is_admin:
             return None
         return Div(
-            H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
+            H3("Face Analysis", cls="text-xl sm:text-lg font-serif font-bold text-white mb-2"),
             P("No face descriptions available yet.", cls="text-slate-400 text-sm mb-2"),
             Div(
                 Button(
                     "Detect Faces",
-                    cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
+                    cls="text-sm px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
                     "rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                     hx_post=f"/api/face-alignment/{photo_id}",
                     hx_target=f"#face-alignment-{photo_id[:8]}",
@@ -3285,21 +3394,21 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         if gender:
             demo_parts.append(gender.capitalize())
         if demo_parts:
-            card_content.append(P(" | ".join(demo_parts), cls="text-indigo-300 text-xs mb-1"))
+            card_content.append(P(" | ".join(demo_parts), cls="text-indigo-300 text-sm sm:text-xs mb-1"))
 
         # Description
         if description:
-            card_content.append(P(description, cls="text-slate-300 text-xs mb-1"))
+            card_content.append(P(description, cls="text-slate-300 text-sm sm:text-xs mb-1"))
 
         # Clothing
         if clothing:
-            card_content.append(P(f"Attire: {clothing}", cls="text-slate-400 text-xs mb-1"))
+            card_content.append(P(f"Attire: {clothing}", cls="text-slate-400 text-sm sm:text-xs mb-1"))
 
         # Position + Features
         if position:
-            card_content.append(P(f"Position: {position}", cls="text-slate-500 text-xs"))
+            card_content.append(P(f"Position: {position}", cls="text-slate-500 text-sm sm:text-xs"))
         if features:
-            card_content.append(P(f"Features: {features}", cls="text-slate-500 text-xs italic"))
+            card_content.append(P(f"Features: {features}", cls="text-slate-500 text-sm sm:text-xs italic"))
 
         face_cards.append(
             Div(
@@ -3314,11 +3423,11 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         mismatch_warning = Div(
             P(
                 f"InsightFace detected {faces_detected} faces, Gemini described {faces_described}.",
-                cls="text-amber-300 text-xs",
+                cls="text-amber-300 text-sm sm:text-xs",
             ),
             P(
                 f"{len(gemini_only)} additional face(s) seen by Gemini only." if gemini_only else "",
-                cls="text-amber-400/70 text-xs",
+                cls="text-amber-400/70 text-sm sm:text-xs",
             )
             if gemini_only
             else None,
@@ -3329,20 +3438,20 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
     # Scene context
     scene_el = None
     if scene_context:
-        scene_el = P(f"Scene: {scene_context}", cls="text-slate-400 text-xs italic mb-3")
+        scene_el = P(f"Scene: {scene_context}", cls="text-slate-400 text-sm sm:text-xs italic mb-3")
 
     return Div(
-        H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
+        H3("Face Analysis", cls="text-xl sm:text-lg font-serif font-bold text-white mb-2"),
         P(model_line, cls="text-indigo-400/70 text-[11px] mb-3"),
         mismatch_warning,
         scene_el,
-        Div(*face_cards, cls="grid gap-2 sm:grid-cols-2")
+        Div(*face_cards, cls="grid gap-4 sm:gap-2 grid-cols-1 sm:grid-cols-2")
         if face_cards
         else P("No subject faces described.", cls="text-slate-500 text-sm"),
         # Re-run button for admin
         Button(
             "Re-run Analysis",
-            cls="mt-3 text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+            cls="mt-3 text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
             hx_post=f"/api/face-alignment/{photo_id}",
             hx_target=f"#face-alignment-{photo_id[:8]}",
             hx_swap="innerHTML",
@@ -3476,8 +3585,8 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "", 
             pill_cls += f" {active_cls}"
         items.append(
             A(
-                Span(str(count), cls="text-lg font-bold"),
-                Span(label, cls="text-xs" + ("" if is_active else " opacity-80")),
+                Span(str(count), cls="text-xl sm:text-lg font-bold"),
+                Span(label, cls="text-sm sm:text-xs" + ("" if is_active else " opacity-80")),
                 href=f"{nav_prefix}/?section=to_review&view={view_mode}&filter={filter_val}",
                 cls=pill_cls,
                 title=tooltip,
@@ -3501,13 +3610,13 @@ def _promotion_badge(identity: dict):
     if reason == "confirmed_match":
         return Span(
             "Suggested ID",
-            cls="text-xs px-2 py-0.5 rounded border bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
+            cls="text-sm sm:text-xs px-2 py-0.5 rounded border bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
             title="Previously skipped — now matches a confirmed identity",
         )
     else:
         return Span(
             "Rediscovered",
-            cls="text-xs px-2 py-0.5 rounded border bg-amber-600/30 text-amber-300 border-amber-500/30",
+            cls="text-sm sm:text-xs px-2 py-0.5 rounded border bg-amber-600/30 text-amber-300 border-amber-500/30",
             title="Previously skipped — new match evidence found",
         )
 
@@ -3537,10 +3646,10 @@ def _promotion_banner(identity: dict):
 
     return Div(
         Div(
-            Span("*", cls=f"text-lg font-bold {icon_cls}"),
+            Span("*", cls=f"text-xl sm:text-lg font-bold {icon_cls}"),
             Div(
                 Strong(title, cls="text-white text-sm"),
-                P(desc, cls="text-slate-400 text-xs mt-0.5"),
+                P(desc, cls="text-slate-400 text-sm sm:text-xs mt-0.5"),
                 cls="ml-2",
             ),
             cls="flex items-start",
@@ -4862,7 +4971,7 @@ def _existing_suggestions_for_identity(identity_id: str, face_id_encoded: str) -
                     Span(ann["value"], cls="text-sm font-medium text-amber-300"),
                     Span(
                         f"suggested by {people_count} {'person' if people_count == 1 else 'people'}",
-                        cls="text-xs text-slate-500",
+                        cls="text-sm sm:text-xs text-slate-500",
                     ),
                     cls="flex flex-col",
                 ),
@@ -4881,10 +4990,10 @@ def _existing_suggestions_for_identity(identity_id: str, face_id_encoded: str) -
                     ),
                     hx_target="closest div",
                     hx_swap="outerHTML",
-                    cls="px-2 py-0.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 flex-shrink-0",
+                    cls="px-2 py-0.5 text-sm sm:text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 flex-shrink-0",
                     type="button",
                 ),
-                cls="flex items-center justify-between gap-2 px-2 py-1.5 bg-amber-900/20 border border-amber-700/30 rounded mb-1",
+                cls="flex items-center justify-between gap-2 px-4 py-3 sm:px-2 sm:py-1.5 bg-amber-900/20 border border-amber-700/30 rounded mb-1",
             )
         )
     return items
@@ -5013,7 +5122,7 @@ def toast_with_undo(
         Span(message, cls="flex-1"),
         Button(
             "Undo",
-            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
             hx_post=f"/api/identity/{source_id}/unreject/{target_id}",
             hx_swap="outerHTML",
             hx_target="closest div",  # Replace the toast itself
@@ -5048,10 +5157,10 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
 
     stats_row = [
         A(
-            Span(str(count), cls=f"font-display font-semibold text-lg {color}"),
-            Span(f" {label}", cls="text-slate-400 text-xs font-medium uppercase tracking-wider ml-1"),
+            Span(str(count), cls=f"font-display font-semibold text-xl sm:text-lg {color}"),
+            Span(f" {label}", cls="text-slate-400 text-sm sm:text-xs font-medium uppercase tracking-wider ml-1"),
             href=link,
-            cls="hover:bg-slate-800 px-3 py-1.5 rounded-md transition-colors flex items-baseline line-height-none border border-transparent hover:border-slate-700",
+            cls="hover:bg-slate-800 px-5 py-4 sm:px-3 sm:py-1.5 rounded-md transition-colors flex items-baseline line-height-none border border-transparent hover:border-slate-700",
         )
         for label, count, link, color in stat_items
     ]
@@ -5081,7 +5190,7 @@ def mobile_header() -> Div:
             type="button",
             aria_label="Open menu",
         ),
-        Span("Rhodesli", cls="text-lg font-display font-bold text-white"),
+        Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-white"),
         cls="mobile-header fixed top-0 left-0 right-0 h-14 bg-slate-800 border-b border-slate-700 "
         "flex items-center gap-3 px-4 z-20",
         id="mobile-header",
@@ -5172,7 +5281,7 @@ def _public_page_nav(
     user=None,
     community_slug: str | None = None,
     max_w: str = "max-w-5xl",
-    font_cls: str = "text-lg font-display font-bold text-white",
+    font_cls: str = "text-xl sm:text-lg font-display font-bold text-white",
     sticky: bool = True,
     fixed: bool = False,
     extra_links: list = None,
@@ -5212,7 +5321,7 @@ def _public_page_nav(
         # Menu panel (slides from right)
         Div(
             Div(
-                Span("Rhodesli", cls="text-lg font-display font-bold text-white"),
+                Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-white"),
                 Button(
                     NotStr(close_svg),
                     cls="text-slate-400 hover:text-white p-3 -mr-2 -mt-2",
@@ -5300,25 +5409,25 @@ def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None
         Div(
             Span(
                 "Admin Mode",
-                cls="text-amber-400/80 text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0",
+                cls="text-amber-400/80 text-[10px] sm:text-sm sm:text-xs font-medium tracking-wide uppercase shrink-0",
             ),
             Div(
                 A(
                     f"Pending ({pending_count})",
                     href=f"{prefix}/?section=to_review",
-                    cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
+                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
                 ),
                 Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A(
                     f"Proposals ({proposal_count})",
                     href=f"{prefix}/?section=to_review",
-                    cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
+                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
                 ),
                 Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A(
                     "Upload",
                     href=f"{prefix}/upload",
-                    cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors",
+                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
                 ),
                 cls="flex items-center overflow-x-auto scrollbar-hide w-full sm:w-auto",
             ),
@@ -5380,7 +5489,7 @@ def sidebar(
 
         # Hide badge when count is 0
         badge = (
-            Span(str(count), cls=f"sidebar-label ml-auto px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}")
+            Span(str(count), cls=f"sidebar-label ml-auto px-2 py-0.5 text-sm sm:text-xs font-bold rounded-full {badge_cls}")
             if not is_zero
             else None
         )
@@ -5403,15 +5512,15 @@ def sidebar(
     if user and user.is_admin:
         workspace_switcher = Div(
             Div(
-                Span(header_name, cls="sidebar-label text-xs text-slate-400 truncate"),
+                Span(header_name, cls="sidebar-label text-sm sm:text-xs text-slate-400 truncate"),
                 A(
                     "Switch",
                     hx_get="/api/communities/switcher",
                     hx_target="#community-switcher-dropdown",
                     hx_swap="innerHTML",
-                    cls="sidebar-label text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer ml-auto flex-shrink-0",
+                    cls="sidebar-label text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer ml-auto flex-shrink-0",
                 ),
-                cls="flex items-center gap-2 px-3 py-1.5",
+                cls="flex items-center gap-2 px-5 py-4 sm:px-3 sm:py-1.5",
             ),
             Div(id="community-switcher-dropdown", cls="relative"),
             cls="border-b border-slate-700/50",
@@ -5420,7 +5529,7 @@ def sidebar(
     elif not is_rhodes and community:
         # Non-admin: just show community name
         workspace_switcher = Div(
-            Span(header_name, cls="sidebar-label text-xs text-slate-400 truncate px-3 py-1.5"),
+            Span(header_name, cls="sidebar-label text-sm sm:text-xs text-slate-400 truncate px-5 py-4 sm:px-3 sm:py-1.5"),
             cls="border-b border-slate-700/50",
         )
 
@@ -5451,7 +5560,7 @@ def sidebar(
         review_section = Div(
             P(
                 "Review",
-                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+                cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
             ),
             nav_item(f"{prefix}/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
             nav_item(
@@ -5466,7 +5575,7 @@ def sidebar(
         review_section = Div(
             P(
                 "Contribute",
-                cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+                cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
             ),
             nav_item(f"{prefix}/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
             A(
@@ -5495,31 +5604,31 @@ def sidebar(
                     Span("📂", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Collections", cls="sidebar-label ml-2"),
                     href=f"{prefix}/collections",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                    cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
                     Span("🗺️", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Map", cls="sidebar-label ml-2"),
                     href=f"{prefix}/map",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                    cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
                     Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Timeline", cls="sidebar-label ml-2"),
                     href=f"{prefix}/timeline",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                    cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
                     Span("\U0001f333", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Tree", cls="sidebar-label ml-2"),
                     href=f"{prefix}/tree",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                    cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
                 A(
                     Span("🔗", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Connect", cls="sidebar-label ml-2"),
                     href=f"{prefix}/connect",
-                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                    cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
                 ),
             ]
         )
@@ -5530,19 +5639,19 @@ def sidebar(
                 Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("Compare", cls="sidebar-label ml-2"),
                 href="/tools/compare",
-                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             A(
                 Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("Estimate", cls="sidebar-label ml-2"),
                 href="/tools/estimate",
-                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             A(
                 Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("About", cls="sidebar-label ml-2"),
                 href="/about",
-                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
         ]
     )
@@ -5550,7 +5659,7 @@ def sidebar(
     # Admin section (all communities, admin-only)
     admin_section = (
         Div(
-            P("Admin", cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
+            P("Admin", cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
             nav_item(
                 f"{prefix}/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"
             ),
@@ -5567,13 +5676,13 @@ def sidebar(
                 Span("🔬", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("Upload Review", cls="sidebar-label ml-2"),
                 href=f"{prefix}/admin/upload-review",
-                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             A(
                 Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                 Span("GEDCOM", cls="sidebar-label ml-2"),
                 href=f"{prefix}/admin/gedcom",
-                cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
             cls="mb-3",
         )
@@ -5679,7 +5788,7 @@ def sidebar(
             Div(
                 P(
                     "Library",
-                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+                    cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
                 nav_item(f"{prefix}/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
                 nav_item(f"{prefix}/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
@@ -5689,7 +5798,7 @@ def sidebar(
             Div(
                 P(
                     "Browse",
-                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+                    cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
                 *browse_items,
                 cls="mb-3",
@@ -5702,27 +5811,27 @@ def sidebar(
         Div(
             Div(
                 Div(
-                    Span(user.email, cls="sidebar-label text-xs text-slate-400 truncate"),
-                    Span(" (admin)" if user.is_admin else "", cls="sidebar-label text-xs text-indigo-400"),
+                    Span(user.email, cls="sidebar-label text-sm sm:text-xs text-slate-400 truncate"),
+                    Span(" (admin)" if user.is_admin else "", cls="sidebar-label text-sm sm:text-xs text-indigo-400"),
                     cls="flex items-center gap-1 min-w-0",
                 ),
                 A(
                     "Sign out",
                     href="/logout",
-                    cls="sidebar-label text-xs text-slate-500 hover:text-slate-300 underline flex-shrink-0",
+                    cls="sidebar-label text-sm sm:text-xs text-slate-500 hover:text-slate-300 underline flex-shrink-0",
                 ),
                 cls="flex items-center justify-between mb-1 gap-2",
             )
             if user
             else Div(
-                A("Sign in", href="/login", cls="sidebar-label text-xs text-slate-400 hover:text-slate-300 underline"),
+                A("Sign in", href="/login", cls="sidebar-label text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline"),
                 cls="mb-1",
             ),
             Div(
                 f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed'] + counts['skipped']} identified",
-                cls="sidebar-label text-xs text-slate-500 font-data",
+                cls="sidebar-label text-sm sm:text-xs text-slate-500 font-data",
             ),
-            Div(APP_VERSION, cls="sidebar-label text-xs text-slate-600 mt-0.5"),
+            Div(APP_VERSION, cls="sidebar-label text-sm sm:text-xs text-slate-600 mt-0.5"),
             cls="px-3 py-2 border-t border-slate-700/50",
         ),
         # Close button for mobile
@@ -5764,17 +5873,17 @@ def section_header(
             A(
                 "Focus",
                 href=f"{nav_prefix}/?section=to_review&view=focus",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
+                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
             ),
             A(
                 "View All",
                 href=f"{nav_prefix}/?section=to_review&view=browse",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
+                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
             ),
             A(
                 "Match",
                 href=f"{nav_prefix}/?section=to_review&view=match",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_match_active if view_mode == 'match' else _tab_inactive}",
+                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_match_active if view_mode == 'match' else _tab_inactive}",
             ),
             cls="flex items-center gap-2",
         )
@@ -5784,12 +5893,12 @@ def section_header(
             A(
                 "Focus",
                 href=f"{nav_prefix}/?section=skipped&view=focus",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
+                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
             ),
             A(
                 "View All",
                 href=f"{nav_prefix}/?section=skipped&view=browse",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
+                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
             ),
             cls="flex items-center gap-2",
         )
@@ -5823,11 +5932,11 @@ def _proposal_banner(identity_id: str):
     confidence_label = _CONFIDENCE_LABEL.get(confidence, "Possible match")
 
     return Div(
-        Span(confidence_label, cls="text-xs font-bold uppercase"),
-        Span(" — ", cls="text-xs opacity-50"),
+        Span(confidence_label, cls="text-sm sm:text-xs font-bold uppercase"),
+        Span(" — ", cls="text-sm sm:text-xs opacity-50"),
         Span(f"Likely {target_name}", cls="text-sm font-medium"),
-        Span(f" ({confidence_pct}%)", cls="text-xs opacity-70"),
-        Span(count_text, cls="text-xs opacity-50") if count_text else None,
+        Span(f" ({confidence_pct}%)", cls="text-sm sm:text-xs opacity-70"),
+        Span(count_text, cls="text-sm sm:text-xs opacity-50") if count_text else None,
         cls=f"mt-2 px-3 py-2 rounded-lg border text-sm {color_cls}",
     )
 
@@ -5861,7 +5970,7 @@ def _proposal_badge_inline(identity_id: str):
 
     return Span(
         label,
-        cls=f"text-xs px-2 py-0.5 rounded border {color_cls}",
+        cls=f"text-sm sm:text-xs px-2 py-0.5 rounded border {color_cls}",
         title=f"ML match: {target_name} — {confidence} confidence, distance {best.get('distance', 0):.3f}",
     )
 
@@ -6003,7 +6112,7 @@ def identity_card_expanded(
             ),
             Span(
                 "Keyboard: C S R F",
-                cls="text-xs text-slate-600 hidden sm:inline ml-2",
+                cls="text-sm sm:text-xs text-slate-600 hidden sm:inline ml-2",
                 title="C=Confirm, S=Skip, R=Reject, F=Find Similar",
             ),
             cls="flex flex-wrap items-center gap-3 mt-6",
@@ -6070,7 +6179,7 @@ def identity_card_expanded(
                     A(
                         "View Public Page",
                         href=f"{nav_prefix}/person/{identity_id}",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300 ml-3",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 ml-3",
                         data_testid="view-public-page",
                     ),
                     cls="flex items-center mt-1",
@@ -6123,7 +6232,7 @@ def identity_card_expanded(
                 Div(
                     Button(
                         "Notes",
-                        cls="text-xs text-slate-400 hover:text-slate-300 underline",
+                        cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline",
                         hx_get=f"{nav_prefix}/api/identity/{identity_id}/notes",
                         hx_target=f"#notes-{identity_id}",
                         hx_swap="innerHTML",
@@ -6160,7 +6269,7 @@ def _suggest_name_form(identity_id: str, nav_prefix: str = "") -> Div:
                 Option("Likely", value="likely", selected=True),
                 Option("Just a guess", value="guess"),
                 name="confidence",
-                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-white",
+                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white",
             ),
             Input(
                 name="reason",
@@ -6370,7 +6479,7 @@ def render_to_review_section(
             # Empty state
             content = Div(
                 Div("🎉", cls="text-4xl mb-4"),
-                H3("All caught up!", cls="text-lg font-medium text-white"),
+                H3("All caught up!", cls="text-xl sm:text-lg font-medium text-white"),
                 P("No items to review.", cls="text-slate-400 mt-1"),
                 A(
                     "Upload more photos →",
@@ -6456,7 +6565,7 @@ def render_to_review_section(
         cards = [c for c in grid_items if c]  # Filter None
 
         if cards:
-            grid = Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+            grid = Div(*cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
             if len(to_review) > display_limit:
                 content = Div(
                     Div(
@@ -6550,7 +6659,7 @@ def _sort_control(
     view_param = f"&view={view_mode}" if view_mode else ""
     for value, label in options:
         is_active = current_sort == value
-        cls = "px-2 py-1 text-xs font-medium rounded transition-colors "
+        cls = "px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-medium rounded transition-colors "
         if is_active:
             cls += "bg-slate-600 text-white"
         else:
@@ -6558,7 +6667,7 @@ def _sort_control(
         buttons.append(
             A(label, href=f"{nav_prefix}/?section={section}&sort_by={value}{view_param}{extra_query}", cls=cls)
         )
-    return Div(Span("Sort:", cls="text-xs text-slate-500 mr-1"), *buttons, cls="flex items-center gap-1")
+    return Div(Span("Sort:", cls="text-sm sm:text-xs text-slate-500 mr-1"), *buttons, cls="flex items-center gap-1")
 
 
 def render_confirmed_section(
@@ -6607,7 +6716,7 @@ def render_confirmed_section(
             grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
     if grid_items:
-        content = Div(*grid_items, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+        content = Div(*grid_items, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
     else:
         content = Div(
             "No confirmed identities yet. Browse the inbox to help identify faces.",
@@ -6633,7 +6742,7 @@ def render_confirmed_section(
     filter_buttons = []
     for value, label in filter_options:
         active = confirmed_filter == value
-        filter_cls = "px-2 py-1 text-xs font-medium rounded transition-colors "
+        filter_cls = "px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-medium rounded transition-colors "
         if active:
             filter_cls += "bg-emerald-700/70 text-white"
         else:
@@ -6658,7 +6767,7 @@ def render_confirmed_section(
                     extra_query=f"&confirmed_filter={confirmed_filter}",
                 ),
                 Div(
-                    Span("Filter:", cls="text-xs text-slate-500 mr-1"),
+                    Span("Filter:", cls="text-sm sm:text-xs text-slate-500 mr-1"),
                     *filter_buttons,
                     cls="flex items-center gap-1",
                 ),
@@ -6668,7 +6777,7 @@ def render_confirmed_section(
         ),
         P(
             "Use Needs Tree to sweep confirmed people who still need a family-tree link.",
-            cls="text-xs text-slate-500",
+            cls="text-sm sm:text-xs text-slate-500",
             data_testid="confirmed-tree-helper",
         )
         if is_admin
@@ -6758,7 +6867,7 @@ def render_skipped_section(
         else:
             content = Div(
                 Div("🎉", cls="text-4xl mb-4"),
-                H3("All caught up!", cls="text-lg font-medium text-white"),
+                H3("All caught up!", cls="text-xl sm:text-lg font-medium text-white"),
                 P("No faces need help right now.", cls="text-slate-400 mt-1"),
                 A(
                     "← Back to Inbox",
@@ -6945,14 +7054,14 @@ def _actionability_badge(identity_id: str, ids_with_proposals: set = None):
 
     if confidence in ("VERY HIGH", "HIGH"):
         return Div(
-            Span("Strong lead", cls="text-xs font-bold text-emerald-300"),
-            Span(" — ML found a likely match", cls="text-xs text-slate-400"),
+            Span("Strong lead", cls="text-sm sm:text-xs font-bold text-emerald-300"),
+            Span(" — ML found a likely match", cls="text-sm sm:text-xs text-slate-400"),
             cls="px-3 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-lg mb-1",
         )
     elif confidence == "MODERATE":
         return Div(
-            Span("Good lead", cls="text-xs font-bold text-amber-300"),
-            Span(" — possible match found", cls="text-xs text-slate-400"),
+            Span("Good lead", cls="text-sm sm:text-xs font-bold text-amber-300"),
+            Span(" — possible match found", cls="text-sm sm:text-xs text-slate-400"),
             cls="px-3 py-1 bg-amber-900/30 border border-amber-500/30 rounded-lg mb-1",
         )
     return None
@@ -7114,7 +7223,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
         Div(
             # Left: This Person
             Div(
-                Div("Who is this?", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+                Div("Who is this?", cls="text-sm sm:text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
                 Button(
                     Div(
                         Img(src=main_crop_url or "", alt=name, cls="w-full h-full object-cover")
@@ -7139,14 +7248,14 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                     cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center",
                 ),
                 Div(
-                    P(name, cls="text-lg font-semibold text-white mt-2"),
-                    P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400"),
+                    P(name, cls="text-xl sm:text-lg font-semibold text-white mt-2"),
+                    P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400"),
                 ),
                 Div(
                     A(
                         "View Photo",
                         href="#",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 inline-block",
                         hx_get=f"{nav_prefix}/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
@@ -7243,9 +7352,9 @@ def _build_skipped_photo_context(
     # Build "Who is this?" photo card
     who_context_items = []
     if collection:
-        who_context_items.append(Span(collection, cls="text-xs text-slate-400 leading-snug"))
+        who_context_items.append(Span(collection, cls="text-sm sm:text-xs text-slate-400 leading-snug"))
     if other_people:
-        who_context_items.append(Span(f"Also: {', '.join(other_people)}", cls="text-xs text-slate-300 truncate"))
+        who_context_items.append(Span(f"Also: {', '.join(other_people)}", cls="text-sm sm:text-xs text-slate-300 truncate"))
 
     who_card = Div(
         Div("Who is this?", cls="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1"),
@@ -7292,9 +7401,9 @@ def _build_skipped_photo_context(
                         match_context_items = []
                         if match_collection:
                             match_context_items.append(
-                                Span(match_collection, cls="text-xs text-slate-400 leading-snug")
+                                Span(match_collection, cls="text-sm sm:text-xs text-slate-400 leading-snug")
                             )
-                        match_context_items.append(Span(match_name, cls="text-xs text-slate-300 truncate"))
+                        match_context_items.append(Span(match_name, cls="text-sm sm:text-xs text-slate-300 truncate"))
 
                         match_card = Div(
                             Div(
@@ -7337,7 +7446,7 @@ def _build_skipped_photo_context(
 
     return Div(
         Div(
-            Span("Photo Context", cls="text-xs font-medium text-slate-400 uppercase tracking-wide"),
+            Span("Photo Context", cls="text-sm sm:text-xs font-medium text-slate-400 uppercase tracking-wide"),
             share_el,
             cls="flex items-center justify-between mb-2",
         ),
@@ -7659,9 +7768,9 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
 
     if not top_matches:
         no_match_el = Div(
-            Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+            Div("Best Match", cls="text-sm sm:text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
             P("No ML suggestions yet", cls="text-sm text-slate-500 italic"),
-            P("Try 'I Know Them' to name this person", cls="text-xs text-slate-500 mt-1"),
+            P("Try 'I Know Them' to name this person", cls="text-sm sm:text-xs text-slate-500 mt-1"),
             cls="flex-1 flex flex-col items-center sm:items-start",
         )
         return no_match_el, None, None
@@ -7697,7 +7806,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
             A(
                 "View Photo",
                 href="#",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 inline-block",
                 hx_get=f"{nav_prefix}/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={target_id}",
                 hx_target="#photo-modal-content",
                 **{"_": "on click remove .hidden from #photo-modal"},
@@ -7710,7 +7819,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
             A(
                 "View Profile",
                 href=f"{nav_prefix}/person/{target_id}",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 inline-block",
             )
         )
     else:
@@ -7718,12 +7827,12 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
             A(
                 "Help Identify",
                 href=f"{nav_prefix}/identify/{target_id}",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 inline-block",
             )
         )
 
     suggestion_el = Div(
-        Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+        Div("Best Match", cls="text-sm sm:text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
         Div(
             Img(src=suggestion_crop_url or "", alt=target_name, cls="w-full h-full object-cover")
             if suggestion_crop_url
@@ -7731,7 +7840,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
             cls=f"w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-3 {ring_cls}",
         ),
         Div(
-            P(target_name, cls="text-lg font-semibold text-white mt-2"),
+            P(target_name, cls="text-xl sm:text-lg font-semibold text-white mt-2"),
             P(Span(confidence_label, cls=f"font-bold {color_cls}"), cls="text-sm mt-1"),
         ),
         Div(*match_links, cls="flex items-center gap-3 mt-1") if match_links else None,
@@ -7755,12 +7864,12 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
                     Div(
                         Img(src=m_crop or "", alt=m_name, cls="w-full h-full object-cover")
                         if m_crop
-                        else Span("?", cls="text-lg text-slate-500"),
+                        else Span("?", cls="text-xl sm:text-lg text-slate-500"),
                         cls=f"w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-2 {m_ring} hover:scale-105 transition-transform",
                     ),
                     P(
                         m_name[:20] + ("..." if len(m_name) > 20 else ""),
-                        cls="text-xs text-slate-300 mt-1 text-center truncate max-w-[80px]",
+                        cls="text-sm sm:text-xs text-slate-300 mt-1 text-center truncate max-w-[80px]",
                     ),
                     P(m_label, cls=f"text-[10px] {_CONFIDENCE_COLOR.get(m_conf, 'text-slate-400')} text-center"),
                     cls="flex flex-col items-center flex-shrink-0 cursor-pointer hover:bg-slate-700/50 rounded-lg p-1 transition-colors",
@@ -7768,7 +7877,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set, nav_
                 )
             )
         other_matches_strip = Div(
-            Div("More matches", cls="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide"),
+            Div("More matches", cls="text-sm sm:text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide"),
             Div(*strip_items, cls="flex gap-3 overflow-x-auto pb-2"),
             cls="mt-5 pt-4 border-t border-slate-700/50",
         )
@@ -7851,7 +7960,7 @@ def _build_skipped_focus_actions(identity_id: str, state: str, nav_prefix: str =
 
     return Div(
         Div(*buttons, cls="flex flex-wrap items-center gap-3"),
-        Div(shortcut_text, cls="text-xs text-slate-500 mt-2 hidden sm:block"),
+        Div(shortcut_text, cls="text-sm sm:text-xs text-slate-500 mt-2 hidden sm:block"),
         # Undo toast (hidden by default, shown after undo-able action)
         Div(
             id="undo-toast",
@@ -7915,7 +8024,7 @@ def get_next_skipped_focus_card(exclude_id: str = None, nav_prefix: str = "") ->
     else:
         return Div(
             Div("🎉", cls="text-4xl mb-4"),
-            H3("All caught up!", cls="text-lg font-medium text-white"),
+            H3("All caught up!", cls="text-xl sm:text-lg font-medium text-white"),
             P("You've reviewed all the faces that need help.", cls="text-slate-400 mt-1"),
             A(
                 "← Back to Inbox",
@@ -7942,7 +8051,7 @@ def render_rejected_section(
             grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
     if grid_items:
-        content = Div(*grid_items, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+        content = Div(*grid_items, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
     else:
         content = Div("No dismissed items. Rejected matches will appear here.", cls="text-center py-12 text-slate-400")
 
@@ -8141,7 +8250,7 @@ def render_photos_section(
             Label("Collection:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *collection_options,
-                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
                 onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection=' + encodeURIComponent(this.value) + '&filter_source={_fs}&sort_by={sort_by}&media_filter={_mf}'",
             ),
@@ -8152,7 +8261,7 @@ def render_photos_section(
             Label("Source:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *source_options,
-                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
                 onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&media_filter={_mf}'",
             ),
@@ -8163,7 +8272,7 @@ def render_photos_section(
             Label("Sort:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *sort_options,
-                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0",
                 onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by=' + this.value + '&media_filter={_mf}'",
             ),
@@ -8174,7 +8283,7 @@ def render_photos_section(
             Label("Media:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *media_options,
-                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 "
                 "focus:ring-2 focus:ring-indigo-500 min-w-0",
                 onchange=f"window.location.href='{nav_prefix}/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by={sort_by}&media_filter=' + this.value",
             ),
@@ -8184,7 +8293,7 @@ def render_photos_section(
         Button(
             "Select",
             id="photo-select-toggle",
-            cls="px-3 py-1.5 text-sm border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors",
+            cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors",
             type="button",
             data_action="toggle-photo-select",
         ),
@@ -8228,7 +8337,7 @@ def render_photos_section(
                 Div(
                     f"+{photo['identified_count'] - 3}",
                     cls="w-6 h-6 rounded-full border-2 border-slate-800 bg-slate-700 "
-                    "flex items-center justify-center text-xs text-slate-300",
+                    "flex items-center justify-center text-sm sm:text-xs text-slate-300",
                     style="margin-left: -4px;",
                 )
             )
@@ -8261,8 +8370,8 @@ def render_photos_section(
                     f"{photo['confirmed_count']}/{photo['face_count']}"
                     if photo["confirmed_count"] > 0
                     else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
-                    cls="absolute top-2 right-2 text-white text-xs font-data "
-                    "px-2 py-1 rounded-full backdrop-blur-sm "
+                    cls="absolute top-2 right-2 text-white text-sm sm:text-xs font-data "
+                    "px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm "
                     + (
                         "bg-emerald-600/80"
                         if photo["face_count"] > 0 and photo["confirmed_count"] == photo["face_count"]
@@ -8277,7 +8386,7 @@ def render_photos_section(
                 Div(
                     "\u21c5",
                     cls="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-amber-600/80 "
-                    "text-white text-xs flex items-center justify-center backdrop-blur-sm",
+                    "text-white text-sm sm:text-xs flex items-center justify-center backdrop-blur-sm",
                     title="Has back image",
                 )
                 if photo.get("has_back")
@@ -8290,7 +8399,7 @@ def render_photos_section(
             Div(
                 P(photo["filename"], cls="text-sm text-white truncate font-data"),
                 Div(
-                    P(f"\U0001f4c1 {photo['source']}", cls="text-xs text-slate-500 leading-snug")
+                    P(f"\U0001f4c1 {photo['source']}", cls="text-sm sm:text-xs text-slate-500 leading-snug")
                     if photo["source"]
                     else None,
                     Span(
@@ -8373,7 +8482,7 @@ def render_photos_section(
     """)
 
     # Photo grid layout
-    grid = Div(*photo_cards, photo_nav_script, cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4")
+    grid = Div(*photo_cards, photo_nav_script, cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4")
 
     # Collection stats cards (shown when viewing all collections, not filtered)
     collection_cards = None
@@ -8387,15 +8496,15 @@ def render_photos_section(
                     Div(
                         Span(
                             f"{stats['photo_count']} photo{'s' if stats['photo_count'] != 1 else ''}",
-                            cls="text-xs text-slate-400",
+                            cls="text-sm sm:text-xs text-slate-400",
                         ),
-                        Span(" \u2022 ", cls="text-xs text-slate-600"),
+                        Span(" \u2022 ", cls="text-sm sm:text-xs text-slate-600"),
                         Span(
                             f"{stats['face_count']} face{'s' if stats['face_count'] != 1 else ''}",
-                            cls="text-xs text-slate-400",
+                            cls="text-sm sm:text-xs text-slate-400",
                         ),
-                        Span(" \u2022 ", cls="text-xs text-slate-600"),
-                        Span(f"{stats['identified_count']} identified", cls="text-xs text-emerald-400"),
+                        Span(" \u2022 ", cls="text-sm sm:text-xs text-slate-600"),
+                        Span(f"{stats['identified_count']} identified", cls="text-sm sm:text-xs text-emerald-400"),
                     ),
                     cls="bg-slate-800/50 border border-slate-700 rounded-lg p-3 cursor-pointer "
                     "hover:border-indigo-500/50 transition-colors",
@@ -8427,30 +8536,30 @@ def render_photos_section(
                 "Select All",
                 type="button",
                 data_action="photo-select-all",
-                cls="px-3 py-1 text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700",
+                cls="px-3 py-1 text-sm sm:text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700",
             ),
             Button(
                 "Clear",
                 type="button",
                 data_action="photo-select-clear",
-                cls="px-3 py-1 text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700",
+                cls="px-3 py-1 text-sm sm:text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700",
             ),
             Div(
                 Select(
                     *collection_options_bulk,
                     id="bulk-move-collection",
-                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-4 py-3 sm:px-2 sm:py-1.5",
                 ),
                 Select(
                     *source_options_bulk,
                     id="bulk-move-source",
-                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-4 py-3 sm:px-2 sm:py-1.5",
                 ),
                 Input(
                     type="url",
                     id="bulk-source-url",
                     placeholder="Source URL...",
-                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5 w-40",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-4 py-3 sm:px-2 sm:py-1.5 w-40",
                 ),
                 Button(
                     "Apply",
@@ -8464,7 +8573,7 @@ def render_photos_section(
                 "Cancel",
                 type="button",
                 data_action="toggle-photo-select",
-                cls="px-3 py-1 text-xs text-slate-400 hover:text-white",
+                cls="px-3 py-1 text-sm sm:text-xs text-slate-400 hover:text-white",
             ),
             cls="flex items-center gap-4 max-w-5xl mx-auto px-4 flex-wrap",
         ),
@@ -8553,7 +8662,7 @@ def render_photos_section(
             "Use /photos for the full archive browser."
             if total_matching_photos > photo_display_limit
             else "",
-            cls="text-xs text-slate-500",
+            cls="text-sm sm:text-xs text-slate-500",
         )
         if total_matching_photos > photo_display_limit
         else None,
@@ -8679,7 +8788,7 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
         # Empty state
         return Div(
             Div("🎉", cls="text-4xl mb-4"),
-            H3("All caught up!", cls="text-lg font-medium text-white"),
+            H3("All caught up!", cls="text-xl sm:text-lg font-medium text-white"),
             P("No more items to review.", cls="text-slate-400 mt-1"),
             A(
                 "Upload more photos →",
@@ -8706,7 +8815,7 @@ def inbox_badge(count: int) -> A:
     return A(
         Span("\U0001f4e5", cls="mr-2"),
         "New Matches",
-        Span(f"({count})", cls="bg-indigo-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"),
+        Span(f"({count})", cls="bg-indigo-600 text-white text-sm sm:text-xs px-1.5 py-0.5 rounded-full ml-1"),
         href="#inbox-lane",
         cls="text-slate-300 hover:text-indigo-400 text-sm font-medium",
     )
@@ -8736,7 +8845,7 @@ def review_action_buttons(
             buttons.append(
                 Button(
                     "\u2713 Confirm",
-                    cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
                     hx_post=confirm_url,
                     hx_target=f"#identity-{identity_id}",
                     hx_swap="outerHTML",
@@ -8749,7 +8858,7 @@ def review_action_buttons(
             buttons.append(
                 Button(
                     "\u2713 Confirm",
-                    cls="px-3 py-1.5 text-sm font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50 min-h-[44px]",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50 min-h-[44px]",
                     title="Name this person first",
                     aria_label="Name this person before confirming",
                     type="button",
@@ -8762,7 +8871,7 @@ def review_action_buttons(
         buttons.append(
             Button(
                 "\u23f8 Skip",
-                cls="px-3 py-1.5 text-sm font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors min-h-[44px]",
+                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors min-h-[44px]",
                 hx_post=f"{nav_prefix}/identity/{identity_id}/skip",
                 hx_target=f"#identity-{identity_id}",
                 hx_swap="outerHTML",
@@ -8781,7 +8890,7 @@ def review_action_buttons(
         buttons.append(
             Button(
                 "\u2717 Reject",
-                cls="px-3 py-1.5 text-sm font-bold border-2 border-red-500 text-red-500 rounded hover:bg-red-500/20 transition-colors min-h-[44px]",
+                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold border-2 border-red-500 text-red-500 rounded hover:bg-red-500/20 transition-colors min-h-[44px]",
                 hx_post=reject_url,
                 hx_target=f"#identity-{identity_id}",
                 hx_swap="outerHTML",
@@ -8796,7 +8905,7 @@ def review_action_buttons(
         buttons.append(
             Button(
                 "Reset",
-                cls="px-2 py-1 text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 rounded transition-colors",
+                cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 rounded transition-colors",
                 hx_post=f"/identity/{identity_id}/reset",
                 hx_target=f"#identity-{identity_id}",
                 hx_swap="outerHTML",
@@ -8835,7 +8944,7 @@ def state_badge(state: str) -> Span:
         "REJECTED": "bg-rose-700 text-white",
         "SKIPPED": "bg-stone-500 text-white",
     }
-    return Span(state, cls=f"text-xs font-bold px-2 py-1 rounded {colors.get(state, 'bg-gray-500 text-white')}")
+    return Span(state, cls=f"text-sm sm:text-xs font-bold px-4 py-3 sm:px-2 sm:py-1 rounded {colors.get(state, 'bg-gray-500 text-white')}")
 
 
 def era_badge(era: str) -> Span:
@@ -8845,7 +8954,7 @@ def era_badge(era: str) -> Span:
     """
     if not era:
         return None
-    return Span(era, cls="absolute top-2 right-2 bg-stone-700/80 text-white text-xs px-2 py-1 font-mono")
+    return Span(era, cls="absolute top-2 right-2 bg-stone-700/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 font-mono")
 
 
 # Share icon SVG (three connected dots) — used everywhere for consistency
@@ -8907,7 +9016,7 @@ def share_button(
                 '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
             ),
             label,
-            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
             type="button",
             data_action="share-photo",
             data_share_url=share_url,
@@ -8917,7 +9026,7 @@ def share_button(
         return Button(
             NotStr(_SHARE_ICON_SVG),
             f" {label}",
-            cls="text-xs text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1",
+            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1",
             type="button",
             data_action="share-photo",
             data_share_url=share_url,
@@ -8992,7 +9101,7 @@ def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
     label = "Front orientation" if target == "front" else "Back orientation"
 
     def _btn(icon_label, transform_val, danger=False):
-        cls_base = "px-2 py-1 text-xs rounded transition-colors"
+        cls_base = "px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs rounded transition-colors"
         cls_color = (
             "bg-red-900/50 hover:bg-red-800/50 text-red-300"
             if danger
@@ -9008,7 +9117,7 @@ def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
         )
 
     return Div(
-        P(label, cls="text-xs text-slate-400 font-medium mb-1"),
+        P(label, cls="text-sm sm:text-xs text-slate-400 font-medium mb-1"),
         Div(
             _btn("\u21bb 90\u00b0", "rotate:90"),
             _btn("\u21ba -90\u00b0", "rotate:270"),
@@ -9066,7 +9175,7 @@ def face_card(
             _vp_url += f"&identity_id={identity_id}"
         view_photo_btn = Button(
             "View Photo",
-            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1",
+            cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline mt-1",
             hx_get=_vp_url,
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
@@ -9091,7 +9200,7 @@ def face_card(
 
         detach_btn = Button(
             "Detach",
-            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2",
+            cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2",
             hx_post=f"/api/face/{quote(face_id)}/detach",
             hx_target=f"#{safe_dom_id}",
             hx_swap="outerHTML",
@@ -9121,7 +9230,7 @@ def face_card(
         Div(
             Span(
                 quality_label,
-                cls=f"text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
+                cls=f"text-sm sm:text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
                 title=f"Quality score: {quality:.2f}" if is_admin else None,
             )
             if quality_label
@@ -9195,16 +9304,16 @@ def match_info_bar(
     }
     similarity_class = _similarity_classes.get(label, "bg-slate-600 text-slate-400")
 
-    badge = Span(f"{pct}% match", cls=f"text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
+    badge = Span(f"{pct}% match", cls=f"text-sm sm:text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
 
     details = []
     if show_distance:
         tier_label = _confidence_tier_label(distance)
-        details.append(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 bg-slate-700 px-1 rounded"))
+        details.append(Span(f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 bg-slate-700 px-1 rounded"))
         details.append(tier_label)
     if confidence_gap > 0:
         details.append(
-            Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded")
+            Span(f"+{confidence_gap}% gap", cls="text-sm sm:text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded")
         )
     if co_occurrence > 0:
         details.append(
@@ -9362,7 +9471,7 @@ def neighbor_card(
     _compare_filter = f"?filter={triage_filter}" if triage_filter else ""
     compare_btn = Button(
         "Compare",
-        cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+        cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
         hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/compare/{neighbor_id}{_compare_filter}",
         hx_target="#compare-modal-content",
         hx_swap="innerHTML",
@@ -9436,7 +9545,7 @@ def neighbor_card(
                     ),
                     Span(
                         f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label,
-                        cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
+                        cls=f"text-sm sm:text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
                     ),
                     _cross_community_badge(neighbor_id, current_community),
                     cls="flex items-center flex-wrap gap-1",
@@ -9444,12 +9553,12 @@ def neighbor_card(
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(
                     Span(
-                        f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"
+                        f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"
                     ),
                     _confidence_tier_label(distance),
                     Span(
                         f"+{confidence_gap}% gap",
-                        cls="text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded",
+                        cls="text-sm sm:text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded",
                     )
                     if confidence_gap > 0
                     else None,
@@ -9468,7 +9577,7 @@ def neighbor_card(
                 merge_btn,
                 Button(
                     "Not Same",
-                    cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+                    cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                     hx_post=f"{_nav_prefix}/api/identity/{target_identity_id}/reject/{neighbor_id}",
                     hx_target=f"#neighbor-{neighbor_id}",
                     hx_swap="outerHTML",
@@ -9517,7 +9626,7 @@ def search_result_card(
     # Compare button -- opens side-by-side comparison modal (same pattern as neighbor_card)
     compare_btn = Button(
         "Compare",
-        cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+        cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
         hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/compare/{result_id}",
         hx_target="#compare-modal-content",
         hx_swap="innerHTML",
@@ -9529,7 +9638,7 @@ def search_result_card(
     if user_role == "contributor":
         merge_btn = Button(
             "Suggest Merge",
-            cls="px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
             hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/suggest-merge/{result_id}",
             hx_target=f"#search-result-{result_id}",
             hx_swap="outerHTML",
@@ -9543,7 +9652,7 @@ def search_result_card(
         )
         merge_btn = Button(
             "Merge",
-            cls="px-2 py-1 text-xs font-bold border border-indigo-500/50 text-indigo-400 rounded hover:bg-indigo-500/20",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-indigo-500/50 text-indigo-400 rounded hover:bg-indigo-500/20",
             hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
             hx_target=f"#identity-{target_identity_id}",
             hx_swap="outerHTML",
@@ -9569,7 +9678,7 @@ def search_result_card(
                     cls="font-medium text-slate-200 truncate text-sm hover:text-indigo-400 hover:underline cursor-pointer",
                     **{"_": nav_script},
                 ),
-                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400 ml-2"),
+                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400 ml-2"),
                 cls="flex items-center ml-2 flex-1 min-w-0",
             ),
             Div(compare_btn, merge_btn, cls="flex items-center gap-1 flex-shrink-0 ml-2"),
@@ -9668,7 +9777,7 @@ def neighbors_sidebar(
     if not neighbors:
         return Div(
             Div(
-                H4("Similar Identities", cls="text-lg font-serif font-bold text-white"),
+                H4("Similar Identities", cls="text-xl sm:text-lg font-serif font-bold text-white"),
                 toggle_btn,
                 close_btn,
                 cls="flex items-center justify-between mb-3",
@@ -9695,7 +9804,7 @@ def neighbors_sidebar(
                 Option("Cross-community only", value="cross", selected=community_filter == "cross"),
                 Option("All (by distance)", value="all", selected=community_filter == "all"),
                 name="community_filter",
-                cls="text-xs bg-slate-600 text-slate-200 border border-slate-500 rounded px-2 py-1 w-full",
+                cls="text-sm sm:text-xs bg-slate-600 text-slate-200 border border-slate-500 rounded px-4 py-3 sm:px-2 sm:py-1 w-full",
                 hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset=0{_focus_p}{_container_p}",
                 hx_target=f"#{_target_el}",
                 hx_swap="innerHTML",
@@ -9759,7 +9868,7 @@ def neighbors_sidebar(
             Div(
                 Label(
                     Input(type="checkbox", cls="mr-2 accent-indigo-500", **{"_": select_all_script}),
-                    Span("Select All", cls="text-xs text-slate-400"),
+                    Span("Select All", cls="text-sm sm:text-xs text-slate-400"),
                     cls="flex items-center cursor-pointer mb-2",
                 ),
                 *[
@@ -9785,7 +9894,7 @@ def neighbors_sidebar(
                     hx_include="closest form",
                     hx_target=f"#{_target_id}",
                     hx_swap="innerHTML",
-                    cls="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
                 ),
                 Button(
                     "Not Same Selected",
@@ -9794,9 +9903,9 @@ def neighbors_sidebar(
                     hx_include="closest form",
                     hx_target=f"#{_target_id}",
                     hx_swap="innerHTML",
-                    cls="px-3 py-1.5 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                 ),
-                cls="flex gap-2",
+                cls="flex flex-col sm:flex-row gap-3 sm:gap-2 w-full sm:w-auto",
             ),
             cls="mb-3 p-2 bg-slate-600/50 rounded border border-slate-600",
         )
@@ -9807,10 +9916,10 @@ def neighbors_sidebar(
     rejected = (
         Div(
             Div(
-                Span(f"{rejected_count} hidden matches", cls="text-xs text-slate-400 italic"),
+                Span(f"{rejected_count} hidden matches", cls="text-sm sm:text-xs text-slate-400 italic"),
                 Button(
                     "Review",
-                    cls="text-xs text-indigo-400 hover:text-indigo-300 ml-2",
+                    cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 ml-2",
                     hx_get=f"{nav_prefix}/api/identity/{identity_id}/rejected",
                     hx_target=f"#rejected-list-{identity_id}",
                     hx_swap="innerHTML",
@@ -9826,7 +9935,7 @@ def neighbors_sidebar(
 
     return Div(
         Div(
-            H4("Similar Identities", cls="text-lg font-serif font-bold text-white"),
+            H4("Similar Identities", cls="text-xl sm:text-lg font-serif font-bold text-white"),
             toggle_btn,
             close_btn,
             cls="flex items-center justify-between mb-3",
@@ -9862,14 +9971,14 @@ def name_display(
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/rename-form",
             hx_target=f"#name-{identity_id}",
             hx_swap="outerHTML",
-            cls="ml-2 text-xs text-slate-400 hover:text-slate-300 underline",
+            cls="ml-2 text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline",
             type="button",
         )
         if is_admin
         else None
     )
     return Div(
-        H3(display_name, cls="text-lg font-display font-bold text-white"),
+        H3(display_name, cls="text-xl sm:text-lg font-display font-bold text-white"),
         edit_btn,
         id=f"name-{identity_id}",
         cls="flex items-center",
@@ -9911,8 +10020,8 @@ def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_det
                         Span("?", cls="text-4xl text-slate-500"),
                         cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center",
                     ),
-                    P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
-                    P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
+                    P("Image unavailable", cls="text-sm sm:text-xs text-slate-400 mt-1"),
+                    P(f"ID: {face_id[:12]}...", cls="text-sm sm:text-xs font-data text-slate-500"),
                     cls="face-card",
                     id=make_css_id(face_id),
                 )
@@ -9932,7 +10041,7 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
     prev_btn = (
         Button(
             Span("<", cls="text-lg"),
-            cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/faces?page={page - 1}&sort={sort}",
             hx_target=f"#faces-{identity_id}",
             hx_swap="outerHTML",
@@ -9941,7 +10050,7 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
         if page > 0
         else Button(
             Span("<", cls="text-lg"),
-            cls="px-2 py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
             type="button",
             disabled=True,
         )
@@ -9950,7 +10059,7 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
     next_btn = (
         Button(
             Span(">", cls="text-lg"),
-            cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
             hx_get=f"{nav_prefix}/api/identity/{identity_id}/faces?page={page + 1}&sort={sort}",
             hx_target=f"#faces-{identity_id}",
             hx_swap="outerHTML",
@@ -9959,7 +10068,7 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
         if page < total_pages - 1
         else Button(
             Span(">", cls="text-lg"),
-            cls="px-2 py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
+            cls="px-4 py-3 sm:px-2 sm:py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
             type="button",
             disabled=True,
         )
@@ -9967,7 +10076,7 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
 
     return Div(
         prev_btn,
-        Span(f"{start}-{end} of {total_faces}", cls="text-xs text-slate-400 mx-2"),
+        Span(f"{start}-{end} of {total_faces}", cls="text-sm sm:text-xs text-slate-400 mx-2"),
         next_btn,
         cls="flex items-center justify-center gap-1 mt-3",
     )
@@ -10030,7 +10139,7 @@ def identity_card(
     sort_dropdown = Select(
         Option("Sort by Date", value="date", selected=True),
         Option("Sort by Outlier", value="outlier"),
-        cls="text-xs border border-slate-600 bg-slate-700 text-slate-300 rounded px-2 py-1",
+        cls="text-sm sm:text-xs border border-slate-600 bg-slate-700 text-slate-300 rounded px-4 py-3 sm:px-2 sm:py-1",
         hx_get=f"{nav_prefix}/api/identity/{identity_id}/faces",
         hx_target=f"#faces-{identity_id}",
         hx_swap="outerHTML",
@@ -10039,7 +10148,7 @@ def identity_card(
     )
 
     # --- Compact pill-style action buttons for card layout (DD-005) ---
-    _pill = "px-2.5 py-1 text-xs font-medium rounded-full transition-all duration-200"
+    _pill = "px-4 py-3 sm:px-2.5 sm:py-1 text-sm sm:text-xs font-medium rounded-full transition-all duration-200"
 
     # View All Photos button (opens photo modal)
     view_all_photos_btn = (
@@ -10148,7 +10257,7 @@ def identity_card(
     if total_faces > 1 and (name.startswith("Unidentified") or name.startswith("Identity ")):
         grouped_badge = Span(
             f"Grouped ({total_faces} faces)",
-            cls="text-xs px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30 ml-2",
+            cls="text-sm sm:text-xs px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30 ml-2",
         )
 
     # Quality label from best face for compact header display
@@ -10291,7 +10400,7 @@ def identity_card(
             Img(
                 src=hero_crop_url,
                 alt=name,
-                cls="w-full aspect-square object-cover rounded-xl transition-all duration-300",
+                cls="w-full aspect-square object-cover face-crop-enter rounded-xl transition-all duration-300",
                 loading="lazy",
                 data_cycle_img="true",
             )
@@ -10312,7 +10421,7 @@ def identity_card(
         Span(
             f"{total_faces}",
             cls="absolute top-2 right-2 w-7 h-7 flex items-center justify-center"
-            " bg-amber-600/90 text-white text-xs font-bold rounded-full"
+            " bg-amber-600/90 text-white text-sm sm:text-xs font-bold rounded-full"
             " shadow-lg backdrop-blur-sm",
         )
         if total_faces > 1
@@ -10366,13 +10475,13 @@ def identity_card(
         review_proposals_btn,
         gedcom_tree_btn,
         view_public_link,
-        cls="flex flex-wrap gap-1.5 mt-3 px-1",
+        cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center mt-3 px-1",
     )
 
     # Triage buttons — visible labeled row for quick review (when show_triage=True)
     triage_section = None
     if show_triage and is_admin and state in ("INBOX", "PROPOSED", "SKIPPED"):
-        _triage_pill = "px-3 py-1.5 text-xs font-bold rounded-full transition-all duration-200 min-h-[32px]"
+        _triage_pill = "px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold rounded-full transition-all duration-200 min-h-[32px]"
         confirm_url = (
             f"{nav_prefix}/inbox/{identity_id}/confirm" if state == "INBOX" else f"{nav_prefix}/confirm/{identity_id}"
         )
@@ -10424,7 +10533,7 @@ def identity_card(
         )
         triage_section = Div(
             *triage_btns,
-            cls="flex flex-wrap gap-1.5 mt-2 px-1",
+            cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center mt-2 px-1",
         )
 
     # Admin tools — collapsible to keep cards clean
@@ -10451,7 +10560,7 @@ def identity_card(
                 Div(
                     Div(
                         *face_cards,
-                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 gap-3",
                     ),
                     pagination,
                     id=f"faces-{identity_id}",
@@ -10510,7 +10619,7 @@ def identity_card(
             ),
             Button(
                 "✕",
-                cls="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-sm",
+                cls="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-full w-8 h-8 flex items-center justify-center text-xl sm:text-lg font-bold transition-colors shadow-sm",
                 data_action="toggle-faces",
                 type="button",
                 aria_label="Close expanded view",
@@ -10763,7 +10872,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                     type="submit",
                     cls="w-full p-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white font-medium",
                 ),
-                P("Your suggestion will be saved anonymously.", cls="text-xs text-slate-500 mt-1 text-center"),
+                P("Your suggestion will be saved anonymously.", cls="text-sm sm:text-xs text-slate-500 mt-1 text-center"),
                 hx_post="/api/annotations/guest-submit",
                 hx_target="#guest-or-login-modal",
                 hx_swap="innerHTML",
@@ -10783,7 +10892,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                     type="submit",
                     cls="w-full p-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-medium",
                 ),
-                P("Track your contributions with your account.", cls="text-xs text-slate-500 mt-1 text-center"),
+                P("Track your contributions with your account.", cls="text-sm sm:text-xs text-slate-500 mt-1 text-center"),
                 hx_post="/api/annotations/stash-and-login",
                 hx_target="#guest-or-login-modal",
                 hx_swap="innerHTML",
@@ -10882,7 +10991,7 @@ def confirm_modal() -> Div:
     return Div(
         Div(cls="absolute inset-0 bg-black/80", **{"_": "on click add .hidden to #confirm-modal"}),
         Div(
-            P("", id="confirm-modal-message", cls="text-white text-lg mb-6"),
+            P("", id="confirm-modal-message", cls="text-white text-xl sm:text-lg mb-6"),
             Div(
                 Button(
                     "Cancel",
@@ -11013,7 +11122,7 @@ def _evidence_card(category: str, cues: list) -> object:
         range_text = f" ({date_range[0]}-{date_range[1]})" if len(date_range) == 2 else ""
         cue_items.append(
             Div(
-                P(cue.get("cue", ""), cls="text-xs text-slate-300"),
+                P(cue.get("cue", ""), cls="text-sm sm:text-xs text-slate-300"),
                 Span(f"{strength}{range_text}", cls=f"text-[10px] px-1.5 py-0.5 rounded-full {color_cls}"),
                 cls="flex items-start justify-between gap-2 py-1",
             )
@@ -11057,7 +11166,7 @@ def _detective_evidence_section(label: dict) -> object:
     if location_evidence.get("place"):
         loc_items.append(
             Div(
-                P(f"Location: {location_evidence['place']}", cls="text-xs text-amber-200 font-semibold"),
+                P(f"Location: {location_evidence['place']}", cls="text-sm sm:text-xs text-amber-200 font-semibold"),
                 Span(
                     f"Confidence: {location_evidence.get('confidence', 'unknown')}",
                     cls="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400",
@@ -11069,7 +11178,7 @@ def _detective_evidence_section(label: dict) -> object:
         loc_items.append(
             Div(
                 P("Visual evidence", cls="text-[10px] text-slate-500 uppercase tracking-wide"),
-                P(location_evidence["visual_evidence"], cls="text-xs text-slate-300"),
+                P(location_evidence["visual_evidence"], cls="text-sm sm:text-xs text-slate-300"),
                 cls="py-1",
             )
         )
@@ -11077,7 +11186,7 @@ def _detective_evidence_section(label: dict) -> object:
         loc_items.append(
             Div(
                 P("Genealogical context", cls="text-[10px] text-indigo-400 uppercase tracking-wide"),
-                P(location_evidence["biographical_evidence"], cls="text-xs text-slate-300"),
+                P(location_evidence["biographical_evidence"], cls="text-sm sm:text-xs text-slate-300"),
                 cls="py-1",
             )
         )
@@ -11085,7 +11194,7 @@ def _detective_evidence_section(label: dict) -> object:
         loc_items.append(
             Div(
                 P("Missing child analysis", cls="text-[10px] text-emerald-400 uppercase tracking-wide"),
-                P(location_evidence["missing_child_analysis"], cls="text-xs text-slate-300"),
+                P(location_evidence["missing_child_analysis"], cls="text-sm sm:text-xs text-slate-300"),
                 cls="py-1",
             )
         )
@@ -11124,7 +11233,7 @@ def _detective_evidence_section(label: dict) -> object:
         version_str = f" ({prompt_version})" if prompt_version else ""
         model_badge = Span(
             f"Analyzed with {display_model}{timestamp_str}{version_str}",
-            cls="text-[10px] text-indigo-300 bg-indigo-900/30 px-2 py-1 rounded-full",
+            cls="text-[10px] text-indigo-300 bg-indigo-900/30 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
             data_testid="model-badge",
         )
 
@@ -11138,7 +11247,7 @@ def _detective_evidence_section(label: dict) -> object:
             cls="flex items-center justify-between mb-3",
         ),
         Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 gap-3"),
-        P(f"Cultural context: {cultural_note}", cls="text-xs text-slate-500 mt-3 italic") if cultural_note else None,
+        P(f"Cultural context: {cultural_note}", cls="text-sm sm:text-xs text-slate-500 mt-3 italic") if cultural_note else None,
         cls="mt-6 p-4 bg-slate-800/20 rounded-lg border border-slate-700/20",
         data_testid="detective-evidence",
     )
@@ -11155,7 +11264,7 @@ def _progressive_refinement_badge(label: dict) -> object:
     fact_count = metadata.get("fact_count", 0)
     return Span(
         f"Refined with {fact_count} verified fact{'s' if fact_count != 1 else ''}",
-        cls="text-[10px] text-amber-300 bg-amber-900/30 px-2 py-1 rounded-full",
+        cls="text-[10px] text-amber-300 bg-amber-900/30 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
         data_testid="refinement-badge",
     )
 

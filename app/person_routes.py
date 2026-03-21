@@ -108,7 +108,7 @@ def _name_provenance_line(person_id: str, is_admin: bool):
                 if parts:
                     return P(
                         " · ".join(parts),
-                        cls="text-xs text-slate-500 mt-1",
+                        cls="text-sm sm:text-xs text-slate-500 mt-1",
                         data_testid="name-provenance",
                     )
     except Exception:
@@ -179,14 +179,14 @@ def _person_comments_section(person_id: str, is_admin: bool = False):
                 hx_post=f"/api/person/{person_id}/comment/{c.get('id', '')}/hide",
                 hx_target=f"#comment-{c.get('id', '')}",
                 hx_swap="outerHTML",
-                cls="text-xs text-rose-400 hover:text-rose-300 ml-2",
+                cls="text-sm sm:text-xs text-rose-400 hover:text-rose-300 ml-2",
             )
 
         comment_items.append(
             Div(
                 Div(
                     Span(author, cls="text-sm font-medium text-slate-300"),
-                    Span(f" · {date_str}", cls="text-xs text-slate-600") if date_str else None,
+                    Span(f" · {date_str}", cls="text-sm sm:text-xs text-slate-600") if date_str else None,
                     hide_btn,
                     cls="flex items-center mb-1",
                 ),
@@ -427,7 +427,7 @@ def public_person_page(
                         Img(
                             src=crop_url,
                             alt=f"{display_name}",
-                            cls="w-full aspect-square object-cover",
+                            cls="w-full aspect-square object-cover face-crop-enter",
                             onerror="this.style.display='none'",
                         ),
                         Span(
@@ -570,7 +570,7 @@ def public_person_page(
                     crop_el,
                     Span(
                         companion["name"],
-                        cls="text-[10px] sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
+                        cls="text-[10px] sm:text-sm sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
                         title=companion["name"],
                     ),
                     href=f"{nav_prefix}/person/{companion['id']}",
@@ -580,7 +580,7 @@ def public_person_page(
             )
         if len(appears_with) > 8:
             companion_cards.append(
-                Span(f"+{len(appears_with) - 8} more", cls="text-xs text-slate-500 self-center ml-2")
+                Span(f"+{len(appears_with) - 8} more", cls="text-sm sm:text-xs text-slate-500 self-center ml-2")
             )
         appears_with_section = Div(
             H3("Often appears with", cls="text-3xl font-serif tracking-tight text-white mb-6"),
@@ -641,7 +641,7 @@ def public_person_page(
                     A(
                         "View in Family Tree →",
                         href=f"{nav_prefix}/tree?person={person_id}",
-                        cls="text-xs text-indigo-400 hover:text-indigo-300 mt-3 inline-block",
+                        cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 mt-3 inline-block",
                         data_testid="family-tree-link",
                     ),
                 )
@@ -709,12 +709,12 @@ def public_person_page(
                         A(
                             "Find connections →",
                             href=f"{nav_prefix}/connect?person_a={person_id}",
-                            cls="text-xs text-indigo-400 hover:text-indigo-300 mr-4",
+                            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 mr-4",
                         ),
                         A(
                             "View in Tree →",
                             href=f"{nav_prefix}/tree?person={person_id}",
-                            cls="text-xs text-indigo-400 hover:text-indigo-300",
+                            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300",
                         ),
                         cls="mt-2 flex gap-4",
                     )
@@ -759,7 +759,7 @@ def public_person_page(
                 label = type_labels.get(ann["type"], ann["type"].title())
                 ann_items.append(
                     Div(
-                        Span(f"{label}", cls="text-xs text-slate-500 font-medium block mb-0.5"),
+                        Span(f"{label}", cls="text-sm sm:text-xs text-slate-500 font-medium block mb-0.5"),
                         P(f"\u201c{ann['value']}\u201d", cls="text-slate-300 text-sm italic"),
                         cls="py-2",
                     )
@@ -872,13 +872,13 @@ def public_person_page(
     if is_state_confirmed:
         badge = Span(
             "Confirmed",
-            cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
+            cls="text-sm sm:text-xs text-emerald-400 bg-emerald-500/10 px-4 py-3 sm:px-2.5 sm:py-1 rounded-full border border-emerald-500/20 transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
             title="This person has been confirmed by an admin",
         )
     else:
         badge = Span(
             "Under Review",
-            cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 cursor-help transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
+            cls="text-sm sm:text-xs text-amber-400 bg-amber-500/10 px-4 py-3 sm:px-2.5 sm:py-1 rounded-full border border-amber-500/20 cursor-help transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
             title="This identity is awaiting admin review",
         )
 
@@ -910,17 +910,17 @@ def public_person_page(
             ml_suggestion_card = Div(
                 Div(
                     Span("\u2728 ", cls="mr-1"),
-                    Span("ML Estimate", cls="text-xs font-semibold text-indigo-300"),
+                    Span("ML Estimate", cls="text-sm sm:text-xs font-semibold text-indigo-300"),
                     cls="mb-2",
                 ),
                 Div(
                     Span(f"Born c. {_admin_by}", cls="text-white text-sm font-medium"),
-                    Span(f" ({range_str})" if range_str else "", cls="text-slate-400 text-xs"),
+                    Span(f" ({range_str})" if range_str else "", cls="text-slate-400 text-sm sm:text-xs"),
                     cls="mb-1",
                 ),
                 Div(
-                    Span(conf_label, cls=f"text-xs px-2 py-0.5 rounded-full border {conf_cls} mr-2"),
-                    Span(f"Based on {n_photos} photo{'s' if n_photos != 1 else ''}", cls="text-xs text-slate-500"),
+                    Span(conf_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full border {conf_cls} mr-2"),
+                    Span(f"Based on {n_photos} photo{'s' if n_photos != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"),
                     cls="mb-3",
                 ),
                 Div(
@@ -931,13 +931,13 @@ def public_person_page(
                         hx_target=f"#ml-suggestion-{person_id}",
                         hx_swap="outerHTML",
                         hx_vals=json.dumps({"birth_year": _admin_by}),
-                        cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+                        cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm sm:text-xs rounded",
                     ),
                     Button(
                         "Edit & Accept",
                         type="button",
                         onclick=f"document.getElementById('ml-edit-{person_id}').classList.toggle('hidden')",
-                        cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
+                        cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded",
                     ),
                     Button(
                         "Reject",
@@ -946,7 +946,7 @@ def public_person_page(
                         hx_target=f"#ml-suggestion-{person_id}",
                         hx_swap="outerHTML",
                         hx_confirm="Reject this ML birth year estimate?",
-                        cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded",
+                        cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-sm sm:text-xs rounded",
                     ),
                     cls="flex gap-2 flex-wrap",
                 ),
@@ -954,29 +954,29 @@ def public_person_page(
                 Div(
                     Form(
                         Div(
-                            Label("Birth year:", cls="text-xs text-slate-400"),
+                            Label("Birth year:", cls="text-sm sm:text-xs text-slate-400"),
                             Input(
                                 type="number",
                                 name="birth_year",
                                 value=str(_admin_by),
-                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-24",
+                                cls="bg-slate-700 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs text-white w-24",
                             ),
                             cls="flex items-center gap-2",
                         ),
                         Div(
-                            Label("Source:", cls="text-xs text-slate-400"),
+                            Label("Source:", cls="text-sm sm:text-xs text-slate-400"),
                             Input(
                                 type="text",
                                 name="source_detail",
                                 placeholder="e.g. Italian census 1903",
-                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-48",
+                                cls="bg-slate-700 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs text-white w-48",
                             ),
                             cls="flex items-center gap-2 mt-2",
                         ),
                         Button(
                             "Save",
                             type="submit",
-                            cls="mt-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+                            cls="mt-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm sm:text-xs rounded",
                             onclick="event.stopPropagation()",
                         ),
                         hx_post=f"/api/ml-review/birth-year/{person_id}/accept",
@@ -1022,7 +1022,7 @@ def public_person_page(
                 A(
                     f" — {prompt_text}",
                     href=f"{nav_prefix}/identify/{person_id}" if not is_confirmed else "#",
-                    cls="text-indigo-400/60 hover:text-indigo-300 text-xs ml-1",
+                    cls="text-indigo-400/60 hover:text-indigo-300 text-sm sm:text-xs ml-1",
                     data_action="share-photo" if is_confirmed else None,
                     data_share_url=f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}" if is_confirmed else None,
                     data_share_title=f"Help us learn more about {display_name}" if is_confirmed else None,
@@ -1081,7 +1081,7 @@ def public_person_page(
                 ),
                 P(
                     f"Help us complete {display_name}'s record.",
-                    cls="text-slate-400 text-xs mb-3",
+                    cls="text-slate-400 text-sm sm:text-xs mb-3",
                 ),
                 A(
                     "Share what you know",
@@ -1248,24 +1248,24 @@ def public_person_page(
                         Form(
                             Div(
                                 Div(
-                                    Label("Birth year:", cls="text-xs text-slate-500"),
+                                    Label("Birth year:", cls="text-sm sm:text-xs text-slate-500"),
                                     Input(
                                         type="number",
                                         name="birth_year",
                                         value=str(person_birth_year) if person_birth_year else "",
                                         placeholder="e.g. 1905",
-                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-24",
+                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-24",
                                     ),
                                     cls="flex items-center gap-1",
                                 ),
                                 Div(
-                                    Label("Death year:", cls="text-xs text-slate-500"),
+                                    Label("Death year:", cls="text-sm sm:text-xs text-slate-500"),
                                     Input(
                                         type="number",
                                         name="death_year",
                                         value=str(identity.get("death_year", "")) if identity.get("death_year") else "",
                                         placeholder="e.g. 1985",
-                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-24",
+                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-24",
                                     ),
                                     cls="flex items-center gap-1",
                                 ),
@@ -1273,45 +1273,45 @@ def public_person_page(
                             ),
                             Div(
                                 Div(
-                                    Label("Birth place:", cls="text-xs text-slate-500"),
+                                    Label("Birth place:", cls="text-sm sm:text-xs text-slate-500"),
                                     Input(
                                         type="text",
                                         name="birth_place",
                                         value=identity.get("birth_place", ""),
                                         placeholder="e.g. Rhodes, Greece",
                                         list="places-list",
-                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40",
+                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-40",
                                     ),
                                     cls="flex items-center gap-1",
                                 ),
                                 Div(
-                                    Label("Death place:", cls="text-xs text-slate-500"),
+                                    Label("Death place:", cls="text-sm sm:text-xs text-slate-500"),
                                     Input(
                                         type="text",
                                         name="death_place",
                                         value=identity.get("death_place", ""),
                                         placeholder="e.g. New York, NY",
                                         list="places-list",
-                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40",
+                                        cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-40",
                                     ),
                                     cls="flex items-center gap-1",
                                 ),
                                 cls="flex flex-wrap gap-3 mb-1",
                             ),
                             Div(
-                                Label("Maiden name:", cls="text-xs text-slate-500"),
+                                Label("Maiden name:", cls="text-sm sm:text-xs text-slate-500"),
                                 Input(
                                     type="text",
                                     name="maiden_name",
                                     value=identity.get("maiden_name", ""),
-                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40",
+                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-sm sm:text-xs text-white w-40",
                                 ),
                                 cls="flex items-center gap-1 mb-2",
                             ),
                             Button(
                                 "Save Metadata",
                                 type="submit",
-                                cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
+                                cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-xs rounded",
                                 onclick="event.stopPropagation()",
                             ),
                             Div(id=f"metadata-status-{person_id}", cls="inline ml-2"),
@@ -1336,7 +1336,7 @@ def public_person_page(
                         Div(
                             Span(
                                 state,
-                                cls="text-xs px-2 py-0.5 rounded-full font-medium cursor-help "
+                                cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium cursor-help "
                                 + (
                                     "bg-emerald-500/20 text-emerald-400"
                                     if state == "CONFIRMED"
@@ -1349,7 +1349,7 @@ def public_person_page(
                             A(
                                 "Edit in Admin",
                                 href=f"{workstation_prefix}/?section={_section_for_state(state)}&view=browse#identity-{person_id}",
-                                cls="text-xs text-indigo-400 hover:text-white",
+                                cls="text-sm sm:text-xs text-indigo-400 hover:text-white",
                                 data_testid="edit-in-admin-link",
                             ),
                             Button(
@@ -1358,7 +1358,7 @@ def public_person_page(
                                 hx_target=f"#{similar_container_id}",
                                 hx_swap="innerHTML",
                                 hx_disabled_elt="this",
-                                cls="text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors disabled:opacity-50",
+                                cls="text-sm sm:text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors disabled:opacity-50",
                                 type="button",
                                 **{"_": "on click put 'Searching...' into me"},
                             )
@@ -1366,15 +1366,15 @@ def public_person_page(
                             else A(
                                 "Find Similar",
                                 href=f"{nav_prefix}/people/{person_id}/similar",
-                                cls="text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
+                                cls="text-sm sm:text-xs px-2.5 py-2 rounded-full bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-colors",
                             ),
                             A(
                                 "Tree Linked" if has_tree_link else "Needs Tree Link",
                                 href="#gedcom",
                                 cls=(
-                                    "text-xs px-2.5 py-2 rounded-full bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-colors"
+                                    "text-sm sm:text-xs px-2.5 py-2 rounded-full bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-colors"
                                     if has_tree_link
-                                    else "text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors"
+                                    else "text-sm sm:text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors"
                                 ),
                                 data_testid="jump-to-gedcom-link",
                             )
@@ -1383,7 +1383,7 @@ def public_person_page(
                             A(
                                 f"Review Proposals ({len(target_proposals)})",
                                 href=f"{nav_prefix}/admin/upload-review#identity-group-{person_id}",
-                                cls="text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors",
+                                cls="text-sm sm:text-xs px-2.5 py-2 rounded-full bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 hover:text-white transition-colors",
                                 data_testid="review-proposals-link",
                             )
                             if target_proposals
@@ -1396,15 +1396,15 @@ def public_person_page(
                                 name="name",
                                 value=display_name,
                                 placeholder="Enter name...",
-                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
+                                cls="bg-slate-700 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
                             ),
                             Button(
                                 "Rename",
                                 type="submit",
-                                cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded disabled:opacity-50 active:scale-95 transition-transform",
+                                cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded disabled:opacity-50 active:scale-95 transition-transform",
                                 **{"_": "on click put 'Saving...' into me"},
                             ),
-                            Span(id=f"rename-status-{person_id}", cls="text-xs text-emerald-400 ml-1"),
+                            Span(id=f"rename-status-{person_id}", cls="text-sm sm:text-xs text-emerald-400 ml-1"),
                             hx_post=f"/api/identity/{person_id}/rename",
                             hx_target=f"#rename-status-{person_id}",
                             hx_swap="innerHTML",
@@ -1419,7 +1419,7 @@ def public_person_page(
                             (
                                 Button(
                                     "\u2713 Confirm",
-                                    cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
+                                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
                                     hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}?from_person_page=true",
                                     hx_target="#person-admin-actions",
                                     hx_swap="outerHTML",
@@ -1430,7 +1430,7 @@ def public_person_page(
                                 if raw_name and not raw_name.startswith("Unidentified Person ")
                                 else Button(
                                     "\u2713 Confirm",
-                                    cls="px-3 py-1.5 text-xs font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50",
+                                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50",
                                     title="Name this person first",
                                     type="button",
                                     disabled=True,
@@ -1440,7 +1440,7 @@ def public_person_page(
                             else None,
                             Button(
                                 "\u23f8 Skip",
-                                cls="px-3 py-1.5 text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50",
+                                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50",
                                 hx_post=f"/identity/{person_id}/skip?from_person_page=true",
                                 hx_target="#person-admin-actions",
                                 hx_swap="outerHTML",
@@ -1452,7 +1452,7 @@ def public_person_page(
                             else None,
                             Button(
                                 "\u2717 Reject",
-                                cls="px-3 py-1.5 text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20 disabled:opacity-50",
+                                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20 disabled:opacity-50",
                                 hx_post=f"/{'inbox/' + person_id + '/reject' if state == 'INBOX' else 'reject/' + person_id}?from_person_page=true",
                                 hx_target="#person-admin-actions",
                                 hx_swap="outerHTML",
@@ -1477,7 +1477,7 @@ def public_person_page(
                                 hx_get=f"/api/identity/{person_id}/search-merge",
                                 hx_trigger="keyup changed delay:300ms",
                                 hx_target=f"#merge-search-results-{person_id}",
-                                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
+                                cls="bg-slate-700 border border-slate-600 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none",
                             ),
                             # Confirmation warning for confirmed persons (hidden until merge attempt)
                             Div(
@@ -1488,14 +1488,14 @@ def public_person_page(
                                     ),
                                     Span(
                                         "This person is confirmed. Are you sure you want to merge?",
-                                        cls="text-amber-300 text-xs",
+                                        cls="text-amber-300 text-sm sm:text-xs",
                                     ),
                                     cls="flex items-center mb-2",
                                 ),
                                 Button(
                                     "Yes, merge anyway",
                                     type="button",
-                                    cls="px-3 py-1 text-xs font-bold bg-amber-600 text-white rounded hover:bg-amber-500 mr-2",
+                                    cls="px-3 py-1 text-sm sm:text-xs font-bold bg-amber-600 text-white rounded hover:bg-amber-500 mr-2",
                                     data_testid="confirm-merge-btn",
                                     **{
                                         "_": "on click "
@@ -1511,7 +1511,7 @@ def public_person_page(
                                 Button(
                                     "Cancel",
                                     type="button",
-                                    cls="px-3 py-1 text-xs text-slate-400 hover:text-white rounded border border-slate-600",
+                                    cls="px-3 py-1 text-sm sm:text-xs text-slate-400 hover:text-white rounded border border-slate-600",
                                     **{"_": "on click add .hidden to my.closest('.merge-confirm-gate')"},
                                 ),
                                 cls="merge-confirm-gate hidden bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mb-2",
@@ -1612,7 +1612,7 @@ def public_person_page(
                             Div(
                                 toggle,
                                 Div(
-                                    Span("Sort:", cls="text-xs text-slate-500 mr-2"),
+                                    Span("Sort:", cls="text-sm sm:text-xs text-slate-500 mr-2"),
                                     sort_select,
                                     cls="flex items-center ml-3",
                                 ),
@@ -1620,7 +1620,7 @@ def public_person_page(
                                     f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}"
                                     if faces_active
                                     else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}",
-                                    cls="text-xs text-slate-500 ml-3 self-center",
+                                    cls="text-sm sm:text-xs text-slate-500 ml-3 self-center",
                                 ),
                                 cls="flex flex-wrap items-center",
                             ),
@@ -1651,7 +1651,7 @@ def public_person_page(
             # CTA section
             Section(
                 Div(
-                    H3(f"Do you have more photos of {display_name}?", cls="text-lg font-serif text-white mb-2"),
+                    H3(f"Do you have more photos of {display_name}?", cls="text-xl sm:text-lg font-serif text-white mb-2"),
                     P(
                         "Upload your family photos to help us build a more complete picture.",
                         cls="text-slate-400 text-sm mb-4",
@@ -1678,15 +1678,15 @@ def public_person_page(
             # Footer
             Div(
                 Div(
-                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
                         "Preserving the memory of the Jewish community of Rhodes",
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     Div(
-                        A("Photos", href=f"{nav_prefix}/photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("Photos", href=f"{nav_prefix}/photos", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("People", href=f"{nav_prefix}/people", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        A("People", href=f"{nav_prefix}/people", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         cls="flex items-center gap-2 mt-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col items-center",
@@ -1900,7 +1900,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
                             Img(
                                 src=crop_url,
                                 alt=display_name,
-                                cls="w-full aspect-square object-cover",
+                                cls="w-full aspect-square object-cover face-crop-enter",
                                 loading="lazy",
                                 onerror="this.style.display='none'",
                             ),
@@ -1979,7 +1979,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             )
         photo_entries.sort(key=lambda e: e["sort_key"])
         gallery_items = [e["item"] for e in photo_entries]
-        grid_cls = "grid grid-cols-2 sm:grid-cols-3 gap-4"
+        grid_cls = "grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
 
     gallery_count = len(gallery_items)
 
@@ -2057,8 +2057,8 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             Div(
                 toggle,
                 speed_loop_cta,
-                Div(Span("Sort:", cls="text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
-                Span(count_label, cls="text-xs text-slate-500 ml-3 self-center"),
+                Div(Span("Sort:", cls="text-sm sm:text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
+                Span(count_label, cls="text-sm sm:text-xs text-slate-500 ml-3 self-center"),
                 cls="flex flex-wrap items-center gap-3",
             ),
             cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
@@ -2124,7 +2124,7 @@ def post(person_id: str, author: str = "", text: str = "", sess=None, request=No
             Div(
                 Div(
                     Span(c["author"], cls="text-sm font-medium text-slate-300"),
-                    Span(f" · {date_str}", cls="text-xs text-slate-600") if date_str else None,
+                    Span(f" · {date_str}", cls="text-sm sm:text-xs text-slate-600") if date_str else None,
                     cls="flex items-center mb-1",
                 ),
                 P(c["text"], cls="text-sm text-slate-400 leading-relaxed"),
@@ -2149,4 +2149,4 @@ def post(person_id: str, comment_id: str, sess=None):
             c["status"] = "hidden"
             break
     _main_mod._save_person_comments(comments_data)
-    return Div(P("Comment hidden.", cls="text-xs text-slate-500 italic py-2"))
+    return Div(P("Comment hidden.", cls="text-sm sm:text-xs text-slate-500 italic py-2"))

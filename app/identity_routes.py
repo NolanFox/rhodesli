@@ -284,7 +284,7 @@ def post(
             Div(
                 Span(
                     "\u2713 CONFIRMED",
-                    cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
+                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
@@ -383,7 +383,7 @@ def post(
     if from_person_page:
         return (
             Div(
-                Span("\u2717 REJECTED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                Span("\u2717 REJECTED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
@@ -750,7 +750,7 @@ def get(identity_id: str, request=None):
         return Span()
 
     if not neighbors:
-        return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
+        return Span("No similar identities found.", cls="text-sm sm:text-xs text-slate-500 italic")
 
     # Variable suggestion count: show more when top match is confident,
     # fewer when uncertain. If best match is strong, show up to 3;
@@ -858,7 +858,7 @@ def get(identity_id: str, request=None):
 
     return Div(
         Div(
-            Span("AI suggestions", cls="text-xs text-slate-400 font-medium"),
+            Span("AI suggestions", cls="text-sm sm:text-xs text-slate-400 font-medium"),
             cls="mb-1",
         ),
         *suggestion_items,
@@ -1001,7 +1001,7 @@ def get(q: str = "", request=None):
                         cls="flex items-center gap-1.5",
                     ),
                     Span(
-                        f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}", cls="text-xs text-slate-500"
+                        f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}", cls="text-sm sm:text-xs text-slate-500"
                     ),
                     cls="flex flex-col min-w-0",
                 ),
@@ -1032,7 +1032,7 @@ def get(q: str = "", request=None):
                         Span(highlighted_fname, cls="text-sm text-slate-200 truncate"),
                         Span(
                             f"{face_count} {'face' if face_count == 1 else 'faces'}",
-                            cls="text-xs text-slate-500",
+                            cls="text-sm sm:text-xs text-slate-500",
                         ),
                         cls="flex flex-col min-w-0",
                     ),
@@ -1098,8 +1098,8 @@ def get(q: str = "", request=None, sess=None):
                 Div(
                     Span(name, cls="text-sm text-white font-medium truncate"),
                     Div(
-                        Span(state, cls=f"text-xs {state_cls}"),
-                        Span(f" · {face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-500"),
+                        Span(state, cls=f"text-sm sm:text-xs {state_cls}"),
+                        Span(f" · {face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"),
                         cls="flex items-center gap-1",
                     ),
                     cls="flex flex-col min-w-0",
@@ -1112,7 +1112,7 @@ def get(q: str = "", request=None, sess=None):
     return Div(
         Div(
             Span(
-                f"Server search: {len(results)} match{'es' if len(results) != 1 else ''}", cls="text-xs text-slate-500"
+                f"Server search: {len(results)} match{'es' if len(results) != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"
             ),
             cls="px-1 mb-1",
         ),
@@ -1155,7 +1155,7 @@ def get(
     try:
         registry = _main_mod.load_registry()
     except Exception:
-        return Div(P("Search unavailable.", cls="text-slate-400 italic text-xs"), id=results_id)
+        return Div(P("Search unavailable.", cls="text-slate-400 italic text-sm sm:text-xs"), id=results_id)
 
     # Determine user role for rendering appropriate action buttons
     user_is_admin = False
@@ -1216,10 +1216,10 @@ def get(
                 thumb,
                 Div(
                     name_row,
-                    Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
+                    Span(f"{r['face_count']} faces", cls="text-sm sm:text-xs text-slate-500"),
                     cls="flex flex-col min-w-0 text-left",
                 ),
-                cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
+                cls="flex items-center gap-2 w-full px-4 py-3 sm:px-2 sm:py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
                 hx_post=f"{nav_prefix}/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}{seq_suffix}{context_suffix}",
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
@@ -1231,10 +1231,10 @@ def get(
                 thumb,
                 Div(
                     name_row,
-                    Span("Suggest match", cls="text-xs text-indigo-400"),
+                    Span("Suggest match", cls="text-sm sm:text-xs text-indigo-400"),
                     cls="flex flex-col min-w-0 text-left",
                 ),
-                cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
+                cls="flex items-center gap-2 w-full px-4 py-3 sm:px-2 sm:py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
                 hx_post="/api/annotations/submit",
                 hx_vals=_json.dumps(
                     {
@@ -1263,10 +1263,10 @@ def get(
             ),
             Div(
                 Span(f'Create "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
-                Span("New identity", cls="text-xs text-slate-500"),
+                Span("New identity", cls="text-sm sm:text-xs text-slate-500"),
                 cls="flex flex-col min-w-0 text-left",
             ),
-            cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
+            cls="flex items-center gap-2 w-full px-4 py-3 sm:px-2 sm:py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
             "border-t border-slate-700 mt-1 pt-1",
             hx_post=(
                 f"{nav_prefix}/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}"
@@ -1284,10 +1284,10 @@ def get(
             ),
             Div(
                 Span(f'Suggest "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
-                Span("Submit for review", cls="text-xs text-slate-500"),
+                Span("Submit for review", cls="text-sm sm:text-xs text-slate-500"),
                 cls="flex flex-col min-w-0 text-left",
             ),
-            cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
+            cls="flex items-center gap-2 w-full px-4 py-3 sm:px-2 sm:py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
             "border-t border-slate-700 mt-1 pt-1",
             hx_post="/api/annotations/submit",
             hx_vals=_json.dumps(
@@ -1308,7 +1308,7 @@ def get(
     if not results:
         # Show only the create/suggest button with a "no matches" message
         return Div(
-            P("No existing matches.", cls="text-slate-500 italic text-xs p-1"),
+            P("No existing matches.", cls="text-slate-500 italic text-sm sm:text-xs p-1"),
             create_btn,
             id=results_id,
         )
@@ -1699,7 +1699,7 @@ def get(identity_id: str, request=None):
 
     if not rejected_ids:
         return Div(
-            P("No hidden matches.", cls="text-slate-400 text-xs italic"),
+            P("No hidden matches.", cls="text-slate-400 text-sm sm:text-xs italic"),
         )
 
     crop_files = _main_mod.get_crop_files()
@@ -1740,7 +1740,7 @@ def get(identity_id: str, request=None):
 
         unblock_btn = Button(
             "Unblock",
-            cls="px-2 py-0.5 text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
+            cls="px-2 py-0.5 text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
             hx_post=f"{nav_prefix}/api/identity/{identity_id}/unreject/{rejected_id}",
             hx_target=f"#rejected-item-{rejected_id}",
             hx_swap="outerHTML",
@@ -1750,7 +1750,7 @@ def get(identity_id: str, request=None):
         items.append(
             Div(
                 thumbnail_img,
-                Span(name, cls="text-xs text-slate-300 truncate flex-1 mx-2"),
+                Span(name, cls="text-sm sm:text-xs text-slate-300 truncate flex-1 mx-2"),
                 unblock_btn,
                 id=f"rejected-item-{rejected_id}",
                 cls="flex items-center py-1.5 border-b border-slate-700 last:border-0",
@@ -1759,7 +1759,7 @@ def get(identity_id: str, request=None):
 
     close_list_btn = Button(
         "Hide",
-        cls="text-xs text-slate-400 hover:text-slate-300",
+        cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300",
         hx_get=f"{nav_prefix}/api/identity/{identity_id}/rejected/close",
         hx_target=f"#rejected-list-{identity_id}",
         hx_swap="innerHTML",
@@ -1768,7 +1768,7 @@ def get(identity_id: str, request=None):
 
     return Div(
         Div(
-            Span("Hidden Matches", cls="text-xs font-medium text-slate-400"),
+            Span("Hidden Matches", cls="text-sm sm:text-xs font-medium text-slate-400"),
             close_list_btn,
             cls="flex items-center justify-between mb-2",
         ),
@@ -1907,7 +1907,7 @@ def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_so
     return Div(
         Div(cls="absolute inset-0 bg-black/80", **{"_": "on click remove closest .fixed"}),
         Div(
-            H3("Name Conflict", cls="text-lg font-bold text-white mb-4"),
+            H3("Name Conflict", cls="text-xl sm:text-lg font-bold text-white mb-4"),
             P("Both identities have names. Choose which name to keep:", cls="text-slate-300 mb-4 text-sm"),
             Form(
                 Input(type="hidden", name="source", value=merge_source),
@@ -1981,7 +1981,7 @@ def toast_with_merge_undo(message: str, target_id: str, nav_prefix: str = "") ->
         Span(message, cls="flex-1"),
         Button(
             "Undo",
-            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/undo-merge",
             hx_swap="outerHTML",
             hx_target="closest div",
@@ -2191,7 +2191,7 @@ def post(
             ),
             Button(
                 "Add a name \u2192",
-                cls="text-xs text-indigo-400 hover:text-indigo-300 underline mt-1",
+                cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 underline mt-1",
                 hx_get=f"{_nav_prefix_from_request(request)}/api/identity/{actual_target_id}/rename-form",
                 hx_target=f"#name-{actual_target_id}",
                 hx_swap="outerHTML",
@@ -2302,7 +2302,7 @@ def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_sugge
     return Div(
         Div(
             H4("You might also want to review:", cls="text-sm font-medium text-amber-400"),
-            P(f"{_main_mod._pl(len(high_matches), 'similar face')} found after merge", cls="text-xs text-slate-400"),
+            P(f"{_main_mod._pl(len(high_matches), 'similar face')} found after merge", cls="text-sm sm:text-xs text-slate-400"),
             cls="mb-2",
         ),
         Div(*cards, cls="space-y-2"),
@@ -2613,8 +2613,8 @@ def get(identity_id: str, sort: str = "date", page: int = 0):
                             Span("?", cls="text-4xl text-slate-500"),
                             cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center",
                         ),
-                        P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
-                        P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
+                        P("Image unavailable", cls="text-sm sm:text-xs text-slate-400 mt-1"),
+                        P(f"ID: {face_id[:12]}...", cls="text-sm sm:text-xs font-data text-slate-500"),
                         cls="face-card",
                         id=_main_mod.make_css_id(face_id),
                     )
@@ -2627,7 +2627,7 @@ def get(identity_id: str, sort: str = "date", page: int = 0):
     return Div(
         Div(
             *cards,
-            cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+            cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 gap-3",
         ),
         pagination,
         id=f"faces-{identity_id}",
@@ -2685,7 +2685,7 @@ def get(identity_id: str, index: int = 0, request=None):
                 oc = "absolute border-2 border-amber-500 bg-amber-500/20 cursor-pointer"
                 lb = Span(
                     identity_name,
-                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap pointer-events-none",
+                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-sm sm:text-xs px-2 py-0.5 rounded whitespace-nowrap pointer-events-none",
                 )
             else:
                 dn = ensure_utf8_display(fi.get("name", "")) if fi else ""
@@ -2693,7 +2693,7 @@ def get(identity_id: str, index: int = 0, request=None):
                 lb = (
                     Span(
                         dn or "Unknown",
-                        cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none",
+                        cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-sm sm:text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none",
                     )
                     if dn
                     else None
@@ -2797,13 +2797,13 @@ def get(identity_id: str, request=None):
             name="name",
             value=current_name,
             placeholder="Enter name...",
-            cls="border border-slate-600 bg-slate-700 text-slate-200 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-400",
+            cls="border border-slate-600 bg-slate-700 text-slate-200 rounded px-4 py-3 sm:px-2 sm:py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-400",
             autofocus=True,
         ),
         Button(
             "Save",
             type="submit",
-            cls="ml-2 bg-emerald-600 text-white px-2 py-1 rounded text-sm hover:bg-emerald-500",
+            cls="ml-2 bg-emerald-600 text-white px-4 py-3 sm:px-2 sm:py-1 rounded text-sm hover:bg-emerald-500",
         ),
         Button(
             "Cancel",
@@ -2934,8 +2934,8 @@ def get(identity_id: str, request=None):
         Div(
             P(n["text"], cls="text-sm text-slate-200"),
             Div(
-                Span(n.get("author", ""), cls="text-xs text-slate-500"),
-                Span(n.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
+                Span(n.get("author", ""), cls="text-sm sm:text-xs text-slate-500"),
+                Span(n.get("timestamp", "")[:10], cls="text-sm sm:text-xs text-slate-500 ml-2"),
                 cls="flex items-center mt-1",
             ),
             cls="p-2 bg-slate-700 rounded mb-1",
@@ -2947,21 +2947,21 @@ def get(identity_id: str, request=None):
 
     return Div(
         H5("Notes", cls="text-sm font-semibold text-slate-300 mb-2"),
-        Div(*note_items) if note_items else P("No notes yet.", cls="text-xs text-slate-500 italic"),
+        Div(*note_items) if note_items else P("No notes yet.", cls="text-sm sm:text-xs text-slate-500 italic"),
         # Add note form
         Form(
             Input(
                 type="text",
                 name="text",
                 placeholder="Add a note...",
-                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                cls="w-full px-4 py-3 sm:px-2 sm:py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                 "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                 required=True,
             ),
             Button(
                 "Add",
                 type="submit",
-                cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                cls="mt-1 px-3 py-1 text-sm sm:text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
             ),
             hx_post=f"{nav_prefix}/api/identity/{identity_id}/notes",
             hx_target=f"#notes-{identity_id}",
@@ -3004,8 +3004,8 @@ def post(identity_id: str, text: str = "", sess=None, request=None):
         Div(
             P(n["text"], cls="text-sm text-slate-200"),
             Div(
-                Span(n.get("author", ""), cls="text-xs text-slate-500"),
-                Span(n.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
+                Span(n.get("author", ""), cls="text-sm sm:text-xs text-slate-500"),
+                Span(n.get("timestamp", "")[:10], cls="text-sm sm:text-xs text-slate-500 ml-2"),
                 cls="flex items-center mt-1",
             ),
             cls="p-2 bg-slate-700 rounded mb-1",
@@ -3023,14 +3023,14 @@ def post(identity_id: str, text: str = "", sess=None, request=None):
                 type="text",
                 name="text",
                 placeholder="Add a note...",
-                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                cls="w-full px-4 py-3 sm:px-2 sm:py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                 "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                 required=True,
             ),
             Button(
                 "Add",
                 type="submit",
-                cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                cls="mt-1 px-3 py-1 text-sm sm:text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
             ),
             hx_post=f"{nav_prefix}/api/identity/{identity_id}/notes",
             hx_target=f"#notes-{identity_id}",
@@ -3055,7 +3055,7 @@ def get(identity_id: str, sess=None, request=None):
         return _main_mod.toast("Identity not found.", "error")
 
     _input_cls = (
-        "w-full px-2 py-1.5 text-sm bg-slate-700 border border-slate-600 text-white rounded "
+        "w-full px-4 py-3 sm:px-2 sm:py-1.5 text-sm bg-slate-700 border border-slate-600 text-white rounded "
         "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500"
     )
 
@@ -3065,7 +3065,7 @@ def get(identity_id: str, sess=None, request=None):
         Form(
             Div(
                 Div(
-                    Label("Display Name", cls="text-xs text-slate-400"),
+                    Label("Display Name", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="display_name",
@@ -3079,7 +3079,7 @@ def get(identity_id: str, sess=None, request=None):
             ),
             Div(
                 Div(
-                    Label("Maiden Name", cls="text-xs text-slate-400"),
+                    Label("Maiden Name", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="maiden_name",
@@ -3090,7 +3090,7 @@ def get(identity_id: str, sess=None, request=None):
                     cls="flex-1",
                 ),
                 Div(
-                    Label("Qualifier", cls="text-xs text-slate-400"),
+                    Label("Qualifier", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="generation_qualifier",
@@ -3100,11 +3100,11 @@ def get(identity_id: str, sess=None, request=None):
                     ),
                     cls="w-24",
                 ),
-                cls="flex gap-2",
+                cls="flex flex-col sm:flex-row gap-3 sm:gap-2 w-full sm:w-auto",
             ),
             Div(
                 Div(
-                    Label("Birth Year", cls="text-xs text-slate-400"),
+                    Label("Birth Year", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="birth_year",
@@ -3115,7 +3115,7 @@ def get(identity_id: str, sess=None, request=None):
                     cls="w-24",
                 ),
                 Div(
-                    Label("Death Year", cls="text-xs text-slate-400"),
+                    Label("Death Year", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="death_year",
@@ -3126,7 +3126,7 @@ def get(identity_id: str, sess=None, request=None):
                     cls="w-24",
                 ),
                 Div(
-                    Label("Birthplace", cls="text-xs text-slate-400"),
+                    Label("Birthplace", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="birth_place",
@@ -3138,7 +3138,7 @@ def get(identity_id: str, sess=None, request=None):
                     cls="flex-1",
                 ),
                 Div(
-                    Label("Death Place", cls="text-xs text-slate-400"),
+                    Label("Death Place", cls="text-sm sm:text-xs text-slate-400"),
                     Input(
                         type="text",
                         name="death_place",
@@ -3152,7 +3152,7 @@ def get(identity_id: str, sess=None, request=None):
                 cls="flex gap-2 flex-wrap",
             ),
             Div(
-                Label("Relationships", cls="text-xs text-slate-400"),
+                Label("Relationships", cls="text-sm sm:text-xs text-slate-400"),
                 Input(
                     type="text",
                     name="relationship_notes",
@@ -3162,7 +3162,7 @@ def get(identity_id: str, sess=None, request=None):
                 ),
             ),
             Div(
-                Label("Bio", cls="text-xs text-slate-400"),
+                Label("Bio", cls="text-sm sm:text-xs text-slate-400"),
                 Textarea(
                     identity.get("bio", ""),
                     name="bio",
@@ -3175,12 +3175,12 @@ def get(identity_id: str, sess=None, request=None):
                 Button(
                     "Save",
                     type="submit",
-                    cls="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
                 ),
                 Button(
                     "Cancel",
                     type="button",
-                    cls="px-3 py-1.5 text-xs bg-slate-600 text-slate-300 rounded hover:bg-slate-500",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs bg-slate-600 text-slate-300 rounded hover:bg-slate-500",
                     hx_get=f"{nav_prefix}/api/identity/{identity_id}/metadata-display",
                     hx_target=f"#metadata-{identity_id}",
                     hx_swap="innerHTML",
@@ -3424,7 +3424,7 @@ async def post(photo_id: str, file: UploadFile = None, back_transcription: str =
 
     return Div(
         P(f"Back image uploaded: {back_filename}", cls="text-emerald-400 text-sm"),
-        P("The 'Turn Over' button is now available on this photo.", cls="text-slate-400 text-xs mt-1"),
+        P("The 'Turn Over' button is now available on this photo.", cls="text-slate-400 text-sm sm:text-xs mt-1"),
         cls="p-2",
     )
 
@@ -3483,7 +3483,7 @@ def post(photo_id: str, transform: str = "", field: str = "transform", sess=None
     css_transform = _main_mod.parse_transform_to_css(new_transform)
     css_filter = _main_mod.parse_transform_to_filter(new_transform)
     return Div(
-        P(f"Transform: {new_transform}" if new_transform else "Transform reset.", cls="text-xs text-slate-400"),
+        P(f"Transform: {new_transform}" if new_transform else "Transform reset.", cls="text-sm sm:text-xs text-slate-400"),
         Script(f"""
             var img = document.querySelector('.photo-hero, .photo-flip-front img');
             if (img) {{
@@ -3844,7 +3844,7 @@ def post(
             Div(
                 Span(
                     "\u2713 CONFIRMED",
-                    cls="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
+                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400",
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
@@ -3935,7 +3935,7 @@ def post(
     if from_person_page:
         return (
             Div(
-                Span("\u2717 REJECTED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                Span("\u2717 REJECTED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
@@ -4041,7 +4041,7 @@ def post(
         return (
             Div(
                 Span(
-                    "\u23f8 SKIPPED", cls="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-400"
+                    "\u23f8 SKIPPED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-400"
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
@@ -4166,7 +4166,7 @@ def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
         Span("Suggestion rejected. Moving to next.", cls="flex-1"),
         Button(
             "Undo",
-            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
             hx_post=f"{_nav_prefix_from_request(request)}/api/identity/{identity_id}/unreject/{suggestion_id}",
             hx_swap="outerHTML",
             hx_target="closest div",
