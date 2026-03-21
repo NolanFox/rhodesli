@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.39] — 2026-03-21 (Session 129: Data Integrity + Performance + Mobile UX)
+
+### Data Integrity (P0)
+- **Duplicate identity prevention**: `confirm_identity()` and `rename_identity()` now check for existing CONFIRMED identities with same name (case-insensitive). Raises ValueError suggesting merge instead.
+- **Esther Burd Fox duplicate merged**: Two CONFIRMED identities (83+29 faces) merged to single 112-face identity via repair script
+- **Robert Mattatia duplicate merged**: Two CONFIRMED identities (1+1 faces) merged
+- **Full data integrity audit**: Scanned Supabase for orphaned merge targets (691 harmless ghosts), multi-claimed faces (0), photo-face gaps (0)
+- **New method `find_confirmed_by_name()`**: Case-insensitive lookup across non-merged CONFIRMED identities
+
+### Performance
+- **HTTP cache headers**: 30-day `Cache-Control: immutable` on `/photos/` and `/static/` routes. Photos and crops cached in browser after first load.
+- **CachedStaticFiles**: Custom StaticFiles subclass with aggressive cache headers
+- **Async JSON backup**: `save_registry()` JSON write moved to background thread. Postgres write stays synchronous. Admin ops ~50-200ms faster.
+
+### Community Scoping (P0 Bug Fix)
+- **Focus mode community filtering**: After actions (merge/skip/confirm/reject), next identity now stays within the correct community. Added `community` parameter to `get_next_focus_card()` and `get_next_skipped_focus_card()`.
+- **`_community_from_request()` helper**: Extracts community from request state, used by all 10 action endpoints
+
+### Mobile UX (Antigravity)
+- **44px touch targets**: All action buttons (merge, skip, confirm, reject) inflated to mobile-safe sizes
+- **Text readability**: `text-sm` minimum for body text on mobile, `sm:text-xs` for desktop
+- **Overflow prevention**: `overflow-x: hidden` on body/main-content
+- **Micro-interactions**: HTMX swap fade animations, button press scale(0.97), card hover lift, loading shimmer, success slide-out
+
+### Tests
+- 17 new tests (9 duplicate prevention, 7 community scoping, 1 test fix)
+- 3567 total tests pass (was 3550)
+
 ## [v0.99.38] — 2026-03-20 (Session 128: Security Hardening + Accessibility + Dead Code)
 
 ### Security
