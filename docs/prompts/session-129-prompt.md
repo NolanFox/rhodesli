@@ -152,6 +152,40 @@ User expects that admin actions (merge, skip, confirm, reject) are logged with e
 
 ---
 
+## Track E: Antigravity Monitor (orchestrator checks periodically)
+
+Antigravity is running on branch `session-129/antigravity-mobile` with prompt `docs/prompts/session-129-antigravity-prompt.md`. It's doing mobile responsiveness + delightful micro-interactions.
+
+When user confirms Antigravity is done:
+1. Review the branch diff for safety (no data/, core/, auth changes)
+2. Cherry-pick safe changes to main
+3. Fix any CSS typos or test assertion breakages
+4. Run tests
+
+## Track F: Codex Audit Integration
+
+Use Codex for:
+1. **Planning audit**: Before implementing perf fixes, have Codex review the plan
+2. **Outcome audit**: After Track B/C complete, have Codex audit all changes
+3. **Performance profiling**: Codex is good at finding backend bottlenecks — iterate with it
+4. Write Codex findings to `docs/session_context/session-129-codex-audit.md`
+
+## PRD/SDD Enforcement
+
+Per `.claude/rules/spec-driven-development.md`:
+- Any feature change >30 min needs a PRD in `docs/prds/`
+- Performance changes should document before/after in ALGORITHMIC_DECISIONS.md
+- Community scoping fix (Track C) is a bug fix — no PRD needed, but write tests first
+
+## Context Persistence
+
+**CRITICAL**: All feedback must be written to disk immediately via background subagents. If the session crashes or compacts, feedback must survive. Use this pattern:
+1. User gives feedback → immediately spawn background subagent to write to `docs/feedback/session-129-feedback.md`
+2. Continue conversation — don't block on file writes
+3. At milestones, verify the feedback file has all entries
+
+---
+
 ## Phase 2: Session End
 
 1. Compile all feedback into prioritized list
