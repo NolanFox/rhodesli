@@ -20,10 +20,13 @@ from fasthtml.common import *
 from starlette.datastructures import UploadFile
 from starlette.responses import FileResponse, HTMLResponse
 
+from starlette.responses import Response as StarletteResponse
+
 from core.registry import IdentityState
 from core.config import DATA_DIR
 from core.ui_safety import ensure_utf8_display
 from core import storage
+from app.rate_limit import check_rate_limit
 
 # Import route decorator only (bound once, never reassigned)
 from app.main import rt
@@ -1312,13 +1315,18 @@ def _facecompare_landing_DEPRECATED():  # noqa: N802
 
 
 @rt("/api/facecompare/upload")
-async def post(photo: UploadFile = None):
+async def post(photo: UploadFile = None, request=None):
     """Upload a photo for standalone face comparison.
 
     Runs InsightFace (detection + embeddings), CORAL (date estimation),
     and similarity search against the archive.
     No login required.
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     import time as _time
 
     t0 = _time.time()

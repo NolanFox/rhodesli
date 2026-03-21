@@ -11,10 +11,13 @@ from datetime import datetime, timezone
 from fasthtml.common import *
 from starlette.datastructures import UploadFile
 
+from starlette.responses import Response as StarletteResponse
+
 from core import storage
 
 # Import route decorator only
 from app.main import rt
+from app.rate_limit import check_rate_limit
 
 # All other main.py functions accessed via module reference
 import app.main as _main_mod
@@ -677,7 +680,7 @@ def _call_gemini_date_estimate(
 
 
 @rt("/api/estimate/upload")
-async def post(photo: UploadFile = None, sess=None):
+async def post(photo: UploadFile = None, sess=None, request=None):
     """Upload a photo for date estimation.
 
     Graceful degradation matrix:
@@ -688,6 +691,11 @@ async def post(photo: UploadFile = None, sess=None):
     | No          | Yes       | Partial: AI date only              |
     | No          | No        | Minimal: photo saved, honest msg   |
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
 

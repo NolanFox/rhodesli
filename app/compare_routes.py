@@ -20,10 +20,13 @@ import numpy as np
 from fasthtml.common import *
 from starlette.datastructures import UploadFile
 
+from starlette.responses import Response as StarletteResponse
+
 from core.registry import IdentityState
 from core.config import PROCESSING_ENABLED
 from core.ui_safety import ensure_utf8_display
 from core import storage
+from app.rate_limit import check_rate_limit
 
 # Import route decorator only (bound once, never reassigned)
 from app.main import rt
@@ -1561,7 +1564,7 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
 
 
 @rt("/api/compare/upload")
-async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess=None):
+async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess=None, request=None):
     """Upload a photo for face comparison via the unified upload pipeline.
 
     Uses the SAME staging + background ingest pipeline as the Upload page.
@@ -1573,6 +1576,11 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     ws=1: workspace mode — results go to #ws-upload-result instead of #compare-results.
     target_ws=1: target workspace mode — results go to #ws-target-upload-result.
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     from datetime import datetime
 
     # Workspace mode: determine correct result container
@@ -3013,6 +3021,11 @@ async def post(request, sess=None):
     cross-compares between uploaded photos, and matches against archive.
     All photos saved for pipeline processing. (PRD-021, Session 61)
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     import time as _time
 
     t0 = _time.time()
@@ -3843,8 +3856,13 @@ def get(result_id: str, sess=None, request=None):
 
 
 @rt("/api/compare/result/{result_id}/respond")
-def post(result_id: str, note: str = "", sess=None):
+def post(result_id: str, note: str = "", sess=None, request=None):
     """Save a response to a comparison result. No login required."""
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     data = _main_mod._load_comparison_results()
     result = data.get("results", {}).get(result_id)
     if not result:
@@ -4181,6 +4199,11 @@ async def post(request):
     Detects faces in the uploaded photo and returns face thumbnails
     for user selection.
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return StarletteResponse("Rate limit exceeded", status_code=429)
+
     import tempfile
 
     form = await request.form()
