@@ -1329,14 +1329,29 @@ async def serve_photo(filename: str):
     """
     photo_path = photos_path / filename
     if photo_path.exists() and photo_path.is_file():
-        return FileResponse(photo_path)
+        resp = FileResponse(photo_path)
+        # Photos are immutable once uploaded — cache for 30 days
+        resp.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        return resp
 
     return Response(content=f"Photo not found: {filename}", status_code=404, media_type="text/plain")
 
 
 from starlette.staticfiles import StaticFiles
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles with aggressive cache headers for immutable assets."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            # Crops and CSS are immutable — cache for 30 days
+            response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        return response
+
+
+app.mount("/static", CachedStaticFiles(directory="app/static"), name="static")
 
 # Note: Sentry ASGI integration is auto-detected by sentry_sdk.init() above.
 # No explicit middleware wrapping needed — it hooks into Starlette/ASGI automatically.
@@ -1621,8 +1636,19 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     except ImportError:
         pass
 
-    # Always write JSON as backup (Session 105b: write-through)
-    registry.save(REGISTRY_PATH)
+    # JSON backup in background thread (Postgres is source of truth — PRD-051).
+    # JSON write uses atomic temp-file + rename with portalocker, safe for concurrent access.
+    import threading as _threading
+
+    _registry_for_backup = registry
+
+    def _write_json_backup():
+        try:
+            _registry_for_backup.save(REGISTRY_PATH)
+        except Exception as e:
+            logging.warning(f"JSON backup write failed (non-critical): {e}")
+
+    _threading.Thread(target=_write_json_backup, daemon=True).start()
 
     # FB-069: Only write changed identities to Supabase when changed_ids is provided
     if changed_ids:
