@@ -222,6 +222,47 @@ app, rt = fast_app(
         """),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
+        Style("""
+            .person-card {
+                transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .person-card.expanded {
+                grid-column: 1 / -1;
+                z-index: 10;
+            }
+            .person-card .faces-expanded {
+                display: none;
+                opacity: 0;
+                transition: opacity 300ms ease-in;
+            }
+            .person-card.expanded .faces-expanded {
+                display: flex;
+                opacity: 1;
+                animation: fadeIn 300ms ease-in;
+            }
+            .person-card .faces-compact {
+                display: flex;
+            }
+            .person-card.expanded .faces-compact {
+                display: none;
+            }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        """),
+        Script("""
+            document.addEventListener('click', function(e) {
+                const facesBtn = e.target.closest('[data-action="toggle-faces"]');
+                if (!facesBtn) return;
+                const card = facesBtn.closest('.person-card');
+                if (!card) return;
+
+                // Collapse others
+                document.querySelectorAll('.person-card.expanded').forEach(c => {
+                    if (c !== card) c.classList.remove('expanded');
+                });
+
+                card.classList.toggle('expanded');
+            });
+        """),
         # Global: handle auth error hash fragments and recovery redirects
         Script("""
             document.addEventListener('DOMContentLoaded', function() {
@@ -10021,10 +10062,10 @@ def identity_card(
     if total_faces > 1:
         faces_btn = Button(
             f"Faces ({total_faces})",
-            cls=f"{_pill} bg-purple-500/15 text-purple-300 hover:bg-purple-500/25",
+            cls=f"{_pill} bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition-all duration-200 active:scale-95",
             type="button",
             data_testid="faces-button",
-            onclick=f"var el=document.getElementById('{_faces_detail_id}');if(el)el.open=true;",
+            data_action="toggle-faces",
         )
 
     # View Public Page link (Gap 3: always show Profile link)
@@ -10423,15 +10464,87 @@ def identity_card(
             id=_faces_detail_id,
         )
 
+    # Build expanded face view for toggle animation (FB-001)
+    expanded_face_cards = []
+    for face_entry in all_face_ids:
+        fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+        c_url = resolve_face_image_url(fid, crop_files)
+        p_id = get_photo_id_for_face(fid)
+        qual = get_face_quality(fid) or 0
+        q_label = "Excellent" if qual >= 30 else "Good" if qual >= 20 else "Fair" if qual >= 10 else "Low"
+        q_color = "text-emerald-400" if qual >= 20 else "text-amber-400" if qual >= 10 else "text-slate-400"
+
+        if c_url:
+            expanded_face_cards.append(
+                A(
+                    Img(
+                        src=c_url,
+                        alt=f"Face of {name}",
+                        cls="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-2xl shadow-lg hover:scale-[1.03] transition-transform duration-300 ring-1 ring-white/10",
+                        loading="lazy",
+                    ),
+                    P(q_label, cls=f"text-center text-sm font-medium {q_color} mt-2"),
+                    href=f"{nav_prefix}/photo/{p_id}" if p_id else "#",
+                    target="_blank",
+                    cls="flex flex-col items-center",
+                )
+            )
+        else:
+            expanded_face_cards.append(
+                Div(
+                    Div(
+                        Span("?", cls="text-3xl text-slate-500"),
+                        cls="w-28 h-28 sm:w-32 sm:h-32 bg-slate-700 border border-slate-600 rounded-2xl flex items-center justify-center shadow-inner",
+                    ),
+                    P("Unavailable", cls="text-center text-sm font-medium text-slate-500 mt-2"),
+                    cls="flex flex-col items-center",
+                )
+            )
+
+    faces_expanded = Div(
+        Div(
+            Div(
+                H3(display_name, cls="text-2xl font-serif font-bold text-white"),
+                state_badge(state),
+                cls="flex items-center gap-3",
+            ),
+            Button(
+                "✕",
+                cls="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-sm",
+                data_action="toggle-faces",
+                type="button",
+                aria_label="Close expanded view",
+            ),
+            cls="flex justify-between items-start mb-6 w-full",
+        ),
+        Div(
+            *expanded_face_cards,
+            cls="flex flex-wrap gap-4 sm:gap-6 justify-center w-full mb-6",
+        ),
+        Div(
+            view_all_photos_btn,
+            find_similar_btn,
+            review_proposals_btn,
+            gedcom_tree_btn,
+            view_public_link,
+            cls="flex flex-wrap gap-2 justify-center w-full pt-4 border-t border-slate-700/50",
+        ),
+        cls="faces-expanded w-full flex-col",
+    )
+
     return Div(
-        hero_section,
-        name_section,
-        action_section,
-        triage_section,
-        admin_tools,
-        cls="identity-card bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3"
-        " hover:border-slate-600 hover:bg-slate-800/80 transition-all duration-300"
-        " hover:shadow-lg hover:shadow-slate-900/50",
+        Div(
+            hero_section,
+            name_section,
+            action_section,
+            triage_section,
+            admin_tools,
+            cls="faces-compact flex-col h-full",
+        ),
+        faces_expanded,
+        cls="person-card identity-card bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3"
+        " hover:border-slate-600 hover:bg-slate-800/80 transition-all"
+        " hover:shadow-lg hover:shadow-slate-900/50 relative group ring-0 hover:ring-2 ring-indigo-500/30",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower(),
     )
