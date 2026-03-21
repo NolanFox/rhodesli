@@ -601,7 +601,10 @@ def _community_landing_page(community: dict, slug: str):
             # Hero section
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
-                P("We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.", cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10"),
+                P(
+                    "We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.",
+                    cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10",
+                ),
                 description_section,
                 stats_row,
                 empty_state,
@@ -3337,213 +3340,6 @@ def _save_corrections_log(data: dict):
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
-
-
-@rt("/api/photo/{photo_id}/correct-date")
-async def post(photo_id: str, correction_year: int = None, sess=None):
-    """Submit a date correction for a photo. Updates date labels and logs the correction.
-
-    Auth: any logged-in user can correct (or admin when auth disabled).
-    Returns updated date section HTML via HTMX swap.
-    """
-    if _main_mod.is_auth_enabled():
-        user = _main_mod.get_current_user(sess or {})
-        if not user:
-            return Response("", status_code=401)
-        contributor_email = user.email
-        contributor_type = "admin" if user.is_admin else "registered"
-    else:
-        contributor_email = "local"
-        contributor_type = "admin"
-
-    if not correction_year or correction_year < 1850 or correction_year > 2030:
-        return Div(
-            Span("Invalid year (1850-2030)", cls="text-sm text-red-400"),
-            id=f"date-section-{photo_id[:8]}",
-        )
-
-    # Load current label
-    labels = _main_mod._load_date_labels()
-    label = labels.get(photo_id)
-    if not label:
-        return Div(
-            Span("No date label found", cls="text-sm text-red-400"),
-            id=f"date-section-{photo_id[:8]}",
-        )
-
-    # Record correction
-    import uuid
-    from datetime import datetime, timezone
-
-    old_decade = label.get("estimated_decade")
-    old_year = label.get("best_year_estimate")
-    new_decade = (correction_year // 10) * 10
-
-    correction_entry = {
-        "id": f"corr_{uuid.uuid4().hex[:12]}",
-        "photo_id": photo_id,
-        "field": "estimated_decade",
-        "old_value": {"decade": old_decade, "year": old_year},
-        "new_value": {"decade": new_decade, "year": correction_year},
-        "old_source": label.get("source", "gemini"),
-        "new_source": "human",
-        "contributor_email": contributor_email,
-        "contributor_type": contributor_type,
-        "status": "applied",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-
-    # Save correction log
-    log = _main_mod._load_corrections_log()
-    log["corrections"].append(correction_entry)
-    _main_mod._save_corrections_log(log)
-
-    # Dual-write to Supabase
-    from app.supabase_data import sync_corrections_log_entry
-
-    sync_corrections_log_entry(correction_entry)
-
-    # Update the in-memory label cache
-    label["estimated_decade"] = new_decade
-    label["best_year_estimate"] = correction_year
-    label["confidence"] = "high"
-    label["source"] = "human"
-    label["probable_range"] = [correction_year - 2, correction_year + 2]
-
-    # Return updated date section with verified styling
-    return Div(
-        Div(
-            P(f"circa {correction_year}", cls="text-lg font-serif text-amber-200 mb-1 inline"),
-            Span("\u2713 Verified", cls="text-[11px] text-emerald-400 ml-2"),
-            cls="flex items-center",
-        ),
-        Div(
-            Span("Confidence: high", cls="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400"),
-            cls="flex items-center gap-2",
-        ),
-        P("Thanks! Your correction helps improve our AI.", cls="text-[11px] text-emerald-400/70 mt-2 italic"),
-        id=f"date-section-{photo_id[:8]}",
-        data_testid="verified-field",
-    )
-
-
-# --- Face Alignment API (PRD-015 coordinate bridging) ---
-
-
-@rt("/api/face-alignment/{photo_id}")
-async def post(photo_id: str, sess=None):
-    """
-    Run Gemini face alignment for a specific photo.
-    Admin-only action (follows Gatekeeper pattern, Lesson 19).
-
-    1. Load photo from R2/local storage
-    2. Load InsightFace face detections from embeddings
-    3. Normalize EXIF orientation
-    4. Run coordinate bridging with Gemini
-    5. Store results
-    6. Return aligned descriptions
-    """
-    from starlette.responses import JSONResponse as _JSONResponse
-    from app.face_alignment import (
-        FaceDetection,
-        cache_alignment,
-        run_face_alignment,
-        save_alignment,
-    )
-
-    admin_err = _main_mod._check_admin(sess)
-    if admin_err:
-        return admin_err
-
-    # Load photo metadata
-    photo = _main_mod.get_photo_metadata(photo_id)
-    if not photo:
-        return _JSONResponse(
-            {"error": "Photo not found", "photo_id": photo_id},
-            status_code=404,
-        )
-
-    # Build FaceDetection objects from embeddings
-    faces = []
-    registry = _main_mod.load_registry()
-    for face_data in photo["faces"]:
-        if not _main_mod.has_displayable_face_bbox(face_data):
-            continue
-        identity = _main_mod.get_identity_for_face(registry, face_data["face_id"])
-        faces.append(
-            FaceDetection(
-                face_id=face_data["face_id"],
-                bbox=face_data["bbox"],
-                face_index=face_data.get("face_index", 0),
-                det_score=face_data.get("det_score", 0),
-                quality=face_data.get("quality", 0),
-                identity_name=identity.get("name") if identity else None,
-            )
-        )
-
-    if not faces:
-        return _JSONResponse(
-            {"error": "No faces detected in this photo", "photo_id": photo_id},
-            status_code=400,
-        )
-
-    # Load image bytes
-    image_bytes = _main_mod._load_photo_bytes(photo_id, photo["filename"])
-    if not image_bytes:
-        return _JSONResponse(
-            {"error": "Could not load photo image", "photo_id": photo_id},
-            status_code=500,
-        )
-
-    # Run face alignment
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    result = await run_face_alignment(
-        photo_id=photo_id,
-        image_bytes=image_bytes,
-        faces=faces,
-        api_key=api_key,
-    )
-
-    if result.error:
-        return _JSONResponse(
-            {"error": result.error, "photo_id": photo_id},
-            status_code=500,
-        )
-
-    # Cache and save (Supabase-first, JSON fallback — AD-152)
-    cache_alignment(result)
-    try:
-        save_alignment(result, output_dir=_main_mod.data_path)
-    except Exception as e:
-        logging.warning(f"Failed to save alignment: {e}")
-
-    return _JSONResponse(result.to_dict())
-
-
-@rt("/api/face-alignment/{photo_id}")
-def get(photo_id: str):
-    """
-    Get stored face alignment results for a photo.
-    Returns cached results if available, null if not yet aligned.
-    Public endpoint (descriptions help with identification).
-    """
-    from starlette.responses import JSONResponse as _JSONResponse
-    from app.face_alignment import get_cached_alignment, load_alignments
-
-    # Check in-memory cache first
-    cached = get_cached_alignment(photo_id)
-    if cached:
-        return _JSONResponse(cached.to_dict())
-
-    # Check Supabase then JSON fallback
-    alignments = load_alignments(_main_mod.data_path)
-    if photo_id in alignments:
-        return _JSONResponse(alignments[photo_id])
-
-    return _JSONResponse(
-        {"status": "not_aligned", "photo_id": photo_id},
-        status_code=200,
-    )
 
 
 def _load_photo_bytes(photo_id: str, filename: str) -> bytes | None:
@@ -7762,13 +7558,18 @@ def get(sess=None, request=None):
                 P(
                     f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive",
                     cls="text-slate-400 mb-8",
-                ) if collections else None,
+                )
+                if collections
+                else None,
                 Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4")
-                if collections else Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'),
+                if collections
+                else Div(
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'
+                    ),
                     H3("No Collections Created", cls="text-xl font-serif text-slate-400 mb-2"),
                     P("Collections will appear here once photos are grouped.", cls="text-sm text-slate-500"),
-                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center"
+                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center",
                 ),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
@@ -9077,15 +8878,18 @@ def get(
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mt-1"),
                             Div(cls="w-px h-16 border-l-2 border-dashed border-slate-700 my-2"),
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mb-6"),
-                            cls="flex flex-col items-center"
+                            cls="flex flex-col items-center",
                         ),
-                        P("No photos or events match your filters.", cls="text-slate-500 text-center text-sm font-medium"),
+                        P(
+                            "No photos or events match your filters.",
+                            cls="text-slate-500 text-center text-sm font-medium",
+                        ),
                         A(
                             "Clear filters and view full timeline \u2192",
                             href=f"{nav_prefix}/timeline",
                             cls="text-indigo-400 hover:text-indigo-300 text-xs block text-center mt-3 transition-colors active:scale-95",
                         ),
-                        cls="flex flex-col items-center justify-center py-16"
+                        cls="flex flex-col items-center justify-center py-16",
                     )
                     if not decade_sections
                     else None,

@@ -812,6 +812,14 @@ async def startup_event():
     # AD-162: Clean up temp files from previous runs to prevent disk exhaustion.
     _startup_disk_cleanup(data_path)
 
+    # Security: warn if ML service is configured with default token
+    ml_service_url = os.getenv("ML_SERVICE_URL", "")
+    ml_service_token = os.getenv("ML_SERVICE_TOKEN", "dev-token")
+    if ml_service_url and ml_service_token == "dev-token":
+        logging.critical(
+            "ML_SERVICE_TOKEN is set to default 'dev-token' while ML_SERVICE_URL is configured. Set a real token!"
+        )
+
     # Session 125 PERF #4: Cold start optimization.
     # Supabase health check, sync, and cache prewarm ALL run in background.
     # Server accepts requests immediately — lazy loading handles missing caches.
