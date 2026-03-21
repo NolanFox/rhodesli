@@ -188,6 +188,7 @@ def posthog_capture(event: str, distinct_id: str = "server", properties: dict | 
 app, rt = fast_app(
     pico=False,
     secret_key=SESSION_SECRET,
+    same_site="Strict",
     hdrs=(
         Meta(name="viewport", content="width=device-width, initial-scale=1"),
         Link(

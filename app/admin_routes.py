@@ -16,7 +16,7 @@ from pathlib import Path
 from fasthtml.common import *
 from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
-from app.auth import get_current_user
+from app.auth import get_current_user, _check_origin
 from core import storage
 from core.registry import IdentityState
 from core.ui_safety import ensure_utf8_display
@@ -174,8 +174,11 @@ async def post(request, sess=None):
 
 
 @rt("/api/admin/run-migrations")
-def post(sess=None):
+def post(sess=None, request=None):
     """Admin-only: run pending SQL migrations (indexes, schema changes)."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -1173,8 +1176,11 @@ def _auto_confirm_job_identities(data_path: Path, job_id: str, user_source: str)
 
 
 @rt("/admin/pending/{job_id}/approve")
-def post(job_id: str, sess=None):
+def post(job_id: str, sess=None, request=None):
     """Approve a pending upload. Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -1543,6 +1549,9 @@ async def post(request, sess=None):
     Accepts form data with one or more ``job_ids`` fields.  Returns an
     HTMX-compatible response that replaces the pending-list container.
     """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -2499,6 +2508,9 @@ def post(sess=None):
 @rt("/admin/approvals/{ann_id}/approve")
 async def post(ann_id: str, request=None, sess=None, **kwargs):
     """Approve an annotation. Updates target record. Optional auto-confirm."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied

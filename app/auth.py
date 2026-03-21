@@ -9,14 +9,25 @@ Permission levels:
 When SUPABASE_URL is not set, auth is disabled and all routes are accessible.
 """
 
+import logging
 import os
 from dataclasses import dataclass
 from functools import wraps
+from urllib.parse import urlparse
+
+from starlette.responses import Response as StarletteResponse
 
 # Auth configuration from environment
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-secret-change-in-production")
+
+# CSRF: warn if default secret is used in production
+if os.getenv("RAILWAY_ENVIRONMENT") and SESSION_SECRET == "dev-secret-change-in-production":
+    logging.getLogger(__name__).critical(
+        "SESSION_SECRET is using the default value in a Railway environment! "
+        "Set a strong random SESSION_SECRET in your Railway variables."
+    )
 INVITE_CODES = [c.strip() for c in os.getenv("INVITE_CODES", "").split(",") if c.strip()]
 
 # Admin emails — users with these emails get admin privileges
@@ -77,27 +88,34 @@ def is_admin(session: dict) -> bool:
 
 def require_login(func):
     """Decorator: requires any logged-in user. Returns 303 redirect to /login."""
+
     @wraps(func)
     def wrapper(*args, sess, **kwargs):
         if not get_current_user(sess):
             from starlette.responses import RedirectResponse
+
             return RedirectResponse("/login", status_code=303)
         return func(*args, sess=sess, **kwargs)
+
     return wrapper
 
 
 def require_admin(func):
     """Decorator: requires admin user. Returns 403 for non-admins, 303 redirect for anonymous."""
+
     @wraps(func)
     def wrapper(*args, sess, **kwargs):
         user = get_current_user(sess)
         if not user:
             from starlette.responses import RedirectResponse
+
             return RedirectResponse("/login", status_code=303)
         if not user.is_admin:
             from starlette.responses import Response
+
             return Response("Forbidden", status_code=403)
         return func(*args, sess=sess, **kwargs)
+
     return wrapper
 
 
@@ -108,9 +126,9 @@ def is_trusted_contributor(email: str, annotations: dict) -> bool:
     automatically qualify as contributors.
     """
     approved_count = sum(
-        1 for ann in annotations.get("annotations", {}).values()
-        if ann.get("submitted_by", "").lower() == email.lower()
-        and ann.get("status") == "approved"
+        1
+        for ann in annotations.get("annotations", {}).values()
+        if ann.get("submitted_by", "").lower() == email.lower() and ann.get("status") == "approved"
     )
     return approved_count >= TRUSTED_CONTRIBUTOR_THRESHOLD
 
@@ -212,6 +230,41 @@ async def update_password(access_token: str, new_password: str) -> tuple[bool, s
                 return False, msg
     except Exception as e:
         return False, f"Connection error: {e}"
+
+
+# ---------------------------------------------------------------------------
+# CSRF Origin Check
+# ---------------------------------------------------------------------------
+
+_ALLOWED_ORIGINS = {"rhodesli.nolanandrewfox.com", "localhost", "127.0.0.1"}
+
+
+def _check_origin(request) -> StarletteResponse | None:
+    """Validate that a POST request comes from an allowed origin.
+
+    Checks the Origin header first, falls back to Referer.
+    Returns None if the origin is allowed or absent (same-origin requests
+    may omit both headers). Returns a 403 Response if the origin doesn't
+    match any allowed domain.
+    """
+    origin = request.headers.get("origin") or ""
+    if not origin:
+        # Fall back to Referer
+        origin = request.headers.get("referer") or ""
+    if not origin:
+        # No Origin or Referer — likely a same-origin request; allow
+        return None
+
+    try:
+        parsed = urlparse(origin)
+        hostname = parsed.hostname or ""
+    except Exception:
+        return StarletteResponse("Forbidden — invalid origin", status_code=403)
+
+    if hostname in _ALLOWED_ORIGINS:
+        return None
+
+    return StarletteResponse("Forbidden — origin not allowed", status_code=403)
 
 
 ENABLED_OAUTH_PROVIDERS = {"google"}  # Facebook deferred — requires Meta Business Verification
