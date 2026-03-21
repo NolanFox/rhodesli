@@ -24,6 +24,7 @@ from core.ui_safety import ensure_utf8_display
 
 from app.main import rt
 from app.utils import photo_url, _section_for_state
+from app.rate_limit import check_rate_limit
 
 import app.main as _main_mod
 
@@ -601,7 +602,10 @@ def _community_landing_page(community: dict, slug: str):
             # Hero section
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
-                P("We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.", cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10"),
+                P(
+                    "We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.",
+                    cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10",
+                ),
                 description_section,
                 stats_row,
                 empty_state,
@@ -7762,13 +7766,18 @@ def get(sess=None, request=None):
                 P(
                     f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive",
                     cls="text-slate-400 mb-8",
-                ) if collections else None,
+                )
+                if collections
+                else None,
                 Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4")
-                if collections else Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'),
+                if collections
+                else Div(
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'
+                    ),
                     H3("No Collections Created", cls="text-xl font-serif text-slate-400 mb-2"),
                     P("Collections will appear here once photos are grouped.", cls="text-sm text-slate-500"),
-                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center"
+                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center",
                 ),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
@@ -9077,15 +9086,18 @@ def get(
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mt-1"),
                             Div(cls="w-px h-16 border-l-2 border-dashed border-slate-700 my-2"),
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mb-6"),
-                            cls="flex flex-col items-center"
+                            cls="flex flex-col items-center",
                         ),
-                        P("No photos or events match your filters.", cls="text-slate-500 text-center text-sm font-medium"),
+                        P(
+                            "No photos or events match your filters.",
+                            cls="text-slate-500 text-center text-sm font-medium",
+                        ),
                         A(
                             "Clear filters and view full timeline \u2192",
                             href=f"{nav_prefix}/timeline",
                             cls="text-indigo-400 hover:text-indigo-300 text-xs block text-center mt-3 transition-colors active:scale-95",
                         ),
-                        cls="flex flex-col items-center justify-center py-16"
+                        cls="flex flex-col items-center justify-center py-16",
                     )
                     if not decade_sections
                     else None,
@@ -9657,6 +9669,11 @@ async def post(request):
     Returns text/event-stream with stage events as processing completes.
     Works for both /compare and /facecompare upload flows.
     """
+    # Rate limiting
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip):
+        return Response("Rate limit exceeded", status_code=429)
+
     import time as _time
     import json as _json
     import tempfile
