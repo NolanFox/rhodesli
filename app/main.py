@@ -6129,7 +6129,12 @@ def identity_card_mini(
         crop_url = resolve_face_image_url(best_fid, crop_files)
 
     img_element = (
-        Img(src=crop_url or "", cls="w-full h-full object-cover", loading="lazy")
+        Img(
+            src=crop_url or "",
+            cls="w-full h-full object-cover",
+            loading="lazy",
+            alt=identity.get("name", "Face thumbnail"),
+        )
         if crop_url
         else Span("?", cls="text-2xl text-slate-500")
     )
@@ -8136,6 +8141,7 @@ def render_photos_section(
                             src=storage.get_crop_url_by_filename(crop_file),
                             cls="w-full h-full object-cover",
                             title=face["name"],
+                            alt=f"Face of {face['name']}",
                         ),
                         cls="w-6 h-6 rounded-full border-2 border-slate-800 overflow-hidden",
                         style=f"margin-left: {-4 if i > 0 else 0}px; z-index: {10 - i};",
@@ -8159,6 +8165,7 @@ def render_photos_section(
                     src=photo_url(photo["filename"]),
                     cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                     loading="lazy",
+                    alt=f"Archive photo {photo['filename']}",
                 ),
                 # Select mode checkbox (hidden by default)
                 Div(
@@ -9572,6 +9579,7 @@ def neighbors_sidebar(
             },
             type="button",
             title="Close",
+            aria_label="Close",
         )
     toggle_btn = Button(
         "▾ Collapse",

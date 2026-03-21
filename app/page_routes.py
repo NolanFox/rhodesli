@@ -601,7 +601,10 @@ def _community_landing_page(community: dict, slug: str):
             # Hero section
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
-                P("We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.", cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10"),
+                P(
+                    "We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.",
+                    cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10",
+                ),
                 description_section,
                 stats_row,
                 empty_state,
@@ -2623,6 +2626,7 @@ def get(
             ),
             onclick="toggleSidebar()",
             cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center",
+            aria_label="Toggle sidebar menu",
         ),
         Span("Rhodesli", cls="text-lg font-bold text-white"),
         cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30",
@@ -5999,6 +6003,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                     data_action="face-carousel-prev",
                     data_target=pid,
                     type="button",
+                    aria_label="Previous face",
                 ),
                 Span(f"1 of {len(face_data_list)}", id=f"face-counter-{pid}", cls="text-xs text-slate-400"),
                 Button(
@@ -6007,6 +6012,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                     data_action="face-carousel-next",
                     data_target=pid,
                     type="button",
+                    aria_label="Next face",
                 ),
                 cls="flex items-center justify-center gap-3 mt-2",
                 data_faces=json_mod.dumps(face_data_list),
@@ -6234,6 +6240,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
             NotStr("&times;"),
             cls="absolute top-4 right-4 text-white text-3xl bg-transparent border-none cursor-pointer z-[1001] hover:text-slate-300 transition-colors leading-none",
             data_action="close-lightbox",
+            aria_label="Close lightbox",
         ),
         Div(
             # Photo container with face overlays
@@ -6570,6 +6577,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                         src=photo_url(photo["filename"]),
                         cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                         loading="lazy",
+                        alt=f"Archive photo {photo['filename']}",
                     ),
                     Div(
                         f"{photo['confirmed_count']}/{photo['face_count']}"
@@ -7643,6 +7651,7 @@ def get(identity_id: str, sess=None, request=None):
         **{"_": f"on click set innerHTML of #expand-{css_id} to ''"},
         type="button",
         title="Close",
+        aria_label="Close",
     )
 
     # Build the fragment
@@ -7762,13 +7771,18 @@ def get(sess=None, request=None):
                 P(
                     f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive",
                     cls="text-slate-400 mb-8",
-                ) if collections else None,
+                )
+                if collections
+                else None,
                 Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4")
-                if collections else Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'),
+                if collections
+                else Div(
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>'
+                    ),
                     H3("No Collections Created", cls="text-xl font-serif text-slate-400 mb-2"),
                     P("Collections will appear here once photos are grouped.", cls="text-sm text-slate-500"),
-                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center"
+                    cls="flex flex-col items-center justify-center py-20 px-6 border-2 border-slate-800 border-dashed rounded-2xl bg-slate-900/30 text-center",
                 ),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
@@ -8838,6 +8852,7 @@ def get(
                                 src=photo_url(entry["filename"]),
                                 cls="w-full h-full object-cover",
                                 loading="lazy",
+                                alt=f"Archive photo {entry['filename']}",
                             ),
                             Span(
                                 badge_text,
@@ -9077,15 +9092,18 @@ def get(
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mt-1"),
                             Div(cls="w-px h-16 border-l-2 border-dashed border-slate-700 my-2"),
                             Div(cls="w-2 h-2 rounded-full bg-slate-600 mb-6"),
-                            cls="flex flex-col items-center"
+                            cls="flex flex-col items-center",
                         ),
-                        P("No photos or events match your filters.", cls="text-slate-500 text-center text-sm font-medium"),
+                        P(
+                            "No photos or events match your filters.",
+                            cls="text-slate-500 text-center text-sm font-medium",
+                        ),
                         A(
                             "Clear filters and view full timeline \u2192",
                             href=f"{nav_prefix}/timeline",
                             cls="text-indigo-400 hover:text-indigo-300 text-xs block text-center mt-3 transition-colors active:scale-95",
                         ),
-                        cls="flex flex-col items-center justify-center py-16"
+                        cls="flex flex-col items-center justify-center py-16",
                     )
                     if not decade_sections
                     else None,
@@ -9330,6 +9348,7 @@ def get(
                                     src=photo_url(entry["filename"]),
                                     cls="w-full h-40 sm:h-48 object-cover rounded-t-lg",
                                     loading="lazy",
+                                    alt=f"Archive photo {entry['filename']}",
                                 ),
                                 href=f"{nav_prefix}/photo/{entry['photo_id']}",
                             ),
@@ -11777,6 +11796,7 @@ def public_photo_page(
                 hx_swap="innerHTML",
                 title="Quick identify",
                 data_testid="quick-identify-btn",
+                aria_label="Quick identify this face",
             )
             quick_id_area = Div(id=f"qid-{safe_fid}", cls="w-full")
 

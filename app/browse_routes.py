@@ -114,6 +114,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                         src=photo_url(photo["filename"]),
                         cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                         loading="lazy",
+                        alt=f"Archive photo {photo['filename']}",
                     ),
                     Div(
                         f"{photo['confirmed_count']}/{photo['face_count']}"
@@ -1488,6 +1489,7 @@ def get(identity_id: str, sess=None, request=None):
         **{"_": f"on click set innerHTML of #expand-{css_id} to ''"},
         type="button",
         title="Close",
+        aria_label="Close",
     )
 
     # Build the fragment

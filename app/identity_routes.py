@@ -786,6 +786,7 @@ def get(identity_id: str, request=None):
                 thumb = Img(
                     src=face_url,
                     cls="w-10 h-10 aspect-square rounded-lg object-cover flex-shrink-0 border border-slate-600",
+                    alt="Face thumbnail",
                 )
                 break
 
@@ -952,7 +953,7 @@ def get(q: str = "", request=None):
             _main_mod.resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
         )
         thumb = (
-            Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0")
+            Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0", alt="Face thumbnail")
             if face_url
             else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
         )
@@ -1068,7 +1069,7 @@ def get(q: str = "", request=None, sess=None):
             _main_mod.resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
         )
         thumb = (
-            Img(src=face_url, cls="w-10 h-10 rounded object-cover flex-shrink-0", loading="lazy")
+            Img(src=face_url, cls="w-10 h-10 rounded object-cover flex-shrink-0", loading="lazy", alt="Face thumbnail")
             if face_url
             else Div(cls="w-10 h-10 rounded bg-slate-700 flex-shrink-0")
         )
@@ -1186,7 +1187,7 @@ def get(
             _main_mod.resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
         )
         thumb = (
-            Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0")
+            Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0", alt="Face thumbnail")
             if face_url
             else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
         )

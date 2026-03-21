@@ -1124,6 +1124,7 @@ def public_person_page(
                 onclick="window.closeLightbox()",
                 cls="absolute top-4 right-4 text-white hover:text-amber-400 bg-black/50 hover:bg-black/80 rounded-full w-10 h-10 flex items-center justify-center transition-colors text-xl font-bold z-50 focus:outline-none",
                 type="button",
+                aria_label="Close lightbox",
             ),
             Img(
                 src="",
