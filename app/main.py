@@ -472,6 +472,31 @@ app, rt = fast_app(
                 };
             });
         """),
+        # Accessible focus indicators (Session 128)
+        Style("""
+            /* Accessible focus indicators */
+            button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+                outline: 2px solid #818cf8;
+                outline-offset: 2px;
+            }
+        """),
+        # Skip-to-content link + main landmark injection (Session 128 a11y)
+        Script("""
+            document.addEventListener('DOMContentLoaded', function() {
+                // Inject skip-to-content link as first child of body
+                var skip = document.createElement('a');
+                skip.href = '#main-content';
+                skip.textContent = 'Skip to main content';
+                skip.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-indigo-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg';
+                document.body.insertBefore(skip, document.body.firstChild);
+
+                // Set id="main-content" on the first <main> element
+                var main = document.querySelector('main');
+                if (main && !main.id) {
+                    main.id = 'main-content';
+                }
+            });
+        """),
         *_posthog_script(),
     ),
     static_path=str(static_path),
