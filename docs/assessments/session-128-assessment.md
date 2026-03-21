@@ -47,3 +47,24 @@
 3. Rate limiter returns 429 on 21st upload
 4. Eva (Deber) Shane annotation — approve or investigate
 5. AD-229 upload verification: 3 new uploads through ML service confirmed healthy
+
+## Session Review (Auto)
+
+### Per-Act Status
+| Act | Status | Evidence | Concerns |
+|-----|--------|----------|----------|
+| Phase 0 | PASS | session log created, audit read, baseline 3470 | None |
+| Phase 1 | PASS | 14 _check_origin calls, SameSite=Strict, rate_limit.py, 39 tests | Did not /clear after phase |
+| Phase 2 | PASS | skip-to-content, focus-visible, 20+ alt, 12+ aria, 42 tests | 36 aria-labels vs 50 target |
+| Phase 3 | PASS | compare_v2 deleted, docs moved, sys.path, label fixed | None |
+| Phase 4A | PASS | CSS cherry-picked, typo fixed, face card expansion merged | None |
+| Phase 4B | SKIPPED | No codex audit file created | Deferred — security work was the audit response |
+| Phase 5 | PASS | Deploy SUCCESS, browser verified, ROADMAP+HISTORY updated | None |
+
+### Harness Violations
+- Did not /clear between phases (recurring — Lesson 89). Context stayed manageable due to subagent usage.
+
+### Auto-Fix Summary
+- Issues found: 3
+- Auto-fixed: 0 (all acceptable deferrals)
+- Deferred: 3 (Codex audit, /clear discipline, aria-label coverage gap)
