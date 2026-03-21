@@ -14,6 +14,20 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 128: Security Hardening + Accessibility + Dead Code (2026-03-21) — v0.99.38
+- CSRF: SameSite=Strict cookies + _check_origin() on 11 dangerous POST routes
+- Rate limiting: IP-based 20/hr on 7 public upload endpoints (app/rate_limit.py)
+- ML token startup warning, SESSION_SECRET default warning on Railway
+- 3 duplicate routes removed (reject-match, correct-date, face-alignment)
+- Skip-to-content link, `<main>` landmark, focus-visible CSS
+- 20+ alt text additions, 12+ aria-labels on icon-only buttons
+- Dead code: compare_v2_routes.py deleted, docs relocated from app/ to docs/
+- Face card expansion animation (FB-001) — CSS grid toggle with cubic-bezier easing
+- Antigravity CSS polish: cluster review rounded-2xl + hover animations
+- 3 uploads verified (971 photos, 2979 embeddings, ML service healthy)
+- 87 new tests across 5 test files, 3557 total pass
+- 5 parallel worktree subagents for security + a11y
+
 ## Session 127: Accessibility + Polish (2026-03-20) — v0.99.37
 - 33 SVG aria attributes across 3 route files (decorative hidden, icon-only labeled)
 - Touch targets: 10 cluster review badges py-0.5→py-1, engagement pagination px-3 py-1.5

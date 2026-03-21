@@ -20,20 +20,30 @@
   - Duplicate sys.path removed
   - Top bar label fixed
   - CONTRIBUTOR_EMAILS documented
-- [x] Phase 4: Antigravity — Evidence: cherry-picked, CSS typo fixed, test updated
-- [x] Phase 5: Deploy + Harness — CHANGELOG, session log, assessment
+- [x] Phase 4: Antigravity — Evidence: cherry-picked CSS polish, face card expansion merged
+  - Cluster review: rounded-2xl on face crops, hover scale animations
+  - Face card expansion (FB-001): CSS grid toggle, cubic-bezier easing, large face crops
+- [x] Phase 5: Deploy + Verify + Harness
+  - Deploy SUCCESS (DOCKERFILE builder confirmed)
+  - v0.99.38 in footer
+  - "New Matches" label fix confirmed in top bar
+  - 3 uploads verified: 971 photos (+3), 2979 embeddings (+22), 0 orphans
+  - ML service healthy: models loaded, 5444s uptime
+  - Community contribution visible: Eva (Deber) Shane pending from maalot20@outlook.com
 
 ## Deferred
-- Codex audit (Phase 4B) — skipped to keep session focused. Security work was the audit response itself.
-- Face card expansion animation (FB-001) — Antigravity follow-up prompt written
+- Codex audit (Phase 4B) — skipped, security work was the audit response itself
+- Browser verification of face card expansion animation — deploy confirmed but not visually tested in this session due to Chrome extension disconnect
 
 ## Red Flags
-- [LOW] Skip-to-content uses JS injection rather than server-side rendering. Works but slightly fragile. Acceptable for now.
+- [LOW] Skip-to-content uses JS injection rather than server-side rendering. Works but slightly fragile.
 - [LOW] Rate limiter is in-memory — resets on restart. Acceptable at current scale.
-- [LOW] Pre-existing flaky test (test_identify_mode_toggle_on_photo_page) — xdist race condition, not our code.
+- [LOW] Pre-existing flaky test (test_identify_mode_toggle_on_photo_page) — xdist race condition.
+- [INFO] auth.py was externally modified during session (antigravity branch checkout overwrote it). _check_origin was preserved on main via merge ordering.
 
 ## Next Session Should Verify
-1. CSRF origin check blocks bad Origin in production (curl test)
-2. Rate limiter returns 429 on 21st upload
-3. Face card expansion animation (if Antigravity delivers)
-4. Skip-to-content link visible on focus in production browser
+1. Face card expansion animation works visually on production
+2. CSRF origin check blocks bad Origin in production (curl test)
+3. Rate limiter returns 429 on 21st upload
+4. Eva (Deber) Shane annotation — approve or investigate
+5. AD-229 upload verification: 3 new uploads through ML service confirmed healthy

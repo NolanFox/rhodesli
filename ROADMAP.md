@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.37 · ~3473 tests · 968 photos · 1660 identities · 89 confirmed
+Current: v0.99.38 · ~3557 tests · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-21: **v0.99.38 — Session 128**: Security Hardening + Accessibility + Dead Code. CSRF: SameSite=Strict + _check_origin on 11 POST routes. Rate limiting: 20/hr IP-based on 7 public upload endpoints. ML token startup warning. 3 duplicate routes removed. Skip-to-content link, `<main>` landmark, focus-visible CSS. 20+ alt text, 12+ aria-labels. Dead code: compare_v2_routes deleted, docs relocated, sys.path dedup, label fix. Face card expansion animation (FB-001). Antigravity CSS polish merged. 3 uploads verified (971 photos, 2979 embeddings). 87 new tests. 3557 app tests pass.
 
 - [x] 2026-03-20: **v0.99.37 — Session 127**: Accessibility + Polish. 33 SVG aria attributes (decorative hidden, icon-only labeled). Touch targets: 10 badges py-0.5→py-1, pagination px-3 py-1.5. Confidence tier labels (Strong/Good/Possible/Weak) next to ML distances. Person page "Can you help?" CTA for CONFIRMED with unknown fields. Merge confirmation gate for CONFIRMED people. Face crop fallback (global JS error handler → SVG silhouette). 2 stale test assertions fixed. Security audit. 76 new tests. 3473 app tests pass.
 
