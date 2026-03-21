@@ -330,6 +330,30 @@ class IdentityRegistry:
             return False
         return not name.startswith("Unidentified Person ")
 
+    def find_confirmed_by_name(self, name: str, exclude_id: str = "") -> dict | None:
+        """Find an existing non-merged CONFIRMED identity with the given name.
+
+        Args:
+            name: Name to search for (case-insensitive, stripped)
+            exclude_id: Identity ID to exclude from the search
+
+        Returns:
+            The matching identity dict, or None if not found.
+        """
+        if not name:
+            return None
+        target = name.strip().lower()
+        for iid, identity in self._identities.items():
+            if iid == exclude_id:
+                continue
+            if identity.get("merged_into"):
+                continue
+            if identity.get("state") != IdentityState.CONFIRMED.value:
+                continue
+            if (identity.get("name") or "").strip().lower() == target:
+                return identity.copy()
+        return None
+
     @staticmethod
     def _state_priority(state: str) -> int:
         """Return trust priority for a state (higher = more trusted)."""
@@ -857,6 +881,16 @@ class IdentityRegistry:
                 f"'{identity.get('name', '')}'. Rename it first."
             )
 
+        # Check for duplicate confirmed name (prevent creating two CONFIRMED
+        # identities with the same name — user should merge instead)
+        dup = self.find_confirmed_by_name(identity.get("name", ""), exclude_id=identity_id)
+        if dup:
+            raise ValueError(
+                f"Another confirmed identity already has the name "
+                f"'{identity['name']}' (ID: {dup['identity_id'][:8]}...). "
+                f"Merge instead of confirming a duplicate."
+            )
+
         previous_state = identity["state"]
         previous_version = identity["version_id"]
 
@@ -1128,6 +1162,16 @@ class IdentityRegistry:
         new_name = new_name.strip()[:100] if new_name else ""
         if not new_name:
             raise ValueError("Name cannot be empty")
+
+        # If identity is already CONFIRMED, check for duplicate name
+        if identity.get("state") == IdentityState.CONFIRMED.value:
+            dup = self.find_confirmed_by_name(new_name, exclude_id=identity_id)
+            if dup:
+                raise ValueError(
+                    f"Another confirmed identity already has the name "
+                    f"'{new_name}' (ID: {dup['identity_id'][:8]}...). "
+                    f"Merge instead of renaming."
+                )
 
         # Auto-parse structured name fields (BE-010)
         parts = new_name.rsplit(" ", 1)

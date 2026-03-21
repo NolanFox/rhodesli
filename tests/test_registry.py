@@ -844,24 +844,24 @@ class TestSearchIdentities:
 
         id_a = registry.create_identity(
             anchor_ids=["face_001"],
-            name="Test Person",
+            name="Test Person Alpha",
             user_source="test",
         )
         registry.confirm_identity(id_a, user_source="test")
 
         id_b = registry.create_identity(
             anchor_ids=["face_002"],
-            name="Test Person",
+            name="Test Person Beta",
             user_source="test",
         )
         registry.confirm_identity(id_b, user_source="test")
 
         # Without exclusion, both should match
-        results = registry.search_identities("Test")
+        results = registry.search_identities("Test Person")
         assert len(results) == 2
 
         # With exclusion, only one should match
-        results = registry.search_identities("Test", exclude_id=id_a)
+        results = registry.search_identities("Test Person", exclude_id=id_a)
         assert len(results) == 1
         assert results[0]["identity_id"] == id_b
 
@@ -1148,3 +1148,150 @@ class TestListIdentitiesByJob:
         # Original should be unchanged (not mutated to "MUTATED")
         original = registry.get_identity(identity_id)
         assert original["name"] != "MUTATED"
+
+
+class TestDuplicateNamePrevention:
+    """Tests for duplicate confirmed name prevention (Session 129)."""
+
+    def _make_registry_with_confirmed(self, name="Esther Burd Fox"):
+        """Helper: create a registry with one CONFIRMED identity."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        iid = registry.create_identity(
+            anchor_ids=["face_100"],
+            name=name,
+            user_source="test",
+        )
+        registry.confirm_identity(iid, user_source="test")
+        return registry, iid
+
+    def test_confirm_rejects_duplicate_name(self):
+        """Confirming an identity with a name that another CONFIRMED identity already has should raise ValueError."""
+        from core.registry import IdentityRegistry
+
+        registry, first_id = self._make_registry_with_confirmed("Esther Burd Fox")
+
+        # Create a second identity with the same name
+        second_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="Esther Burd Fox",
+            user_source="test",
+        )
+
+        with pytest.raises(ValueError, match="Another confirmed identity"):
+            registry.confirm_identity(second_id, user_source="test")
+
+    def test_confirm_allows_different_name(self):
+        """Confirming an identity with a DIFFERENT name from existing CONFIRMED should succeed."""
+        from core.registry import IdentityRegistry
+
+        registry, first_id = self._make_registry_with_confirmed("Esther Burd Fox")
+
+        second_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="Albert Fox",
+            user_source="test",
+        )
+        # Should NOT raise
+        registry.confirm_identity(second_id, user_source="test")
+        identity = registry.get_identity(second_id)
+        assert identity["state"] == "CONFIRMED"
+
+    def test_confirm_duplicate_check_is_case_insensitive(self):
+        """Duplicate check should be case-insensitive."""
+        from core.registry import IdentityRegistry
+
+        registry, first_id = self._make_registry_with_confirmed("Esther Burd Fox")
+
+        second_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="esther burd fox",
+            user_source="test",
+        )
+
+        with pytest.raises(ValueError, match="Another confirmed identity"):
+            registry.confirm_identity(second_id, user_source="test")
+
+    def test_confirm_ignores_merged_identities(self):
+        """Duplicate check should skip merged identities — only non-merged matter."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        # Create an identity, confirm it, then mark it as merged (simulating a merge)
+        old_id = registry.create_identity(
+            anchor_ids=["face_100"],
+            name="Esther Burd Fox",
+            user_source="test",
+        )
+        registry.confirm_identity(old_id, user_source="test")
+        # Simulate merge: mark as merged_into some other ID
+        registry._identities[old_id]["merged_into"] = "some-canonical-id"
+
+        # Now a NEW identity with same name should succeed because
+        # the old one is merged (not active)
+        new_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="Esther Burd Fox",
+            user_source="test",
+        )
+        # Should NOT raise — old_id is merged, not counted as active
+        registry.confirm_identity(new_id, user_source="test")
+        assert registry.get_identity(new_id)["state"] == "CONFIRMED"
+
+    def test_rename_confirmed_rejects_duplicate_name(self):
+        """Renaming a CONFIRMED identity to a name another CONFIRMED has should raise ValueError."""
+        from core.registry import IdentityRegistry
+
+        registry, first_id = self._make_registry_with_confirmed("Esther Burd Fox")
+
+        second_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="Albert Fox",
+            user_source="test",
+        )
+        registry.confirm_identity(second_id, user_source="test")
+
+        with pytest.raises(ValueError, match="Another confirmed identity"):
+            registry.rename_identity(second_id, "Esther Burd Fox", user_source="test")
+
+    def test_rename_non_confirmed_allows_duplicate_name(self):
+        """Renaming a non-CONFIRMED identity should not block on duplicate names."""
+        from core.registry import IdentityRegistry
+
+        registry, first_id = self._make_registry_with_confirmed("Esther Burd Fox")
+
+        # PROPOSED identity — rename should succeed (check only applies to CONFIRMED)
+        second_id = registry.create_identity(
+            anchor_ids=["face_200"],
+            name="Unknown Person",
+            user_source="test",
+        )
+        # Should NOT raise
+        registry.rename_identity(second_id, "Esther Burd Fox", user_source="test")
+
+    def test_find_confirmed_by_name_returns_match(self):
+        """find_confirmed_by_name should return the matching identity."""
+        from core.registry import IdentityRegistry
+
+        registry, iid = self._make_registry_with_confirmed("Esther Burd Fox")
+        result = registry.find_confirmed_by_name("Esther Burd Fox")
+        assert result is not None
+        assert result["identity_id"] == iid
+
+    def test_find_confirmed_by_name_returns_none_for_no_match(self):
+        """find_confirmed_by_name should return None when no match."""
+        from core.registry import IdentityRegistry
+
+        registry, iid = self._make_registry_with_confirmed("Esther Burd Fox")
+        result = registry.find_confirmed_by_name("Nonexistent Person")
+        assert result is None
+
+    def test_find_confirmed_by_name_excludes_self(self):
+        """find_confirmed_by_name with exclude_id should skip that identity."""
+        from core.registry import IdentityRegistry
+
+        registry, iid = self._make_registry_with_confirmed("Esther Burd Fox")
+        result = registry.find_confirmed_by_name("Esther Burd Fox", exclude_id=iid)
+        assert result is None
