@@ -855,7 +855,11 @@ def _compare_result_card(result: dict, crop_files: set, index: int, nav_prefix: 
 
     return Div(
         A(
-            Img(src=crop_url, cls=f"w-28 h-28 rounded-lg object-cover mx-auto {style['ring']}"),
+            Img(
+                src=crop_url,
+                cls=f"w-28 h-28 rounded-lg object-cover mx-auto {style['ring']}",
+                alt=f"Face of {display_name}",
+            ),
             href=photo_link,
             cls="block",
         ),
@@ -3720,7 +3724,11 @@ def get(result_id: str, sess=None, request=None):
         result_cards.append(
             Div(
                 Div(
-                    Img(src=match_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600")
+                    Img(
+                        src=match_url,
+                        cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
+                        alt=f"Face of {name}",
+                    )
                     if match_url
                     else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                     Div(
@@ -4337,7 +4345,7 @@ async def post(request):
             crop_url = get_upload_url(f"uploads/compare/{upload_id}_face{i}.jpg")
             face_elements.append(
                 Div(
-                    Img(src=crop_url, cls="w-16 h-16 rounded-lg object-cover"),
+                    Img(src=crop_url, cls="w-16 h-16 rounded-lg object-cover", alt=f"Face {i + 1}"),
                     P(f"Face {i + 1}", cls="text-[10px] text-slate-400 mt-1 text-center"),
                     cls="face-thumb p-1 rounded-lg hover:bg-slate-600/50",
                     onclick=f"selectPairFace('{panel}','{upload_id}',{i},this)",
@@ -4348,7 +4356,7 @@ async def post(request):
         return Div(
             H3(f"Photo {panel.upper()}", cls="text-sm font-medium text-slate-400 mb-3 text-center"),
             Div(
-                Img(src=image_url, cls="max-h-40 rounded-lg mx-auto border border-slate-600"),
+                Img(src=image_url, cls="max-h-40 rounded-lg mx-auto border border-slate-600", alt="Uploaded photo"),
                 cls="mb-3",
             ),
             P(
@@ -4538,7 +4546,11 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             H3("Comparison Result", cls="text-lg font-serif text-white mb-4 text-center"),
             Div(
                 Div(
-                    Img(src=crop_a_url, cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600"),
+                    Img(
+                        src=crop_a_url,
+                        cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600",
+                        alt="Face from Photo A",
+                    ),
                     P("Photo A", cls="text-xs text-slate-400 mt-2"),
                     cls="flex flex-col items-center",
                 ),
@@ -4548,7 +4560,11 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                     cls="flex flex-col items-center justify-center px-6",
                 ),
                 Div(
-                    Img(src=crop_b_url, cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600"),
+                    Img(
+                        src=crop_b_url,
+                        cls="w-24 h-24 aspect-square rounded-lg object-cover ring-2 ring-slate-600",
+                        alt="Face from Photo B",
+                    ),
                     P("Photo B", cls="text-xs text-slate-400 mt-2"),
                     cls="flex flex-col items-center",
                 ),
@@ -5155,6 +5171,7 @@ def post(
                         cls="ml-auto text-slate-500 hover:text-white transition-colors p-1",
                         data_action="toggle-face-section",
                         data_face_idx=str(fi),
+                        aria_label="Toggle face section",
                     ),
                     cls="flex items-center mb-3 cursor-pointer",
                     data_testid=f"compare-face-header-{fi}",
@@ -5530,7 +5547,7 @@ def _compare_photo_with_overlays(
     photo = _main_mod.get_photo_metadata(photo_id) if photo_id else None
     if not photo or not photo_url_str:
         return Div(
-            Img(src=photo_url_str or "", cls=f"max-w-full {img_height_cls} object-contain rounded")
+            Img(src=photo_url_str or "", cls=f"max-w-full {img_height_cls} object-contain rounded", alt="Archive photo")
             if photo_url_str
             else Div(
                 Span("?", cls="text-6xl text-slate-500"),
@@ -5603,7 +5620,7 @@ def _compare_photo_with_overlays(
 
     return Div(
         Div(
-            Img(src=photo_url_str, cls=f"max-w-full {img_height_cls} object-contain rounded"),
+            Img(src=photo_url_str, cls=f"max-w-full {img_height_cls} object-contain rounded", alt="Archive photo"),
             *face_overlays,
             cls="relative inline-block max-w-full",
         ),

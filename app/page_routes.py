@@ -2627,6 +2627,7 @@ def get(
             ),
             onclick="toggleSidebar()",
             cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center",
+            aria_label="Toggle sidebar menu",
         ),
         Span("Rhodesli", cls="text-lg font-bold text-white"),
         cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30",
@@ -5796,6 +5797,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                     data_action="face-carousel-prev",
                     data_target=pid,
                     type="button",
+                    aria_label="Previous face",
                 ),
                 Span(f"1 of {len(face_data_list)}", id=f"face-counter-{pid}", cls="text-xs text-slate-400"),
                 Button(
@@ -5804,6 +5806,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                     data_action="face-carousel-next",
                     data_target=pid,
                     type="button",
+                    aria_label="Next face",
                 ),
                 cls="flex items-center justify-center gap-3 mt-2",
                 data_faces=json_mod.dumps(face_data_list),
@@ -6031,6 +6034,7 @@ def get(person_a: str, person_b: str, sess=None, request=None):
             NotStr("&times;"),
             cls="absolute top-4 right-4 text-white text-3xl bg-transparent border-none cursor-pointer z-[1001] hover:text-slate-300 transition-colors leading-none",
             data_action="close-lightbox",
+            aria_label="Close lightbox",
         ),
         Div(
             # Photo container with face overlays
@@ -6367,6 +6371,7 @@ def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = ""
                         src=photo_url(photo["filename"]),
                         cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                         loading="lazy",
+                        alt=f"Archive photo {photo['filename']}",
                     ),
                     Div(
                         f"{photo['confirmed_count']}/{photo['face_count']}"
@@ -7440,6 +7445,7 @@ def get(identity_id: str, sess=None, request=None):
         **{"_": f"on click set innerHTML of #expand-{css_id} to ''"},
         type="button",
         title="Close",
+        aria_label="Close",
     )
 
     # Build the fragment
@@ -8640,6 +8646,7 @@ def get(
                                 src=photo_url(entry["filename"]),
                                 cls="w-full h-full object-cover",
                                 loading="lazy",
+                                alt=f"Archive photo {entry['filename']}",
                             ),
                             Span(
                                 badge_text,
@@ -9135,6 +9142,7 @@ def get(
                                     src=photo_url(entry["filename"]),
                                     cls="w-full h-40 sm:h-48 object-cover rounded-t-lg",
                                     loading="lazy",
+                                    alt=f"Archive photo {entry['filename']}",
                                 ),
                                 href=f"{nav_prefix}/photo/{entry['photo_id']}",
                             ),
@@ -11587,6 +11595,7 @@ def public_photo_page(
                 hx_swap="innerHTML",
                 title="Quick identify",
                 data_testid="quick-identify-btn",
+                aria_label="Quick identify this face",
             )
             quick_id_area = Div(id=f"qid-{safe_fid}", cls="w-full")
 
