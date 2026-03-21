@@ -68,6 +68,11 @@ def _nav_prefix_from_request(request) -> str:
     return _main_mod.community_url_prefix(community_slug)
 
 
+def _community_from_request(request):
+    """Return the community dict from request.state (set by CommunityMiddleware)."""
+    return getattr(request.state, "community", None) if request else None
+
+
 @rt("/confirm/{identity_id}")
 def post(
     identity_id: str,
@@ -274,7 +279,12 @@ def post(
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -375,7 +385,12 @@ def post(
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -383,7 +398,10 @@ def post(
     if from_person_page:
         return (
             Div(
-                Span("\u2717 REJECTED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                Span(
+                    "\u2717 REJECTED",
+                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400",
+                ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
@@ -1001,7 +1019,8 @@ def get(q: str = "", request=None):
                         cls="flex items-center gap-1.5",
                     ),
                     Span(
-                        f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}", cls="text-sm sm:text-xs text-slate-500"
+                        f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}",
+                        cls="text-sm sm:text-xs text-slate-500",
                     ),
                     cls="flex flex-col min-w-0",
                 ),
@@ -1099,7 +1118,10 @@ def get(q: str = "", request=None, sess=None):
                     Span(name, cls="text-sm text-white font-medium truncate"),
                     Div(
                         Span(state, cls=f"text-sm sm:text-xs {state_cls}"),
-                        Span(f" · {face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"),
+                        Span(
+                            f" · {face_count} face{'s' if face_count != 1 else ''}",
+                            cls="text-sm sm:text-xs text-slate-500",
+                        ),
                         cls="flex items-center gap-1",
                     ),
                     cls="flex flex-col min-w-0",
@@ -1112,7 +1134,8 @@ def get(q: str = "", request=None, sess=None):
     return Div(
         Div(
             Span(
-                f"Server search: {len(results)} match{'es' if len(results) != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"
+                f"Server search: {len(results)} match{'es' if len(results) != 1 else ''}",
+                cls="text-sm sm:text-xs text-slate-500",
             ),
             cls="px-1 mb-1",
         ),
@@ -2227,11 +2250,18 @@ def post(
         )
         if focus_section == "skipped":
             return (
-                _main_mod.get_next_skipped_focus_card(exclude_id=actual_target_id, nav_prefix=nav_prefix),
+                _main_mod.get_next_skipped_focus_card(
+                    exclude_id=actual_target_id, nav_prefix=nav_prefix, community=_community_from_request(request)
+                ),
                 oob_toast,
             )
         return (
-            _main_mod.get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=actual_target_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -2302,7 +2332,10 @@ def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_sugge
     return Div(
         Div(
             H4("You might also want to review:", cls="text-sm font-medium text-amber-400"),
-            P(f"{_main_mod._pl(len(high_matches), 'similar face')} found after merge", cls="text-sm sm:text-xs text-slate-400"),
+            P(
+                f"{_main_mod._pl(len(high_matches), 'similar face')} found after merge",
+                cls="text-sm sm:text-xs text-slate-400",
+            ),
             cls="mb-2",
         ),
         Div(*cards, cls="space-y-2"),
@@ -3483,7 +3516,10 @@ def post(photo_id: str, transform: str = "", field: str = "transform", sess=None
     css_transform = _main_mod.parse_transform_to_css(new_transform)
     css_filter = _main_mod.parse_transform_to_filter(new_transform)
     return Div(
-        P(f"Transform: {new_transform}" if new_transform else "Transform reset.", cls="text-sm sm:text-xs text-slate-400"),
+        P(
+            f"Transform: {new_transform}" if new_transform else "Transform reset.",
+            cls="text-sm sm:text-xs text-slate-400",
+        ),
         Script(f"""
             var img = document.querySelector('.photo-hero, .photo-flip-front img');
             if (img) {{
@@ -3834,7 +3870,12 @@ def post(
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -3927,7 +3968,12 @@ def post(
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -3935,7 +3981,10 @@ def post(
     if from_person_page:
         return (
             Div(
-                Span("\u2717 REJECTED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"),
+                Span(
+                    "\u2717 REJECTED",
+                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400",
+                ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
@@ -4032,7 +4081,12 @@ def post(
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
-            _main_mod.get_next_focus_card(exclude_id=identity_id, triage_filter=filter, nav_prefix=nav_prefix),
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
             oob_toast,
         )
 
@@ -4041,7 +4095,8 @@ def post(
         return (
             Div(
                 Span(
-                    "\u23f8 SKIPPED", cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-400"
+                    "\u23f8 SKIPPED",
+                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-400",
                 ),
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
@@ -4131,7 +4186,11 @@ def post(identity_id: str, sess=None, request=None):
         nav_prefix = _nav_prefix_from_request(request)
         return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
+        _main_mod.get_next_skipped_focus_card(
+            exclude_id=identity_id,
+            nav_prefix=_nav_prefix_from_request(request),
+            community=_community_from_request(request),
+        ),
         _main_mod.toast("Skipped for now.", "info"),
     )
 
@@ -4179,7 +4238,11 @@ def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
     )
 
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
+        _main_mod.get_next_skipped_focus_card(
+            exclude_id=identity_id,
+            nav_prefix=_nav_prefix_from_request(request),
+            community=_community_from_request(request),
+        ),
         reject_toast,
     )
 
@@ -4238,7 +4301,11 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
     )
 
     return (
-        _main_mod.get_next_skipped_focus_card(exclude_id=identity_id, nav_prefix=_nav_prefix_from_request(request)),
+        _main_mod.get_next_skipped_focus_card(
+            exclude_id=identity_id,
+            nav_prefix=_nav_prefix_from_request(request),
+            community=_community_from_request(request),
+        ),
         _main_mod.toast(f"Confirmed as {name}!", "success"),
     )
 

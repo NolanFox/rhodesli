@@ -222,8 +222,7 @@ app, rt = fast_app(
         """),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
-
-        Style('''
+        Style("""
             /* Mobile generic layout constraints */
             body, .main-content {
                 overflow-x: hidden;
@@ -305,8 +304,8 @@ app, rt = fast_app(
                 opacity: 1;
                 transform: scale(1);
             }
-        '''),
-        Script('''
+        """),
+        Script("""
             // Face Crop Intersection Observer
             document.addEventListener('DOMContentLoaded', () => {
                 const observer = new IntersectionObserver((entries) => {
@@ -330,7 +329,7 @@ app, rt = fast_app(
                     }
                 }
             });
-        '''),
+        """),
         Style("""
             .person-card {
                 transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -2998,7 +2997,11 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         # Evidence text (Gemini's reasoning)
         if location_estimate:
             location_parts.append(
-                P(location_estimate, cls="text-slate-400 text-sm sm:text-xs mt-2 italic", data_testid="location-evidence")
+                P(
+                    location_estimate,
+                    cls="text-slate-400 text-sm sm:text-xs mt-2 italic",
+                    data_testid="location-evidence",
+                )
             )
         # Admin: Correct Location button (simple text input)
         if is_admin:
@@ -3073,7 +3076,9 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     # Visible text (OCR)
     visible_text = label.get("visible_text", "")
     if visible_text:
-        sections.append(_field("Visible Text", P(visible_text, cls="italic font-mono text-sm sm:text-xs text-slate-400")))
+        sections.append(
+            _field("Visible Text", P(visible_text, cls="italic font-mono text-sm sm:text-xs text-slate-400"))
+        )
 
     # Tags
     tags = label.get("controlled_tags") or (search_doc.get("controlled_tags") if search_doc else None)
@@ -3087,7 +3092,14 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             )
             for t in tags
         ]
-        sections.append(_field("Tags", Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center")))
+        sections.append(
+            _field(
+                "Tags",
+                Div(
+                    *tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center"
+                ),
+            )
+        )
 
     # Dating evidence — Photo Detective card layout
     detective_section = _detective_evidence_section(label)
@@ -5489,7 +5501,10 @@ def sidebar(
 
         # Hide badge when count is 0
         badge = (
-            Span(str(count), cls=f"sidebar-label ml-auto px-2 py-0.5 text-sm sm:text-xs font-bold rounded-full {badge_cls}")
+            Span(
+                str(count),
+                cls=f"sidebar-label ml-auto px-2 py-0.5 text-sm sm:text-xs font-bold rounded-full {badge_cls}",
+            )
             if not is_zero
             else None
         )
@@ -5529,7 +5544,9 @@ def sidebar(
     elif not is_rhodes and community:
         # Non-admin: just show community name
         workspace_switcher = Div(
-            Span(header_name, cls="sidebar-label text-sm sm:text-xs text-slate-400 truncate px-5 py-4 sm:px-3 sm:py-1.5"),
+            Span(
+                header_name, cls="sidebar-label text-sm sm:text-xs text-slate-400 truncate px-5 py-4 sm:px-3 sm:py-1.5"
+            ),
             cls="border-b border-slate-700/50",
         )
 
@@ -5659,7 +5676,10 @@ def sidebar(
     # Admin section (all communities, admin-only)
     admin_section = (
         Div(
-            P("Admin", cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"),
+            P(
+                "Admin",
+                cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
+            ),
             nav_item(
                 f"{prefix}/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"
             ),
@@ -5824,7 +5844,11 @@ def sidebar(
             )
             if user
             else Div(
-                A("Sign in", href="/login", cls="sidebar-label text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline"),
+                A(
+                    "Sign in",
+                    href="/login",
+                    cls="sidebar-label text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline",
+                ),
                 cls="mb-1",
             ),
             Div(
@@ -6565,7 +6589,10 @@ def render_to_review_section(
         cards = [c for c in grid_items if c]  # Filter None
 
         if cards:
-            grid = Div(*cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+            grid = Div(
+                *cards,
+                cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4",
+            )
             if len(to_review) > display_limit:
                 content = Div(
                     Div(
@@ -6716,7 +6743,10 @@ def render_confirmed_section(
             grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
     if grid_items:
-        content = Div(*grid_items, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+        content = Div(
+            *grid_items,
+            cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4",
+        )
     else:
         content = Div(
             "No confirmed identities yet. Browse the inbox to help identify faces.",
@@ -7354,7 +7384,9 @@ def _build_skipped_photo_context(
     if collection:
         who_context_items.append(Span(collection, cls="text-sm sm:text-xs text-slate-400 leading-snug"))
     if other_people:
-        who_context_items.append(Span(f"Also: {', '.join(other_people)}", cls="text-sm sm:text-xs text-slate-300 truncate"))
+        who_context_items.append(
+            Span(f"Also: {', '.join(other_people)}", cls="text-sm sm:text-xs text-slate-300 truncate")
+        )
 
     who_card = Div(
         Div("Who is this?", cls="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1"),
@@ -7970,17 +8002,25 @@ def _build_skipped_focus_actions(identity_id: str, state: str, nav_prefix: str =
     )
 
 
-def get_next_skipped_focus_card(exclude_id: str = None, nav_prefix: str = "") -> Div:
+def get_next_skipped_focus_card(exclude_id: str = None, nav_prefix: str = "", community=None) -> Div:
     """
     Get the next skipped identity card for focus mode review.
 
     Returns an expanded identity card + Up Next carousel for skipped identities,
     sorted by actionability. Returns empty state if no items remain.
+
+    Args:
+        community: Community dict for scoping (from request.state.community)
     """
     registry = load_registry()
     crop_files = get_crop_files()
 
     skipped = registry.list_identities(state=IdentityState.SKIPPED)
+
+    # Community scoping — filter to identities belonging to this community
+    community_identity_ids = _get_community_identity_ids(community)
+    if community_identity_ids is not None:
+        skipped = [i for i in skipped if i.get("identity_id") in community_identity_ids]
 
     # Filter out the just-actioned item
     if exclude_id:
@@ -8051,7 +8091,10 @@ def render_rejected_section(
             grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
     if grid_items:
-        content = Div(*grid_items, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4")
+        content = Div(
+            *grid_items,
+            cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4",
+        )
     else:
         content = Div("No dismissed items. Rejected matches will appear here.", cls="text-center py-12 text-slate-400")
 
@@ -8482,7 +8525,9 @@ def render_photos_section(
     """)
 
     # Photo grid layout
-    grid = Div(*photo_cards, photo_nav_script, cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4")
+    grid = Div(
+        *photo_cards, photo_nav_script, cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+    )
 
     # Collection stats cards (shown when viewing all collections, not filtered)
     collection_cards = None
@@ -8679,7 +8724,7 @@ def render_photos_section(
     )
 
 
-def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_prefix: str = ""):
+def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_prefix: str = "", community=None):
     """
     Get the next identity card for focus mode review.
 
@@ -8689,6 +8734,7 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
     Args:
         exclude_id: Identity ID to exclude (just-actioned item)
         triage_filter: Active triage filter to preserve through navigation
+        community: Community dict for scoping (from request.state.community)
 
     IMPORTANT: This must use the same sorting as render_to_review_section to ensure
     the "Up Next" queue matches what appears after an action.
@@ -8700,6 +8746,11 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
     inbox = registry.list_identities(state=IdentityState.INBOX)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     to_review = inbox + proposed
+
+    # Community scoping — filter to identities belonging to this community
+    community_identity_ids = _get_community_identity_ids(community)
+    if community_identity_ids is not None:
+        to_review = [i for i in to_review if i.get("identity_id") in community_identity_ids]
 
     # Filter out the just-actioned item
     if exclude_id:
@@ -8944,7 +8995,10 @@ def state_badge(state: str) -> Span:
         "REJECTED": "bg-rose-700 text-white",
         "SKIPPED": "bg-stone-500 text-white",
     }
-    return Span(state, cls=f"text-sm sm:text-xs font-bold px-4 py-3 sm:px-2 sm:py-1 rounded {colors.get(state, 'bg-gray-500 text-white')}")
+    return Span(
+        state,
+        cls=f"text-sm sm:text-xs font-bold px-4 py-3 sm:px-2 sm:py-1 rounded {colors.get(state, 'bg-gray-500 text-white')}",
+    )
 
 
 def era_badge(era: str) -> Span:
@@ -8954,7 +9008,10 @@ def era_badge(era: str) -> Span:
     """
     if not era:
         return None
-    return Span(era, cls="absolute top-2 right-2 bg-stone-700/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 font-mono")
+    return Span(
+        era,
+        cls="absolute top-2 right-2 bg-stone-700/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 font-mono",
+    )
 
 
 # Share icon SVG (three connected dots) — used everywhere for consistency
@@ -9304,16 +9361,23 @@ def match_info_bar(
     }
     similarity_class = _similarity_classes.get(label, "bg-slate-600 text-slate-400")
 
-    badge = Span(f"{pct}% match", cls=f"text-sm sm:text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
+    badge = (
+        Span(f"{pct}% match", cls=f"text-sm sm:text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
+    )
 
     details = []
     if show_distance:
         tier_label = _confidence_tier_label(distance)
-        details.append(Span(f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 bg-slate-700 px-1 rounded"))
+        details.append(
+            Span(f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 bg-slate-700 px-1 rounded")
+        )
         details.append(tier_label)
     if confidence_gap > 0:
         details.append(
-            Span(f"+{confidence_gap}% gap", cls="text-sm sm:text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded")
+            Span(
+                f"+{confidence_gap}% gap",
+                cls="text-sm sm:text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded",
+            )
         )
     if co_occurrence > 0:
         details.append(
@@ -9553,7 +9617,8 @@ def neighbor_card(
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(
                     Span(
-                        f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"
+                        f"Dist: {distance:.2f}",
+                        cls="text-sm sm:text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded",
                     ),
                     _confidence_tier_label(distance),
                     Span(
@@ -9678,7 +9743,9 @@ def search_result_card(
                     cls="font-medium text-slate-200 truncate text-sm hover:text-indigo-400 hover:underline cursor-pointer",
                     **{"_": nav_script},
                 ),
-                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400 ml-2"),
+                Span(
+                    f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400 ml-2"
+                ),
                 cls="flex items-center ml-2 flex-1 min-w-0",
             ),
             Div(compare_btn, merge_btn, cls="flex items-center gap-1 flex-shrink-0 ml-2"),
@@ -10872,7 +10939,10 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                     type="submit",
                     cls="w-full p-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white font-medium",
                 ),
-                P("Your suggestion will be saved anonymously.", cls="text-sm sm:text-xs text-slate-500 mt-1 text-center"),
+                P(
+                    "Your suggestion will be saved anonymously.",
+                    cls="text-sm sm:text-xs text-slate-500 mt-1 text-center",
+                ),
                 hx_post="/api/annotations/guest-submit",
                 hx_target="#guest-or-login-modal",
                 hx_swap="innerHTML",
@@ -10892,7 +10962,10 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                     type="submit",
                     cls="w-full p-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-medium",
                 ),
-                P("Track your contributions with your account.", cls="text-sm sm:text-xs text-slate-500 mt-1 text-center"),
+                P(
+                    "Track your contributions with your account.",
+                    cls="text-sm sm:text-xs text-slate-500 mt-1 text-center",
+                ),
                 hx_post="/api/annotations/stash-and-login",
                 hx_target="#guest-or-login-modal",
                 hx_swap="innerHTML",
@@ -11247,7 +11320,9 @@ def _detective_evidence_section(label: dict) -> object:
             cls="flex items-center justify-between mb-3",
         ),
         Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 gap-3"),
-        P(f"Cultural context: {cultural_note}", cls="text-sm sm:text-xs text-slate-500 mt-3 italic") if cultural_note else None,
+        P(f"Cultural context: {cultural_note}", cls="text-sm sm:text-xs text-slate-500 mt-3 italic")
+        if cultural_note
+        else None,
         cls="mt-6 p-4 bg-slate-800/20 rounded-lg border border-slate-700/20",
         data_testid="detective-evidence",
     )
