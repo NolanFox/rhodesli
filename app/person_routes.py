@@ -923,9 +923,9 @@ def public_person_page(
     # --- Status badge ---
     if is_state_confirmed:
         badge = Span(
-            "Confirmed",
+            "Identified",
             cls="text-sm sm:text-xs text-emerald-400 bg-emerald-500/10 px-4 py-3 sm:px-2.5 sm:py-1 rounded-full border border-emerald-500/20 transition-all duration-300 hover:ring-2 hover:ring-indigo-400/50",
-            title="This person has been confirmed by an admin",
+            title="This person has been identified",
         )
     else:
         badge = Span(
