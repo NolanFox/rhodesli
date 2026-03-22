@@ -271,6 +271,19 @@ def get(
         for inbox_id, cache_id in _main_mod._photo_id_aliases.items():
             _reverse_aliases[cache_id] = inbox_id
 
+    # Build face_id -> is_confirmed lookup ONCE to avoid N+1 get_identity_for_face calls (~2900 per page load)
+    _face_id_confirmed = set()
+    for identity in registry.list_identities():
+        if identity.get("state") == "CONFIRMED":
+            for fid_entry in identity.get("anchor_ids", []):
+                fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id")
+                if fid:
+                    _face_id_confirmed.add(fid)
+            for fid_entry in identity.get("candidate_ids", []):
+                fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id")
+                if fid:
+                    _face_id_confirmed.add(fid)
+
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
         # Apply community filter (PRD-035)
         if community_photo_ids is not None:
@@ -289,11 +302,9 @@ def get(
             continue
 
         face_count = len(photo_data.get("faces", []))
-        confirmed_count = 0
-        for face in photo_data.get("faces", []):
-            identity = _main_mod.get_identity_for_face(registry, face.get("face_id", ""))
-            if identity and identity.get("state") == "CONFIRMED":
-                confirmed_count += 1
+        confirmed_count = sum(
+            1 for face in photo_data.get("faces", []) if face.get("face_id", "") in _face_id_confirmed
+        )
 
         photos.append(
             {
@@ -530,7 +541,12 @@ def get(
                             cls="flex-shrink-0",
                         ),
                         # Tag pills
-                        Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center") if tag_pills else None,
+                        Div(
+                            *tag_pills,
+                            cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center",
+                        )
+                        if tag_pills
+                        else None,
                         cls="flex flex-wrap items-center gap-3 mb-3",
                     ),
                     # Collection/sort/media dropdowns
@@ -646,6 +662,19 @@ def photos_more(
     if community_photo_ids is not None and _main_mod._photo_id_aliases:
         for inbox_id, cache_id in _main_mod._photo_id_aliases.items():
             _reverse_aliases[cache_id] = inbox_id
+    # Build face_id -> is_confirmed lookup ONCE (same pattern as /photos route)
+    _face_id_confirmed = set()
+    for identity in registry.list_identities():
+        if identity.get("state") == "CONFIRMED":
+            for fid_entry in identity.get("anchor_ids", []):
+                fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id")
+                if fid:
+                    _face_id_confirmed.add(fid)
+            for fid_entry in identity.get("candidate_ids", []):
+                fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id")
+                if fid:
+                    _face_id_confirmed.add(fid)
+
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
         if community_photo_ids is not None:
             alias_id = _reverse_aliases.get(photo_id_val)
@@ -658,11 +687,9 @@ def photos_more(
             continue
         filename = photo_data.get("filename", "unknown")
         face_count = len(photo_data.get("faces", []))
-        confirmed_count = 0
-        for face in photo_data.get("faces", []):
-            identity = _main_mod.get_identity_for_face(registry, face.get("face_id", ""))
-            if identity and identity.get("state") == "CONFIRMED":
-                confirmed_count += 1
+        confirmed_count = sum(
+            1 for face in photo_data.get("faces", []) if face.get("face_id", "") in _face_id_confirmed
+        )
         photos.append(
             {
                 "photo_id": photo_id_val,
@@ -1083,7 +1110,9 @@ def get(identity_id: str, sess=None, request=None):
                 ),
                 Div(
                     Span(tier_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
-                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2") if is_admin else None,
+                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2")
+                    if is_admin
+                    else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
                 P(
@@ -1838,7 +1867,10 @@ def get(slug: str, sess=None, request=None):
                 if col["unidentified_count"] > 0
                 else "",
                 # Photo grid
-                Div(*photo_cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"),
+                Div(
+                    *photo_cards,
+                    cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3",
+                ),
                 # People section
                 people_section,
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
