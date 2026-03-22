@@ -94,9 +94,37 @@ All snapshots saved to `data_backup_session133/`:
 | CONFIRMED | 125 | 125 |
 | INBOX | 1,314 | 1,529 |
 
+## Impact on Find Similar / Embedding Distances
+
+**Verified: No impact on any CONFIRMED identity's embedding set or distances.**
+
+Compared all 125 CONFIRMED identities' `anchor_ids` before and after all fixes:
+
+| Identity | Change | Impact on Distances |
+|----------|--------|-------------------|
+| Esther Burd Fox | +1 candidate_id | **None** — candidates don't affect centroid computation |
+| Netanel Menashe | -2 ghost anchors removed | **None** — ghost faces had no embeddings, were never in distance computations |
+| All other 123 CONFIRMED | No change | **None** |
+
+**Why this matters:**
+- Find Similar computes L2 distances from **embeddings** (512-dim vectors in embeddings.npy), NOT from identity metadata
+- Embeddings are **immutable** — created at detection time, never modified by merge/transfer operations
+- The confirmed identity centroid (used for ranking) is computed from **anchor_ids** only — all 123 other CONFIRMED identities have identical anchor lists
+- **Harry Fox, Albert Fox, Charles Fox, Esther Burd Fox** — all anchor sets unchanged, all distances unchanged
+- No merge suggestions were influenced by the data errors because the errors were in bookkeeping (which identity "owns" a face) not in the embeddings themselves
+
+**What COULD have impacted distances (but didn't happen here):**
+- If a wrong face was added to a CONFIRMED identity's anchors (e.g., an Albert Fox face on Harry Fox's anchor list), that would shift Harry's centroid
+- If embeddings.npy was corrupted or faces were re-detected with a different model version
+- If the similarity calibration model was retrained on incorrect label data
+
+**Future safeguard:** Before any data repair that touches CONFIRMED identities' anchor_ids, diff the anchor lists and alert if any CONFIRMED anchors changed. Script: compare `data_backup_session{N}/identities_pre_*.json` against post-fix snapshot.
+
 ## Lessons Learned
 
 1. **Always snapshot before EACH fix step, not just before the first one.** The face transfer created secondary multi-claimed issues that required another fix. Each step's snapshot enables independent rollback.
 2. **Un-merging creates multi-claimed faces.** When identity A was merged into B, A's faces were on both A (original) and B (transferred). Un-merging A makes both active → duplicate claims.
 3. **Fix order matters.** Dangling merges → face transfer → orphans → multi-claimed. Doing multi-claimed before face transfer would have missed the secondary multi-claimed explosion.
 4. **106 missing merge targets are historical ghosts.** They were never in any backup we have. They're likely from early clustering runs that created temporary identities.
+5. **Data repair bookkeeping ≠ embedding changes.** The fixes only changed which identity "owns" which face — the embeddings and distances are computed from the immutable .npy file. Anchor list verification is the key check.
+6. **Per-step restore capability is essential.** User requirement: "anything that was previously merged should be something we should be able to repair." The 4-step snapshot + restore_from_backup.py satisfies this.
