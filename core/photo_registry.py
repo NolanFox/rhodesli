@@ -51,6 +51,7 @@ class PhotoRegistry:
         self._photos: dict[str, dict] = {}
         self._face_to_photo: dict[str, str] = {}
         self._filename_to_photo_id: dict[str, str] = {}  # basename -> photo_id
+        self._sha256_to_photo_id: dict[str, str] = {}  # SHA256(basename)[:16] -> photo_id
 
     def register_photo(self, photo_id: str, path: str, source: str = "", collection: str = "") -> None:
         """Register a photo without any faces (e.g., documents, buildings, far-away groups)."""
@@ -175,29 +176,25 @@ class PhotoRegistry:
         """
         if photo_id in self._photos:
             return photo_id
-        # Try resolving via _filename_to_photo_id (built lazily)
+        # Try resolving via pre-built SHA256 reverse index
         if not self._filename_to_photo_id:
             self._build_filename_index()
-        # Generate the filename from a SHA256 photo_id lookup in embeddings
-        # is not feasible, but we can reverse-lookup: iterate _filename_to_photo_id
-        # and see if any filename generates this SHA256 ID.
-        from app.utils import generate_photo_id as _gen_pid
-
-        for fname, canonical_pid in self._filename_to_photo_id.items():
-            if _gen_pid(fname) == photo_id:
-                return canonical_pid
-        return None
+        return self._sha256_to_photo_id.get(photo_id)
 
     def _build_filename_index(self) -> None:
-        """Build the filename → photo_id index for cross-ID resolution."""
+        """Build filename and SHA256 indexes for cross-ID resolution."""
+        import hashlib
+
         self._filename_to_photo_id = {}
+        self._sha256_to_photo_id = {}
         for pid, entry in self._photos.items():
             path = entry.get("path", "")
             if path:
-                from pathlib import Path as _Path
-
-                fname = _Path(path).name
+                fname = Path(path).name
                 self._filename_to_photo_id[fname] = pid
+                # Pre-compute SHA256 ID for O(1) reverse lookup
+                sha_id = hashlib.sha256(fname.encode("utf-8")).hexdigest()[:16]
+                self._sha256_to_photo_id[sha_id] = pid
 
     def get_faces_in_photo(self, photo_id: str) -> set[str]:
         """

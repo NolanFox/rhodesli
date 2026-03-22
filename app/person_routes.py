@@ -570,7 +570,7 @@ def public_person_page(
                     crop_el,
                     Span(
                         companion["name"],
-                        cls="text-[10px] sm:text-sm sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
+                        cls="text-[10px] sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
                         title=companion["name"],
                     ),
                     href=f"{nav_prefix}/person/{companion['id']}",
@@ -920,7 +920,10 @@ def public_person_page(
                 ),
                 Div(
                     Span(conf_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full border {conf_cls} mr-2"),
-                    Span(f"Based on {n_photos} photo{'s' if n_photos != 1 else ''}", cls="text-sm sm:text-xs text-slate-500"),
+                    Span(
+                        f"Based on {n_photos} photo{'s' if n_photos != 1 else ''}",
+                        cls="text-sm sm:text-xs text-slate-500",
+                    ),
                     cls="mb-3",
                 ),
                 Div(
@@ -1651,7 +1654,10 @@ def public_person_page(
             # CTA section
             Section(
                 Div(
-                    H3(f"Do you have more photos of {display_name}?", cls="text-xl sm:text-lg font-serif text-white mb-2"),
+                    H3(
+                        f"Do you have more photos of {display_name}?",
+                        cls="text-xl sm:text-lg font-serif text-white mb-2",
+                    ),
                     P(
                         "Upload your family photos to help us build a more complete picture.",
                         cls="text-slate-400 text-sm mb-4",
@@ -1684,9 +1690,17 @@ def public_person_page(
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     Div(
-                        A("Photos", href=f"{nav_prefix}/photos", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
+                        A(
+                            "Photos",
+                            href=f"{nav_prefix}/photos",
+                            cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300",
+                        ),
                         Span("·", cls="text-slate-700"),
-                        A("People", href=f"{nav_prefix}/people", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
+                        A(
+                            "People",
+                            href=f"{nav_prefix}/people",
+                            cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300",
+                        ),
                         cls="flex items-center gap-2 mt-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col items-center",
@@ -2057,7 +2071,11 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
             Div(
                 toggle,
                 speed_loop_cta,
-                Div(Span("Sort:", cls="text-sm sm:text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
+                Div(
+                    Span("Sort:", cls="text-sm sm:text-xs text-slate-500 mr-2"),
+                    sort_select,
+                    cls="flex items-center ml-3",
+                ),
                 Span(count_label, cls="text-sm sm:text-xs text-slate-500 ml-3 self-center"),
                 cls="flex flex-wrap items-center gap-3",
             ),

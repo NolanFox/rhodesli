@@ -923,7 +923,7 @@ def get(sort_by: str = "name", sess=None, request=None):
                     ),
                     Div(
                         *person_cards,
-                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                        cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4",
                     )
                     if person_cards
                     else Div(
@@ -1869,7 +1869,7 @@ def get(slug: str, sess=None, request=None):
                 # Photo grid
                 Div(
                     *photo_cards,
-                    cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3",
+                    cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3",
                 ),
                 # People section
                 people_section,

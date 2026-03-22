@@ -1637,14 +1637,16 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
         pass
 
     # JSON backup in background thread (Postgres is source of truth — PRD-051).
-    # JSON write uses atomic temp-file + rename with portalocker, safe for concurrent access.
+    # Session 131 audit fix: snapshot identities dict before passing to thread
+    # to avoid RuntimeError from concurrent dict mutation during serialization.
+    import copy as _copy
     import threading as _threading
 
-    _registry_for_backup = registry
+    _registry_snapshot = _copy.deepcopy(registry)
 
     def _write_json_backup():
         try:
-            _registry_for_backup.save(REGISTRY_PATH)
+            _registry_snapshot.save(REGISTRY_PATH)
         except Exception as e:
             logging.warning(f"JSON backup write failed (non-critical): {e}")
 
@@ -5471,7 +5473,7 @@ def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None
         Div(
             Span(
                 "Admin Mode",
-                cls="text-amber-400/80 text-[10px] sm:text-sm sm:text-xs font-medium tracking-wide uppercase shrink-0",
+                cls="text-amber-400/80 text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0",
             ),
             Div(
                 A(
