@@ -777,22 +777,32 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
             raise ConnectionError("Supabase client not available for strict shadow write")
         return 0
 
-    # DATA-020: Pre-fetch existing Postgres names for protection check
+    # DATA-020 + Session 132 race condition fix: Pre-fetch existing Postgres
+    # names AND version_ids. Version check prevents stale writes from
+    # overwriting merge results (optimistic concurrency control).
     all_ids = [ident.get("identity_id", "") for ident in identities_list if ident.get("identity_id")]
     postgres_names = {}
+    postgres_versions = {}
     if all_ids:
         try:
             # Fetch in batches of 200 to stay within URL limits
             for batch_start in range(0, len(all_ids), 200):
                 id_batch = all_ids[batch_start : batch_start + 200]
-                result = client.table("identities").select("identity_id,name").in_("identity_id", id_batch).execute()
+                result = (
+                    client.table("identities")
+                    .select("identity_id,name,version_id")
+                    .in_("identity_id", id_batch)
+                    .execute()
+                )
                 if result.data:
                     for row in result.data:
                         postgres_names[row["identity_id"]] = row.get("name", "")
+                        postgres_versions[row["identity_id"]] = row.get("version_id", 0)
         except Exception as e:
             logger.warning(f"DATA-020 name prefetch failed (proceeding without protection): {e}")
 
     written = 0
+    skipped_stale = 0
     name_protected = 0
     batch_size = 100
     for i in range(0, len(identities_list), batch_size):
@@ -800,6 +810,23 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
         rows = []
         for ident in batch:
             identity_id = ident.get("identity_id", "")
+            incoming_version = ident.get("version_id", 1)
+
+            # Session 132: Optimistic concurrency — skip rows where Supabase
+            # already has a higher version_id (merge won the race).
+            pg_version = postgres_versions.get(identity_id, 0)
+            if pg_version > incoming_version:
+                skipped_stale += 1
+                logger.warning(
+                    "stale_write_skipped",
+                    extra={
+                        "identity_id": identity_id,
+                        "incoming_version": incoming_version,
+                        "postgres_version": pg_version,
+                    },
+                )
+                continue
+
             local_name = ident.get("name") or f"Unidentified Person {identity_id[:8]}"
 
             # DATA-020: Never overwrite a real Postgres name with an auto-generated local name
@@ -825,7 +852,7 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
                 "candidate_ids": _ensure_list_for_supabase(ident.get("candidate_ids", [])),
                 "negative_ids": _ensure_list_for_supabase(ident.get("negative_ids", [])),
                 "metadata": ident.get("metadata", {}),
-                "version_id": ident.get("version_id", 1),
+                "version_id": incoming_version,
                 "merged_into": ident.get("merged_into"),
                 "created_at": ident.get("created_at"),
                 "updated_at": ident.get("updated_at"),
@@ -834,6 +861,8 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
                 row["name"] = local_name
 
             rows.append(row)
+        if not rows:
+            continue
         try:
             client.table("identities").upsert(rows).execute()
             written += len(rows)
@@ -844,6 +873,8 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
 
     if name_protected:
         logger.info(f"DATA-020: Protected {name_protected} Postgres names from auto-generated overwrite")
+    if skipped_stale:
+        logger.info(f"Session 132: Skipped {skipped_stale} stale writes (Supabase had higher version_id)")
     return written
 
 

@@ -361,3 +361,134 @@ class TestNameProtection:
         # Should still write (graceful degradation) — name included since protection couldn't check
         assert count == 1
         assert upserted[0]["name"] == "Unidentified Person abc"
+
+
+# ---------------------------------------------------------------------------
+# Session 132: Optimistic Concurrency (Race Condition Fix)
+# ---------------------------------------------------------------------------
+
+
+class TestOptimisticConcurrency:
+    """Verify that stale writes are skipped when Supabase has a higher version_id."""
+
+    def test_stale_write_skipped_when_postgres_version_higher(self):
+        """A write with version_id=2 is skipped when Supabase has version_id=5."""
+        client = MagicMock()
+        upserted = []
+
+        # Pre-fetch returns version_id=5 for the identity
+        select_result = MagicMock()
+        select_result.data = [{"identity_id": "id1", "name": "Test Person", "version_id": 5}]
+
+        def table_side_effect(name):
+            mock_table = MagicMock()
+            if name == "identities":
+                # select().in_().execute() chain for pre-fetch
+                mock_table.select.return_value.in_.return_value.execute.return_value = select_result
+                # upsert().execute() chain
+                mock_table.upsert.side_effect = lambda rows: (upserted.extend(rows), mock_table)[1]
+                mock_table.execute.return_value = MagicMock()
+            return mock_table
+
+        client.table = MagicMock(side_effect=table_side_effect)
+
+        # Incoming identity has version_id=2 (stale)
+        identities = [{"identity_id": "id1", "name": "Test Person", "state": "CONFIRMED", "version_id": 2}]
+        with patch("app.supabase_data.get_supabase_client", return_value=client):
+            count = shadow_write_identities_batch(identities)
+
+        # Should skip the stale write
+        assert count == 0
+        assert len(upserted) == 0
+
+    def test_current_version_write_proceeds(self):
+        """A write with version_id >= Supabase version proceeds normally."""
+        client = MagicMock()
+        upserted = []
+
+        select_result = MagicMock()
+        select_result.data = [{"identity_id": "id1", "name": "Test", "version_id": 3}]
+
+        def table_side_effect(name):
+            mock_table = MagicMock()
+            if name == "identities":
+                mock_table.select.return_value.in_.return_value.execute.return_value = select_result
+                mock_table.upsert.side_effect = lambda rows: (upserted.extend(rows), mock_table)[1]
+                mock_table.execute.return_value = MagicMock()
+            return mock_table
+
+        client.table = MagicMock(side_effect=table_side_effect)
+
+        # Incoming has version_id=5 (newer than Supabase's 3)
+        identities = [{"identity_id": "id1", "name": "Test", "state": "CONFIRMED", "version_id": 5}]
+        with patch("app.supabase_data.get_supabase_client", return_value=client):
+            count = shadow_write_identities_batch(identities)
+
+        assert count == 1
+        assert len(upserted) == 1
+        assert upserted[0]["version_id"] == 5
+
+    def test_new_identity_no_postgres_version_proceeds(self):
+        """A new identity (not in Supabase) proceeds with no version conflict."""
+        client = MagicMock()
+        upserted = []
+
+        select_result = MagicMock()
+        select_result.data = []  # Not in Supabase yet
+
+        def table_side_effect(name):
+            mock_table = MagicMock()
+            if name == "identities":
+                mock_table.select.return_value.in_.return_value.execute.return_value = select_result
+                mock_table.upsert.side_effect = lambda rows: (upserted.extend(rows), mock_table)[1]
+                mock_table.execute.return_value = MagicMock()
+            return mock_table
+
+        client.table = MagicMock(side_effect=table_side_effect)
+
+        identities = [{"identity_id": "new-id", "name": "New Person", "state": "INBOX", "version_id": 1}]
+        with patch("app.supabase_data.get_supabase_client", return_value=client):
+            count = shadow_write_identities_batch(identities)
+
+        assert count == 1
+        assert upserted[0]["identity_id"] == "new-id"
+
+    def test_merge_wins_race_condition(self):
+        """Simulate race: merge bumps version to 10, stale batch has version 5."""
+        client = MagicMock()
+        upserted = []
+
+        # Supabase shows the merge already happened (version=10)
+        select_result = MagicMock()
+        select_result.data = [
+            {"identity_id": "source", "name": "Source", "version_id": 10},
+            {"identity_id": "target", "name": "Target", "version_id": 10},
+        ]
+
+        def table_side_effect(name):
+            mock_table = MagicMock()
+            if name == "identities":
+                mock_table.select.return_value.in_.return_value.execute.return_value = select_result
+                mock_table.upsert.side_effect = lambda rows: (upserted.extend(rows), mock_table)[1]
+                mock_table.execute.return_value = MagicMock()
+            return mock_table
+
+        client.table = MagicMock(side_effect=table_side_effect)
+
+        # Stale batch with pre-merge data (version=5)
+        identities = [
+            {
+                "identity_id": "source",
+                "name": "Source",
+                "state": "CONFIRMED",
+                "version_id": 5,
+                "anchor_ids": ["f1", "f2"],
+            },
+            {"identity_id": "target", "name": "Target", "state": "CONFIRMED", "version_id": 5, "anchor_ids": ["f3"]},
+        ]
+        with patch("app.supabase_data.get_supabase_client", return_value=client):
+            count = shadow_write_identities_batch(identities)
+
+        # Both should be skipped — merge already happened
+        assert count == 0
+        assert len(upserted) == 0
