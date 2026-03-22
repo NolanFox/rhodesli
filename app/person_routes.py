@@ -1070,22 +1070,16 @@ def public_person_page(
                 Span(str(value), cls="text-slate-300 text-sm"),
                 cls="py-0.5",
             )
-        else:
+        elif is_admin:
+            # UX-089: Only show "Unknown" fields to admin (for data entry).
+            # Public visitors see a clean page without empty fields.
             return Div(
                 Span(f"{label}: ", cls="text-slate-500 text-sm w-20 inline-block"),
                 Span("Unknown", cls="text-slate-600 text-sm italic"),
-                A(
-                    f" — {prompt_text}",
-                    href=f"{nav_prefix}/identify/{person_id}" if not is_confirmed else "#",
-                    cls="text-indigo-400/60 hover:text-indigo-300 text-sm sm:text-xs ml-1",
-                    data_action="share-photo" if is_confirmed else None,
-                    data_share_url=f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}" if is_confirmed else None,
-                    data_share_title=f"Help us learn more about {display_name}" if is_confirmed else None,
-                )
-                if not is_admin
-                else None,
                 cls="py-0.5",
             )
+        else:
+            return None
 
     # Only show life details section if person is identified or under active review
     if is_confirmed or identity.get("state") in ("PROPOSED", "INBOX"):
