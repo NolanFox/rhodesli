@@ -2,6 +2,9 @@ python-fasthtml
 # Pin fastcore<1.12.22: version 1.12.22 changed to_xml(*elms) signature,
 # breaking python-fasthtml's to_xml(resp, indent) positional call pattern.
 fastcore<1.12.22
+# Pin starlette<0.53: 0.53+ removed on_startup kwarg from Starlette.__init__(),
+# breaking python-fasthtml's app initialization.
+starlette<0.53
 uvicorn
 numpy
 scipy
