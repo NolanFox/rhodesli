@@ -57,7 +57,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116, Phase 3 (wire pipeline) Session 117, Phase 4 (clustering automation — verified already wired, Session 118). ML service deployed on Railway, upload pipeline wired with fallback. Session 118: fixed critical port mismatch, ML service first healthy deploy. Remaining: Phase 5 (remove local ML deps — deferred per AD-229).
 - [x] 2026-03-19: TOOLS-003: Face Compare Real-Time — POST /api/compare/realtime endpoint (Session 122). Needs tests + production verification.
 - [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
-- [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). See `docs/BACKLOG.md`
+- [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). PRD: `docs/prds/055_estimate_v2.md`. See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
 - [x] 2026-03-10: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix + 96d). Remaining: about page, tools photo picker.
