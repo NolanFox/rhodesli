@@ -263,9 +263,61 @@ def public_person_page(
     except KeyError:
         identity = None
 
-    # UX-038: Redirect merged identities to canonical person
+    # UX-038: Redirect merged identities to canonical person (follow chains)
     if identity and identity.get("merged_into"):
         canonical_id = identity["merged_into"]
+        visited = {person_id, canonical_id}
+        for _ in range(10):  # max 10 hops to prevent infinite loops
+            try:
+                target = registry.get_identity(canonical_id)
+            except KeyError:
+                target = None
+            if not target or not target.get("merged_into"):
+                break
+            next_id = target["merged_into"]
+            if next_id in visited:
+                # Circular chain — treat as not found
+                style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+                page_html = (
+                    to_xml(Title("Person Not Found - Rhodesli"))
+                    + to_xml(style_404)
+                    + to_xml(
+                        Main(
+                            Nav(
+                                Div(
+                                    A(
+                                        Span("Rhodesli", cls="text-xl font-bold text-white"),
+                                        href=f"{nav_prefix}/",
+                                        cls="hover:opacity-90",
+                                    ),
+                                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
+                                ),
+                                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800",
+                            ),
+                            Div(
+                                Div(
+                                    Span("404", cls="text-6xl font-bold text-slate-700 block mb-4"),
+                                    H1("Person not found", cls="text-2xl font-serif font-bold text-white mb-3"),
+                                    P(
+                                        "This person hasn't been identified in our archive yet.",
+                                        cls="text-slate-400 mb-8",
+                                    ),
+                                    A(
+                                        "Explore the Archive",
+                                        href=f"{nav_prefix}/?section=photos",
+                                        cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
+                                    ),
+                                    cls="text-center",
+                                ),
+                                cls="flex items-center justify-center min-h-[60vh]",
+                            ),
+                            cls="min-h-screen bg-slate-900",
+                        ),
+                    )
+                )
+                return HTMLResponse(page_html, status_code=404)
+            visited.add(next_id)
+            canonical_id = next_id
         return RedirectResponse(f"{nav_prefix}/person/{canonical_id}", status_code=301)
 
     if not identity:
