@@ -4,6 +4,8 @@ Auth routes extracted from app/main.py.
 All /login, /signup, /forgot-password, /reset-password, /auth/*, /logout routes.
 """
 
+import logging
+
 from fasthtml.common import *
 from starlette.responses import RedirectResponse, JSONResponse
 
@@ -13,6 +15,10 @@ from app.main import rt
 # All other main.py functions accessed via module reference
 # so that test patches on app.main.X work correctly
 import app.main as _main_mod
+
+from app.supabase_data import create_personal_archive
+
+logger = logging.getLogger(__name__)
 
 
 @rt("/login")
@@ -320,6 +326,13 @@ async def post(email: str, password: str, invite_code: str, sess):
             ),
         )
     sess["auth"] = user
+
+    # Create personal archive for the new user (non-blocking)
+    try:
+        create_personal_archive(user["id"], email)
+    except Exception:
+        logger.error("Failed to create personal archive for user %s", email, exc_info=True)
+
     return RedirectResponse("/", status_code=303)
 
 
