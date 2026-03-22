@@ -385,15 +385,16 @@ gedcom_only = [s for s in confirmed_anchor_stats if s["anchor_count"] == 0]
 print(f"\n  CONFIRMED with 0 anchors: {len(gedcom_only)}")
 
 # Check GEDCOM matches
-gedcom_matches = paginate_table("gedcom_matches", "identity_id,match_type,gedcom_record_id,confidence_score")
+gedcom_links = paginate_table("gedcom_face_links", "identity_id,gedcom_id,confidence")
 gedcom_by_identity = defaultdict(list)
-for gm in gedcom_matches:
-    gedcom_by_identity[gm["identity_id"]].append(gm)
+for gl in gedcom_links:
+    gedcom_by_identity[gl["identity_id"]].append(gl)
 
 has_gedcom = 0
 no_gedcom = 0
 for g in gedcom_only:
     iid = g["id"]
+    matches = gedcom_by_identity.get(iid, [])
     matches = gedcom_by_identity.get(iid, [])
     if matches:
         has_gedcom += 1
