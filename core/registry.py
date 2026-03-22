@@ -742,6 +742,12 @@ class IdentityRegistry:
         # POST-MERGE VERIFICATION (Session 131 — Lesson 154)
         # Verify ALL source faces are now in the target. If any are missing,
         # the merge succeeded in-memory but may fail to persist to Supabase.
+        #
+        # IMPORTANT (Codex P1-1): This reads source.anchor_ids/candidate_ids AFTER
+        # merged_into is set (line 673). This works because merge never clears the
+        # source lists — it only copies faces to the target. If a future change
+        # clears source lists during merge, this safety net would silently break.
+        # The source lists MUST remain populated for this verification to work.
         target_face_set = self._face_id_set(target.get("anchor_ids", [])) | self._face_id_set(
             target.get("candidate_ids", [])
         )

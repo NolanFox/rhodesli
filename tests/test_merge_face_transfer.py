@@ -190,6 +190,89 @@ class TestChainedMerges:
         assert len(orphans) == 0, f"Chained merge produced orphans: {orphans}"
 
 
+class TestForceAddSafetyNet:
+    """The post-merge verification must catch and repair faces that slip through."""
+
+    def test_force_add_fires_when_face_skipped(self):
+        """Simulate a face that the normal merge loop skips (e.g., already in target_all_faces
+        set but not actually in target lists due to a bug). The verification should catch it."""
+        registry = IdentityRegistry()
+        photo_registry = PhotoRegistry()
+
+        target_id = registry.create_identity(
+            anchor_ids=["face_t1"],
+            user_source="test",
+            state=IdentityState.CONFIRMED,
+        )
+        registry.rename_identity(target_id, "Target", user_source="test")
+
+        source_id = registry.create_identity(
+            anchor_ids=["face_s1", "face_s2"],
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+
+        for i, fid in enumerate(["face_t1", "face_s1", "face_s2"]):
+            photo_registry.register_face(f"photo_{i}", f"photo_{i}.jpg", fid)
+
+        # Monkey-patch _face_id_set to simulate a bug where face_s2 appears
+        # to already be in target but isn't actually added
+        original_face_id_set = registry._face_id_set
+        call_count = [0]
+
+        def rigged_face_id_set(entries):
+            call_count[0] += 1
+            result = original_face_id_set(entries)
+            # On the first call (building target_all_faces for the merge loop),
+            # inject face_s2 so the loop thinks it's already there
+            if call_count[0] == 1:
+                result.add("face_s2")
+            return result
+
+        registry._face_id_set = rigged_face_id_set
+
+        result = registry.merge_identities(source_id, target_id, "test", photo_registry)
+        assert result["success"]
+
+        # Restore original
+        registry._face_id_set = original_face_id_set
+
+        # The verification safety net should have force-added face_s2
+        actual_target = registry._identities[result["target_id"]]
+        target_faces = set(actual_target.get("anchor_ids", []))
+        assert "face_s2" in target_faces, (
+            "Safety net failed: face_s2 was skipped by merge loop but not caught by verification"
+        )
+
+    def test_source_lists_preserved_after_merge(self):
+        """Source identity must keep its face lists after merge (needed by verification)."""
+        registry = IdentityRegistry()
+        photo_registry = PhotoRegistry()
+
+        source_id = registry.create_identity(
+            anchor_ids=["face_s1", "face_s2"],
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+        target_id = registry.create_identity(
+            anchor_ids=["face_t1"],
+            user_source="test",
+            state=IdentityState.CONFIRMED,
+        )
+        registry.rename_identity(target_id, "Target", user_source="test")
+
+        for i, fid in enumerate(["face_s1", "face_s2", "face_t1"]):
+            photo_registry.register_face(f"photo_{i}", f"photo_{i}.jpg", fid)
+
+        result = registry.merge_identities(source_id, target_id, "test", photo_registry)
+        assert result["success"]
+
+        # Source must still have its faces (needed for post-merge verification)
+        source = registry._identities[result["source_id"]]
+        assert "face_s1" in source.get("anchor_ids", []), "Source anchor_ids cleared — breaks verification"
+        assert "face_s2" in source.get("anchor_ids", []), "Source anchor_ids cleared — breaks verification"
+
+
 def _find_merge_orphans(registry: IdentityRegistry) -> list[dict]:
     """Find faces in merged identities that are not in their target.
 
