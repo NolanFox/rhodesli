@@ -30,6 +30,11 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Default Community Routing Risk (COMMUNITY-017) — HARDENED (Session 115)
 - **COMMUNITY-017**: ~~Root URL `/` defaults to Rhodes community.~~ HARDENED (Session 115, PRD-052). Neutral root landing (Session 100), `is_community_explicit()` guard on uploads, hidden form field carries community context, non-admin uploads go to moderation queue. 27 safety tests in `test_community_routing_safety.py`. Comprehensive audit of 120+ routes — 95+ admin-guarded, 5 intentionally public documented. **Remaining**: (1) Upload form dropdown for explicit community selection (WORKSPACE-001), (2) Community selector on first visit (WORKSPACE-005). These are nice-to-have — current guards prevent data pollution. Source: Session 96e-cont5 feedback, Session 115 audit.
 
+### P2 — Community Routing Polish (COMMUNITY-018, Session 133)
+- **COMMUNITY-018a**: Add `request` parameter to `/admin/communities` GET handler for nav_bar prefix. Currently community management pages don't pass request to `_admin_nav_bar()` — acceptable for single-admin but fragile for multi-admin. Source: Session 133 community audit DOC-5.
+- **COMMUNITY-018b**: Consider extracting community_slug from Referer header in middleware for HTMX requests. Currently HTMX POST paths in admin context lack community prefix (DOC-1) — acceptable because operations target entities by ID, but fragile if community-scoped operations are added later. Source: Session 133 community audit recommendation.
+- **COMMUNITY-018c**: Move admin POST routes under `/api/admin/` prefix for consistency with middleware `/api/` skip rule. Low priority — functional correctness not affected. Source: Session 133 community audit recommendation.
+
 ### P2 — Missing Embeddings (EMBED-001)
 - ~~**EMBED-001**: Reduced from `124` missing embeddings to `2` archival face records after local InsightFace rerun regenerated 130 embeddings.~~ FIXED (Session 96e-cont12) — the final `2` archival records were crop-matched back to current detections and embedded. Final local audit reports `0` missing embeddings. Root cause was registry/artifact drift plus staged-upload publication gaps.
 
