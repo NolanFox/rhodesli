@@ -14,6 +14,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 134: Clean Sweep + Security + Performance (2026-03-22) — v0.99.44
+- **Security hardening**: Open redirect blocked (login ?next=//), rate limiting on search (60/hr), login (10/hr), signup (5/hr). PostgREST filter injection sanitized (SEC-001). ILIKE wildcard escaping (SEC-002). Input length cap (500 chars). 11 security tests.
+- **15 UX bugs addressed**: FB-113 Identified label, FB-005/007 clickable face cards, FB-008 state borders, FB-009 responsive 4-col grid, FB-004 community-scoped name dropdown, FB-106 admin context links, FB-100/103/104/110 verified already implemented.
+- **NL query photo search fix**: `date_estimate` column doesn't exist in photos table — switched to two-step date_labels + photos query. Person search, temporal (1940s → 50 results), and collection queries all working on production.
+- **Performance**: save_registry deepcopy→json.dumps (-20-50ms). Tree load 440ms, landing 827ms, all pages <1s. Starlette pinned <0.53.
+- **Data integrity**: All zeros confirmed — 0 ghost, 0 orphaned, 0 multi-claimed, 2984/2984 face coverage.
+- 3703 app tests pass. 3 parallel worktree subagents for UX sprint.
+
 ## Session 133: Data Resolution + Feature Foundation (2026-03-22) — v0.99.43
 - **ALL data concerns resolved to zero**: 691 dangling merges cleared, 1858 face transfers from merged identities, 212 orphaned faces repaired, 695 multi-claimed resolved, 2 ghost faces removed. Per-step Supabase snapshots with restore script.
 - **TOOLS-004 NL Query MVP**: `/tools/search` — rule-based parser (rhodesli_ml/nl_query.py) wired to Supabase executor. Person search, temporal, location, photo type, aggregate queries. 22 tests.
