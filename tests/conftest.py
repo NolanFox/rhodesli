@@ -151,6 +151,16 @@ def default_data_source_json():
     main_mod.DATA_SOURCE = old
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Reset IP rate limits between tests to prevent cross-test interference."""
+    from app.rate_limit import reset_rate_limits as _reset
+
+    _reset()
+    yield
+    _reset()
+
+
 # ---------------------------------------------------------------------------
 # Auth state fixtures
 # ---------------------------------------------------------------------------

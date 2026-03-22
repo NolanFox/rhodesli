@@ -162,6 +162,55 @@ class TestAuthCallbackRoute:
         assert response.status_code == 200
 
 
+class TestSecurityAuditFixes:
+    """Session 134: Security audit findings 3, 5, 6."""
+
+    def test_login_next_blocks_protocol_relative_redirect(self, client, auth_enabled, no_user, google_oauth_disabled):
+        """Finding 5: //evil.com should not be accepted as redirect target."""
+        response = client.get("/login?next=//evil.com")
+        assert response.status_code == 200
+        # The form action should NOT contain //evil.com
+        assert "//evil.com" not in response.text
+
+    def test_login_next_allows_valid_path(self, client, auth_enabled, no_user, google_oauth_disabled):
+        """Valid paths starting with / should be preserved in the form action."""
+        response = client.get("/login?next=/person/123")
+        assert response.status_code == 200
+        assert "/person/123" in response.text
+
+    def test_search_rate_limit_returns_429_message(self):
+        """Finding 3: Search should rate-limit after 60 requests."""
+        from app.rate_limit import reset_rate_limits, check_rate_limit
+
+        reset_rate_limits()
+        # Exhaust the limit
+        for _ in range(60):
+            assert check_rate_limit("test-search-ip", max_per_hour=60)
+        # 61st should be rejected
+        assert not check_rate_limit("test-search-ip", max_per_hour=60)
+        reset_rate_limits()
+
+    def test_login_rate_limit_enforced(self):
+        """Finding 6: Login should rate-limit after 10 attempts."""
+        from app.rate_limit import reset_rate_limits, check_rate_limit
+
+        reset_rate_limits()
+        for _ in range(10):
+            assert check_rate_limit("test-login-ip", max_per_hour=10)
+        assert not check_rate_limit("test-login-ip", max_per_hour=10)
+        reset_rate_limits()
+
+    def test_signup_rate_limit_enforced(self):
+        """Finding 6: Signup should rate-limit after 5 attempts."""
+        from app.rate_limit import reset_rate_limits, check_rate_limit
+
+        reset_rate_limits()
+        for _ in range(5):
+            assert check_rate_limit("test-signup-ip", max_per_hour=5)
+        assert not check_rate_limit("test-signup-ip", max_per_hour=5)
+        reset_rate_limits()
+
+
 class TestLogout:
     """Tests for GET /logout."""
 

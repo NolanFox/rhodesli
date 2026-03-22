@@ -338,8 +338,18 @@ def get(sess=None):
 
 
 @rt("/tools/search")
-def post(q: str = "", sess=None):
+def post(q: str = "", sess=None, request=None):
     """Handle search query — parse intent and execute against Supabase."""
+    # Rate limit: 60 searches/hr per IP (Security audit Finding 3)
+    from app.rate_limit import check_rate_limit
+
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip, max_per_hour=60):
+        return Div(
+            P("Too many searches. Please wait a few minutes.", cls="text-amber-400 text-center py-8"),
+            id="search-results",
+        )
+
     if not q or not q.strip():
         return Div(
             P(
@@ -349,15 +359,18 @@ def post(q: str = "", sess=None):
             id="search-results",
         )
 
+    # Truncate excessively long queries (Finding 10)
+    q = q.strip()[:500]
+
     from rhodesli_ml.nl_query import parse_query_intent
     from app.nl_query_executor import execute_query
     from app.supabase_data import get_supabase_client
 
-    intent_result = parse_query_intent(q.strip())
+    intent_result = parse_query_intent(q)
     sb = get_supabase_client()
     result = execute_query(intent_result, supabase_client=sb)
 
-    return _render_search_results(result, q.strip())
+    return _render_search_results(result, q)
 
 
 def _render_search_results(result: dict, query: str):

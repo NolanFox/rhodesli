@@ -7,7 +7,7 @@ All /login, /signup, /forgot-password, /reset-password, /auth/*, /logout routes.
 import logging
 
 from fasthtml.common import *
-from starlette.responses import RedirectResponse, JSONResponse
+from starlette.responses import RedirectResponse, JSONResponse, HTMLResponse
 
 # Import route decorator only (bound once, never reassigned)
 from app.main import rt
@@ -29,10 +29,12 @@ def get(sess, next: str = ""):
     if sess.get("auth"):
         return RedirectResponse(next or "/", status_code=303)
 
-    # Build POST action with ?next= if provided
+    # Build POST action with ?next= if provided (URL-encode to prevent attribute injection)
+    from urllib.parse import quote as _url_quote
+
     post_action = "/login"
-    if next:
-        post_action = f"/login?next={next}"
+    if next and next.startswith("/") and not next.startswith("//"):
+        post_action = f"/login?next={_url_quote(next, safe='/?=&#')}"
 
     return Html(
         Head(
@@ -115,8 +117,18 @@ def get(sess, next: str = ""):
 
 
 @rt("/login")
-async def post(email: str, password: str, sess, next: str = ""):
+async def post(email: str, password: str, sess, next: str = "", request=None):
     """Handle login form submission."""
+    # Rate limit: 10 login attempts/hr per IP (Security audit Finding 6)
+    from app.rate_limit import check_rate_limit
+
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip, max_per_hour=10):
+        return HTMLResponse(
+            "<html><body style='background:#0f172a;color:#fbbf24;text-align:center;padding:4em'>"
+            "<h1>Too many login attempts</h1><p>Please wait before trying again.</p></body></html>",
+            status_code=429,
+        )
     user, error = await _main_mod.login_with_supabase(email, password)
     if error:
         return Html(
@@ -168,7 +180,8 @@ async def post(email: str, password: str, sess, next: str = ""):
         )
     sess["auth"] = user
     # Redirect to the page they were trying to reach, or home
-    redirect_to = next if next and next.startswith("/") else "/"
+    # Prevent open redirect: block protocol-relative URLs (//evil.com)
+    redirect_to = next if next and next.startswith("/") and not next.startswith("//") else "/"
     return RedirectResponse(redirect_to, status_code=303)
 
 
@@ -257,8 +270,18 @@ def get(sess):
 
 
 @rt("/signup")
-async def post(email: str, password: str, invite_code: str, sess):
+async def post(email: str, password: str, invite_code: str, sess, request=None):
     """Handle signup form submission."""
+    # Rate limit: 5 signup attempts/hr per IP (Security audit Finding 6)
+    from app.rate_limit import check_rate_limit
+
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip, max_per_hour=5):
+        return HTMLResponse(
+            "<html><body style='background:#0f172a;color:#fbbf24;text-align:center;padding:4em'>"
+            "<h1>Too many signup attempts</h1><p>Please wait before trying again.</p></body></html>",
+            status_code=429,
+        )
     if not _main_mod.validate_invite_code(invite_code):
         error = "Invalid invite code"
         user = None
