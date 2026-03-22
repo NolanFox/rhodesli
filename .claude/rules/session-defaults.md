@@ -38,10 +38,25 @@ make test-fast  # Baseline
 ```
 Create session log immediately.
 
-### Codex Audit
+### Post-Merge Checker Subagent (R1 — Session 133 research)
+After merging parallel worktrees or completing major implementation:
+- Launch a **checker subagent** on the merged code (not during implementation)
+- Checker reviews: auth guards on new POST routes, data integrity (face-identity mappings),
+  test coverage delta (new code has tests), no hardcoded paths leaked
+- This is a Claude subagent for speed — reserve Codex for security-sensitive sessions
+
+### Codex Audit Strategy (R3 — Session 133 research)
+- **Security-sensitive sessions** (auth, data migration, uploads): Fresh Codex audit (independent, no prior context)
+- **UX polish sessions**: Resume-style audit (Codex sees prior findings, tracks fixes)
 - Run as background subagent during implementation
 - Write findings to `docs/session_context/session-NN-codex-audit.md`
 - Triage: P0/P1 fix immediately, quick wins implement, rest BACKLOG
+- Log ALL audit tool usage per `.claude/rules/ai-tool-audit.md`
+
+### Parallelization Decision (R4 — Session 133 research)
+**Parallel** (subagents + worktrees): independent bug fixes, test writing, docs + code simultaneously
+**Sequential** (same agent): anything touching app/main.py, data migrations, identity write paths
+**Agent teams** (future): cross-layer features spanning auth + upload + UI + tests (try on WORKSPACE-001)
 
 ## Why This Exists (Session 127 — HD-029)
 User had to repeat the same instructions in Sessions 125, 126, and 127.
