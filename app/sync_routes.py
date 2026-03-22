@@ -1243,7 +1243,40 @@ def get(request, sess):
         }
 
         report["photos"] = {"count": len(photo_reg._photos)}
-        report["status"] = "healthy" if not orphan_faces and not orphan_identities else "issues_found"
+
+        # Session 130: Confirmed identity face integrity check
+        # Every CONFIRMED identity must have all anchor faces resolvable
+        confirmed_issues = []
+        for iid, idata in id_reg._identities.items():
+            if idata.get("merged_into") or idata.get("state") != "CONFIRMED":
+                continue
+            anchors = idata.get("anchor_ids", [])
+            face_ids = []
+            for a in anchors:
+                if isinstance(a, str):
+                    face_ids.append(a)
+                elif isinstance(a, dict):
+                    fid = a.get("face_id", "")
+                    if fid:
+                        face_ids.append(fid)
+            missing = [fid for fid in face_ids if fid not in all_photo_faces]
+            if missing:
+                confirmed_issues.append(
+                    {
+                        "identity_id": iid[:8],
+                        "name": idata.get("name", "?"),
+                        "total_faces": len(face_ids),
+                        "missing_faces": len(missing),
+                    }
+                )
+        report["confirmed_integrity"] = {
+            "total_confirmed": confirmed,
+            "issues": len(confirmed_issues),
+            "details": confirmed_issues[:20],
+        }
+
+        has_critical = bool(confirmed_issues) or bool(orphan_identities)
+        report["status"] = "critical" if has_critical else ("issues_found" if orphan_faces else "healthy")
 
     except Exception as e:
         report["error"] = str(e)
