@@ -28,6 +28,9 @@ HARDCODED_PATTERNS = [
     (r'HX-Redirect",\s*f"\/person\/', 'HX-Redirect to f"/person/..." without nav_prefix'),
     (r'HX-Redirect",\s*"\/\?', 'HX-Redirect to "/?" without nav_prefix'),
     (r'HX-Redirect",\s*f"\/\?', 'HX-Redirect to f"/?" without nav_prefix'),
+    # Session 133: admin links must also use nav_prefix
+    (r'href\s*=\s*["\']\/admin\/(?!communities)', 'href="/admin/..." without nav_prefix'),
+    (r'href\s*=\s*f["\']\/admin\/(?!communities)', 'href=f"/admin/..." without nav_prefix'),
 ]
 
 # Known exceptions — lines that legitimately have hardcoded paths.
@@ -59,6 +62,22 @@ def _is_exception(filepath: Path, line: str) -> bool:
         return True
     # Test assertions that check for the pattern
     if "assert" in stripped:
+        return True
+    # hx_post to admin action endpoints — these target entities by ID, not community-scoped
+    # (Session 133 audit: acceptable because operations are entity-targeted)
+    if "hx_post=" in stripped and "/admin/" in stripped:
+        return True
+    # Admin GEDCOM POST handler responses (no request param, global operations)
+    if filepath.name == "admin_routes.py" and "hx_post=" in stripped:
+        return True
+    # /api/ routes returning href links to admin pages (switcher dropdown, etc.)
+    if filepath.name == "admin_routes.py" and "/admin/communities" in stripped:
+        return True
+    # Birth year accept-all-high response (API route, no request param)
+    if filepath.name == "admin_routes.py" and "admin/review/birth-years" in stripped:
+        return True
+    # GEDCOM apply success response (POST handler without request, links to /admin/gedcom)
+    if filepath.name == "admin_routes.py" and 'href="/admin/gedcom"' in stripped:
         return True
     return False
 

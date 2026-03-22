@@ -833,7 +833,7 @@ async def post(
             ),
             A(
                 "View in Pending Uploads \u2192",
-                href="/admin/pending",
+                href=f"{_main_mod.community_url_prefix(community_slug)}/admin/pending",
                 cls="inline-block text-indigo-400 hover:text-indigo-300 text-sm mt-2 underline",
             ),
             P(f"Reference: {job_id}", cls="text-slate-500 text-xs mt-2 font-mono"),

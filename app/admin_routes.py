@@ -1695,6 +1695,8 @@ async def post(request, sess=None):
                 ).start()
 
     # Build summary response — redirect to /admin/pending to refresh the full list
+    _batch_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    _batch_prefix = _main_mod.community_url_prefix(_batch_slug)
     msg_parts = [f"Approved {len(approved_ids)} upload{'s' if len(approved_ids) != 1 else ''}"]
     if skipped_ids:
         msg_parts.append(f"{len(skipped_ids)} skipped (already reviewed)")
@@ -1705,7 +1707,7 @@ async def post(request, sess=None):
         P(
             A(
                 "Refresh page",
-                href="/admin/pending",
+                href=f"{_batch_prefix}/admin/pending",
                 cls="text-indigo-400 hover:text-indigo-300 underline text-xs",
             ),
             cls="mt-1",
@@ -2086,7 +2088,7 @@ def _admin_nav_bar(active: str = "", request=None) -> Div:
         cls = "px-3 py-1.5 text-sm rounded-lg transition-colors " + (
             "bg-indigo-600 text-white" if is_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
         )
-        nav_items.append(A(label, href=href, cls=cls))
+        nav_items.append(A(label, href=f"{nav_prefix}{href}", cls=cls))
     nav_items.append(
         A(
             "Dashboard",
