@@ -36,6 +36,9 @@ KNOWN_EXCEPTIONS = [
     # Test files or comments are fine
     ("__init__", ""),
     # Static asset links, login/logout, API endpoints are fine
+    # tools_routes.py search results — community-agnostic by design (TOOLS-004)
+    ("tools_routes", "/person/{item"),
+    ("tools_routes", "/photo/{item"),
 ]
 
 
@@ -60,6 +63,10 @@ def _is_exception(filepath: Path, line: str) -> bool:
     # Test assertions that check for the pattern
     if "assert" in stripped:
         return True
+    # Known exceptions list
+    for filename_stem, content_substr in KNOWN_EXCEPTIONS:
+        if filename_stem and filename_stem in filepath.stem and content_substr in stripped:
+            return True
     return False
 
 
