@@ -1557,7 +1557,7 @@ class TestDiscoveriesThreeSections:
         html = response.text
         assert 'data-testid="section-suggested-matches"' in html
         assert "Suggested Matches" in html
-        assert "bg-blue-500/5" in html
+        assert "bg-indigo-500/5" in html
 
     def test_help_identify_section_present(self, client):
         """Help Identify section shows when there are unidentified faces."""

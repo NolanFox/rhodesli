@@ -50,6 +50,7 @@ class PhotoRegistry:
     def __init__(self):
         self._photos: dict[str, dict] = {}
         self._face_to_photo: dict[str, str] = {}
+        self._filename_to_photo_id: dict[str, str] = {}  # basename -> photo_id
 
     def register_photo(self, photo_id: str, path: str, source: str = "", collection: str = "") -> None:
         """Register a photo without any faces (e.g., documents, buildings, far-away groups)."""
@@ -163,17 +164,56 @@ class PhotoRegistry:
             return ""
         return self._photos[photo_id].get("source_url", "")
 
+    def resolve_photo_id(self, photo_id: str) -> str | None:
+        """Resolve a photo_id to the canonical registry ID.
+
+        Handles the inbox vs SHA256 ID mismatch: if ``photo_id`` is not a
+        direct key in ``_photos``, tries to resolve via the filename→photo_id
+        index (which bridges SHA256 URL IDs to inbox registry IDs).
+
+        Returns the canonical photo_id, or None if unresolvable.
+        """
+        if photo_id in self._photos:
+            return photo_id
+        # Try resolving via _filename_to_photo_id (built lazily)
+        if not self._filename_to_photo_id:
+            self._build_filename_index()
+        # Generate the filename from a SHA256 photo_id lookup in embeddings
+        # is not feasible, but we can reverse-lookup: iterate _filename_to_photo_id
+        # and see if any filename generates this SHA256 ID.
+        from app.utils import generate_photo_id as _gen_pid
+
+        for fname, canonical_pid in self._filename_to_photo_id.items():
+            if _gen_pid(fname) == photo_id:
+                return canonical_pid
+        return None
+
+    def _build_filename_index(self) -> None:
+        """Build the filename → photo_id index for cross-ID resolution."""
+        self._filename_to_photo_id = {}
+        for pid, entry in self._photos.items():
+            path = entry.get("path", "")
+            if path:
+                from pathlib import Path as _Path
+
+                fname = _Path(path).name
+                self._filename_to_photo_id[fname] = pid
+
     def get_faces_in_photo(self, photo_id: str) -> set[str]:
         """
         Get all face_ids detected in a photo.
 
         Args:
-            photo_id: Photo identifier
+            photo_id: Photo identifier (accepts both inbox and SHA256 formats)
 
         Returns:
             Set of face_ids, or empty set if photo unknown
         """
         if photo_id not in self._photos:
+            # Try resolving cross-ID format
+            resolved = self.resolve_photo_id(photo_id)
+            if resolved:
+                return self._photos[resolved]["face_ids"].copy()
             return set()
         return self._photos[photo_id]["face_ids"].copy()
 
@@ -428,6 +468,9 @@ class PhotoRegistry:
                 registry._photos[photo_id] = entry
 
             registry._face_to_photo = face_to_photo
+
+            # Pre-build filename index for cross-ID resolution (inbox vs SHA256)
+            registry._build_filename_index()
 
             logger.info(
                 f"PhotoRegistry loaded from Postgres "
