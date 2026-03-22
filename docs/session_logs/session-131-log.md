@@ -51,7 +51,59 @@ Predecessor: Session 130
 | Estimate tool | 363ms |
 | Compare tool | 356ms |
 
+## Continuation Phase — Merge Orphan Crisis (Lesson 154)
+
+### P0 Data Fix: 175 Orphaned Faces
+- **Root cause**: Merge operations transferred faces in-memory but persistence failed silently. Merged source identities got `merged_into` set (hiding them from `list_identities()`) while their faces were never transferred to the target.
+- **Impact**: 175 faces across 18 identities orphaned. Esther Burd Fox lost 8 faces, showing as "Unidentified" in Dayton Ohio photo (10a7d40eb3bf94f7) despite being tagged.
+- **Fix**: Direct Supabase repair — 112 unique faces restored to 18 target identities.
+- **Browser verified**: Esther Burd photo now shows 17/18 identified (was 16/18). "Esther Bur..." label visible on correct face.
+
+### Prevention: Post-Merge Verification
+- Added to `core/registry.py merge_identities()`: after merge completes, verify ALL source faces are in target. Force-adds any orphans with error logging.
+- Defensive comment (Codex P1-1): documents that source lists must remain populated for verification to work.
+
+### Structural Tests (8 total)
+- `tests/test_merge_face_transfer.py`:
+  - Simple merge face transfer (all source faces in target)
+  - get_identity_for_face finds merged faces
+  - Source hidden after merge
+  - No orphaned faces after merge
+  - Direction swap preserves all faces
+  - Chained merges (A→B→C) preserve all faces
+  - Force-add safety net fires when face skipped (Codex P1-2)
+  - Source lists preserved after merge
+- `tests/test_merge_orphan_audit.py`: Production Supabase audit (skipped in CI)
+
+### Codex Audit (Session 131 Continuation)
+- 10 findings across 4 severity levels
+- 3 P1s fixed: defensive comment, safety net test, co-occurrence audit
+- Co-occurrence audit confirmed 0 violations from repair (4 pre-existing)
+- Written to `docs/session_context/session-131-codex-audit.md`
+
+### Investigation Report
+- `docs/session_context/session-131-merge-failure-investigation.md`
+- Finding: Sessions 129/130/131 each verified at wrong layer (person page count / Supabase query / generic browser check) — never the specific broken photo page
+
+### Lesson 154 Documented
+- 10th data integrity occurrence (Lessons 56→69→78→85→141→144→147→150→153→154)
+- Rule: NEVER declare data fix done without browser-verifying the SPECIFIC affected page
+
+### Deep Investigation Findings (7 vulnerabilities)
+1. TTL cache stale-while-revalidate race (MEDIUM)
+2. Community cache not invalidated after merge (MEDIUM)
+3. Batch shadow write can overwrite merge data (CRITICAL)
+4. No transitive merge chain following (CRITICAL)
+5. Merged identity GET not redirected (LOW)
+6. Partial batch merges leave inconsistent state (MEDIUM)
+7. Photo registry cache not cleared after merge (MEDIUM)
+
+→ All deferred to Session 132 for comprehensive fix
+
 ## Commits
 - `380662e` — audit fixes (thread safety, CSS, imports)
 - `4aa9947` — hide upload provenance from non-admin
 - Merge commits for performance worktrees
+- `a1f3397` — post-merge verification prevents face orphaning (Lesson 154)
+- `dfe5068` — continuation prompt + merge failure investigation
+- `31f5269` — Codex audit P1 fixes — safety net test + defensive comment

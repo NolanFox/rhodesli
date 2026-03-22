@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.41] — 2026-03-22 (Session 131: Performance + Merge Orphan Crisis)
+
+### Data Integrity (P0)
+- **175 orphaned faces repaired**: Merge operations orphaned faces — source identities marked as merged (hidden) but faces never transferred to target. 112 unique faces restored across 18 identities via direct Supabase repair.
+- **Post-merge verification**: `merge_identities()` now verifies ALL source faces are in target after merge, force-adds any orphans. Catches failures that in-memory merge misses.
+- **Lesson 154**: 10th data integrity occurrence. Rule: NEVER declare data fix done without browser-verifying the SPECIFIC affected page.
+
+### Performance
+- **Focus mode N+1 fix**: `_build_best_proposals_index()` pre-computes O(n) lookup, eliminates ~200+ redundant `_load_proposals()` calls per sort
+- **Photo grid identity lookup**: Pre-computed `_face_id_confirmed` set eliminates ~2,900 per-face lookups per /photos page load
+- **PhotoRegistry O(1) resolve**: SHA256 reverse index for cross-ID resolution
+
+### UX
+- Upload provenance ("Uploader not recorded for this import") hidden from non-admin users
+
+### Codex Audit (Sessions 125-131)
+- 11 findings from sessions 125-130 audit: 4 P1s fixed (thread safety, CSS, imports, PhotoRegistry)
+- 10 findings from merge fix audit: 3 P1s fixed (safety net test, defensive comment, co-occurrence validation)
+
+### Tests
+- 8 new merge integrity tests (face transfer, direction swap, chained merges, force-add safety net)
+- Production Supabase merge orphan audit test
+- FakeRegistry mock fix for lazy loading tests
+
 ## [v0.99.40] — 2026-03-22 (Session 130: Data Integrity Deep Audit)
 
 ### Data Integrity (P0)

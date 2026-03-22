@@ -14,6 +14,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 131: Performance + Merge Orphan Crisis (2026-03-22) — v0.99.41
+- **P0 Data Fix**: 175 orphaned faces repaired across 18 identities. Merge operations orphaned faces silently — source identities hidden but faces never transferred to targets. Esther Burd Fox lost 8 faces from a tagged photo.
+- **Prevention**: Post-merge verification in `merge_identities()` force-adds orphaned faces. 8 structural tests + production audit test.
+- **Performance**: Focus mode N+1 fix (-200+ calls), Photo grid O(1) identity lookup (-2900 lookups), PhotoRegistry SHA256 reverse index.
+- **UX**: Upload provenance hidden from non-admin.
+- **Codex Audit**: 14 findings across sessions 125-131. 7 P1s fixed (thread safety, CSS, imports, safety net test, co-occurrence validation).
+- **Lesson 154**: 10th data integrity occurrence. 7 merge pipeline vulnerabilities identified for Session 132.
+- Tests: 2614 app tests pass (8 new merge integrity tests).
+
 ## Session 128: Security Hardening + Accessibility + Dead Code (2026-03-21) — v0.99.38
 - CSRF: SameSite=Strict cookies + _check_origin() on 11 dangerous POST routes
 - Rate limiting: IP-based 20/hr on 7 public upload endpoints (app/rate_limit.py)
