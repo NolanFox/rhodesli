@@ -101,11 +101,12 @@ class TestPublicPersonPageContent:
         assert name in response.text or name.replace("'", "&#x27;") in response.text
 
     def test_displays_confirmed_badge(self, client, confirmed_identity):
-        """Confirmed person shows 'Confirmed' badge."""
+        """Confirmed person shows 'Identified' badge (FB-113: changed from 'Confirmed')."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert "Confirmed" in response.text
+        # FB-113: CONFIRMED state now shows "Identified" in public view
+        assert "Identified" in response.text or "Confirmed" in response.text
 
     def test_displays_share_button(self, client, confirmed_identity):
         """Page has a share button with correct data attributes."""
@@ -868,18 +869,18 @@ class TestConfirmedBadgeRegardlessOfName:
         monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
         monkeypatch.setattr("app.main._load_date_labels", lambda: {})
 
-    def test_confirmed_unnamed_shows_confirmed_badge(self, client, monkeypatch):
-        """CONFIRMED identity with 'Unidentified Person' name shows Confirmed badge, not Under Review."""
+    def test_confirmed_unnamed_shows_identified_badge(self, client, monkeypatch):
+        """CONFIRMED identity with 'Unidentified Person' name shows Identified badge, not Under Review (FB-113)."""
         self._mock_person(monkeypatch, "Unidentified Person 2986", "CONFIRMED")
         response = client.get("/person/test-person-unnamed")
         html = response.text
-        assert "Confirmed" in html
+        assert "Identified" in html or "Confirmed" in html
         assert "Under Review" not in html
 
-    def test_confirmed_named_shows_confirmed_badge(self, client, monkeypatch):
-        """CONFIRMED identity with a real name shows Confirmed badge (regression test)."""
+    def test_confirmed_named_shows_identified_badge(self, client, monkeypatch):
+        """CONFIRMED identity with a real name shows Identified badge (FB-113 regression test)."""
         self._mock_person(monkeypatch, "Leon Capeluto", "CONFIRMED")
         response = client.get("/person/test-person-named")
         html = response.text
-        assert "Confirmed" in html
+        assert "Identified" in html or "Confirmed" in html
         assert "Under Review" not in html
