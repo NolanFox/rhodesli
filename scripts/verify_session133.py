@@ -98,18 +98,22 @@ with open("data_backup_session133/identities_pre_phase2.json") as f:
 with open("data_backup_session133/identities_post_all_fixes.json") as f:
     post_fix = json.load(f)
 
-# Build pre-fix lookup
-pre_identities = pre_fix.get("identities", pre_fix)
-if isinstance(pre_identities, list):
-    pre_lookup = {r["identity_id"]: r for r in pre_identities}
+# Build pre-fix lookup — backups are lists of identity dicts
+if isinstance(pre_fix, list):
+    pre_lookup = {r["identity_id"]: r for r in pre_fix}
+elif isinstance(pre_fix, dict) and "identities" in pre_fix:
+    idents = pre_fix["identities"]
+    pre_lookup = {r["identity_id"]: r for r in idents} if isinstance(idents, list) else idents
 else:
-    pre_lookup = pre_identities
+    pre_lookup = pre_fix
 
-post_identities = post_fix.get("identities", post_fix)
-if isinstance(post_identities, list):
-    post_lookup = {r["identity_id"]: r for r in post_identities}
+if isinstance(post_fix, list):
+    post_lookup = {r["identity_id"]: r for r in post_fix}
+elif isinstance(post_fix, dict) and "identities" in post_fix:
+    idents = post_fix["identities"]
+    post_lookup = {r["identity_id"]: r for r in idents} if isinstance(idents, list) else idents
 else:
-    post_lookup = post_identities
+    post_lookup = post_fix
 
 print(f"  Pre-fix identities: {len(pre_lookup)}")
 print(f"  Post-fix identities: {len(post_lookup)}")
