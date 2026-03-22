@@ -1130,6 +1130,52 @@ async def startup_event():
         except Exception as e:
             logging.warning(f"Startup orphan detection failed: {e}")
 
+        # Session 132: Detect faces in merged identities not transferred to target.
+        # When merge_identities() runs, it should transfer all faces from source to
+        # target. If it didn't (bug), faces are orphaned in the invisible source.
+        try:
+            registry = load_registry()
+            all_identities = registry.list_identities(include_merged=True)
+            merged_orphans = 0
+            repaired_targets = set()
+
+            for identity in all_identities:
+                merged_into = identity.get("merged_into")
+                if not merged_into:
+                    continue
+                source_faces = set(identity.get("anchor_ids", []) + identity.get("candidate_ids", []))
+                if not source_faces:
+                    continue
+
+                # Check if target exists and has these faces
+                try:
+                    target = registry.get_identity(merged_into)
+                except KeyError:
+                    continue  # Dangling reference — handled separately
+                if target.get("merged_into"):
+                    continue  # Target itself merged — chain issue
+
+                target_faces = set(target.get("anchor_ids", []) + target.get("candidate_ids", []))
+                missing = source_faces - target_faces
+                if missing:
+                    merged_orphans += len(missing)
+                    # Auto-repair: add missing faces to target's anchor_ids
+                    target_anchors = list(target.get("anchor_ids", []))
+                    target_anchors.extend(missing)
+                    registry._identities[merged_into]["anchor_ids"] = target_anchors
+                    repaired_targets.add(merged_into)
+
+            if merged_orphans:
+                logging.warning(
+                    f"Startup merge orphan check: {merged_orphans} faces in merged identities "
+                    f"not transferred to {len(repaired_targets)} targets. Auto-repaired."
+                )
+                save_registry(registry, changed_ids=repaired_targets)
+            else:
+                logging.info("Startup merge orphan check: no orphaned faces in merged identities")
+        except Exception as e:
+            logging.warning(f"Startup merge orphan check failed: {e}")
+
     threading.Thread(target=_startup_parity_check, daemon=True, name="parity-check").start()
 
     get_event_recorder().record(
@@ -1635,6 +1681,12 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
             invalidate_cluster_review_caches()
     except ImportError:
         pass
+
+    # Session 132: Invalidate community identity IDs cache after identity changes.
+    # Without this, merges leave stale community-scoped views (e.g., person counts).
+    global _community_identity_ids_cache, _community_ids_cache_ts
+    _community_identity_ids_cache = {}
+    _community_ids_cache_ts = 0.0
 
     # JSON backup in background thread (Postgres is source of truth — PRD-051).
     # Session 131 audit fix: snapshot identities dict before passing to thread
