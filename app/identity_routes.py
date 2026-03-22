@@ -1151,6 +1151,7 @@ def get(
     seq: str = "",
     context_identity_id: str = "",
     sort_by: str = "date_asc",
+    show_all: str = "",
     sess=None,
     request=None,
 ):
@@ -1197,9 +1198,17 @@ def get(
     # Search all identities (confirmed get priority in search_identities)
     results = registry.search_identities(q, exclude_id=exclude_id)
 
-    # FB-162: Re-sort to prioritize same-community + confirmed + higher face count
+    # FB-004: Filter by community by default, show all only when requested
     community = getattr(request.state, "community", None) if request else None
     comm_ids = _main_mod._get_community_identity_ids(community) if community else None
+    is_community_filtered = False
+    all_results_count = len(results)
+    if comm_ids is not None and show_all != "1":
+        # Filter to only community identities
+        results = [r for r in results if r["identity_id"] in comm_ids]
+        is_community_filtered = True
+
+    # FB-162: Re-sort to prioritize same-community + confirmed + higher face count
     if comm_ids is not None:
         _sr = {"CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2, "SKIPPED": 3}
         results.sort(
@@ -1327,16 +1336,38 @@ def get(
             hx_swap="innerHTML",
             type="button",
         )
+    # FB-004: "Show all communities" link when community-filtered
+    show_all_btn = None
+    if is_community_filtered and all_results_count > len(results):
+        from urllib.parse import quote as _url_quote_all
+
+        show_all_btn = Button(
+            Span("Show all communities", cls="text-sm text-indigo-400"),
+            Span(f"({all_results_count - len(results)} more)", cls="text-sm sm:text-xs text-slate-500 ml-1"),
+            cls="flex items-center justify-center w-full px-4 py-2 sm:px-2 sm:py-1 hover:bg-slate-700 rounded "
+            "transition-colors cursor-pointer border-t border-slate-700 mt-1 pt-1",
+            hx_get=(
+                f"{nav_prefix}/api/face/tag-search?face_id={face_id_encoded}&q={_url_quote_all(q)}"
+                f"&show_all=1{seq_suffix}{context_suffix}"
+            ),
+            hx_target=f"#{results_id}",
+            hx_swap="outerHTML",
+            type="button",
+        )
+
     # UX-074: "Create New" at top of dropdown (first option, before search results)
     if not results:
         # Show only the create/suggest button with a "no matches" message
+        extra = [show_all_btn] if show_all_btn else []
         return Div(
             P("No existing matches.", cls="text-slate-500 italic text-sm sm:text-xs p-1"),
             create_btn,
+            *extra,
             id=results_id,
         )
 
-    return Div(create_btn, *items, id=results_id)
+    extra = [show_all_btn] if show_all_btn else []
+    return Div(create_btn, *items, *extra, id=results_id)
 
 
 @rt("/api/face/tag")
