@@ -14,6 +14,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 132: Data Integrity Hardening (2026-03-22) — v0.99.42
+- **Optimistic concurrency**: shadow_write_identities_batch() pre-fetches version_ids, skips stale writes. Merge results can't be overwritten by concurrent batch saves.
+- **556 multi-hop merge chains flattened**: All A→B→C chains updated to A→C in Supabase. 0 remaining.
+- **Deep audits**: Merge chain (0 circular, 691 dangling historical, 1858 merged with retained faces). Face-identity coverage (2 ghost, 212 orphaned, 3 multi-claimed, 24 empty CONFIRMED).
+- **Merge safety**: Community cache invalidation in save_registry(). Startup merge orphan auto-repair. Merged identity redirect already existed (UX-038).
+- **UX**: Hide Unknown fields from public person pages (UX-089).
+- **Tests**: 4 pre-existing failures fixed, 19 new tests. 3619 app + 590 ML pass.
+
 ## Session 131: Performance + Merge Orphan Crisis (2026-03-22) — v0.99.41
 - **P0 Data Fix**: 175 orphaned faces repaired across 18 identities. Merge operations orphaned faces silently — source identities hidden but faces never transferred to targets. Esther Burd Fox lost 8 faces from a tagged photo.
 - **Prevention**: Post-merge verification in `merge_identities()` force-adds orphaned faces. 8 structural tests + production audit test.

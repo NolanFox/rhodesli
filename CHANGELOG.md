@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.42] — 2026-03-22 (Session 132: Data Integrity Hardening)
+
+### Data Integrity
+- **Optimistic concurrency**: `shadow_write_identities_batch()` now pre-fetches version_ids and skips stale writes — merge results can't be overwritten by concurrent batch saves
+- **556 multi-hop merge chains flattened**: All A→B→C chains updated to A→C directly in Supabase
+- **Community cache invalidation**: `save_registry()` clears `_community_identity_ids_cache` so merges reflect immediately in community-scoped views
+- **Startup merge orphan check**: Auto-detects and repairs faces in merged identities not transferred to target
+
+### Audits
+- **Merge chain audit**: 0 circular, 556 multi-hop (all flattened), 691 dangling (historical), 1,858 merged with retained faces
+- **Face-identity coverage audit**: 2 ghost faces (Netanel Menashe), 212 orphaned faces, 3 multi-claimed, 24 CONFIRMED with 0 anchors
+- Reusable scripts: `scripts/audit_merge_chains.py`, `scripts/face_coverage_audit.py`
+
+### UX
+- **UX-089**: Hide "Unknown" fields on person pages for public visitors (admin still sees them)
+
+### Tests
+- 4 pre-existing test failures fixed (Session 131 aftermath)
+- 4 optimistic concurrency tests (stale skip, current write, new identity, merge-wins-race)
+- 7 merged identity redirect tests (from worktree agent)
+- 4 merge safety tests (cache invalidation, orphan detection, dangling skip)
+- 3619 app tests + 590 ML tests pass
+
 ## [v0.99.41] — 2026-03-22 (Session 131: Performance + Merge Orphan Crisis)
 
 ### Data Integrity (P0)
