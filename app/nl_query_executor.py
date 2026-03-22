@@ -127,57 +127,89 @@ def _execute_person_search(intent_result: dict, sb) -> dict[str, Any]:
 
 
 def _execute_photo_filter(intent_result: dict, sb) -> dict[str, Any]:
-    """Filter photos by decade, year, location, or type."""
+    """Filter photos by decade, year, location, or type.
+
+    Temporal filters query the date_labels table (not photos — photos has no
+    date_estimate column). Non-temporal filters query photos directly.
+    """
     filters = intent_result.get("filters", {})
 
-    query = sb.table("photos").select("photo_id, path, source, collection, date_estimate, upload_date")
-
+    has_temporal = any(k in filters for k in ("decade", "year", "year_start", "year_end"))
     query_desc_parts = []
+    temporal_photo_ids = None
 
-    # Temporal filters
-    if "decade" in filters:
-        decade_str = filters["decade"]  # e.g. "1940s"
-        decade_start = int(decade_str.rstrip("s"))
-        decade_end = decade_start + 9
-        query = query.gte("date_estimate", decade_start).lte("date_estimate", decade_end)
-        query_desc_parts.append(f"from the {decade_str}")
+    if has_temporal:
+        # Step 1: Get matching photo_ids from date_labels (no FK to photos)
+        dl_query = sb.table("date_labels").select("photo_id, best_year_estimate")
 
-    if "year" in filters:
-        year = filters["year"]
-        query = query.eq("date_estimate", year)
-        query_desc_parts.append(f"from {year}")
+        if "decade" in filters:
+            decade_str = filters["decade"]  # e.g. "1940s"
+            decade_start = int(decade_str.rstrip("s"))
+            decade_end = decade_start + 9
+            dl_query = dl_query.gte("best_year_estimate", decade_start).lte("best_year_estimate", decade_end)
+            query_desc_parts.append(f"from the {decade_str}")
 
-    if "year_start" in filters:
-        query = query.gte("date_estimate", filters["year_start"])
-        query_desc_parts.append(f"after {filters['year_start']}")
+        if "year" in filters:
+            year = filters["year"]
+            dl_query = dl_query.eq("best_year_estimate", year)
+            query_desc_parts.append(f"from {year}")
 
-    if "year_end" in filters:
-        query = query.lte("date_estimate", filters["year_end"])
-        query_desc_parts.append(f"before {filters['year_end']}")
+        if "year_start" in filters:
+            dl_query = dl_query.gte("best_year_estimate", filters["year_start"])
+            query_desc_parts.append(f"after {filters['year_start']}")
 
-    # Location filter (sanitized against PostgREST injection — Finding 1)
-    if "location" in filters:
-        loc = _sanitize_postgrest_value(filters["location"])
-        query = query.or_(f"source.ilike.%{loc}%,collection.ilike.%{loc}%")
-        query_desc_parts.append(f"from {filters['location']}")
+        if "year_end" in filters:
+            dl_query = dl_query.lte("best_year_estimate", filters["year_end"])
+            query_desc_parts.append(f"before {filters['year_end']}")
 
-    # Photo type filter (sanitized against PostgREST injection — Finding 1)
-    if "photo_type" in filters:
-        ptype = _sanitize_postgrest_value(filters["photo_type"])
-        query = query.or_(f"source.ilike.%{ptype}%,collection.ilike.%{ptype}%")
-        query_desc_parts.append(f"{filters['photo_type']} photos")
+        dl_result = dl_query.limit(100).execute()
+        temporal_photo_ids = {row["photo_id"]: row.get("best_year_estimate") for row in (dl_result.data or [])}
+
+        if not temporal_photo_ids:
+            return {
+                "result_type": "photos",
+                "items": [],
+                "message": f"No photos found {', '.join(query_desc_parts)}",
+                "query_summary": "Photos " + ", ".join(query_desc_parts),
+            }
+
+        # Step 2: Get photo details for matching IDs
+        query = (
+            sb.table("photos")
+            .select("photo_id, path, source, collection, upload_date")
+            .in_("photo_id", list(temporal_photo_ids.keys())[:50])
+        )
+    else:
+        query = sb.table("photos").select("photo_id, path, source, collection, upload_date")
+
+    # Location and photo_type filters only work on non-temporal queries (direct photos table).
+    # For temporal queries (date_labels join), these would need PostgREST nested filters
+    # which aren't supported yet — skip gracefully.
+    if not has_temporal:
+        # Location filter (sanitized against PostgREST injection — Finding 1)
+        if "location" in filters:
+            loc = _sanitize_postgrest_value(filters["location"])
+            query = query.or_(f"source.ilike.%{loc}%,collection.ilike.%{loc}%")
+            query_desc_parts.append(f"from {filters['location']}")
+
+        # Photo type filter (sanitized against PostgREST injection — Finding 1)
+        if "photo_type" in filters:
+            ptype = _sanitize_postgrest_value(filters["photo_type"])
+            query = query.or_(f"source.ilike.%{ptype}%,collection.ilike.%{ptype}%")
+            query_desc_parts.append(f"{filters['photo_type']} photos")
 
     result = query.limit(50).execute()
 
     items = []
     for row in result.data or []:
+        date_est = temporal_photo_ids.get(row["photo_id"]) if temporal_photo_ids else None
         items.append(
             {
                 "photo_id": row["photo_id"],
                 "path": row.get("path", ""),
                 "source": row.get("source", ""),
                 "collection": row.get("collection", ""),
-                "date_estimate": row.get("date_estimate"),
+                "date_estimate": date_est,
             }
         )
 

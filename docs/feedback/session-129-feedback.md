@@ -7,21 +7,21 @@ Started: 2026-03-21
 | FB ID | Title | Severity | Category | Status |
 |-------|-------|----------|----------|--------|
 | FB-001 | Duplicate Esther Burd Fox identities | P0 | DATA | FIXED |
-| FB-002 | Esther Burd face untagged in photo despite prior tagging | P0 | DATA | ROOT CAUSE IDENTIFIED |
-| FB-003 | Face overlay click does nothing for some faces | P1 | UX | BACKLOG |
-| FB-004 | Quick Identify name dropdown shows wrong community names | P1 | UX | BACKLOG |
-| FB-005 | Face cards at bottom of photo page not clickable to person page | P1 | UX | BACKLOG |
-| FB-006 | Unidentified face shows no number in photo overlay | P2 | UX | BACKLOG |
-| FB-007 | People in photo section — face crops not linked to person pages | P1 | UX | BACKLOG |
-| FB-008 | People in photo grid — no visual distinction identified vs unidentified | P2 | UX | BACKLOG |
-| FB-009 | Photo page people grid — 2-column wastes space on desktop | P3 | UX | BACKLOG |
-| FB-010 | Speed Loop — Esther's face has no checkmark/name | P1 | BUG | ROOT CAUSE: FB-002 |
+| FB-002 | Esther Burd face untagged in photo despite prior tagging | P0 | DATA | FIXED (Session 133 data repair + Session 134 verification) |
+| FB-003 | Face overlay click does nothing for some faces | P1 | UX | FIXED (Session 134 — FB-016 root cause resolved, faces now resolve) |
+| FB-004 | Quick Identify name dropdown shows wrong community names | P1 | UX | FIXED (Session 134 Track C — community-scoped dropdown) |
+| FB-005 | Face cards at bottom of photo page not clickable to person page | P1 | UX | FIXED (Session 134 Track B — wrapped in A tags) |
+| FB-006 | Unidentified face shows no number in photo overlay | P2 | UX | FIXED (Session 133 data repair — faces now resolve to identities) |
+| FB-007 | People in photo section — face crops not linked to person pages | P1 | UX | FIXED (Session 134 Track B — same as FB-005) |
+| FB-008 | People in photo grid — no visual distinction identified vs unidentified | P2 | UX | FIXED (Session 134 Track B — state-colored borders) |
+| FB-009 | Photo page people grid — 2-column wastes space on desktop | P3 | UX | FIXED (Session 134 Track B — responsive 4-col grid) |
+| FB-010 | Speed Loop — Esther's face has no checkmark/name | P1 | BUG | FIXED (Session 133 data repair — FB-002 root cause resolved) |
 | FB-011 | Speed Loop — two Esther Burds in tag search | P0 | DATA | FIXED |
 | FB-012 | Focus mode — two Esther Burds in Similar Identities | P0 | DATA | FIXED |
 | FB-013 | Focus sidebar — 839 New Matches is overwhelming | P2 | UX | BACKLOG |
 | FB-014 | Identify Mode button green when not active | P3 | UX | BACKLOG |
 | FB-015 | "Back to Morris Shane" assumes navigation context | P3 | NAVIGATION | BACKLOG |
-| FB-016 | photo_faces uses inbox IDs, URLs use SHA256 IDs | P1 | DATA | BACKLOG |
+| FB-016 | photo_faces uses inbox IDs, URLs use SHA256 IDs | P1 | DATA | FIXED (already resolved — Session 131 SHA256 reverse index + Session 133 data repair) |
 | FB-017 | Mobile — no easy way to switch communities | P1 | MOBILE | BACKLOG |
 | FB-018 | Compare Faces — "56 of 83" shows stale pre-merge count | P2 | DATA | BACKLOG |
 | FB-019 | Compare Faces modal — no merge/action buttons, dead-end UX | P2 | UX | BACKLOG |

@@ -3,6 +3,24 @@
 **Source:** Nolan's live triage session, ~20 minutes of speed-run + people page work
 **Result:** Named and merged Charles Fox (68 faces), Esther Burd Fox (12 faces), Roland Fox (31 faces). Linked Charles and Esther to GEDCOM.
 
+## Resolution Status (Updated Session 134, 2026-03-22)
+| FB | Status |
+|----|--------|
+| FB-100 | FIXED (Session 134 — already implemented, verified) |
+| FB-101 | BACKLOG (COMMUNITY-004) |
+| FB-102 | BACKLOG |
+| FB-103 | FIXED (already implemented — merge banner with face count) |
+| FB-104 | FIXED (already implemented — merge search → name → GEDCOM order) |
+| FB-105 | PARTIALLY ADDRESSED (Session 134 deepcopy removal, full measurement pending) |
+| FB-106 | FIXED (Session 134 — ?from=admin on enrichment links) |
+| FB-107 | BACKLOG (unmerge UX needed) |
+| FB-108 | BACKLOG (merge count context messaging) |
+| FB-109 | BACKLOG (browse view hash anchor issue) |
+| FB-110 | FIXED (already implemented — GEDCOM panel in enrichment) |
+| FB-111 | BACKLOG (ML cluster ordering improvement) |
+| FB-113 | FIXED (Session 134 Track A — "Identified" label for CONFIRMED) |
+| FB-114 | BACKLOG ("Grouped" badge removal) |
+
 ## Issues Found (in order encountered)
 
 ### FB-100: No cross-community indicator on suggested matches

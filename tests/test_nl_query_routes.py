@@ -151,22 +151,39 @@ class TestSearchTemporalQuery:
     """Tests for temporal photo filter queries."""
 
     def test_temporal_search_decade(self, client):
-        """POST with 'Photos from the 1940s' returns photo results."""
+        """POST with 'Photos from the 1940s' returns photo results.
+
+        Session 134 fix: temporal queries now use a two-step approach —
+        first date_labels for matching photo_ids, then photos for details.
+        """
         mock_sb = MagicMock()
-        mock_result = MagicMock()
-        mock_result.data = [
+
+        # Step 1: date_labels query returns matching photo_ids
+        dl_result = MagicMock()
+        dl_result.data = [{"photo_id": "abc123", "best_year_estimate": 1942}]
+
+        # Step 2: photos query returns photo details
+        photos_result = MagicMock()
+        photos_result.data = [
             {
                 "photo_id": "abc123",
                 "path": "Image_001.jpg",
                 "source": "Vida Collection",
                 "collection": "NYC Photos",
-                "date_estimate": 1942,
                 "upload_date": None,
             }
         ]
-        # Chain: table().select().gte().lte().limit().execute()
-        chain = mock_sb.table.return_value.select.return_value
-        chain.gte.return_value.lte.return_value.limit.return_value.execute.return_value = mock_result
+
+        # Mock table() to return different chains based on table name
+        def table_side_effect(name):
+            mock_table = MagicMock()
+            if name == "date_labels":
+                mock_table.select.return_value.gte.return_value.lte.return_value.limit.return_value.execute.return_value = dl_result
+            elif name == "photos":
+                mock_table.select.return_value.in_.return_value.limit.return_value.execute.return_value = photos_result
+            return mock_table
+
+        mock_sb.table.side_effect = table_side_effect
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
             resp = _run_post(client, "/tools/search", data={"q": "Photos from the 1940s"})
