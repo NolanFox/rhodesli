@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.43] — 2026-03-22 (Session 133: Data Resolution + Feature Foundation)
+
+### Data Integrity (P0)
+- **ALL data concerns resolved to zero**: 691 dangling merges cleared, 1858 face transfers, 212 orphans repaired, 695 multi-claimed resolved, 2 ghost faces removed
+- Per-step Supabase snapshots with restore script (`scripts/restore_from_backup.py`)
+- 20 data resolution tests (`tests/test_data_resolution_133.py`)
+
+### Features
+- **TOOLS-004 NL Query MVP**: `/tools/search` — natural language archive search with rule-based parser, Supabase query executor, 22 tests
+- **WORKSPACE-001 Signup Integration**: Personal archive auto-created on signup via `create_personal_archive()`, non-blocking, 5 tests
+- **TOOLS-005 PRD**: Estimate v2 with GEDCOM upload, text hints, geography retry (`docs/prds/055_estimate_v2.md`)
+
+### Community
+- Community middleware audit: 3 prefix gaps fixed, 8 safety tests, COMMUNITY-018 backlog items
+
+### Harness
+- Parallel agent research: post-merge checker subagent (R1), Codex audit strategy (R3), parallelization guide (R4)
+- AI tool audit logging rule (`.claude/rules/ai-tool-audit.md`)
+- Lessons 155 (per-step snapshots), 156 (mutation audit trail)
+
+### Tests
+- 3674 app tests pass (+55 from Session 132)
+
 ## [v0.99.42] — 2026-03-22 (Session 132: Data Integrity Hardening)
 
 ### Data Integrity

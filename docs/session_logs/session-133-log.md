@@ -7,11 +7,11 @@ Prompt: docs/prompts/session-133-prompt.md
 - [x] Phase 1: Session 132 Closeout (BACKLOG DATA-021–025, HARNESS-001, AD-230, lost tests, hook fix)
 - [x] Phase 2: Resolve ALL Data Concerns — ALL ZEROS achieved
 - [x] Phase 3: TOOLS-005 Estimate v2 PRD — `docs/prds/055_estimate_v2.md`
-- [ ] Phase 4: TOOLS-004 NL Query MVP — DEFERRED to next session
-- [ ] Phase 5: WORKSPACE-001 Signup Integration — DEFERRED to next session
+- [x] Phase 4: TOOLS-004 NL Query MVP — /tools/search, 22 tests, executor + route
+- [x] Phase 5: WORKSPACE-001 Signup Integration — create_personal_archive wired, 5 tests
 - [x] Phase 6: Community Middleware Audit — 3 gaps fixed, 8 new tests, merged
 - [x] Phase 7: Parallel Agent Research — harness updated with R1/R3/R4
-- [ ] Phase 8: Deploy + Verify + Close — IN PROGRESS
+- [x] Phase 8: Deploy + Verify + Close — COMPLETE
 
 ## Phase 0: Session Init
 - Set session 133, implementation mode

@@ -14,6 +14,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 133: Data Resolution + Feature Foundation (2026-03-22) — v0.99.43
+- **ALL data concerns resolved to zero**: 691 dangling merges cleared, 1858 face transfers from merged identities, 212 orphaned faces repaired, 695 multi-claimed resolved, 2 ghost faces removed. Per-step Supabase snapshots with restore script.
+- **TOOLS-004 NL Query MVP**: `/tools/search` — rule-based parser (rhodesli_ml/nl_query.py) wired to Supabase executor. Person search, temporal, location, photo type, aggregate queries. 22 tests.
+- **WORKSPACE-001 signup wiring**: `create_personal_archive()` called on successful signup, non-blocking. 5 tests.
+- **TOOLS-005 PRD**: Estimate v2 with GEDCOM upload, text hints, geography retry (`docs/prds/055_estimate_v2.md`).
+- **Community middleware audit**: 3 prefix gaps fixed, 8 safety tests, COMMUNITY-018 backlog items.
+- **Harness**: Parallel agent research — post-merge checker subagent (R1), Codex audit strategy (R3), parallelization guide (R4). AI tool audit logging rule.
+- Lessons 155 (per-step snapshots), 156 (mutation audit trail). 3674 app tests pass.
+
 ## Session 132: Data Integrity Hardening (2026-03-22) — v0.99.42
 - **Optimistic concurrency**: shadow_write_identities_batch() pre-fetches version_ids, skips stale writes. Merge results can't be overwritten by concurrent batch saves.
 - **556 multi-hop merge chains flattened**: All A→B→C chains updated to A→C in Supabase. 0 remaining.

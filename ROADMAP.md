@@ -56,7 +56,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-09: TOOLS-001: Date + Location Estimator Standalone — shipped as `/tools/estimate` (Session 95)
 - [x] 2026-03-18: TOOLS-002: ML Service Extraction — Phase 1 (skeleton) Session 115, Phase 2 (deploy) Session 116, Phase 3 (wire pipeline) Session 117, Phase 4 (clustering automation — verified already wired, Session 118). ML service deployed on Railway, upload pipeline wired with fallback. Session 118: fixed critical port mismatch, ML service first healthy deploy. Remaining: Phase 5 (remove local ML deps — deferred per AD-229).
 - [x] 2026-03-19: TOOLS-003: Face Compare Real-Time — POST /api/compare/realtime endpoint (Session 122). Needs tests + production verification.
-- [ ] TOOLS-004: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
+- [x] 2026-03-22: TOOLS-004: NL Query MVP — `/tools/search` with rule-based parser + Supabase executor (Session 133). Remaining: Gemini-assisted parsing, chatbot mode
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). PRD: `docs/prds/055_estimate_v2.md`. See `docs/BACKLOG.md`
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
@@ -101,7 +101,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 ### Near-Term — Workspace & Onboarding (PRD-036)
 Self-service workspace for users. See `docs/prds/036_workspace_onboarding.md`.
 
-- [ ] WORKSPACE-001: Personal archive auto-creation on signup — 1 session. **Agent team candidate** — auth, upload, permissions, UI layers in parallel. See `docs/architecture/PARALLEL_AGENT_STRATEGY.md`.
+- [x] 2026-03-22: WORKSPACE-001: Personal archive auto-creation on signup — Phase 1 schema (Session 122) + Phase 2 signup wiring (Session 133). Remaining: redirect to personal archive, upload to personal archive.
 - [ ] WORKSPACE-002: Sharing mode UX (Help Identify for members) — 1-2 sessions, depends on WORKSPACE-001
 - [ ] WORKSPACE-003: Add photos to community flow — 1-2 sessions, depends on WORKSPACE-001
 - [ ] WORKSPACE-004: Anonymous contributions with session tracking — 1 session
@@ -132,6 +132,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-22: **v0.99.43 — Session 133**: Data Resolution + Feature Foundation. ALL data concerns resolved to zero (691 dangling, 1858 transfers, 212 orphans, 695 multi-claimed, 2 ghost). TOOLS-004 NL Query MVP at /tools/search. WORKSPACE-001 signup wiring. TOOLS-005 PRD. Community audit (3 fixes, 8 tests). Parallel agent research (R1/R3/R4). 27 new tests. 3674 app tests pass.
 
 - [x] 2026-03-22: **v0.99.42 — Session 132**: Data Integrity Hardening. Optimistic concurrency in shadow_write_identities_batch() prevents stale writes from overwriting merge results. 556 multi-hop merge chains flattened to direct targets. Community cache invalidation on save_registry(). Startup merge orphan auto-repair. Deep audits: merge chain (0 circular, 691 dangling historical), face-identity coverage (2 ghost, 212 orphaned, 3 multi-claimed, 24 empty CONFIRMED). UX-089: hide Unknown fields from public. 4 pre-existing test failures fixed. 19 new tests. 3619 app + 590 ML tests pass.
 
