@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.40] — 2026-03-22 (Session 130: Data Integrity Deep Audit)
+
+### Data Integrity (P0)
+- **212 missing photo_faces rows backfilled**: Legacy photos never migrated from JSON to Supabase. 82/125 CONFIRMED identities were missing face entries. All now resolved.
+- **identity_overrides startup read removed (CRITICAL)**: Session 129 removed the write but left the startup read. Every deploy was re-applying stale data from a 2369-row table. Root cause of persistent data corruption (9th occurrence of split-brain pattern).
+- **identity_overrides table truncated**: 2369 stale rows deleted. Functions stubbed.
+- **PhotoRegistry cross-ID resolution**: `resolve_photo_id()` bridges inbox and SHA256 ID formats via filename index. `get_faces_in_photo()` now accepts both formats.
+
+### Health & Monitoring
+- **Confirmed identity integrity check**: `/api/health/data` reports status=critical when CONFIRMED identities have missing faces
+- **Data reconciliation script**: `scripts/data_reconciliation.py` — 5 cross-source consistency checks (embeddings, photo_faces, confirmed faces, duplicates)
+- **Backfill script**: `scripts/backfill_photo_faces.py` — can be rerun after any data migration
+
+### Structural Prevention
+- 13 invariant tests preventing:
+  - identity_overrides reads from any production code path
+  - JSON reads when DATA_SOURCE=postgres
+  - Missing cross-ID resolution methods on PhotoRegistry
+- Pre-existing test fix: blue→indigo assertion from Session 126 UX audit
+
+### Tests
+- 25 new tests (9 cross-ID resolution, 3 health endpoint, 13 structural invariants)
+
 ## [v0.99.39] — 2026-03-21 (Session 129: Data Integrity + Performance + Mobile UX)
 
 ### Data Integrity (P0)
