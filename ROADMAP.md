@@ -133,6 +133,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-03-22: **v0.99.44 — Session 134**: Clean Sweep + Security + Performance. Security audit: open redirect blocked, rate limiting on search/login/signup, input caps. 15 UX bugs: FB-113 Identified label, FB-005/007 clickable face cards, FB-008 state borders, FB-009 4-col grid, FB-004 community-scoped names, FB-106 admin links. Performance: save_registry deepcopy→json.dumps (-20-50ms). FB-016 verified already fixed. 3 worktree subagents for parallel UX sprint. 22 new tests. 3696 app tests pass.
+
 - [x] 2026-03-22: **v0.99.43 — Session 133**: Data Resolution + Feature Foundation. ALL data concerns resolved to zero (691 dangling, 1858 transfers, 212 orphans, 695 multi-claimed, 2 ghost). TOOLS-004 NL Query MVP at /tools/search. WORKSPACE-001 signup wiring. TOOLS-005 PRD. Community audit (3 fixes, 8 tests). Parallel agent research (R1/R3/R4). 27 new tests. 3674 app tests pass.
 
 - [x] 2026-03-22: **v0.99.42 — Session 132**: Data Integrity Hardening. Optimistic concurrency in shadow_write_identities_batch() prevents stale writes from overwriting merge results. 556 multi-hop merge chains flattened to direct targets. Community cache invalidation on save_registry(). Startup merge orphan auto-repair. Deep audits: merge chain (0 circular, 691 dangling historical), face-identity coverage (2 ghost, 212 orphaned, 3 multi-claimed, 24 empty CONFIRMED). UX-089: hide Unknown fields from public. 4 pre-existing test failures fixed. 19 new tests. 3619 app + 590 ML tests pass.

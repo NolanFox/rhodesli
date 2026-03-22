@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.44] — 2026-03-22 (Session 134: Clean Sweep + Security + Performance)
+
+### Security (Audit Findings)
+- **Open redirect blocked**: Login `?next=` param now rejects `//` protocol-relative URLs
+- **Rate limiting**: /tools/search (60/hr), /login (10/hr), /signup (5/hr) per IP
+- **Input length cap**: Search queries truncated at 500 chars
+- Test fixture: `reset_rate_limits` autouse prevents cross-test interference
+
+### UX Bug Fixes (15 items)
+- **FB-113**: CONFIRMED person pages show "Identified" instead of "Under Review"
+- **FB-100**: Cross-community badge on speed-run suggestions (verified already implemented)
+- **FB-005/007**: Face cards in "People in this photo" now clickable to person pages
+- **FB-008**: State-colored borders: green (CONFIRMED), amber (PROPOSED), dashed (INBOX)
+- **FB-009**: Responsive 4-column grid for people in photo section
+- **FB-004**: Quick Identify dropdown filters by current community
+- **FB-106**: Speed-run person links include `?from=admin` for admin context
+- **FB-103/104/110**: Verified already implemented (merge confirmation, panel order, GEDCOM)
+
+### Performance
+- **save_registry()**: Replaced deepcopy (~20-50ms) with json.dumps (~1ms) for JSON backup
+- Security + performance audit report: 10 findings, 4 fixed, 6 BACKLOG
+
+### Data Integrity
+- FB-016 root cause verified fixed: face ID resolution works across inbox/SHA256 formats
+- 3 verification tests for cross-ID face resolution
+
+### Tests
+- 3696 app tests pass (+22 from Session 133)
+
 ## [v0.99.43] — 2026-03-22 (Session 133: Data Resolution + Feature Foundation)
 
 ### Data Integrity (P0)
