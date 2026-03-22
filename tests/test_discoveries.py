@@ -294,7 +294,7 @@ class TestComputeDiscoveries:
             "confidence": "HIGH",
         }
 
-        def mock_best_proposal(iid):
+        def mock_best_proposal(iid, **kwargs):
             if iid == "inbox1":
                 return proposal1
             if iid == "inbox2":

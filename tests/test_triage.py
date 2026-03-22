@@ -94,7 +94,7 @@ class TestTriageCategories:
 
         mock_ids.return_value = {"id1", "id2"}
 
-        def best_proposal(iid):
+        def best_proposal(iid, **kwargs):
             if iid == "id1":
                 return {"distance": 0.7, "confidence": "VERY HIGH"}
             return {"distance": 1.1, "confidence": "MODERATE"}
