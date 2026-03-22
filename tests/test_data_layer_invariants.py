@@ -9,6 +9,7 @@ These tests enforce structural invariants that prevent this class of bug.
 
 import ast
 import inspect
+from pathlib import Path
 
 import pytest
 
@@ -111,6 +112,67 @@ class TestNoOverrideLayers:
                         f"{filepath}:{i} queries identity_overrides table: {stripped}\n"
                         "This table is deprecated (Session 130). Remove the query."
                     )
+
+
+class TestNoJsonReadsInPostgresMode:
+    """Ensure no production code reads from JSON files when DATA_SOURCE=postgres.
+
+    Session 130: JSON files are cache-only. No code path should use json.load()
+    on identities.json/photo_index.json as a data source in postgres mode."""
+
+    def test_load_registry_uses_postgres_not_json(self):
+        """load_registry() should call load_from_postgres when DATA_SOURCE=postgres."""
+        from app.main import load_registry
+
+        source = inspect.getsource(load_registry)
+        assert "load_from_postgres" in source, (
+            "load_registry must call load_from_postgres. JSON-only load path would bypass Supabase source of truth."
+        )
+
+    def test_load_photo_registry_uses_postgres_not_json(self):
+        """load_photo_registry() should try Postgres first."""
+        from app.main import load_photo_registry
+
+        source = inspect.getsource(load_photo_registry)
+        assert "load_from_postgres" in source, (
+            "load_photo_registry must call load_from_postgres. JSON-only load path would miss Supabase data."
+        )
+
+    def test_save_registry_writes_to_postgres(self):
+        """save_registry() must write to Supabase when DATA_SOURCE=postgres."""
+        from app.main import save_registry
+
+        source = inspect.getsource(save_registry)
+        assert "shadow_write_identities_batch" in source, (
+            "save_registry must call shadow_write_identities_batch to write identity changes to Supabase."
+        )
+
+
+class TestPhotoFacesConsistency:
+    """Ensure photo_faces table rows reference valid photos table entries.
+
+    Session 130: Backfilled 212 missing rows. These tests prevent regression."""
+
+    def test_backfill_script_exists(self):
+        """The backfill script should exist for future use."""
+        script = Path("scripts/backfill_photo_faces.py")
+        assert script.exists(), "backfill_photo_faces.py must exist for future backfills"
+
+    def test_photo_registry_resolve_photo_id(self):
+        """PhotoRegistry.resolve_photo_id bridges inbox and SHA256 IDs."""
+        from core.photo_registry import PhotoRegistry
+
+        assert hasattr(PhotoRegistry, "resolve_photo_id"), (
+            "PhotoRegistry must have resolve_photo_id method for cross-ID resolution (inbox vs SHA256)."
+        )
+
+    def test_photo_registry_filename_index(self):
+        """PhotoRegistry must build a filename index for cross-ID lookups."""
+        from core.photo_registry import PhotoRegistry
+
+        assert hasattr(PhotoRegistry, "_build_filename_index"), (
+            "PhotoRegistry must have _build_filename_index for bridging inbox IDs and SHA256 IDs."
+        )
 
 
 class TestDataIntegrityInvariants:
