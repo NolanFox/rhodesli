@@ -447,3 +447,85 @@ class TestKeyboardShortcuts:
             assert "speed-run-recent-actions" in html
             assert "speed-run-action-list" in html
             assert "Recent Actions" in html
+
+
+class TestEnrichmentAdminLinks:
+    """FB-106: Speed-run person links should use admin context."""
+
+    def test_enrichment_suggestion_links_include_from_admin(self):
+        """Suggested match person links should include ?from=admin."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity = _make_identity(state="CONFIRMED")
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._get_crop_url_for_face",
+                    return_value="/static/crops/test.jpg",
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._get_confirmed_identity_suggestions",
+                    return_value=[
+                        {
+                            "identity_id": "sug-001",
+                            "name": "Albert Fox",
+                            "face_count": 5,
+                            "best_face_id": "face_a",
+                            "distance": 0.8,
+                        }
+                    ],
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._main_mod._cross_community_badge",
+                    return_value=None,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._main_mod.community_url_prefix",
+                    return_value="/c/fox-family",
+                )
+            )
+
+            panel = _speed_run_enrichment_panel("test-id-123", identity, 0, "fox-family")
+            html = repr(panel)
+
+            # Suggestion links should include ?from=admin
+            assert "from=admin" in html
+            assert "/c/fox-family/person/sug-001" in html
+
+    def test_enrichment_confirmed_banner_links_to_person(self):
+        """Confirmed banner should have a clickable link to the person page."""
+        from app.cluster_review_routes import _speed_run_enrichment_panel
+
+        identity = _make_identity(name="Charles Fox", state="CONFIRMED")
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._get_crop_url_for_face",
+                    return_value="/static/crops/test.jpg",
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._get_confirmed_identity_suggestions",
+                    return_value=[],
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "app.cluster_review_routes._main_mod.community_url_prefix",
+                    return_value="/c/fox-family",
+                )
+            )
+
+            panel = _speed_run_enrichment_panel("test-id-123", identity, 0, "fox-family")
+            html = repr(panel)
+
+            # Confirmed banner should link to person page
+            assert "/c/fox-family/person/test-id-123" in html
+            assert "from=admin" in html

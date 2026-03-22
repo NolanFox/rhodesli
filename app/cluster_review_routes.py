@@ -2085,7 +2085,7 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
         # Cross-community badge (FB-100)
         cross_badge = _main_mod._cross_community_badge(sug["identity_id"], community) if community else None
         nav_prefix = _main_mod.community_url_prefix(community_slug)
-        sug_person_url = f"{nav_prefix}/person/{sug['identity_id']}"
+        sug_person_url = f"{nav_prefix}/person/{sug['identity_id']}?from=admin"
         sug_thumb = (
             Img(
                 src=sug_crop,
@@ -2166,7 +2166,12 @@ def _speed_run_enrichment_panel(identity_id, identity_data, offset, community_sl
             ),
             Div(
                 Span("Confirmed!", cls="text-emerald-400 text-lg font-semibold"),
-                Span(f"{display_name} — {len(face_ids)} faces", cls="text-slate-300 text-sm block mt-1"),
+                A(
+                    f"{display_name} — {len(face_ids)} faces",
+                    href=f"{_main_mod.community_url_prefix(community_slug)}/person/{identity_id}?from=admin",
+                    cls="text-slate-300 text-sm block mt-1 hover:text-indigo-300 transition-colors",
+                    target="_blank",
+                ),
                 cls="ml-4",
             ),
             cls="flex items-center mb-4 p-3 bg-emerald-900/30 border border-emerald-700/50 rounded-lg",
