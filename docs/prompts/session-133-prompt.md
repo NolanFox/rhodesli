@@ -89,6 +89,8 @@ Commit, /clear.
 - [ ] 0 ghost faces
 - [ ] 24 CONFIRMED/0-anchors documented as GEDCOM-only
 
+**Codex Audit Checkpoint (MANDATORY):** After Phase 2 commit, run Codex on ALL data repair scripts (resolve_dangling_merges.py, bulk_face_transfer.py, fix_multi_claimed.py). Focus: data loss risk, off-by-one in face transfers, edge cases in un-merge logic. Log results to `docs/session_context/session-133-codex-audit.md`. Fix any P0/P1 before proceeding.
+
 Commit, /clear.
 
 ## Phase 3: TOOLS-005 Estimate v2 PRD (~15 min)
@@ -102,13 +104,17 @@ Commit, /clear.
 - **4C**: `app/nl_query_executor.py` — Supabase query per intent type
 - **4D**: Add "Search" to tools_nav_bar
 - Reuse: `rhodesli_ml/nl_query.py` (259 lines, complete)
-- Commit, /clear.
+
+**Codex Audit Checkpoint (MANDATORY):** Run Codex on nl_query_executor.py. Focus: SQL injection (must use parameterized queries), input sanitization, error handling for malformed queries. Append to `docs/session_context/session-133-codex-audit.md`.
+
+Commit, /clear.
 
 ## Phase 5: WORKSPACE-001 Signup Integration (~20 min)
 - Wire `create_personal_archive()` into POST /signup at `app/auth_routes.py:253`
 - Post-signup redirect to personal archive
 - 5 tests in `tests/test_workspace_signup.py`
-- Commit, /clear.
+
+**Codex Audit Checkpoint (MANDATORY):** Run Codex on signup integration. Focus: auth flow correctness, race conditions in archive creation, idempotency. Append to `docs/session_context/session-133-codex-audit.md`.
 
 ## Phase 6: Community Middleware Audit (~30 min, PARALLEL WORKTREE)
 - Branch: `session-133/community-audit`
