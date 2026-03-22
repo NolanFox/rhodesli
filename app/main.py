@@ -1749,8 +1749,14 @@ def _format_display_date(date_str: str, include_time: bool = False) -> str | Non
         return None
 
 
-def _get_upload_provenance_display(photo: dict) -> dict | None:
-    """Return shared upload/archive provenance strings for photo UIs."""
+def _get_upload_provenance_display(photo: dict, is_admin: bool = True) -> dict | None:
+    """Return shared upload/archive provenance strings for photo UIs.
+
+    When is_admin is False, returns None to hide internal import metadata
+    (uploader emails, archive entry dates) from public users.
+    """
+    if not is_admin:
+        return None
     upload_date_label = _format_display_date(photo.get("upload_date", ""), include_time=True)
     uploaded_by = (photo.get("uploaded_by") or "").strip()
 
@@ -1776,9 +1782,9 @@ def _get_upload_provenance_display(photo: dict) -> dict | None:
     return None
 
 
-def _build_upload_provenance_line(photo: dict):
+def _build_upload_provenance_line(photo: dict, is_admin: bool = True):
     """Build the archive-entry/source line shown on photo pages."""
-    provenance = _get_upload_provenance_display(photo)
+    provenance = _get_upload_provenance_display(photo, is_admin=is_admin)
     if provenance:
         return Span(provenance["full_text"], cls="text-sm sm:text-xs text-slate-500")
 

@@ -824,7 +824,10 @@ def _platform_root_page(auth_enabled: bool = False):
                     Div(
                         Div(*showcase_cards, cls="grid platform-mosaic gap-4") if showcase_cards else None,
                         Div(
-                            P("Featured public archive", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                            P(
+                                "Featured public archive",
+                                cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70",
+                            ),
                             H2("Jewish Community of Rhodes", cls="mt-3 text-2xl font-display text-white"),
                             P(
                                 "The Rhodes archive remains the clearest public example of the platform. "
@@ -843,7 +846,9 @@ def _platform_root_page(auth_enabled: bool = False):
             Section(
                 Div(
                     Div(
-                        Span("Archive directory", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70"),
+                        Span(
+                            "Archive directory", cls="text-sm sm:text-xs uppercase tracking-[0.28em] text-amber-300/70"
+                        ),
                         H2("Enter the archive you actually mean to use.", cls="mt-3 text-3xl font-display text-white"),
                         P(
                             "This removes the old Rhodes-by-default ambiguity. Each archive keeps its own landing page, help flow, and share context.",
@@ -1437,7 +1442,10 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             # Names ticker -- confirmed identities scrolling
             Section(
                 Div(
-                    P("Identified so far", cls="text-center text-amber-400/50 text-sm sm:text-xs tracking-widest uppercase mb-3"),
+                    P(
+                        "Identified so far",
+                        cls="text-center text-amber-400/50 text-sm sm:text-xs tracking-widest uppercase mb-3",
+                    ),
                     Div(
                         Div(
                             *[
@@ -1587,7 +1595,10 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>'
                                 ),
                                 H3("Browse Photos", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P(f"{stats['photo_count']} photos from 9 decades", cls="text-amber-100/40 text-sm sm:text-xs"),
+                                P(
+                                    f"{stats['photo_count']} photos from 9 decades",
+                                    cls="text-amber-100/40 text-sm sm:text-xs",
+                                ),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/photos",
@@ -1599,7 +1610,10 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>'
                                 ),
                                 H3("People", cls="text-base font-semibold text-amber-100 mb-1"),
-                                P(f"{stats['named_count']} identified people", cls="text-amber-100/40 text-sm sm:text-xs"),
+                                P(
+                                    f"{stats['named_count']} identified people",
+                                    cls="text-amber-100/40 text-sm sm:text-xs",
+                                ),
                                 cls="p-5 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-500/40 hover:bg-amber-900/20 transition-all h-full",
                             ),
                             href="/people",
@@ -4244,8 +4258,8 @@ def photo_view_content(
             P("(Face overlays require cached dimensions)", cls="text-slate-600 text-sm sm:text-xs italic")
             if not has_dimensions and photo["faces"]
             else None,
-            # Upload provenance (uploaded by / added to archive date)
-            _main_mod._build_upload_provenance_line(photo),
+            # Upload provenance (uploaded by / added to archive date) — admin-only
+            _main_mod._build_upload_provenance_line(photo, is_admin=is_admin),
             # Collection / Source / Source URL display
             Div(
                 P(
@@ -4783,7 +4797,9 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                 photo_cards.append(
                     A(
                         Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
-                        P(collection, cls="text-sm sm:text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                        P(collection, cls="text-sm sm:text-xs text-slate-500 mt-1 leading-snug")
+                        if collection
+                        else None,
                         P("See full photo \u2192", cls="text-sm sm:text-xs text-indigo-400 mt-1"),
                         href=f"{nav_prefix}/photo/{pid}",
                         cls="block hover:opacity-80 transition-opacity",
@@ -5114,7 +5130,10 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
             Nav(
                 Div(
                     A(
-                        Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-amber-50 tracking-wide ui99-title"),
+                        Span(
+                            "Rhodesli",
+                            cls="text-xl sm:text-lg font-display font-bold text-amber-50 tracking-wide ui99-title",
+                        ),
                         href=f"{nav_prefix}/",
                     ),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
@@ -5904,7 +5923,11 @@ def get(person_a: str, person_b: str, sess=None, request=None):
                 cls="flex-1",
             ),
             Div(
-                Label("How do you know? (optional)", fr="responder_note", cls="text-sm sm:text-xs text-slate-500 block mb-1"),
+                Label(
+                    "How do you know? (optional)",
+                    fr="responder_note",
+                    cls="text-sm sm:text-xs text-slate-500 block mb-1",
+                ),
                 Input(
                     type="text",
                     name="responder_note",
@@ -6306,16 +6329,17 @@ def _sort_photos(photos: list, sort_by: str) -> list:
     return photos
 
 
-def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "") -> list:
+def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "", is_admin: bool = False) -> list:
     """Build photo card elements for a list of photo dicts.
 
     Args:
         photos: List of photo dicts with photo_id, filename, face_count, etc.
         masonry: If True, render cards at natural aspect ratio for masonry layout.
+        is_admin: If True, show upload provenance metadata (uploader, import dates).
     """
     cards = []
     for photo in photos:
-        provenance = _main_mod._get_upload_provenance_display(photo)
+        provenance = _main_mod._get_upload_provenance_display(photo, is_admin=is_admin)
         badge_cls = (
             "bg-emerald-600/80"
             if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0
@@ -6485,7 +6509,8 @@ def get(
 
     # Build photo cards (paginated — 24 per page for lazy loading)
     PHOTOS_PER_PAGE = 24
-    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True, nav_prefix=nav_prefix)
+    _is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
+    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True, nav_prefix=nav_prefix, is_admin=_is_admin)
 
     # Lazy loading sentinel: loads next page when scrolled into view
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -6669,7 +6694,12 @@ def get(
                             cls="flex-shrink-0",
                         ),
                         # Tag pills
-                        Div(*tag_pills, cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center") if tag_pills else None,
+                        Div(
+                            *tag_pills,
+                            cls="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-1.5 w-full sm:w-auto text-center",
+                        )
+                        if tag_pills
+                        else None,
                         cls="flex flex-wrap items-center gap-3 mb-3",
                     ),
                     # Collection/sort dropdowns
@@ -6729,11 +6759,15 @@ def photos_more(
     decade: int = None,
     search_q: str = "",
     tag: str = "",
+    sess=None,
 ):
     """HTMX endpoint for infinite scroll — returns next batch of photo cards."""
     from urllib.parse import urlencode as _ue
 
     PHOTOS_PER_PAGE = 24
+
+    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -6786,7 +6820,7 @@ def photos_more(
     if not page_photos:
         return ""  # No more photos
 
-    cards = _build_photo_cards(page_photos, masonry=True, nav_prefix=nav_prefix)
+    cards = _build_photo_cards(page_photos, masonry=True, nav_prefix=nav_prefix, is_admin=_is_admin)
 
     # Add sentinel for next page if there are more
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -7097,7 +7131,9 @@ def get(identity_id: str, sess=None, request=None):
                 Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
                 Div(
                     Span(tier_label, cls=f"text-sm sm:text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
-                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2") if is_admin else None,
+                    Span(f"{n.get('distance', 0):.2f}", cls="text-sm sm:text-xs text-slate-500 ml-2")
+                    if is_admin
+                    else None,
                     cls="flex items-center gap-1 mt-1",
                 ),
                 Span(
@@ -7799,7 +7835,10 @@ def get(slug: str, sess=None, request=None):
                 if col["unidentified_count"] > 0
                 else "",
                 # Photo grid
-                Div(*photo_cards, cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"),
+                Div(
+                    *photo_cards,
+                    cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3",
+                ),
                 # People section
                 people_section,
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
@@ -8723,7 +8762,9 @@ def get(
                         Div(
                             Span(icon, cls="text-base"),
                             Div(
-                                Span(str(entry["year"]), cls="text-sm sm:text-xs font-serif text-slate-300 font-medium"),
+                                Span(
+                                    str(entry["year"]), cls="text-sm sm:text-xs font-serif text-slate-300 font-medium"
+                                ),
                                 H3(
                                     entry["title"],
                                     cls="text-sm font-medium text-white leading-snug",
@@ -11665,8 +11706,8 @@ def public_photo_page(
         meta_elements.append(Span(photo["source"]))
     meta_line = Span(*meta_elements) if meta_elements else None
 
-    # --- Uploader attribution ---
-    uploader_line = _main_mod._build_upload_provenance_line(photo)
+    # --- Uploader attribution (admin-only) ---
+    uploader_line = _main_mod._build_upload_provenance_line(photo, is_admin=is_admin)
 
     # --- Open Graph meta tag data ---
     total_faces = len(face_info_list)
@@ -12652,9 +12693,17 @@ def public_photo_page(
                     Div(
                         A("Home", href=f"{nav_prefix}/", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
                         Span("·", cls="text-slate-700"),
-                        A("Photos", href=f"{nav_prefix}/photos", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
+                        A(
+                            "Photos",
+                            href=f"{nav_prefix}/photos",
+                            cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300",
+                        ),
                         Span("·", cls="text-slate-700"),
-                        A("People", href=f"{nav_prefix}/people", cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300"),
+                        A(
+                            "People",
+                            href=f"{nav_prefix}/people",
+                            cls="text-sm sm:text-xs text-slate-500 hover:text-slate-300",
+                        ),
                         cls="flex items-center gap-2",
                     ),
                     cls="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3",

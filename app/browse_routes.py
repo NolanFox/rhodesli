@@ -34,16 +34,17 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "") -> list:
+def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "", is_admin: bool = False) -> list:
     """Build photo card elements for a list of photo dicts.
 
     Args:
         photos: List of photo dicts with photo_id, filename, face_count, etc.
         masonry: If True, render cards at natural aspect ratio for masonry layout.
+        is_admin: If True, show upload provenance (uploader, import dates).
     """
     cards = []
     for photo in photos:
-        provenance = _main_mod._get_upload_provenance_display(photo)
+        provenance = _main_mod._get_upload_provenance_display(photo, is_admin=is_admin)
         badge_cls = (
             "bg-emerald-600/80"
             if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0
@@ -339,7 +340,8 @@ def get(
 
     # Build photo cards (paginated — 24 per page for lazy loading)
     PHOTOS_PER_PAGE = 24
-    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True, nav_prefix=nav_prefix)
+    _is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
+    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True, nav_prefix=nav_prefix, is_admin=_is_admin)
 
     # Lazy loading sentinel: loads next page when scrolled into view
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -636,10 +638,14 @@ def photos_more(
     search_q: str = "",
     tag: str = "",
     media_filter: str = "all",
+    sess=None,
     request=None,
 ):
     """HTMX endpoint for infinite scroll — returns next batch of photo cards."""
     from urllib.parse import urlencode as _ue
+
+    user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _is_admin = user and user.is_admin if user else not _main_mod.is_auth_enabled()
 
     PHOTOS_PER_PAGE = 24
 
@@ -726,7 +732,7 @@ def photos_more(
     if not page_photos:
         return ""  # No more photos
 
-    cards = _build_photo_cards(page_photos, masonry=True, nav_prefix=nav_prefix)
+    cards = _build_photo_cards(page_photos, masonry=True, nav_prefix=nav_prefix, is_admin=_is_admin)
 
     # Add sentinel for next page if there are more
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE

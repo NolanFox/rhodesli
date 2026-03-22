@@ -18,13 +18,37 @@ class TestUploadProvenanceDisplay:
             {
                 "uploaded_by": "user@example.com",
                 "upload_date": "2026-03-05T12:00:00+00:00",
-            }
+            },
+            is_admin=True,
         )
 
         assert display is not None
         assert display["headline"] == "Uploaded Mar 5, 2026 at 12:00 PM UTC"
         assert display["subline"] == "by user@example.com"
         assert display["full_text"] == "Uploaded by user@example.com on Mar 5, 2026 at 12:00 PM UTC"
+
+    def test_helper_returns_none_for_non_admin(self):
+        """Provenance helper returns None for non-admin users to hide internal metadata."""
+        from app.main import _get_upload_provenance_display
+
+        # With uploader recorded
+        display = _get_upload_provenance_display(
+            {
+                "uploaded_by": "user@example.com",
+                "upload_date": "2026-03-05T12:00:00+00:00",
+            },
+            is_admin=False,
+        )
+        assert display is None
+
+        # With archive entry (no uploader)
+        display = _get_upload_provenance_display(
+            {
+                "upload_date": "2026-02-10T00:00:00+00:00",
+            },
+            is_admin=False,
+        )
+        assert display is None
 
     def test_photo_page_shows_uploaded_by(self, client):
         """Photo page shows 'Uploaded by email on date' when fields exist."""
@@ -159,6 +183,34 @@ class TestUploadProvenanceDisplay:
         assert resp.status_code == 200
         assert "Uploaded Mar 5, 2026 at 12:00 PM UTC" in resp.text
         assert "by user@example.com" in resp.text
+
+    def test_public_photos_cards_hide_provenance_for_non_admin(self, client):
+        """Public /photos cards should NOT show provenance metadata for non-admin users."""
+        mock_photo_cache = {
+            "test_backfilled": {
+                "filename": "test.jpg",
+                "collection": "Betty Collection",
+                "faces": [],
+                "upload_date": "2026-02-10T00:00:00+00:00",
+                "photo_index_order": 5,
+            }
+        }
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = []
+
+        with (
+            patch("app.main._build_caches"),
+            patch("app.main._photo_cache", mock_photo_cache),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.get_identity_for_face", return_value=None),
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=None),
+        ):
+            resp = client.get("/photos?sort_by=upload_newest")
+
+        assert resp.status_code == 200
+        assert "Archive entry" not in resp.text
+        assert "Uploader not recorded" not in resp.text
 
     def test_public_photos_cards_surface_archive_provenance_summary(self, client):
         """Public /photos cards show archive-entry timing even without uploader attribution."""
