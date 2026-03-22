@@ -175,6 +175,48 @@ class TestBuildCachesFaceResolution:
         assert identity["name"] == "Test Person"
         assert identity["state"] == "CONFIRMED"
 
+    def test_get_identity_for_face_handles_candidate_ids(self):
+        """Faces in candidate_ids (not just anchor_ids) should resolve."""
+        from app.main import get_identity_for_face
+
+        class FakeRegistry:
+            def list_identities(self):
+                return [
+                    {
+                        "identity_id": "id-002",
+                        "name": "Candidate Person",
+                        "state": "PROPOSED",
+                        "anchor_ids": [],
+                        "candidate_ids": ["inbox_candidate_face"],
+                    }
+                ]
+
+        registry = FakeRegistry()
+        identity = get_identity_for_face(registry, "inbox_candidate_face")
+        assert identity is not None
+        assert identity["name"] == "Candidate Person"
+
+    def test_legacy_face_id_format_resolves(self):
+        """Legacy face IDs (filename:faceN) should also resolve to identities."""
+        from app.main import get_identity_for_face
+
+        class FakeRegistry:
+            def list_identities(self):
+                return [
+                    {
+                        "identity_id": "id-003",
+                        "name": "Legacy Person",
+                        "state": "CONFIRMED",
+                        "anchor_ids": ["Image 001_compress:face0", "Image 001_compress:face1"],
+                        "candidate_ids": [],
+                    }
+                ]
+
+        registry = FakeRegistry()
+        identity = get_identity_for_face(registry, "Image 001_compress:face0")
+        assert identity is not None
+        assert identity["name"] == "Legacy Person"
+
     def test_get_identity_for_face_returns_none_for_unknown(self):
         """get_identity_for_face returns None for faces not in any identity."""
         from app.main import get_identity_for_face

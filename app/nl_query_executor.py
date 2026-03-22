@@ -9,9 +9,28 @@ All queries use parameterized Supabase client methods (ilike, gte, lte)
 """
 
 import logging
+import re
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_postgrest_value(value: str) -> str:
+    """Strip PostgREST metacharacters to prevent filter injection via .or_().
+
+    Security audit Finding 1 (Session 134): .or_() takes raw PostgREST filter
+    strings. Commas, periods, and parens in values can alter filter logic.
+    """
+    return re.sub(r"[^a-zA-Z0-9 '\-]", "", value)
+
+
+def _escape_ilike(value: str) -> str:
+    """Escape ILIKE special characters (%, _) in user-provided search terms.
+
+    Security audit Finding 2 (Session 134): unescaped % matches all rows,
+    _ matches any single character.
+    """
+    return value.replace("%", r"\%").replace("_", r"\_")
 
 
 def execute_query(intent_result: dict[str, Any], supabase_client=None) -> dict[str, Any]:
@@ -74,7 +93,7 @@ def _execute_person_search(intent_result: dict, sb) -> dict[str, Any]:
     result = (
         sb.table("identities")
         .select("identity_id, name, state, anchor_ids")
-        .ilike("name", f"%{name}%")
+        .ilike("name", f"%{_escape_ilike(name)}%")
         .neq("state", "MERGED")
         .limit(50)
         .execute()
@@ -136,17 +155,17 @@ def _execute_photo_filter(intent_result: dict, sb) -> dict[str, Any]:
         query = query.lte("date_estimate", filters["year_end"])
         query_desc_parts.append(f"before {filters['year_end']}")
 
-    # Location filter
+    # Location filter (sanitized against PostgREST injection — Finding 1)
     if "location" in filters:
-        loc = filters["location"]
+        loc = _sanitize_postgrest_value(filters["location"])
         query = query.or_(f"source.ilike.%{loc}%,collection.ilike.%{loc}%")
-        query_desc_parts.append(f"from {loc}")
+        query_desc_parts.append(f"from {filters['location']}")
 
-    # Photo type filter
+    # Photo type filter (sanitized against PostgREST injection — Finding 1)
     if "photo_type" in filters:
-        ptype = filters["photo_type"]
+        ptype = _sanitize_postgrest_value(filters["photo_type"])
         query = query.or_(f"source.ilike.%{ptype}%,collection.ilike.%{ptype}%")
-        query_desc_parts.append(f"{ptype} photos")
+        query_desc_parts.append(f"{filters['photo_type']} photos")
 
     result = query.limit(50).execute()
 

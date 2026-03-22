@@ -408,3 +408,61 @@ class TestNlQueryExecutor:
         )
         assert result["result_type"] == "persons"
         assert result["items"][0]["face_count"] == 3
+
+
+class TestSecuritySanitization:
+    """Session 134: Security audit findings 1 + 2 — input sanitization."""
+
+    def test_sanitize_postgrest_strips_metacharacters(self):
+        """PostgREST metacharacters (.,()) are stripped from filter values."""
+        from app.nl_query_executor import _sanitize_postgrest_value
+
+        assert _sanitize_postgrest_value("normal text") == "normal text"
+        assert _sanitize_postgrest_value("evil.comma,paren(") == "evilcommaparen"
+        assert _sanitize_postgrest_value("Rhodes") == "Rhodes"
+        assert _sanitize_postgrest_value("New York") == "New York"
+
+    def test_sanitize_postgrest_preserves_allowed_chars(self):
+        """Apostrophes and hyphens are preserved (common in names/places)."""
+        from app.nl_query_executor import _sanitize_postgrest_value
+
+        assert _sanitize_postgrest_value("O'Brien") == "O'Brien"
+        assert _sanitize_postgrest_value("Tel-Aviv") == "Tel-Aviv"
+
+    def test_escape_ilike_wildcards(self):
+        """ILIKE special characters % and _ are escaped."""
+        from app.nl_query_executor import _escape_ilike
+
+        assert _escape_ilike("normal") == "normal"
+        assert _escape_ilike("100%") == r"100\%"
+        assert _escape_ilike("test_name") == r"test\_name"
+        assert _escape_ilike("%_%") == r"\%\_\%"
+
+    def test_person_search_uses_escaped_ilike(self):
+        """Person search escapes % and _ in name before ilike query."""
+        from app.nl_query_executor import execute_query
+
+        mock_sb = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = []
+        mock_sb.table.return_value.select.return_value.ilike.return_value.neq.return_value.limit.return_value.execute.return_value = mock_result
+
+        execute_query(
+            {"intent": "person_search", "entities": {"name": "test%user"}},
+            supabase_client=mock_sb,
+        )
+
+        # Verify ilike was called with escaped value
+        ilike_call = mock_sb.table.return_value.select.return_value.ilike
+        ilike_call.assert_called_once_with("name", r"%test\%user%")
+
+    def test_sanitize_postgrest_blocks_injection_payload(self):
+        """A realistic PostgREST injection payload gets fully sanitized."""
+        from app.nl_query_executor import _sanitize_postgrest_value
+
+        # This payload would alter a .or_() filter if unsanitized
+        payload = "rhodes%,identity_id.eq.secret-id"
+        sanitized = _sanitize_postgrest_value(payload)
+        assert "," not in sanitized
+        assert ".eq." not in sanitized
+        assert "%" not in sanitized
