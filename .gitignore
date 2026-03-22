@@ -1,6 +1,9 @@
 # Test artifacts (leaked MagicMock paths)
 MagicMock/
 
+# Production data backups (contain real Supabase data)
+data_backup_session*/
+
 # Python
 __pycache__/
 *.py[cod]
