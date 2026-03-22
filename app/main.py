@@ -1689,20 +1689,35 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     _community_ids_cache_ts = 0.0
 
     # JSON backup in background thread (Postgres is source of truth — PRD-051).
-    # Session 131 audit fix: snapshot identities dict before passing to thread
-    # to avoid RuntimeError from concurrent dict mutation during serialization.
-    import copy as _copy
+    # Session 134 perf fix: serialize to JSON string synchronously (cheap) instead
+    # of deepcopy (expensive ~20-50ms for 3400 identities). Write string in bg thread.
+    # Guard: skip when registry._identities is not a real dict (test environment mocks).
     import threading as _threading
 
-    _registry_snapshot = _copy.deepcopy(registry)
-
-    def _write_json_backup():
+    _json_str = None
+    if isinstance(registry._identities, dict) and len(registry._identities) > 1:
         try:
-            _registry_snapshot.save(REGISTRY_PATH)
-        except Exception as e:
-            logging.warning(f"JSON backup write failed (non-critical): {e}")
+            _json_str = json.dumps(
+                {"schema_version": 1, "identities": registry._identities, "history": registry._history},
+                ensure_ascii=False,
+                default=str,
+            )
+        except Exception:
+            _json_str = None
 
-    _threading.Thread(target=_write_json_backup, daemon=True).start()
+    if _json_str:
+
+        def _write_json_backup():
+            try:
+                _path = Path(REGISTRY_PATH)
+                _path.parent.mkdir(parents=True, exist_ok=True)
+                _tmp = _path.with_suffix(".tmp")
+                _tmp.write_text(_json_str, encoding="utf-8")
+                _tmp.replace(_path)
+            except Exception as e:
+                logging.warning(f"JSON backup write failed (non-critical): {e}")
+
+        _threading.Thread(target=_write_json_backup, daemon=True).start()
 
     # FB-069: Only write changed identities to Supabase when changed_ids is provided
     if changed_ids:
