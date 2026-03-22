@@ -350,19 +350,10 @@ class TestIdentityHistoryAuditLog:
 
         assert [e["event_id"] for e in events] == ["evt-1", "evt-2"]
 
-    def test_load_identity_overrides_from_supabase(self, mock_sb_client):
-        result = MagicMock()
-        result.data = [
-            {"identity_id": "id1", "data": {"identity_id": "id1", "merge_history": [{"merge_event_id": "m1"}]}},
-            {"identity_id": "id2", "data": {"identity_id": "id2", "provenance": {"job_id": "job-2"}}},
-        ]
-        mock_sb_client.table.return_value.select.return_value.execute.return_value = result
-
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb_client):
-            overrides = load_identity_overrides_from_supabase()
-
-        assert overrides["id1"]["merge_history"] == [{"merge_event_id": "m1"}]
-        assert overrides["id2"]["provenance"] == {"job_id": "job-2"}
+    def test_load_identity_overrides_from_supabase_returns_none(self, mock_sb_client):
+        """identity_overrides deprecated in Session 130 — stub returns None."""
+        overrides = load_identity_overrides_from_supabase()
+        assert overrides is None
 
 
 # ---------------------------------------------------------------------------

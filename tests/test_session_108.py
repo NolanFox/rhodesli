@@ -207,7 +207,7 @@ class TestDataHealthEndpoint:
         assert "identities" in data
         assert "photos" in data
         assert "status" in data
-        assert data["status"] in ("healthy", "issues_found", "error")
+        assert data["status"] in ("healthy", "issues_found", "critical", "error")
 
     def test_data_health_orphan_faces_structure(self, client, admin_user):
         """Orphan faces section has count and face_ids list."""
