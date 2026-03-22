@@ -913,3 +913,129 @@ class TestSession100PhotoWorkflow:
 
         assert 'data-testid="photo-face-fallback-thumb"' in html
         assert "translate(" in html
+
+
+class TestFB005007ClickableFaceCards:
+    """FB-005/007: Face crops in people grid must be wrapped in anchor tags."""
+
+    def test_face_cards_wrapped_in_anchor_with_person_href(self, client, real_photo_id):
+        """Identified face crops link to /person/{id}."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import app.main as main
+
+        main._photo_cache = None
+        main._face_to_photo_cache = None
+        main._photo_id_aliases = None
+        main._face_data_cache = None
+        main._crop_files_cache = None
+        main._skipped_neighbor_cache = None
+        main._photo_registry_cache = None
+        main._discovery_cache = None
+
+        c = TestClient(main.app)
+        html = c.get(f"/photo/{real_photo_id}").text
+        # Cards should be wrapped in <a> tags pointing to /person/ or /identify/
+        card_links = re.findall(
+            r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="no-underline',
+            html,
+        )
+        assert len(card_links) > 0, "Face cards should be wrapped in anchor tags"
+
+
+class TestFB008StateBorderColors:
+    """FB-008: Visual distinction between CONFIRMED, PROPOSED, INBOX faces."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch(
+        "app.main._photo_cache",
+        {
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "a.jpg",
+                "collection": "Test",
+                "source": "Test",
+                "faces": [
+                    {"face_id": "face-confirmed", "bbox": [10, 10, 50, 50]},
+                    {"face_id": "face-proposed", "bbox": [100, 100, 150, 150]},
+                    {"face_id": "face-inbox", "bbox": [200, 200, 250, 250]},
+                ],
+            },
+        },
+    )
+    @patch("app.main._public_nav_links", return_value=[])
+    @patch("app.main._public_page_nav", return_value=())
+    @patch("app.main._admin_bar", return_value=())
+    @patch("app.main._build_upload_provenance_line", return_value=None)
+    @patch("app.main._get_date_badge", return_value=("", "low", ""))
+    @patch("app.main._build_ai_analysis_section", return_value=None)
+    @patch("app.main._build_face_alignment_section", return_value=None)
+    @patch("app.main._build_photo_date_badge", return_value=None)
+    @patch("app.main.get_identity_for_face")
+    def test_confirmed_face_has_green_border(
+        self,
+        mock_get_id,
+        mock_date_badge,
+        mock_alignment,
+        mock_ai,
+        mock_date_meta,
+        mock_upload_line,
+        mock_admin_bar,
+        mock_public_nav,
+        mock_nav_links,
+        mock_reg,
+        mock_dim,
+        mock_meta,
+    ):
+        from app.main import public_photo_page, to_xml
+
+        mock_reg.return_value = MagicMock()
+        mock_meta.return_value = {
+            "photo_id": "photo-1",
+            "filename": "a.jpg",
+            "collection": "Test",
+            "source": "Test",
+            "faces": [
+                {"face_id": "face-confirmed", "bbox": [10, 10, 50, 50]},
+                {"face_id": "face-proposed", "bbox": [100, 100, 150, 150]},
+                {"face_id": "face-inbox", "bbox": [200, 200, 250, 250]},
+            ],
+        }
+
+        def id_for_face(registry, fid, **kwargs):
+            if fid == "face-confirmed":
+                return {"identity_id": "p-1", "name": "Alice", "state": "CONFIRMED"}
+            elif fid == "face-proposed":
+                return {"identity_id": "p-2", "name": "Unidentified Person 1", "state": "PROPOSED"}
+            elif fid == "face-inbox":
+                return {"identity_id": "p-3", "name": "Unidentified Person 2", "state": "INBOX"}
+            return None
+
+        mock_get_id.side_effect = id_for_face
+
+        html = to_xml(public_photo_page("photo-1", community_slug="rhodes"))
+
+        # CONFIRMED face should have emerald/green border
+        assert "border-emerald-400" in html, "CONFIRMED faces should have green border"
+        # PROPOSED face should have amber border
+        assert "border-amber-400" in html, "PROPOSED faces should have amber border"
+        # INBOX face should have dashed slate border
+        assert "border-dashed" in html, "INBOX faces should have dashed border"
+        assert "border-slate-400" in html, "INBOX faces should have slate border"
+
+
+class TestFB009ResponsiveGrid:
+    """FB-009: People grid uses responsive column layout."""
+
+    def test_grid_uses_responsive_columns(self, client, real_photo_id):
+        """Grid container should have responsive Tailwind column classes."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Check for responsive grid classes
+        assert "grid-cols-2" in html, "Grid should have 2-column base"
+        assert "sm:grid-cols-3" in html, "Grid should have 3-column on sm screens"
+        assert "lg:grid-cols-4" in html, "Grid should have 4-column on lg screens"

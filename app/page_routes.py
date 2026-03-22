@@ -11516,14 +11516,27 @@ def public_photo_page(
             face_overlays.append(overlay)
 
     # --- Build person cards strip / dense grid ---
+    def _face_card_border_cls(fi: dict) -> str:
+        """Return border CSS classes based on identity state (FB-008)."""
+        state = fi.get("state", "")
+        if state == "CONFIRMED":
+            return "border-2 border-emerald-400"
+        elif state == "PROPOSED":
+            return "border-2 border-amber-400"
+        elif state == "INBOX":
+            return "border-2 border-dashed border-slate-400"
+        else:
+            return "border-2 border-slate-600"
+
     def _face_card_thumb(fi: dict):
+        border_cls = _face_card_border_cls(fi)
         if fi["crop_url"]:
             return Img(
                 src=fi["crop_url"],
                 alt=fi["display_name"],
-                cls="w-20 h-20 rounded-full object-cover border-2 "
-                + ("border-emerald-500/50" if fi["is_identified"] else "border-slate-600"),
+                cls=f"w-20 h-20 rounded-full object-cover {border_cls}",
                 onerror="this.style.display='none'",
+                data_testid="photo-face-thumb",
             )
 
         if has_dimensions and fi["bbox"] and len(fi["bbox"]) >= 4:
@@ -11550,8 +11563,7 @@ def public_photo_page(
                     ),
                     loading="lazy",
                 ),
-                cls="relative w-20 h-20 rounded-full overflow-hidden border-2 "
-                + ("border-emerald-500/50 bg-slate-900" if fi["is_identified"] else "border-slate-600 bg-slate-900"),
+                cls=f"relative w-20 h-20 rounded-full overflow-hidden {border_cls} bg-slate-900",
                 data_testid="photo-face-fallback-thumb",
             )
 
@@ -11567,7 +11579,16 @@ def public_photo_page(
 
     person_cards = []
     for fi in display_face_info_list:
-        card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
+        # Card border matches face state (FB-008)
+        _state = fi.get("state", "")
+        if _state == "CONFIRMED":
+            card_border = "border-emerald-500/30"
+        elif _state == "PROPOSED":
+            card_border = "border-amber-500/30"
+        elif _state == "INBOX":
+            card_border = "border-dashed border-slate-500/30"
+        else:
+            card_border = "border-slate-600/50"
         if fi["bbox_conflict"] and not fi["is_identified"]:
             badge = Span("Conflict", cls="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-full")
         elif fi["is_context_identity"]:
@@ -12599,8 +12620,8 @@ def public_photo_page(
                     ),
                     Div(
                         *person_cards,
-                        cls="person-grid" if dense_faces_layout else "person-strip",
-                        data_testid="photo-people-grid" if dense_faces_layout else "photo-people-strip",
+                        cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 py-2",
+                        data_testid="photo-people-grid",
                     )
                     if person_cards
                     else P("No faces detected in this photo.", cls="text-slate-500 text-sm"),
