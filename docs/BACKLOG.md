@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 50.0 — March 22, 2026
-**Status**: ~3677 tests passing, v0.99.43, 972 photos, 3757 identities (1863 non-merged), ~154 confirmed
+**Version**: 51.0 — March 22, 2026
+**Status**: ~3703 tests passing, v0.99.44, 972 photos, 3757 identities (1863 non-merged), ~154 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -34,6 +34,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **COMMUNITY-018a**: Add `request` parameter to `/admin/communities` GET handler for nav_bar prefix. Currently community management pages don't pass request to `_admin_nav_bar()` — acceptable for single-admin but fragile for multi-admin. Source: Session 133 community audit DOC-5.
 - **COMMUNITY-018b**: Consider extracting community_slug from Referer header in middleware for HTMX requests. Currently HTMX POST paths in admin context lack community prefix (DOC-1) — acceptable because operations target entities by ID, but fragile if community-scoped operations are added later. Source: Session 133 community audit recommendation.
 - **COMMUNITY-018c**: Move admin POST routes under `/api/admin/` prefix for consistency with middleware `/api/` skip rule. Low priority — functional correctness not affected. Source: Session 133 community audit recommendation.
+
+### P1 — PostgREST Filter Injection (SEC-001) — Session 134
+- **SEC-001**: `.or_()` in nl_query_executor.py takes raw PostgREST filter strings. Currently safe due to hardcoded allowlist in NL parser, but will become P0 if Gemini-assisted parsing (TOOLS-004 Phase 2) passes user-controlled strings. `_sanitize_postgrest_value()` added as defense-in-depth but the underlying `.or_()` pattern should be replaced with parameterized filters. **Must fix before TOOLS-004 Phase 2 ships.** Source: Session 134 security audit Finding 1.
+
+### P3 — Security Audit Deferred Items (SEC-002/003/004) — Session 134
+- **SEC-002**: ILIKE wildcard escaping — `_escape_ilike()` added in Session 134. DONE but verify on edge cases. Source: Session 134 Finding 2.
+- **SEC-003**: No CSRF check on `/tools/search` POST — read-only endpoint, low risk. Add `_check_origin()` for consistency. Source: Session 134 Finding 4.
+- **SEC-004**: Invite code timing side-channel — `in` operator on list is not constant-time. Negligible at current scale (1-3 codes). Use `hmac.compare_digest()` if code space expands. Source: Session 134 Finding 7.
 
 ### P2 — Missing Embeddings (EMBED-001)
 - ~~**EMBED-001**: Reduced from `124` missing embeddings to `2` archival face records after local InsightFace rerun regenerated 130 embeddings.~~ FIXED (Session 96e-cont12) — the final `2` archival records were crop-matched back to current detections and embedded. Final local audit reports `0` missing embeddings. Root cause was registry/artifact drift plus staged-upload publication gaps.
