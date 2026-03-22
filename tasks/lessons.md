@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-154 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+156 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -149,6 +149,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 152 | **Deployed Supabase queries must match actual schema — mock tests don't catch column mismatches (see also 105)** |
 | 153 | **Legacy data layers that "just sync" WILL silently corrupt production — 9th occurrence. identity_overrides overwrote correct anchor_ids with stale snapshots for 4 days. 36 faces lost. Fix: structural tests that fail if ANY override layer is re-introduced** |
 | 154 | **Merge face transfer must be verified post-write — 10th data integrity occurrence. 175 faces orphaned across 18 identities. Merged sources hidden but faces never transferred to targets. Post-merge verification + structural tests added** |
+| 155 | **Data repair scripts must snapshot before EACH step — un-merging created 692 secondary multi-claimed faces requiring a 7th fix step** |
+| 156 | **Database mutations need comprehensive audit trail — 11th data integrity occurrence, 691 dangling merges untraceable** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
