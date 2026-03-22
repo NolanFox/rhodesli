@@ -88,7 +88,8 @@ class TestPhotosLazyLoading:
         monkeypatch.setattr(main_mod, "_get_date_badge", lambda _photo_id: ("c. 1930s", "high", "Estimated: 1930s"))
 
         class FakeRegistry:
-            pass
+            def list_identities(self, include_merged=False):
+                return []
 
         monkeypatch.setattr(main_mod, "load_registry", lambda: FakeRegistry())
         monkeypatch.setattr(main_mod, "get_identity_for_face", lambda *_args, **_kwargs: None)
@@ -100,7 +101,7 @@ class TestPhotosLazyLoading:
             response = client.get("/c/fox-family/api/photos/more?page=1")
 
         assert response.status_code == 200
-        assert '/c/fox-family/photo/photo-1' in response.text
+        assert "/c/fox-family/photo/photo-1" in response.text
 
 
 class TestTimelineLazyLoading:
