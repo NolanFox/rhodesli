@@ -2080,8 +2080,35 @@ def _get_identities_with_proposals() -> set[str]:
     return {p["source_identity_id"] for p in data.get("proposals", [])}
 
 
-def _get_best_proposal_for_identity(identity_id: str) -> dict | None:
-    """Get the highest-confidence proposal for an identity."""
+def _build_best_proposals_index() -> dict[str, dict]:
+    """Build an index of best (lowest-distance) proposal per source identity.
+
+    Returns dict mapping source_identity_id -> best proposal dict.
+    Use this instead of calling _get_best_proposal_for_identity() in loops
+    to avoid the N+1 proposals loading pattern.
+    """
+    data = _load_proposals()
+    best: dict[str, dict] = {}
+    for p in data.get("proposals", []):
+        sid = p.get("source_identity_id", "")
+        if not sid:
+            continue
+        dist = p.get("distance", float("inf"))
+        if sid not in best or dist < best[sid].get("distance", float("inf")):
+            best[sid] = p
+    return best
+
+
+def _get_best_proposal_for_identity(identity_id: str, *, proposals_index: dict[str, dict] | None = None) -> dict | None:
+    """Get the highest-confidence proposal for an identity.
+
+    Args:
+        identity_id: The identity to look up.
+        proposals_index: Optional pre-built index from _build_best_proposals_index().
+            When provided, avoids reloading proposals (use in loops/sorts).
+    """
+    if proposals_index is not None:
+        return proposals_index.get(identity_id)
     proposals = _get_proposals_for_identity(identity_id)
     if not proposals:
         return None
@@ -3532,6 +3559,7 @@ def _compute_triage_counts(to_review: list) -> dict:
         }
     """
     ids_with_proposals = _get_identities_with_proposals()
+    best_proposals = _build_best_proposals_index()
     ready = 0
     rediscovered = 0
     unmatched = 0
@@ -3541,7 +3569,7 @@ def _compute_triage_counts(to_review: list) -> dict:
         has_promotion = identity.get("promoted_from") is not None
 
         if iid in ids_with_proposals:
-            best = _get_best_proposal_for_identity(iid)
+            best = _get_best_proposal_for_identity(iid, proposals_index=best_proposals)
             if best and best.get("confidence") in ("VERY HIGH", "HIGH"):
                 ready += 1
                 continue
@@ -6419,11 +6447,12 @@ def render_to_review_section(
     # 4. Faces with High proposals
     # 5. Remaining inbox faces
     ids_with_proposals = _get_identities_with_proposals()
+    best_proposals = _build_best_proposals_index()
 
     def _focus_sort_key(x):
         iid = x.get("identity_id", "")
         has_proposal = iid in ids_with_proposals
-        best = _get_best_proposal_for_identity(iid) if has_proposal else None
+        best = _get_best_proposal_for_identity(iid, proposals_index=best_proposals) if has_proposal else None
         has_promotion = x.get("promoted_from") is not None
         promotion_reason = x.get("promotion_reason", "")
 
@@ -6984,13 +7013,14 @@ def _get_skipped_neighbor_distances(skipped: list) -> dict:
         return _skipped_neighbor_cache
 
     ids_with_proposals = _get_identities_with_proposals()
+    best_proposals = _build_best_proposals_index()
     result = {}
 
     # First, use proposals for any identities that have them
     for identity in skipped:
         iid = identity.get("identity_id", "")
         if iid in ids_with_proposals:
-            best = _get_best_proposal_for_identity(iid)
+            best = _get_best_proposal_for_identity(iid, proposals_index=best_proposals)
             if best:
                 target_name = best.get("target_name", best.get("name", ""))
                 result[iid] = (best.get("distance", 999), best.get("confidence", "LOW"), target_name)
@@ -7692,13 +7722,14 @@ def _compute_discoveries(registry=None, community_identity_ids=None) -> list:
     # No batch_best_neighbor_distances fallback — identities without proposals
     # simply don't appear in discoveries. Run clustering pipeline to generate proposals.
     ids_with_proposals = _get_identities_with_proposals()
+    best_proposals = _build_best_proposals_index()
     unreviewed_ids = {u["identity_id"] for u in unreviewed}
 
     for identity in unreviewed:
         iid = identity["identity_id"]
         if iid not in ids_with_proposals:
             continue
-        best = _get_best_proposal_for_identity(iid)
+        best = _get_best_proposal_for_identity(iid, proposals_index=best_proposals)
         if best:
             target_id = best.get("target_identity_id", best.get("target_id", ""))
             if target_id in confirmed_ids and best.get("distance", 999) < DISCOVERY_DISTANCE_THRESHOLD:
@@ -8784,11 +8815,12 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
 
     # Sort by actionability priority (matches render_to_review_section's _focus_sort_key)
     ids_with_proposals = _get_identities_with_proposals()
+    best_proposals = _build_best_proposals_index()
 
     def _focus_sort_key(x):
         iid = x.get("identity_id", "")
         has_proposal = iid in ids_with_proposals
-        best = _get_best_proposal_for_identity(iid) if has_proposal else None
+        best = _get_best_proposal_for_identity(iid, proposals_index=best_proposals) if has_proposal else None
         has_promotion = x.get("promoted_from") is not None
         promotion_reason = x.get("promotion_reason", "")
 
