@@ -739,6 +739,29 @@ class IdentityRegistry:
             f"({faces_merged} faces transferred, swapped={direction_swapped})"
         )
 
+        # POST-MERGE VERIFICATION (Session 131 — Lesson 154)
+        # Verify ALL source faces are now in the target. If any are missing,
+        # the merge succeeded in-memory but may fail to persist to Supabase.
+        target_face_set = self._face_id_set(target.get("anchor_ids", [])) | self._face_id_set(
+            target.get("candidate_ids", [])
+        )
+        source_face_ids = [self._face_id_from_entry(a) for a in source.get("anchor_ids", [])] + [
+            self._face_id_from_entry(c) for c in source.get("candidate_ids", [])
+        ]
+        source_face_ids = [f for f in source_face_ids if f]
+        orphaned = [f for f in source_face_ids if f not in target_face_set]
+        if orphaned:
+            logger.error(
+                f"MERGE VERIFICATION FAILED: {len(orphaned)} faces from "
+                f"{actual_source_id} not found in target {actual_target_id}: "
+                f"{orphaned[:5]}{'...' if len(orphaned) > 5 else ''}"
+            )
+            # Force-add the orphaned faces to prevent data loss
+            for fid in orphaned:
+                target["anchor_ids"].append(fid)
+                faces_merged += 1
+            logger.warning(f"Force-added {len(orphaned)} orphaned faces to target {actual_target_id}")
+
         return {
             "success": True,
             "reason": "ok",
