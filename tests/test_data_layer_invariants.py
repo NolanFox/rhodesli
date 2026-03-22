@@ -70,6 +70,48 @@ class TestNoOverrideLayers:
         for ref in identity_tables:
             assert "override" not in ref.lower(), f"Found override table reference in load_from_postgres: {ref}"
 
+    def test_startup_sync_does_not_read_overrides(self):
+        """sync_from_supabase_on_startup must NOT read identity_overrides.
+
+        Session 130: Found that Session 129 removed the write but left the
+        startup read. Every deploy was still applying stale overrides."""
+        from app.supabase_data import sync_from_supabase_on_startup
+
+        source = inspect.getsource(sync_from_supabase_on_startup)
+        lines = source.split("\n")
+        code_lines = [l for l in lines if l.strip() and not l.strip().startswith("#")]
+        code_text = "\n".join(code_lines)
+        assert "identity_overrides" not in code_text, (
+            "sync_from_supabase_on_startup must not read identity_overrides. "
+            "This table is deprecated — reads were removed in Session 130."
+        )
+
+    def test_no_production_code_queries_identity_overrides_table(self):
+        """No production Python file should query the identity_overrides table.
+
+        Session 130: Complete removal of identity_overrides as a data layer.
+        Only test files and docs may reference it (for invariant checks)."""
+        import glob
+        import os
+
+        app_files = glob.glob("app/**/*.py", recursive=True)
+        core_files = glob.glob("core/**/*.py", recursive=True)
+        prod_files = app_files + core_files
+
+        for filepath in prod_files:
+            with open(filepath) as f:
+                source = f.read()
+            lines = source.split("\n")
+            for i, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if stripped.startswith("#") or stripped.startswith('"""') or stripped.startswith("'''"):
+                    continue
+                if "identity_overrides" in stripped and ".table(" in stripped:
+                    pytest.fail(
+                        f"{filepath}:{i} queries identity_overrides table: {stripped}\n"
+                        "This table is deprecated (Session 130). Remove the query."
+                    )
+
 
 class TestDataIntegrityInvariants:
     """Structural tests that catch data corruption patterns before they ship."""

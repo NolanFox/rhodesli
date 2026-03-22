@@ -7,7 +7,7 @@ Architecture (AD-135):
 - If Supabase is unavailable, app continues from JSON (degraded mode)
 
 Tables:
-- identity_overrides: complete identity records for user-modified identities
+- identities: sole source of truth for all identity data (Session 130)
 - annotations: community annotations (name suggestions, bios, etc.)
 - relationships: person-to-person relationships
 - gedcom_matches: GEDCOM individual → identity match decisions
@@ -116,44 +116,12 @@ def _is_user_modified_identity(data):
 
 
 def sync_identity_overrides(identities_dict):
-    """Upsert all user-modified identities to Supabase.
+    """DEPRECATED: identity_overrides removed in Session 130.
 
-    Called after every save_registry(). Syncs the full state of each
-    user-modified identity so Supabase stays current.
-
-    Args:
-        identities_dict: dict of {identity_id: identity_data} from the registry
+    This function is a no-op. The identities table in Supabase is the sole
+    source of truth. Kept as a stub so tests that mock it don't break.
     """
-    sb = get_supabase_client()
-    if not sb:
-        return
-
-    rows = []
-    for identity_id, data in identities_dict.items():
-        if _is_user_modified_identity(data):
-            rows.append(
-                {
-                    "identity_id": identity_id,
-                    "state": data.get("state", "INBOX"),
-                    "name": data.get("name"),
-                    "merged_into": data.get("merged_into"),
-                    "data": data,
-                    "updated_by": "admin",
-                    "updated_at": data.get("updated_at"),
-                }
-            )
-
-    if not rows:
-        return
-
-    try:
-        batch_size = 100
-        for i in range(0, len(rows), batch_size):
-            batch = rows[i : i + batch_size]
-            sb.table("identity_overrides").upsert(batch).execute()
-        logger.debug(f"Synced {len(rows)} identity overrides to Supabase")
-    except Exception as e:
-        logger.warning(f"Supabase identity sync failed (degraded mode): {e}")
+    pass
 
 
 # =========================================================================
@@ -310,58 +278,11 @@ def sync_from_supabase_on_startup(data_path):
     data_path = Path(data_path)
     changes_made = False
 
-    # --- Sync identity overrides ---
-    # Only apply overrides where Supabase updated_at is NEWER than JSON.
-    # This prevents restart from reverting manual volume fixes (Person 2973 bug).
-    try:
-        result = sb.table("identity_overrides").select("identity_id, data").execute()
-        overrides = {row["identity_id"]: row["data"] for row in result.data}
-
-        if overrides:
-            ids_path = data_path / "identities.json"
-            if ids_path.exists():
-                with open(ids_path) as f:
-                    ids_data = json.load(f)
-
-                identities = ids_data.get("identities", {})
-                applied = 0
-                skipped = 0
-                state_changes = []
-                for identity_id, override_data in overrides.items():
-                    existing = identities.get(identity_id)
-                    if existing:
-                        # Compare updated_at: only apply if Supabase is newer
-                        sb_updated = override_data.get("updated_at", "")
-                        json_updated = existing.get("updated_at", "")
-                        if json_updated and sb_updated and json_updated >= sb_updated:
-                            skipped += 1
-                            continue
-                        # Log state changes for provenance
-                        old_state = existing.get("state", "INBOX")
-                        new_state = override_data.get("state", "INBOX")
-                        if old_state != new_state:
-                            state_changes.append(
-                                f"{identity_id}: {old_state} -> {new_state} (name={override_data.get('name', '?')})"
-                            )
-                    identities[identity_id] = override_data
-                    applied += 1
-
-                ids_data["identities"] = identities
-
-                # Atomic write with lock
-                tmp_path = ids_path.with_suffix(".tmp")
-                with open(tmp_path, "w") as f:
-                    portalocker.lock(f, portalocker.LOCK_EX)
-                    json.dump(ids_data, f, indent=2)
-                tmp_path.replace(ids_path)
-
-                if state_changes:
-                    for sc in state_changes:
-                        logger.warning(f"Startup sync STATE CHANGE: {sc}")
-                logger.info(f"Startup sync: applied {applied}, skipped {skipped} identity overrides from Supabase")
-                changes_made = True
-    except Exception as e:
-        logger.error(f"Startup sync failed for identities: {e}")
+    # --- identity_overrides REMOVED (Session 130) ---
+    # identity_overrides was a stale data layer that silently overwrote correct
+    # identity data with snapshots from days ago. Caused 36 faces to disappear
+    # (9th occurrence of split-brain pattern, Lesson 153). The identities table
+    # in Supabase is now the sole source of truth — no override/shadow layer.
 
     # --- Sync annotations ---
     try:
@@ -1295,23 +1216,11 @@ def load_identity_history_from_supabase() -> list[dict] | None:
 
 
 def load_identity_overrides_from_supabase() -> dict[str, dict] | None:
-    """Load full identity override payloads keyed by identity_id."""
-    sb = get_supabase_client()
-    if not sb:
-        return None
+    """DEPRECATED: identity_overrides removed in Session 130.
 
-    try:
-        result = sb.table("identity_overrides").select("identity_id, data").execute()
-        overrides = {}
-        for row in result.data or []:
-            identity_id = row.get("identity_id")
-            data = row.get("data")
-            if identity_id and isinstance(data, dict):
-                overrides[identity_id] = data
-        return overrides
-    except _SUPABASE_ERRORS as e:
-        logger.warning(f"Supabase identity override load failed: {e}")
-        return None
+    Returns None (no overrides). Kept as a stub so tests that mock it don't break.
+    """
+    return None
 
 
 # =========================================================================
