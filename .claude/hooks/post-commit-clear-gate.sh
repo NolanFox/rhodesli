@@ -31,7 +31,9 @@ fi
 
 # Detect successful git commit
 if echo "$CMD" | grep -qE '\bgit commit\b'; then
-    COUNTER_FILE=".claude/commits_since_clear.txt"
+    # Session 133: Use git-aware path so worktree agents have their own counter
+    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+    COUNTER_FILE="$REPO_ROOT/.claude/commits_since_clear.txt"
     CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
     NEW=$((CURRENT + 1))
     echo "$NEW" > "$COUNTER_FILE"

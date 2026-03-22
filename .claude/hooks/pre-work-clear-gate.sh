@@ -22,7 +22,9 @@ if [ "$SESSION_MODE" = "interactive" ] || [ "$SESSION_MODE" = "continuation" ]; 
     exit 0
 fi
 
-COUNTER_FILE=".claude/commits_since_clear.txt"
+# Session 133: Use git-aware path so worktree agents have their own counter
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+COUNTER_FILE="$REPO_ROOT/.claude/commits_since_clear.txt"
 CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
 
 # Block after 1+ commits without /clear

@@ -243,6 +243,24 @@ P2 items: FB-101, 102, 107, 108, 109, 111, 114, 115, 116, 117. See feedback doc 
 ### P2 — Solomon Galante Empty Anchor IDs (DATA-017)
 - **DATA-017**: Identity for Solomon "Solly" Galante exists but has empty anchor_ids — no displayable face. Needs investigation: was the face detached? Is there a merge chain issue? Source: Session 100b-cont3 assessment.
 
+### P0 — Dangling Merge References (DATA-021) — Session 133
+- **DATA-021**: 691 identities have `merged_into` pointing to 106 unique target IDs that don't exist in Supabase. Top 3 targets account for 67% (465/691). Cross-reference with `data_backup_session25/identities.json` to determine if targets existed pre-Supabase. Fix: re-point to final active target or un-merge. Source: Session 132 audit `docs/session_context/session-132-merge-chain-audit.md`.
+
+### P0 — Merged Identities Retaining Faces (DATA-022) — Session 133
+- **DATA-022**: 1,858 of 1,896 merged identities still hold anchor_ids/candidate_ids. Faces effectively invisible. Startup auto-repair (Session 132) handles valid targets but 691 with dangling targets can't auto-repair. Fix: resolve DATA-021 first, then bulk transfer faces. Source: Session 132 audit `docs/session_context/session-132-merge-chain-audit.md`.
+
+### P1 — Orphaned Faces (DATA-023) — Session 133
+- **DATA-023**: 212 faces in photo_faces not claimed by any active identity. Concentrated in `inbox_b5e8a89e_*` (Fox Family batch). Startup auto-repair creates INBOX identities. Fix: verify startup ran, re-run audit. Source: Session 132 audit `docs/session_context/session-132-face-coverage-audit.md`.
+
+### P1 — Multi-Claimed Faces (DATA-024) — Session 133
+- **DATA-024**: 3 faces claimed by 2+ active identities: `inbox_fb4b65ccecfe` (Albert Fox + Person 4063), `inbox_eaf34885039f` (Person 2820 + 1e91425f), `Image 026_compress:face2` (Contested + Selma Capeluto). Fix: CONFIRMED identity wins, remove from other. Source: Session 132 audit `docs/session_context/session-132-face-coverage-audit.md`.
+
+### P1 — Ghost Faces in CONFIRMED (DATA-025) — Session 133
+- **DATA-025**: Netanel Menashe (64096284) has 2 anchor_ids (`inbox_22a58175dbc2`, `inbox_b13a0d1781cc`) that don't exist in photo_faces. Fix: verify in embeddings.npy, remove if phantom. Source: Session 132 audit.
+
+### P2 — Worktree Hook Scoping (HARNESS-001) — FIXED Session 133
+- ~~**HARNESS-001**: `pre-work-clear-gate.sh` uses relative `.claude/commits_since_clear.txt` path, shared across main and worktrees. Worktree agents blocked by main's counter.~~ FIXED (Session 133) — derive path from `git rev-parse --show-toplevel`.
+
 ### P2 — Admin vs Share Mode Distinction (UX-064)
 - **UX-064**: No deliberate product distinction between admin workstation mode and public share/contributor mode. The same sidebar shows different items per role, but the overall mode is not communicated clearly. Non-admin users may not understand they're in a limited view. Source: Session 100 Fox Family audit.
 

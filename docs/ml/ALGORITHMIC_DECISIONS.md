@@ -2696,3 +2696,13 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   4. Graceful degradation when ML service unavailable
 - **Gap/Risk**: Not yet production-verified. Needs browser test with real upload. ML service cold start (~17s) could timeout on first request after idle.
 - **Affects**: `app/compare_routes.py`, PRD-053
+
+### AD-230: Optimistic Concurrency for Supabase Shadow Writes (2026-03-22)
+- **Date**: 2026-03-22 | **Session**: 132
+- **Context**: `shadow_write_identities_batch()` used raw `upsert()` with no version check. Concurrent writes (e.g., save_registry from a stale cache while a merge is in progress) could overwrite merge results, silently reverting face transfers. This was identified as one of 7 merge pipeline vulnerabilities after the Session 131 merge orphan crisis (175 faces orphaned).
+- **Decision**: Pre-fetch `version_id` for each identity from Supabase before upserting. Skip any row where Supabase `version_id > incoming version_id`. Log skipped stale writes.
+- **Rationale**: Merge operations increment `version_id` on both source and target identities. If Supabase already has a higher version, a concurrent merge completed first — the stale write must yield to preserve the merge result. This is standard optimistic concurrency control adapted for Supabase's upsert pattern.
+- **Implementation**: `app/supabase_data.py:767` — `shadow_write_identities_batch()` now pre-fetches `identity_id,name,version_id` (was `identity_id,name` for DATA-020 protection). Version comparison happens per-row before building the upsert batch.
+- **Tests**: `tests/test_supabase_shadow.py::TestOptimisticConcurrency` — 4 tests (stale skip, current write, new identity, merge-wins-race).
+- **Gap/Risk**: Version-based concurrency only protects against stale batch writes. It does NOT prevent two simultaneous merges of the same identity (extremely unlikely with single-admin). If multi-admin is added, consider row-level locking.
+- **Affects**: `app/supabase_data.py`, all callers of `save_registry()`
