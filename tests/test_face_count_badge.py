@@ -116,11 +116,13 @@ def synthetic_data_dir(tmp_path):
     # photo_normal: register all 5
     normal_faces = {_face_id(normal, i) for i in range(5)}
 
-    pi = _make_photo_index({
-        clean: clean_faces,
-        noisy: noisy_faces,
-        normal: normal_faces,
-    })
+    pi = _make_photo_index(
+        {
+            clean: clean_faces,
+            noisy: noisy_faces,
+            normal: normal_faces,
+        }
+    )
     pi_path = tmp_path / "photo_index.json"
     pi_path.write_text(json.dumps(pi, indent=2))
 
@@ -135,10 +137,12 @@ def caches_from_synthetic(synthetic_data_dir):
     # Point data_path at our synthetic dir
     original_data_path = main.data_path
     original_photo_registry_cache = main._photo_registry_cache
+    original_raw_embeddings_cache = main._raw_embeddings_cache
     main.data_path = synthetic_data_dir
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_registry_cache = None
+    main._raw_embeddings_cache = None  # Force re-read from synthetic data_path
 
     try:
         main._build_caches()
@@ -149,6 +153,7 @@ def caches_from_synthetic(synthetic_data_dir):
         main._photo_cache = None
         main._face_to_photo_cache = None
         main._photo_registry_cache = original_photo_registry_cache
+        main._raw_embeddings_cache = original_raw_embeddings_cache
 
 
 # ---------------------------------------------------------------------------
@@ -186,10 +191,7 @@ class TestPhotoCacheFaceFiltering:
         assert noisy_pid in photo_cache, "Noisy photo should be in cache"
 
         face_count = len(photo_cache[noisy_pid].get("faces", []))
-        assert face_count == 2, (
-            f"Noisy photo should have 2 faces (registered in photo_index), "
-            f"got {face_count}"
-        )
+        assert face_count == 2, f"Noisy photo should have 2 faces (registered in photo_index), got {face_count}"
 
     def test_specific_photo_516167_not_63_faces(self, caches_from_synthetic):
         """Noisy photo must NOT have the raw detection count (10), only the registered count (2).
@@ -204,13 +206,9 @@ class TestPhotoCacheFaceFiltering:
 
         face_count = len(photo_cache[noisy_pid].get("faces", []))
         # Must NOT be 10 (the raw detection count)
-        assert face_count != 10, (
-            "Noisy photo has 10 faces — still using raw embedding count"
-        )
+        assert face_count != 10, "Noisy photo has 10 faces — still using raw embedding count"
         # Must be exactly 2 (the registered count)
-        assert face_count == 2, (
-            f"Noisy photo has {face_count} faces — should be 2 registered"
-        )
+        assert face_count == 2, f"Noisy photo has {face_count} faces — should be 2 registered"
 
     def test_clean_photo_keeps_all_faces(self, caches_from_synthetic):
         """When all detections are registered, all should be kept."""
@@ -220,9 +218,7 @@ class TestPhotoCacheFaceFiltering:
         assert clean_pid in photo_cache
 
         face_count = len(photo_cache[clean_pid].get("faces", []))
-        assert face_count == 3, (
-            f"Clean photo should keep all 3 registered faces, got {face_count}"
-        )
+        assert face_count == 3, f"Clean photo should keep all 3 registered faces, got {face_count}"
 
     def test_normal_photo_keeps_all_faces(self, caches_from_synthetic):
         """Normal photo with 5/5 registered should keep all 5."""
@@ -232,9 +228,7 @@ class TestPhotoCacheFaceFiltering:
         assert normal_pid in photo_cache
 
         face_count = len(photo_cache[normal_pid].get("faces", []))
-        assert face_count == 5, (
-            f"Normal photo should keep all 5 registered faces, got {face_count}"
-        )
+        assert face_count == 5, f"Normal photo should keep all 5 registered faces, got {face_count}"
 
     def test_face_to_photo_cache_only_has_registered_faces(self, caches_from_synthetic):
         """_face_to_photo_cache should only contain registered faces, not noise."""
@@ -248,9 +242,7 @@ class TestPhotoCacheFaceFiltering:
         # Noise faces from noisy photo should NOT be in the cache
         for i in [1, 2, 3, 5, 6, 7, 8, 9]:
             noise_fid = _face_id("photo_noisy.jpg", i)
-            assert noise_fid not in face_to_photo, (
-                f"Noise face {noise_fid} should not be in face_to_photo_cache"
-            )
+            assert noise_fid not in face_to_photo, f"Noise face {noise_fid} should not be in face_to_photo_cache"
 
 
 class TestFaceCountBadge:
@@ -266,8 +258,7 @@ class TestFaceCountBadge:
         for photo_id, photo_data in photo_cache.items():
             face_count = len(photo_data.get("faces", []))
             assert face_count <= 50, (
-                f"Photo {photo_id} ({photo_data.get('filename')}) has {face_count} faces — "
-                f"badge would show wrong count"
+                f"Photo {photo_id} ({photo_data.get('filename')}) has {face_count} faces — badge would show wrong count"
             )
 
 
@@ -291,9 +282,7 @@ class TestPhotoViewFaceCount:
             faces = photo_data.get("faces", [])
             # Each face must have a face_id (required for overlay rendering)
             for face in faces:
-                assert "face_id" in face, (
-                    f"Face in photo {photo_id} missing face_id — overlay can't render"
-                )
+                assert "face_id" in face, f"Face in photo {photo_id} missing face_id — overlay can't render"
                 assert "bbox" in face, (
                     f"Face {face['face_id']} in photo {photo_id} missing bbox — overlay can't position"
                 )
@@ -301,6 +290,4 @@ class TestPhotoViewFaceCount:
         # Specific check: noisy photo should report 2, not 10
         noisy_pid = _photo_id("photo_noisy.jpg")
         noisy_faces = photo_cache[noisy_pid]["faces"]
-        assert len(noisy_faces) == 2, (
-            f"Lightbox for noisy photo would show {len(noisy_faces)} overlays, expected 2"
-        )
+        assert len(noisy_faces) == 2, f"Lightbox for noisy photo would show {len(noisy_faces)} overlays, expected 2"
