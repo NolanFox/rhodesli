@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.45 · ~3729 tests · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.46 · ~3746 tests · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -133,6 +133,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-23: **v0.99.46 — Session 135c**: Override Preview + Compare Active Side. FB-008 co-occurrence photo preview replaces browser confirm() with HTMX two-step (shared photo + face bounding boxes). FB-009 active side indicator in Compare modal (amber ring, Source/Match labels, arrow toggle). DD-018 Speed-Run vs Focus Mode documented. PRD-048 extended. 15 new tests. 3746 app tests pass.
 
 - [x] 2026-03-23: **v0.99.45 — Session 135b**: Data Repair + Performance. FB-007 multi-claimed faces repaired (Person 3779→Esther Burd Fox). FB-002 precomputed global embedding matrix eliminates 100-200ms neighbors cache miss. FB-010 face strip shows all faces. 7 new tests. 3729 app tests pass.
 

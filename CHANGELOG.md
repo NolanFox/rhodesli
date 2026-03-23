@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.46] — 2026-03-23 (Session 135c: Override Preview + Compare Active Side)
+
+### UX Features
+- **FB-008**: Co-occurrence photo preview on Override button — replaces blind browser confirm() with HTMX two-step: preview panel shows shared photo with face bounding boxes (amber=target, indigo=neighbor), Cancel + Confirm Override & Merge buttons
+- **FB-009**: Active side indicator in Compare modal — target panel has amber ring by default, arrow clicks toggle ring to show which side is active. "Source" / "Match" labels above panels. Aria labels for accessibility.
+
+### Design
+- **DD-018**: Speed-Run vs Focus Mode documented as distinct surfaces (cluster quality triage vs identity knowledge elicitation). Three BACKLOG items for future sidebar improvements.
+- **PRD-048**: Extended with co-occurrence preview visualization spec
+
+### Tests
+- 15 new tests (7 override preview, 8 compare active side)
+- 3746 total tests pass
+
 ## [v0.99.45] — 2026-03-23 (Session 135b: Data Repair + Performance)
 
 ### Data Integrity

@@ -14,6 +14,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 135c: Override Preview + Compare Active Side (2026-03-23) — v0.99.46
+- **FB-008**: Co-occurrence photo preview on Override button — replaces browser confirm() with HTMX two-step preview panel showing shared photo with face bounding boxes (amber=target, indigo=neighbor).
+- **FB-009**: Active side indicator in Compare modal — target panel gets amber ring by default, arrow clicks toggle ring. "Source"/"Match" labels. Aria labels for accessibility.
+- **DD-018**: Speed-Run vs Focus Mode documented as distinct surfaces. 3 BACKLOG items for future sidebar improvements.
+- **PRD-048**: Extended with co-occurrence preview visualization spec.
+- 15 new tests. 3746 app tests pass. Parallel worktree execution (zero file overlap).
+
+## Session 135b: Data Repair + Performance (2026-03-23) — v0.99.45
+- **FB-007**: Multi-claimed faces repaired — Person 3779 merged into Esther Burd Fox. Zero multi-claimed faces remain.
+- **FB-002**: Precomputed global embedding matrix in perf_cache.py — eliminates 100-200ms neighbors cache miss.
+- **FB-010**: Focus mode face strip shows all faces (was limited to 6).
+- 7 new tests. 3729 app tests pass.
+
+## Session 135: Planning + Research + Quick Fixes (2026-03-22) — v0.99.44
+- PRD-056: main.py refactoring plan (DD-017). Session 135 research context.
+- FB-003/011: upload-review KeyError fix, async distance in Manual Search.
+- FB-012: Photo nav arrows restored in Focus mode identity lightbox.
+
 ## Session 134: Clean Sweep + Security + Performance (2026-03-22) — v0.99.44
 - **Security hardening**: Open redirect blocked (login ?next=//), rate limiting on search (60/hr), login (10/hr), signup (5/hr). PostgREST filter injection sanitized (SEC-001). ILIKE wildcard escaping (SEC-002). Input length cap (500 chars). 11 security tests.
 - **15 UX bugs addressed**: FB-113 Identified label, FB-005/007 clickable face cards, FB-008 state borders, FB-009 responsive 4-col grid, FB-004 community-scoped name dropdown, FB-106 admin context links, FB-100/103/104/110 verified already implemented.
