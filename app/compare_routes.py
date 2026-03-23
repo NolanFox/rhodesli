@@ -5705,6 +5705,13 @@ def get(
     n_section = _section_for_state(nbr.get("state", "INBOX"))
     _filter_suffix = f"&filter={filter}" if filter else ""
 
+    # Hyperscript for arrow buttons to toggle the active ring to the clicked panel
+    _ring_toggle_hs = (
+        "on click "
+        "remove .ring-2 .ring-amber-400\\/50 from <div[data-compare-side]/> "
+        "then add .ring-2 .ring-amber-400\\/50 to closest <div[data-compare-side]/> "
+    )
+
     def _cn(side, cur, tot, oth):
         if tot <= 1:
             return None
@@ -5723,6 +5730,7 @@ def get(
                 hx_target="#compare-modal-content",
                 hx_swap="innerHTML",
                 type="button",
+                **{"_": _ring_toggle_hs},
             )
             if cur > 0
             else Button(
@@ -5737,6 +5745,7 @@ def get(
                 hx_target="#compare-modal-content",
                 hx_swap="innerHTML",
                 type="button",
+                **{"_": _ring_toggle_hs},
             )
             if cur < tot - 1
             else Button(
@@ -5902,6 +5911,7 @@ def get(
         toggle,
         Div(
             Div(
+                Span("Source", cls="text-xs text-amber-400/60 uppercase tracking-wider"),
                 A(
                     t_name,
                     href=f"{nav_prefix}/?section={t_section}&current={target_id}{_filter_suffix}",
@@ -5911,10 +5921,13 @@ def get(
                 t_photo_div,
                 t_view_photo,
                 _cn("t", target_idx, len(tf), neighbor_idx),
-                cls="flex-1 min-w-0",
+                cls="flex-1 min-w-0 ring-2 ring-amber-400/50 rounded-xl p-2",
+                data_compare_side="target",
+                aria_label="Source panel",
             ),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
             Div(
+                Span("Match", cls="text-xs text-indigo-400/60 uppercase tracking-wider"),
                 A(
                     n_name,
                     href=f"{nav_prefix}/?section={n_section}&current={neighbor_id}{_filter_suffix}",
@@ -5924,7 +5937,9 @@ def get(
                 n_photo_div,
                 n_view_photo,
                 _cn("n", neighbor_idx, len(nf), target_idx),
-                cls="flex-1 min-w-0",
+                cls="flex-1 min-w-0 rounded-xl p-2",
+                data_compare_side="neighbor",
+                aria_label="Match panel",
             ),
             cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start",
         ),
