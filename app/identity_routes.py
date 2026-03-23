@@ -4465,3 +4465,192 @@ def post(identity_id: str, sess=None, request=None):
         ),
         _main_mod.toast("Returned to Inbox.", "info"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Co-occurrence preview — shows shared photo before override merge
+# ---------------------------------------------------------------------------
+
+
+@rt("/api/identity/{target_id}/co-occurrence-preview/{neighbor_id}")
+def get(
+    target_id: str,
+    neighbor_id: str,
+    sess=None,
+    request=None,
+    from_focus: bool = False,
+    filter: str = "",
+    focus_section: str = "",
+    from_person_page: bool = False,
+):
+    """Preview the shared photo between two co-occurring identities.
+
+    Shows the photo with face bounding box overlays:
+    - Target identity faces highlighted in amber
+    - Neighbor identity faces highlighted in indigo
+
+    Admin-only. Returns 404 if no shared photo found.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    registry = _main_mod.load_registry()
+    photo_registry = _main_mod.load_photo_registry()
+
+    # Find the shared photo filename
+    shared_filename = _main_mod.find_shared_photo_filename(target_id, neighbor_id, registry, photo_registry)
+    if not shared_filename:
+        return Response(
+            to_xml(
+                Div(
+                    P("No shared photo found between these identities.", cls="text-amber-400 text-sm italic py-2"),
+                    cls="co-occurrence-preview",
+                )
+            ),
+            status_code=404,
+        )
+
+    nav_prefix = _nav_prefix_from_request(request)
+
+    # Get photo dimensions and URL
+    width, height = _main_mod.get_photo_dimensions(shared_filename)
+    photo_url_str = photo_url(shared_filename)
+    has_dimensions = width > 0 and height > 0
+
+    # Find the photo_id to get face data from cache
+    photo_id = _main_mod.generate_photo_id(shared_filename)
+    photo_meta = _main_mod.get_photo_metadata(photo_id)
+
+    # Get face IDs for each identity
+    target_face_ids = set(registry.get_all_face_ids(target_id))
+    neighbor_face_ids = set(registry.get_all_face_ids(neighbor_id))
+
+    # Build face overlays
+    face_overlays = []
+    if has_dimensions and photo_meta:
+        for face_data in photo_meta.get("faces", []):
+            face_id = face_data["face_id"]
+            bbox = face_data.get("bbox")
+            if not bbox:
+                continue
+            x1, y1, x2, y2 = bbox
+
+            left_pct = (x1 / width) * 100
+            top_pct = (y1 / height) * 100
+            width_pct = ((x2 - x1) / width) * 100
+            height_pct = ((y2 - y1) / height) * 100
+
+            # Color coding: amber for target, indigo for neighbor, slate for others
+            if face_id in target_face_ids:
+                overlay_cls = "border-2 border-amber-400 bg-amber-400/25"
+                label = "Target"
+            elif face_id in neighbor_face_ids:
+                overlay_cls = "border-2 border-indigo-400 bg-indigo-400/25"
+                label = "Neighbor"
+            else:
+                overlay_cls = "border-2 border-dashed border-slate-400/40 bg-slate-400/5"
+                label = ""
+
+            # Get identity name for tooltip
+            identity = _main_mod.get_identity_for_face(registry, face_id)
+            raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+            display_name = ensure_utf8_display(raw_name)
+
+            tooltip_text = f"{display_name} ({label})" if label else display_name
+
+            overlay = Div(
+                Span(
+                    tooltip_text,
+                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10",
+                ),
+                cls=f"absolute cursor-pointer transition-all group {overlay_cls}",
+                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                title=tooltip_text,
+                data_face_id=face_id,
+            )
+            face_overlays.append(overlay)
+
+    # Build the override merge URL with all necessary params
+    focus_suffix = ""
+    if from_focus:
+        _focus_filter = f"&filter={filter}" if filter else ""
+        _focus_section = f"&focus_section={focus_section}" if focus_section else ""
+        focus_suffix = f"?from_focus=true{_focus_filter}{_focus_section}"
+    _override_sep = "&" if focus_suffix else "?"
+    _person_page_param = "&from_person_page=true" if from_person_page else ""
+    override_url = (
+        f"{nav_prefix}/api/identity/{target_id}/merge/{neighbor_id}"
+        f"{focus_suffix}{_override_sep}override_co_occurrence=true"
+        f"&override_reason=collage&source=web{_person_page_param}"
+    )
+
+    # Determine merge target for the confirm button
+    if from_focus and focus_section == "skipped":
+        merge_target = "#skipped-focus-container"
+    elif from_focus:
+        merge_target = "#focus-container"
+    elif from_person_page:
+        merge_target = f"#neighbor-{neighbor_id}"
+    else:
+        merge_target = f"#identity-{target_id}"
+
+    # Legend
+    legend = Div(
+        Span("", cls="inline-block w-3 h-3 border-2 border-amber-400 bg-amber-400/25 rounded-sm mr-1"),
+        Span("Target", cls="text-xs text-amber-400 mr-3"),
+        Span("", cls="inline-block w-3 h-3 border-2 border-indigo-400 bg-indigo-400/25 rounded-sm mr-1"),
+        Span("Neighbor", cls="text-xs text-indigo-400"),
+        cls="flex items-center mt-2 mb-1",
+    )
+
+    return Div(
+        Div(
+            P(
+                "These faces appear in the same photo. Override only if this is a collage, photo-of-album, or composite image.",
+                cls="text-amber-400 text-xs mb-2",
+            ),
+            # Photo with overlays
+            Div(
+                Img(
+                    src=photo_url_str,
+                    cls="max-w-full max-h-64 object-contain rounded",
+                    alt=f"Shared photo: {shared_filename}",
+                ),
+                *face_overlays,
+                cls="relative inline-block",
+            )
+            if has_dimensions
+            else Div(
+                Img(
+                    src=photo_url_str,
+                    cls="max-w-full max-h-64 object-contain rounded",
+                    alt=f"Shared photo: {shared_filename}",
+                ),
+                cls="inline-block",
+            ),
+            legend,
+            P(shared_filename, cls="text-xs text-slate-500 mt-1 truncate"),
+            cls="bg-slate-800 rounded p-3 mt-2",
+        ),
+        Div(
+            Button(
+                "Cancel",
+                cls="px-3 py-1 text-sm font-bold border border-slate-500 text-slate-400 rounded hover:bg-slate-600",
+                aria_label="Cancel override",
+                **{"_": "on click remove closest .co-occurrence-preview"},
+            ),
+            Button(
+                "Confirm Override & Merge",
+                cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded disabled:opacity-50",
+                hx_post=override_url,
+                hx_target=merge_target,
+                hx_swap="outerHTML",
+                hx_disabled_elt="this",
+                aria_label="Confirm override and merge these identities",
+                **{"_": "on click put 'Merging...' into me"},
+            ),
+            cls="flex items-center gap-2 mt-2",
+        ),
+        cls="co-occurrence-preview",
+    )

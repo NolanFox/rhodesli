@@ -123,15 +123,15 @@ class TestOverrideButton:
         )
         html = to_xml(card)
 
-        # Override button should POST to /api/identity/{TARGET}/merge/{SOURCE}
-        # where TARGET is James Fields (survivor) and SOURCE is the neighbor
-        assert f"/api/identity/{target_id}/merge/{source_id}" in html
+        # FB-008: Override button now uses hx-get to load preview panel
+        # Preview endpoint URL should have correct merge direction (TARGET/preview/SOURCE)
+        assert f"/api/identity/{target_id}/co-occurrence-preview/{source_id}" in html
         # Should NOT have the IDs reversed
-        assert f"/api/identity/{source_id}/merge/{target_id}" not in html
-        # Should include override params
-        assert "override_co_occurrence=true" in html
-        # Should include from_person_page
+        assert f"/api/identity/{source_id}/co-occurrence-preview/{target_id}" not in html
+        # Should include from_person_page in preview params
         assert "from_person_page=true" in html
+        # Preview container div should exist
+        assert f'id="override-preview-{source_id}"' in html
 
 
 class TestConfirmFromPersonPage:

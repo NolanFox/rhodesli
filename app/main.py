@@ -9630,22 +9630,28 @@ def neighbor_card(
     if not can_merge:
         # PRD-048: Admin can override co-occurrence for collages
         if user_role == "admin" and neighbor.get("merge_blocked_reason") == "co_occurrence":
-            # FB-021 fix: correct merge direction (target_identity_id is the survivor, neighbor_id is merged in)
-            _override_sep = "&" if focus_suffix else "?"
-            _override_params = (
-                f"{_override_sep}override_co_occurrence=true&override_reason=collage&source=web{_person_page_suffix}"
-            )
-            merge_btn = Button(
-                "Override \u26a0\ufe0f",
-                cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded disabled:opacity-50",
-                hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}{_override_params}",
-                hx_target=merge_target,
-                hx_swap=merge_swap,
-                hx_disabled_elt="this",
-                hx_confirm="These faces appear in the SAME PHOTO. Override only if this is a collage, "
-                "photo-of-album, or composite image. Are you sure these are the same person?",
-                title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
-                **{"_": "on click put 'Merging...' into me"},
+            # FB-008: Two-step override — first show preview, then confirm
+            _preview_params = []
+            if from_focus:
+                _preview_params.append("from_focus=true")
+                if triage_filter:
+                    _preview_params.append(f"filter={triage_filter}")
+                if focus_section:
+                    _preview_params.append(f"focus_section={focus_section}")
+            if from_person_page:
+                _preview_params.append("from_person_page=true")
+            _preview_qs = f"?{'&'.join(_preview_params)}" if _preview_params else ""
+            merge_btn = Div(
+                Button(
+                    "Override \u26a0\ufe0f",
+                    cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded",
+                    hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/co-occurrence-preview/{neighbor_id}{_preview_qs}",
+                    hx_target=f"#override-preview-{neighbor_id}",
+                    hx_swap="innerHTML",
+                    title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
+                    aria_label="Show co-occurrence photo preview before override",
+                ),
+                Div(id=f"override-preview-{neighbor_id}"),
             )
         else:
             merge_btn = Button(
