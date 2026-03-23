@@ -1694,6 +1694,14 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     except ImportError:
         pass
 
+    # Invalidate global embedding matrix (Session 135b perf optimization)
+    try:
+        from app.perf_cache import mark_global_dirty
+
+        mark_global_dirty()
+    except ImportError:
+        pass
+
     # Invalidate cluster review caches — surgical for changed identities
     try:
         from app.cluster_review_routes import invalidate_cluster_review_caches

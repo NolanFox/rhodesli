@@ -551,10 +551,6 @@ def get(
     except KeyError:
         return Div(P("Identity not found.", cls="text-red-600 text-center py-4"), cls="neighbors-sidebar")
 
-    # Load required data
-    face_data = _main_mod.get_face_data()
-    photo_registry = _main_mod.load_photo_registry()
-
     # Request one extra to determine if more exist (B3: pagination)
     total_to_fetch = offset + limit + 1
     try:
@@ -564,13 +560,12 @@ def get(
             all_neighbors = cached[:total_to_fetch]
             cache_hit = True
         else:
-            from core.neighbors import find_nearest_neighbors_fast
+            from app.perf_cache import get_all_neighbors
 
-            # Fetch a generous batch so the cache serves Load More requests too
+            # Use precomputed global embedding matrix (Session 135b)
+            # Eliminates 100-200ms matrix construction per request
             fetch_limit = max(total_to_fetch, 20)
-            all_neighbors = find_nearest_neighbors_fast(
-                identity_id, registry, photo_registry, face_data, limit=fetch_limit
-            )
+            all_neighbors = get_all_neighbors(identity_id, limit=fetch_limit)
             _set_cached_neighbors(identity_id, all_neighbors)
             cache_hit = False
     except ImportError as e:
@@ -605,6 +600,7 @@ def get(
     is_incremental = offset > 0
 
     # Enhance neighbor data with additional info for UI
+    photo_registry = _main_mod.load_photo_registry()
     crop_files = _main_mod.get_crop_files()
     for n in neighbors:
         # Add face IDs for thumbnail resolution (B2-REPAIR)

@@ -65,10 +65,11 @@ def invalidate_cluster_review_caches(changed_ids=None):
         keys_to_remove = [k for k in _suggestions_cache if k[0] in changed_ids]
         for k in keys_to_remove:
             del _suggestions_cache[k]
-    # Also invalidate the vectorized confirmed matrix
-    from app.perf_cache import mark_confirmed_dirty
+    # Also invalidate the vectorized embedding matrices
+    from app.perf_cache import mark_confirmed_dirty, mark_global_dirty
 
     mark_confirmed_dirty()
+    mark_global_dirty()
 
 
 def _load_proposals():
