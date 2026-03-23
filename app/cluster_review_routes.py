@@ -559,6 +559,8 @@ def _build_unresolved_review_groups(filtered_ids, face_data, photo_registry):
             continue
 
         preview_crop_url = _get_crop_url_for_face(preview_face_id)
+        if preview_face_id not in face_data:
+            continue
         photos = photo_registry.get_photos_for_faces(face_ids)
 
         items.append(
