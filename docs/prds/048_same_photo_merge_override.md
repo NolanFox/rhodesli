@@ -97,6 +97,54 @@ Clicking "Override ⚠️" opens a confirmation:
 ### Grouping Pipeline
 - `group_inbox_identities()` does NOT get override capability — only human-initiated merges
 
+## Co-Occurrence Preview Visualization (FB-008, Session 135c)
+
+### Problem
+
+The Override button (shipped Session 108b) uses a browser `confirm()` dialog — a plain
+text prompt with no visual context. The admin cannot see WHICH photo has the co-occurrence
+or verify the face detections before committing to an override merge. This forces blind
+decisions on a safety-critical action.
+
+### New Endpoint
+
+`GET /api/identity/{target_id}/co-occurrence-preview/{neighbor_id}`
+
+Returns an HTML partial showing:
+- The shared photo (max-width 400px) with both face bounding boxes highlighted
+- Target face: amber highlight ring
+- Neighbor face: indigo highlight ring
+- Photo filename below image
+- Two buttons: "Cancel" (dismiss preview) + "Confirm Override & Merge" (execute merge)
+
+Implementation reuses face overlay rendering from `_compare_photo_with_overlays` pattern
+in compare_routes.py. Uses `find_shared_photo_filename()` (already exists) to locate the
+co-occurring photo.
+
+Auth: admin-only (`_check_admin`).
+
+### Override Button Change
+
+Replace `hx_confirm` browser dialog with HTMX two-step flow:
+
+1. First click on "Override" → `hx_get` loads preview panel (slide-down below the button)
+2. Preview panel shows: photo thumbnail + face highlights + filename
+3. "Cancel" dismisses panel, "Confirm Override & Merge" executes the POST merge
+
+This gives the admin visual confirmation before committing.
+
+### Acceptance Criteria
+
+- [ ] Preview endpoint returns photo HTML for co-occurring identities
+- [ ] Preview endpoint returns 404 for non-co-occurring identities
+- [ ] Non-admin cannot access preview endpoint
+- [ ] Override button uses `hx_get` (not `hx_confirm`) to load preview
+- [ ] Preview shows both face bounding boxes with distinct colors
+- [ ] "Confirm Override & Merge" in preview executes the merge POST
+- [ ] Override reason preserved in merge audit trail
+
+---
+
 ## Out of Scope
 - Automatic collage detection (future ML feature)
 - Contributor-level override (admin only)

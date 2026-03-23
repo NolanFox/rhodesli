@@ -615,6 +615,9 @@ See: docs/session_context/session_49C_community_feedback.md
 - [x] **Gemini unified extraction architecture**: AD-143, rhodesli_ml/gemini_extraction.py, 16 tests. Session 61B.
 - [x] **PRD-023 Stage 1**: Similarity calibration — isotonic regression (better than Platt). AUC=0.9577, 348 pairs. Session 63, AD-149. Stage 2 (LoRA) deferred.
 - [x] **Progressive refinement**: Pipeline fully wired — enriched prompt now sent to Gemini. Session 60 (AD-138) + Session 61 (ML-090 fixed).
+- [ ] **DD-018-001**: Rename "Speed-Run" → "Cluster Review" in sidebar (P3). Source: DD-018, Session 135c.
+- [ ] **DD-018-002**: Add subtitle text distinguishing Speed-Run and Focus Mode (P3). Source: DD-018, Session 135c.
+- [ ] **DD-018-003**: Cross-links between Speed-Run results and Focus Mode (P3). Source: DD-018, Session 135c.
 - [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-132**: Homepage "Compare a Face" CTA for non-admin visitors (P2). Source: Session 61B UX evaluation.

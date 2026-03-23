@@ -369,3 +369,50 @@ from `app/main.py` to avoid big-bang import changes across 3,696+ tests.
 - Research: docs/session_context/session-135-research.md
 - Lesson 88: tasks/lessons/harness-lessons.md
 - BACKLOG: REFACTOR-001
+
+---
+
+## DD-018: Speed-Run vs Focus Mode — Distinct Purposes
+
+- **Date:** 2026-03-23
+- **Session:** 135c
+- **Status:** Decided
+
+### Context
+
+User reports that Speed-Run and Focus Mode "blur together" — unclear when to use which.
+Both are admin triage surfaces for unidentified faces, but they serve genuinely different
+cognitive tasks.
+
+### Decision
+
+Keep Speed-Run and Focus Mode as separate surfaces with distinct purposes:
+
+| Dimension | Speed-Run (Cluster Review) | Focus Mode |
+|-----------|---------------------------|------------|
+| **Question** | "Is this ML cluster correct?" | "Who is this person?" |
+| **Unit of work** | Multi-face cluster | Single identity |
+| **Primary action** | Confirm/split cluster | Name, link GEDCOM, merge |
+| **Cognitive mode** | Pattern matching (fast) | Knowledge elicitation (slow) |
+| **Entry point** | Sidebar "Speed-Run" | Sidebar "New Matches" → Focus |
+| **Implementation** | cluster_review_routes.py | app/main.py focus mode |
+
+### Recommendations (future sessions)
+
+1. Rename "Speed-Run" → "Cluster Review" in sidebar (clearer intent)
+2. Add subtitle text: "Review ML clusters" / "Identify individuals"
+3. Add cross-links: Speed-Run results → Focus for naming, Focus → Speed-Run for related clusters
+
+### Alternatives Rejected
+
+1. **Merge into one surface** — Different cognitive tasks need different UIs. A single
+   surface would either be too complex (both workflows) or too simple (one workflow suffers)
+2. **Remove Speed-Run** — Cluster validation is genuinely useful for batch quality review;
+   Focus Mode doesn't provide the cluster-level view
+
+### Breadcrumbs
+
+- Speed-Run: app/cluster_review_routes.py:847-870
+- Focus Mode: app/main.py:7312-7501
+- User feedback: docs/feedback/session-135-feedback.md
+- BACKLOG: DD-018-001 (sidebar rename), DD-018-002 (subtitles), DD-018-003 (cross-links)
