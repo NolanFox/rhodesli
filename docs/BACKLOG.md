@@ -562,6 +562,7 @@ Self-service workspace and contribution UX. Vision PRD: `docs/prds/036_workspace
 
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
+- [ ] **REFACTOR-001: app/main.py refactoring** — 11,765 lines, 173 functions, 1,997 `_main_mod` references across 19 route files. Three-phase extraction: Phase 1 UI components (LOW risk, ~5,500 lines), Phase 2 helpers/proposals/community (MEDIUM, ~1,700 lines), Phase 3 data layer/caches (HIGH, ~3,000 lines). Phase 1 unblocks parallel worktree UX development (Lesson 88). Subsumes UX-204 (face card consolidation). PRD: `docs/prds/056_mainpy_refactoring.md`. DD-017. Source: Session 135 research audit.
 
 ---
 

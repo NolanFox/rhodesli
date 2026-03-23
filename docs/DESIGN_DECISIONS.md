@@ -327,3 +327,45 @@ The Modern UI upgrade (PR #7) mandated a strict "zero-regression" rollout. Deepl
 - PR #7: Modern UI Audit
 - Session 99: docs/session_logs/session-99-log.md
 - Codex review: docs/assessments/session-99-codex-review.md
+
+---
+
+## DD-017: app/main.py Phased Refactoring Strategy
+
+- **Date:** 2026-03-22
+- **Session:** 135
+- **Status:** Decided
+
+### Context
+
+`app/main.py` is 11,765 lines with 173 functions, creating the single largest
+bottleneck for parallel worktree development (Lesson 88). Prior extraction sessions
+(91b, 92) moved route handlers out but left 215 shared attributes accessed via
+`_main_mod` pattern (1,997 total references across 19 route files).
+
+### Decision
+
+Three-phase extraction ordered by risk:
+1. **Phase 1 (LOW):** Pure UI component functions -> `app/components/` package (~5,500 lines)
+2. **Phase 2 (MEDIUM):** Helpers, proposals, community logic -> named modules (~1,700 lines)
+3. **Phase 3 (HIGH):** Data layer, caches, middleware -> `app/data_access.py`, `app/cache.py` (~3,000 lines)
+
+Each phase is independently shippable. Phase 1 unblocks parallel UX development
+immediately without touching the `_main_mod` pattern. Phase 3 eliminates it entirely.
+
+Migration uses re-export pattern: extracted functions are temporarily re-exported
+from `app/main.py` to avoid big-bang import changes across 3,696+ tests.
+
+### Alternatives Rejected
+
+1. **Big-bang refactor** — Too risky; touching 19 route files + 3,696 tests simultaneously
+2. **Leave as-is** — Parallel development remains blocked; every UX session serialized
+3. **Dependency injection framework** — Overkill for FastHTML; adds complexity without proportional benefit
+4. **Move to React/Next.js** — Framework migration trigger not yet met (HD-022)
+
+### Breadcrumbs
+
+- PRD: docs/prds/056_mainpy_refactoring.md
+- Research: docs/session_context/session-135-research.md
+- Lesson 88: tasks/lessons/harness-lessons.md
+- BACKLOG: REFACTOR-001

@@ -1,136 +1,248 @@
-# PRD-056: main.py Refactoring — UI Component Extraction
+# PRD-056: app/main.py Refactoring — Eliminate _main_mod Coupling
 
-**Status:** Planning
-**Author:** Session 135
+**Author:** Nolan Fox (requirements), Claude (spec)
 **Date:** 2026-03-22
-**References:** Lesson 88 (parallel worktree blocking), Session 135 research audit
-**Research:** [docs/session_context/session-135-research.md](../session_context/session-135-research.md)
+**Status:** Draft
+**Session:** 135 (research + PRD), TBD (implementation)
+**Context:** docs/session_context/session-135-research.md
 
 ---
 
-## Problem
+## Problem Statement
 
-`app/main.py` is 11,735 lines with 173 functions. It is the single largest blocker to parallel development. Per Lesson 88, any session track that touches `app/main.py` must be sequential — parallel worktree development is impossible when multiple tracks need to modify the same file.
+`app/main.py` is 11,765 lines with 173 functions. It is the single largest
+file in the codebase and the primary bottleneck for parallel development.
 
-Previous extraction sessions moved route handlers into `app/page_routes.py`, `app/identity_routes.py`, `app/match_facecompare_routes.py`, `app/cluster_review_routes.py`, and `app/estimate_routes.py`. However, these extracted files depend on a `_main_mod` pattern (importing the main module to access shared state), creating 482 references in `page_routes.py` and 422 in `identity_routes.py`.
+**Why this matters now:**
+1. **Parallel development blocked (Lesson 88):** Worktree tracks touching
+   `app/main.py` must run sequentially. Since main.py contains UI components,
+   data loaders, auth helpers, middleware, and caches, most feature work
+   touches it — making parallel subagent sessions impossible for overlapping
+   file regions.
+2. **Massive coupling surface:** 19 extracted route files import `app.main as
+   _main_mod` and reference **215 unique attributes** through it (1,997 total
+   references). The top offenders: `page_routes.py` (482 refs),
+   `identity_routes.py` (425 refs), `admin_routes.py` (206 refs),
+   `compare_routes.py` (195 refs). Every route file is tightly coupled to
+   main.py's internal API.
+3. **Cognitive load:** UI rendering, data access, caching, auth, middleware,
+   startup logic, and proposal management all coexist in one file with no
+   clear boundaries.
 
-What remains in `main.py`:
-- ~5,500 lines of UI component/rendering functions (cards, grids, panels, modals)
-- ~1,700 lines of helpers, proposal logic, community logic
-- ~3,000 lines of data layer, middleware, caches, and startup
+**Prior extraction work:** Session 91b reduced main.py from 26,100 to 9,383
+lines by extracting 17 route files. Session 92 extracted compare and estimate
+routes (5,381 lines). Extraction stalled because the remaining functions are
+shared state (registries, caches, helpers) that route files depend on via the
+`_main_mod` pattern.
+
+## Who This Is For
+
+- **Claude Code agents** — parallel worktrees without merge conflicts
+- **Nolan (admin)** — faster feature iteration, easier code review
+- **Future contributors** — lower barrier to understanding the codebase
+
+## Developer Flows
+
+### Flow 1: Adding a new UI component (current vs. after)
+
+**Today:**
+1. Open `app/main.py` (11,765 lines), find a similar component function
+2. Add new function to main.py (anywhere — no organizational convention)
+3. If another worktree track is editing main.py, **merge conflict**
+4. Route files access it via `_main_mod.new_function()`
+
+**After Phase 1:**
+1. Open `app/components/cards.py` (300-500 lines), find similar component
+2. Add new function to the appropriate component module
+3. Other worktree tracks editing main.py or other modules: **no conflict**
+4. Route files import directly: `from app.components.cards import new_function`
+
+### Flow 2: Understanding a route file's dependencies (current vs. after)
+
+**Today:**
+1. Open route file, see `import app.main as _main_mod`
+2. Search for `_main_mod.` — find 50-400+ opaque references
+3. Must read main.py to understand each one (pure renderer? side effect?)
+
+**After Phase 3:**
+1. Open route file, see explicit imports from named modules
+2. Import list shows exactly what the route needs and where it comes from
+3. Module names convey intent: `data_access`, `components`, `auth_helpers`
 
 ## Phased Approach
 
-### Phase 1: Extract UI Components (~5,500 lines) — LOW risk
+### Phase 1: UI Components Extraction (~5,500 lines) — LOW risk
 
-**Target:** Pure rendering functions that take data as arguments and return FastHTML elements. These have no dependency on registry state or `_main_mod`.
+Extract pure rendering functions (data in, FT elements out, no side effects).
 
-**Destination:** `app/components/` package with domain-grouped modules:
-- `app/components/cards.py` — identity cards, face cards, photo cards, suggestion cards
-- `app/components/grids.py` — photo grids, people grids, face grids
-- `app/components/panels.py` — detail panels, info panels, enrichment panels
-- `app/components/modals.py` — login modal, confirm modal, merge modal
-- `app/components/navigation.py` — sidebar, nav bar, breadcrumbs, pagination
-- `app/components/badges.py` — state badges, confidence badges, community badges
-- `app/components/forms.py` — upload forms, search forms, filter forms
-- `app/components/__init__.py` — re-exports for convenience
+**Target modules:**
 
-**Why LOW risk:**
-- Pure functions: take data in, return FT elements out
-- No shared state access needed
-- No `_main_mod` dependency
-- Easy to test in isolation
-- Import changes are mechanical (find/replace)
+| Module | Contents | Est. lines |
+|--------|----------|-----------|
+| `app/components/cards.py` | `identity_card`, `face_card`, `neighbor_card`, suggestion cards | ~800 |
+| `app/components/badges.py` | `_cross_community_badge`, `_promotion_badge`, date badges, confidence tiers | ~400 |
+| `app/components/nav.py` | `_public_nav_links`, `sidebar`, `_build_triage_bar`, share button, OG tags | ~600 |
+| `app/components/photo.py` | `_build_ai_analysis_section`, `_build_ai_sections_list`, `_build_face_alignment_section` | ~1,500 |
+| `app/components/forms.py` | `_place_datalist`, `_photo_collection_datalist`, form helpers | ~200 |
+| `app/components/layouts.py` | Page shell, 404 handler, `_posthog_script`, CSS/JS head elements | ~500 |
+| `app/components/__init__.py` | Re-exports for backward compatibility | ~30 |
 
-**Acceptance criteria:**
-1. All UI component functions moved to `app/components/`
-2. `app/main.py` reduced by ~5,500 lines
-3. All existing tests pass without modification (imports updated)
-4. No new `_main_mod` references introduced
-5. `make test-fast` passes
-6. At least 2 route files can be modified in parallel worktrees without conflict
-
-### Phase 2: Extract Helpers, Proposals, Community (~1,700 lines) — MEDIUM risk
-
-**Target:** Business logic that accesses registry state but can be parameterized.
-
-**Destination:**
-- `app/proposals.py` — proposal generation, filtering, enrichment
-- `app/community_logic.py` — community scoping, cross-community badges, workspace logic
-- `app/helpers.py` — utility functions shared across routes
-
-**Why MEDIUM risk:**
-- Some functions currently access global state via closure
-- Need to refactor from closure-based to parameter-based (pass registry as argument)
-- Proposal logic interacts with multiple data sources (identities, embeddings, GEDCOM)
-- Community middleware integration has subtle routing dependencies
+**Why LOW risk:** Pure functions with no shared state access. Extraction is
+mechanical find-and-replace. Any function that reads `_main_mod._photo_cache`
+or similar stays in main.py for Phase 2.
 
 **Acceptance criteria:**
-1. All helper/proposal/community functions extracted
-2. No closure-based global state access — all state passed as parameters
-3. All existing tests pass
-4. Community routing behavior unchanged (verified by `test_community_routing_safety.py`)
+- [ ] Each component module importable independently (no circular imports)
+- [ ] `_main_mod` reference count drops by 300+ (from 1,997)
+- [ ] `app/main.py` drops below 7,000 lines
+- [ ] `make test-fast` passes (3,696+ tests, zero regressions)
+- [ ] Two route files modifiable in parallel worktrees without conflict
 
-### Phase 3: Extract Data Layer, Middleware, Caches (~3,000 lines) — HIGH risk
+### Phase 2: Helpers, Proposals, Community Logic (~1,700 lines) — MEDIUM risk
 
-**Target:** Registry loading, cache management, middleware, startup sequence.
+Extract stateful helpers that read from caches but can be parameterized.
 
-**Destination:**
-- `app/registry.py` — IdentityRegistry + PhotoRegistry access layer
-- `app/caches.py` — TTL caches, perf_cache integration, cache invalidation
-- `app/middleware.py` — CommunityMiddleware, auth middleware, request context
-- `app/startup.py` — app initialization, background tasks, health checks
+**Target modules:**
 
-**Why HIGH risk:**
-- Registry is the core shared state — every route file depends on it
-- Cache invalidation has subtle timing dependencies
-- Middleware ordering affects auth, community scoping, and API routing
-- Startup sequence has dependency ordering (data load → cache warm → middleware → routes)
-- This is where the `_main_mod` pattern lives — extraction requires replacing it
+| Module | Contents | Est. lines |
+|--------|----------|-----------|
+| `app/proposals.py` | `_load_proposals`, `_get_proposals_for_identity`, proposal index, cache | ~400 |
+| `app/community.py` | `_get_community_photo_ids`, `_get_community_identity_ids`, community middleware helpers | ~400 |
+| `app/search.py` | `_search_photos`, `_load_search_index`, `_get_decade_counts`, `_get_tag_counts` | ~300 |
+| `app/auth_helpers.py` | `_check_admin`, `_check_login`, `_check_contributor`, `_get_user_role` | ~200 |
+| `app/dates.py` | Date label loading, birth year estimates, ML review decisions | ~400 |
+
+**Key risk:** Functions read `_photo_cache`, `_proposals_cache`, etc. Must
+refactor from closure-based global state to parameter-based injection.
 
 **Acceptance criteria:**
-1. `app/main.py` reduced to <500 lines (app factory + route registration)
-2. `_main_mod` pattern eliminated from all route files
-3. Registry access through explicit dependency injection or module-level singleton
-4. All existing tests pass
-5. Production deploy succeeds with health check
-6. No performance regression (startup time, request latency)
+- [ ] `_main_mod` reference count drops below 800
+- [ ] Auth helpers importable without circular imports
+- [ ] Community routing unchanged (verified by `test_community_routing_safety.py`)
+- [ ] `make test-fast` passes
+
+### Phase 3: Data Layer, Middleware, Caches (~3,000 lines) — HIGH risk
+
+Extract the core data access layer and cache management.
+
+**Target modules:**
+
+| Module | Contents | Est. lines |
+|--------|----------|-----------|
+| `app/data_access.py` | `load_registry`, `save_registry`, `load_photo_registry`, `save_photo_registry`, `load_face_embeddings`, `get_face_data` | ~800 |
+| `app/cache.py` | All `_*_cache` dicts, `_invalidate_all_caches`, `_build_caches`, TTL management | ~500 |
+| `app/startup.py` | `startup_event`, `shutdown_event`, disk cleanup, health checks | ~500 |
+| `app/middleware.py` | `CommunityMiddleware`, `CachedStaticFiles`, route reordering | ~300 |
+
+**Key risks:**
+- Circular imports: `data_access` needs `core/registry`, routes need `data_access`
+- Cache invalidation has subtle timing dependencies across modules
+- Startup sequence has strict ordering: data load -> cache warm -> middleware -> routes
+- This is where the `_main_mod` pattern originates — full elimination
+
+**Import graph must be strictly layered:**
+```
+core/ -> app/data_access.py -> app/components/ -> route files
+                            -> app/cache.py
+```
+
+**Acceptance criteria:**
+- [ ] `_main_mod` pattern eliminated (0 references across all route files)
+- [ ] `app/main.py` under 1,500 lines (app factory + route registration)
+- [ ] No circular imports (verified by import test)
+- [ ] `make test-fast` passes
+- [ ] Production deploy succeeds, health check 200
+
+## Most-Referenced _main_mod Attributes
+
+Top 15 attributes driving the coupling (must be routed to new homes):
+
+| Attribute | Refs | Target module |
+|-----------|------|--------------|
+| `toast` | 161 | `app/components/layouts.py` |
+| `load_registry` | 160 | `app/data_access.py` (Phase 3) |
+| `_check_admin` | 129 | `app/auth_helpers.py` (Phase 2) |
+| `is_auth_enabled` | 102 | `app/auth_helpers.py` (Phase 2) |
+| `data_path` | 85 | `core/config.py` (already exists) |
+| `get_current_user` | 83 | `app/auth_helpers.py` (Phase 2) |
+| `community_url_prefix` | 82 | `app/community.py` (Phase 2) |
+| `get_crop_files` | 64 | `app/data_access.py` (Phase 3) |
+| `_photo_cache` | 64 | `app/cache.py` (Phase 3) |
+| `resolve_face_image_url` | 52 | `app/components/cards.py` (Phase 1) |
+| `save_registry` | 51 | `app/data_access.py` (Phase 3) |
+| `load_photo_registry` | 47 | `app/data_access.py` (Phase 3) |
+| `get_identity_for_face` | 45 | `app/data_access.py` (Phase 3) |
+| `get_photo_metadata` | 43 | `app/data_access.py` (Phase 3) |
+| `log_user_action` | 37 | `app/audit.py` (already exists) |
+
+## Risk Analysis
+
+| Risk | Severity | Mitigation |
+|------|----------|-----------|
+| Circular imports | HIGH | Strict layering enforced by import test |
+| Test mock paths breaking | MEDIUM | `app.main.load_registry` -> `app.data_access.load_registry`. Batch find-replace. Re-export from main.py during transition |
+| `_main_mod` references missed | MEDIUM | Automated grep count; regression test asserts count below target |
+| Route registration (`rt`) breaks | LOW | `rt` stays in `app/main.py`, route files keep `from app.main import rt` |
+| Cache invalidation timing | HIGH | Phase 3 only. Single cache module with explicit invalidation API |
+| Performance from import overhead | LOW | Python caches imports; no runtime cost after startup |
+
+## Migration Pattern (per function)
+
+1. **Copy** function to target module with its imports
+2. **Add re-export** in `app/main.py`: `from app.components.cards import identity_card`
+3. **Update route files** to import from new location (or use re-export)
+4. **Run** `make test-fast` — fix breakage
+5. **Remove** re-export from main.py once all consumers updated
+6. **Commit** atomically per logical group
+
+The re-export step provides backward compatibility during migration,
+allowing incremental route file updates instead of big-bang changes.
+
+## Recommended Tooling
+
+- **Codex CLI** for bulk extraction in Phase 1 (mechanical, parallelizable)
+- **Claude Code** for Phase 2-3 (requires understanding of state dependencies)
+- **Claude Code audit** after each phase (circular imports, test coverage, _main_mod count)
+- **grep regression script:** `grep -rc '_main_mod\.' app/ | awk -F: '{s+=$2}END{print s}'`
 
 ## Out of Scope
 
-- **Phase 4: Eliminate `_main_mod` entirely** — This is a prerequisite for Phase 3 but could be its own initiative if Phase 3 is deferred. Not planned for initial execution.
-- **Framework migration** — No change to FastHTML/HTMX stack (see ROADMAP "Future Evaluation" trigger)
-- **Route file refactoring** — The 5 existing route files (`page_routes.py`, `identity_routes.py`, etc.) stay as-is
-- **Test reorganization** — Tests may need import updates but no structural test refactoring
+- Splitting `page_routes.py` (13,029 lines) — separate PRD if needed
+- Framework migration (FastHTML -> React/Next.js)
+- Database schema changes
+- Performance optimization (separate concern)
+- Renaming functions (preserve API names to minimize test churn)
+- Splitting `core/` modules (already well-factored)
 
-## Key Risks
+## Priority Order
 
-| Risk | Mitigation |
-|------|------------|
-| `_main_mod` circular imports | Phase 1 avoids this entirely; Phase 2 uses parameter injection |
-| Import path breakage across 3,600+ tests | Mechanical find/replace; re-export from `__init__.py` for backwards compat |
-| Subtle rendering bugs from moved functions | Browser verification of all major pages post-extraction |
-| Performance regression from import overhead | Benchmark startup time before/after |
-| Merge conflicts with in-flight work | Execute during a quiet period; no parallel sessions |
-
-## Recommended Execution Approach
-
-**Phase 1 (recommended first session):**
-1. **Codex** for mechanical extraction — identify pure functions, move to modules, update imports across codebase
-2. **Claude Code** for audit/verification — run full test suite, browser verify all pages, check for subtle breakage
-3. Estimated effort: 1 day (4-6 hours Codex + 2-3 hours Claude Code audit)
-
-**Phases 2-3:** Defer until Phase 1 is validated in production. Each phase is a separate session.
+1. **Phase 1** — highest value, lowest risk, unblocks parallel UX development
+2. **Phase 2** — medium value, reduces coupling, cleans up auth/proposal imports
+3. **Phase 3** — deferred until Phases 1-2 are stable in production
 
 ## Success Metrics
 
-- `app/main.py` line count: 11,735 → ~6,200 (Phase 1) → ~4,500 (Phase 2) → <500 (Phase 3)
-- Parallel worktree capability: blocked → unblocked for UX work (Phase 1)
-- `_main_mod` references: 904+ → 904+ (Phase 1, unchanged) → reduced (Phase 2) → 0 (Phase 3)
+| Metric | Before | Phase 1 | Phase 2 | Phase 3 |
+|--------|--------|---------|---------|---------|
+| `main.py` lines | 11,765 | ~6,200 | ~4,500 | <1,500 |
+| `_main_mod` refs | 1,997 | ~1,700 | ~800 | 0 |
+| Parallel UX work | blocked | unblocked | unblocked | fully unblocked |
+| Unique attributes | 215 | ~180 | ~100 | 0 |
 
-## Breadcrumbs
+## Effort Estimate
 
-- Research: `docs/session_context/session-135-research.md` (Main.py Refactoring Audit)
-- Lesson 88: `tasks/lessons/harness-lessons.md` — parallel worktree blocking
-- BACKLOG: REFACTOR-001
-- ROADMAP: Near-Term — Infrastructure
+| Phase | Sessions | Risk |
+|-------|----------|------|
+| Phase 1 | 1-2 | LOW (subagents per component module) |
+| Phase 2 | 1 | MEDIUM (proposals + auth parallelizable) |
+| Phase 3 | 2 | HIGH (sequential, touches shared state) |
+
+## References
+
+- `docs/session_context/session-135-research.md` — Full refactoring audit
+- Lesson 88 (`tasks/lessons/harness-lessons.md`) — Parallel worktree blocking
+- BACKLOG UX-204 — Face card consolidation (subsumed by Phase 1)
+- BACKLOG ARCH-001 — Rhodes-specific hardcoding (separate concern)
+- Session 91b — Prior extraction (26,100 -> 9,383 lines, 17 route files)
+- Session 92 — Compare + estimate route extraction (5,381 lines)
+- DD-017 (`docs/DESIGN_DECISIONS.md`) — This refactoring decision

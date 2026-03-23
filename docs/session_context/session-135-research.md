@@ -83,3 +83,23 @@
 **Key blocker:** `_main_mod` pattern — 482 references in `page_routes.py`, 422 in `identity_routes.py`. Every extracted route file imports the main module to access shared state. Phase 1 avoids this by extracting pure rendering functions that don't need registry access.
 
 **Strategic benefit:** Unblocks parallel worktree development (Lesson 88 — tracks touching `app/main.py` must be sequential). After Phase 1, most UX work can happen in `app/components/` without conflicts.
+
+---
+
+## Harness Artifacts (Session 135)
+
+The following artifacts were created from this research:
+
+| Artifact | Location | Description |
+|----------|----------|-------------|
+| PRD-056 | `docs/prds/056_mainpy_refactoring.md` | Full PRD with phased approach, acceptance criteria, risk analysis, migration strategy |
+| DD-017 | `docs/DESIGN_DECISIONS.md` | Design decision: three-phase extraction, re-export migration pattern |
+| REFACTOR-001 | `docs/BACKLOG.md` (Architecture section) | Backlog entry with breadcrumbs to PRD and DD |
+| ROADMAP entry | `ROADMAP.md` (Near-Term -- Infrastructure) | Roadmap line item for REFACTOR-001 |
+
+**Key data points from deeper analysis (not in original research):**
+- 215 unique `_main_mod` attributes referenced across route files (not 2 groups as originally estimated)
+- 1,997 total `_main_mod` references (not just 482+422 in the two largest files)
+- Top coupling drivers: `toast` (161 refs), `load_registry` (160), `_check_admin` (129), `is_auth_enabled` (102)
+- 19 route files (not 5 as noted in original research) depend on `_main_mod`
+- `page_routes.py` is itself 13,029 lines — a candidate for future PRD
