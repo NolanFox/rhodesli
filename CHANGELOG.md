@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.45] — 2026-03-23 (Session 135b: Data Repair + Performance)
+
+### Data Integrity
+- **FB-007**: Repaired 8 multi-claimed faces — Person 3779 merged into Esther Burd Fox. Zero multi-claimed faces remain.
+
+### Performance
+- **FB-002**: Precomputed global embedding matrix in `perf_cache.py` — eliminates 100-200ms matrix construction per neighbors cache miss. Vectorized cosine distance for all ~1864 active identities.
+
+### UX Fixes
+- **FB-010**: Focus mode face strip now shows ALL face thumbnails (was limited to 6)
+
+### Tests
+- 7 new tests for global perf cache (sorting, self-exclusion, co-occurrence, limit, structure)
+- 3729 total tests pass
+
 ## [v0.99.44] — 2026-03-22 (Session 134: Clean Sweep + Security + Performance)
 
 ### Security (Audit Findings)

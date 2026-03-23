@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.38 · ~3557 tests · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.45 · ~3729 tests · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -133,6 +133,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-23: **v0.99.45 — Session 135b**: Data Repair + Performance. FB-007 multi-claimed faces repaired (Person 3779→Esther Burd Fox). FB-002 precomputed global embedding matrix eliminates 100-200ms neighbors cache miss. FB-010 face strip shows all faces. 7 new tests. 3729 app tests pass.
 
 - [x] 2026-03-22: **v0.99.44 — Session 134**: Clean Sweep + Security + Performance. Security audit: open redirect blocked, rate limiting on search/login/signup, input caps. 15 UX bugs: FB-113 Identified label, FB-005/007 clickable face cards, FB-008 state borders, FB-009 4-col grid, FB-004 community-scoped names, FB-106 admin links. Performance: save_registry deepcopy→json.dumps (-20-50ms). FB-016 verified already fixed. 3 worktree subagents for parallel UX sprint. 22 new tests. 3696 app tests pass.
 
