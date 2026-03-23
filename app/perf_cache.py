@@ -95,8 +95,8 @@ def _rebuild_matrix():
             if not fid:
                 continue
             fd = face_data.get(fid)
-            if fd and "embeddings" in fd:
-                emb = fd["embeddings"]
+            if fd and ("mu" in fd or "embeddings" in fd):
+                emb = fd.get("mu", fd.get("embeddings"))
                 if hasattr(emb, "__len__") and len(emb) > 0:
                     embeddings.append(np.array(emb).flatten())
                     face_map.append((iid, fid))
@@ -264,8 +264,8 @@ def _rebuild_global_matrix():
 
         for fid in face_ids:
             fd = face_data.get(fid)
-            if fd and "embeddings" in fd:
-                emb = fd["embeddings"]
+            if fd and ("mu" in fd or "embeddings" in fd):
+                emb = fd.get("mu", fd.get("embeddings"))
                 if hasattr(emb, "__len__") and len(emb) > 0:
                     embeddings.append(np.array(emb).flatten())
                     face_map.append((iid, fid))
