@@ -6170,13 +6170,22 @@ def identity_card_expanded(
     main_crop_url = None
     main_photo_id = None
     best_face_id = get_best_face_id(all_face_ids)
+    best_face_idx = 0
     if best_face_id:
         main_crop_url = resolve_face_image_url(best_face_id, crop_files)
         main_photo_id = get_photo_id_for_face(best_face_id)
+        # Find index of best face in all_face_ids for lightbox navigation
+        for _i, _fe in enumerate(all_face_ids):
+            _fid = _fe if isinstance(_fe, str) else _fe.get("face_id", "")
+            if _fid == best_face_id:
+                best_face_idx = _i
+                break
 
     # Build face grid for additional faces (skip best since it's shown as main thumbnail)
+    # Use identity lightbox (/api/identity/{id}/photos?index=N) for face-by-face
+    # navigation with prev/next arrows scoped to this identity's faces.
     face_previews = []
-    for face_entry in all_face_ids[:6]:  # Show up to 6, skip the best one
+    for face_idx, face_entry in enumerate(all_face_ids[:6]):  # Show up to 6, skip the best one
         if isinstance(face_entry, str):
             face_id = face_entry
         else:
@@ -6196,7 +6205,7 @@ def identity_card_expanded(
                             alt=f"Face {face_id[:8]}",
                         ),
                         cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
-                        hx_get=f"{nav_prefix}/photo/{face_photo_id}/partial?face={face_id}&identity_id={identity_id}",
+                        hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={face_idx}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
                         type="button",
@@ -6323,7 +6332,7 @@ def identity_card_expanded(
                         cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center",
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"{nav_prefix}/photo/{main_photo_id}/partial?face={best_face_id}&identity_id={identity_id}"
+                    hx_get=f"{nav_prefix}/api/identity/{identity_id}/photos?index={best_face_idx}"
                     if main_photo_id
                     else None,
                     hx_target="#photo-modal-content",

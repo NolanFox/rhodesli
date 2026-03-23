@@ -142,10 +142,18 @@ def main():
 
     client = get_client()
 
-    # Fetch all identities
+    # Fetch all identities (paginate to avoid 1000-row default limit)
     print("Fetching identities from Supabase...")
-    result = client.table("identities").select("*").execute()
-    identities = result.data
+    identities = []
+    page_size = 1000
+    offset = 0
+    while True:
+        result = client.table("identities").select("*").range(offset, offset + page_size - 1).execute()
+        batch = result.data
+        identities.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
     print(f"  Found {len(identities)} total identities")
 
     active = [i for i in identities if not i.get("merged_into")]

@@ -362,7 +362,7 @@ class TestCommunityScopedHelpers(unittest.TestCase):
         assert "/c/fox-family/identity/id-roland/skip?from_focus=true" in html
         assert "/c/fox-family/api/identity/id-roland/neighbors?from_focus=true" in html
         assert "/c/fox-family/person/id-roland" in html
-        assert "/c/fox-family/photo/photo-1/partial?face=face-a&amp;identity_id=id-roland" in html
+        assert "/c/fox-family/api/identity/id-roland/photos?index=0" in html
         assert "/c/fox-family/api/annotations/submit" in html
         assert "/c/fox-family/api/identity/id-roland/notes" in html
 

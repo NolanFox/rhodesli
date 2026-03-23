@@ -10,6 +10,7 @@ class TestPhotoNavUrl:
     def test_first_photo_has_next_only(self):
         """First photo in collection has next_id but no prev_id."""
         from app.main import _photo_nav_url
+
         photos = [{"photo_id": f"p{i}"} for i in range(5)]
         url = _photo_nav_url("p0", 0, photos, 5)
         assert "prev_id" not in url
@@ -20,6 +21,7 @@ class TestPhotoNavUrl:
     def test_last_photo_has_prev_only(self):
         """Last photo in collection has prev_id but no next_id."""
         from app.main import _photo_nav_url
+
         photos = [{"photo_id": f"p{i}"} for i in range(5)]
         url = _photo_nav_url("p4", 4, photos, 5)
         assert "prev_id=p3" in url
@@ -28,6 +30,7 @@ class TestPhotoNavUrl:
     def test_middle_photo_has_both(self):
         """Middle photo has both prev_id and next_id."""
         from app.main import _photo_nav_url
+
         photos = [{"photo_id": f"p{i}"} for i in range(5)]
         url = _photo_nav_url("p2", 2, photos, 5)
         assert "prev_id=p1" in url
@@ -37,6 +40,7 @@ class TestPhotoNavUrl:
     def test_single_photo_has_no_nav(self):
         """Single photo in collection has no prev/next."""
         from app.main import _photo_nav_url
+
         photos = [{"photo_id": "p0"}]
         url = _photo_nav_url("p0", 0, photos, 1)
         assert "prev_id" not in url
@@ -60,11 +64,7 @@ class TestPhotoViewNavigation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p1", is_partial=True,
-            prev_id="p0", next_id="p2",
-            nav_idx=1, nav_total=5
-        )
+        result = photo_view_content("p1", is_partial=True, prev_id="p0", next_id="p2", nav_idx=1, nav_total=5)
         html = to_xml(result)
 
         # Prev button
@@ -109,11 +109,7 @@ class TestPhotoViewNavigation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p1", is_partial=True,
-            prev_id="p0", next_id="p2",
-            nav_idx=1, nav_total=3
-        )
+        result = photo_view_content("p1", is_partial=True, prev_id="p0", next_id="p2", nav_idx=1, nav_total=3)
         html = to_xml(result)
 
         # Buttons carry data-action for the global delegation handler
@@ -133,11 +129,7 @@ class TestPhotoViewNavigation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p0", is_partial=True,
-            next_id="p1",
-            nav_idx=0, nav_total=3
-        )
+        result = photo_view_content("p0", is_partial=True, next_id="p1", nav_idx=0, nav_total=3)
         html = to_xml(result)
 
         assert 'id="photo-nav-prev"' not in html
@@ -174,11 +166,7 @@ class TestArrowButtonsUseEventDelegation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p1", is_partial=True,
-            prev_id="p0", next_id="p2",
-            nav_idx=1, nav_total=5
-        )
+        result = photo_view_content("p1", is_partial=True, prev_id="p0", next_id="p2", nav_idx=1, nav_total=5)
         html = to_xml(result)
 
         assert 'data-action="photo-nav-prev"' in html
@@ -198,11 +186,7 @@ class TestArrowButtonsUseEventDelegation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p1", is_partial=True,
-            prev_id="p0", next_id="p2",
-            nav_idx=1, nav_total=5
-        )
+        result = photo_view_content("p1", is_partial=True, prev_id="p0", next_id="p2", nav_idx=1, nav_total=5)
         html = to_xml(result)
 
         assert 'data-action="photo-nav-next"' in html
@@ -221,11 +205,7 @@ class TestArrowButtonsUseEventDelegation:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content(
-            "p1", is_partial=True,
-            prev_id="p0", next_id="p2",
-            nav_idx=1, nav_total=3
-        )
+        result = photo_view_content("p1", is_partial=True, prev_id="p0", next_id="p2", nav_idx=1, nav_total=3)
         html = to_xml(result)
 
         # No inline onclick that calls photoNavTo — delegation handles it
@@ -395,10 +375,7 @@ class TestIdentityBasedNavigation:
         mock_reg.return_value = MagicMock()
 
         result = photo_view_content(
-            "p2", is_partial=True,
-            prev_id="p1", next_id="p3",
-            nav_idx=1, nav_total=5,
-            identity_id="id1"
+            "p2", is_partial=True, prev_id="p1", next_id="p3", nav_idx=1, nav_total=5, identity_id="id1"
         )
         html = to_xml(result)
 
@@ -493,26 +470,87 @@ class TestFaceCardIdentityContext:
         """'View Photo' button in face detail card passes identity_id."""
         from app.main import face_card, to_xml
 
-        html = to_xml(face_card(
-            face_id="f1",
-            crop_url="/crops/f1.jpg",
-            quality=0.95,
-            identity_id="id1",
-            photo_id="p1",
-        ))
+        html = to_xml(
+            face_card(
+                face_id="f1",
+                crop_url="/crops/f1.jpg",
+                quality=0.95,
+                identity_id="id1",
+                photo_id="p1",
+            )
+        )
 
         assert "identity_id=id1" in html
+
+
+class TestFocusModeIdentityLightbox:
+    """Tests that Focus mode face thumbnails use identity lightbox for navigation."""
+
+    @patch("app.main.get_best_face_id")
+    @patch("app.main.resolve_face_image_url")
+    @patch("app.main.get_photo_id_for_face")
+    def test_face_thumbnails_use_identity_lightbox(self, mock_photo_id, mock_crop_url, mock_best):
+        """Face thumbnails in identity_card_expanded use /api/identity/{id}/photos?index=N."""
+        from app.main import identity_card_expanded, to_xml
+
+        identity = {
+            "identity_id": "id1",
+            "name": "Test Person",
+            "state": "PROPOSED",
+            "anchor_ids": [],
+            "candidate_ids": ["f1", "f2", "f3"],
+        }
+        mock_best.return_value = "f1"
+        mock_crop_url.return_value = "/crops/test.jpg"
+        mock_photo_id.side_effect = lambda fid: {"f1": "p1", "f2": "p2", "f3": "p3"}.get(fid)
+
+        html = to_xml(identity_card_expanded(identity, crop_files=set(), is_admin=True))
+
+        # Main thumbnail should use identity lightbox at index of best face
+        assert "/api/identity/id1/photos?index=0" in html
+        # Secondary face thumbnails should use identity lightbox with their indices
+        assert "/api/identity/id1/photos?index=1" in html
+        assert "/api/identity/id1/photos?index=2" in html
+        # Should NOT use /photo/{id}/partial for face thumbnails
+        assert "/photo/p2/partial" not in html
+        assert "/photo/p3/partial" not in html
+
+    @patch("app.main.get_best_face_id")
+    @patch("app.main.resolve_face_image_url")
+    @patch("app.main.get_photo_id_for_face")
+    def test_single_face_identity_no_secondary_thumbnails(self, mock_photo_id, mock_crop_url, mock_best):
+        """Single-face identity has main thumbnail but no secondary face grid."""
+        from app.main import identity_card_expanded, to_xml
+
+        identity = {
+            "identity_id": "id1",
+            "name": "Test Person",
+            "state": "PROPOSED",
+            "anchor_ids": [],
+            "candidate_ids": ["f1"],
+        }
+        mock_best.return_value = "f1"
+        mock_crop_url.return_value = "/crops/test.jpg"
+        mock_photo_id.return_value = "p1"
+
+        html = to_xml(identity_card_expanded(identity, crop_files=set(), is_admin=True))
+
+        # Main thumbnail uses identity lightbox
+        assert "/api/identity/id1/photos?index=0" in html
 
 
 class TestPhotosGridNavScript:
     """Tests for the navigation script embedded in the photos grid."""
 
     @patch("app.main._build_caches")
-    @patch("app.main._photo_cache", {
-        "p1": {"filename": "a.jpg", "source": "Test", "faces": []},
-        "p2": {"filename": "b.jpg", "source": "Test", "faces": []},
-        "p3": {"filename": "c.jpg", "source": "Test", "faces": []},
-    })
+    @patch(
+        "app.main._photo_cache",
+        {
+            "p1": {"filename": "a.jpg", "source": "Test", "faces": []},
+            "p2": {"filename": "b.jpg", "source": "Test", "faces": []},
+            "p3": {"filename": "c.jpg", "source": "Test", "faces": []},
+        },
+    )
     @patch("app.main.get_identity_for_face", return_value=None)
     @patch("app.main.photo_url", side_effect=lambda f: f"/photos/{f}")
     def test_photos_section_includes_nav_script(self, mock_url, mock_id, mock_cache):
@@ -525,9 +563,7 @@ class TestPhotosGridNavScript:
         from app.main import render_photos_section, to_xml
 
         registry = MagicMock()
-        html = to_xml(render_photos_section(
-            {"photos": 3}, registry, set()
-        ))
+        html = to_xml(render_photos_section({"photos": 3}, registry, set()))
 
         assert "window._photoNavIds" in html
         assert "photoNavTo" in html
