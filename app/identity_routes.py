@@ -631,7 +631,26 @@ def get(
 
     # Filter out duplicate face detections: same face detected twice in same photo
     # These show as Dist ~0.00 with co-occurrence (seen together in same photo)
-    neighbors = [n for n in neighbors if not (n.get("distance", 1.0) < 0.1 and n.get("co_occurrence", 0) > 0)]
+    # BUT: if the identities share face IDs (multi-claimed faces), that's a data
+    # integrity issue — keep them and flag for merge instead of hiding them.
+    target_faces = set(registry.get_anchor_face_ids(identity_id) + registry.get_candidate_face_ids(identity_id))
+    filtered_neighbors = []
+    for n in neighbors:
+        if n.get("distance", 1.0) < 0.1 and n.get("co_occurrence", 0) > 0:
+            # Check if this is multi-claimed faces (shared face IDs) vs genuine co-occurrence
+            neighbor_faces = set(n.get("anchor_face_ids", []) + n.get("candidate_face_ids", []))
+            shared_faces = target_faces & neighbor_faces
+            if shared_faces:
+                # Multi-claimed faces — keep and flag for merge
+                n["has_shared_faces"] = True
+                n["shared_face_count"] = len(shared_faces)
+                filtered_neighbors.append(n)
+            else:
+                # Genuine co-occurrence with near-identical embedding — likely duplicate detection, filter out
+                pass
+        else:
+            filtered_neighbors.append(n)
+    neighbors = filtered_neighbors
 
     # FB-011: Community-aware sorting/filtering for Similar Identities
     current_community = getattr(request.state, "community", None) if request else None

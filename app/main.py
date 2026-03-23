@@ -9760,7 +9760,13 @@ def neighbor_card(
                         f"Seen together in {co_occurrence} photo{'s' if co_occurrence != 1 else ''}",
                         cls="text-[10px] text-amber-400 italic ml-1",
                     )
-                    if co_occurrence > 0
+                    if co_occurrence > 0 and not neighbor.get("has_shared_faces")
+                    else None,
+                    Span(
+                        f"Shares {neighbor.get('shared_face_count', 0)} face{'s' if neighbor.get('shared_face_count', 0) != 1 else ''} — merge recommended",
+                        cls="text-[10px] text-red-400 font-bold italic ml-1",
+                    )
+                    if neighbor.get("has_shared_faces")
                     else None,
                     cls="flex items-center flex-wrap",
                 ),
