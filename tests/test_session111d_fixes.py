@@ -450,6 +450,8 @@ class TestFB030SpeedRunCounterPersistence:
         assert "speed-run-reset" in html
         # restoreStats call
         assert "restoreStats" in html
+
+
 class TestFB054058ThumbnailConsistency:
     """FB-054/058: Compare view should default to best-quality face, matching neighbor card thumbnail."""
 
@@ -506,8 +508,8 @@ class TestFB054058ThumbnailConsistency:
             result = compare_routes.get.__wrapped__(
                 target_id="target-id",
                 neighbor_id="neighbor-id",
-                target_idx=0,  # default
-                neighbor_idx=0,  # default
+                target_idx=-1,  # default (sentinel for auto-select)
+                neighbor_idx=-1,  # default (sentinel for auto-select)
                 view="faces",
                 filter="",
                 sess=None,
@@ -648,6 +650,8 @@ class TestFB038LoadMorePreservesCheckboxes:
             assert "nbr-5" in html or "nbr-6" in html or "Person 5" in html or "Person 6" in html, (
                 "Incremental load should return new neighbor cards"
             )
+
+
 class TestFB028ToastOOBSwap:
     """FB-028: Toast persistence via OOB swap in focus mode."""
 

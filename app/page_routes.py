@@ -2977,12 +2977,14 @@ def get(
                 // Photo modal prev/next (Photos grid browsing)
                 if (action === 'photo-nav-prev' || action === 'photo-nav-next') {
                     e.preventDefault();
-                    var idx = parseInt(btn.getAttribute('data-nav-idx'), 10);
-                    if (typeof photoNavTo === 'function' && !isNaN(idx)) {
-                        photoNavTo(idx);
+                    var navUrl = btn.getAttribute('data-nav-url');
+                    if (navUrl) {
+                        htmx.ajax('GET', navUrl, {target:'#photo-modal-content', swap:'innerHTML'});
                     } else {
-                        var url = btn.getAttribute('data-nav-url');
-                        if (url) htmx.ajax('GET', url, {target:'#photo-modal-content', swap:'innerHTML'});
+                        var idx = parseInt(btn.getAttribute('data-nav-idx'), 10);
+                        if (typeof photoNavTo === 'function' && !isNaN(idx)) {
+                            photoNavTo(idx);
+                        }
                     }
                     return;
                 }

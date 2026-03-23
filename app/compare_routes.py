@@ -1134,7 +1134,7 @@ def _compare_summary_section(
                 admin_actions.append(
                     Button(
                         "Not Same",
-                        hx_post=f"{nav_prefix}/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{m['target_id']}/reject/{face_iid}?source=compare",
                         hx_target=f"#summary-card-{i}",
                         hx_swap="outerHTML",
                         cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -2399,7 +2399,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -2820,7 +2820,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/reject/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -3713,7 +3713,7 @@ def get(result_id: str, sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"{nav_prefix}/api/identity/{ref_id}/not-same/{m_identity_id}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{ref_id}/reject/{m_identity_id}?source=compare",
                     hx_target=f"#result-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -5080,7 +5080,7 @@ def post(
                 action_btns.append(
                     Button(
                         "Not Same",
-                        hx_post=f"{nav_prefix}/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{tr['target_id']}/reject/{face_iid}?source=compare",
                         hx_target=f"#compare-row-{fi}-{ti}",
                         hx_swap="outerHTML",
                         cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded",
@@ -5632,8 +5632,8 @@ def _compare_photo_with_overlays(
 def get(
     target_id: str,
     neighbor_id: str,
-    target_idx: int = 0,
-    neighbor_idx: int = 0,
+    target_idx: int = -1,
+    neighbor_idx: int = -1,
     view: str = "faces",
     filter: str = "",
     sess=None,
@@ -5666,10 +5666,10 @@ def get(
                 pass
         return 0
 
-    if target_idx == 0 and len(tf) > 1:
-        target_idx = _best_face_index(tf)
-    if neighbor_idx == 0 and len(nf) > 1:
-        neighbor_idx = _best_face_index(nf)
+    if target_idx < 0:
+        target_idx = _best_face_index(tf) if len(tf) > 1 else 0
+    if neighbor_idx < 0:
+        neighbor_idx = _best_face_index(nf) if len(nf) > 1 else 0
 
     target_idx = max(0, min(target_idx, len(tf) - 1))
     neighbor_idx = max(0, min(neighbor_idx, len(nf) - 1))
