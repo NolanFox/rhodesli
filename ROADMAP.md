@@ -91,6 +91,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
 - [x] 2026-03-17: AUDIT-001: Audit logging foundation — 22 audit_log calls across route files, new app/audit.py. Remaining: entity timelines on `/person` + `/photo`, canonical actor fields. See `docs/BACKLOG.md`.
+- [ ] REFACTOR-001: main.py Phase 1 — Extract UI components to app/components/ (PRD-056). Codex + Claude Code session.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
