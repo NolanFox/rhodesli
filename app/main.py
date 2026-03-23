@@ -304,6 +304,26 @@ app, rt = fast_app(
                 opacity: 1;
                 transform: scale(1);
             }
+
+
+            /* Distance Scanner Animation */
+            @keyframes distance-scan {
+                0% { background-position: -100% 0; }
+                100% { background-position: 200% 0; }
+            }
+            .search-distance-scanner {
+                background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.15) 40%, rgba(99,102,241,0.3) 50%, rgba(99,102,241,0.15) 60%, transparent 100%);
+                background-size: 50% 100%;
+                background-repeat: no-repeat;
+                animation: distance-scan 1.2s ease-in-out infinite;
+                border: 1px solid rgba(99,102,241,0.1);
+            }
+            @keyframes distance-reveal {
+                0% { opacity: 0; transform: scale(0.9); filter: blur(2px); }
+                60% { opacity: 1; transform: scale(1.02); filter: blur(0); }
+                100% { opacity: 1; transform: scale(1); filter: blur(0); }
+            }
+            .distance-badge-reveal { animation: distance-reveal 0.35s ease-out forwards; }
         """),
         Script("""
             // Face Crop Intersection Observer
@@ -9883,6 +9903,13 @@ def search_result_card(
                 ),
                 Span(
                     f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-sm sm:text-xs text-slate-400 ml-2"
+                ),
+                # Async distance badge — loads via HTMX on render
+                Span(
+                    cls="search-distance-scanner inline-block w-28 h-5 rounded bg-slate-700/50 ml-2",
+                    hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/distance/{result_id}",
+                    hx_trigger="load",
+                    hx_swap="outerHTML",
                 ),
                 cls="flex items-center ml-2 flex-1 min-w-0",
             ),

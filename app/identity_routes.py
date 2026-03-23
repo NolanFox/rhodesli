@@ -947,6 +947,55 @@ def get(identity_id: str, q: str = "", sess=None, request=None):
     )
 
 
+@rt("/api/identity/{source_id}/distance/{target_id}")
+def get(source_id: str, target_id: str, sess=None, request=None):
+    """Compute embedding distance between two identities (lazy-loaded via HTMX)."""
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return Span("", cls="hidden")
+
+    try:
+        registry = _main_mod.load_registry()
+        registry.get_identity(source_id)
+        registry.get_identity(target_id)
+    except (KeyError, Exception):
+        return Span("", cls="hidden")
+
+    face_data = _main_mod.get_face_data()
+    from core.neighbors import get_identity_embeddings
+    from scipy.spatial.distance import cdist
+
+    _s_fids, s_embs = get_identity_embeddings(source_id, registry, face_data)
+    _t_fids, t_embs = get_identity_embeddings(target_id, registry, face_data)
+
+    if s_embs.size == 0 or t_embs.size == 0:
+        return Span("No embedding", cls="text-[10px] text-slate-500 italic distance-badge-reveal ml-2")
+
+    dists = cdist(s_embs, t_embs, metric="euclidean")
+    min_dist = float(dists.min())
+
+    from core.confidence import compute_face_confidence
+
+    conf = compute_face_confidence(min_dist)
+    pct = conf.get("calibrated_score", 0)
+    tier = conf.get("tier_label", "")
+
+    # Color based on tier
+    if pct >= 60:
+        color = "bg-emerald-600/80 text-emerald-100"
+    elif pct >= 45:
+        color = "bg-amber-600/80 text-amber-100"
+    else:
+        color = "bg-slate-600/80 text-slate-300"
+
+    return Span(
+        Span(f"{pct}% match", cls=f"text-[10px] font-bold px-1.5 py-0.5 rounded {color}"),
+        Span(f"Dist: {min_dist:.2f}", cls="text-[10px] font-mono text-slate-400 ml-1"),
+        Span(tier, cls="text-[10px] text-slate-400 ml-1"),
+        cls="flex items-center gap-1 distance-badge-reveal ml-2",
+    )
+
+
 @rt("/api/search")
 def get(q: str = "", request=None):
     """

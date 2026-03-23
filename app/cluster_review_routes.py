@@ -299,8 +299,10 @@ def _recent_active_learning_card(label):
 
 def _face_match_card(proposal, identity_name, identity_id, nav_prefix=""):
     """Render a single face match card with confirm/reject buttons."""
-    face_id = proposal["face_id"]
-    distance = proposal["distance"]
+    face_id = proposal.get("face_id", "")
+    if not face_id:
+        return None
+    distance = proposal.get("distance", 999)
     crop_url = _get_crop_url_for_face(face_id)
 
     # Get the photo this face belongs to
@@ -430,7 +432,13 @@ def _identity_match_group(identity_id, identity_name, proposals, nav_prefix=""):
         ),
         # Individual face cards
         Div(
-            *[_face_match_card(p, identity_name, identity_id, nav_prefix=nav_prefix) for p in proposals_sorted],
+            *[
+                c
+                for c in [
+                    _face_match_card(p, identity_name, identity_id, nav_prefix=nav_prefix) for p in proposals_sorted
+                ]
+                if c is not None
+            ],
             cls="space-y-2",
         ),
         id=f"identity-group-{identity_id}",
