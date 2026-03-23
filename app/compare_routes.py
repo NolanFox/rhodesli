@@ -1123,7 +1123,7 @@ def _compare_summary_section(
                 admin_actions.append(
                     Button(
                         "Merge",
-                        hx_post=f"/api/identity/{m['target_id']}/merge/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{m['target_id']}/merge/{face_iid}?source=compare",
                         hx_target=f"#summary-card-{i}",
                         hx_swap="outerHTML",
                         hx_confirm=_merge_confirm,
@@ -1134,7 +1134,7 @@ def _compare_summary_section(
                 admin_actions.append(
                     Button(
                         "Not Same",
-                        hx_post=f"/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
                         hx_target=f"#summary-card-{i}",
                         hx_swap="outerHTML",
                         cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -2388,7 +2388,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Merge",
-                    hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
@@ -2399,7 +2399,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/not-same/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -2809,7 +2809,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Merge",
-                    hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/merge/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     hx_confirm=_merge_confirm,
@@ -2820,7 +2820,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/not-same/{fiid}?source=compare",
                     hx_target=f"#compare-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -3702,7 +3702,7 @@ def get(result_id: str, sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Merge",
-                    hx_post=f"/api/identity/{ref_id}/merge/{m_identity_id}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{ref_id}/merge/{m_identity_id}?source=compare",
                     hx_target=f"#result-face-{i}",
                     hx_swap="outerHTML",
                     hx_confirm=_merge_confirm,
@@ -3713,7 +3713,7 @@ def get(result_id: str, sess=None, request=None):
             action_buttons.append(
                 Button(
                     "Not Same",
-                    hx_post=f"/api/identity/{ref_id}/not-same/{m_identity_id}?source=compare",
+                    hx_post=f"{nav_prefix}/api/identity/{ref_id}/not-same/{m_identity_id}?source=compare",
                     hx_target=f"#result-face-{i}",
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
@@ -5070,7 +5070,7 @@ def post(
                 action_btns.append(
                     Button(
                         "Merge",
-                        hx_post=f"/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
                         hx_target=f"#compare-row-{fi}-{ti}",
                         hx_swap="outerHTML",
                         hx_confirm=_merge_confirm,
@@ -5080,7 +5080,7 @@ def post(
                 action_btns.append(
                     Button(
                         "Not Same",
-                        hx_post=f"/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_post=f"{nav_prefix}/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
                         hx_target=f"#compare-row-{fi}-{ti}",
                         hx_swap="outerHTML",
                         cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded",
@@ -5778,7 +5778,7 @@ def get(
         m_btn = Button(
             "Suggest Merge",
             cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
-            hx_post=f"/api/identity/{target_id}/suggest-merge/{neighbor_id}",
+            hx_post=f"{nav_prefix}/api/identity/{target_id}/suggest-merge/{neighbor_id}",
             hx_target=f"#neighbor-{neighbor_id}",
             hx_swap="outerHTML",
             **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
@@ -5793,7 +5793,7 @@ def get(
         m_btn = Button(
             "Merge",
             cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
-            hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}",
+            hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{neighbor_id}",
             hx_target=f"#identity-{target_id}",
             hx_swap="outerHTML",
             hx_confirm=_merge_confirm,
@@ -5803,7 +5803,7 @@ def get(
     ns_btn = Button(
         "Not Same",
         cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
-        hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}",
+        hx_post=f"{nav_prefix}/api/identity/{target_id}/reject/{neighbor_id}",
         hx_target=f"#neighbor-{neighbor_id}",
         hx_swap="outerHTML",
         **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
