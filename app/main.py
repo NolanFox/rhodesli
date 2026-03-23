@@ -10097,7 +10097,7 @@ def neighbors_sidebar(
             Button(
                 "Load More",
                 cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}",
+                hx_get=f"{nav_prefix}/api/identity/{identity_id}/neighbors?offset={offset + len(neighbors)}{focus_param}{_container_param}{'&community_filter=' + community_filter if community_filter else ''}",
                 hx_target=f"#{_load_more_id}",
                 hx_swap="outerHTML",
             ),
