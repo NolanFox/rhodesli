@@ -273,8 +273,16 @@ def health():
     }
 
 
+_landing_stats_cache = None
+_landing_stats_ts = 0
+
+
 def _compute_landing_stats() -> dict:
-    """Compute live stats for the landing page."""
+    """Compute live stats for the landing page (cached for 2 minutes)."""
+    global _landing_stats_cache, _landing_stats_ts
+    now = time.time()
+    if _landing_stats_cache and now - _landing_stats_ts < 120:
+        return _landing_stats_cache
     registry = _main_mod.load_registry()
     _main_mod._build_caches()
     all_identities = registry.list_identities()
@@ -311,7 +319,7 @@ def _compute_landing_stats() -> dict:
             src = pd.get("source", "")
             if src:
                 sources.add(src)
-    return {
+    result = {
         "photo_count": len(_main_mod._photo_cache) if _main_mod._photo_cache else 0,
         "named_count": len(confirmed),
         "confirmed_count": len(confirmed),
@@ -321,6 +329,9 @@ def _compute_landing_stats() -> dict:
         "unidentified_faces": unidentified_faces,
         "sources": sorted(sources),
     }
+    _landing_stats_cache = result
+    _landing_stats_ts = now
+    return result
 
 
 def _get_featured_photos(limit: int = 8) -> list:
@@ -2258,7 +2269,10 @@ def get(
                 if community_slug == "rhodes":
                     stats = _main_mod._compute_landing_stats()
                     featured_photos = _main_mod._get_featured_photos(8)
-                    return _main_mod.landing_page(stats, featured_photos, nav_prefix=nav_prefix)
+                    return (
+                        HttpHeader("Cache-Control", "public, s-maxage=120, max-age=60"),
+                        _main_mod.landing_page(stats, featured_photos, nav_prefix=nav_prefix),
+                    )
                 return _community_landing_page(community, community_slug)
 
         if user is not None:
@@ -2271,7 +2285,10 @@ def get(
             else:
                 section = "skipped"  # Needs Help — always has items to review
         else:
-            return _platform_root_page(auth_enabled=_main_mod.is_auth_enabled())
+            return (
+                HttpHeader("Cache-Control", "public, s-maxage=120, max-age=60"),
+                _platform_root_page(auth_enabled=_main_mod.is_auth_enabled()),
+            )
 
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
 
