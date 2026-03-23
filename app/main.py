@@ -6185,7 +6185,7 @@ def identity_card_expanded(
     # Use identity lightbox (/api/identity/{id}/photos?index=N) for face-by-face
     # navigation with prev/next arrows scoped to this identity's faces.
     face_previews = []
-    for face_idx, face_entry in enumerate(all_face_ids[:6]):  # Show up to 6, skip the best one
+    for face_idx, face_entry in enumerate(all_face_ids):  # Show all faces, skip the best one
         if isinstance(face_entry, str):
             face_id = face_entry
         else:
