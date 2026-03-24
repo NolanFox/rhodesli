@@ -1790,6 +1790,7 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
     - view: "faces" (default) or "photos" — gallery view mode
     - sort_by: date_asc (default), date_desc, uploaded_desc, uploaded_asc
     """
+    _main_mod.touch_user_activity()  # SWR bot guard (egress reduction)
     user = get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"

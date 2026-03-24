@@ -403,7 +403,15 @@ class PhotoRegistry:
             page_size = 1000
             offset = 0
             while True:
-                result = client.table("photos").select("*").range(offset, offset + page_size - 1).execute()
+                result = (
+                    client.table("photos")
+                    .select(
+                        "photo_id, path, source, collection, source_url, "
+                        "width, height, upload_date, uploaded_by, job_id, created_at, updated_at"
+                    )
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
                 if not result.data:
                     break
                 all_photos.extend(result.data)

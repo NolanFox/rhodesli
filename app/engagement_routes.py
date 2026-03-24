@@ -506,7 +506,7 @@ def post(source_id: str, proposal_id: str, sess=None, request=None):
 
 _annotations_cache = None
 _annotations_cache_ts: float = 0.0
-_ANNOTATIONS_CACHE_TTL: float = 120.0
+_ANNOTATIONS_CACHE_TTL: float = 600.0  # 10 min — single admin, staleness acceptable (egress reduction)
 
 
 def _load_annotations() -> dict:

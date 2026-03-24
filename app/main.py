@@ -843,11 +843,11 @@ def _identity_home_community_slug(identity_id: str, current_community: dict | No
     return None
 
 
-# Cached community photo/identity ID sets (120s TTL)
+# Cached community photo/identity ID sets (600s TTL)
 _community_photo_ids_cache: dict = {}  # community_id -> set[str]
 _community_identity_ids_cache: dict = {}  # community_id -> set[str]
 _community_ids_cache_ts: float = 0.0
-_COMMUNITY_IDS_CACHE_TTL: float = 120.0
+_COMMUNITY_IDS_CACHE_TTL: float = 600.0  # 10 min — single admin, staleness acceptable (egress reduction)
 
 
 def _get_community_photo_ids(community: dict | None) -> set[str] | None:
@@ -881,7 +881,7 @@ def _get_community_photo_ids(community: dict | None) -> set[str] | None:
     photo_ids = load_photos_for_community(community_id)
     if photo_ids is None:
         # DO NOT cache None — transient Supabase errors would disable community
-        # filtering for the full TTL (120s), causing cross-community data leakage.
+        # filtering for the full TTL (600s), causing cross-community data leakage.
         # Return None (caller decides whether to fail-open or fail-closed).
         return None
 
@@ -1533,9 +1533,27 @@ import threading as _registry_threading
 _registry_cache = None
 _registry_cache_ts: float = 0.0
 _registry_cache_key: tuple[str, str] | None = None
-_REGISTRY_CACHE_TTL: float = 120.0
+_REGISTRY_CACHE_TTL: float = 600.0  # 10 min — single admin, staleness acceptable (egress reduction)
 # Session 125 PERF #1: SWR — serve stale, refresh in background
 _registry_refresh_lock = _registry_threading.Lock()
+
+# Guard against bot/crawler-triggered SWR refreshes — only refresh if a real
+# user request occurred within the last 5 minutes.  This prevents web crawlers
+# from keeping the cache perpetually hot when nobody is using the app.
+_last_user_request_ts: float = 0.0
+_USER_ACTIVITY_WINDOW: float = 300.0  # 5 minutes
+
+
+def touch_user_activity():
+    """Mark that a real user request just occurred (not a health check or bot).
+
+    Called from page route handlers. Used by SWR background refresh to avoid
+    Supabase reloads when only bots/crawlers are hitting the server.
+    """
+    global _last_user_request_ts
+    import time as _time
+
+    _last_user_request_ts = _time.time()
 
 
 def _background_registry_refresh(cache_key):
@@ -1543,9 +1561,17 @@ def _background_registry_refresh(cache_key):
 
     Session 125 PERF #1: Stale-while-revalidate — requests never block on
     Supabase reload. Only one thread refreshes at a time.
+
+    Egress guard: skip refresh if no real user request in the last 5 minutes.
+    This prevents bots/crawlers from triggering Supabase reloads.
     """
     global _registry_cache, _registry_cache_ts, _registry_cache_key
     import time as _time
+
+    # Skip refresh if no recent user activity (bot/crawler guard)
+    if _time.time() - _last_user_request_ts > _USER_ACTIVITY_WINDOW:
+        logging.debug("registry_swr_skip: no recent user activity")
+        return
 
     if not _registry_refresh_lock.acquire(blocking=False):
         # Another thread is already refreshing — skip
@@ -1588,7 +1614,7 @@ def load_registry():
 
     When DATA_SOURCE=json (rollback escape hatch), loads from JSON file.
 
-    Uses a 120-second TTL cache with stale-while-revalidate (Session 125 PERF #1):
+    Uses a 600-second TTL cache with stale-while-revalidate (Session 125 PERF #1):
     - Fresh (within TTL): return cached immediately
     - Stale (TTL expired, cache exists): return stale, refresh in background
     - Cold start (no cache): block on load (unavoidable)
@@ -2062,7 +2088,7 @@ def _count_pending_uploads() -> int:
 
 _proposals_cache = None
 _proposals_cache_ts: float = 0.0
-_PROPOSALS_CACHE_TTL: float = 120.0
+_PROPOSALS_CACHE_TTL: float = 600.0  # 10 min — single admin, staleness acceptable (egress reduction)
 _proposal_target_counts_cache = None
 
 
@@ -2071,7 +2097,7 @@ def _load_proposals() -> dict:
 
     When DATA_SOURCE=postgres (default), reads from Supabase ml_proposals table.
     When DATA_SOURCE=json (rollback), reads from proposals.json.
-    Uses a 120-second TTL cache (PRD-051 Phase 2, Session 114).
+    Uses a 600-second TTL cache (PRD-051 Phase 2, Session 114; bumped for egress reduction).
     """
     global _proposals_cache, _proposals_cache_ts, _proposal_target_counts_cache
     import time as _time

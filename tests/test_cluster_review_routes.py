@@ -1138,11 +1138,11 @@ class TestClusterReviewCaches:
         assert cr_mod._speed_run_cache == {}
         assert cr_mod._suggestions_cache == {}
 
-    def test_speed_run_cache_ttl_is_120s(self):
-        """Session 122: TTL increased from 30s to 120s for user-driven workflow."""
+    def test_speed_run_cache_ttl_is_600s(self):
+        """Session 136: TTL increased from 120s to 600s for egress reduction (single admin)."""
         from app.cluster_review_routes import _CACHE_TTL
 
-        assert _CACHE_TTL == 120, f"Expected _CACHE_TTL=120, got {_CACHE_TTL}"
+        assert _CACHE_TTL == 600, f"Expected _CACHE_TTL=600, got {_CACHE_TTL}"
 
     def test_speed_run_clusters_accepts_community_parameter(self):
         """Session 122: _get_speed_run_clusters accepts community_slug without request."""

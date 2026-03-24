@@ -2240,6 +2240,8 @@ def get(
     Public access -- anyone can view. Action buttons shown only to admins.
     Logged-in users with no section go to the triage dashboard.
     """
+    # Track user activity for SWR bot guard (egress reduction)
+    _main_mod.touch_user_activity()
     user = _main_mod.get_current_user(sess or {})
 
     # Read interest surnames from cookie for personalization
@@ -12822,6 +12824,7 @@ def get(
     - seq: If True for admins, enter the standalone speed-loop flow
     - from_queue: If True, show "Back to Review Queue" link in Speed Loop
     """
+    _main_mod.touch_user_activity()  # SWR bot guard (egress reduction)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"

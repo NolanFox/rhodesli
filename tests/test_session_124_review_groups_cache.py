@@ -15,9 +15,9 @@ class TestReviewGroupsCache:
         """Clear caches before each test."""
         cluster_review_routes._review_groups_cache = {}
 
-    def test_cache_ttl_constant_is_120(self):
-        """The TTL constant should be 120 seconds."""
-        assert cluster_review_routes._CACHE_TTL == 120
+    def test_cache_ttl_constant_is_600(self):
+        """Session 136: TTL bumped from 120s to 600s for egress reduction."""
+        assert cluster_review_routes._CACHE_TTL == 600
 
     def test_review_groups_cache_exists_as_module_level_dict(self):
         """_review_groups_cache should be a dict at module level."""

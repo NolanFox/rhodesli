@@ -1934,7 +1934,15 @@ class IdentityRegistry:
             page_size = 1000
             offset = 0
             while True:
-                result = client.table("identities").select("*").range(offset, offset + page_size - 1).execute()
+                result = (
+                    client.table("identities")
+                    .select(
+                        "identity_id, name, display_name, state, anchor_ids, candidate_ids, "
+                        "negative_ids, version_id, created_at, updated_at, merged_into, metadata"
+                    )
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
                 if not result.data:
                     break
                 all_rows.extend(result.data)

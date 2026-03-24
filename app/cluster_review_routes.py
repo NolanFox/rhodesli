@@ -43,7 +43,7 @@ UNRESOLVED_REVIEW_MEMBER_LIMIT = 6
 _speed_run_cache = {}  # keyed by community_slug -> (timestamp, result)
 _suggestions_cache = {}  # keyed by (identity_id, community_slug) -> (timestamp, result)
 _review_groups_cache = {}  # keyed by community_slug -> (timestamp, result)  — Session 124
-_CACHE_TTL = 120  # seconds — user-driven workflow, data doesn't change fast (Session 122)
+_CACHE_TTL = 600  # seconds — 10 min, single admin, staleness acceptable (egress reduction)
 
 
 def invalidate_cluster_review_caches(changed_ids=None):
