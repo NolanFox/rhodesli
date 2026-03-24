@@ -164,6 +164,32 @@ This document records deployment, infrastructure, and operational decisions for 
 - **Breadcrumbs**: Lesson 139 (tasks/lessons/deployment-lessons.md), BACKLOG.md EGRESS-001/002/003,
   `.claude/rules/egress-budget.md`
 
+## OD-012: Supabase Egress Crisis — TTLs 120s→600s + Selective Columns + SWR Guard
+- **Date**: 2026-03-24
+- **Session**: 136
+- **Context**: Supabase restricted project — 13.79 GB of 5.5 GB quota consumed. Grace period (OD-011)
+  proved insufficient. Root cause: 120s TTL SWR still fires 24/7 from Railway (bot/crawler traffic
+  triggers stale-while-revalidate). `SELECT *` on identities and photos fetches unused columns.
+  Community filtering failed open for Rhodes when Supabase returned 402, leaking Fox Family data.
+- **Decision**: Three-pronged egress reduction:
+  1. **TTLs 120s → 600s** on ALL caches (registry, community IDs, proposals, cluster review, annotations)
+  2. **Selective columns**: identities and photos queries now fetch only the 12 columns each actually uses
+  3. **SWR bot guard**: Background refresh only fires if a real user page load occurred within 5 min
+  4. **Fail-closed**: ALL communities including Rhodes now return empty set when Supabase unavailable
+- **Tradeoffs**:
+  - 600s staleness window for external DB edits (irrelevant — single admin, writes invalidate locally)
+  - First page load after 5 min idle takes ~1s longer (cold SWR refresh)
+  - No functional difference for the admin during active use
+- **Estimated impact**: ~14 GB/mo → ~3 GB/mo (well within 5.5 GB free tier)
+- **Monitoring thresholds** (same as OD-011, plus):
+  6. **If quota exceeded again**: Upgrade to Pro ($25/mo) — no further optimization ROI
+- **Alternatives rejected**:
+  - DATA_SOURCE=json rollback: Would reintroduce all JSON data integrity issues (10+ incidents)
+  - New Supabase org: Data migration hassle outweighs benefit
+  - 300s TTL: Insufficient — would still be ~7 GB/mo from SWR without the bot guard
+- **EGRESS-003 (selective columns) now DONE**: Implemented in this session
+- **Breadcrumbs**: OD-011, Lesson 139, `.claude/rules/egress-budget.md`, Session 136 feedback
+
 ## OD-008: Dev vs Production Environment Separation
 - **Date**: 2026-03-09
 - **Session**: 95b
