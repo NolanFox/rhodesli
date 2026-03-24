@@ -115,14 +115,15 @@ class TestGetCommunityIdentityIds:
 
         assert _get_community_identity_ids(None) is None
 
-    def test_photo_scope_failure_returns_none(self):
+    def test_photo_scope_failure_fails_closed(self):
+        """When Supabase is unavailable, ALL communities fail closed (empty set)."""
         import app.main
 
         app.main._community_identity_ids_cache = {}
         app.main._community_ids_cache_ts = 0.0
         with patch.object(app.main, "_get_community_photo_ids", return_value=None):
             result = app.main._get_community_identity_ids({"slug": "rhodes", "id": "some-id"})
-            assert result is None
+            assert result == set()  # Fail closed, not None (fail open)
 
     def test_non_rhodes_returns_photo_derived_set(self):
         """Photo-derived identity set returns identities with faces in community photos (AD-216)."""

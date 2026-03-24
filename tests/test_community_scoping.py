@@ -205,8 +205,13 @@ class TestGetCommunityIdentityIds:
             result = app.main._get_community_identity_ids(community)
             assert result == set()  # Empty set = show nothing, not None = show everything
 
-    def test_photo_scope_failure_returns_none_for_rhodes(self):
-        """When photo scope unavailable, Rhodes falls back to None (show all)."""
+    def test_photo_scope_failure_fails_closed_for_rhodes(self):
+        """When photo scope unavailable, Rhodes also fails closed (empty set).
+
+        Previously Rhodes failed open (returned None = show everything), which
+        caused cross-community data leakage when Supabase was unavailable.
+        Fixed: ALL communities fail closed when Supabase errors occur.
+        """
         import app.main
 
         app.main._community_identity_ids_cache = {}
@@ -215,7 +220,36 @@ class TestGetCommunityIdentityIds:
         with patch.object(app.main, "_get_community_photo_ids", return_value=None):
             community = {"slug": "rhodes", "id": "rhodes-uuid"}
             result = app.main._get_community_identity_ids(community)
-            assert result is None  # None = no filtering = show everything
+            assert result == set()  # Empty set = fail closed, not None = show everything
+
+    def test_supabase_error_fails_closed_not_open(self):
+        """When Supabase returns an error (e.g. 402 egress exceeded), ALL communities
+        fail closed — no identities shown rather than leaking all identities.
+
+        Regression test for: Supabase egress quota exceeded caused Rhodes page
+        to show ALL 1853 identities including Fox Family data.
+        """
+        import app.main
+
+        app.main._community_identity_ids_cache = {}
+        app.main._community_ids_cache_ts = 0.0
+
+        # Simulate Supabase error by having _get_community_photo_ids return None
+        with patch.object(app.main, "_get_community_photo_ids", return_value=None):
+            # Rhodes community
+            rhodes = {"slug": "rhodes", "id": "rhodes-uuid"}
+            result_rhodes = app.main._get_community_identity_ids(rhodes)
+            assert result_rhodes == set(), "Rhodes must fail closed on Supabase error"
+
+            # Fox Family community
+            app.main._community_identity_ids_cache = {}
+            fox = {"slug": "fox-family", "id": "fox-uuid"}
+            result_fox = app.main._get_community_identity_ids(fox)
+            assert result_fox == set(), "Fox Family must fail closed on Supabase error"
+
+        # But when community is None (no community middleware), return None (no filtering)
+        result_none = app.main._get_community_identity_ids(None)
+        assert result_none is None, "No community context should return None (no filtering)"
 
 
 # ============================================================================
