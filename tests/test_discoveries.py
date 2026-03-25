@@ -501,7 +501,7 @@ class TestSidebarDiscoveries:
 class TestDiscoveriesRoute:
     """Tests for the /discoveries page route."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -534,7 +534,7 @@ class TestDiscoveriesRoute:
 class TestApiDiscoveriesRoute:
     """Tests for the /api/discoveries HTMX endpoint."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -705,7 +705,7 @@ class TestApiDiscoveriesRoute:
 class TestApiDiscoveryReject:
     """Tests for the /api/discovery/reject endpoint."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -751,7 +751,7 @@ class TestApiDiscoveryReject:
 class TestApiDiscoveryConfirmUndo:
     """Tests for audited discovery confirm/undo mutations."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -866,7 +866,7 @@ class TestDiscoveryCacheInvalidation:
 class TestDiscoveriesFilterControls:
     """Tests for the discoveries page filter controls."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1086,7 +1086,7 @@ class TestDiscoveriesFilterControls:
 class TestDiscoveriesCardEnhancements:
     """Tests for discovery card visual improvements (Session 87 Act 5b)."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1124,7 +1124,7 @@ class TestDiscoveriesCardEnhancements:
         assert response.status_code == 200
         return response.text
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def default_discovery_html(self, client):
         """Cache the default discovery HTML (distance=0.6) for reuse across tests."""
         return self._get_discovery_html(client, distance=0.6)
@@ -1216,7 +1216,7 @@ class TestDiscoveriesCardEnhancements:
 class TestDiscoveriesPhotoDropdownLazyLoad:
     """Session 90b: Photo dropdown loads options via dedicated loader div."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1264,7 +1264,7 @@ class TestDiscoveriesPhotoDropdownLazyLoad:
 class TestDiscoveriesExtraction:
     """Tests for discoveries_routes.py extraction and UX fixes."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1433,7 +1433,7 @@ class TestDiscoveriesExtraction:
 class TestDiscoveriesShareButtons:
     """Discovery cards must have share buttons for community outreach."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1483,7 +1483,7 @@ class TestDiscoveriesShareButtons:
 class TestDiscoveriesThreeSections:
     """The discoveries page must have three visually distinct sections."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 
@@ -1594,7 +1594,7 @@ class TestDiscoveriesThreeSections:
 class TestDiscoveriesCommunityScoping:
     """Tests for community-scoped discoveries page and HTMX endpoints."""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def client(self):
         from app.main import app
 

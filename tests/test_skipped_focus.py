@@ -32,11 +32,20 @@ def _render_path(path: str) -> str:
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_id_aliases = None
+    main._photo_dimensions_cache = None
     main._face_data_cache = None
+    main._raw_embeddings_cache = None
     main._crop_files_cache = None
     main._skipped_neighbor_cache = None
+    main._skipped_neighbor_cache_key = None
     main._photo_registry_cache = None
     main._discovery_cache = None
+    main._discovery_cache_key = None
+    main._registry_cache = None
+    main._registry_cache_ts = 0.0
+    main._registry_cache_key = None
+    main._proposals_cache = None
+    main._proposals_cache_ts = 0.0
 
     c = TestClient(main.app)
     return c.get(path).text
