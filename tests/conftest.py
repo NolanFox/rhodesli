@@ -119,17 +119,107 @@ def disable_supabase_writes():
 
 @pytest.fixture(autouse=True)
 def reset_registry_cache():
-    """Reset global registry cache after each test.
+    """Reset ALL module-level caches after each test.
 
-    Prevents save_registry() in one test from poisoning _registry_cache
-    for other tests in the same xdist worker. CI fix for test isolation.
+    Prevents one test from poisoning caches for other tests in the same
+    xdist worker. Covers registry, photo, embeddings, proposals, discovery,
+    and all other TTL/lazy caches in app.main and route modules.
     """
     yield
     import app.main as main_mod
 
+    # Registry caches
     main_mod._registry_cache = None
     main_mod._registry_cache_ts = 0.0
     main_mod._registry_cache_key = None
+
+    # Embeddings / face data caches
+    main_mod._raw_embeddings_cache = None
+    main_mod._face_data_cache = None
+
+    # Photo registry / photo caches
+    main_mod._photo_registry_cache = None
+    main_mod._photo_cache = None
+    main_mod._face_to_photo_cache = None
+    main_mod._photo_id_aliases = None
+    main_mod._photo_dimensions_cache = None
+    main_mod._crop_files_cache = None
+
+    # Community caches
+    main_mod._community_photo_ids_cache = {}
+    main_mod._community_identity_ids_cache = {}
+    main_mod._community_ids_cache_ts = 0.0
+
+    # Proposals caches
+    main_mod._proposals_cache = None
+    main_mod._proposals_cache_ts = 0.0
+    main_mod._proposal_target_counts_cache = None
+
+    # Discovery / skipped / misc caches
+    main_mod._discovery_cache = None
+    main_mod._discovery_cache_key = None
+    main_mod._skipped_neighbor_cache = None
+    main_mod._skipped_neighbor_cache_key = None
+    main_mod._date_labels_cache = None
+    main_mod._search_index_cache = None
+    main_mod._birth_year_cache = None
+    main_mod._ml_review_decisions_cache = None
+    main_mod._context_events_cache = None
+    main_mod._place_options_cache = None
+
+    # Route module caches (aliased into main or independent)
+    try:
+        import app.cluster_review_routes as cr
+
+        cr._speed_run_cache = {}
+        cr._suggestions_cache = {}
+        cr._review_groups_cache = {}
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        import app.identity_routes as ir
+
+        ir._neighbors_cache = {}
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        import app.engagement_routes as er
+
+        er._annotations_cache = None
+        er._person_comments_cache = None
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        import app.relationship_routes as rr
+
+        rr._gedcom_matches_cache = None
+        rr._gedcom_tree_relationships_cache = None
+        rr._relationship_graph_cache = None
+        rr._gedcom_individuals_cache = None
+        rr._gedcom_face_links_cache = None
+        rr._gedcom_redirects_cache = None
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        import app.page_routes as pr
+
+        pr._landing_stats_cache = None
+        pr._identification_responses_cache = None
+        pr._photo_locations_cache = None
+        pr._comparison_results_cache = None
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        import app.supabase_data as sd
+
+        sd._community_cache = {}
+    except (ImportError, AttributeError):
+        pass
 
 
 @pytest.fixture(autouse=True)
