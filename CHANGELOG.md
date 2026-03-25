@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.48] — 2026-03-25 (Session 137: Overnight Parallel Refactor + Tests + Design)
+
+### Refactoring
+- **REFACTOR-001 Phase 1**: Extract 1,127 lines from main.py (11,765 → 10,638) to 7 component modules in `app/components/` (badges, forms, layouts, modals, nav, toasts, __init__). 37 functions + constants extracted with re-exports for backward compatibility.
+
+### Testing
+- **Flaky xdist fix**: Expand `reset_registry_cache()` from 3 to 30+ cache resets across 7 modules. Change `scope="class"` → `scope="function"` in test_discoveries.py. 3/3 consecutive xdist runs pass.
+- **ML test coverage**: 68 new tests — test_multi_pass (18), test_nl_query (33), test_prompt_manifest (17). ML suite: 590 → 658 tests.
+- **TOOLS-005 skeletons**: 13 xfail test skeletons for Estimate v2 (text hints, GEDCOM paste, geography retry).
+
+### Documentation
+- PRD-055 updated with implementation anchors
+
+### Tests
+- 3748 app tests + 658 ML tests pass
+
 ## [v0.99.47] — 2026-03-24 (Session 136: Supabase Egress Crisis + Resilience)
 
 ### Security

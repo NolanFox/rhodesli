@@ -14,6 +14,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 137: Overnight Parallel Refactor + Tests + Design (2026-03-25) — v0.99.48
+- **REFACTOR-001 Phase 1**: Extract 1,127 lines from main.py to 7 app/components/ modules (badges, forms, layouts, modals, nav, toasts). 37 functions + constants. Re-exports maintain backward compatibility.
+- **Flaky xdist fix**: Expand reset_registry_cache() from 3 to 30+ cache resets. scope="class" → scope="function" in test_discoveries.py. 3/3 consecutive runs pass.
+- **ML test coverage**: 68 new tests — test_multi_pass (18), test_nl_query (33), test_prompt_manifest (17). ML suite 590 → 658.
+- **TOOLS-005 design**: 13 xfail test skeletons (text hints, GEDCOM paste, geography retry) + PRD-055 implementation anchors.
+- 4 parallel worktree agents. 3748 app + 658 ML tests pass.
+
+## Session 136: Supabase Egress Crisis + Resilience (2026-03-24) — v0.99.47
+- Community filtering fails closed when Supabase unavailable. Egress reduction ~70% (TTLs 120s→600s, selective columns, SWR bot guard).
+- Pre-migration row counts for 50 tables. Codex/planning agent migration reviews.
+- Decision: upgrade to Pro ($25/mo) rather than migrate during outage. 3749 app tests pass.
+
 ## Session 135c: Override Preview + Compare Active Side (2026-03-23) — v0.99.46
 - **FB-008**: Co-occurrence photo preview on Override button — replaces browser confirm() with HTMX two-step preview panel showing shared photo with face bounding boxes (amber=target, indigo=neighbor).
 - **FB-009**: Active side indicator in Compare modal — target panel gets amber ring by default, arrow clicks toggle ring. "Source"/"Match" labels. Aria labels for accessibility.

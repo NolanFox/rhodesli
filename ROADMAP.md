@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.46 · ~3746 tests · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.48 · ~4406 tests (3748 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -91,7 +91,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
 - [x] 2026-03-17: AUDIT-001: Audit logging foundation — 22 audit_log calls across route files, new app/audit.py. Remaining: entity timelines on `/person` + `/photo`, canonical actor fields. See `docs/BACKLOG.md`.
-- [ ] REFACTOR-001: main.py refactoring — 11,765 lines, 173 functions, 1,997 `_main_mod` refs. Phase 1: UI components to `app/components/` (LOW risk, ~5,500 lines, 1-2 sessions). Phase 2: helpers/proposals/community (MEDIUM). Phase 3: data layer/caches (HIGH). PRD-056, DD-017.
+- [-] 2026-03-25: REFACTOR-001: main.py refactoring — Phase 1 partial (Session 137): 1,127 lines extracted to 7 `app/components/` modules (10,638 remaining). cards.py + photo.py deferred (too tightly coupled). Phase 2: helpers/proposals/community (MEDIUM). Phase 3: data layer/caches (HIGH). PRD-056, DD-017.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -133,6 +133,10 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-25: **v0.99.48 — Session 137**: Overnight Parallel Refactor + Tests + Design. 4 parallel worktree tracks. REFACTOR-001 Phase 1: 1,127 lines extracted from main.py to 7 app/components/ modules (badges, forms, layouts, modals, nav, toasts). Flaky xdist fix: 30+ cache resets in conftest.py. ML test coverage: 68 new tests (multi_pass, nl_query, prompt_manifest). TOOLS-005 design: 13 xfail test skeletons + PRD-055 anchors. 3748 app + 658 ML tests pass.
+
+- [x] 2026-03-24: **v0.99.47 — Session 136**: Supabase Egress Crisis + Resilience. Community filtering fails closed when Supabase down. Egress reduction ~70% (TTLs 120s→600s, selective columns, SWR bot guard). Pre-migration row counts for 50 tables. Codex/planning agent migration reviews. 3749 app tests pass.
 
 - [x] 2026-03-23: **v0.99.46 — Session 135c**: Override Preview + Compare Active Side. FB-008 co-occurrence photo preview replaces browser confirm() with HTMX two-step (shared photo + face bounding boxes). FB-009 active side indicator in Compare modal (amber ring, Source/Match labels, arrow toggle). DD-018 Speed-Run vs Focus Mode documented. PRD-048 extended. 15 new tests. 3746 app tests pass.
 
