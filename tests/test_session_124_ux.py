@@ -7,10 +7,13 @@ from pathlib import Path
 
 def test_mobile_close_button_touch_target():
     """Mobile nav close button must have at least p-3 for 44px touch target."""
+    # Session 137: _public_page_nav extracted to app/components/nav.py
     main_py = Path("app/main.py").read_text()
+    nav_py = Path("app/components/nav.py").read_text()
+    combined = main_py + nav_py
     # Find the fallback close button (non-JS mobile nav)
     # Should use p-3 not p-1
-    assert 'cls="text-slate-400 hover:text-white p-3 -mr-2 -mt-2"' in main_py, (
+    assert 'cls="text-slate-400 hover:text-white p-3 -mr-2 -mt-2"' in combined, (
         "Fallback mobile close button should have p-3 padding for 44px touch target"
     )
 
