@@ -117,6 +117,44 @@ No additional storage needed for retries.
 - Text hints are injected as a new prompt section, not mixed into GEDCOM context
 - Geography retry passes location as `photo_metadata={"user_location": "Rhodes, Greece"}`
 
+## Implementation Anchors
+
+Codebase analysis (Session 137) identified existing functions, routes, and data
+structures that TOOLS-005 will build on:
+
+### Routes (app/estimate_routes.py)
+- **`GET /tools/estimate`** (line 35) — Page renderer. Add `textarea` for GEDCOM
+  paste and `input` for text hints to the upload form.
+- **`POST /api/estimate/upload`** (line 682) — Upload handler. Must accept new
+  form fields `text_hints` and `gedcom_text`. Currently only accepts `photo`.
+- **`POST /api/estimate/retry`** — NEW endpoint for geography retry. Accepts
+  `upload_id` + `location`, reuses stored image from R2.
+
+### Gemini Integration (app/estimate_routes.py)
+- **`_call_gemini_date_estimate()`** (line 479) — Already accepts `gedcom_context`,
+  `photo_metadata`, `trigger`, and `call_type`. Wire new flows here.
+- **Enrichment level** (line 512) — Extend from `"gedcom"`/`"none"` to include
+  `"gedcom_user_provided"`, `"text_hints"`, `"geography_retry"`.
+
+### Prompt Builder (rhodesli_ml/gemini_extraction.py)
+- **`build_extraction_prompt()`** (line 207) — Already accepts `gedcom_context`,
+  `photo_metadata`, `verified_facts`. Text hints can use `verified_facts.notes`
+  or a new `user_context` parameter.
+
+### Storage + Rate Limiting
+- **`core/storage.py`** — `upload_bytes_to_r2()` and `get_upload_url()` already
+  handle the `uploads/estimate/{upload_id}{suffix}` path. Retry reads from this.
+- **`app/rate_limit.py`** — `check_rate_limit()` used at upload handler line 696.
+
+### GEDCOM Parsing
+- **`rhodesli_ml/gedcom_linking.py`** — Has `parse_gedcom_individuals()` for
+  extracting names, dates, places from GEDCOM data. Reusable for paste parsing.
+
+### Test Skeletons (Session 137)
+- `tests/test_estimate_v2_text_hints.py` — 4 xfail tests for Flow 2
+- `tests/test_estimate_v2_gedcom_paste.py` — 5 xfail tests for Flow 1
+- `tests/test_estimate_v2_geography_retry.py` — 6 xfail tests for Flow 3
+
 ## Out of Scope
 
 - **GEDCOM file upload** — Only paste input in v2. File upload parsing is a
