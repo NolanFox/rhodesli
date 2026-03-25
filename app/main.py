@@ -97,6 +97,58 @@ from app.utils import (
     APP_VERSION,
 )
 
+# --- EXTRACTED UI COMPONENTS (Session 137) ---
+from app.components.badges import (  # noqa: E402, F811
+    state_badge,
+    era_badge,
+    _confidence_tier_label,
+    _confidence_tier,
+    _promotion_badge,
+    _promotion_banner,
+    _progressive_refinement_badge,
+    _actionability_badge as _actionability_badge_impl,
+    _CONFIDENCE_RING,
+    _CONFIDENCE_COLOR,
+    _CONFIDENCE_LABEL,
+)
+from app.components.toasts import (  # noqa: E402, F811
+    toast_container,
+    toast,
+    toast_with_undo,
+)
+from app.components.modals import (  # noqa: E402, F811
+    photo_modal,
+    compare_modal,
+    confirm_modal,
+    login_modal,
+)
+from app.components.nav import (  # noqa: E402, F811
+    og_tags,
+    share_button,
+    _SHARE_ICON_SVG,
+    mobile_header,
+    _public_nav_links,
+    _public_page_nav,
+    _admin_bar,
+    _admin_dashboard_banner,
+    inbox_badge,
+)
+from app.components.forms import (  # noqa: E402, F811
+    parse_transform_to_css,
+    parse_transform_to_filter,
+    _suggest_name_form,
+    manual_search_section,
+)
+
+# image_transform_toolbar kept in main.py — implementation differs from forms.py stub
+from app.components.layouts import (  # noqa: E402, F811
+    section_header,
+    _evidence_card,
+    _detective_evidence_section,
+    _welcome_banner,
+    _get_onboarding_surnames,
+)
+
 # --- Observability init (all gated on env vars) ---
 # Sentry error tracking — no-op when SENTRY_DSN is not set
 _sentry_enabled = bool(os.environ.get("SENTRY_DSN"))
@@ -3795,60 +3847,7 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "", 
     )
 
 
-def _promotion_badge(identity: dict):
-    """Badge for promoted (rediscovered) identities in browse view."""
-    if not identity.get("promoted_from"):
-        return None
-    reason = identity.get("promotion_reason", "")
-    if reason == "confirmed_match":
-        return Span(
-            "Suggested ID",
-            cls="text-sm sm:text-xs px-2 py-0.5 rounded border bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
-            title="Previously skipped — now matches a confirmed identity",
-        )
-    else:
-        return Span(
-            "Rediscovered",
-            cls="text-sm sm:text-xs px-2 py-0.5 rounded border bg-amber-600/30 text-amber-300 border-amber-500/30",
-            title="Previously skipped — new match evidence found",
-        )
-
-
-def _promotion_banner(identity: dict):
-    """Banner for promoted faces shown above expanded cards in Focus mode."""
-    if not identity.get("promoted_from"):
-        return None
-    reason = identity.get("promotion_reason", "")
-    context = identity.get("promotion_context", "")
-
-    if reason == "confirmed_match":
-        title = "Identity Suggested"
-        desc = context or "This previously skipped face now matches a confirmed identity with high confidence."
-        icon_cls = "text-emerald-400"
-        border_cls = "border-emerald-600/40 bg-emerald-900/20"
-    elif reason == "new_face_match":
-        title = "New Context Available"
-        desc = context or "A newly uploaded photo matches this previously skipped face."
-        icon_cls = "text-amber-400"
-        border_cls = "border-amber-600/40 bg-amber-900/20"
-    else:  # group_discovery
-        title = "Rediscovered"
-        desc = context or "This face now groups with another face from a different batch."
-        icon_cls = "text-amber-400"
-        border_cls = "border-amber-600/40 bg-amber-900/20"
-
-    return Div(
-        Div(
-            Span("*", cls=f"text-xl sm:text-lg font-bold {icon_cls}"),
-            Div(
-                Strong(title, cls="text-white text-sm"),
-                P(desc, cls="text-slate-400 text-sm sm:text-xs mt-0.5"),
-                cls="ml-2",
-            ),
-            cls="flex items-start",
-        ),
-        cls=f"rounded-lg border p-3 mb-3 {border_cls}",
-    )
+# _promotion_badge, _promotion_banner extracted to app/components/badges.py (Session 137)
 
 
 # _section_for_state imported from app.utils
@@ -5249,387 +5248,9 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
 # =============================================================================
 
 
-def toast_container() -> Div:
-    """
-    Toast notification container.
-    UX Intent: Non-blocking feedback for actions.
-    """
-    return Div(id="toast-container", cls="fixed top-4 right-4 z-[10001] flex flex-col gap-2")
-
-
-def toast(message: str, variant: str = "info") -> Div:
-    """
-    Single toast notification.
-    Variants: success, error, warning, info
-    """
-    # UI BOUNDARY: sanitize message for safe rendering
-    safe_message = ensure_utf8_display(message)
-
-    colors = {
-        "success": "bg-emerald-600 text-white",
-        "error": "bg-red-600 text-white",
-        "warning": "bg-amber-500 text-white",
-        "info": "bg-stone-700 text-white",
-    }
-    icons = {
-        "success": "\u2713",
-        "error": "\u2717",
-        "warning": "\u26a0",
-        "info": "\u2139",
-    }
-    return Div(
-        Span(icons.get(variant, ""), cls="mr-2"),
-        Span(safe_message),
-        cls=f"px-4 py-3 rounded shadow-lg flex items-center {colors.get(variant, colors['info'])} animate-fade-in",
-        # Auto-dismiss after 4 seconds
-        **{"_": "on load wait 4s then remove me"},
-    )
-
-
-def toast_with_undo(
-    message: str,
-    source_id: str,
-    target_id: str,
-    variant: str = "info",
-) -> Div:
-    """
-    Toast notification with inline Undo button (D5).
-
-    Used for "Not Same Person" rejection - allows immediate reversal.
-    Auto-dismisses after 8 seconds (longer than standard toast to allow undo).
-    """
-    colors = {
-        "success": "bg-emerald-600 text-white",
-        "error": "bg-red-600 text-white",
-        "warning": "bg-amber-500 text-white",
-        "info": "bg-stone-700 text-white",
-    }
-    icons = {
-        "success": "\u2713",
-        "error": "\u2717",
-        "warning": "\u26a0",
-        "info": "\u2139",
-    }
-    return Div(
-        Span(icons.get(variant, ""), cls="mr-2"),
-        Span(message, cls="flex-1"),
-        Button(
-            "Undo",
-            cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
-            hx_post=f"/api/identity/{source_id}/unreject/{target_id}",
-            hx_swap="outerHTML",
-            hx_target="closest div",  # Replace the toast itself
-            type="button",
-        ),
-        cls=f"px-4 py-3 rounded shadow-lg flex items-center {colors.get(variant, colors['info'])} animate-fade-in",
-        # Longer dismiss time to allow undo
-        **{"_": "on load wait 8s then remove me"},
-    )
-
-
-def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
-    """Admin-only dashboard summary banner at the top of the workstation.
-
-    Shows inbox count, skipped count, and quick links.
-    Focus/Browse toggle lives in each section's header instead.
-    Only rendered when user is admin.
-    """
-    to_review = counts.get("to_review", 0)
-    skipped = counts.get("skipped", 0)
-    confirmed = counts.get("confirmed", 0)
-    proposals = counts.get("proposals", 0)
-    photo_count = counts.get("photo_count", 0)
-
-    stat_items = [
-        ("New Matches", to_review, "/?section=to_review&view=focus", "text-amber-500"),
-        ("People", confirmed, "/?section=confirmed", "text-emerald-500"),
-        ("Help Identify", skipped, "/?section=skipped", "text-amber-300"),
-    ]
-    if proposals > 0:
-        stat_items.append(("Proposals", proposals, "/admin/proposals", "text-indigo-400"))
-
-    stats_row = [
-        A(
-            Span(str(count), cls=f"font-display font-semibold text-xl sm:text-lg {color}"),
-            Span(f" {label}", cls="text-slate-400 text-sm sm:text-xs font-medium uppercase tracking-wider ml-1"),
-            href=link,
-            cls="hover:bg-slate-800 px-5 py-4 sm:px-3 sm:py-1.5 rounded-md transition-colors flex items-baseline line-height-none border border-transparent hover:border-slate-700",
-        )
-        for label, count, link, color in stat_items
-    ]
-
-    return Div(
-        Div(
-            Div(*stats_row, cls="flex items-center gap-2"),
-            cls="max-w-7xl mx-auto px-6 flex items-center justify-between",
-        ),
-        id="admin-dashboard-banner",
-        cls="py-2 bg-slate-900 border-b border-amber-900/40 sticky top-0 z-40 shadow-sm ui99-workstation-banner",
-    )
-
-
-def mobile_header() -> Div:
-    """
-    Mobile top bar with hamburger menu button.
-    Hidden on desktop (lg+), shown on smaller screens.
-    """
-    return Div(
-        Button(
-            NotStr(
-                '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>'
-            ),
-            cls="text-white p-2 -ml-2",
-            onclick="toggleSidebar()",
-            type="button",
-            aria_label="Open menu",
-        ),
-        Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-white"),
-        cls="mobile-header fixed top-0 left-0 right-0 h-14 bg-slate-800 border-b border-slate-700 "
-        "flex items-center gap-3 px-4 z-20",
-        id="mobile-header",
-    )
-
-
-def _public_nav_links(active: str = "", user=None, community_slug: str | None = None) -> list:
-    """Build standard navigation links for public pages."""
-    _inactive = "text-amber-900/60 hover:text-amber-900 font-serif tracking-wide text-sm transition-colors duration-300"
-    _active = "text-amber-950 font-serif tracking-wide text-sm border-b border-amber-900 pb-0.5"
-
-    p = community_url_prefix(community_slug)
-
-    links = [
-        # Core Archive
-        A("Photos", href=f"{p}/photos", cls=_active if active == "photos" else _inactive),
-        A("Collections", href=f"{p}/collections", cls=_active if active == "collections" else _inactive),
-        A("People", href=f"{p}/people", cls=_active if active == "people" else _inactive),
-        A("Timeline", href=f"{p}/timeline", cls=_active if active == "timeline" else _inactive),
-        A("Map", href=f"{p}/map", cls=_active if active == "map" else _inactive),
-        # Visual separator for Tools
-        Span("|", cls="text-slate-700 hidden lg:inline"),
-        # Tools
-        A("Tree", href=f"{p}/tree", cls=_active if active == "tree" else _inactive),
-        A("Connect", href=f"{p}/connect", cls=_active if active == "connect" else _inactive),
-        A("Compare", href="/tools/compare", cls=_active if active == "compare" else _inactive),
-        A("Estimate", href="/tools/estimate", cls=_active if active == "estimate" else _inactive),
-    ]
-
-    # Help Identify CTA — links to dedicated /help page
-    links.append(
-        A(
-            "Help Identify",
-            href=f"{p}/help",
-            cls=(
-                "text-amber-400 font-medium text-sm border-b-2 border-amber-500 pb-1 ml-2"
-                if active == "help"
-                else "text-amber-400 hover:text-amber-300 font-medium text-sm transition-colors border border-amber-500/30 px-2 py-0.5 rounded ml-2"
-            ),
-        )
-    )
-
-    if is_auth_enabled() and not user:
-        links.append(
-            A(
-                "Sign In",
-                href="/login",
-                cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-2",
-            )
-        )
-
-    # Bell icon for logged-in users (PRD-028 Notifications)
-    if user:
-        bell_svg = NotStr(
-            '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" '
-            'viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">'
-            '<path stroke-linecap="round" stroke-linejoin="round" '
-            'd="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 '
-            "6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 "
-            "11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 "
-            '11-6 0v-1m6 0H9"/></svg>'
-        )
-        links.append(
-            A(
-                Div(
-                    bell_svg,
-                    Span(id="notification-badge"),
-                    cls="relative",
-                    hx_get="/api/notifications/count",
-                    hx_trigger="load, every 30s",
-                    hx_target="#notification-badge",
-                    hx_swap="outerHTML",
-                ),
-                href=f"{p}/notifications",
-                cls="text-slate-300 hover:text-white transition-colors ml-2",
-                title="Notifications",
-                aria_label="Notifications",
-            )
-        )
-
-    return links
-
-
-def _public_page_nav(
-    nav_links: list,
-    *,
-    active: str = "",
-    user=None,
-    community_slug: str | None = None,
-    max_w: str = "max-w-5xl",
-    font_cls: str = "text-xl sm:text-lg font-display font-bold text-white",
-    sticky: bool = True,
-    fixed: bool = False,
-    extra_links: list = None,
-    include_admin_bar: bool = True,
-) -> object:
-    """Build a public page nav bar with mobile hamburger menu.
-
-    All public pages should use this instead of inlining Nav() with hidden sm:flex.
-    Includes a hamburger button visible below sm breakpoint.
-    """
-    hamburger_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>'
-    close_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>'
-
-    # Mobile menu overlay (hidden by default, shown via JS)
-    mobile_menu_links = []
-    for link in nav_links:
-        # Clone link with mobile-friendly styling
-        href = link.attrs.get("href", "#") if hasattr(link, "attrs") else "#"
-        text = link.children[0] if hasattr(link, "children") and link.children else str(link)
-        if hasattr(text, "children"):
-            text = str(text.children[0]) if text.children else str(text)
-        mobile_menu_links.append(
-            A(
-                str(text),
-                href=href,
-                cls="block px-4 py-3 text-slate-200 hover:bg-slate-700/50 hover:text-white text-base font-medium rounded-lg transition-colors",
-                onclick="document.getElementById('mobile-nav-overlay').classList.add('hidden');",
-            )
-        )
-
-    mobile_overlay = Div(
-        # Backdrop
-        Div(
-            onclick="closeMobileNav ? closeMobileNav() : document.getElementById('mobile-nav-overlay').classList.add('hidden');",
-            cls="absolute inset-0 bg-black/50 transition-opacity",
-        ),
-        # Menu panel (slides from right)
-        Div(
-            Div(
-                Span("Rhodesli", cls="text-xl sm:text-lg font-display font-bold text-white"),
-                Button(
-                    NotStr(close_svg),
-                    cls="text-slate-400 hover:text-white p-3 -mr-2 -mt-2",
-                    onclick="closeMobileNav ? closeMobileNav() : document.getElementById('mobile-nav-overlay').classList.add('hidden');",
-                    type="button",
-                    aria_label="Close menu",
-                ),
-                cls="flex items-center justify-between px-4 py-4 border-b border-slate-700",
-            ),
-            Div(*mobile_menu_links, cls="py-2 px-2"),
-            cls="mobile-nav-panel absolute top-0 right-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto transition-transform duration-200",
-            style="transform: translateX(100%);",
-        ),
-        id="mobile-nav-overlay",
-        cls="hidden fixed inset-0 z-[60]",
-        style="display: none;",
-    )
-
-    # Hamburger button (visible below md/768px, hidden at md+)
-    hamburger_btn = Button(
-        NotStr(hamburger_svg),
-        cls="md:hidden text-white p-1 -ml-1",
-        onclick="openMobileNav ? openMobileNav() : document.getElementById('mobile-nav-overlay').classList.remove('hidden');",
-        type="button",
-        aria_label="Open navigation menu",
-    )
-
-    right_items = list(extra_links) if extra_links else []
-
-    pos_cls = "sticky top-0" if sticky else ("fixed top-0 left-0 right-0" if fixed else "")
-
-    home_href = (
-        f"{community_url_prefix(community_slug)}/" if community_slug and community_url_prefix(community_slug) else "/"
-    )
-
-    nav = Nav(
-        Div(
-            Div(
-                hamburger_btn,
-                A(Span("Rhodesli", cls=font_cls), href=home_href),
-                cls="flex items-center gap-2",
-            ),
-            Div(*nav_links, *right_items, cls="hidden md:flex items-center gap-6"),
-            cls=f"{max_w} mx-auto px-6 flex items-center justify-between h-16",
-        ),
-        mobile_overlay,
-        cls=f"bg-slate-900/80 backdrop-blur-md border-b border-slate-800 {pos_cls} z-50",
-    )
-
-    if include_admin_bar and user and getattr(user, "is_admin", False):
-        return Div(nav, _admin_bar(user, community_slug=community_slug), id="nav-with-admin")
-    return nav
-
-
-def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None = None) -> object:
-    """Admin mode indicator bar — only visible for admin users.
-
-    Shows pending count, quick links to admin sections.
-    Returns empty string for non-admin users.
-    Community-aware: scopes counts and links to active community.
-    """
-    if not user or not getattr(user, "is_admin", False):
-        return NotStr("")
-
-    prefix = community_url_prefix(community_slug or "rhodes")
-
-    # Count pending items (scoped to community)
-    pending_count = 0
-    proposal_count = 0
-    try:
-        registry = load_registry()
-        community_identity_ids = _get_community_identity_ids(community)
-        for ident in registry.list_identities():
-            if community_identity_ids is not None and ident.get("identity_id") not in community_identity_ids:
-                continue
-            state = ident.get("state", "")
-            if state == "INBOX":
-                pending_count += 1
-            elif state == "PROPOSED":
-                proposal_count += 1
-    except Exception:
-        pass
-
-    return Div(
-        Div(
-            Span(
-                "Admin Mode",
-                cls="text-amber-400/80 text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0",
-            ),
-            Div(
-                A(
-                    f"Pending ({pending_count})",
-                    href=f"{prefix}/?section=to_review",
-                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
-                ),
-                Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
-                A(
-                    f"Proposals ({proposal_count})",
-                    href=f"{prefix}/?section=to_review",
-                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
-                ),
-                Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
-                A(
-                    "Upload",
-                    href=f"{prefix}/upload",
-                    cls="text-slate-400 hover:text-white text-sm sm:text-xs whitespace-nowrap transition-colors",
-                ),
-                cls="flex items-center overflow-x-auto scrollbar-hide w-full sm:w-auto",
-            ),
-            cls="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0",
-        ),
-        cls="bg-slate-950 border-b border-amber-400/20 py-1.5 sm:py-1",
-        id="admin-bar",
-        data_testid="admin-bar",
-    )
+# toast_container, toast, toast_with_undo extracted to app/components/toasts.py (Session 137)
+# _admin_dashboard_banner, mobile_header, _public_nav_links, _public_page_nav, _admin_bar
+# extracted to app/components/nav.py (Session 137)
 
 
 def sidebar(
@@ -6053,63 +5674,7 @@ def sidebar(
     )
 
 
-def section_header(
-    title: str,
-    subtitle: str,
-    view_mode: str = None,
-    section: str = None,
-    nav_prefix: str = "",
-) -> Div:
-    """
-    Section header with optional Focus/Browse toggle.
-    """
-    header_content = [
-        Div(
-            H2(title, cls="text-3xl font-bold text-slate-100 font-display tracking-tight ui99-title"),
-            P(subtitle, cls="text-sm text-slate-400 font-serif italic mt-1"),
-        )
-    ]
-    _tab_active = "bg-amber-900/40 text-amber-100 shadow-inner shadow-black/50 font-medium border border-amber-700/50"
-    _tab_inactive = "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-transparent"
-    _tab_match_active = "bg-amber-600 text-white shadow-md shadow-amber-900/50 font-semibold border border-amber-500"
-
-    if section == "to_review" and view_mode is not None:
-        toggle = Div(
-            A(
-                "Focus",
-                href=f"{nav_prefix}/?section=to_review&view=focus",
-                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
-            ),
-            A(
-                "View All",
-                href=f"{nav_prefix}/?section=to_review&view=browse",
-                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
-            ),
-            A(
-                "Match",
-                href=f"{nav_prefix}/?section=to_review&view=match",
-                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_match_active if view_mode == 'match' else _tab_inactive}",
-            ),
-            cls="flex items-center gap-2",
-        )
-        header_content.append(toggle)
-    elif section == "skipped" and view_mode is not None:
-        toggle = Div(
-            A(
-                "Focus",
-                href=f"{nav_prefix}/?section=skipped&view=focus",
-                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}",
-            ),
-            A(
-                "View All",
-                href=f"{nav_prefix}/?section=skipped&view=browse",
-                cls=f"px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}",
-            ),
-            cls="flex items-center gap-2",
-        )
-        header_content.append(toggle)
-
-    return Div(*header_content, cls="section-header flex items-center justify-between mb-8")
+# section_header extracted to app/components/layouts.py (Session 137)
 
 
 def _proposal_banner(identity_id: str):
@@ -6464,45 +6029,7 @@ def identity_card_expanded(
     )
 
 
-def _suggest_name_form(identity_id: str, nav_prefix: str = "") -> Div:
-    """Hidden form for suggesting a name for an unidentified person."""
-    return Div(
-        H4("I Know This Person", cls="text-sm font-medium text-white mb-2"),
-        Form(
-            Input(type="hidden", name="target_type", value="identity"),
-            Input(type="hidden", name="target_id", value=identity_id),
-            Input(type="hidden", name="annotation_type", value="name_suggestion"),
-            Input(
-                name="value",
-                placeholder="Enter name...",
-                cls="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-sm text-white placeholder-slate-400",
-                required=True,
-            ),
-            Select(
-                Option("I'm certain", value="certain"),
-                Option("Likely", value="likely", selected=True),
-                Option("Just a guess", value="guess"),
-                name="confidence",
-                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white",
-            ),
-            Input(
-                name="reason",
-                placeholder="How do you know? (optional)",
-                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-3 py-2 text-sm text-white placeholder-slate-400",
-            ),
-            Button(
-                "Submit Suggestion",
-                type="submit",
-                cls="mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-500",
-            ),
-            hx_post=f"{nav_prefix}/api/annotations/submit",
-            hx_swap="beforeend",
-            hx_target="#toast-container",
-            cls="space-y-0",
-        ),
-        cls="hidden mt-4 p-4 bg-slate-900/50 border border-indigo-500/30 rounded-lg",
-        id=f"suggest-name-{identity_id}",
-    )
+# _suggest_name_form extracted to app/components/forms.py (Session 137)
 
 
 def identity_card_mini(
@@ -7256,37 +6783,13 @@ def _sort_skipped_by_actionability(skipped: list) -> list:
 
 
 def _actionability_badge(identity_id: str, ids_with_proposals: set = None):
-    """Return a visual badge for an identity's actionability level.
-
-    Uses cached neighbor data from _get_skipped_neighbor_distances() when available,
-    falls back to proposals. Returns None if the identity has no leads.
-    """
-    # Try cached neighbor distances first
-    if _skipped_neighbor_cache and identity_id in _skipped_neighbor_cache:
-        cached = _skipped_neighbor_cache[identity_id]
-        confidence = cached[1]  # (distance, confidence, target_name)
-    else:
-        # Fallback to proposals
-        if ids_with_proposals and identity_id not in ids_with_proposals:
-            return None
-        best = _get_best_proposal_for_identity(identity_id)
-        if not best:
-            return None
-        confidence = best.get("confidence", "")
-
-    if confidence in ("VERY HIGH", "HIGH"):
-        return Div(
-            Span("Strong lead", cls="text-sm sm:text-xs font-bold text-emerald-300"),
-            Span(" — ML found a likely match", cls="text-sm sm:text-xs text-slate-400"),
-            cls="px-3 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-lg mb-1",
-        )
-    elif confidence == "MODERATE":
-        return Div(
-            Span("Good lead", cls="text-sm sm:text-xs font-bold text-amber-300"),
-            Span(" — possible match found", cls="text-sm sm:text-xs text-slate-400"),
-            cls="px-3 py-1 bg-amber-900/30 border border-amber-500/30 rounded-lg mb-1",
-        )
-    return None
+    """Thin wrapper — delegates to app/components/badges.py (Session 137)."""
+    return _actionability_badge_impl(
+        identity_id,
+        ids_with_proposals,
+        _skipped_neighbor_cache=_skipped_neighbor_cache,
+        _get_best_proposal_for_identity=_get_best_proposal_for_identity,
+    )
 
 
 def _skipped_focus_progress(nav_prefix: str = "") -> Div:
@@ -7785,24 +7288,7 @@ def _resolve_match_crop(target_id: str, crop_files: set):
     return None
 
 
-def _confidence_tier(distance: float) -> str:
-    """Map embedding distance to confidence tier. Uses unified scoring (AD-200)."""
-    from core.confidence import compute_face_confidence
-
-    conf = compute_face_confidence(distance)
-    # Map unified short_label → legacy tier names for backward compat
-    _label_to_tier = {"Very High": "VERY HIGH", "High": "HIGH", "Moderate": "MODERATE", "Low": "LOW", "Very Low": "LOW"}
-    return _label_to_tier.get(conf["short_label"], "LOW")
-
-
-_CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-indigo-400", "MODERATE": "ring-amber-400"}
-_CONFIDENCE_COLOR = {"VERY HIGH": "text-emerald-300", "HIGH": "text-indigo-300", "MODERATE": "text-amber-300"}
-_CONFIDENCE_LABEL = {
-    "VERY HIGH": "Strong match",
-    "HIGH": "Good match",
-    "MODERATE": "Possible match",
-    "LOW": "Weak match",
-}
+# _confidence_tier, _CONFIDENCE_RING, _CONFIDENCE_COLOR, _CONFIDENCE_LABEL extracted to app/components/badges.py (Session 137)
 
 # =============================================================================
 # DISCOVERY DETECTION — High-confidence matches to CONFIRMED identities
@@ -9045,25 +8531,7 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
         )
 
 
-def inbox_badge(count: int) -> A:
-    """
-    New Matches badge showing count of items awaiting review.
-    """
-    if count == 0:
-        return A(
-            Span("\U0001f4e5", cls="mr-2"),
-            "New Matches",
-            Span("(0)", cls="text-slate-500 ml-1"),
-            href="#inbox-lane",
-            cls="text-slate-400 hover:text-slate-300 text-sm",
-        )
-    return A(
-        Span("\U0001f4e5", cls="mr-2"),
-        "New Matches",
-        Span(f"({count})", cls="bg-indigo-600 text-white text-sm sm:text-xs px-1.5 py-0.5 rounded-full ml-1"),
-        href="#inbox-lane",
-        cls="text-slate-300 hover:text-indigo-400 text-sm font-medium",
-    )
+# inbox_badge extracted to app/components/nav.py (Session 137)
 
 
 def review_action_buttons(
@@ -9176,171 +8644,14 @@ def review_action_buttons(
     )
 
 
-def state_badge(state: str) -> Span:
-    """
-    Render state as a colored badge.
-    UX Intent: Instant state recognition via color coding.
-    """
-    colors = {
-        "INBOX": "bg-indigo-600 text-white",
-        "CONFIRMED": "bg-emerald-600 text-white",
-        "PROPOSED": "bg-amber-500 text-white",
-        "CONTESTED": "bg-red-600 text-white",
-        "REJECTED": "bg-rose-700 text-white",
-        "SKIPPED": "bg-stone-500 text-white",
-    }
-    return Span(
-        state,
-        cls=f"text-sm sm:text-xs font-bold px-4 py-3 sm:px-2 sm:py-1 rounded {colors.get(state, 'bg-gray-500 text-white')}",
-    )
+# state_badge, era_badge extracted to app/components/badges.py (Session 137)
+# _SHARE_ICON_SVG extracted to app/components/nav.py (Session 137)
 
 
-def era_badge(era: str) -> Span:
-    """
-    Render era classification as a subtle badge.
-    UX Intent: Temporal context without visual dominance.
-    """
-    if not era:
-        return None
-    return Span(
-        era,
-        cls="absolute top-2 right-2 bg-stone-700/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 font-mono",
-    )
+# og_tags, share_button extracted to app/components/nav.py (Session 137)
 
 
-# Share icon SVG (three connected dots) — used everywhere for consistency
-_SHARE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
-
-
-def og_tags(
-    title: str, description: str = "", image_url: str = "", canonical_url: str = "", og_type: str = "website"
-) -> tuple:
-    """
-    Unified OG meta tags for social sharing previews.
-    All URLs are converted to absolute (prepends SITE_URL if relative).
-    Returns a tuple of Meta elements to spread into Title() or page head.
-    """
-    # Ensure absolute URLs
-    if image_url and not image_url.startswith("http"):
-        image_url = f"{SITE_URL}{image_url}"
-    if canonical_url and not canonical_url.startswith("http"):
-        canonical_url = f"{SITE_URL}{canonical_url}"
-    tags = [
-        Meta(property="og:title", content=title),
-        Meta(property="og:description", content=description),
-        Meta(property="og:url", content=canonical_url),
-        Meta(property="og:type", content=og_type),
-        Meta(property="og:site_name", content="Rhodesli \u2014 Heritage Photo Archive"),
-        Meta(name="twitter:card", content="summary_large_image" if image_url else "summary"),
-        Meta(name="twitter:title", content=title),
-        Meta(name="twitter:description", content=description),
-        Meta(name="description", content=description),
-    ]
-    if image_url:
-        tags.insert(2, Meta(property="og:image", content=image_url))
-        tags.append(Meta(name="twitter:image", content=image_url))
-    return tuple(tags)
-
-
-def share_button(
-    photo_id: str = None, *, url: str = None, style: str = "icon", label: str = "Share", title: str = "", text: str = ""
-):
-    """
-    Reusable share button. Works with photo_id (legacy) or any url.
-    Uses data-action="share-photo" for global event delegation.
-
-    photo_id: Legacy param — generates /photo/{photo_id} URL
-    url: Direct URL to share (takes precedence over photo_id)
-    style: "icon" (compact), "button" (icon + text), "link" (text link), "prominent" (large CTA)
-    title: Share title for native share sheet (optional)
-    text: Share description for native share sheet (optional)
-    """
-    share_url = url or (f"/photo/{photo_id}" if photo_id else "")
-    extra_attrs = {}
-    if title:
-        extra_attrs["data_share_title"] = title
-    if text:
-        extra_attrs["data_share_text"] = text
-    if style == "button":
-        return Button(
-            NotStr(
-                '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
-            ),
-            label,
-            cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
-            type="button",
-            data_action="share-photo",
-            data_share_url=share_url,
-            **extra_attrs,
-        )
-    elif style == "link":
-        return Button(
-            NotStr(_SHARE_ICON_SVG),
-            f" {label}",
-            cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1",
-            type="button",
-            data_action="share-photo",
-            data_share_url=share_url,
-            **extra_attrs,
-        )
-    elif style == "prominent":
-        return Button(
-            NotStr(
-                '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
-            ),
-            label,
-            cls="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-base font-medium rounded-xl transition-colors inline-flex items-center shadow-lg hover:shadow-xl",
-            type="button",
-            data_action="share-photo",
-            data_share_url=share_url,
-            **extra_attrs,
-        )
-    else:  # "icon" — compact, for grid overlays and card corners
-        return Button(
-            NotStr(_SHARE_ICON_SVG),
-            cls="p-1.5 bg-black/60 hover:bg-indigo-600 text-white rounded transition-colors",
-            type="button",
-            data_action="share-photo",
-            data_share_url=share_url,
-            title=label,
-            aria_label=label,
-            **extra_attrs,
-        )
-
-
-def parse_transform_to_css(transform_str: str) -> str:
-    """Convert a transform string like 'rotate:90,flipH' to CSS transform value.
-
-    Supported transforms:
-    - rotate:90, rotate:180, rotate:270 — clockwise rotation
-    - flipH — horizontal mirror (scaleX(-1))
-    - flipV — vertical mirror (scaleY(-1))
-    - invert — handled separately via CSS filter, not transform
-
-    Returns CSS transform property value (e.g., 'rotate(90deg) scaleX(-1)').
-    """
-    if not transform_str or not transform_str.strip():
-        return ""
-
-    parts = [p.strip() for p in transform_str.split(",") if p.strip()]
-    css_parts = []
-    for part in parts:
-        if part.startswith("rotate:"):
-            degrees = part.split(":")[1]
-            css_parts.append(f"rotate({degrees}deg)")
-        elif part == "flipH":
-            css_parts.append("scaleX(-1)")
-        elif part == "flipV":
-            css_parts.append("scaleY(-1)")
-        # 'invert' is handled via CSS filter, not transform
-    return " ".join(css_parts)
-
-
-def parse_transform_to_filter(transform_str: str) -> str:
-    """Extract CSS filter from transform string (for 'invert')."""
-    if not transform_str or "invert" not in transform_str:
-        return ""
-    return "invert(1)"
+# parse_transform_to_css, parse_transform_to_filter extracted to app/components/forms.py (Session 137)
 
 
 def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
@@ -9505,26 +8816,7 @@ def face_card(
     )
 
 
-def _confidence_tier_label(distance: float) -> "Span":
-    """Map a distance value to a human-readable confidence tier pill.
-
-    Tiers:
-      < 0.80  → Strong match (emerald)
-      0.80–0.99 → Good match (indigo)
-      1.00–1.19 → Possible match (amber)
-      >= 1.20 → Weak match (slate)
-    """
-    if distance < 0.80:
-        text, cls_color = "Strong match", "text-emerald-300 bg-emerald-900/40 border-emerald-700/40"
-    elif distance < 1.00:
-        text, cls_color = "Good match", "text-indigo-300 bg-indigo-900/40 border-indigo-700/40"
-    elif distance < 1.20:
-        text, cls_color = "Possible match", "text-amber-300 bg-amber-900/40 border-amber-700/40"
-    else:
-        text, cls_color = "Weak match", "text-slate-400 bg-slate-700/40 border-slate-600/40"
-    return Span(
-        text, cls=f"text-[10px] font-medium px-1.5 py-0.5 rounded border {cls_color}", data_testid="confidence-tier"
-    )
+# _confidence_tier_label extracted to app/components/badges.py (Session 137)
 
 
 def match_info_bar(
@@ -9993,26 +9285,7 @@ def search_results_panel(
     return Div(*cards, id=f"search-results-{target_identity_id}")
 
 
-def manual_search_section(identity_id: str, nav_prefix: str = "") -> Div:
-    """
-    Manual search input and results container.
-    Positioned in neighbors sidebar after Load More, before Rejected section.
-    """
-    return Div(
-        H5("Manual Search", cls="text-sm font-semibold text-slate-300 mb-2"),
-        Input(
-            type="text",
-            name="q",
-            placeholder="Search by name...",
-            cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-slate-500",
-            hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
-            hx_trigger="keyup changed delay:300ms",
-            hx_target=f"#search-results-{identity_id}",
-            hx_include="this",
-        ),
-        Div(id=f"search-results-{identity_id}", cls="mt-2"),
-        cls="mt-4 pt-3 border-t border-slate-600",
-    )
+# manual_search_section extracted to app/components/forms.py (Session 137)
 
 
 def neighbors_sidebar(
@@ -10939,180 +10212,10 @@ def identity_card(
     )
 
 
-def photo_modal() -> Div:
-    """
-    Modal container for photo context viewer.
-    Hidden by default, shown via HTMX when "View Photo" is clicked.
-
-    Z-index hierarchy:
-    - Confirm modal: z-[10002] (above compare — always topmost interactive)
-    - Toast container: z-[10001] (above all content modals)
-    - Compare modal: z-[10000] (above photo modal)
-    - Photo modal: z-[9999] (above page content)
-    - Backdrop: absolute, no z-index (first child, renders behind content)
-    - Content: relative, no z-index (second child, renders above backdrop)
-    """
-    return Div(
-        # Backdrop - absolute within the fixed parent, click to close
-        Div(
-            cls="absolute inset-0 bg-black/80",
-            **{"_": "on click add .hidden to #photo-modal"},
-        ),
-        # Modal content - relative positioning to sit above backdrop
-        Div(
-            # Header with close button
-            Div(
-                H2("Photo Context", cls="text-xl font-serif font-bold text-white"),
-                Button(
-                    "X",
-                    cls="text-slate-400 hover:text-white text-xl font-bold",
-                    **{"_": "on click add .hidden to #photo-modal"},
-                    type="button",
-                    aria_label="Close modal",
-                ),
-                cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700",
-            ),
-            # Content area (populated by HTMX)
-            Div(
-                P("Loading...", cls="text-slate-400 text-center py-8"),
-                id="photo-modal-content",
-            ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-5xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700",
-        ),
-        id="photo-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[9999]",
-        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
-        tabindex="-1",
-    )
+# photo_modal extracted to app/components/modals.py (Session 137)
 
 
-def compare_modal() -> Div:
-    """
-    Side-by-side comparison modal for evaluating merge candidates.
-    Shows the source identity's best face alongside the neighbor's best face.
-    """
-    return Div(
-        # Backdrop
-        Div(
-            cls="absolute inset-0 bg-black/85",
-            **{"_": "on click add .hidden to #compare-modal"},
-        ),
-        # Content
-        Div(
-            # Header
-            Div(
-                H2("Compare Faces", cls="text-xl font-serif font-bold text-white"),
-                Button(
-                    "X",
-                    cls="text-slate-400 hover:text-white text-xl font-bold",
-                    **{"_": "on click add .hidden to #compare-modal"},
-                    type="button",
-                    aria_label="Close comparison",
-                ),
-                cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700",
-            ),
-            # Comparison content (populated by HTMX)
-            Div(
-                P("Loading...", cls="text-slate-400 text-center py-8"),
-                id="compare-modal-content",
-            ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-[90vw] lg:max-w-7xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700",
-        ),
-        id="compare-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[10000]",
-        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
-    )
-
-
-def login_modal() -> Div:
-    """Login modal for unauthenticated HTMX action attempts.
-    Shown by htmx:beforeSwap handler when server returns 401."""
-    google_url = get_oauth_url("google")
-    return Div(
-        Div(cls="absolute inset-0 bg-black/80", **{"_": "on click add .hidden to #login-modal"}),
-        Div(
-            Div(
-                H2("Sign in to continue", cls="text-xl font-bold text-white"),
-                Button(
-                    "X",
-                    cls="text-slate-400 hover:text-white text-xl font-bold",
-                    **{"_": "on click add .hidden to #login-modal"},
-                    type="button",
-                    aria_label="Close",
-                ),
-                cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700",
-            ),
-            P("Sign in to contribute to the archive.", id="login-modal-message", cls="text-slate-400 mb-6 text-sm"),
-            Form(
-                Div(
-                    Label("Email", fr="modal-email", cls="block text-sm mb-1 text-slate-300"),
-                    Input(
-                        type="email",
-                        name="email",
-                        id="modal-email",
-                        required=True,
-                        cls="w-full p-2 rounded bg-slate-700 text-white border border-slate-600",
-                    ),
-                    cls="mb-4",
-                ),
-                Div(
-                    Label("Password", fr="modal-password", cls="block text-sm mb-1 text-slate-300"),
-                    Input(
-                        type="password",
-                        name="password",
-                        id="modal-password",
-                        required=True,
-                        cls="w-full p-2 rounded bg-slate-700 text-white border border-slate-600",
-                    ),
-                    cls="mb-4",
-                ),
-                Button(
-                    "Sign In",
-                    type="submit",
-                    cls="w-full p-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-medium",
-                ),
-                Div(id="login-modal-error", cls="text-red-400 text-sm mt-2"),
-                hx_post="/login/modal",
-                hx_target="#login-modal-error",
-                hx_swap="innerHTML",
-            ),
-            # Google OAuth divider + button
-            Div(
-                Div(cls="flex-grow border-t border-slate-600"),
-                Span("or", cls="px-4 text-slate-500 text-sm"),
-                Div(cls="flex-grow border-t border-slate-600"),
-                cls="flex items-center my-4",
-            )
-            if google_url
-            else None,
-            A(
-                NotStr(
-                    '<svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>'
-                ),
-                Span("Sign in with Google"),
-                href=google_url or "#",
-                style="display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 40px; "
-                "background: white; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; "
-                "font-family: 'Roboto', Arial, sans-serif; font-size: 14px; color: #3c4043; "
-                "font-weight: 500; text-decoration: none; justify-content: center; width: 100%;",
-            )
-            if google_url
-            else None,
-            Div(
-                P(A("Forgot password?", href="/forgot-password", cls="text-indigo-400 hover:underline"), cls="text-sm"),
-                P(
-                    "No account? ",
-                    A("Sign up with invite code", href="/signup", cls="text-indigo-400 hover:underline"),
-                    cls="text-sm text-slate-400",
-                ),
-                cls="mt-4 text-center space-y-1",
-            ),
-            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700",
-        ),
-        id="login-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9998]",
-        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
-    )
+# compare_modal, login_modal extracted to app/components/modals.py (Session 137)
 
 
 def _guest_or_login_modal(form_data: dict) -> Div:
@@ -11191,114 +10294,10 @@ def _guest_or_login_modal(form_data: dict) -> Div:
     )
 
 
-def _get_onboarding_surnames() -> list[str]:
-    """Get canonical surname list from surname_variants.json for the onboarding grid."""
-    variants_path = Path(__file__).resolve().parent.parent / "data" / "surname_variants.json"
-    if not variants_path.exists():
-        return []
-    try:
-        with open(variants_path) as f:
-            data = json.load(f)
-        return [g["canonical"] for g in data.get("variant_groups", []) if g.get("canonical")]
-    except Exception:
-        return []
+# _get_onboarding_surnames, _welcome_banner extracted to app/components/layouts.py (Session 137)
 
 
-def _welcome_banner() -> Div:
-    """
-    Dismissible welcome banner for first-time visitors (replaces modal wall).
-
-    Shows a non-blocking top bar with context about the archive.
-    Dismissed via X button; uses rhodesli_welcomed cookie (1 year).
-    Content is immediately visible underneath — no overlay, no blocking.
-    """
-    return Div(
-        Div(
-            Div(
-                Span("Welcome to Rhodesli", cls="font-semibold text-amber-100"),
-                Span(" — ", cls="text-amber-300/60 hidden sm:inline"),
-                Span(
-                    "a heritage photo archive for the Jewish community of Rhodes. ",
-                    cls="text-amber-200/80 hidden sm:inline",
-                ),
-                Span(
-                    "Know someone in these photos? Tap their face to help identify them.",
-                    cls="text-amber-200/80 hidden sm:inline",
-                ),
-                # Mobile: shorter copy
-                Span(" — Tap a face to help identify someone.", cls="text-amber-200/80 sm:hidden"),
-                cls="flex-1 text-sm",
-            ),
-            Button(
-                Svg(
-                    Path(d="M6 18L18 6M6 6l12 12"),
-                    cls="w-4 h-4",
-                    fill="none",
-                    stroke="currentColor",
-                    viewBox="0 0 24 24",
-                    stroke_width="2",
-                    stroke_linecap="round",
-                    stroke_linejoin="round",
-                ),
-                type="button",
-                cls="text-amber-300/60 hover:text-white ml-3 p-1 min-w-[28px] min-h-[28px] flex items-center justify-center",
-                data_action="welcome-banner-dismiss",
-                aria_label="Dismiss welcome banner",
-            ),
-            cls="max-w-6xl mx-auto px-4 sm:px-8 flex items-center",
-        ),
-        Script("""
-            (function() {
-                var welcomed = document.cookie.split(';').some(function(c) {
-                    return c.trim().startsWith('rhodesli_welcomed=');
-                });
-                if (welcomed) {
-                    var el = document.getElementById('welcome-banner');
-                    if (el) el.remove();
-                }
-                document.addEventListener('click', function(e) {
-                    var action = e.target.closest('[data-action="welcome-banner-dismiss"]');
-                    if (action) {
-                        document.cookie = 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax';
-                        var banner = document.getElementById('welcome-banner');
-                        if (banner) banner.remove();
-                    }
-                });
-            })();
-        """),
-        id="welcome-banner",
-        cls="bg-amber-900/40 border-b border-amber-700/30 py-2",
-    )
-
-
-def confirm_modal() -> Div:
-    """Styled confirmation modal replacing native browser confirm().
-    Shown by htmx:confirm event handler."""
-    return Div(
-        Div(cls="absolute inset-0 bg-black/80", **{"_": "on click add .hidden to #confirm-modal"}),
-        Div(
-            P("", id="confirm-modal-message", cls="text-white text-xl sm:text-lg mb-6"),
-            Div(
-                Button(
-                    "Cancel",
-                    id="confirm-modal-no",
-                    type="button",
-                    cls="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500",
-                ),
-                Button(
-                    "Confirm",
-                    id="confirm-modal-yes",
-                    type="button",
-                    cls="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-bold",
-                ),
-                cls="flex justify-end gap-3",
-            ),
-            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-6 relative border border-slate-700",
-        ),
-        id="confirm-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[10002]",
-        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
-    )
+# confirm_modal extracted to app/components/modals.py (Session 137)
 
 
 def lane_section(
@@ -11374,187 +10373,13 @@ def lane_section(
 # =============================================================================
 
 
-# --- Photo Detective Evidence Display Components (PRD-022, Session 61) ---
+# --- Photo Detective Evidence Display Components — extracted to app/components/layouts.py (Session 137) ---
 
 
-def _evidence_card(category: str, cues: list) -> object:
-    """Render a single evidence category card for Photo Detective display.
-
-    Args:
-        category: Evidence category name (e.g., 'print_format', 'fashion').
-        cues: List of cue dicts with 'cue', 'strength', 'suggested_range'.
-    """
-    icons = {
-        "print_format": "Print/Physical",
-        "fashion": "Fashion/Grooming",
-        "environment": "Environment",
-        "technology": "Technology",
-        "cultural": "Cultural Context",
-    }
-    strength_colors = {
-        "strong": "text-emerald-400 bg-emerald-900/30",
-        "moderate": "text-amber-400 bg-amber-900/30",
-        "weak": "text-slate-400 bg-slate-700/30",
-    }
-    display_name = icons.get(category, category.replace("_", " ").title())
-    if not cues:
-        return None
-
-    cue_items = []
-    for cue in cues[:3]:  # Show top 3 cues per category
-        strength = cue.get("strength", "moderate")
-        color_cls = strength_colors.get(strength, strength_colors["moderate"])
-        date_range = cue.get("suggested_range", [])
-        range_text = f" ({date_range[0]}-{date_range[1]})" if len(date_range) == 2 else ""
-        cue_items.append(
-            Div(
-                P(cue.get("cue", ""), cls="text-sm sm:text-xs text-slate-300"),
-                Span(f"{strength}{range_text}", cls=f"text-[10px] px-1.5 py-0.5 rounded-full {color_cls}"),
-                cls="flex items-start justify-between gap-2 py-1",
-            )
-        )
-
-    return Div(
-        H4(display_name, cls="text-sm font-semibold text-white mb-2"),
-        *cue_items,
-        cls="bg-slate-800/40 rounded-lg p-3 border border-slate-700/30",
-        data_testid=f"evidence-card-{category}",
-    )
+# _detective_evidence_section extracted to app/components/layouts.py (Session 137)
 
 
-def _detective_evidence_section(label: dict) -> object:
-    """Build Photo Detective evidence display from a Gemini date label.
-
-    Args:
-        label: Date label dict from date_labels.json (Gemini output).
-    """
-    if not label:
-        return None
-
-    evidence = label.get("evidence", {})
-    if not evidence and not label.get("date_estimation", {}).get("evidence"):
-        return None
-
-    # Handle nested date_estimation structure
-    if "date_estimation" in label:
-        evidence = label["date_estimation"].get("evidence", {})
-
-    cards = []
-    for category in ("print_format", "fashion", "environment", "technology"):
-        cues = evidence.get(category, [])
-        card = _evidence_card(category, cues)
-        if card:
-            cards.append(card)
-
-    # Location evidence card (from Gemini location analysis + GEDCOM reasoning)
-    location_evidence = label.get("location_evidence", {})
-    loc_items = []
-    if location_evidence.get("place"):
-        loc_items.append(
-            Div(
-                P(f"Location: {location_evidence['place']}", cls="text-sm sm:text-xs text-amber-200 font-semibold"),
-                Span(
-                    f"Confidence: {location_evidence.get('confidence', 'unknown')}",
-                    cls="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400",
-                ),
-                cls="flex items-start justify-between gap-2 py-1",
-            )
-        )
-    if location_evidence.get("visual_evidence"):
-        loc_items.append(
-            Div(
-                P("Visual evidence", cls="text-[10px] text-slate-500 uppercase tracking-wide"),
-                P(location_evidence["visual_evidence"], cls="text-sm sm:text-xs text-slate-300"),
-                cls="py-1",
-            )
-        )
-    if location_evidence.get("biographical_evidence"):
-        loc_items.append(
-            Div(
-                P("Genealogical context", cls="text-[10px] text-indigo-400 uppercase tracking-wide"),
-                P(location_evidence["biographical_evidence"], cls="text-sm sm:text-xs text-slate-300"),
-                cls="py-1",
-            )
-        )
-    if location_evidence.get("missing_child_analysis"):
-        loc_items.append(
-            Div(
-                P("Missing child analysis", cls="text-[10px] text-emerald-400 uppercase tracking-wide"),
-                P(location_evidence["missing_child_analysis"], cls="text-sm sm:text-xs text-slate-300"),
-                cls="py-1",
-            )
-        )
-    if loc_items:
-        cards.append(
-            Div(
-                H4("Geographic Analysis", cls="text-sm font-semibold text-white mb-2"),
-                *loc_items,
-                cls="bg-slate-800/40 rounded-lg p-3 border border-slate-700/30",
-                data_testid="evidence-card-location",
-            )
-        )
-
-    if not cards:
-        return None
-
-    # Model badge with timestamp
-    model = label.get("model", label.get("_model", ""))
-    model_badge = None
-    if model:
-        display_model = model.replace("gemini-", "Gemini ").replace("-preview", "")
-        # Build timestamp string from reanalyzed_at or analyzed_at
-        timestamp_str = ""
-        analysis_ts = label.get("reanalyzed_at") or label.get("analyzed_at") or label.get("timestamp")
-        if analysis_ts:
-            try:
-                from datetime import datetime
-
-                if isinstance(analysis_ts, str):
-                    # Try ISO format
-                    dt = datetime.fromisoformat(analysis_ts.replace("Z", "+00:00"))
-                    timestamp_str = f" on {dt.strftime('%b %-d, %Y')}"
-            except (ValueError, TypeError):
-                pass
-        prompt_version = label.get("prompt_version", "")
-        version_str = f" ({prompt_version})" if prompt_version else ""
-        model_badge = Span(
-            f"Analyzed with {display_model}{timestamp_str}{version_str}",
-            cls="text-[10px] text-indigo-300 bg-indigo-900/30 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
-            data_testid="model-badge",
-        )
-
-    # Cultural context note
-    cultural_note = label.get("cultural_lag_note") or (label.get("date_estimation", {}).get("cultural_lag_note"))
-
-    return Div(
-        Div(
-            H3("Photo Detective Analysis", cls="text-base font-serif font-semibold text-white"),
-            model_badge,
-            cls="flex items-center justify-between mb-3",
-        ),
-        Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 gap-3"),
-        P(f"Cultural context: {cultural_note}", cls="text-sm sm:text-xs text-slate-500 mt-3 italic")
-        if cultural_note
-        else None,
-        cls="mt-6 p-4 bg-slate-800/20 rounded-lg border border-slate-700/20",
-        data_testid="detective-evidence",
-    )
-
-
-def _progressive_refinement_badge(label: dict) -> object:
-    """Show badge when estimate was refined with verified facts."""
-    if not label:
-        return None
-    metadata = label.get("_metadata", label.get("metadata", {}))
-    if not metadata.get("refinement"):
-        return None
-
-    fact_count = metadata.get("fact_count", 0)
-    return Span(
-        f"Refined with {fact_count} verified fact{'s' if fact_count != 1 else ''}",
-        cls="text-[10px] text-amber-300 bg-amber-900/30 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
-        data_testid="refinement-badge",
-    )
+# _progressive_refinement_badge extracted to app/components/badges.py (Session 137)
 
 
 # --- page routes extracted to app/page_routes.py (lines 17672-19985) ---
