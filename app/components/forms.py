@@ -52,47 +52,6 @@ def parse_transform_to_filter(transform_str: str) -> str:
     return "invert(1)"
 
 
-def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
-    """Admin toolbar for non-destructive image orientation.
-
-    target: 'front' or 'back' -- which image side to transform.
-    """
-    field_name = "transform" if target == "front" else "back_transform"
-    label = "Front orientation" if target == "front" else "Back orientation"
-
-    def _btn(icon_label, transform_val, danger=False):
-        cls_base = "px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs rounded transition-colors"
-        cls_color = (
-            "bg-red-900/50 hover:bg-red-800/50 text-red-300"
-            if danger
-            else "bg-slate-700 hover:bg-slate-600 text-slate-200"
-        )
-        return Button(
-            icon_label,
-            type="button",
-            hx_post=f"/api/photo/{photo_id}/transform",
-            hx_vals=f'{{"field": "{field_name}", "value": "{transform_val}"}}',
-            hx_target=f"#photo-detail-{photo_id}",
-            hx_swap="outerHTML",
-            cls=f"{cls_base} {cls_color}",
-        )
-
-    return Div(
-        Span(label, cls="text-[10px] text-slate-500 uppercase tracking-wider block mb-1"),
-        Div(
-            _btn("Rotate 90", "rotate:90"),
-            _btn("Rotate 180", "rotate:180"),
-            _btn("Rotate 270", "rotate:270"),
-            _btn("Flip H", "flipH"),
-            _btn("Flip V", "flipV"),
-            _btn("Invert", "invert"),
-            _btn("Reset", "", danger=True),
-            cls="flex flex-wrap gap-1",
-        ),
-        cls="mt-2",
-    )
-
-
 def _suggest_name_form(identity_id: str, nav_prefix: str = "") -> Div:
     """Hidden form for suggesting a name for an unidentified person."""
     return Div(

@@ -368,7 +368,9 @@ def _admin_bar(user=None, community_slug: str = "rhodes", community: dict | None
             elif state == "PROPOSED":
                 proposal_count += 1
     except Exception:
-        pass
+        import logging
+
+        logging.warning("_admin_bar: failed to compute pending/proposal counts", exc_info=True)
 
     return Div(
         Div(

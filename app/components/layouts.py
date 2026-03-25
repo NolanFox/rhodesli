@@ -248,7 +248,9 @@ def _detective_evidence_section(label: dict) -> object:
 
 def _get_onboarding_surnames() -> list[str]:
     """Get canonical surname list from surname_variants.json for the onboarding grid."""
-    variants_path = Path(__file__).resolve().parent.parent.parent / "data" / "surname_variants.json"
+    from core.config import DATA_DIR
+
+    variants_path = Path(DATA_DIR) / "surname_variants.json"
     if not variants_path.exists():
         return []
     try:
