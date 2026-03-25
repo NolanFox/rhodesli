@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.47] — 2026-03-24 (Session 136: Supabase Egress Crisis + Resilience)
+
+### Security
+- **Community filtering fails closed** for ALL communities when Supabase is unavailable. Previously Rhodes failed open, leaking Fox Family data.
+
+### Performance
+- **Egress reduction ~70%**: TTLs 120s→600s, selective columns on identities/photos queries, SWR bot guard (skip refresh if no user activity in 5 min)
+- Estimated post-fix egress: ~3 GB/month (was ~14 GB/month)
+
+### Operations
+- **OD-012**: Supabase egress crisis documented with root cause analysis and monitoring thresholds
+- Pre-migration row counts captured for all 50 tables (verification baseline)
+
+### Research
+- Codex CLI migration review: schema drift in repo SQL makes reconstruction risky
+- Planning agent migration review: pg_dump/pg_restore feasible but non-trivial
+- Decision: upgrade to Pro ($25/mo) rather than migrate during outage
+
+### Tests
+- 3749 total tests pass
+
 ## [v0.99.46] — 2026-03-23 (Session 135c: Override Preview + Compare Active Side)
 
 ### UX Features
