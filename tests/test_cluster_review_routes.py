@@ -1186,8 +1186,8 @@ class TestClusterReviewCaches:
 class TestConfirmUnidentifiedPersonPage:
     """FB-077: Confirm button shows inline error for unidentified persons."""
 
-    def test_confirm_unidentified_person_page_shows_inline_error(self):
-        """Confirm on person page for 'Unidentified Person NNN' shows visible error."""
+    def test_confirm_unidentified_person_page_succeeds(self):
+        """Confirm on person page for 'Unidentified Person NNN' succeeds (Session 138 FB-006)."""
         client = _get_test_client()
         identity_data = _make_identity("Unidentified Person 42", state="INBOX")
         mock_reg = MagicMock()
@@ -1196,15 +1196,25 @@ class TestConfirmUnidentifiedPersonPage:
         with ExitStack() as stack:
             stack.enter_context(_admin_session())
             stack.enter_context(patch("app.identity_routes._main_mod.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.identity_routes._main_mod.save_registry"))
             stack.enter_context(
                 patch("app.identity_routes._main_mod._check_merged_identity", return_value=(False, None))
             )
+            stack.enter_context(patch("app.identity_routes._main_mod.posthog_capture"))
+            stack.enter_context(patch("app.identity_routes._main_mod.log_user_action"))
+            stack.enter_context(
+                patch(
+                    "app.identity_routes._main_mod.get_current_user",
+                    return_value=MagicMock(id="u1", email="admin@test.com"),
+                )
+            )
+            stack.enter_context(patch("app.identity_routes._main_mod.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.identity_routes._main_mod._fire_recalibration_hook"))
             resp = client.post("/confirm/unid-1?from_person_page=true")
 
         assert resp.status_code == 200
         html = resp.text
-        assert "Rename this person first" in html
-        assert "person-admin-actions" in html
+        assert "CONFIRMED" in html
 
     def test_confirm_named_person_page_succeeds(self):
         """Confirm on person page for named person should work."""

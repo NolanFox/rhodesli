@@ -5832,28 +5832,18 @@ def identity_card_expanded(
         reject_url = f"{base_reject_url}?from_focus=true{_filter_suffix}"
         skip_url = f"{nav_prefix}/identity/{identity_id}/skip?from_focus=true{_filter_suffix}"
 
-        # FB-009 Session 120: Disable confirm for unidentified persons in Focus view
-        _is_unidentified = name.startswith("Unidentified Person")
-        if _is_unidentified:
-            _confirm_btn = Button(
-                "✓ Confirm",
-                cls="px-4 py-2 bg-gray-400 cursor-not-allowed text-white font-medium rounded-lg opacity-50 min-h-[44px]",
-                title="Name this person first",
-                type="button",
-                id="focus-btn-confirm",
-                disabled=True,
-            )
-        else:
-            _confirm_btn = Button(
-                "✓ Confirm",
-                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
-                hx_post=confirm_url,
-                hx_target="#focus-container",
-                hx_swap="outerHTML",
-                hx_push_url="false",
-                type="button",
-                id="focus-btn-confirm",
-            )
+        # Session 138 FB-006: Confirm enabled for all persons (including unidentified).
+        # User workflow: confirm cluster first, identify (name) later.
+        _confirm_btn = Button(
+            "✓ Confirm",
+            cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
+            hx_post=confirm_url,
+            hx_target="#focus-container",
+            hx_swap="outerHTML",
+            hx_push_url="false",
+            type="button",
+            id="focus-btn-confirm",
+        )
 
         actions = Div(
             _confirm_btn,
@@ -6032,59 +6022,7 @@ def identity_card_expanded(
 # _suggest_name_form extracted to app/components/forms.py (Session 137)
 
 
-def identity_card_mini(
-    identity: dict, crop_files: set, clickable: bool = False, triage_filter: str = "", nav_prefix: str = ""
-) -> Div:
-    """
-    Mini identity card for queue preview in Focus Mode.
-
-    Args:
-        identity: Identity dict
-        crop_files: Set of available crop files
-        clickable: If True, clicking loads this identity in focus mode
-        triage_filter: Active filter to preserve in navigation links
-    """
-    identity_id = identity["identity_id"]
-
-    # Get best-quality face for thumbnail
-    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
-    crop_url = None
-    best_fid = get_best_face_id(all_face_ids)
-    if best_fid:
-        crop_url = resolve_face_image_url(best_fid, crop_files)
-
-    img_element = (
-        Img(
-            src=crop_url or "",
-            cls="w-full h-full object-cover",
-            loading="lazy",
-            alt=identity.get("name", "Face thumbnail"),
-        )
-        if crop_url
-        else Span("?", cls="text-2xl text-slate-500")
-    )
-
-    if clickable:
-        # Wrap in a link that loads this identity in focus mode (correct section)
-        section = _section_for_state(identity.get("state", "INBOX"))
-        filter_suffix = f"&filter={triage_filter}" if triage_filter else ""
-        return A(
-            Div(
-                img_element,
-                cls="w-full aspect-square rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center hover:ring-2 hover:ring-indigo-400 transition-all",
-            ),
-            href=f"{nav_prefix}/?section={section}&view=focus&current={identity_id}{filter_suffix}",
-            cls="w-24 flex-shrink-0 cursor-pointer",
-            title="Click to review this identity",
-        )
-    else:
-        return Div(
-            Div(
-                img_element,
-                cls="w-full aspect-square rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center",
-            ),
-            cls="w-24 flex-shrink-0",
-        )
+from app.components.cards import identity_card_mini  # noqa: E402 — extracted Session 138
 
 
 def render_to_review_section(
@@ -8549,35 +8487,22 @@ def review_action_buttons(
     # Confirm button - available for reviewable and skipped states
     if state in ("INBOX", "PROPOSED", "SKIPPED"):
         # FB-009: Disable confirm for unidentified persons
-        _has_real_name = identity_name and not identity_name.startswith("Unidentified Person ")
-        # Use different endpoint for INBOX vs PROPOSED/SKIPPED
+        # Session 138 FB-006: Confirm enabled for all persons (including unidentified).
         confirm_url = (
             f"{nav_prefix}/inbox/{identity_id}/confirm" if state == "INBOX" else f"{nav_prefix}/confirm/{identity_id}"
         )
-        if _has_real_name:
-            buttons.append(
-                Button(
-                    "\u2713 Confirm",
-                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
-                    hx_post=confirm_url,
-                    hx_target=f"#identity-{identity_id}",
-                    hx_swap="outerHTML",
-                    hx_indicator=f"#loading-{identity_id}",
-                    aria_label="Confirm this identity",
-                    type="button",
-                )
+        buttons.append(
+            Button(
+                "\u2713 Confirm",
+                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
+                hx_post=confirm_url,
+                hx_target=f"#identity-{identity_id}",
+                hx_swap="outerHTML",
+                hx_indicator=f"#loading-{identity_id}",
+                aria_label="Confirm this identity",
+                type="button",
             )
-        else:
-            buttons.append(
-                Button(
-                    "\u2713 Confirm",
-                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm font-bold bg-gray-400 cursor-not-allowed text-white rounded opacity-50 min-h-[44px]",
-                    title="Name this person first",
-                    aria_label="Name this person before confirming",
-                    type="button",
-                    disabled=True,
-                )
-            )
+        )
 
     # Skip button - available for reviewable states only
     if state in ("INBOX", "PROPOSED"):
@@ -8693,192 +8618,13 @@ def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
     )
 
 
-def face_card(
-    face_id: str,
-    crop_url: str,
-    quality: float = None,
-    era: str = None,
-    identity_id: str = None,
-    photo_id: str = None,
-    show_actions: bool = False,
-    show_detach: bool = False,
-    is_admin: bool = True,
-) -> Div:
-    """
-    Single face card with optional action buttons.
-    UX Intent: Face-first display with metadata secondary.
-
-    Args:
-        face_id: Canonical face identifier (for alt text)
-        crop_url: Resolved URL path to the crop image (from backend)
-        quality: Quality score (extracted from URL if not provided)
-        era: Era classification for badge display
-        identity_id: Parent identity ID
-        photo_id: Photo ID for "View Photo" button
-        show_actions: Whether to show action buttons
-        show_detach: Whether to show "Detach" button (only when identity has > 1 face)
-        is_admin: Whether to show admin-only info (quality score)
-    """
-    if quality is None:
-        # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
-        quality = parse_quality_from_filename(crop_url)
-    if quality == 0.0:
-        # Inbox crops don't encode quality in filename — look up from embeddings
-        emb_quality = get_face_quality(face_id)
-        if emb_quality is not None:
-            quality = emb_quality
-
-    # View Photo button (only if photo_id is available)
-    # Pass identity_id for navigation context between identity's photos
-    view_photo_btn = None
-    if photo_id:
-        _vp_url = f"/photo/{photo_id}/partial?face={face_id}"
-        if identity_id:
-            _vp_url += f"&identity_id={identity_id}"
-        view_photo_btn = Button(
-            "View Photo",
-            cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline mt-1",
-            hx_get=_vp_url,
-            hx_target="#photo-modal-content",
-            hx_swap="innerHTML",
-            # Show the modal when clicked
-            **{"_": "on click remove .hidden from #photo-modal"},
-            type="button",
-        )
-
-    # Share button for public photo viewer
-    full_page_link = None
-    if photo_id:
-        full_page_link = Span(
-            share_button(photo_id, style="link", label="Share"),
-            cls="mt-1 ml-2",
-        )
-
-    # Detach button (only if show_detach is True)
-    detach_btn = None
-    if show_detach:
-        # Generate safe DOM ID for targeting
-        safe_dom_id = make_css_id(face_id)
-
-        detach_btn = Button(
-            "Detach",
-            cls="text-sm sm:text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2",
-            hx_post=f"/api/face/{quote(face_id)}/detach",
-            hx_target=f"#{safe_dom_id}",
-            hx_swap="outerHTML",
-            hx_confirm="Move this face to its own identity? (You can merge it back later.)",
-            type="button",
-        )
-
-    # Quality label text
-    quality_word = None
-    quality_label = None
-    if quality > 0:
-        quality_word = "Excellent" if quality >= 30 else "Good" if quality >= 20 else "Fair" if quality >= 10 else "Low"
-        quality_label = f"{quality_word} quality"
-
-    return Div(
-        # Face hero — dominant visual element (min 200px desktop, 150px mobile)
-        Div(
-            Img(
-                src=crop_url,
-                alt=face_id,
-                cls="w-full h-full object-cover sepia-[.15] hover:sepia-0 transition-all duration-300",
-            ),
-            era_badge(era) if era else None,
-            cls="relative border border-amber-900/30 rounded-sm overflow-hidden min-h-[150px] sm:min-h-[200px]",
-        ),
-        # Compact metadata: quality label + secondary actions on hover
-        Div(
-            Span(
-                quality_label,
-                cls=f"text-sm sm:text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
-                title=f"Quality score: {quality:.2f}" if is_admin else None,
-            )
-            if quality_label
-            else None,
-            # Secondary actions (View Photo, Share, Detach)
-            # Detach is always visible for admin; other actions visible on hover
-            Div(
-                view_photo_btn,
-                full_page_link,
-                detach_btn,
-                cls="flex items-center"
-                + ("" if show_detach else " opacity-0 group-hover:opacity-100 transition-opacity"),
-            )
-            if view_photo_btn or detach_btn or full_page_link
-            else None,
-            cls="mt-1 px-0.5 flex items-center justify-between",
-        ),
-        cls="face-card-archival group p-1 rounded overflow-hidden",
-        # Fix: Apply the safe ID to the container
-        id=make_css_id(face_id),
-    )
+from app.components.cards import face_card  # noqa: E402 — extracted Session 138
 
 
 # _confidence_tier_label extracted to app/components/badges.py (Session 137)
 
 
-def match_info_bar(
-    distance: float,
-    confidence_gap: float = 0.0,
-    co_occurrence: int = 0,
-    show_distance: bool = True,
-    show_badge: bool = True,
-) -> Div:
-    """Shared match metrics bar — used by neighbor_card and discovery cards.
-
-    Session 88: Unified component so all match displays show the same info.
-    Args:
-        show_badge: If False, skip the "X% match" badge (caller already shows pct).
-    """
-    from core.confidence import compute_face_confidence
-
-    conf = compute_face_confidence(distance)
-    pct = conf["confidence_pct"]
-    label = conf["short_label"]
-
-    _similarity_classes = {
-        "Very High": "bg-emerald-500/30 text-emerald-300",
-        "High": "bg-emerald-500/20 text-emerald-400",
-        "Moderate": "bg-amber-500/20 text-amber-400",
-        "Low": "bg-amber-500/15 text-amber-500",
-        "Very Low": "bg-slate-600 text-slate-400",
-    }
-    similarity_class = _similarity_classes.get(label, "bg-slate-600 text-slate-400")
-
-    badge = (
-        Span(f"{pct}% match", cls=f"text-sm sm:text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
-    )
-
-    details = []
-    if show_distance:
-        tier_label = _confidence_tier_label(distance)
-        details.append(
-            Span(f"Dist: {distance:.2f}", cls="text-sm sm:text-xs font-data text-slate-400 bg-slate-700 px-1 rounded")
-        )
-        details.append(tier_label)
-    if confidence_gap > 0:
-        details.append(
-            Span(
-                f"+{confidence_gap}% gap",
-                cls="text-sm sm:text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded",
-            )
-        )
-    if co_occurrence > 0:
-        details.append(
-            Span(
-                f"Seen together in {co_occurrence} photo{'s' if co_occurrence != 1 else ''}",
-                cls="text-[10px] text-amber-400 italic",
-            )
-        )
-
-    return Div(
-        badge,
-        Div(*details, cls="flex items-center flex-wrap gap-1") if details else None,
-        cls="flex flex-col gap-0.5",
-        data_testid="match-info-bar",
-    )
+from app.components.cards import match_info_bar  # noqa: E402 — extracted Session 138
 
 
 def neighbor_card(

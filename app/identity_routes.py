@@ -116,26 +116,9 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    # FB-077: Pre-check for placeholder names — show inline error on person page
-    identity_name = identity.get("name", "")
-    if identity_name.startswith("Unidentified Person "):
-        if from_person_page:
-            return (
-                Div(
-                    P(
-                        "Rename this person first, then confirm.",
-                        cls="text-amber-400 text-sm font-medium",
-                    ),
-                    id="person-admin-actions",
-                    cls="flex items-center justify-center gap-2 mb-3 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg",
-                ),
-            )
-        elif from_focus:
-            return Response(
-                to_xml(_main_mod.toast("Rename this person first, then confirm.", "warning")),
-                status_code=409,
-                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
-            )
+    # Session 138 FB-006: Allow confirming unidentified persons.
+    # User workflow: confirm cluster as real person first, identify (name) later.
+    # Previously blocked by FB-077/FB-009 — removed per user feedback.
 
     # Confirm the identity (state promotion only — merge is a separate explicit action)
     try:
@@ -1612,13 +1595,8 @@ def post(
     state = identity.get("state", "INBOX")
     action_name = "Ignored" if action == "skip" else action.capitalize()
 
-    # FB-066: Pre-check for unidentified names before confirm
-    if action == "confirm" and not IdentityRegistry._is_real_name(identity.get("name")):
-        return Response(
-            to_xml(_main_mod.toast("Name this person first, then confirm.", "warning")),
-            status_code=409,
-            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
-        )
+    # Session 138 FB-006: Allow confirming unidentified persons.
+    # Previously blocked by FB-066 — removed per user feedback.
 
     try:
         if action == "confirm":

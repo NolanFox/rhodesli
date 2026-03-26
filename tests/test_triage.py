@@ -552,22 +552,21 @@ class TestFocusMergeSearch:
         assert "focus-search-results-abc123" not in html
 
 
-class TestFocusConfirmDisabled:
-    """FB-009: Confirm button disabled for unidentified persons in Focus view."""
+class TestFocusConfirmEnabled:
+    """Session 138 FB-006: Confirm button active for ALL persons (including unidentified)."""
 
     @patch("app.main._get_identities_with_proposals")
-    def test_focus_confirm_disabled_for_unidentified(self, mock_proposals):
-        """Focus view confirm button is disabled when name is unidentified."""
+    def test_focus_confirm_active_for_unidentified(self, mock_proposals):
+        """Focus view confirm button is active even for unidentified persons."""
         from app.main import identity_card_expanded, to_xml
 
         mock_proposals.return_value = set()
         identity = make_identity("abc123", state="INBOX")  # default: "Unidentified Person abc12345"
         card = identity_card_expanded(identity, crop_files=set(), is_admin=True)
         html = to_xml(card)
-        assert "bg-gray-400" in html, "Confirm should be gray for unidentified"
-        assert "cursor-not-allowed" in html, "Confirm should show not-allowed cursor"
-        assert "disabled" in html, "Confirm should be disabled"
-        assert "Name this person first" in html, "Tooltip should explain why disabled"
+        assert "bg-green-500" in html, "Confirm should be green for unidentified"
+        assert "/inbox/abc123/confirm" in html, "Confirm should have hx-post URL"
+        assert "bg-gray-400" not in html, "Should NOT be gray/disabled"
 
     @patch("app.main._get_identities_with_proposals")
     def test_focus_confirm_active_for_named(self, mock_proposals):

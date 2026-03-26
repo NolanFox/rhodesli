@@ -1,14 +1,15 @@
-"""Tests for FB-009: Confirm button disabled for unidentified persons.
+"""Tests for confirm button behavior.
 
-The confirm button should be disabled (gray, with tooltip) when the identity
-has an auto-generated name like "Unidentified Person 1234". It should be
-active (green) when the identity has a real human-assigned name.
+Session 138 FB-006: Confirm is now ENABLED for all persons, including unidentified.
+User workflow: confirm cluster as real person first, identify (name) later.
+
+Previous behavior (FB-009, Session 120) disabled confirm for unidentified persons.
+That was reversed in Session 138 per user feedback.
 
 Covers:
-1. review_action_buttons() in main.py — disabled for unidentified, active for named
-2. Person detail page confirm button — disabled for unidentified
-3. Photo modal quick-action confirm button — disabled for unidentified
-4. Server-side defense in depth — quick-action endpoint returns 409 for unidentified
+1. review_action_buttons() — confirm active for ALL names
+2. Photo modal quick-action confirm — active for all
+3. _is_real_name() — still classifies names correctly (used elsewhere)
 """
 
 import pytest
@@ -20,22 +21,22 @@ from unittest.mock import patch, MagicMock
 # ---------------------------------------------------------------------------
 
 
-class TestReviewActionButtonsConfirmDisabled:
-    """review_action_buttons should render disabled confirm for unidentified persons."""
+class TestReviewActionButtonsConfirm:
+    """review_action_buttons should render active confirm for all persons."""
 
-    def test_confirm_disabled_for_unidentified(self):
-        """Unidentified Person should get a disabled gray confirm button."""
+    def test_confirm_active_for_unidentified(self):
+        """Unidentified Person should get an active confirm button (Session 138 FB-006)."""
         from app.main import review_action_buttons, to_xml
 
         result = review_action_buttons(
             "id1", "PROPOSED", is_admin=True, nav_prefix="", identity_name="Unidentified Person 1234"
         )
         html = to_xml(result)
-        assert "disabled" in html
-        assert "bg-gray-400" in html
-        assert "Name this person first" in html
-        # Should NOT have the active confirm endpoint
-        assert "hx-post" not in html or "confirm/id1" not in html
+        assert "bg-emerald-600" in html
+        assert "confirm/id1" in html
+        # Should NOT be disabled
+        assert "bg-gray-400" not in html
+        assert "cursor-not-allowed" not in html
 
     def test_confirm_active_for_named_person(self):
         """Named person should get an active green confirm button."""
@@ -47,14 +48,14 @@ class TestReviewActionButtonsConfirmDisabled:
         assert "confirm/id1" in html
         assert "bg-gray-400" not in html
 
-    def test_confirm_disabled_for_empty_name(self):
-        """Empty name should also get disabled confirm button."""
+    def test_confirm_active_for_empty_name(self):
+        """Empty name should also get active confirm button (Session 138 FB-006)."""
         from app.main import review_action_buttons, to_xml
 
         result = review_action_buttons("id1", "INBOX", is_admin=True, nav_prefix="", identity_name="")
         html = to_xml(result)
-        assert "disabled" in html
-        assert "Name this person first" in html
+        assert "bg-emerald-600" in html
+        assert "confirm" in html.lower()
 
     def test_confirmed_state_has_no_confirm_button(self):
         """CONFIRMED state should not have a confirm button at all."""
@@ -80,14 +81,14 @@ class TestReviewActionButtonsConfirmDisabled:
 # ---------------------------------------------------------------------------
 
 
-class TestPhotoModalConfirmDisabled:
-    """Photo modal quick-action confirm should be disabled for unidentified persons."""
+class TestPhotoModalConfirm:
+    """Photo modal quick-action confirm should be active for all persons."""
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
-    def test_unidentified_face_confirm_disabled_in_photo_modal(self, mock_reg, mock_dim, mock_meta):
-        """Unidentified person's confirm button in photo modal should be disabled."""
+    def test_unidentified_face_confirm_active_in_photo_modal(self, mock_reg, mock_dim, mock_meta):
+        """Unidentified person's confirm button in photo modal should be active (Session 138 FB-006)."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -110,9 +111,9 @@ class TestPhotoModalConfirmDisabled:
             result = photo_view_content("p1", is_partial=True, is_admin=True)
             html = to_xml(result)
 
-        # The confirm button area should have a disabled button
-        # It should NOT have the active quick-action confirm endpoint
-        assert "bg-gray-400" in html or "disabled" in html
+        # The confirm button should be active (emerald, not gray)
+        assert "action=confirm" in html
+        assert "bg-emerald-600" in html
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
@@ -141,21 +142,19 @@ class TestPhotoModalConfirmDisabled:
             result = photo_view_content("p1", is_partial=True, is_admin=True)
             html = to_xml(result)
 
-        # The active confirm button should have emerald styling and the endpoint
         assert "action=confirm" in html
         assert "bg-emerald-600" in html
 
 
 # ---------------------------------------------------------------------------
-# 3. Server-side defense in depth — quick-action endpoint returns 409
+# 3. _is_real_name — still works correctly (used for display, not blocking)
 # ---------------------------------------------------------------------------
 
 
-class TestIsRealNameDefenseInDepth:
-    """Server-side _is_real_name guard correctly classifies names."""
+class TestIsRealName:
+    """_is_real_name correctly classifies names (used for display logic, not confirm blocking)."""
 
     def test_unidentified_person_is_not_real_name(self):
-        """Unidentified Person names are not real names."""
         from core.registry import IdentityRegistry
 
         assert not IdentityRegistry._is_real_name("Unidentified Person 999")
@@ -164,7 +163,6 @@ class TestIsRealNameDefenseInDepth:
         assert not IdentityRegistry._is_real_name("")
 
     def test_real_names_are_real(self):
-        """Human-assigned names are real names."""
         from core.registry import IdentityRegistry
 
         assert IdentityRegistry._is_real_name("Albert Fox")

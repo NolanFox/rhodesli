@@ -904,21 +904,21 @@ class IdentityRegistry:
                 f"Identity {identity_id} cannot be confirmed from state "
                 f"'{identity['state']}' (must be INBOX, PROPOSED, or SKIPPED)"
             )
-        if not self._is_real_name(identity.get("name")):
-            raise ValueError(
-                f"Identity {identity_id} cannot be confirmed with placeholder name "
-                f"'{identity.get('name', '')}'. Rename it first."
-            )
+        # Session 138 FB-006: Allow confirming unidentified persons.
+        # User workflow: confirm cluster as real person first, identify (name) later.
 
         # Check for duplicate confirmed name (prevent creating two CONFIRMED
-        # identities with the same name — user should merge instead)
-        dup = self.find_confirmed_by_name(identity.get("name", ""), exclude_id=identity_id)
-        if dup:
-            raise ValueError(
-                f"Another confirmed identity already has the name "
-                f"'{identity['name']}' (ID: {dup['identity_id'][:8]}...). "
-                f"Merge instead of confirming a duplicate."
-            )
+        # identities with the same REAL name — user should merge instead)
+        # Skip this check for unidentified/placeholder names
+        identity_name = identity.get("name", "")
+        if self._is_real_name(identity_name):
+            dup = self.find_confirmed_by_name(identity_name, exclude_id=identity_id)
+            if dup:
+                raise ValueError(
+                    f"Another confirmed identity already has the name "
+                    f"'{identity_name}' (ID: {dup['identity_id'][:8]}...). "
+                    f"Merge instead of confirming a duplicate."
+                )
 
         previous_state = identity["state"]
         previous_version = identity["version_id"]

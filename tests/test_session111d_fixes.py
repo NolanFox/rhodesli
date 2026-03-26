@@ -238,22 +238,24 @@ class TestFB065MergedIdentitySearch:
 class TestFB066UnidentifiedConfirm:
     """FB-066: Green checkmark on photo overlay should show clear error for unidentified faces."""
 
-    def test_quick_action_confirm_unidentified_returns_warning(self, client, admin_user):
-        """Confirming an unidentified person via quick-action should return a helpful warning."""
+    def test_quick_action_confirm_unidentified_succeeds(self, client, admin_user):
+        """Confirming an unidentified person via quick-action should succeed (Session 138 FB-006)."""
         reg = IdentityRegistry()
         identity_id = reg.create_identity(anchor_ids=["face_fb066"], user_source="test")
 
         with (
             patch("app.identity_routes._main_mod.load_registry", return_value=reg),
             patch("app.identity_routes._main_mod.save_registry"),
+            patch("app.identity_routes._main_mod.photo_view_content", return_value=(Div("ok"),)),
+            patch("app.identity_routes._main_mod.get_current_user", return_value=None),
+            patch("app.identity_routes._main_mod.is_auth_enabled", return_value=False),
         ):
             resp = client.post(
                 "/api/face/quick-action",
                 data={"identity_id": identity_id, "action": "confirm", "photo_id": "fake_photo"},
                 headers=HTMX_HEADERS,
             )
-        assert resp.status_code == 409
-        assert "Name this person first" in resp.text
+        assert resp.status_code == 200
 
     def test_quick_action_confirm_named_identity_succeeds(self, client, admin_user):
         """Confirming a named identity via quick-action should succeed."""
