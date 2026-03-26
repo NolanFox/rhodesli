@@ -425,6 +425,8 @@ def post(identity_id: str, neighbor_id: str, sess=None, request=None):
     try:
         registry.reject_identity_pair(identity_id, neighbor_id, user_source="admin_inline")
         _main_mod.save_registry(registry, changed_ids={identity_id, neighbor_id})
+        invalidate_neighbors_cache(identity_id)
+        invalidate_neighbors_cache(neighbor_id)
     except KeyError:
         pass  # Neighbor may have been merged/deleted
 
@@ -547,7 +549,10 @@ def get(
 
             # Use precomputed global embedding matrix (Session 135b)
             # Eliminates 100-200ms matrix construction per request
-            fetch_limit = max(total_to_fetch, 20)
+            # Session 138: Fetch more when community filter is active, since filtering
+            # may eliminate most results from the raw pool (Codex P1 finding)
+            _base_limit = 60 if community_filter in ("same", "cross") else 20
+            fetch_limit = max(total_to_fetch, _base_limit)
             all_neighbors = get_all_neighbors(identity_id, limit=fetch_limit)
             _set_cached_neighbors(identity_id, all_neighbors)
             cache_hit = False
@@ -1994,6 +1999,8 @@ def post(source_id: str, target_id: str, sess=None, request=None):
     # Remove rejection
     registry.unreject_identity_pair(source_id, target_id, user_source="web")
     _main_mod.save_registry(registry, changed_ids={source_id, target_id})
+    invalidate_neighbors_cache(source_id)
+    invalidate_neighbors_cache(target_id)
 
     # Log the action
     _main_mod.log_user_action(
@@ -2660,6 +2667,9 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
 
     if rejected_count > 0:
         _main_mod.save_registry(registry, changed_ids={identity_id} | set(bulk_ids))
+        invalidate_neighbors_cache(identity_id)
+        for _bid in bulk_ids:
+            invalidate_neighbors_cache(_bid)
         _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
         _log_audit(
             "negative_match",
