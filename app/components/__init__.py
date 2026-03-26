@@ -15,6 +15,7 @@ from app.components.badges import (  # noqa: F401
     _promotion_banner,
     _progressive_refinement_badge,
     _actionability_badge,
+    _cross_community_badge,
     _CONFIDENCE_RING,
     _CONFIDENCE_COLOR,
     _CONFIDENCE_LABEL,
@@ -43,6 +44,7 @@ from app.components.nav import (  # noqa: F401
     _admin_bar,
     _admin_dashboard_banner,
     inbox_badge,
+    _build_triage_bar,
 )
 
 from app.components.forms import (  # noqa: F401

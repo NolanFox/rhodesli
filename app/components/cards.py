@@ -11,7 +11,7 @@ Uses lazy imports for app.main dependencies to avoid circular imports.
 from fasthtml.common import A, Button, Div, Img, Input, NotStr, P, Span
 from urllib.parse import quote
 
-from app.components.badges import _confidence_tier_label, era_badge
+from app.components.badges import _confidence_tier_label, _cross_community_badge, era_badge
 from app.components.nav import share_button
 from app.utils import _section_for_state, make_css_id, parse_quality_from_filename
 from core.ui_safety import ensure_utf8_display
@@ -643,7 +643,7 @@ def neighbor_card(
                         f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label,
                         cls=f"text-sm sm:text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
                     ),
-                    _m._cross_community_badge(neighbor_id, current_community),
+                    _cross_community_badge(neighbor_id, current_community),
                     cls="flex items-center flex-wrap gap-1",
                 ),
                 Div(

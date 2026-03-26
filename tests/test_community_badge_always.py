@@ -8,7 +8,7 @@ class TestCommunityBadgeAlways:
 
     def test_same_community_returns_badge_not_none(self):
         """Same-community identities should get a badge, not None."""
-        source = Path("app/main.py").read_text()
+        source = Path("app/components/badges.py").read_text()
         idx = source.index("def _cross_community_badge")
         func = source[idx : idx + 2500]
 
@@ -18,7 +18,7 @@ class TestCommunityBadgeAlways:
 
     def test_cross_community_uses_bright_styling(self):
         """Cross-community identities should get a bright blue badge."""
-        source = Path("app/main.py").read_text()
+        source = Path("app/components/badges.py").read_text()
         idx = source.index("def _cross_community_badge")
         func = source[idx : idx + 2500]
 
@@ -26,7 +26,7 @@ class TestCommunityBadgeAlways:
 
     def test_same_and_cross_have_different_styles(self):
         """Same-community and cross-community badges must be visually distinct."""
-        source = Path("app/main.py").read_text()
+        source = Path("app/components/badges.py").read_text()
         idx = source.index("def _cross_community_badge")
         func = source[idx : idx + 2500]
 

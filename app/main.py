@@ -811,55 +811,7 @@ def community_url_prefix(slug: str | None) -> str:
     return f"/c/{slug}"
 
 
-def _cross_community_badge(identity_id: str, current_community: dict | None) -> "FT | None":
-    """Return a badge if identity belongs to a DIFFERENT community than current.
-
-    COMMUNITY-014: Shows "[Community Name]" badge when viewing cross-community content.
-    Returns None if same community or no community context.
-    """
-    if current_community is None:
-        return None
-
-    current_slug = current_community.get("slug", "rhodes")
-    current_id = current_community.get("id")
-    if not current_id:
-        return None
-
-    # Check cached identity sets for all communities
-    from app.supabase_data import load_communities
-
-    communities = load_communities()
-    if not communities:
-        return None
-
-    # Session 121 (UX-208): Always show community badge, even for same community.
-    # Same-community gets a subtle muted badge; cross-community gets bright badge.
-    current_ids = _get_community_identity_ids(current_community)
-    current_name = current_community.get("name", current_slug.replace("-", " ").title())
-    if current_ids and identity_id in current_ids:
-        return Span(
-            current_name,
-            cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/30",
-            title=f"From {current_name}",
-        )
-
-    for comm in communities:
-        comm_slug = comm.get("slug", "")
-        comm_id = comm.get("id")
-        if not comm_id or comm_slug == current_slug:
-            continue  # skip current community
-
-        # Check if identity belongs to this other community
-        other_ids = _get_community_identity_ids(comm)
-        if other_ids and identity_id in other_ids:
-            comm_name = comm.get("name", comm_slug.replace("-", " ").title())
-            return Span(
-                comm_name,
-                cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30",
-                title=f"This person appears in the {comm_name} archive",
-            )
-
-    return None
+from app.components.badges import _cross_community_badge  # noqa: E402 — extracted Session 138
 
 
 def _identity_home_community_slug(identity_id: str, current_community: dict | None) -> str | None:
@@ -3789,62 +3741,7 @@ def _triage_category(identity: dict) -> str:
     return "unmatched"
 
 
-def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "", nav_prefix: str = "") -> Div:
-    """Build the triage summary bar for the inbox."""
-    counts = _compute_triage_counts(to_review)
-
-    items = []
-    categories = [
-        (
-            "ready",
-            "Ready to Confirm",
-            counts["ready_to_confirm"],
-            "bg-emerald-900/40 border-emerald-600/40 text-emerald-300 hover:bg-emerald-900/60",
-            "ring-2 ring-emerald-400 bg-emerald-800/60 font-bold",
-            "ML found a strong match — review and confirm",
-        ),
-        (
-            "rediscovered",
-            "Rediscovered",
-            counts["rediscovered"],
-            "bg-amber-900/40 border-amber-600/40 text-amber-300 hover:bg-amber-900/60",
-            "ring-2 ring-amber-400 bg-amber-800/60 font-bold",
-            "Previously skipped faces with new match evidence",
-        ),
-        (
-            "unmatched",
-            "Unmatched",
-            counts["unmatched"],
-            "bg-slate-700/40 border-slate-600/40 text-slate-300 hover:bg-slate-700/60",
-            "ring-2 ring-slate-400 bg-slate-600/60 font-bold",
-            "Faces not yet linked to a known person — help identify them",
-        ),
-    ]
-
-    for filter_val, label, count, color_cls, active_cls, tooltip in categories:
-        if count == 0:
-            continue
-        is_active = filter_val == active_filter
-        pill_cls = f"flex flex-col items-center px-4 py-2 rounded-lg border transition-colors {color_cls}"
-        if is_active:
-            pill_cls += f" {active_cls}"
-        items.append(
-            A(
-                Span(str(count), cls="text-xl sm:text-lg font-bold"),
-                Span(label, cls="text-sm sm:text-xs" + ("" if is_active else " opacity-80")),
-                href=f"{nav_prefix}/?section=to_review&view={view_mode}&filter={filter_val}",
-                cls=pill_cls,
-                title=tooltip,
-            )
-        )
-
-    if not items:
-        return None
-
-    return Div(
-        *items,
-        cls="flex gap-3 mb-6 flex-wrap pb-4 border-b border-slate-700/50",
-    )
+from app.components.nav import _build_triage_bar  # noqa: E402 — extracted Session 138
 
 
 # _promotion_badge, _promotion_banner extracted to app/components/badges.py (Session 137)

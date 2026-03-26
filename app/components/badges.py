@@ -197,3 +197,52 @@ def _actionability_badge(
             cls="px-3 py-1 bg-amber-900/30 border border-amber-500/30 rounded-lg mb-1",
         )
     return None
+
+
+def _cross_community_badge(identity_id: str, current_community: dict | None):
+    """Return a badge if identity belongs to a DIFFERENT community than current.
+
+    COMMUNITY-014: Shows "[Community Name]" badge when viewing cross-community content.
+    Returns None if same community or no community context.
+    Extracted from app/main.py in Session 138.
+    """
+    if current_community is None:
+        return None
+
+    current_slug = current_community.get("slug", "rhodes")
+    current_id = current_community.get("id")
+    if not current_id:
+        return None
+
+    from app.supabase_data import load_communities
+    import app.main as _m
+
+    communities = load_communities()
+    if not communities:
+        return None
+
+    current_ids = _m._get_community_identity_ids(current_community)
+    current_name = current_community.get("name", current_slug.replace("-", " ").title())
+    if current_ids and identity_id in current_ids:
+        return Span(
+            current_name,
+            cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/30",
+            title=f"From {current_name}",
+        )
+
+    for comm in communities:
+        comm_slug = comm.get("slug", "")
+        comm_id = comm.get("id")
+        if not comm_id or comm_slug == current_slug:
+            continue
+
+        other_ids = _m._get_community_identity_ids(comm)
+        if other_ids and identity_id in other_ids:
+            comm_name = comm.get("name", comm_slug.replace("-", " ").title())
+            return Span(
+                comm_name,
+                cls="text-sm sm:text-xs px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30",
+                title=f"This person appears in the {comm_name} archive",
+            )
+
+    return None
