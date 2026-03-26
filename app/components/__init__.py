@@ -59,3 +59,14 @@ from app.components.layouts import (  # noqa: F401
     _welcome_banner,
     _get_onboarding_surnames,
 )
+
+from app.components.cards import (  # noqa: F401
+    FACES_PER_PAGE,
+    match_info_bar,
+    face_card,
+    identity_card_mini,
+    search_result_card,
+    search_results_panel,
+    _build_face_cards_for_entries,
+    _face_pagination_controls,
+)
