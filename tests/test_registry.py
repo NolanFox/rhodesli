@@ -109,8 +109,8 @@ class TestIdentityState:
         identity = registry.get_identity(identity_id)
         assert identity["version_id"] == 2
 
-    def test_confirm_placeholder_name_raises(self):
-        """Placeholder identities must be renamed before confirmation."""
+    def test_confirm_placeholder_name_succeeds(self):
+        """Placeholder identities can be confirmed without renaming (Session 138 FB-006)."""
         from core.registry import IdentityRegistry
 
         registry = IdentityRegistry()
@@ -119,8 +119,8 @@ class TestIdentityState:
             user_source="manual",
         )
 
-        with pytest.raises(ValueError, match="Rename it first"):
-            registry.confirm_identity(identity_id, user_source="manual")
+        registry.confirm_identity(identity_id, user_source="manual")
+        assert registry.get_identity(identity_id)["state"] == "CONFIRMED"
 
     def test_contest_identity_changes_state(self):
         """Contesting an identity should change state to CONTESTED."""
