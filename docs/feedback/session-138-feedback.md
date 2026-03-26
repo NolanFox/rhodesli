@@ -56,3 +56,21 @@
 - **Context:** The confirm button fix (FB-006) has not deployed yet. User is seeing the old disabled confirm button on production. Need to push and deploy.
 - **Root cause:** Code not deployed yet
 - **Fix:** IN PROGRESS — pushing now
+
+### FB-010: After merge in focus mode, doesn't advance to next person
+- **Severity:** P1
+- **Context:** After merging in focus mode, shows "Merged 1 identities (1 faces)" success message but stays on the same identity. Doesn't auto-advance to next person. User has to refresh the page. Confirm button still grayed out (pre-deploy). Related to FB-003.
+- **Root cause:** Focus mode merge handler returns success toast but doesn't trigger navigation to next identity
+- **Fix:** BACKLOG — same root cause as FB-003
+
+### FB-011: Person 163 has no face crop — missing crops pattern
+- **Severity:** P1
+- **Context:** Same issue as FB-001. Person 163 shows gray placeholder instead of face crop in neighbor cards. Investigation shows 750 out of 1000 faces in photo_faces table have NULL bbox and quality — these are likely all missing crop files on R2. This is a systemic data issue affecting many Rhodes community identities.
+- **Root cause:** Face records were created in photo_faces during Supabase migration but crop image files were never generated/uploaded to R2. The original pipeline creates crops locally but they were never synced to R2 for these faces.
+- **Fix:** Needs pipeline run to regenerate and upload crops for all affected faces
+
+### FB-012: "Load More" doesn't work with "Same community only" filter
+- **Severity:** P2
+- **Context:** On person page Similar Identities panel, selecting "Same community only" filter works for initial results but the "Load More" button doesn't preserve the community filter. Previously fixed in Session 135c (FB-014) for the focus mode neighbors sidebar, but person page may use a different code path.
+- **Root cause:** Load More URL on person page may not include community_filter parameter
+- **Fix:** IN PROGRESS — need to check person page neighbors code path
