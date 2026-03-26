@@ -14,6 +14,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 138: Interactive Feedback + Refactor Phase 2 (2026-03-26) — v0.99.49
+- **13 feedback items** received during interactive session (FB-001–FB-013).
+- **FB-006 (P0)**: Enable confirm for unidentified persons — removed _is_real_name blocks across 5 files (registry, identity_routes, main, person_routes, page_routes). User workflow: confirm cluster first, identify later.
+- **FB-012**: Community filter + Load More pagination — apply filter BEFORE pagination slice.
+- **FB-013**: Rejected identities not filtered from neighbors — added negative_ids filtering + cache invalidation on all reject/unreject paths.
+- **Codex audit**: gpt-5.4 independent. P1: fetch limit 20→60 for community filter. P2: cache invalidation on 3 additional paths. Value: STRONG.
+- **REFACTOR-001 Phase 2**: 848 lines extracted from main.py (10,638→9,790). cards.py (8 functions, 699 lines), badges.py (_cross_community_badge), nav.py (_build_triage_bar).
+- **Track 1**: Mobile nav separator fix, xfail rate-limit patch targets.
+- **Deploy**: Session 137 commits deployed (previously stuck on Supabase outage, now Pro). Supabase Pro ($25/mo).
+- 3748 app tests pass.
+
 ## Session 137: Overnight Parallel Refactor + Tests + Design (2026-03-25) — v0.99.48
 - **REFACTOR-001 Phase 1**: Extract 1,127 lines from main.py to 7 app/components/ modules (badges, forms, layouts, modals, nav, toasts). 37 functions + constants. Re-exports maintain backward compatibility.
 - **Flaky xdist fix**: Expand reset_registry_cache() from 3 to 30+ cache resets. scope="class" → scope="function" in test_discoveries.py. 3/3 consecutive runs pass.
