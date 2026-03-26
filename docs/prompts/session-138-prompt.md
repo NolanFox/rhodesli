@@ -107,11 +107,27 @@ After Track 1 AND after Track 2, run the dual-audit cycle:
 
 This is NOT optional. Session 137 proved Claude and Codex find different categories of bugs.
 
+## Track 4: Interactive Feedback (runs in parallel with Tracks 1-3)
+**User will be using the live site and providing real-time feedback.**
+
+When user gives feedback:
+1. Switch to interactive mode: `echo "interactive" > .claude/session_mode.txt`
+2. Log IMMEDIATELY as FB-NNN (background subagent — do NOT block current work)
+3. Acknowledge: "Got it, FB-NNN"
+4. At next commit point, pause implementation and fix ALL feedback items
+5. Parallelize independent fixes via worktree subagents
+6. Do NOT defer to BACKLOG — fix everything in this session
+7. After all fixes: `make test-fast`, commit, dual-audit cycle, then resume implementation
+
+See `.claude/rules/interactive-session-feedback.md` for full protocol (HD-031).
+
 ## Session End Checklist
 - [ ] Phase 0: Supabase verified working
 - [ ] Track 1: Quick fixes from Codex audit + dual-audit cycle
 - [ ] Track 2: cards.py extracted, main.py reduced + dual-audit cycle
 - [ ] Track 3: Harness updates committed
+- [ ] Track 4: ALL user feedback items FIXED (zero deferred)
+- [ ] `docs/feedback/session-138-feedback.md` exists with all FB entries
 - [ ] `make test-fast` passes on final state
 - [ ] Codex CLI audit(s) saved with provenance
 - [ ] Assessment with AI Tools section (provenance for ALL tools used)
