@@ -27,6 +27,7 @@ _global_face_map = None  # list of (identity_id, face_id) tuples
 _global_identity_map = None  # numpy array, parallel to rows — maps face row to identity index
 _global_identity_info = None  # list of (identity_id, name, face_ids_list, face_count)
 _global_identity_photos = None  # dict of identity_id -> set of photo_ids
+_global_identity_info_by_id = None  # dict of identity_id -> (identity_id, name, face_ids, face_count)
 _global_dirty = True
 _global_lock = threading.Lock()
 
@@ -209,7 +210,7 @@ def get_confirmed_distances(target_embedding, community_slug=None):
 def _rebuild_global_matrix():
     """Rebuild the global embedding matrix from ALL active (non-merged) identities."""
     global _global_matrix, _global_face_map, _global_identity_map, _global_identity_info
-    global _global_identity_photos, _global_dirty
+    global _global_identity_photos, _global_identity_info_by_id, _global_dirty
 
     import app.main as _main_mod
 
@@ -224,6 +225,7 @@ def _rebuild_global_matrix():
         _global_identity_map = np.array([], dtype=np.int32)
         _global_identity_info = []
         _global_identity_photos = {}
+        _global_identity_info_by_id = {}
         _global_dirty = False
         return
 
@@ -283,6 +285,7 @@ def _rebuild_global_matrix():
     _global_face_map = face_map
     _global_identity_map = np.array(identity_indices, dtype=np.int32)
     _global_identity_info = identity_info
+    _global_identity_info_by_id = {item[0]: item for item in identity_info}
     _global_identity_photos = identity_photos
     _global_dirty = False
 
@@ -341,12 +344,8 @@ def get_all_neighbors(target_id, registry=None, limit=20):
     # Build result list
     candidates = []
     for iid, dist in identity_best.items():
-        # Find info
-        info = None
-        for item in _global_identity_info:
-            if item[0] == iid:
-                info = item
-                break
+        # O(1) dict lookup instead of O(N) linear scan (Session 139 E1)
+        info = _global_identity_info_by_id.get(iid) if _global_identity_info_by_id else None
         if info is None:
             continue
 
