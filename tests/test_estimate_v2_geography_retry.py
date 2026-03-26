@@ -37,7 +37,7 @@ def _upload_patches():
         patch("app.main._load_date_labels", return_value={}),
         patch("core.storage.can_write_r2", return_value=False),
         patch("core.storage.get_upload_url", return_value="/uploads/test.jpg"),
-        patch("app.rate_limit.check_rate_limit", return_value=True),
+        patch("app.estimate_routes.check_rate_limit", return_value=True),
     ]
 
 
@@ -197,7 +197,7 @@ class TestEstimateV2GeographyRetry:
             patch("app.main._load_date_labels", return_value={}),
             patch("core.storage.can_write_r2", return_value=False),
             patch("core.storage.get_upload_url", return_value="/uploads/test.jpg"),
-            patch("app.rate_limit.check_rate_limit", return_value=False),
+            patch("app.estimate_routes.check_rate_limit", return_value=False),
         ]
         with ExitStack() as stack:
             for p in patches:

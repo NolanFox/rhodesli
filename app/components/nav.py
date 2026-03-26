@@ -256,6 +256,9 @@ def _public_page_nav(
     # Mobile menu overlay (hidden by default, shown via JS)
     mobile_menu_links = []
     for link in nav_links:
+        # Skip non-link elements (e.g. Span separators)
+        if not hasattr(link, "tag") or link.tag != "a":
+            continue
         # Clone link with mobile-friendly styling
         href = link.attrs.get("href", "#") if hasattr(link, "attrs") else "#"
         text = link.children[0] if hasattr(link, "children") and link.children else str(link)
