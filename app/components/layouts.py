@@ -250,7 +250,11 @@ def _get_onboarding_surnames() -> list[str]:
     """Get canonical surname list from surname_variants.json for the onboarding grid."""
     from core.config import DATA_DIR
 
-    variants_path = Path(DATA_DIR) / "surname_variants.json"
+    data_path = Path(DATA_DIR)
+    if not data_path.is_absolute():
+        # Resolve relative DATA_DIR against project root (parent of app/)
+        data_path = Path(__file__).resolve().parent.parent.parent / DATA_DIR
+    variants_path = data_path / "surname_variants.json"
     if not variants_path.exists():
         return []
     try:
