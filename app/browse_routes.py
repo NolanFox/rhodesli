@@ -1261,7 +1261,7 @@ def get(identity_id: str, sess=None, request=None):
                                 else None,
                                 A(
                                     "Edit in Admin",
-                                    href=f"{nav_prefix}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{identity_id}",
+                                    href=f"{nav_prefix}/?section={_main_mod._section_for_state(state)}&view=focus&current={identity_id}",
                                     cls="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
                                 )
                                 if is_admin

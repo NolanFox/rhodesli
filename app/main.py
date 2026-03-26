@@ -8658,6 +8658,18 @@ def neighbors_sidebar(
             "set vcbs to <input.visible-bulk-cb/> in container "
             "repeat for vcb in vcbs set vcb.checked to my.checked end"
         )
+        # Build focus-aware URLs for bulk actions
+        _bulk_focus_suffix = f"?from_focus=true&focus_section={focus_section}" if from_focus else ""
+        if from_focus and focus_section == "skipped":
+            _bulk_target = "#skipped-focus-container"
+        elif from_focus:
+            _bulk_target = "#focus-container"
+        else:
+            _bulk_target = f"#{_target_id}"
+        _bulk_swap = "outerHTML" if from_focus else "innerHTML"
+        _bulk_merge_attrs = {}
+        if from_focus:
+            _bulk_merge_attrs["hx_push_url"] = "false"
         bulk_actions = Form(
             # Hidden inputs for each mergeable neighbor (checkboxes)
             Div(
@@ -8685,11 +8697,12 @@ def neighbors_sidebar(
                 Button(
                     "Merge Selected",
                     type="button",
-                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/bulk-merge",
+                    hx_post=f"{nav_prefix}/api/identity/{identity_id}/bulk-merge{_bulk_focus_suffix}",
                     hx_include="closest form",
-                    hx_target=f"#{_target_id}",
-                    hx_swap="innerHTML",
+                    hx_target=_bulk_target,
+                    hx_swap=_bulk_swap,
                     cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                    **_bulk_merge_attrs,
                 ),
                 Button(
                     "Not Same Selected",

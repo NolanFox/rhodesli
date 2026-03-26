@@ -2540,7 +2540,15 @@ def post(identity_id: str, sess=None):
 
 
 @rt("/api/identity/{identity_id}/bulk-merge")
-def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
+def post(
+    identity_id: str,
+    bulk_ids: list[str] = None,
+    from_focus: bool = False,
+    filter: str = "",
+    focus_section: str = "",
+    sess=None,
+    request=None,
+):
     """
     Bulk merge multiple identities into one target. Requires admin.
 
@@ -2615,15 +2623,45 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None, request=None):
             metadata={"route": "bulk_merge"},
         )
 
+    # Build toast message
     # FB-039/FB-056/FB-062: Show per-identity success/failure with reasons
     if failed_details:
         failed_items = "; ".join(f"{name} ({reason})" for name, reason in failed_details[:5])
         if len(failed_details) > 5:
             failed_items += f" +{len(failed_details) - 5} more"
         msg = f"Merged {merged_count} ({total_faces} faces). {len(failed_details)} skipped: {failed_items}"
-        return _main_mod.toast(msg, "warning")
+        toast_level = "warning"
+    else:
+        msg = f"Merged {merged_count} identities ({total_faces} faces)."
+        toast_level = "success"
 
-    return _main_mod.toast(f"Merged {merged_count} identities ({total_faces} faces).", "success")
+    merge_toast = _main_mod.toast(msg, toast_level)
+
+    # If from focus mode, advance to next identity instead of just showing toast
+    if from_focus and merged_count > 0:
+        nav_prefix = _nav_prefix_from_request(request)
+        oob_toast = Div(
+            merge_toast,
+            hx_swap_oob="beforeend:#toast-container",
+        )
+        if focus_section == "skipped":
+            return (
+                _main_mod.get_next_skipped_focus_card(
+                    exclude_id=identity_id, nav_prefix=nav_prefix, community=_community_from_request(request)
+                ),
+                oob_toast,
+            )
+        return (
+            _main_mod.get_next_focus_card(
+                exclude_id=identity_id,
+                triage_filter=filter,
+                nav_prefix=nav_prefix,
+                community=_community_from_request(request),
+            ),
+            oob_toast,
+        )
+
+    return merge_toast
 
 
 @rt("/api/identity/{identity_id}/bulk-reject")
