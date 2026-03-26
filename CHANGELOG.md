@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.49] — 2026-03-26 (Session 138: Interactive Feedback + Refactor Phase 2)
+
+### Bug Fixes
+- **FB-006 (P0)**: Enable confirm for unidentified persons — removed _is_real_name blocks across 5 files (registry, identity_routes, main, person_routes, page_routes). User can now confirm clusters without naming first.
+- **FB-012**: Community filter + Load More pagination — apply filter BEFORE pagination slice so "Same community only" works with Load More.
+- **FB-013**: Rejected identities not filtered from neighbors — perf_cache.get_all_neighbors() didn't check negative_ids. Added filtering + cache invalidation on all reject/unreject paths.
+- **Track 1**: Mobile nav `|` separator filtered from hamburger menu clone. xfail rate-limit patches targeting correct module.
+- **Codex P1**: Increase neighbor fetch limit from 20 to 60 when community filter active.
+- **Codex P2**: Add invalidate_neighbors_cache() to reject-match, unreject, and bulk-reject endpoints.
+
+### Refactoring
+- **REFACTOR-001 Phase 2**: Extract 848 lines from main.py (10,638 → 9,790) to component modules:
+  - `app/components/cards.py` (699 lines): match_info_bar, face_card, identity_card_mini, neighbor_card, search_result_card, search_results_panel, _build_face_cards_for_entries, _face_pagination_controls
+  - `app/components/badges.py`: _cross_community_badge
+  - `app/components/nav.py`: _build_triage_bar
+
+### Feedback (13 items received)
+- 3 P0s fixed, 2 P1s fixed, 2 Codex findings fixed
+- 5 items logged to BACKLOG (FB-002/003/004/005/007/008/010)
+- 2 items need PRD (confirm vs identify workflow)
+
+### Infrastructure
+- Supabase upgraded to Pro ($25/mo) — deploy unblocked
+- Session 137 commits deployed (previously stuck on Supabase outage)
+
+### Tests
+- 3748 app tests pass
+
 ## [v0.99.48] — 2026-03-25 (Session 137: Overnight Parallel Refactor + Tests + Design)
 
 ### Refactoring

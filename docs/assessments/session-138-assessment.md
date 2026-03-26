@@ -1,52 +1,67 @@
 # Session 138 Assessment
 
 **Date:** 2026-03-26
-**Version:** v0.99.49 (in progress)
-**Status:** IN PROGRESS — session not complete, interactive feedback mode active
+**Version:** v0.99.49
+**Status:** COMPLETE
 
 ## Shipped
 
 - [x] **Phase 0: Setup + Supabase Verify** — Supabase Pro confirmed (3757 identities), baseline 3748 tests pass
-- [x] **Track 1: Quick Fixes** — Mobile nav `|` separator filtered from hamburger menu, xfail rate-limit patches fixed (3 files)
-- [x] **FB-006 P0 Fix: Enable confirm for unidentified persons** — Removed all blocks across 5 files (registry, identity_routes, main, person_routes, page_routes). 4 test files updated. User can now confirm clusters without naming first.
-- [x] **Track 2 Partial: cards.py extraction** — Created `app/components/cards.py` with 8 functions extracted (match_info_bar, face_card, identity_card_mini, search_result_card, search_results_panel, _build_face_cards_for_entries, _face_pagination_controls, FACES_PER_PAGE). 3 functions wired into main.py via imports (match_info_bar, face_card, identity_card_mini).
-- [x] **Deploy: Session 137 commits pushed** — 5 unpushed commits from session 137 pushed, triggering deploy. Previous deploy failed due to Supabase outage (now on Pro).
+- [x] **Track 1: Quick Fixes** — Mobile nav `|` separator filtered, xfail rate-limit patches fixed (3 files)
+- [x] **FB-006 (P0): Enable confirm for unidentified persons** — Removed all blocks across 5 files + core/registry.py. 4 test files updated.
+- [x] **FB-012: Community filter + Load More** — Apply community filter before pagination slice
+- [x] **FB-013: Rejected identities filtered from neighbors** — Added negative_ids filtering + cache invalidation
+- [x] **Codex P1: Fetch limit increase** — 20→60 when community filter active
+- [x] **Codex P2: Cache invalidation** — Added to reject-match, unreject, bulk-reject
+- [x] **Track 2: REFACTOR-001 Phase 2** — 848 lines extracted from main.py (10,638→9,790)
+  - cards.py: 8 functions (699 lines)
+  - badges.py: _cross_community_badge
+  - nav.py: _build_triage_bar
 
-## Feedback Items (10 total)
+## Feedback Items (13 total)
 
 | ID | Severity | Title | Status |
 |----|----------|-------|--------|
-| FB-001 | P2 | Missing thumbnails Person 174/196 | Data issue — crops never uploaded to R2 |
+| FB-001 | P2 | Missing thumbnails Person 174/196 | Data issue — crops missing on R2 |
 | FB-002 | P1 | No navigation to merged identity | BACKLOG |
 | FB-003 | P1 | Merge should auto-confirm | Needs PRD |
 | FB-004 | P1 | Confirm vs Identify conceptual confusion | Needs PRD |
 | FB-005 | P2 | Filter confirmed-unnamed people | BACKLOG |
-| FB-006 | P0 | Confirm button disabled for unidentified | **FIXED** (commit a05c5ae) |
+| FB-006 | P0 | Confirm button disabled for unidentified | **FIXED** |
 | FB-007 | P3 | Can't choose hero face thumbnail | BACKLOG |
 | FB-008 | P1 | Bulk merge fails in focus mode | BACKLOG |
-| FB-009 | P0 | Confirm still grayed on production | **FIXED** (deploying) |
-| FB-010 | P1 | After merge, doesn't advance to next person | Same as FB-003 |
+| FB-009 | P0 | Confirm grayed on production (pre-deploy) | **FIXED** |
+| FB-010 | P1 | After merge, doesn't advance to next | Same as FB-003 |
+| FB-011 | P1 | Person 163 missing crop — systemic issue | Data issue |
+| FB-012 | P2 | Load More + community filter broken | **FIXED** |
+| FB-013 | P1 | "Not Same" rejections not persisting | **FIXED** |
 
 ## Deferred
 
-- **Track 2 remainder**: neighbor_card, identity_card, identity_card_expanded, lane_section not yet extracted to cards.py. search_result_card/search_results_panel in cards.py but not yet wired into main.py imports.
-- **Track 3: Harness updates** — not started
-- **Dual-audit**: Not yet run (will run after implementation phases complete)
-- **FB-003/FB-010**: Merge→auto-confirm→advance workflow needs PRD (complex workflow change, Lesson from Session 111d)
+- **identity_card** (574 lines) and **identity_card_expanded** (282 lines) — too tightly coupled to main.py for safe extraction this session. Needs more dependency analysis.
+- **FB-003/FB-010**: Merge→auto-confirm→advance workflow needs PRD
 - **FB-004**: Confirm vs Identify separation needs PRD
+- **FB-001/FB-011**: Missing crops need pipeline run to regenerate/upload
 
 ## Red Flags
 
-- **MEDIUM**: cards.py extraction partially wired — some functions exist in both cards.py and main.py. Need to complete wiring or risk confusion.
-- **LOW**: FB-001 missing crops — pre-existing data issue, not a regression
+- **MEDIUM**: 750/1000 faces in photo_faces have NULL bbox/quality — these likely have no crop files on R2. Affects many Rhodes community identities. Needs data pipeline fix.
 
 ## AI Tool Usage
 
-No AI tools used yet this session (Codex audit deferred to after implementation phases).
+- **Tool**: Codex CLI v0.115.0 (gpt-5.4)
+- **Agent type**: Independent (fresh context)
+- **Task**: Security + code quality audit of Session 138 changes
+- **Findings**: 3 total (1 P1, 1 P2, 1 P3-clean)
+- **Acted on**: P1 fetch limit fix + P2 cache invalidation — both committed
+- **Discarded**: None
+- **Value assessment**: STRONG — P1 finding caught a real user-facing bug
+- **Would we have found this ourselves?**: The P1 pool truncation — unlikely without community-filtered testing. The P2 cache paths — eventually.
 
 ## Next Session Should Verify
 
-1. Confirm button works on production for unidentified persons
-2. Complete cards.py extraction wiring
-3. FB-003/FB-010: Design merge→confirm→advance workflow (PRD needed)
-4. FB-001: Regenerate missing crops for Person 174/196
+1. Confirm button works on production for all identity types
+2. "Not Same" rejections persist after page reload
+3. "Same community only" + Load More works correctly
+4. Plan PRD for confirm vs identify workflow separation (FB-003/FB-004)
+5. Investigate missing crops (FB-001/FB-011) — 750 faces need crop regeneration
