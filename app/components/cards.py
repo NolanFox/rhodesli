@@ -8,7 +8,7 @@ FACES_PER_PAGE.
 Uses lazy imports for app.main dependencies to avoid circular imports.
 """
 
-from fasthtml.common import A, Button, Div, Img, P, Span
+from fasthtml.common import A, Button, Div, Img, Input, NotStr, P, Span
 from urllib.parse import quote
 
 from app.components.badges import _confidence_tier_label, era_badge
@@ -438,4 +438,262 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
         Span(f"{start}-{end} of {total_faces}", cls="text-sm sm:text-xs text-slate-400 mx-2"),
         next_btn,
         cls="flex items-center justify-center gap-1 mt-3",
+    )
+
+
+def neighbor_card(
+    neighbor: dict,
+    target_identity_id: str,
+    crop_files: set,
+    show_checkbox: bool = True,
+    user_role: str = "admin",
+    from_focus: bool = False,
+    triage_filter: str = "",
+    focus_section: str = "",
+    target_name: str = "",
+    current_community: dict | None = None,
+    nav_prefix: str = "",
+    from_person_page: bool = False,
+) -> Div:
+    """Neighbor card for Similar Identities panel."""
+    import app.main as _m
+
+    neighbor_id = neighbor["identity_id"]
+    name = _m._sequential_display_name(ensure_utf8_display(neighbor["name"]))
+    if name.startswith("Unidentified Person "):
+        name = "Person " + name[len("Unidentified Person ") :]
+    distance = neighbor["distance"]
+    percentile = neighbor.get("percentile", 1.0)
+    confidence_gap = neighbor.get("confidence_gap", 0.0)
+
+    can_merge = neighbor["can_merge"]
+    face_count = neighbor.get("face_count", 0)
+    co_occurrence = neighbor.get("co_occurrence", 0)
+
+    from core.confidence import compute_face_confidence
+
+    _disc_conf = compute_face_confidence(distance)
+    similarity_label = _disc_conf["short_label"]
+    calibrated_pct = _disc_conf["confidence_pct"]
+
+    _similarity_classes = {
+        "Very High": "bg-emerald-500/30 text-emerald-300",
+        "High": "bg-emerald-500/20 text-emerald-400",
+        "Moderate": "bg-amber-500/20 text-amber-400",
+        "Low": "bg-amber-500/15 text-amber-500",
+        "Very Low": "bg-slate-600 text-slate-400",
+    }
+    similarity_class = _similarity_classes.get(similarity_label, "bg-slate-600 text-slate-400")
+
+    _focus_filter = f"&filter={triage_filter}" if triage_filter else ""
+    _focus_section = f"&focus_section={focus_section}" if focus_section else ""
+    focus_suffix = f"?from_focus=true{_focus_filter}{_focus_section}" if from_focus else ""
+    _person_page_suffix = "&from_person_page=true" if from_person_page else ""
+    if from_focus and focus_section == "skipped":
+        merge_target = "#skipped-focus-container"
+    elif from_focus:
+        merge_target = "#focus-container"
+    elif from_person_page:
+        merge_target = f"#neighbor-{neighbor_id}"
+    else:
+        merge_target = f"#identity-{target_identity_id}"
+    merge_swap = "outerHTML"
+    if not can_merge:
+        if user_role == "admin" and neighbor.get("merge_blocked_reason") == "co_occurrence":
+            _preview_params = []
+            if from_focus:
+                _preview_params.append("from_focus=true")
+                if triage_filter:
+                    _preview_params.append(f"filter={triage_filter}")
+                if focus_section:
+                    _preview_params.append(f"focus_section={focus_section}")
+            if from_person_page:
+                _preview_params.append("from_person_page=true")
+            _preview_qs = f"?{'&'.join(_preview_params)}" if _preview_params else ""
+            merge_btn = Div(
+                Button(
+                    "Override \u26a0\ufe0f",
+                    cls="px-3 py-1 text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white rounded",
+                    hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/co-occurrence-preview/{neighbor_id}{_preview_qs}",
+                    hx_target=f"#override-preview-{neighbor_id}",
+                    hx_swap="innerHTML",
+                    title=f"Override: {neighbor.get('merge_blocked_reason_display', 'Same photo')}",
+                    aria_label="Show co-occurrence photo preview before override",
+                ),
+                Div(id=f"override-preview-{neighbor_id}"),
+            )
+        else:
+            merge_btn = Button(
+                "Blocked",
+                cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed",
+                disabled=True,
+                title=neighbor.get("merge_blocked_reason_display"),
+            )
+    elif user_role == "contributor":
+        merge_btn = Button(
+            "Suggest Merge",
+            cls="px-3 py-1 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/suggest-merge/{neighbor_id}",
+            hx_target=f"#neighbor-{neighbor_id}",
+            hx_swap="outerHTML",
+            data_auth_action="suggest a merge",
+        )
+    else:
+        _merge_label = (
+            f"Merge \u2192 {target_name}" if target_name and not target_name.startswith("Unidentified") else "Merge"
+        )
+        _confirm_msg = (
+            f"Merge {name} into {target_name}? All faces will be combined."
+            if target_name and not target_name.startswith("Unidentified")
+            else "Merge these identities? This can be undone."
+        )
+        _merge_url_suffix = focus_suffix
+        if from_person_page and not _merge_url_suffix:
+            _merge_url_suffix = "?from_person_page=true"
+        elif from_person_page:
+            _merge_url_suffix += "&from_person_page=true"
+        _merge_btn_attrs = {
+            "hx_post": f"{nav_prefix}/api/identity/{target_identity_id}/merge/{neighbor_id}{_merge_url_suffix}",
+            "hx_target": merge_target,
+            "hx_swap": merge_swap,
+            "hx_disabled_elt": "this",
+            "data_auth_action": "merge these identities",
+            "title": f"Merge {name} into {target_name}" if target_name else "Merge these identities",
+        }
+        if from_focus:
+            _merge_btn_attrs["hx_push_url"] = "false"
+        if not from_focus:
+            _merge_btn_attrs["hx_confirm"] = _confirm_msg
+        merge_btn = Button(
+            _merge_label,
+            cls="px-3 py-1 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50",
+            **_merge_btn_attrs,
+            **{"_": "on click put 'Merging...' into me"},
+        )
+
+    _compare_filter = f"?filter={triage_filter}" if triage_filter else ""
+    compare_btn = Button(
+        "Compare",
+        cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+        hx_get=f"{nav_prefix}/api/identity/{target_identity_id}/compare/{neighbor_id}{_compare_filter}",
+        hx_target="#compare-modal-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #compare-modal"},
+        type="button",
+    )
+
+    thumbnail_img = Div(cls="w-16 h-16 sm:w-20 sm:h-20 bg-slate-600 rounded")
+    anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
+    crop_url = None
+    best_fid = _m.get_best_face_id(anchor_face_ids) if anchor_face_ids else None
+    if best_fid:
+        crop_url = _m.resolve_face_image_url(best_fid, crop_files)
+    if not crop_url:
+        for fid in anchor_face_ids:
+            crop_url = _m.resolve_face_image_url(fid, crop_files)
+            if crop_url:
+                break
+    if crop_url:
+        thumbnail_img = Img(
+            src=crop_url,
+            alt=name,
+            cls="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded border border-slate-600 hover:scale-105 transition-transform",
+            loading="lazy",
+        )
+
+    checkbox = (
+        Input(
+            type="checkbox",
+            cls="visible-bulk-cb w-4 h-4 rounded border-slate-500 bg-slate-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
+            **{"_": f"on change set #bulk-{neighbor_id}.checked to my.checked"},
+        )
+        if (show_checkbox and can_merge)
+        else None
+    )
+
+    neighbor_section = _section_for_state(neighbor.get("state", "INBOX"))
+
+    _cross_slug = _m._identity_home_community_slug(neighbor_id, current_community)
+    if _cross_slug:
+        _nav_prefix = _m.community_url_prefix(_cross_slug)
+    else:
+        _community_slug = current_community.get("slug") if current_community else None
+        _nav_prefix = nav_prefix or _m.community_url_prefix(_community_slug)
+
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-indigo-400 to target then wait 1.5s then remove .ring-2 .ring-indigo-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
+
+    return Div(
+        Div(
+            checkbox,
+            A(
+                thumbnail_img,
+                href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                cls="flex-shrink-0 cursor-pointer hover:opacity-80",
+                **{"_": nav_script},
+            ),
+            Div(
+                Div(
+                    A(
+                        name,
+                        href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                        cls="font-medium text-slate-200 hover:text-indigo-400 hover:underline cursor-pointer text-sm leading-tight",
+                        **{"_": nav_script},
+                    ),
+                    Span(
+                        f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label,
+                        cls=f"text-sm sm:text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
+                    ),
+                    _m._cross_community_badge(neighbor_id, current_community),
+                    cls="flex items-center flex-wrap gap-1",
+                ),
+                Div(
+                    Span(
+                        f"Dist: {distance:.2f}",
+                        cls="text-sm sm:text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded",
+                    ),
+                    _confidence_tier_label(distance),
+                    Span(
+                        f"+{confidence_gap}% gap",
+                        cls="text-sm sm:text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded",
+                    )
+                    if confidence_gap > 0
+                    else None,
+                    Span(
+                        f"Seen together in {co_occurrence} photo{'s' if co_occurrence != 1 else ''}",
+                        cls="text-[10px] text-amber-400 italic ml-1",
+                    )
+                    if co_occurrence > 0 and not neighbor.get("has_shared_faces")
+                    else None,
+                    Span(
+                        f"Shares {neighbor.get('shared_face_count', 0)} face{'s' if neighbor.get('shared_face_count', 0) != 1 else ''} — merge recommended",
+                        cls="text-[10px] text-red-400 font-bold italic ml-1",
+                    )
+                    if neighbor.get("has_shared_faces")
+                    else None,
+                    cls="flex items-center flex-wrap",
+                ),
+                cls="flex-1 min-w-0 ml-3",
+            ),
+            Div(
+                compare_btn,
+                merge_btn,
+                Button(
+                    "Not Same",
+                    cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+                    hx_post=f"{_nav_prefix}/api/identity/{target_identity_id}/reject/{neighbor_id}",
+                    hx_target=f"#neighbor-{neighbor_id}",
+                    hx_swap="outerHTML",
+                ),
+                share_button(
+                    url=f"{_nav_prefix}/identify/{target_identity_id}/match/{neighbor_id}",
+                    style="icon",
+                    title="Are these the same person?",
+                    text=f"Help identify: {name}",
+                ),
+                cls="flex items-center gap-1 sm:gap-2 flex-shrink-0 sm:ml-2 mt-2 sm:mt-0",
+            ),
+            cls="flex flex-wrap sm:flex-nowrap items-center gap-2",
+        ),
+        id=f"neighbor-{neighbor_id}",
+        cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg overflow-hidden",
     )

@@ -65,6 +65,7 @@ from app.components.cards import (  # noqa: F401
     match_info_bar,
     face_card,
     identity_card_mini,
+    neighbor_card,
     search_result_card,
     search_results_panel,
     _build_face_cards_for_entries,
