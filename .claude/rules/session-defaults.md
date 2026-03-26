@@ -38,20 +38,37 @@ make test-fast  # Baseline
 ```
 Create session log immediately.
 
-### Post-Merge Checker Subagent (R1 — Session 133 research)
-After merging parallel worktrees or completing major implementation:
-- Launch a **checker subagent** on the merged code (not during implementation)
-- Checker reviews: auth guards on new POST routes, data integrity (face-identity mappings),
-  test coverage delta (new code has tests), no hardcoded paths leaked
-- This is a Claude subagent for speed — reserve Codex for security-sensitive sessions
+### Dual-Audit Protocol (MANDATORY after every phase) — HD-030, Session 137
+After completing each implementation phase (not at session end — after EACH phase):
 
-### Codex Audit Strategy (R3 — Session 133 research)
-- **Security-sensitive sessions** (auth, data migration, uploads): Fresh Codex audit (independent, no prior context)
-- **UX polish sessions**: Resume-style audit (Codex sees prior findings, tracks fixes)
-- Run as background subagent during implementation
-- Write findings to `docs/session_context/session-NN-codex-audit.md`
-- Triage: P0/P1 fix immediately, quick wins implement, rest BACKLOG
-- Log ALL audit tool usage per `.claude/rules/ai-tool-audit.md`
+1. **Codex CLI audit** (independent, fresh context):
+   ```bash
+   codex exec --full-auto "Audit [changed files]. Security, code quality, test quality. P0/P1/P2/P3 report."
+   ```
+2. **Claude Code reviews** the Codex findings:
+   - P0/P1: fix immediately before next phase
+   - P2: fix if quick (<5 min), otherwise BACKLOG with justification
+   - P3: note in session log, no action required
+   - **Claude may REJECT** Codex suggestions with written reasoning (e.g., "false positive because X")
+3. **Iterate** if fixes introduce new issues — re-run Codex on the fixes
+4. **Save** to `docs/session_context/session-NN-codex-audit.md` with provenance header:
+   ```
+   **Auditor**: Codex CLI v0.115.0 (model)
+   **Agent type**: Independent (fresh context)
+   **Phase**: [which phase was audited]
+   **Date**: [ISO date]
+   ```
+5. Log ALL audit tool usage per `.claude/rules/ai-tool-audit.md`
+
+**Why both**: Claude finds design/structural issues. Codex finds runtime/behavioral issues.
+Session 137 proved neither catches what the other does. The cost is ~5 min per phase.
+
+### Post-Merge Checker Subagent (R1 — Session 133 research)
+After merging parallel worktrees:
+- Launch a **checker subagent** on the merged code
+- Checker reviews: auth guards on new POST routes, data integrity,
+  test coverage delta, no hardcoded paths leaked
+- This is a Claude subagent for speed, supplementing (not replacing) Codex
 
 ### Parallelization Decision (R4 — Session 133 research)
 **Parallel** (subagents + worktrees): independent bug fixes, test writing, docs + code simultaneously

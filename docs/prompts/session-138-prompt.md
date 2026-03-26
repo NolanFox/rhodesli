@@ -1,10 +1,11 @@
 # Session 138: Refactor Phase 2 + Quick Fixes + Harness
 
 ## Context
-Supabase upgraded to Pro ($25/mo). Deploy is unblocked.
+Supabase upgraded to Pro ($25/mo). Deploy should be unblocked.
 See `docs/session_context/session-138-context.md` for full research, dependency maps, and audit comparison.
+**New harness rule**: Codex CLI audit is mandatory after EVERY phase (see `.claude/rules/session-defaults.md` Dual-Audit Protocol).
 
-## Session Setup
+## Phase 0: Verify Supabase + Setup (DO FIRST)
 ```bash
 echo "138" > .claude/current_session.txt
 echo "implementation" > .claude/session_mode.txt
@@ -12,7 +13,19 @@ source venv/bin/activate
 make test-fast  # Baseline (~3748 tests)
 ```
 
-## Track 1: Quick Fixes from Codex CLI Audit (do first)
+Then confirm Supabase is working:
+```bash
+python3 -c "
+from dotenv import load_dotenv; load_dotenv()
+from app.supabase_data import get_supabase_client
+client = get_supabase_client()
+result = client.table('identities').select('identity_id', count='exact').limit(1).execute()
+print(f'Supabase OK: {result.count} identities')
+"
+```
+If this fails, STOP and tell the user. Do not proceed with implementation until Supabase is confirmed working.
+
+## Track 1: Quick Fixes from Codex CLI Audit (do second)
 **5-10 minutes. Fix before refactoring.**
 
 1. **Mobile nav `|` separator** (P3-1): In `app/components/nav.py:257`, filter out `Span` elements before mobile nav clone. The `_public_nav_links()` separator `Span("|")` renders as a clickable link in mobile menu.
@@ -82,25 +95,25 @@ def face_card(face_id, ...):
 1. Commit `ai-tool-audit.md` update (model + agent type tracking) — already staged
 2. Verify worktree cleanup (Session 137 branches deleted)
 
-## Codex CLI Audit (MANDATORY)
-After Track 2 completes, run:
-```bash
-codex exec --full-auto "Audit app/components/cards.py for: security (XSS in rendered HTML), code quality (lazy imports correct, no circular deps), re-exports in main.py match. P0/P1/P2/P3 report."
-```
-Save to `docs/session_context/session-138-codex-audit.md` with provenance header:
-```markdown
-**Auditor**: Codex CLI v0.115.0 (gpt-5.4)
-**Agent type**: Independent (fresh context)
-**Scope**: [what was reviewed]
-**Date**: [ISO date]
-```
+## Dual-Audit Protocol (MANDATORY — after EACH phase)
+Per `.claude/rules/session-defaults.md` HD-030:
+
+After Track 1 AND after Track 2, run the dual-audit cycle:
+1. **Codex CLI** (independent): `codex exec --full-auto "Audit [changed files]. P0/P1/P2/P3."`
+2. **Claude reviews** Codex findings: fix P0/P1, evaluate P2, note P3
+3. **Claude may reject** Codex suggestions with reasoning
+4. **Iterate** if fixes introduce new issues
+5. **Save** to `docs/session_context/session-138-codex-audit.md` with provenance header
+
+This is NOT optional. Session 137 proved Claude and Codex find different categories of bugs.
 
 ## Session End Checklist
-- [ ] Track 1: Quick fixes from Codex audit
-- [ ] Track 2: cards.py extracted, main.py reduced
+- [ ] Phase 0: Supabase verified working
+- [ ] Track 1: Quick fixes from Codex audit + dual-audit cycle
+- [ ] Track 2: cards.py extracted, main.py reduced + dual-audit cycle
 - [ ] Track 3: Harness updates committed
 - [ ] `make test-fast` passes on final state
-- [ ] Codex CLI audit saved with provenance
+- [ ] Codex CLI audit(s) saved with provenance
 - [ ] Assessment with AI Tools section (provenance for ALL tools used)
 - [ ] CHANGELOG (v0.99.49), ROADMAP, BACKLOG, SESSION_HISTORY updated
 - [ ] `git push origin main`
