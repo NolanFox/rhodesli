@@ -595,7 +595,17 @@ def get(
     else:
         _community_filter_applied_early = False
 
-    # Determine if more neighbors exist beyond current page (AFTER community filter)
+    # Session 138 FB-013: Filter out rejected identities (negative_ids).
+    # perf_cache.get_all_neighbors doesn't check negative_ids, so we filter here.
+    try:
+        target_identity = registry.get_identity(identity_id)
+        negative_ids = set(target_identity.get("negative_ids", []))
+        if negative_ids:
+            all_neighbors = [n for n in all_neighbors if f"identity:{n['identity_id']}" not in negative_ids]
+    except KeyError:
+        pass
+
+    # Determine if more neighbors exist beyond current page (AFTER community + rejection filter)
     has_more = len(all_neighbors) > offset + limit
 
     # Return only neighbors up to current offset + limit
@@ -1920,6 +1930,10 @@ def post(source_id: str, target_id: str, sess=None, request=None):
     # Record rejection
     registry.reject_identity_pair(source_id, target_id, user_source="web")
     _main_mod.save_registry(registry, changed_ids={source_id, target_id})
+
+    # Session 138 FB-013: Invalidate neighbors cache so rejected identity won't reappear
+    invalidate_neighbors_cache(source_id)
+    invalidate_neighbors_cache(target_id)
 
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
