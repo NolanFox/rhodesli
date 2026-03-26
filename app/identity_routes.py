@@ -572,15 +572,34 @@ def get(
         cache_hit=cache_hit,
     )
 
-    # Determine if more neighbors exist beyond current page
+    # FB-038: For Load More (offset > 0), only return NEW cards (not already-shown ones)
+    is_incremental = offset > 0
+
+    # Session 138 FB-012: Apply community filter BEFORE pagination so Load More works correctly.
+    # Previously, community filter was applied after slicing, causing Load More to return empty
+    # results when "Same community only" was selected.
+    current_community = getattr(request.state, "community", None) if request else None
+    comm_ids = _main_mod._get_community_identity_ids(current_community) if current_community else None
+    if comm_ids is not None:
+        for n in all_neighbors:
+            n["_same_community"] = n["identity_id"] in comm_ids
+        if community_filter == "same":
+            all_neighbors = [n for n in all_neighbors if n.get("_same_community", False)]
+        elif community_filter == "cross":
+            all_neighbors = [n for n in all_neighbors if not n.get("_same_community", False)]
+        elif community_filter == "all":
+            pass
+        else:
+            all_neighbors.sort(key=lambda n: (0 if n.get("_same_community", False) else 1, n.get("distance", 999)))
+        _community_filter_applied_early = True
+    else:
+        _community_filter_applied_early = False
+
+    # Determine if more neighbors exist beyond current page (AFTER community filter)
     has_more = len(all_neighbors) > offset + limit
 
     # Return only neighbors up to current offset + limit
     neighbors = all_neighbors[: offset + limit]
-
-    # FB-038: For Load More (offset > 0), only return NEW cards (not already-shown ones)
-    # The new cards will be appended via outerHTML on the Load More button
-    is_incremental = offset > 0
 
     # Enhance neighbor data with additional info for UI
     photo_registry = _main_mod.load_photo_registry()
@@ -631,26 +650,8 @@ def get(
             filtered_neighbors.append(n)
     neighbors = filtered_neighbors
 
-    # FB-011: Community-aware sorting/filtering for Similar Identities
-    current_community = getattr(request.state, "community", None) if request else None
-    comm_ids = _main_mod._get_community_identity_ids(current_community) if current_community else None
-    if comm_ids is not None:
-        # Tag each neighbor with community membership for sorting
-        for n in neighbors:
-            n["_same_community"] = n["identity_id"] in comm_ids
-
-        if community_filter == "same":
-            # Show only same-community matches
-            neighbors = [n for n in neighbors if n.get("_same_community", False)]
-        elif community_filter == "cross":
-            # Show only cross-community matches
-            neighbors = [n for n in neighbors if not n.get("_same_community", False)]
-        elif community_filter == "all":
-            # Keep original distance order — no reordering
-            pass
-        else:
-            # Default: sort same-community first, preserve distance order within groups
-            neighbors.sort(key=lambda n: (0 if n.get("_same_community", False) else 1, n.get("distance", 999)))
+    # FB-011: Community-aware sorting/filtering — already applied early (Session 138 FB-012)
+    # current_community already set above for early community filter
 
     # Count rejected identities for contextual recovery indicator
     identity = registry.get_identity(identity_id)
