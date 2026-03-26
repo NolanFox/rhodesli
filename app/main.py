@@ -3840,9 +3840,17 @@ def _compute_sidebar_counts(registry, community=None) -> dict:
     # Count discoveries (high-confidence matches to confirmed identities)
     discovery_count = _count_discoveries(registry, community_identity_ids=community_identity_ids)
 
+    # Compute named/unidentified breakdown for confirmed identities
+    from core.registry import IdentityRegistry as _IR
+
+    confirmed_named = len([i for i in confirmed_list if _IR._is_real_name(i.get("name"))])
+    confirmed_unidentified = len(confirmed_list) - confirmed_named
+
     return {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
+        "confirmed_named": confirmed_named,
+        "confirmed_unidentified": confirmed_unidentified,
         "skipped": len(skipped_list),
         "rejected": len(dismissed),
         "photos": photo_count,
@@ -5510,6 +5518,16 @@ def sidebar(
                     cls="sidebar-label px-3 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1",
                 ),
                 nav_item(f"{prefix}/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
+                # Named/unidentified breakdown (only when both exist)
+                Div(
+                    Span(
+                        f"{counts['confirmed_named']} named · {counts['confirmed_unidentified']} unidentified",
+                        cls="text-[10px] text-slate-500",
+                    ),
+                    cls="sidebar-label pl-10 -mt-1 mb-1",
+                )
+                if counts.get("confirmed_unidentified", 0) > 0
+                else "",
                 nav_item(f"{prefix}/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
                 cls="mb-3",
             ),
