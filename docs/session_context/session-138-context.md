@@ -8,52 +8,77 @@
 - 1,127 lines extracted from main.py (11,765 → 10,638)
 - 68 new ML tests (658 total), 13 xfail TOOLS-005 skeletons
 - Flaky xdist cache reset expansion (30+ caches)
-- Codex CLI audit: 0 P0, 2 P1 (both fixed), 5 P2 (3 fixed, 2 deferred)
+- Dual audit: Claude subagent (Opus 4.6) + Codex CLI (gpt-5.4)
 
-## What Session 137 Did NOT Do
-- **cards.py**: `identity_card` (line 9647), `identity_card_expanded` (line 5748), `neighbor_card` (line 8884), `face_card` (line 8696), `match_info_bar` (line 8822), `lane_section` (line 10303) — all tightly coupled to main.py state
-- **photo.py**: `_build_ai_analysis_section` (line 2975, ~436 lines), `_build_face_alignment_section` (line 3493, ~219 lines) — largest single functions, worktree persistence issues
-- **Also not extracted**: `_cross_community_badge` (line 814, ~51 lines), `_build_triage_bar` (line 3792, ~58 lines), `neighbors_sidebar` (line 9291)
-- main.py target was ≤6,500 lines — achieved 10,638 (4,138 lines over target)
+## Audit Comparison (Session 137)
+| Aspect | Claude Subagent | Codex CLI |
+|--------|----------------|-----------|
+| Model | Claude Opus 4.6 | gpt-5.4 |
+| Independence | NO (shared context) | YES (fresh) |
+| Unique findings | Duplicate function, brittle cache reset | cwd-relative regression, wrong patch target, mobile `|` |
+| Reproduced issues | No | Yes (DATA_DIR, mobile `|`) |
+| Value | MODERATE | STRONG |
 
-## Phase 2 Strategy: Parameter Injection Pattern
-Functions that reference main.py globals need their dependencies injected as parameters:
-```python
-# Instead of:
-def identity_card(identity, crop_files, ...):
-    photo_id = get_photo_id_for_face(...)  # main.py global
+**Key insight**: Claude finds design issues, Codex finds runtime issues. Use both.
 
-# Extract as:
-def identity_card(identity, crop_files, *, get_photo_id_for_face=None, ...):
-    if get_photo_id_for_face is None:
-        from app.main import get_photo_id_for_face
-    ...
-```
-This avoids circular imports while allowing test injection.
+## Phase 2 Detailed Scope (from research agent)
 
-## Key Dependencies to Map
-| Function | main.py globals used |
-|---|---|
-| identity_card | get_crop_url, resolve_face_image_url, get_best_face_id, _cross_community_badge |
-| neighbor_card | match_info_bar, _confidence_tier_label, get_crop_url |
-| face_card | resolve_face_image_url, get_face_quality |
-| _build_ai_analysis_section | _evidence_card (already extracted), _detective_evidence_section (already extracted) |
-| _build_face_alignment_section | get_photo_url, _photo_cache |
+### cards.py — 7 functions + 4 helpers (~2,077 lines)
 
-## xpassed Tests Finding
-The 2 xpassed tests only appear under xdist parallelization (cache bleed from other tests). When run alone, all 15 are xfail. Not a real feature implementation — it's a test isolation artifact. No fix needed beyond documentation.
+| Function | Lines | Start | Dependencies | Risk |
+|---|---|---|---|---|
+| identity_card | 574 | 9647 | get_best_face_id, resolve_face_image_url, _sequential_display_name, _cross_community_badge | HIGH |
+| identity_card_expanded | 287 | 5748 | get_best_face_id, resolve_face_image_url, _sequential_display_name | MEDIUM |
+| neighbor_card | 279 | 8884 | match_info_bar, compute_face_confidence, share_button | MEDIUM |
+| face_card | 126 | 8696 | resolve_face_image_url, get_face_quality | LOW |
+| identity_card_mini | 55 | 6035 | get_best_face_id, resolve_face_image_url, state_badge | LOW |
+| search_result_card | 101 | 9163 | match_info_bar, compute_face_confidence, share_button | LOW |
+| match_info_bar | 20 | 8822 | _confidence_tier_label (already in badges.py) | LOW |
 
-## Harness Improvements Needed
-Per user feedback in Session 137:
-1. AI tool audit must track **model** and **agent type** (independent vs resume) — DONE in ai-tool-audit.md
-2. Codex CLI (not Claude subagent) for audits — ensures independent review
-3. Provenance tracking is mandatory in all audit artifacts
+Helpers: `_build_face_cards_for_entries` (39 lines), `_face_pagination_controls` (52 lines)
+
+### photo.py — render_photos_section (611 lines)
+
+| Function | Lines | Start | Dependencies | Risk |
+|---|---|---|---|---|
+| render_photos_section | 611 | 7795 | _photo_cache, _face_to_photo_cache, _get_community_photo_ids, section_header | HIGH |
+
+### Module-Level Globals Referenced
+- `_photo_cache` — photo metadata dict
+- `_face_to_photo_cache` — face→photo ID mapping
+- `FACES_PER_PAGE` — pagination constant
+- `_build_caches()` — lazy cache init
+
+### _main_mod Call Sites (20+ total)
+- `identity_routes.py` — 13 calls
+- `page_routes.py` — 5 calls
+- `photo_routes.py` — 2 calls
+
+## Codex CLI Findings to Address in Session 138
+
+### P2-1: DATA_DIR cwd-relative — FIXED in Session 137
+- Used `is_absolute()` check + `__file__`-relative fallback
+
+### P2-2: xfail tests patch wrong rate-limit symbol
+- Patch `app.rate_limit.check_rate_limit` but route imports alias
+- **Fix**: Change to `app.estimate_routes.check_rate_limit`
+
+### P2-3: Placeholder test assertions
+- Some xfail tests assert wrong things (gedcom_context vs text_hints)
+- **Action**: Fix when implementing TOOLS-005, not now
+
+### P3-1: Mobile nav renders clickable `|` separator
+- `_public_nav_links()` includes `Span("|")`, mobile clone makes it an anchor
+- **Fix**: Filter Span elements in mobile nav clone
+
+## xpassed Tests
+Confirmed: 0 xpassed when run alone. The 2 xpassed under xdist are cache-bleed artifacts. No fix needed.
 
 ## Supabase Status
-Egress exceeded, grace period until 2026-04-13. All work must be Supabase-independent until restored or upgraded to Pro ($25/mo).
+User upgrading to Pro ($25/mo) to restore service immediately. Session 138 can deploy.
 
 ## Cross-references
 - BACKLOG: REFACTOR-001 (in progress, Phase 2)
 - PRD: docs/prds/056_mainpy_refactoring.md
-- AD: None needed (mechanical refactor, no algorithmic decisions)
+- Audit: docs/session_context/session-137-codex-audit.md
 - Lessons: 88 (monolithic app prevents parallel worktrees)
