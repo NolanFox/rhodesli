@@ -1397,7 +1397,7 @@ def public_person_page(
                             ),
                             A(
                                 "Edit in Admin",
-                                href=f"{workstation_prefix}/?section={_section_for_state(state)}&view=browse#identity-{person_id}",
+                                href=f"{workstation_prefix}/?section={_section_for_state(state)}&view=focus&current={person_id}",
                                 cls="text-sm sm:text-xs text-indigo-400 hover:text-white",
                                 data_testid="edit-in-admin-link",
                             ),
