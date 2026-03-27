@@ -646,20 +646,18 @@ def get(sess):
                     const accessToken = params.get('access_token');
 
                     if (accessToken) {
-                        fetch('/auth/session', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({access_token: accessToken})
-                        }).then(r => r.json()).then(data => {
-                            if (data.success) {
-                                // Redirect to server-provided return URL or default community
-                                window.location.href = data.redirect_to || '/c/rhodes/';
-                            } else {
-                                window.location.href = '/login?error=oauth_failed';
-                            }
-                        }).catch(() => {
-                            window.location.href = '/login?error=oauth_failed';
-                        });
+                        // Use form POST instead of fetch to ensure cookie is set
+                        // on the redirect response (fetch + redirect has cookie issues)
+                        var form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/auth/session';
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'access_token';
+                        input.value = accessToken;
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
                     } else {
                         window.location.href = '/login?error=oauth_failed';
                     }
@@ -676,27 +674,29 @@ def get(sess):
 
 
 @rt("/auth/session")
-async def post(request, sess):
-    """Create session from OAuth access token."""
-    try:
-        data = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid request"}, status_code=400)
+async def post(access_token: str = "", request=None, sess=None):
+    """Create session from OAuth access token. Accepts form POST or JSON."""
+    # Support both form data (new) and JSON (legacy)
+    if not access_token and request:
+        try:
+            data = await request.json()
+            access_token = data.get("access_token", "")
+        except Exception:
+            pass
 
-    access_token = data.get("access_token")
     if not access_token:
-        return JSONResponse({"error": "No token"}, status_code=400)
+        return RedirectResponse("/login?error=no_token", status_code=303)
 
     user, error = await _main_mod.get_user_from_token(access_token)
     if user:
         sess["auth"] = user
         # Submit any pending annotation stashed before OAuth login
         _main_mod._submit_pending_annotation(sess, user)
-        # Return the saved return URL for client-side redirect
+        # Redirect to saved return URL or default community
         return_to = sess.pop("login_return_to", "/c/rhodes/")
-        return JSONResponse({"success": True, "redirect_to": return_to})
+        return RedirectResponse(return_to, status_code=303)
     else:
-        return JSONResponse({"error": error or "Failed to get user"}, status_code=401)
+        return RedirectResponse("/login?error=oauth_failed", status_code=303)
 
 
 @rt("/auth/exchange-code")
