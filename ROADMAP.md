@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.51 · ~4438 tests (3780 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.52 · ~4471 tests (3813 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -91,7 +91,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
 - [x] 2026-03-17: AUDIT-001: Audit logging foundation — 22 audit_log calls across route files, new app/audit.py. Remaining: entity timelines on `/person` + `/photo`, canonical actor fields. See `docs/BACKLOG.md`.
-- [-] 2026-03-26: REFACTOR-001: main.py refactoring — Phase 1 (Session 137): 1,127 lines. Phase 2 (Session 138): 848 lines (cards.py, badges, nav). Total: 1,975 lines extracted, main.py at 9,790. Remaining: identity_card (574), identity_card_expanded (282), photo.py. PRD-056, DD-017.
+- [x] 2026-03-26: REFACTOR-001: main.py refactoring — Phase 1 (Session 137): 1,127 lines. Phase 2 (Session 138): 848 lines. Phase 3 (Session 141): 937 lines (identity_card, identity_card_expanded). Total: 2,912 lines extracted, main.py at 8,930. Remaining: photo.py routes. PRD-056, DD-017.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -133,6 +133,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-26: **v0.99.52 — Session 141**: Fix Sprint + Refactor + Hardening. 5 parallel tracks. Track A: structural test for _main_mod refs (prevents auth-style regressions) + FB-002 merge toast link. Track B: FB-007 hero face picker (primary_face_id + admin star button + endpoint). Track C: heapq.nsmallest focus sort + parallel cold start. Track D: REFACTOR-001 Phase 3 — identity_card extraction (937 lines, main.py 9867→8930). Track E: PRD-058 merge auto-confirm analysis. 33 new tests. 3813 app tests pass.
 
 - [x] 2026-03-27: **v0.99.51 — Session 140**: P0 Auth Fix + OAuth Redirect. All auth operations (OAuth, login, signup, password reset) broken since Session 90b — re-exported 7 auth functions. OAuth redirect changed from fetch()+JS to form POST→303 (Lesson 158). Root page shows logged-in state. Codex audit: all 180 _main_mod refs clean. 3780 tests pass.
 
