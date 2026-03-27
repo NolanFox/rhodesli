@@ -29,7 +29,12 @@ def get(sess, next: str = ""):
     if not _main_mod.is_auth_enabled():
         return RedirectResponse("/", status_code=303)
     if sess.get("auth"):
-        return RedirectResponse(next or "/", status_code=303)
+        # Already logged in — redirect to where they wanted to go, or default community
+        redirect_to = next if (next and next.startswith("/") and not next.startswith("//")) else "/c/rhodes/"
+        return RedirectResponse(redirect_to, status_code=303)
+    # Save return URL in server session for post-OAuth redirect
+    if next and next.startswith("/") and not next.startswith("//"):
+        sess["login_return_to"] = next
 
     # Build POST action with ?next= if provided (URL-encode to prevent attribute injection)
     from urllib.parse import quote as _url_quote
@@ -647,10 +652,8 @@ def get(sess):
                             body: JSON.stringify({access_token: accessToken})
                         }).then(r => r.json()).then(data => {
                             if (data.success) {
-                                // Redirect to the page they came from, or default community
-                                var returnTo = sessionStorage.getItem('login_return_to') || '/c/rhodes/';
-                                sessionStorage.removeItem('login_return_to');
-                                window.location.href = returnTo;
+                                // Redirect to server-provided return URL or default community
+                                window.location.href = data.redirect_to || '/c/rhodes/';
                             } else {
                                 window.location.href = '/login?error=oauth_failed';
                             }
@@ -689,7 +692,9 @@ async def post(request, sess):
         sess["auth"] = user
         # Submit any pending annotation stashed before OAuth login
         _main_mod._submit_pending_annotation(sess, user)
-        return JSONResponse({"success": True})
+        # Return the saved return URL for client-side redirect
+        return_to = sess.pop("login_return_to", "/c/rhodes/")
+        return JSONResponse({"success": True, "redirect_to": return_to})
     else:
         return JSONResponse({"error": error or "Failed to get user"}, status_code=401)
 

@@ -630,7 +630,7 @@ def _community_landing_page(community: dict, slug: str):
     )
 
 
-def _platform_root_page(auth_enabled: bool = False):
+def _platform_root_page(auth_enabled: bool = False, sess=None):
     """Render a neutral platform root with explicit archive choices."""
     from app.supabase_data import get_community_by_slug, load_communities
 
@@ -750,13 +750,23 @@ def _platform_root_page(auth_enabled: bool = False):
         A("About", href="/about", cls="text-slate-200 hover:text-white transition-colors"),
     ]
     if auth_enabled:
-        nav_items.append(
-            A(
-                "Sign In",
-                href="/login",
-                cls="inline-flex items-center px-4 py-2 border border-amber-700/60 text-amber-200 hover:text-amber-100 hover:bg-amber-900/20 rounded-lg transition-colors",
+        user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        if user:
+            nav_items.append(
+                A(
+                    "Go to Archive",
+                    href="/c/rhodes/",
+                    cls="inline-flex items-center px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors font-medium",
+                )
             )
-        )
+        else:
+            nav_items.append(
+                A(
+                    "Sign In",
+                    href="/login",
+                    cls="inline-flex items-center px-4 py-2 border border-amber-700/60 text-amber-200 hover:text-amber-100 hover:bg-amber-900/20 rounded-lg transition-colors",
+                )
+            )
 
     return (
         Title("Rhodesli — Community Archives"),
@@ -2289,7 +2299,7 @@ def get(
         else:
             return (
                 HttpHeader("Cache-Control", "public, s-maxage=120, max-age=60"),
-                _platform_root_page(auth_enabled=_main_mod.is_auth_enabled()),
+                _platform_root_page(auth_enabled=_main_mod.is_auth_enabled(), sess=sess),
             )
 
     user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
