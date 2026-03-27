@@ -45,16 +45,82 @@ logger = logging.getLogger(__name__)
 def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
     """Get all unique photos containing any of the given identities.
 
+    Reads from Supabase (source of truth) for identity face lists,
+    and from local photo_index.json for photo metadata + face-to-photo mapping.
+
     Returns dict of {photo_id: photo_entry} with identity attribution.
     """
-    with open("data/identities.json") as f:
-        identities_data = json.load(f)
-    identities = identities_data.get("identities", identities_data)
+    from dotenv import load_dotenv
 
+    load_dotenv()
+
+    # Read identities from Supabase (has the latest face assignments)
+    try:
+        from supabase import create_client
+
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            logger.info("Reading identities from Supabase (source of truth)")
+            identities = {}
+            for iid in identity_ids:
+                r = (
+                    sb.table("identities")
+                    .select("identity_id, name, anchor_ids, candidate_ids")
+                    .eq("identity_id", iid)
+                    .execute()
+                )
+                if r.data:
+                    row = r.data[0]
+                    # Handle JSONB string encoding (Lesson 142)
+                    for key_name in ("anchor_ids", "candidate_ids"):
+                        val = row.get(key_name, [])
+                        if isinstance(val, str):
+                            val = json.loads(val)
+                        row[key_name] = val or []
+                    identities[iid] = row
+        else:
+            raise ValueError("Supabase not configured")
+    except Exception as e:
+        logger.warning(f"Supabase unavailable ({e}), falling back to local JSON")
+        with open("data/identities.json") as f:
+            identities_data = json.load(f)
+        identities = identities_data.get("identities", identities_data)
+        identities = {iid: identities.get(iid) for iid in identity_ids if iid in identities}
+
+    # Photo index is local (has face-to-photo mapping)
     with open("data/photo_index.json") as f:
         photo_index = json.load(f)
     photos = photo_index.get("photos", photo_index)
     face_to_photo = photo_index.get("face_to_photo", {})
+
+    # Also load photo_faces from Supabase for faces not in local index
+    # Paginate to get ALL rows (Supabase default limit is 1000)
+    supabase_face_to_photo = {}
+    try:
+        from supabase import create_client
+
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            offset = 0
+            page_size = 1000
+            while True:
+                r = sb.table("photo_faces").select("face_id, photo_id").range(offset, offset + page_size - 1).execute()
+                rows = r.data or []
+                for row in rows:
+                    supabase_face_to_photo[row["face_id"]] = row["photo_id"]
+                if len(rows) < page_size:
+                    break
+                offset += page_size
+            logger.info(f"Loaded {len(supabase_face_to_photo)} face-to-photo mappings from Supabase")
+    except Exception as e:
+        logger.warning(f"Could not load photo_faces from Supabase: {e}")
+
+    # Merge face-to-photo mappings (Supabase takes precedence for completeness)
+    merged_ftp = {**face_to_photo, **supabase_face_to_photo}
 
     result = {}
     for iid in identity_ids:
@@ -73,7 +139,7 @@ def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
 
         photo_ids = set()
         for fid in face_ids:
-            pid = face_to_photo.get(fid)
+            pid = merged_ftp.get(fid)
             if pid:
                 photo_ids.add(pid)
 
