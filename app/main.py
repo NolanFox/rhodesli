@@ -8854,8 +8854,23 @@ if __name__ == "__main__":
     else:
         print("[data] WARNING: raw_photos directory does not exist")
 
-    # Check data files
-    registry = load_registry()
+    # Check data files — retry on Supabase timeout (Lesson 159, Session 142)
+    _startup_retries = 3
+    registry = None
+    for _attempt in range(1, _startup_retries + 1):
+        try:
+            registry = load_registry()
+            break
+        except RuntimeError as e:
+            if _attempt < _startup_retries:
+                _wait = _attempt * 10
+                print(f"[data] Registry load failed (attempt {_attempt}/{_startup_retries}): {e}")
+                print(f"[data] Retrying in {_wait}s...")
+                import time as _startup_time
+
+                _startup_time.sleep(_wait)
+            else:
+                raise
     print(f"[data] Identities loaded: {len(registry.list_identities())}")
 
     # Count photos from photo_index.json
