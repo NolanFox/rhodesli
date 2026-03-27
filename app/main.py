@@ -78,7 +78,14 @@ from app.auth import (
     get_current_user,
     User,
     ADMIN_EMAILS,
+    login_with_supabase,
+    signup_with_supabase,
+    validate_invite_code,
+    send_password_reset,
+    update_password,
     get_oauth_url,
+    get_user_from_token,
+    exchange_code_for_session,
 )
 
 # --- INSTRUMENTATION IMPORT ---

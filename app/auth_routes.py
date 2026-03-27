@@ -16,6 +16,8 @@ from app.main import rt
 # so that test patches on app.main.X work correctly
 import app.main as _main_mod
 
+# Session 140 fix: auth functions are now re-exported from app.main
+# (they were removed during Session 90b extraction but auth_routes needs them via _main_mod)
 from app.supabase_data import create_personal_archive
 
 logger = logging.getLogger(__name__)
