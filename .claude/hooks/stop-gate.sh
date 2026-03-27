@@ -64,6 +64,19 @@ else
     fi
 fi
 
+# Check codex audit file exists (HD-030 — mechanical enforcement added Session 141)
+# Behavioral instructions failed: Session 141 skipped codex audit despite MANDATORY rule.
+# Exception: if codex is unavailable (rate-limited, down, etc.), the audit file must
+# still exist but can document the reason codex was skipped. Check for the file,
+# not the codex output — this way the engineer must consciously document the skip.
+if [ ! -f "docs/session_context/session-${S}-codex-audit.md" ]; then
+    echo "BLOCKED: Codex audit file missing for session ${S}" >&2
+    echo "Create: docs/session_context/session-${S}-codex-audit.md" >&2
+    echo "Either run: codex exec --full-auto 'Audit [changed files]. P0/P1/P2/P3.'" >&2
+    echo "Or document why codex was unavailable (rate limit, outage, etc.)" >&2
+    exit 2
+fi
+
 # Check for uncommitted files (exclude ephemeral state + production-origin data)
 # data/identities.json drifts from Supabase runtime syncs — never commit it (Lesson 141)
 DIRTY=$(git status --porcelain \

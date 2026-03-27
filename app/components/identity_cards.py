@@ -7,9 +7,6 @@ _sequential_display_name, _proposal_banner, _proposal_badge_inline.
 Uses lazy imports for app.main dependencies to avoid circular imports.
 """
 
-import json as _json
-import re
-
 from fasthtml.common import (
     A,
     Button,
