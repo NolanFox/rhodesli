@@ -486,15 +486,6 @@ def identity_card(
     if not face_cards:
         return None
 
-    border_colors = {
-        "blue": "border-l-indigo-500",
-        "emerald": "border-l-emerald-500",
-        "amber": "border-l-amber-500",
-        "red": "border-l-red-500",
-        "stone": "border-l-stone-400",
-        "rose": "border-l-rose-500",
-    }
-
     # Sort dropdown for face ordering
     sort_dropdown = Select(
         Option("Sort by Date", value="date", selected=True),
