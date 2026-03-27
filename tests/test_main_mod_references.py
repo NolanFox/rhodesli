@@ -31,6 +31,7 @@ def test_all_main_mod_references_resolve():
     assert not missing, "Broken _main_mod references:\n" + "\n".join(f"  - {m}" for m in sorted(missing))
 
 
+@pytest.mark.xfail(reason="17 create=True patches exist — track and reduce over time")
 def test_no_create_true_in_mock_patches():
     """Flag mock patches that use create=True — these mask missing attributes.
 
@@ -38,6 +39,10 @@ def test_no_create_true_in_mock_patches():
     exist on the target, which hides real breakage. Each usage should be
     reviewed: if the attribute genuinely doesn't exist, fix the code; if it's
     a deliberate test-only extension, add a # noqa: create-true comment.
+
+    Marked xfail so CI stays green while the count is tracked. When all
+    create=True patches are removed (or annotated with # noqa: create-true),
+    this test will xpass — signaling the xfail marker can be removed.
     """
     test_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests")
     # Pattern: patch(..., create=True) in various forms
@@ -56,11 +61,10 @@ def test_no_create_true_in_mock_patches():
                     rel = os.path.relpath(fpath, test_dir)
                     flagged.append(f"{rel}:{i}: {line.strip()}")
 
-    if flagged:
-        pytest.skip(
-            f"Found {len(flagged)} mock patch(es) with create=True (review needed):\n"
-            + "\n".join(f"  - {f}" for f in flagged[:20])
-        )
+    assert not flagged, (
+        f"Found {len(flagged)} mock patch(es) with create=True (review and remove or add '# noqa: create-true'):\n"
+        + "\n".join(f"  - {f}" for f in flagged[:20])
+    )
 
 
 class TestToastWithMergeUndo:
