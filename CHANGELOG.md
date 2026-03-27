@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.52] — 2026-03-26 (Session 141: Fix Sprint + Refactor + Hardening)
+
+### Features
+- **FB-002**: Merge toast now links to surviving identity ("View [Name]" link)
+- **FB-007**: Hero face picker — admin can set primary thumbnail per identity via star button on face cards. `primary_face_id` field + `get_best_face_id()` override.
+- **PRD-058**: Merge auto-confirm analysis — defines safe/unsafe cases, direction guard
+
+### Performance
+- **C1**: `heapq.nsmallest` replaces `sorted()[:10]` in focus mode — O(n) vs O(n log n)
+- **C2**: Parallel cold start — Supabase cache prewarms run concurrently via ThreadPoolExecutor
+
+### Hardening
+- **A1**: Structural test for `_main_mod` references — prevents auth-style regressions (Lesson 157)
+- **A1**: Test scanner for `create=True` in mock patches
+
+### Refactoring
+- **REFACTOR-001 Phase 3**: Extracted identity_card + identity_card_expanded to `app/components/identity_cards.py` — 937 lines from main.py (9,867 → 8,930)
+- Total REFACTOR-001: 3,112 lines extracted across 3 phases (Sessions 137-141)
+
 ## [v0.99.51] — 2026-03-26 (Session 140: P0 Auth Fix + OAuth Redirect)
 
 ### Critical Fixes
