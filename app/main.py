@@ -1711,6 +1711,9 @@ def save_registry(registry, confirmed_identity_info=None, changed_ids=None):
     if registry_dict is not None:
         registry_dict.pop("_face_identity_lookup_cache", None)
 
+    # Invalidate best_face_cache — face assignments may have changed (Session 139 E2)
+    _best_face_cache.clear()
+
     # Invalidate neighbors cache — surgical invalidation for changed identities only
     try:
         from app.identity_routes import invalidate_neighbors_cache
@@ -4375,6 +4378,7 @@ def _invalidate_all_caches():
     _community_photo_ids_cache = {}
     _community_identity_ids_cache = {}
     _community_ids_cache_ts = 0.0
+    _best_face_cache.clear()
     # Also invalidate cluster_review_routes caches
     try:
         from app.cluster_review_routes import invalidate_cluster_review_caches
@@ -4882,11 +4886,15 @@ def _sequential_display_name(name: str) -> str:
     return f"Unidentified Person {_unidentified_seq_map[suffix]}"
 
 
+_best_face_cache: dict[str, str | None] = {}
+
+
 def get_best_face_id(face_ids: list) -> str | None:
     """Pick the highest-quality face from a list of face IDs.
 
     Returns the face_id with the highest composite quality score,
     or the first one if scores can't be computed.
+    Uses a module-level cache keyed by frozenset of normalized face IDs (Session 139 E2).
     """
     if not face_ids:
         return None
@@ -4904,6 +4912,12 @@ def get_best_face_id(face_ids: list) -> str | None:
     if len(ids) == 1:
         return ids[0]
 
+    # Cache lookup — use tuple of sorted IDs as hashable key
+    cache_key = tuple(sorted(ids))
+    cached = _best_face_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     best_id = ids[0]
     best_score = -1
     for fid in ids:
@@ -4911,6 +4925,8 @@ def get_best_face_id(face_ids: list) -> str | None:
         if s > best_score:
             best_score = s
             best_id = fid
+
+    _best_face_cache[cache_key] = best_id
     return best_id
 
 

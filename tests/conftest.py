@@ -145,6 +145,9 @@ def reset_registry_cache():
     main_mod._photo_dimensions_cache = None
     main_mod._crop_files_cache = None
 
+    # Best face cache (Session 139 E2)
+    main_mod._best_face_cache.clear()
+
     # Community caches
     main_mod._community_photo_ids_cache = {}
     main_mod._community_identity_ids_cache = {}
