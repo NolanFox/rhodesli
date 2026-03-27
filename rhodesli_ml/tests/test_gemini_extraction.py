@@ -56,6 +56,8 @@ class TestBuildPrompt:
         assert "Group Composition" in prompt
         assert "Photo Condition" in prompt
         assert "Subject Age" in prompt
+        assert "Scene Description" in prompt
+        assert "Capture vs Print" in prompt
 
     def test_quick_prompt_excludes_disabled_sections(self):
         """Quick prompt should not include face analysis or cultural markers."""
@@ -221,7 +223,7 @@ class TestGetActiveExtractions:
     def test_full_returns_all(self):
         """Full preset returns all extraction types."""
         active = get_active_extractions("full")
-        assert len(active) == 10
+        assert len(active) == 12
 
     def test_quick_returns_subset(self):
         """Quick preset returns only enabled types."""
@@ -236,3 +238,62 @@ class TestGetActiveExtractions:
         active = get_active_extractions("quick", include=["face_analysis"], exclude=["location"])
         assert "face_analysis" in active
         assert "location" not in active
+
+
+class TestNewExtractionFields:
+    """Tests for scene_description, capture_vs_print, and reasoning_summary (Session 142)."""
+
+    def test_scene_description_in_full_prompt(self):
+        """scene_description section and schema appear in full preset prompt."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "Scene Description" in prompt
+        assert '"scene_description"' in prompt
+
+    def test_scene_description_not_in_quick(self):
+        """scene_description should not appear in quick preset by default."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "Scene Description" not in prompt
+
+    def test_scene_description_can_be_added_to_quick(self):
+        """scene_description can be included in quick preset via include param."""
+        prompt = build_extraction_prompt(preset="quick", include=["scene_description"])
+        assert "Scene Description" in prompt
+
+    def test_capture_vs_print_in_full_prompt(self):
+        """capture_vs_print section and schema appear in full preset prompt."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "Capture vs Print" in prompt
+        assert '"capture_vs_print"' in prompt
+        assert "original_capture" in prompt
+        assert "later_print" in prompt
+        assert "scan_of_original" in prompt
+
+    def test_capture_vs_print_not_in_quick(self):
+        """capture_vs_print should not appear in quick preset by default."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "Capture vs Print" not in prompt
+
+    def test_reasoning_summary_in_date_estimation(self):
+        """reasoning_summary is requested in the date estimation section and schema."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "reasoning_summary" in prompt
+        # Verify it's in both the prompt instruction and schema
+        assert "2-3 sentence" in prompt.lower()
+
+    def test_full_preset_active_types_include_new_fields(self):
+        """Full preset active types include scene_description and capture_vs_print."""
+        active = get_active_extractions("full")
+        assert "scene_description" in active
+        assert "capture_vs_print" in active
+
+    def test_capture_vs_print_schema_has_classification(self):
+        """capture_vs_print schema includes classification field with all options."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "classification" in prompt
+        assert "uncertain" in prompt
+
+    def test_scene_description_prompt_content(self):
+        """scene_description prompt section has appropriate instructions."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "setting" in prompt.lower()
+        assert "composition" in prompt.lower()

@@ -32,6 +32,8 @@ EXTRACTION_PRESETS: dict[str, dict[str, bool]] = {
         "group_composition": True,
         "photo_condition": True,
         "subject_ages": True,
+        "scene_description": True,
+        "capture_vs_print": True,
     },
     "quick": {
         "date_estimation": True,
@@ -75,7 +77,7 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "confidence": "high|medium|low",
     "probable_range": [YYYY, YYYY],
     "decade_probabilities": {"1920": 0.05, "1930": 0.55, ...},
-    "reasoning_summary": "1-2 sentences"
+    "reasoning_summary": "2-3 sentence explanation of how date was estimated"
   }""",
     "face_analysis": """"face_analysis": [
     {"face_index": 0, "estimated_age": 35, "gender": "male|female", "description": "..."}
@@ -111,6 +113,11 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "issues": ["slight fading", "corner damage"]
   }""",
     "subject_ages": """"subject_ages": [45, 12, 8]""",
+    "scene_description": """"scene_description": "A formal sepia-toned studio portrait of a family group..."  """,
+    "capture_vs_print": """"capture_vs_print": {
+    "classification": "original_capture|later_print|scan_of_original|uncertain",
+    "evidence": "Visible halftone dots suggest newspaper reproduction"
+  }""",
 }
 
 # Prompt section fragments per extraction type
@@ -120,7 +127,9 @@ Examine FOUR evidence categories: (1) Print/Physical Format, (2) Fashion/Groomin
 (3) Environmental/Geographic, (4) Technological/Object Markers.
 Rate each cue as STRONG, MODERATE, or WEAK. Provide suggested date ranges.
 The decade_probabilities MUST sum to 1.0 (only decades with >0.01 probability).
-best_year_estimate should be your best point estimate, NOT just the midpoint.""",
+best_year_estimate should be your best point estimate, NOT just the midpoint.
+Include a reasoning_summary (2-3 sentences) explaining HOW you arrived at the estimate —
+which evidence was strongest, what was ambiguous, and any cultural lag adjustments applied.""",
     "face_analysis": """## Face Analysis
 For each detected face (use face_index starting from 0, left-to-right),
 estimate age, gender, and provide a brief physical description.
@@ -190,6 +199,17 @@ Rate overall condition (excellent/good/fair/poor) and list specific issues
     "subject_ages": """## Subject Age Estimation
 Estimate the approximate age of each visible person as integers,
 ordered left-to-right as they appear in the photo.""",
+    "scene_description": """## Scene Description
+Write a detailed 2-4 sentence description of the entire photograph. Include the setting
+(studio, outdoor, interior), composition, lighting, and any notable background elements.
+This description should capture what a person would see when looking at the photo.""",
+    "capture_vs_print": """## Capture vs Print Analysis
+Determine whether this is the ORIGINAL photograph or a reproduction.
+Look for: halftone dots (newspaper/book reproduction), moiré patterns (scan of print),
+visible page edges or binding (book/album scan), digital artifacts vs analog grain,
+color shifts from re-photography.
+Classify as: original_capture / later_print / scan_of_original / uncertain.
+This distinction is CRITICAL — a 1960s reprint of a 1920s photo should be dated to the 1920s.""",
 }
 
 _PREAMBLE = """You are a forensic photo analyst specializing in dating historical photographs
