@@ -31568,6 +31568,2847 @@
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
       "created_at": "2026-02-15T05:27:31.493327+00:00"
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_20_02133_p_13akf5twbc4075",
+      "filename": "raw_photos/02133_p_13akf5twbc4075.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "medium",
+      "probable_range": [
+        1940,
+        1950
+      ],
+      "decade_probabilities": {
+        "1930": 0.2,
+        "1940": 0.7,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "Dayton, Ohio",
+        "confidence": "high",
+        "visual_evidence": "Studio portrait setting provides no specific geographic clues.",
+        "biographical_evidence": "Genealogical records show the subject, Esther Burd, resided continuously in Dayton, Ohio from 1920 until her death in 1966.",
+        "missing_child_analysis": "Not applicable for a solo portrait."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:34:59.774200+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_199_01642_p_13akf5twbc0864",
+      "filename": "raw_photos/01642_p_13akf5twbc0864.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1962
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.7,
+        "1960": 0.25
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Greenhouse setting with English signage ('PHALAENOPSIS', 'TYPES', 'PLANT'). The collection name 'Dayton Ohio' suggests a US context, though the specific location could be anywhere with a botanical garden or commercial greenhouse.",
+        "biographical_evidence": "No specific biographical data provided to cross-reference.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:37:18.808652+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_587_01595_p_13akf5twbc0738",
+      "filename": "raw_photos/01595_p_13akf5twbc0738.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1962
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.75,
+        "1960": 0.2
+      },
+      "location_estimate": {
+        "place": "Unknown Vacation Resort (Likely Florida)",
+        "confidence": "low",
+        "visual_evidence": "Tropical broadleaf plants (resembling Bird of Paradise or banana leaves), white stucco flat-roofed architecture, and resort-style lounge chairs strongly indicate a warm-weather vacation destination, possibly Miami Beach or a similar mid-century resort area.",
+        "biographical_evidence": "Genealogical records show Esther Burd resided continuously in Dayton, Ohio during the 1950s and 1960s. The visual evidence strongly contradicts an Ohio location, indicating this is a vacation photograph taken away from her primary residence.",
+        "missing_child_analysis": "Not applicable; solo portrait of an adult."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:40:07.650662+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_270_01956_p_13akf5twbc3721",
+      "filename": "raw_photos/01956_p_13akf5twbc3721.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1955,
+      "confidence": "medium",
+      "probable_range": [
+        1950,
+        1960
+      ],
+      "decade_probabilities": {
+        "1940": 0.2,
+        "1950": 0.7,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic outdoor foliage, no distinct architectural or geographic markers visible.",
+        "biographical_evidence": "No specific biographical data provided to narrow down the location beyond the collection name (Dayton Ohio), which is weak evidence.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:42:36.363450+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_345_01590_p_13akf5twbc0775",
+      "filename": "raw_photos/01590_p_13akf5twbc0775.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.6,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "Florida, United States",
+        "confidence": "medium",
+        "visual_evidence": "Tropical vegetation (sea grape, traveler's palm) and bright sunlight strongly suggest a subtropical climate like Florida, consistent with diaspora communities in Miami or Tampa.",
+        "biographical_evidence": "None provided, but visual cues align with known Sephardic diaspora locations in Florida.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:44:10.211047+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_0_01612_p_13akf5twbc0833",
+      "filename": "raw_photos/01612_p_13akf5twbc0833.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.4,
+        "1950": 0.5,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic beach scene. The canvas beach chairs with canopies are common in many mid-century American beach resorts (e.g., Florida, New Jersey, New York).",
+        "biographical_evidence": "No biographical data provided to narrow down the specific beach location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:44:40.075381+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_323_02168_p_13akf5twbc3257",
+      "filename": "raw_photos/02168_p_13akf5twbc3257.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.3,
+        "1950": 0.6,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "Miami Beach, Florida",
+        "confidence": "medium",
+        "visual_evidence": "Wide sandy beach, wooden lounge chairs, and large canvas sun cabanas are typical of mid-century American beach resorts, particularly in Florida.",
+        "biographical_evidence": "While the collection is from Dayton, Ohio, the visual evidence strongly suggests a vacation destination. Given the known diaspora communities, Miami Beach was a very common vacation and relocation spot for Sephardic families from New York and elsewhere during this era.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:47:36.067985+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_425_01644_p_13akf5twbc0867",
+      "filename": "raw_photos/01644_p_13akf5twbc0867.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1962,
+      "confidence": "medium",
+      "probable_range": [
+        1958,
+        1968
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.6,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "Florida, United States",
+        "confidence": "medium",
+        "visual_evidence": "Lush tropical palm trees (likely Areca palms) and white crushed stone or shell ground cover are quintessential landscaping features of South or Central Florida (e.g., Miami, Tampa).",
+        "biographical_evidence": "While the collection is named 'Dayton Ohio', the visual evidence strongly contradicts a Midwestern location, pointing instead to a subtropical climate consistent with known Sephardic diaspora communities in Florida.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:48:24.436810+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_370_01568_p_13akf5twbc0675",
+      "filename": "raw_photos/01568_p_13akf5twbc0675.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.6,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Typical mid-century American commercial strip mall architecture, English signage ('Dr. REDU... CHIRO...').",
+        "biographical_evidence": "No specific biographical data provided to narrow down the exact city, but the collection name 'Charles Fox Dayton Ohio Collection' suggests a possible connection to Ohio or the US in general.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:49:32.329875+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_521_01820_p_13akf5twbc2178",
+      "filename": "raw_photos/01820_p_13akf5twbc2178.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1955,
+      "confidence": "medium",
+      "probable_range": [
+        1950,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.1,
+        "1950": 0.7,
+        "1960": 0.2
+      },
+      "location_estimate": {
+        "place": "Unknown Beach Location",
+        "confidence": "low",
+        "visual_evidence": "Generic beach setting with a wooden breakwater/groin visible in the background. Common on many coastlines, including the US East Coast.",
+        "biographical_evidence": "No biographical data provided to narrow down the location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:51:25.697365+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_118_02131_p_13akf5twbc0873",
+      "filename": "raw_photos/02131_p_13akf5twbc0873.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1962
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.7,
+        "1960": 0.25
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Typical mid-century American suburban architecture (brick house, asphalt shingles), utility pole, and TV antenna.",
+        "biographical_evidence": "No specific biographical data provided, but the collection name (Dayton Ohio) and visual cues suggest a US location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:52:24.839573+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_183_01582_p_13akf5twbc0720_z",
+      "filename": "raw_photos/01582_p_13akf5twbc0720_z.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.6,
+        "1960": 0.3,
+        "1970": 0.05
+      },
+      "location_estimate": {
+        "place": "United States (likely Florida)",
+        "confidence": "low",
+        "visual_evidence": "Sunny outdoor setting with water and bathers in the background, suggesting a beach or public pool resort area.",
+        "biographical_evidence": "The collection originates from Dayton, Ohio, but the beach/pool setting suggests a vacation or relocation. Given the Sephardic diaspora context, Florida (Miami or Tampa) is a highly probable location for older couples vacationing or retiring.",
+        "missing_child_analysis": "N/A - No children present and no specific biographical family data provided."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:54:17.543286+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_128_01607_p_13akf5twbc0809_r",
+      "filename": "raw_photos/01607_p_13akf5twbc0809_r.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "high",
+      "probable_range": [
+        1940,
+        1949
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.8,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic studio backdrop provides no geographic markers. The fashion is consistent with American styles of the 1940s.",
+        "biographical_evidence": "No specific biographical data provided for the subject. The collection name (Dayton, Ohio) suggests a US context but is weak evidence for the actual location of the studio.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:55:10.256653+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_464_02151_p_13akf5twbc1954_r",
+      "filename": "raw_photos/02151_p_13akf5twbc1954_r.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1918,
+      "confidence": "high",
+      "probable_range": [
+        1915,
+        1922
+      ],
+      "decade_probabilities": {
+        "1910": 0.85,
+        "1920": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The building in the background features a pitched roof, siding, and multi-pane windows typical of American residential or institutional architecture of the early 20th century. The grassy, temperate environment does not resemble the Mediterranean landscape of Rhodes.",
+        "biographical_evidence": "No biographical data provided. The collection name (Dayton Ohio) aligns with the visual evidence of an American setting, but cannot be used as definitive proof of the exact city.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:56:26.871607+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_534_02172_p_13akf5twbc1271",
+      "filename": "raw_photos/02172_p_13akf5twbc1271.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "high",
+      "probable_range": [
+        1920,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.15,
+        "1920": 0.85
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic outdoor setting, possibly a park or fairground, with a wire fence. The crowd's clothing suggests a Western (US or European) location, but lacks specific geographic markers.",
+        "biographical_evidence": "No biographical data provided to cross-reference.",
+        "missing_child_analysis": "Not applicable."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T05:57:29.543159+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_318_02134_p_13akf5twbc4080",
+      "filename": "raw_photos/02134_p_13akf5twbc4080.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1918,
+      "confidence": "high",
+      "probable_range": [
+        1917,
+        1922
+      ],
+      "decade_probabilities": {
+        "1910": 0.8,
+        "1920": 0.2
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The groom's US Army uniform strongly indicates a United States context. The landscape and background architecture are consistent with North America.",
+        "biographical_evidence": "The photo is from the 'Charles Fox Dayton Ohio Collection', suggesting a possible connection to Dayton, Ohio, though collection names are weak evidence for the specific photo location without further biographical data.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:00:07.874463+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_400_02181_p_13akf5twbc3217",
+      "filename": "raw_photos/02181_p_13akf5twbc3217.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1914,
+      "confidence": "high",
+      "probable_range": [
+        1910,
+        1918
+      ],
+      "decade_probabilities": {
+        "1900": 0.15,
+        "1910": 0.8,
+        "1920": 0.05
+      },
+      "location_estimate": {
+        "place": "Unknown (Temperate Climate)",
+        "confidence": "low",
+        "visual_evidence": "Grassy field and small pine tree indicate a temperate climate, likely North America or Europe. It lacks the distinct arid/rocky Mediterranean markers of Rhodes or urban markers of NYC.",
+        "biographical_evidence": "No specific GEDCOM or biographical residence data provided. The 'Charles Fox Dayton Ohio Collection' suggests a US origin, but collection name alone is insufficient to confirm Dayton as the photo location.",
+        "missing_child_analysis": "Not applicable due to lack of provided family data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:01:55.111946+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_411_01570_p_13akf5twbc0677",
+      "filename": "raw_photos/01570_p_13akf5twbc0677.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1957,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1960
+      ],
+      "decade_probabilities": {
+        "1940": 0.02,
+        "1950": 0.85,
+        "1960": 0.13
+      },
+      "location_estimate": {
+        "place": "United States (likely Florida or similar warm climate)",
+        "confidence": "medium",
+        "visual_evidence": "The architecture features a low-pitched roof and jalousie windows, which were extremely common in post-war Florida homes to allow ventilation before central air conditioning was ubiquitous. The presence of a large American car confirms a US location.",
+        "biographical_evidence": "No specific biographical data provided, but the visual evidence strongly suggests a warm-weather US location, consistent with diaspora communities in places like Miami or Tampa.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:07:08.810378+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_93_01893_p_13akf5twbc1818_z",
+      "filename": "raw_photos/01893_p_13akf5twbc1818_z.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1965,
+      "confidence": "medium",
+      "probable_range": [
+        1960,
+        1970
+      ],
+      "decade_probabilities": {
+        "1950": 0.2,
+        "1960": 0.7,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "Miami Beach, Florida",
+        "confidence": "high",
+        "visual_evidence": "Sandy beach with palm trees, a low coral-rock or stone wall, and a large white multi-story hotel with Mediterranean Revival/Art Deco architectural elements (arched balconies) in the background. This is highly characteristic of Miami Beach.",
+        "biographical_evidence": "Miami is noted as a primary diaspora community for this demographic.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:08:05.568581+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_234_01979_p_13akf5twbc1268",
+      "filename": "raw_photos/01979_p_13akf5twbc1268.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.45,
+        "1950": 0.45
+      },
+      "location_estimate": {
+        "place": "Unknown (Beach Location)",
+        "confidence": "low",
+        "visual_evidence": "Ocean beach with waves. No distinct geographical landmarks or architecture are visible.",
+        "biographical_evidence": "No biographical data provided to cross-reference.",
+        "missing_child_analysis": "Not applicable without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:12:48.849059+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_621_01810_p_13akf5twbc3555",
+      "filename": "raw_photos/01810_p_13akf5twbc3555.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "medium",
+      "probable_range": [
+        1940,
+        1949
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.8,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Clapboard siding on the house, concrete sidewalk, and wooden utility pole are highly characteristic of American residential neighborhoods in the mid-20th century.",
+        "biographical_evidence": "No biographical data provided to narrow down the specific US city.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:42:59.910178+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_110_02173_p_13akf5twbc1355",
+      "filename": "raw_photos/02173_p_13akf5twbc1355.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "high",
+      "probable_range": [
+        1940,
+        1949
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.8,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "The public park setting, paved walkways, and the heavy stone civic building in the background are typical of American cities. The car in the background also appears to be an American model.",
+        "biographical_evidence": "No specific biographical data provided. The collection name (Dayton, Ohio) suggests a possible location, but without further evidence, it remains a weak signal.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:46:46.265119+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_198_02179_p_13akf5twbc2015",
+      "filename": "raw_photos/02179_p_13akf5twbc2015.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1918,
+      "confidence": "high",
+      "probable_range": [
+        1915,
+        1922
+      ],
+      "decade_probabilities": {
+        "1910": 0.85,
+        "1920": 0.15
+      },
+      "location_estimate": {
+        "place": "United States (Unknown City)",
+        "confidence": "low",
+        "visual_evidence": "The architecture of the large building in the background appears to be typical North American wood-frame construction (possibly a resort, hotel, or large residence), distinct from Mediterranean stone architecture. The clothing styles are also typical of American fashion of the era.",
+        "biographical_evidence": "No specific biographical or GEDCOM data provided to narrow down the location beyond the visual cues.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:50:58.218617+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_115_01782_p_13akf5twbc1815_r",
+      "filename": "raw_photos/01782_p_13akf5twbc1815_r.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.3,
+        "1950": 0.6,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "English-language neon signs in the background ('ADLER'S').",
+        "biographical_evidence": "No biographical data provided to narrow down the specific US city.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:52:59.785930+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_371_01837_p_13akf5twbc2268",
+      "filename": "raw_photos/01837_p_13akf5twbc2268.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1955,
+      "confidence": "high",
+      "probable_range": [
+        1952,
+        1960
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.8,
+        "1960": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor setting with no distinct architectural or geographic markers. The fashion and snapshot style are typical of mid-century America.",
+        "biographical_evidence": "No biographical data provided to narrow down the location beyond the general context of the collection.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T06:56:56.396955+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_219_02044_p_13akf5twbc3226",
+      "filename": "raw_photos/02044_p_13akf5twbc3226.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "medium",
+      "probable_range": [
+        1918,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.35,
+        "1920": 0.65
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor studio setting with a painted backdrop. The heavy coats suggest a cooler climate or winter season, but there are no specific geographic or architectural markers.",
+        "biographical_evidence": "No specific biographical, GEDCOM, or business data provided to cross-reference against the collection name.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:04:12.110410+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_352_01701_p_13akf5twbc1172",
+      "filename": "raw_photos/01701_p_13akf5twbc1172.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.35,
+        "1960": 0.55,
+        "1970": 0.05
+      },
+      "location_estimate": {
+        "place": "Florida, United States",
+        "confidence": "medium",
+        "visual_evidence": "The presence of large palm fronds and crushed white stone or shell ground cover strongly suggests a subtropical climate, characteristic of Florida.",
+        "biographical_evidence": "While no specific biographical data is provided for this image, the visual evidence aligns perfectly with the known Sephardic diaspora communities in Miami and Tampa, Florida mentioned in the context.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:07:54.051996+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_177_02137_p_13akf5twbc1287",
+      "filename": "raw_photos/02137_p_13akf5twbc1287.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1924,
+      "confidence": "high",
+      "probable_range": [
+        1922,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.1,
+        "1920": 0.85,
+        "1930": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The background architecture (wood-frame and brick buildings with pitched roofs) and the brickwork of the wall suggest an American setting, possibly a park, promenade, or residential neighborhood, rather than the Mediterranean stone architecture of Rhodes.",
+        "biographical_evidence": "No specific biographical data provided to narrow down the exact US city.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:09:44.629318+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_23_01906_p_13akf5twbc1990",
+      "filename": "raw_photos/01906_p_13akf5twbc1990.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1915,
+      "confidence": "medium",
+      "probable_range": [
+        1910,
+        1920
+      ],
+      "decade_probabilities": {
+        "1900": 0.1,
+        "1910": 0.75,
+        "1920": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Interior of a light manufacturing facility with brick walls and large windows, typical of early 20th-century American industrial architecture.",
+        "biographical_evidence": "No specific biographical or GEDCOM data provided. While the collection name references Dayton, Ohio (a known historical manufacturing hub), this is weak evidence on its own for the specific photo location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:12:14.456453+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_209_01816_p_13akf5twbc3322_g",
+      "filename": "raw_photos/01816_p_13akf5twbc3322_g.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "high",
+      "probable_range": [
+        1940,
+        1949
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.8,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States (Urban area)",
+        "confidence": "low",
+        "visual_evidence": "Generic urban street scene with paved sidewalks, storefronts, and pedestrians dressed for cool weather. The style of the street and clothing suggests an American city.",
+        "biographical_evidence": "No specific biographical data provided to cross-reference. The collection name (Dayton Ohio) suggests a US context, but is weak evidence for the specific location of the photo.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:13:09.752388+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_143_01660_p_13akf5twbc1060_r",
+      "filename": "raw_photos/01660_p_13akf5twbc1060_r.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "medium",
+      "probable_range": [
+        1940,
+        1950
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.75,
+        "1950": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor event space with patterned carpet; no specific geographic markers visible.",
+        "biographical_evidence": "The collection name 'Charles Fox Dayton Ohio Collection' suggests a connection to Dayton, Ohio, but without further biographical data, the exact location cannot be confirmed.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:16:10.900819+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_136_01578_p_13akf5twbc0710",
+      "filename": "raw_photos/01578_p_13akf5twbc0710.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1952,
+      "confidence": "high",
+      "probable_range": [
+        1948,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.3,
+        "1950": 0.65,
+        "1960": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Interior living room with a fireplace, mantle, and patterned carpet, typical of mid-century American homes.",
+        "biographical_evidence": "No specific biographical data provided, but the collection name (Dayton Ohio) and typical American interior suggest a US location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:20:00.909633+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_88_02162_p_13akf5twbc3370",
+      "filename": "raw_photos/02162_p_13akf5twbc3370.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1925,
+      "confidence": "high",
+      "probable_range": [
+        1922,
+        1929
+      ],
+      "decade_probabilities": {
+        "1910": 0.05,
+        "1920": 0.85,
+        "1930": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Grassy bank, deciduous trees, and wooden pier suggest a temperate inland lake or river, typical of North American summer recreation areas. It lacks the rocky or sandy features typical of Mediterranean coastal environments like Rhodes.",
+        "biographical_evidence": "The collection name 'Charles Fox Dayton Ohio Collection' suggests a possible Midwest US location, but without specific GEDCOM residence data, the exact location remains generic.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:51:26.273981+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_623_02160_p_13akf5twbc3289",
+      "filename": "raw_photos/02160_p_13akf5twbc3289.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "medium",
+      "probable_range": [
+        1918,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.2,
+        "1920": 0.75,
+        "1930": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "The setting appears to be a park or cemetery with large deciduous trees and manicured grass, typical of North American or European landscapes, but lacking specific architectural markers.",
+        "biographical_evidence": "No specific biographical data provided to cross-reference.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:54:54.645228+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_354_02063_p_13akf5twbc3642",
+      "filename": "raw_photos/02063_p_13akf5twbc3642.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1925,
+      "confidence": "high",
+      "probable_range": [
+        1922,
+        1929
+      ],
+      "decade_probabilities": {
+        "1910": 0.05,
+        "1920": 0.85,
+        "1930": 0.1
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic body of water (likely a lake or calm coastal area) with a distant shoreline; no distinct geographical markers.",
+        "biographical_evidence": "The collection name indicates provenance in Dayton, Ohio, but without specific biographical or genealogical data, it cannot be confirmed if the photo was taken at a local lake or a vacation destination.",
+        "missing_child_analysis": "Not applicable without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:56:14.446575+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_96_02139_p_13akf5twbc1280",
+      "filename": "raw_photos/02139_p_13akf5twbc1280.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1923,
+      "confidence": "high",
+      "probable_range": [
+        1920,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.15,
+        "1920": 0.8,
+        "1930": 0.05
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic outdoor setting with tall grass, foliage, and a wooden structure (possibly a fence or shed). No distinct architectural or geographic markers.",
+        "biographical_evidence": "No biographical context provided to cross-reference.",
+        "missing_child_analysis": "Cannot perform without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T07:58:48.839554+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_4_02177_p_13akf5twbc1904",
+      "filename": "raw_photos/02177_p_13akf5twbc1904.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1919,
+      "confidence": "medium",
+      "probable_range": [
+        1916,
+        1924
+      ],
+      "decade_probabilities": {
+        "1910": 0.45,
+        "1920": 0.55
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "The photograph was taken in a photography studio with a generic painted backdrop, offering no specific geographic or architectural clues.",
+        "biographical_evidence": "No biographical or genealogical context was provided to cross-reference.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T08:03:00.533713+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_627_01638_p_13akf5twbc0880_r",
+      "filename": "raw_photos/01638_p_13akf5twbc0880_r.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1952,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1958
+      ],
+      "decade_probabilities": {
+        "1940": 0.3,
+        "1950": 0.6,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "Florida, United States (likely Miami or Tampa area)",
+        "confidence": "medium",
+        "visual_evidence": "Wide, flat sandy beach with gentle surf, characteristic of the American East Coast or Gulf Coast, contrasting with the rocky beaches typical of Rhodes.",
+        "biographical_evidence": "The prompt notes diaspora communities in Miami and Tampa; this beach environment strongly aligns with those Florida locations, which were common settlement and vacation destinations for these communities.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T08:06:20.937871+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_161_01795_p_13akf5twbc1857",
+      "filename": "raw_photos/01795_p_13akf5twbc1857.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.4,
+        "1960": 0.6
+      },
+      "location_estimate": {
+        "place": "Florida, United States",
+        "confidence": "medium",
+        "visual_evidence": "The presence of tall palm trees, lush tropical vegetation, a water feature, and a rough-hewn stone wall (likely oolitic limestone/coral rock) strongly suggests a South Florida location, such as a park or botanical garden in the Miami area.",
+        "biographical_evidence": "No specific biographical data provided, but visual evidence aligns with known Sephardic diaspora communities in Florida.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T08:30:43.716113+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_277_01985_s_13akf5twbc0203",
+      "filename": "raw_photos/01985_s_13akf5twbc0203.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1958,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.4,
+        "1960": 0.6
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Interior setting with venetian blinds and drapes, typical of mid-century American homes.",
+        "biographical_evidence": "Collection name suggests a US location (Dayton, Ohio), though this is weak evidence for the photo's actual location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T08:34:05.384893+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_29_01833_p_13akf5twbc2275",
+      "filename": "raw_photos/01833_p_13akf5twbc2275.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "high",
+      "probable_range": [
+        1953,
+        1963
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.7,
+        "1960": 0.25
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The setting appears to be a typical mid-century American public pool, country club, or resort, given the architecture, recreational facilities (ping pong), and general atmosphere.",
+        "biographical_evidence": "No specific biographical data provided to narrow down the exact city, but the collection name 'Dayton Ohio' suggests a US context, though the photo could have been taken on vacation.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:12:54.500403+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_220_02152_p_13akf5twbc1989",
+      "filename": "raw_photos/02152_p_13akf5twbc1989.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "high",
+      "probable_range": [
+        1918,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.3,
+        "1920": 0.7
+      },
+      "location_estimate": {
+        "place": "Dayton, Ohio",
+        "confidence": "high",
+        "visual_evidence": "The photograph has an explicit studio mark printed at the bottom reading 'THE DENNEWITZ STUDIO, DAYTON, OHIO.'",
+        "biographical_evidence": "The collection name 'Charles Fox Dayton Ohio Collection' aligns perfectly with the studio mark.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:15:03.593659+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_393_01599_p_13akf5twbc0745",
+      "filename": "raw_photos/01599_p_13akf5twbc0745.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "medium",
+      "probable_range": [
+        1952,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.75,
+        "1960": 0.2
+      },
+      "location_estimate": {
+        "place": "Miami Beach, Florida",
+        "confidence": "medium",
+        "visual_evidence": "Sandy beach setting, white stucco wall (likely separating a hotel pool area from the beach), and a high-rise hotel building with window awnings in the background, highly characteristic of mid-century Miami Beach.",
+        "biographical_evidence": "None provided, but Miami Beach was a very common vacation and retirement destination for Sephardic Jews from New York and other diaspora communities.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:18:14.712487+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_418_01983_p_13akf5twbc1243",
+      "filename": "raw_photos/01983_p_13akf5twbc1243.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.4,
+        "1950": 0.5,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic sandy beach setting with wooden folding chairs; no distinct geographical markers visible.",
+        "biographical_evidence": "Collection name 'Charles Fox Dayton Ohio Collection' suggests a US context, but without specific biographical data or business names, a precise city cannot be determined.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:21:01.789433+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_91_02055_p_13akf5twbc3671",
+      "filename": "raw_photos/02055_p_13akf5twbc3671.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1923,
+      "confidence": "high",
+      "probable_range": [
+        1920,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.15,
+        "1920": 0.8,
+        "1930": 0.05
+      },
+      "location_estimate": {
+        "place": "Cincinnati, Ohio",
+        "confidence": "high",
+        "visual_evidence": "The photographer's mark in the bottom right corner explicitly reads 'Benjamin Studio Grand Cincinnati'.",
+        "biographical_evidence": "The photo belongs to the 'Charles Fox Dayton Ohio Collection'. Dayton is in close geographic proximity to Cincinnati, making it highly plausible the subjects traveled there for a formal portrait or lived there prior to Dayton.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:21:43.782271+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_455_02170_p_13akf5twbc1245_r",
+      "filename": "raw_photos/02170_p_13akf5twbc1245_r.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1928,
+      "confidence": "medium",
+      "probable_range": [
+        1925,
+        1932
+      ],
+      "decade_probabilities": {
+        "1920": 0.7,
+        "1930": 0.3
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic studio backdrop provides no geographic clues.",
+        "biographical_evidence": "No specific biographical data provided for the subject. The photo is from the 'Charles Fox Dayton Ohio Collection', but this only indicates where the photo was stored, not necessarily where it was taken.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:23:11.242543+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_326_01567_p_13akf5twbc0660",
+      "filename": "raw_photos/01567_p_13akf5twbc0660.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.45,
+        "1960": 0.45,
+        "1970": 0.05
+      },
+      "location_estimate": {
+        "place": "Hialeah, Florida",
+        "confidence": "high",
+        "visual_evidence": "The sign directly behind the couple explicitly reads 'HIALEAH RACE COURSE'. Palm trees and tropical vegetation confirm a South Florida location.",
+        "biographical_evidence": "None provided, but visual evidence is definitive.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:25:44.811331+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_22_01904_p_13akf5twbc1902",
+      "filename": "raw_photos/01904_p_13akf5twbc1902.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.7,
+        "1960": 0.25
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The architecture, specifically the concrete steps, decorative wrought iron railing, and house siding, is highly characteristic of post-WWII American suburban housing.",
+        "biographical_evidence": "The collection name 'Dayton Ohio' suggests a possible location, but without specific family residence records, a general US location is the most accurate deduction based on visual evidence.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:29:35.986759+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_525_01992_s_13akf5twbc0240",
+      "filename": "raw_photos/01992_s_13akf5twbc0240.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1959,
+        1964
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.7
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The architecture (detached white garage, brick house), paved driveway, and specifically the American-made automobile with tail fins strongly indicate a United States suburban location.",
+        "biographical_evidence": "No specific biographical data provided to pinpoint the exact city. While the collection name mentions Dayton, Ohio, visual evidence alone confirms a US suburban setting.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:31:42.296166+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_45_02040_p_13akf5twbc3152",
+      "filename": "raw_photos/02040_p_13akf5twbc3152.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.4,
+        "1950": 0.5,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic outdoor setting with foliage; no distinct architectural or geographic markers.",
+        "biographical_evidence": "The collection name 'Charles Fox Dayton Ohio Collection' suggests a possible connection to Dayton, Ohio, but without further biographical data, the location remains uncertain.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:32:12.407812+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_70_01678_p_13akf5twbc1097_r",
+      "filename": "raw_photos/01678_p_13akf5twbc1097_r.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.6,
+        "1960": 0.4
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The wood-frame house with siding, chain-link fence, and the style of the vehicle in the background are highly characteristic of mid-20th century American suburban or town environments.",
+        "biographical_evidence": "No specific biographical data provided to pinpoint a city; the collection name 'Dayton Ohio' suggests a possible location, but visual evidence only confirms a general US setting.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:33:00.643684+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_201_02165_p_13akf5twbc3436",
+      "filename": "raw_photos/02165_p_13akf5twbc3436.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1928,
+      "confidence": "high",
+      "probable_range": [
+        1925,
+        1932
+      ],
+      "decade_probabilities": {
+        "1920": 0.85,
+        "1930": 0.15
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic outdoor setting, possibly a park or field, with a crowd in the background. No identifiable architectural or geographic landmarks.",
+        "biographical_evidence": "No specific biographical data provided to cross-reference.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:33:50.080810+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_529_01569_p_13akf5twbc0676",
+      "filename": "raw_photos/01569_p_13akf5twbc0676.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.6,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "high",
+        "visual_evidence": "English language signage ('REAL ESTATE', 'CHIROPRACTOR', 'FOR RENT'), typical American mid-century strip mall/commercial architecture, Rotary International logo on the door.",
+        "biographical_evidence": "No biographical data provided to narrow down the specific US city.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:34:20.753186+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_46_01581_p_13akf5twbc0715",
+      "filename": "raw_photos/01581_p_13akf5twbc0715.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1955,
+      "confidence": "high",
+      "probable_range": [
+        1950,
+        1960
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.85,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The house features horizontal wood siding, a front porch with simple wooden pillars, and concrete steps, which is highly characteristic of 20th-century American residential architecture and distinctly different from Mediterranean stone construction.",
+        "biographical_evidence": "The photo is from the Charles Fox Dayton Ohio Collection, suggesting a possible US location, though without specific residence records, a precise city cannot be definitively assigned based solely on the collection name.",
+        "missing_child_analysis": "Not applicable"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:35:01.982377+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_168_01606_p_13akf5twbc0793",
+      "filename": "raw_photos/01606_p_13akf5twbc0793.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "medium",
+      "probable_range": [
+        1940,
+        1950
+      ],
+      "decade_probabilities": {
+        "1930": 0.15,
+        "1940": 0.7,
+        "1950": 0.15
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "The generic draped curtain studio backdrop provides no geographic or environmental clues.",
+        "biographical_evidence": "No specific biographical or GEDCOM data was provided to cross-reference with the image.",
+        "missing_child_analysis": "Not applicable without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:35:43.658909+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_233_01836_p_13akf5twbc2214",
+      "filename": "raw_photos/01836_p_13akf5twbc2214.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1955,
+      "confidence": "medium",
+      "probable_range": [
+        1950,
+        1960
+      ],
+      "decade_probabilities": {
+        "1940": 0.2,
+        "1950": 0.65,
+        "1960": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The horizontal wooden clapboard siding on the house exterior is a hallmark of American residential architecture and strongly indicates a US location rather than the Mediterranean stone or stucco typical of Rhodes.",
+        "biographical_evidence": "No specific biographical data provided. The collection name (Dayton Ohio) suggests a possible US location, aligning with the visual architectural evidence, though collection names are weak primary locators.",
+        "missing_child_analysis": "Not applicable"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:37:04.964270+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_579_01611_p_13akf5twbc0830",
+      "filename": "raw_photos/01611_p_13akf5twbc0830.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.45,
+        "1950": 0.45,
+        "1960": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Wide sandy beach, typical of popular American coastal destinations like Florida or the Northeast (Coney Island, Atlantic City, etc.). No specific landmarks visible.",
+        "biographical_evidence": "None provided.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:37:47.489937+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_28_02153_p_13akf5twbc1803",
+      "filename": "raw_photos/02153_p_13akf5twbc1803.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "high",
+      "probable_range": [
+        1946,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.4,
+        "1950": 0.55,
+        "1960": 0.05
+      },
+      "location_estimate": {
+        "place": "United States (likely Florida or East Coast)",
+        "confidence": "low",
+        "visual_evidence": "Generic sandy beach. No distinct geographical markers.",
+        "biographical_evidence": "No specific biographical data provided in the prompt to cross-reference. The collection name 'Charles Fox Dayton Ohio Collection' suggests a US context, but Dayton is inland. A beach trip to Florida or the East Coast is plausible for diaspora communities.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:38:20.742521+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_113_01709_p_13akf5twbc5262",
+      "filename": "raw_photos/01709_p_13akf5twbc5262.jpg",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1935,
+      "confidence": "high",
+      "probable_range": [
+        1932,
+        1938
+      ],
+      "decade_probabilities": {
+        "1920": 0.1,
+        "1930": 0.85,
+        "1940": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Studio portrait lacking specific geographic markers. The clothing style is typical of Western/American middle-class fashion of the era.",
+        "biographical_evidence": "No specific family GEDCOM data provided. The collection name (Dayton Ohio) suggests a US origin, but is weak evidence for the actual photo location.",
+        "missing_child_analysis": "Cannot be performed without specific family genealogical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:41:26.091606+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_329_01922_p_13akf5twbc2264",
+      "filename": "raw_photos/01922_p_13akf5twbc2264.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "medium",
+      "probable_range": [
+        1952,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.7,
+        "1960": 0.25
+      },
+      "location_estimate": {
+        "place": "Miami, Florida",
+        "confidence": "medium",
+        "visual_evidence": "Tropical vegetation (Giant Bird of Paradise plant), white flat-roofed resort architecture, and pool setting strongly suggest a warm-weather vacation destination like Miami, a known hub for this community.",
+        "biographical_evidence": "No specific biographical data provided, but location aligns with known diaspora vacation/retirement patterns.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:42:13.277699+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_369_01769_p_13akf5twbc1743",
+      "filename": "raw_photos/01769_p_13akf5twbc1743.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1940": 0.05,
+        "1950": 0.45,
+        "1960": 0.45,
+        "1970": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The white clapboard building with a distinctive tower in the background is characteristic of American vernacular architecture, possibly a historical reconstruction or preserved building in a park setting. The deciduous trees and grass indicate a temperate climate.",
+        "biographical_evidence": "No specific biographical data provided. The collection name 'Charles Fox Dayton Ohio Collection' suggests a possible connection to Dayton, Ohio (which has historical parks like Carillon Historical Park), but visual evidence alone only confirms a likely US location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:44:16.666761+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_330_02116_p_13akf5twbc1982",
+      "filename": "raw_photos/02116_p_13akf5twbc1982.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "medium",
+      "probable_range": [
+        1920,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.2,
+        "1920": 0.7,
+        "1930": 0.1
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Studio setting provides no specific geographic clues.",
+        "biographical_evidence": "No biographical data provided.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:44:48.121367+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_186_02113_p_13akf5twbc1356",
+      "filename": "raw_photos/02113_p_13akf5twbc1356.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1950,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.4,
+        "1950": 0.5,
+        "1960": 0.1
+      },
+      "location_estimate": {
+        "place": "Miami Beach, Florida",
+        "confidence": "medium",
+        "visual_evidence": "Wide sandy beach, wooden lifeguard stand, and hooded beach chairs which were iconic to Miami Beach resorts in the mid-20th century.",
+        "biographical_evidence": "Miami is a known major hub for the Sephardic diaspora community mentioned in the prompt context.",
+        "missing_child_analysis": null
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:45:32.371494+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_170_01910_p_13akf5twbc2221",
+      "filename": "raw_photos/01910_p_13akf5twbc2221.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.4,
+        "1960": 0.6
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor party setting with American-style buffet equipment (chafing dish). No specific geographic markers visible.",
+        "biographical_evidence": "No specific biographical data provided to cross-reference with the collection name.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:46:12.767267+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_523_02174_p_13akf5twbc3457",
+      "filename": "raw_photos/02174_p_13akf5twbc3457.jpg",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1958,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1962
+      ],
+      "decade_probabilities": {
+        "1950": 0.85,
+        "1960": 0.15
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "The architecture of the homes (brick with glass block windows, Tudor-style elements), mature deciduous trees, and general layout strongly indicate a typical mid-century American suburban neighborhood, likely in the Midwest or Northeast.",
+        "biographical_evidence": "No specific biographical data provided. The collection name 'Charles Fox Dayton Ohio Collection' aligns with the visual evidence of a midwestern US suburb, but is not definitive proof of location.",
+        "missing_child_analysis": "Not applicable without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T09:47:00.319610+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_607_02155_p_13akf5twbc3556",
+      "filename": "raw_photos/02155_p_13akf5twbc3556.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1920,
+      "confidence": "medium",
+      "probable_range": [
+        1918,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.3,
+        "1920": 0.7
+      },
+      "location_estimate": {
+        "place": "Unknown (likely Northern United States or Europe)",
+        "confidence": "low",
+        "visual_evidence": "The subjects are wearing heavy winter coats, which strongly suggests a colder climate (e.g., New York, Ohio) rather than warmer Sephardic hubs like Rhodes, Miami, or Tampa.",
+        "biographical_evidence": "No specific biographical or GEDCOM data provided. The collection name (Dayton Ohio) aligns with the cold-weather clothing, but cannot be used as definitive proof of location.",
+        "missing_child_analysis": "Not applicable (no biographical data provided)."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:05:06.518813+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_512_02128_p_13akf5twbc0774",
+      "filename": "raw_photos/02128_p_13akf5twbc0774.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.4,
+        "1960": 0.5,
+        "1970": 0.1
+      },
+      "location_estimate": {
+        "place": "Hialeah, Florida",
+        "confidence": "high",
+        "visual_evidence": "Sign clearly reads 'HIALEAH RACE COURSE' with a flamingo, a famous landmark in Hialeah (Miami area), Florida. Palm trees confirm a tropical/subtropical climate.",
+        "biographical_evidence": "None provided, but visual evidence is definitive.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:05:39.458104+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_302_01615_p_13akf5twbc0839",
+      "filename": "raw_photos/01615_p_13akf5twbc0839.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1940,
+      "confidence": "medium",
+      "probable_range": [
+        1935,
+        1945
+      ],
+      "decade_probabilities": {
+        "1920": 0.0,
+        "1930": 0.4,
+        "1940": 0.5,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "California, United States",
+        "confidence": "medium",
+        "visual_evidence": "The combination of mature palm trees and prominent mountains/hills in the background strongly suggests Southern California. The presence of an Asian-themed statue (figure on a water buffalo) and manicured gardens indicates a specific public park, botanical garden, or exposition site.",
+        "biographical_evidence": "None provided to cross-reference.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:07:41.144720+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_78_01652_p_13akf5twbc1008",
+      "filename": "raw_photos/01652_p_13akf5twbc1008.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1945,
+      "confidence": "medium",
+      "probable_range": [
+        1940,
+        1950
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.85,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "The interior decor, including the window casing, curtains, and the style of the tiered anniversary cake, are typical of mid-20th century American homes or event spaces.",
+        "biographical_evidence": "No specific biographical data provided to pinpoint a city. The collection name (Dayton Ohio) suggests a US location, but is not definitive proof of where the photo was taken.",
+        "missing_child_analysis": "Not applicable without specific family data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:08:20.762817+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_242_01892_p_13akf5twbc1817",
+      "filename": "raw_photos/01892_p_13akf5twbc1817.jpg",
+      "estimated_decade": 1980,
+      "best_year_estimate": 1985,
+      "confidence": "high",
+      "probable_range": [
+        1985,
+        1985
+      ],
+      "decade_probabilities": {
+        "1980": 1.0
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor setting (likely a community hall or hotel) with an English-language sign.",
+        "biographical_evidence": "The collection name 'Charles Fox Dayton Ohio Collection' suggests a connection to Dayton, Ohio, but without specific residence records for Albert Fox in 1985, a definitive city cannot be confirmed.",
+        "missing_child_analysis": "Not applicable."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:09:07.666148+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_294_02098_p_13akf5twbc5278",
+      "filename": "raw_photos/02098_p_13akf5twbc5278.jpg",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1932,
+      "confidence": "medium",
+      "probable_range": [
+        1928,
+        1935
+      ],
+      "decade_probabilities": {
+        "1920": 0.3,
+        "1930": 0.7
+      },
+      "location_estimate": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Studio portrait with no distinct geographic markers.",
+        "biographical_evidence": "No biographical data provided to cross-reference.",
+        "missing_child_analysis": "Cannot perform without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:09:46.864002+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_173_02176_p_13akf5twbc1898",
+      "filename": "raw_photos/02176_p_13akf5twbc1898.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1946,
+      "confidence": "high",
+      "probable_range": [
+        1943,
+        1949
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.85,
+        "1950": 0.1
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Interior domestic setting with American-style mid-century furnishings (valance, curtains) and fashion typical of US diaspora communities.",
+        "biographical_evidence": "No specific biographical data provided, but the collection name (Dayton Ohio) and fashion suggest a US location.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:10:18.680909+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_157_01789_p_13akf5twbc1825",
+      "filename": "raw_photos/01789_p_13akf5twbc1825.jpg",
+      "estimated_decade": 1990,
+      "best_year_estimate": 1992,
+      "confidence": "medium",
+      "probable_range": [
+        1985,
+        1995
+      ],
+      "decade_probabilities": {
+        "1980": 0.4,
+        "1990": 0.55,
+        "2000": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Generic indoor banquet or community room setting. The sheet cake, commercial greeting cards, and overall aesthetic are typical of American celebrations.",
+        "biographical_evidence": "No specific biographical or GEDCOM data provided to pinpoint a city. The collection name (Dayton, Ohio) suggests a US context but is not definitive proof of the photo's location.",
+        "missing_child_analysis": "Not applicable without biographical data."
+      },
+      "scene_description": "",
+      "clothing_notes": "",
+      "subject_ages": [],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": "",
+      "source_method": "gemini_batch_person",
+      "prompt_version": "v3_enriched",
+      "created_at": "2026-03-27T10:11:07.160974+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
     }
   ]
 }
