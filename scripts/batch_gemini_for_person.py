@@ -42,6 +42,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 
+class QuotaExhaustedError(Exception):
+    """Raised when Gemini API returns 429 RESOURCE_EXHAUSTED."""
+
+    pass
+
+
 def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
     """Get all unique photos containing any of the given identities.
 
@@ -511,6 +517,11 @@ def run_batch(
                 except Exception as e:
                     latency_ms = int((_time.time() - start_time) * 1000)
                     error_msg = str(e)
+                    # Detect quota exhaustion — stop entire batch immediately
+                    if "429" in error_msg and "RESOURCE_EXHAUSTED" in error_msg:
+                        status = "error"
+                        logger.error(f"  Quota exhausted: {e}")
+                        raise QuotaExhaustedError(str(e))
                     is_retryable = any(
                         s in error_msg for s in ["504", "503", "DEADLINE_EXCEEDED", "timeout", "Timeout"]
                     )
@@ -631,6 +642,13 @@ def run_batch(
                 },
                 face_coordinates=face_coordinates,
             )
+        except QuotaExhaustedError:
+            remaining = len(photo_list) - (i + 1)
+            logger.error(
+                f"Gemini daily quota exhausted. {i + 1} photos processed, "
+                f"{remaining} remaining. Retry after quota resets."
+            )
+            break
         except Exception as e:
             logger.error(f"  Gemini call failed: {e}")
             error_count += 1
