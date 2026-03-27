@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 142: Interactive Feedback + Batch Gemini (2026-03-27) — v0.99.53
+- **12 feedback fixes**: FB-001 (neighbor links→person page), FB-002 (Compare View Photo prefix), FB-003 (multi-merge Focus mode), FB-004 (confirm+merge), FB-006 (bulk merge toast), FB-007 (filter merged neighbors), FB-008 (fetch limit 20→100), FB-010 (face overlay→person page), FB-011 (Confirm Only button), FB-012 (expansion panel cleanup).
+- **3 Codex P1 security fixes**: CSRF on inbox confirm, merge side effects (annotations+recalibration), rematch target ID.
+- **Batch Gemini**: 80/279 Esther+Albert photos processed with full preset (face coords, GEDCOM, subject ages). Hit daily quota (250/day). Script: `scripts/batch_gemini_for_person.py`.
+- **PRD-059**: Temporal co-occurrence analysis for family identification (4 phases).
+- **Startup retry**: 3-attempt retry with backoff for Supabase identity load on Railway cold start.
+- **3 Codex audits**: Security (3 P1 + 2 P2), prompt (3 P0 + 4 P1), speed (GEDCOM preload P0).
+- **Lessons 159-160**: Deploy health verification, batch logging verification.
+- 3815 app tests pass. Harness gap: Session 140 prompt backfilled.
+
 ## Session 141: Fix Sprint + Refactor + Hardening (2026-03-26) — v0.99.52
 - **Track A**: Structural test for _main_mod references (Lesson 157 prevention). FB-002 merge toast link to surviving identity.
 - **Track B**: FB-007 hero face picker — primary_face_id field, admin star button, POST endpoint, Supabase shadow write.

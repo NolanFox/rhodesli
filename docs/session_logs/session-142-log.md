@@ -7,9 +7,12 @@ Prompt: docs/prompts/session-142-prompt.md
 - [x] Phase 0: Setup — session init, test baseline (3815 pass)
 - [x] Phase 0b: Harness gap audit — Session 140 prompt backfilled (worktree subagent)
 - [x] Interactive feedback: FB-001 through FB-012
-- [ ] Codex audit (running)
-- [ ] Gemini batch estimation (running)
-- [ ] Session end: assessment, CHANGELOG, ROADMAP, deploy verify
+- [x] Codex audit #1 (security): 3 P1 + 2 P2, all P1s fixed
+- [x] Codex audit #2 (prompt): 3 P0 + 4 P1, face sort P0 fixed
+- [x] Codex audit #3 (speed): GEDCOM preload P0 identified
+- [x] Gemini batch: 80/279 photos, hit 250/day quota
+- [x] Startup retry fix for Supabase timeout
+- [x] Session end: assessment, CHANGELOG, ROADMAP, BACKLOG, SESSION_HISTORY, deploy verify
 
 ## Feedback Items (FB-001 through FB-012)
 

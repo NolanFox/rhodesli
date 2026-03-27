@@ -52,6 +52,26 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **FB-008**: Bulk merge (Merge Selected) fails in focus mode. Only single merge works.
 - [x] **FB-001/FB-011**: 750/1000 faces in photo_faces have NULL bbox/quality — crops missing on R2. DONE Session 139 — 418 crops regenerated and uploaded.
 
+### Session 142 — Fixes Shipped + Remaining (2026-03-27)
+- [x] **FB-001**: Similar Identities links → person page (was review grid). DONE.
+- [x] **FB-002**: Compare "View Photo" missing community prefix. DONE.
+- [x] **FB-003**: Multi-merge Focus mode breaks after first. DONE.
+- [x] **FB-004**: "Confirm as [Name]" now merges. DONE. (Updates Session 138 FB-003/010)
+- [x] **FB-006**: Bulk merge "already merged" toast improved. DONE.
+- [x] **FB-007**: Similar panel filters merged identities. DONE.
+- [x] **FB-008**: Neighbor fetch limit 20→100. DONE.
+- [x] **FB-010**: Face overlay → person page. DONE.
+- [x] **FB-011**: "Confirm Only" button added. DONE. (Updates Session 138 FB-004)
+- [x] **FB-012**: Expansion panel cleared after confirm. DONE.
+- [x] **CSRF**: inbox confirm missing _check_origin. DONE (Codex audit).
+- [x] **Merge side effects**: confirm+merge runs annotations + recalibration. DONE.
+- **FB-009** (P2): Speed Loop auto-suggestion for obvious matches. DEFERRED (user approved) — feature gap needing proposal pipeline work.
+- **BATCH-001** (P2): Batch Gemini script atomic JSON writes. Codex finding.
+- **BATCH-002** (P2): Batch Gemini results should also write to Supabase date labels. Codex finding.
+- **BATCH-003** (P1): Backfill 80 Gemini API call audit logs to Supabase. Session 142 logging gap.
+- **BATCH-004** (P0): GEDCOM preload optimization for batch scripts — load once, not per photo. Codex speed audit.
+- **BATCH-005** (P1): Resume Gemini batch for remaining 199 Esther/Albert photos after quota resets.
+
 ### P2 — Missing Embeddings (EMBED-001)
 - ~~**EMBED-001**: Reduced from `124` missing embeddings to `2` archival face records after local InsightFace rerun regenerated 130 embeddings.~~ FIXED (Session 96e-cont12) — the final `2` archival records were crop-matched back to current detections and embedded. Final local audit reports `0` missing embeddings. Root cause was registry/artifact drift plus staged-upload publication gaps.
 
