@@ -200,6 +200,12 @@ def post(
                     merge_target_id[:8],
                     merge_result.get("faces_merged", 0),
                 )
+                # Codex P1: Run merge side effects (annotations + recalibration)
+                try:
+                    _main_mod._fire_recalibration_hook("merge", actual_target, actual_source)
+                except Exception:
+                    pass
+                _main_mod._merge_annotations(actual_source, actual_target)
             else:
                 logger.warning(
                     "Confirm succeeded but auto-merge failed: %s -> %s, reason=%s",
@@ -295,9 +301,11 @@ def post(
             except Exception as e:
                 logger.error("Post-confirm re-match failed for %s: %s", iid[:8], e)
 
+        # Codex P2: Use surviving identity for rematching (not source if it was merged)
+        _rematch_id = merge_result["target_id"] if (merge_result and merge_result.get("success")) else identity_id
         threading.Thread(
             target=_post_confirm_rematch,
-            args=(identity_id, _main_mod.data_path),
+            args=(_rematch_id, _main_mod.data_path),
             daemon=True,
         ).start()
     except Exception:
@@ -4078,6 +4086,9 @@ def post(
     """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin.
     When merge_target_id is provided, also auto-merges into that target (FB-004).
     """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -4178,6 +4189,12 @@ def post(
                     merge_target_id[:8],
                     merge_result.get("faces_merged", 0),
                 )
+                # Codex P1: Run merge side effects (annotations + recalibration)
+                try:
+                    _main_mod._fire_recalibration_hook("merge", actual_target, actual_source)
+                except Exception:
+                    pass
+                _main_mod._merge_annotations(actual_source, actual_target)
             else:
                 logger.warning(
                     "Inbox confirm succeeded but auto-merge failed: %s -> %s, reason=%s",
