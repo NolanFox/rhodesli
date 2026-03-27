@@ -63,6 +63,7 @@ def _setup_global_cache():
         ("id-proposed", "Bob Proposed", ["face-b"], 1),
         ("id-inbox", "Unidentified Person 123", ["face-c"], 1),
     ]
+    pc._global_identity_info_by_id = {item[0]: item for item in pc._global_identity_info}
     pc._global_identity_photos = {
         "id-confirmed": set(),
         "id-proposed": set(),

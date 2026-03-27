@@ -87,11 +87,16 @@ def _base_patches():
         patch("app.main.get_best_face_id", return_value="face-u1"),
         patch("app.main.resolve_face_image_url", return_value="/static/crops/face-u1.jpg"),
         patch("app.main.get_photo_id_for_face", return_value="photo-1"),
-        patch("app.main.get_photo_metadata", return_value={
-            "filename": "test.jpg", "collection": "Test Collection",
-            "width": 800, "height": 600,
-            "faces": [{"face_id": "face-u1", "bbox": [100, 100, 200, 200]}],
-        }),
+        patch(
+            "app.main.get_photo_metadata",
+            return_value={
+                "filename": "test.jpg",
+                "collection": "Test Collection",
+                "width": 800,
+                "height": 600,
+                "faces": [{"face_id": "face-u1", "bbox": [100, 100, 200, 200]}],
+            },
+        ),
         patch("app.main._get_date_badge", return_value=("c. 1950s", "medium", "Estimated: 1950s")),
         patch("app.main._load_identification_responses", return_value={"schema_version": 1, "responses": []}),
         patch("app.main._save_identification_responses"),
@@ -106,6 +111,7 @@ def _base_patches():
 # ============================================================
 # Gap 1: Unidentified Person contextual explanation
 # ============================================================
+
 
 class TestGap1UnidentifiedExplanation:
     """Explanation text appears for unidentified persons, not for confirmed."""
@@ -150,6 +156,7 @@ class TestGap1UnidentifiedExplanation:
 # Gap 2: Bidirectional admin/public links
 # ============================================================
 
+
 class TestGap2BidirectionalLinks:
     """Admin sees Edit in Admin on person page; Focus view has View Public Page."""
 
@@ -162,11 +169,13 @@ class TestGap2BidirectionalLinks:
         # Auth disabled = admin, so Edit in Admin should appear
         assert resp.status_code == 200
         assert "Edit in Admin" in resp.text or "View in Admin" in resp.text
-        assert "view=browse#identity-unknown-1" in resp.text
+        # Session 139 FB-014: Edit in Admin now links to focus mode
+        assert "view=focus" in resp.text and "current=unknown-1" in resp.text
 
     def test_identify_page_admin_sees_admin_link(self, client):
         """Admin user sees admin link on identify page."""
         from app.auth import User
+
         admin_user = User(id="test", email="admin@test.com", is_admin=True)
         with ExitStack() as stack:
             for p in _base_patches():
@@ -183,13 +192,14 @@ class TestGap2BidirectionalLinks:
         from pathlib import Path
 
         source = Path("app/page_routes.py").read_text()
-        assert 'community_url_prefix(community_slug)' in source
-        assert 'view=browse#identity-{person_id}' in source
+        assert "community_url_prefix(community_slug)" in source
+        assert "view=browse#identity-{person_id}" in source
 
 
 # ============================================================
 # UX-039: Person page inline admin controls
 # ============================================================
+
 
 class TestUX039PersonPageAdminControls:
     """Admin sees inline rename, state actions, and merge search on person page."""
@@ -227,6 +237,7 @@ class TestUX039PersonPageAdminControls:
     def test_no_admin_controls_for_anonymous(self, client):
         """Anonymous user does NOT see admin controls."""
         from app.auth import User
+
         with ExitStack() as stack:
             for p in _base_patches():
                 stack.enter_context(p)
@@ -251,6 +262,7 @@ class TestUX039PersonPageAdminControls:
 # ============================================================
 # Gap 3: Face card consistency across views
 # ============================================================
+
 
 class TestGap3FaceCardConsistency:
     """Face cards across views have consistent core actions."""
@@ -286,10 +298,12 @@ class TestGap3FaceCardConsistency:
         with ExitStack() as stack:
             for p in _base_patches():
                 stack.enter_context(p)
-            html = repr(identity_card_expanded(
-                identity=_MOCK_IDENTITIES["identities"]["unknown-1"],
-                crop_files={"face-u1.jpg"},
-            ))
+            html = repr(
+                identity_card_expanded(
+                    identity=_MOCK_IDENTITIES["identities"]["unknown-1"],
+                    crop_files={"face-u1.jpg"},
+                )
+            )
         assert "View Public Page" in html
         assert "/person/unknown-1" in html
 
@@ -297,6 +311,7 @@ class TestGap3FaceCardConsistency:
 # ============================================================
 # Gap 4: Compare discoverability CTAs
 # ============================================================
+
 
 class TestGap4CompareDiscoverability:
     """Compare CTAs appear on person page and identify page."""
@@ -321,6 +336,7 @@ class TestGap4CompareDiscoverability:
 # ============================================================
 # Gap 5: Help Identify submission persistence
 # ============================================================
+
 
 class TestGap5SubmissionPersistence:
     """Submission success state survives page refresh via query param."""
@@ -347,6 +363,7 @@ class TestGap5SubmissionPersistence:
 # ============================================================
 # Face Labels: Visibility logic unit test
 # ============================================================
+
 
 class TestFaceLabelsVisibility:
     """Confirmed face overlays visible for all users; non-confirmed hidden for non-admin."""
