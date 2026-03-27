@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-159 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+160 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -75,6 +75,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 139 | Supabase free-tier egress is dominated by TTL cache reloads, not user traffic |
 | 71 | has_insightface check must probe actual deferred imports |
 | 159 | **ALWAYS verify deploy health before ending a session — failed deploy left site down overnight (Session 142)** |
+| 160 | **Batch scripts must verify logging on first call — 79 Gemini calls went unlogged to Supabase (Session 142)** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
