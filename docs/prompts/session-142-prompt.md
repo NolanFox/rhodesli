@@ -17,6 +17,15 @@ Create feedback file immediately:
 touch docs/feedback/session-142-feedback.md
 ```
 
+## Phase 0b: Harness Gap Fix (parallel subagent — run during setup)
+Launch a worktree subagent to fix any harness compliance gaps from recent sessions:
+- Audit sessions 138-141 for missing files (prompts, contexts, codex audits, assessments, logs)
+- Backfill any missing files from assessment content or git history
+- Verify SESSION_HISTORY has entries for all sessions
+- Verify BACKLOG items closed match ROADMAP completed items
+- Commit on branch `session-142/harness-gaps`
+This runs in background while you wait for user feedback.
+
 ## Interactive Feedback Protocol
 This session is FEEDBACK-DRIVEN. The harness is at `.claude/rules/interactive-session-feedback.md`.
 
