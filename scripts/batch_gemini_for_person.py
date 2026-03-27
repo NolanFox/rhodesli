@@ -475,23 +475,19 @@ def run_batch(
                             "prompt_version": "v3_enriched",
                             "prompt_variant": prompt_variant,
                             "prompt_manifest_id": prompt_manifest["prompt_manifest_id"],
+                            "prompt_family": prompt_manifest["prompt_family"],
+                            "prompt_contract_version": prompt_manifest["prompt_contract_version"],
                             "temperature": 0.1,
                             "trigger": "batch_person_analysis",
                             "preset": "full",
                             "face_count": len(face_coordinates) if face_coordinates else 0,
+                            "request_surface": "scripts.batch_gemini_for_person",
+                            "request_mode": "batch",
                         },
                         response_summary=response_summary,
                         prompt_text=prompt_text,
                         full_response=parsed if parsed else None,
                         gedcom_context=gedcom_context,
-                        # Only pass fields that exist in gemini_api_calls table
-                        prompt_manifest_id=prompt_manifest["prompt_manifest_id"],
-                        prompt_family=prompt_manifest["prompt_family"],
-                        prompt_version=prompt_manifest["prompt_version"],
-                        prompt_variant=prompt_manifest["prompt_variant"],
-                        prompt_contract_version=prompt_manifest["prompt_contract_version"],
-                        request_surface="scripts.batch_gemini_for_person._call_gemini_full",
-                        request_mode="batch",
                     )
                 except Exception as log_err:
                     logger.warning(f"  Failed to log Gemini call: {log_err}")
