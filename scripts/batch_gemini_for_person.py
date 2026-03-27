@@ -266,11 +266,11 @@ def run_batch(
         return
 
     # Import production functions
-    from app.estimate_routes import _build_gedcom_context_for_photo
     from rhodesli_ml.gemini_extraction import build_extraction_prompt
     from rhodesli_ml.gemini_config import GEMINI_MODEL, get_model_pricing
     from rhodesli_ml.prompt_manifest import build_prompt_lineage_fields, build_prompt_manifest
     from app.supabase_data import log_gemini_call
+    from scripts.run_combined_pipeline import load_gedcom_data, build_gedcom_context
     from google import genai
     from google.genai import types
     import numpy as np
@@ -293,14 +293,95 @@ def run_batch(
         _pi = json.load(f)
     local_face_to_photo = _pi.get("face_to_photo", {})
 
-    # Cache GEDCOM context — load once per unique set of identified faces
+    # P0 GEDCOM preload optimization (Session 142 Codex speed audit):
+    # Load GEDCOM tree ONCE instead of per-photo (~60-90s per call eliminated).
+    logger.info("Pre-loading GEDCOM data from Supabase (one-time)...")
+    _preloaded_gedcom_data = None
+    try:
+        _preloaded_gedcom_data = load_gedcom_data()
+        if _preloaded_gedcom_data:
+            n_links = len(_preloaded_gedcom_data.get("face_links", {}))
+            logger.info(f"GEDCOM data pre-loaded: {n_links} face links")
+        else:
+            logger.warning("GEDCOM data unavailable — context will be None for all photos")
+    except Exception as e:
+        logger.warning(f"Failed to pre-load GEDCOM data: {e}")
+
+    # Pre-load identity registry for face->identity lookups in GEDCOM context
+    _identities_for_gedcom = {}
+    try:
+        from supabase import create_client as _sc
+
+        _sb_url = os.environ.get("SUPABASE_URL")
+        _sb_key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if _sb_url and _sb_key:
+            _sb = _sc(_sb_url, _sb_key)
+            _offset = 0
+            _page_size = 1000
+            while True:
+                _resp = (
+                    _sb.table("identities")
+                    .select("identity_id, name, anchor_ids, candidate_ids")
+                    .range(_offset, _offset + _page_size - 1)
+                    .execute()
+                )
+                _rows = _resp.data or []
+                for _row in _rows:
+                    for _k in ("anchor_ids", "candidate_ids"):
+                        _v = _row.get(_k, [])
+                        if isinstance(_v, str):
+                            _v = json.loads(_v)
+                        _row[_k] = _v or []
+                    _identities_for_gedcom[_row["identity_id"]] = _row
+                if len(_rows) < _page_size:
+                    break
+                _offset += _page_size
+            logger.info(f"Pre-loaded {len(_identities_for_gedcom)} identities for GEDCOM context")
+    except Exception as e:
+        logger.warning(f"Failed to pre-load identities for GEDCOM: {e}")
+
+    # Build face_id -> identity_id reverse map for GEDCOM lookups
+    _face_to_identity = {}
+    for _iid, _ident in _identities_for_gedcom.items():
+        for _fid in _ident.get("anchor_ids", []) + _ident.get("candidate_ids", []):
+            if isinstance(_fid, str):
+                _face_to_identity[_fid] = _iid
+            elif isinstance(_fid, dict):
+                _face_to_identity[_fid.get("face_id", "")] = _iid
+
+    # Cache GEDCOM context per photo — uses pre-loaded data (no Supabase per call)
     _gedcom_cache = {}
 
     def _get_cached_gedcom_context(photo_id):
         if photo_id not in _gedcom_cache:
             try:
-                ctx = _build_gedcom_context_for_photo(photo_id)
-                _gedcom_cache[photo_id] = ctx
+                if not _preloaded_gedcom_data:
+                    _gedcom_cache[photo_id] = None
+                    return None
+
+                # Get face_ids for this photo
+                _photos = _pi.get("photos", _pi)
+                photo_entry = _photos.get(photo_id, {})
+                photo_face_ids = photo_entry.get("face_ids", [])
+
+                if not photo_face_ids:
+                    _gedcom_cache[photo_id] = None
+                    return None
+
+                # Build face stubs with identity names (same interface as run_combined_pipeline)
+                class _FaceStub:
+                    def __init__(self, face_id, identity_name):
+                        self.face_id = face_id
+                        self.identity_name = identity_name
+
+                faces = []
+                for fid in photo_face_ids:
+                    iid = _face_to_identity.get(fid)
+                    name = _identities_for_gedcom[iid].get("name") if iid and iid in _identities_for_gedcom else None
+                    faces.append(_FaceStub(fid, name))
+
+                ctx = build_gedcom_context(photo_id, faces, _identities_for_gedcom, _preloaded_gedcom_data)
+                _gedcom_cache[photo_id] = ctx or None
             except Exception as e:
                 logger.warning(f"  GEDCOM context failed for {photo_id}: {e}")
                 _gedcom_cache[photo_id] = None
