@@ -38,12 +38,31 @@ def get(sess, next: str = ""):
     if next and next.startswith("/") and not next.startswith("//"):
         post_action = f"/login?next={_url_quote(next, safe='/?=&#')}"
 
+    # Session 140: Save return URL for post-OAuth redirect
+    _return_script = ""
+    _return_to = next if (next and next.startswith("/") and not next.startswith("//")) else ""
+    if _return_to:
+        from urllib.parse import quote as _url_q
+
+        _return_script = f"sessionStorage.setItem('login_return_to', '{_url_q(_return_to, safe='/?=&#')}');"
+    else:
+        # Default: try to use referrer if it's from the same site
+        _return_script = """
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                var url = new URL(document.referrer);
+                if (url.pathname !== '/login' && url.pathname !== '/signup') {
+                    sessionStorage.setItem('login_return_to', url.pathname + url.search);
+                }
+            }
+        """
+
     return Html(
         Head(
             Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Login - Rhodesli"),
             Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Script(src="https://cdn.tailwindcss.com"),
+            Script(_return_script),
         ),
         Body(
             Div(
@@ -628,7 +647,10 @@ def get(sess):
                             body: JSON.stringify({access_token: accessToken})
                         }).then(r => r.json()).then(data => {
                             if (data.success) {
-                                window.location.href = '/';
+                                // Redirect to the page they came from, or default community
+                                var returnTo = sessionStorage.getItem('login_return_to') || '/c/rhodes/';
+                                sessionStorage.removeItem('login_return_to');
+                                window.location.href = returnTo;
                             } else {
                                 window.location.href = '/login?error=oauth_failed';
                             }
