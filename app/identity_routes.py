@@ -2151,6 +2151,7 @@ def post(
     try:
         registry = _main_mod.load_registry()
     except Exception:
+        logger.exception(f"Merge failed: could not load registry for {source_id} -> {target_id}")
         return Response(
             to_xml(_main_mod.toast("System busy. Please try again.", "warning")),
             status_code=423,
@@ -2161,9 +2162,28 @@ def post(
     nav_prefix = _nav_prefix_from_request(request)
     is_merged, canonical_id = _main_mod._check_merged_identity(target_id, registry)
     if is_merged:
+        logger.warning(f"Merge target {target_id} already merged into {canonical_id}")
+        if from_focus:
+            return Response(
+                to_xml(_main_mod.toast("Target identity was already merged. Refreshing...", "warning")),
+                status_code=409,
+                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+            )
         return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
     is_merged, canonical_id = _main_mod._check_merged_identity(source_id, registry)
     if is_merged:
+        logger.warning(f"Merge source {source_id} already merged into {canonical_id}")
+        if from_focus:
+            # Remove the already-merged neighbor card from the DOM
+            return Response(
+                to_xml(
+                    Div(
+                        Div(id=f"neighbor-{source_id}", hx_swap_oob="delete"),
+                        _main_mod.toast("Already merged. Removed from suggestions.", "info"),
+                    )
+                ),
+                headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+            )
         return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
 
     # Validate both identities exist
@@ -2196,9 +2216,7 @@ def post(
         valid_reasons = {"collage", "photo_album", "picture_on_wall", "other"}
         if override_reason in valid_reasons:
             allow_co_occurrence = True
-            import logging as _merge_log
-
-            _merge_log.info(f"Co-occurrence override: {source_id} -> {target_id} reason={override_reason} by admin")
+            logger.info(f"Co-occurrence override: {source_id} -> {target_id} reason={override_reason} by admin")
 
     # Attempt merge (with auto-correction)
     result = registry.merge_identities(
@@ -2211,6 +2229,10 @@ def post(
     )
 
     if not result["success"]:
+        logger.warning(
+            f"Merge failed: {source_id} -> {target_id}, reason={result['reason']}, "
+            f"from_focus={from_focus}, message={result.get('message', '')}"
+        )
         # Handle name conflict -- show resolution modal
         if result["reason"] == "name_conflict":
             return _main_mod._name_conflict_modal(
@@ -2222,7 +2244,7 @@ def post(
 
         error_messages = {
             "co_occurrence": "Cannot merge: these identities appear in the same photo. Use Override to merge collages.",
-            "already_merged": "Cannot merge: source identity was already merged.",
+            "already_merged": "Already merged. Try refreshing the page.",
         }
         message = error_messages.get(result["reason"], f"Merge failed: {result['reason']}")
 

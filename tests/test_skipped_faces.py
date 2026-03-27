@@ -18,6 +18,7 @@ from unittest.mock import patch, MagicMock
 # BUG 1: Clustering must include SKIPPED faces as candidates
 # ---------------------------------------------------------------------------
 
+
 class TestClusteringIncludesSkipped:
     """Skipped faces must be included as candidates for clustering."""
 
@@ -169,6 +170,7 @@ class TestClusteringIncludesSkipped:
 # BUG 2: Lightbox face overlays must be clickable for all states
 # ---------------------------------------------------------------------------
 
+
 class TestLightboxFaceOverlayClickable:
     """Face overlays in the identity lightbox must have interaction handlers."""
 
@@ -176,6 +178,7 @@ class TestLightboxFaceOverlayClickable:
         """Lightbox face overlays must have cursor-pointer and a click handler."""
         from app.main import load_registry
         from core.registry import IdentityState
+
         registry = load_registry()
 
         # Find an identity with faces to test the lightbox
@@ -198,18 +201,19 @@ class TestLightboxFaceOverlayClickable:
         # Check that face overlays (positioned via left:/top:/width:/height: percentages)
         # have cursor-pointer class, indicating they are clickable
         import re
+
         # Find divs that have percentage-based positioning (face overlays)
         overlay_pattern = r'style="left:\s*[\d.]+%.*?top:\s*[\d.]+%'
         overlays = re.findall(overlay_pattern, text)
         if overlays:
             # At least one overlay should have cursor-pointer
-            assert "cursor-pointer" in text, \
-                "Lightbox face overlays must have cursor-pointer for clickability"
+            assert "cursor-pointer" in text, "Lightbox face overlays must have cursor-pointer for clickability"
 
 
 # ---------------------------------------------------------------------------
 # BUG 3: Identity links must route to correct section based on state
 # ---------------------------------------------------------------------------
+
 
 class TestSkippedSectionFilterWrapper:
     """Skipped section cards must have wrappers with data-name for sidebar filtering."""
@@ -221,8 +225,9 @@ class TestSkippedSectionFilterWrapper:
         html = response.text
         # If there are identity cards, they should be inside wrappers with data-name
         if "identity-card" in html:
-            assert "identity-card-wrapper" in html, \
+            assert "identity-card-wrapper" in html, (
                 "Skipped section cards must be wrapped in identity-card-wrapper for filter"
+            )
 
     def test_filter_script_targets_wrappers(self, client):
         """Client-side filter script queries both .identity-card and .identity-card-wrapper."""
@@ -245,8 +250,9 @@ class TestIdentityLinkRouting:
         if "identity-" in text:
             # The section should have at least some links that use section=skipped
             # and should NOT route to to_review for skipped identities
-            assert "section=to_review" not in text or "section=skipped" in text, \
+            assert "section=to_review" not in text or "section=skipped" in text, (
                 "Skipped identity links should route to section=skipped"
+            )
 
     def test_confirmed_section_links_not_to_review(self, client):
         """Links in confirmed section must not route to to_review."""
@@ -259,10 +265,11 @@ class TestIdentityLinkRouting:
             # The confirmed cards should link within confirmed section
             assert "section=confirmed" in text
 
-    def test_neighbor_card_uses_correct_section(self, client):
-        """Find Similar neighbor cards must link to correct section based on neighbor state."""
+    def test_neighbor_card_links_to_person_page(self, client):
+        """Find Similar neighbor cards must link to person detail page (FB-001, Session 142)."""
         from app.main import load_registry
         from core.registry import IdentityState
+
         registry = load_registry()
 
         # Find a confirmed identity to test neighbors endpoint
@@ -275,16 +282,19 @@ class TestIdentityLinkRouting:
         assert response.status_code == 200
         text = response.text
 
-        # If neighbors are returned, they should link to correct sections
-        # Neighbors can be in any section, so we just verify the link pattern
-        # exists (section= is present in href attributes)
+        # Neighbor cards should link to /person/{uuid}, not to review grid
         if "neighbor-" in text:
-            assert "section=" in text, "Neighbor links should specify their section"
+            assert "/person/" in text, "Neighbor links should point to person detail page"
+            # Must NOT use old review grid anchor pattern
+            assert "section=to_review&amp;view=browse#identity-" not in text, (
+                "Neighbor links must not use review grid anchors (FB-001)"
+            )
 
 
 # ---------------------------------------------------------------------------
 # BUG 4: Footer stats must include skipped in denominator
 # ---------------------------------------------------------------------------
+
 
 class TestFooterStatsIncludeSkipped:
     """Footer progress stat must include skipped faces in the total."""
@@ -292,28 +302,30 @@ class TestFooterStatsIncludeSkipped:
     def test_sidebar_footer_denominator_includes_skipped(self, client):
         """The sidebar footer 'X of Y identified' must count skipped in Y."""
         from app.main import _compute_sidebar_counts, load_registry
+
         registry = load_registry()
         counts = _compute_sidebar_counts(registry)
 
         # The denominator should be confirmed + skipped + to_review, not just confirmed + to_review
-        total_with_skipped = counts['confirmed'] + counts['skipped'] + counts['to_review']
-        total_without_skipped = counts['confirmed'] + counts['to_review']
+        total_with_skipped = counts["confirmed"] + counts["skipped"] + counts["to_review"]
+        total_without_skipped = counts["confirmed"] + counts["to_review"]
 
         # If there are skipped faces, total_with_skipped > total_without_skipped
-        if counts['skipped'] > 0:
-            assert total_with_skipped > total_without_skipped, \
+        if counts["skipped"] > 0:
+            assert total_with_skipped > total_without_skipped, (
                 "With skipped faces, denominator must be larger than confirmed + to_review"
+            )
 
     def test_footer_text_not_self_referential(self, client, auth_disabled):
         """Footer should not say 'N of N identified' when skipped faces exist."""
         from app.main import _compute_sidebar_counts, load_registry
+
         registry = load_registry()
         counts = _compute_sidebar_counts(registry)
 
-        if counts['skipped'] > 0:
+        if counts["skipped"] > 0:
             response = client.get("/?section=confirmed")
             text = response.text
             # Should NOT say "23 of 23 identified" when 192 are skipped
             bad_pattern = f"{counts['confirmed']} of {counts['confirmed']} identified"
-            assert bad_pattern not in text, \
-                f"Footer shows '{bad_pattern}' but {counts['skipped']} faces are skipped"
+            assert bad_pattern not in text, f"Footer shows '{bad_pattern}' but {counts['skipped']} faces are skipped"
