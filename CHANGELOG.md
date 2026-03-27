@@ -2,15 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.99.51] — 2026-03-26 (Session 140: P0 Auth Fix)
+## [v0.99.51] — 2026-03-26 (Session 140: P0 Auth Fix + OAuth Redirect)
 
-### Critical Fix
-- **P0 Auth**: Re-export 7 auth functions (login_with_supabase, signup_with_supabase, validate_invite_code, send_password_reset, update_password, get_user_from_token, exchange_code_for_session) from app.auth in main.py. All auth operations (OAuth, login, signup, password reset) were broken since Session 90b.
+### Critical Fixes
+- **P0 Auth**: Re-export 7 auth functions from app.auth in main.py. All auth operations (OAuth, login, signup, password reset) were broken since Session 90b (~20 sessions, ~3 weeks).
+- **OAuth redirect**: Post-login now redirects to `/c/rhodes/` instead of root `/`. Uses form POST → 303 redirect instead of fetch() + client JS redirect (Lesson 158: fetch cookies not committed before redirect).
+- **Root page nav**: Shows "Go to Archive" when logged in instead of "Sign In" (which did nothing).
+- **Already-logged-in redirect**: `/login` redirects to `/c/rhodes/` instead of `/`.
 
-### Root Cause
-- Session 90b extracted auth_routes.py from main.py, removing auth function imports
-- auth_routes.py still referenced them via `_main_mod` (app.main) → AttributeError
-- Tests used `create=True` on patches, silently masking the missing attributes
+### Root Causes
+- Session 90b extracted auth_routes.py, removed imports, tests masked with `create=True`
+- OAuth callback used fetch() API which doesn't reliably commit session cookies before JS redirect
+- Root landing page never checked auth state for nav rendering
 
 ## [v0.99.50] — 2026-03-26 (Session 139: Mega Fix Sprint — 4 Parallel Tracks)
 

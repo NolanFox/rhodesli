@@ -1,45 +1,71 @@
-# Session 140 Log — P0 Auth Fix + Comprehensive Audit
+# Session 140 Log — P0 Auth Fix + OAuth Redirect
 
 **Started:** 2026-03-26
-**Mode:** Implementation (emergency fix)
-**Prompt:** User reported OAuth broken
+**Mode:** Emergency fix → iterative debugging with user
+**Prompt:** User reported "You broke OAuth. I can't sign in."
 
 ## Phase Checklist
 - [x] Investigate OAuth failure
-- [x] Identify root cause (missing auth function imports since Session 90b)
-- [x] Fix: re-export 7 auth functions in main.py
-- [x] Tests: 3780 pass
-- [x] Deploy: SUCCESS (commit 5114d2a)
-- [x] Codex audit: all 180 _main_mod references verified correct, zero merge conflicts
-- [x] Own audit: Python script verified all _main_mod.X references resolve
+- [x] Root cause: missing auth function imports since Session 90b
+- [x] Fix 1: Re-export 7 auth functions in main.py
+- [x] Deploy + verify: auth/session returns 200
+- [x] Fix 2: Post-OAuth redirect to /c/rhodes/ instead of /
+- [x] Fix 3: Root page shows "Go to Archive" when logged in
+- [x] Fix 4: Form POST replaces fetch() for reliable cookie setting
+- [x] Codex critical audit: all 180 _main_mod refs clean
+- [x] User confirmed OAuth works end-to-end
 
 ## Timeline
 
-### Investigation (01:30 UTC)
-- User reported "You broke OAuth. I can't sign in."
-- Checked deploy logs: `AttributeError: module '__main__' has no attribute 'get_user_from_token'`
-- Traced to auth_routes.py calling `_main_mod.get_user_from_token()` where `_main_mod` = `app.main`
-- `get_user_from_token` defined in `app/auth.py` but NOT imported in `app/main.py`
+### 01:30 UTC — Investigation
+- Deploy logs: `AttributeError: module '__main__' has no attribute 'get_user_from_token'`
+- Traced to Session 90b (commit b541381): auth_routes extraction removed imports
+- ALL auth operations broken: OAuth, email login, signup, password reset
 
-### Root Cause Analysis (01:35 UTC)
-- Session 90b (commit b541381) extracted auth_routes.py from main.py
-- That commit removed imports: signup_with_supabase, validate_invite_code, send_password_reset, update_password, get_user_from_token, exchange_code_for_session
-- auth_routes.py continued using `_main_mod.X` for ALL of them → AttributeError
-- Tests didn't catch it: patches use `create=True` which auto-creates missing attributes
-- ALL auth operations (OAuth, email login, signup, password reset) broken for ~20 sessions
+### 01:40 UTC — Fix 1: Re-export auth functions
+- Added 7 imports to main.py's `from app.auth import` block
+- First attempt (direct import in auth_routes.py) broke tests — patches target `_main_mod.X`
+- Final: re-export in main.py, auth_routes continues using `_main_mod.X`
+- Commit 5114d2a, deployed, auth/session returns 200
 
-### Fix (01:40 UTC)
-- First attempt: import auth functions directly in auth_routes.py → broke tests (patches target `_main_mod.X`)
-- Final fix: re-export all 7 auth functions from app.auth in main.py's import block
-- auth_routes.py continues using `_main_mod.X` pattern (compatible with existing test patches)
-- 3780 tests pass
+### 02:00 UTC — User reports redirect issue
+- Auth works but redirects to `/` (platform root) instead of community page
+- Root page shows "Sign In" even when logged in — confusing
 
-### Verification (01:47 UTC)
-- Deploy SUCCESS on Railway
-- Login page returns 200
-- No auth errors in deploy logs
-- Codex CLI audit: all 180 _main_mod references verified across 8 route files
-- Python script audit: confirms all references resolve
+### 02:05 UTC — Fix 2: OAuth redirect
+- Changed post-login redirect from `/` to `/c/rhodes/`
+- Used sessionStorage to save return URL — unreliable in incognito
+- Commit 83391c8
 
-## Lesson
-**Lesson 157**: Tests with `create=True` on mock patches silently mask missing attributes. The `create=True` parameter creates the attribute if it doesn't exist, which means a test can pass even when the actual code would raise AttributeError. Avoid `create=True` on critical path patches, or add a structural test that verifies all `_main_mod.X` references resolve without mocking.
+### 02:10 UTC — User reports still broken
+- sessionStorage cleared by cross-origin OAuth redirect
+- Switched to server-side session (`sess["login_return_to"]`)
+- Root page nav shows "Go to Archive" when authenticated
+- Commit 9f49702
+
+### 02:15 UTC — User reports need to refresh
+- fetch() + `window.location.href` race condition: cookie not committed before redirect
+- Replaced with form POST → 303 server redirect
+- Cookie travels WITH the redirect response — guaranteed to be set
+- Commit b1243be
+
+### 02:20 UTC — User confirms working
+- OAuth flow works end-to-end in incognito
+- Redirects to archive page with session intact
+- No manual refresh needed
+
+## Codex Audit (01:50 UTC)
+- **Auditor**: Codex CLI v0.115.0 (gpt-5.4)
+- **Scope**: All route files, _main_mod references, merge conflicts, security
+- **Result**: P0 none, all 180 refs clean, no merge conflicts, no auth bypass
+- Ran test suites: auth, workspace signup, community routing — all pass
+
+## Commits
+| Hash | Description |
+|------|-------------|
+| 5114d2a | fix(auth): P0 — re-export auth functions |
+| 4869d89 | docs: session 140 assessment + CHANGELOG v0.99.51 |
+| 4e1f6a9 | docs: session 140 log |
+| 83391c8 | fix(auth): post-OAuth redirect to community page |
+| 9f49702 | fix(auth): server-side redirect + root page nav |
+| b1243be | fix(auth): form POST instead of fetch for session |

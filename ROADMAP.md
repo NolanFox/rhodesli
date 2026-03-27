@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.50 · ~4438 tests (3780 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.51 · ~4438 tests (3780 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -133,6 +133,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-27: **v0.99.51 — Session 140**: P0 Auth Fix + OAuth Redirect. All auth operations (OAuth, login, signup, password reset) broken since Session 90b — re-exported 7 auth functions. OAuth redirect changed from fetch()+JS to form POST→303 (Lesson 158). Root page shows logged-in state. Codex audit: all 180 _main_mod refs clean. 3780 tests pass.
 
 - [x] 2026-03-26: **v0.99.49 — Session 138**: Interactive Feedback + Refactor Phase 2. 13 feedback items (FB-001–FB-013). FB-006 P0: confirm for unidentified persons (5 files). FB-012: community filter pagination. FB-013: rejected identities filtered from neighbors. Codex audit: P1 fetch limit, P2 cache invalidation. REFACTOR-001 Phase 2: 848 lines extracted to cards.py (8 functions), badges.py (_cross_community_badge), nav.py (_build_triage_bar). main.py: 10,638 → 9,790. 3748 app tests pass.
 

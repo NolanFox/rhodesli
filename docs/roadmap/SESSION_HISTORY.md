@@ -14,6 +14,22 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 140: P0 Auth Fix + OAuth Redirect (2026-03-27) — v0.99.51
+- **P0**: All auth operations broken since Session 90b (~20 sessions). Re-exported 7 auth functions in main.py.
+- **OAuth redirect**: fetch()+JS redirect → form POST→303 server redirect. Fixes cookie race condition (Lesson 158).
+- **Root page**: Shows "Go to Archive" when logged in. Login redirect goes to /c/rhodes/ not /.
+- **Codex audit**: All 180 _main_mod refs clean across 10 route files. No merge conflicts. No security issues.
+- **Lessons**: 157 (create=True masks missing attrs), 158 (fetch cookies unreliable for auth redirect).
+- 3780 app tests pass.
+
+## Session 139: Mega Fix Sprint — 4 Parallel Tracks (2026-03-26) — v0.99.50
+- **Track A**: 418 missing face crops regenerated + uploaded to R2 (FB-001/FB-011).
+- **Track B**: Bulk merge auto-advance in focus mode (FB-008). Edit in Admin deep link via focus mode (FB-014).
+- **Track C**: PRD-057 triage workflow. People page name filter: All/Named/Needs Name (FB-004/FB-005).
+- **Track E**: perf_cache dict lookup O(N²)→O(1). best_face_id cache. Browse mode skips quality sort.
+- **Codex audit**: P2 tie-breaking (rejected), P3 sidebar text (noted).
+- 3780 app tests pass (+32 new).
+
 ## Session 138: Interactive Feedback + Refactor Phase 2 (2026-03-26) — v0.99.49
 - **13 feedback items** received during interactive session (FB-001–FB-013).
 - **FB-006 (P0)**: Enable confirm for unidentified persons — removed _is_real_name blocks across 5 files (registry, identity_routes, main, person_routes, page_routes). User workflow: confirm cluster first, identify later.
