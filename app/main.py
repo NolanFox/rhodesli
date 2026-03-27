@@ -11,6 +11,7 @@ Error Semantics:
 """
 
 import hashlib
+import heapq
 import json
 import logging
 import os
@@ -1055,13 +1056,25 @@ async def startup_event():
         except Exception as e:
             logging.warning(f"Supabase startup sync failed (using existing JSON): {e}")
 
-        # Prewarm UI caches
+        # Prewarm UI caches — run independent fetches in parallel (Session 141 C2)
         try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
             t0 = time.perf_counter()
-            _build_caches()
-            _load_date_labels()
-            get_crop_files()
-            logging.info(f"UI caches prewarmed in {time.perf_counter() - t0:.2f}s")
+            cache_tasks = {
+                "_build_caches": _build_caches,
+                "_load_date_labels": _load_date_labels,
+                "get_crop_files": get_crop_files,
+            }
+            with ThreadPoolExecutor(max_workers=3, thread_name_prefix="cache-warm") as executor:
+                futures = {executor.submit(fn): name for name, fn in cache_tasks.items()}
+                for future in as_completed(futures):
+                    name = futures[future]
+                    try:
+                        future.result()
+                    except Exception as exc:
+                        logging.warning(f"UI cache prewarm '{name}' failed: {exc}")
+            logging.info(f"UI caches prewarmed in {time.perf_counter() - t0:.2f}s (parallel)")
         except Exception as e:
             logging.warning(f"UI cache prewarm failed (lazy loading on first request): {e}")
 
@@ -6029,7 +6042,7 @@ def render_to_review_section(
             -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         )
 
-    high_confidence = sorted(to_review, key=_focus_sort_key)[:10]
+    high_confidence = heapq.nsmallest(10, to_review, key=_focus_sort_key)
 
     # If a specific identity was requested, move it to the front
     if current_id and view_mode == "focus":
@@ -8349,7 +8362,7 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = "", nav_pre
             -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         )
 
-    high_confidence = sorted(to_review, key=_focus_sort_key)[:10]
+    high_confidence = heapq.nsmallest(10, to_review, key=_focus_sort_key)
 
     if high_confidence:
         user_is_admin = True  # get_next_focus_card is only called from admin action routes
