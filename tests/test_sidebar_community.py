@@ -273,7 +273,7 @@ class TestIdentityCardCommunity(unittest.TestCase):
 
     @patch("app.main.resolve_face_image_url", return_value="/static/crops/test.jpg")
     @patch("app.main.get_best_face_id", return_value="face-a")
-    @patch("app.main._load_gedcom_face_links", return_value={"id-roland": "@I1@"})
+    @patch("app.relationship_routes._load_gedcom_face_links", return_value={"id-roland": "@I1@"})
     @patch("app.main._get_proposal_target_count", return_value=3)
     def test_identity_card_uses_nav_prefix(self, *_mocks):
         from app.main import identity_card

@@ -73,3 +73,12 @@ from app.components.cards import (  # noqa: F401
     _build_face_cards_for_entries,
     _face_pagination_controls,
 )
+
+from app.components.identity_cards import (  # noqa: F401
+    identity_card,
+    identity_card_expanded,
+    identity_card_compact,
+    _sequential_display_name,
+    _proposal_banner,
+    _proposal_badge_inline,
+)

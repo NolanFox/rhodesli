@@ -94,7 +94,15 @@ class TestMainPyAriaLabels:
     def setup_method(self):
         self.content = _read_file("app/main.py")
         # Session 137: some components extracted to app/components/
-        for comp_file in ("nav.py", "modals.py", "badges.py", "toasts.py", "forms.py", "layouts.py"):
+        for comp_file in (
+            "nav.py",
+            "modals.py",
+            "badges.py",
+            "toasts.py",
+            "forms.py",
+            "layouts.py",
+            "identity_cards.py",
+        ):
             try:
                 self.content += _read_file(f"app/components/{comp_file}")
             except FileNotFoundError:
