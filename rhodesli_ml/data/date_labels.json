@@ -39051,6 +39051,82 @@
         ],
         "trigger": "session_142_esther_albert"
       }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_12_01635_p_13akf5twbc0904",
+      "filename": "raw_photos/01635_p_13akf5twbc0904.jpg",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1917,
+      "confidence": "high",
+      "probable_range": [
+        1917,
+        1918
+      ],
+      "decade_probabilities": {
+        "1910": 0.9,
+        "1920": 0.1
+      },
+      "location_estimate": {
+        "place": "Detroit, Michigan",
+        "confidence": "high",
+        "visual_evidence": "A poster on the wall clearly reads 'DETROIT' and advertises a local event.",
+        "biographical_evidence": "Genealogical records confirm Albert Fox resided in Detroit, Wayne, Michigan between 1917 and 1918.",
+        "missing_child_analysis": "Not applicable; subject is photographed alone prior to his 1920 marriage."
+      },
+      "scene_description": "An informal, black-and-white indoor portrait of a young man seated in a room illuminated by harsh, directional sunlight from an off-camera window. He is wearing a casual white shirt and dark trousers. Behind him on the plain wall hangs a poster advertising a Maccabees picnic in Detroit.",
+      "clothing_notes": "The subject is wearing a casual, collarless white button-up shirt with the sleeves rolled up, paired with dark trousers. This is typical informal summer or workwear for young men in the 1910s.",
+      "subject_ages": [
+        21
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "fair",
+        "issues": [
+          "vertical scratches",
+          "heavy grain",
+          "soft focus",
+          "slight fading"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 21,
+          "gender": "male",
+          "description": "Young man with dark hair, strong facial features, looking directly at the camera with a neutral expression."
+        }
+      ],
+      "group_composition": {
+        "type": "candid",
+        "people_count": 1,
+        "arrangement": "Single subject seated indoors facing the camera"
+      },
+      "cultural_markers": [
+        "Maccabees poster (likely referring to the Knights of the Maccabees, a major fraternal organization headquartered in Detroit during this era, or possibly a Jewish Maccabi sports club)"
+      ],
+      "photo_technique": {
+        "type": "gelatin silver print",
+        "format": "snapshot",
+        "is_color": false,
+        "condition": "fair"
+      },
+      "text_signage": {},
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": true,
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-27T20:43:52.449879+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
     }
   ]
 }
