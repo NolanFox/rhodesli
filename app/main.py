@@ -4917,10 +4917,14 @@ def _sequential_display_name(name: str) -> str:
 _best_face_cache: dict[str, str | None] = {}
 
 
-def get_best_face_id(face_ids: list) -> str | None:
+def get_best_face_id(face_ids: list, identity: dict | None = None) -> str | None:
     """Pick the highest-quality face from a list of face IDs.
 
-    Returns the face_id with the highest composite quality score,
+    If *identity* is provided and has a ``primary_face_id`` that exists in the
+    face list, that face is returned immediately (admin hero-face override,
+    Session 141 Track B).
+
+    Otherwise returns the face_id with the highest composite quality score,
     or the first one if scores can't be computed.
     Uses a module-level cache keyed by frozenset of normalized face IDs (Session 139 E2).
     """
@@ -4936,6 +4940,12 @@ def get_best_face_id(face_ids: list) -> str | None:
             ids.append(f.get("face_id", ""))
         else:
             ids.append(str(f))
+
+    # Check admin-chosen primary face (Session 141 — Hero Face Picker)
+    if identity:
+        primary = identity.get("primary_face_id")
+        if primary and primary in ids:
+            return primary
 
     if len(ids) == 1:
         return ids[0]

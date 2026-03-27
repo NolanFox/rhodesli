@@ -4702,3 +4702,65 @@ def get(
         ),
         cls="co-occurrence-preview",
     )
+
+
+# ---------------------------------------------------------------------------
+# Hero Face Picker — Set Primary Face (Session 141 Track B)
+# ---------------------------------------------------------------------------
+
+
+@rt("/api/identity/{identity_id}/set-primary-face/{face_id:path}")
+def post(identity_id: str, face_id: str, sess=None, request=None):
+    """Set a face as the hero thumbnail for an identity. Admin-only."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = _main_mod.load_registry()
+    except Exception:
+        return Response(
+            to_xml(_main_mod.toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(_main_mod.toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    # Validate the face belongs to this identity
+    all_face_ids = list(identity.get("anchor_ids", [])) + list(identity.get("candidate_ids", []))
+    if face_id not in all_face_ids:
+        return Response(
+            to_xml(_main_mod.toast("Face does not belong to this identity.", "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    # Set primary_face_id on the identity (directly on internal dict — Lesson 36)
+    registry._identities[identity_id]["primary_face_id"] = face_id
+    registry._identities[identity_id]["updated_at"] = (
+        __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+    )
+
+    _main_mod.save_registry(registry, changed_ids={identity_id})
+    _main_mod.log_user_action(
+        "SET_PRIMARY_FACE",
+        identity_id=identity_id,
+        identity_name=identity.get("name", "Unknown"),
+        context=f"face_id={face_id}",
+    )
+
+    return _main_mod.toast(
+        f"Set hero face for {identity.get('name', 'this person')}",
+        "success",
+    )

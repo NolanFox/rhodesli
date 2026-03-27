@@ -1938,7 +1938,8 @@ class IdentityRegistry:
                     client.table("identities")
                     .select(
                         "identity_id, name, display_name, state, anchor_ids, candidate_ids, "
-                        "negative_ids, version_id, created_at, updated_at, merged_into, metadata"
+                        "negative_ids, version_id, created_at, updated_at, merged_into, metadata, "
+                        "primary_face_id"
                     )
                     .range(offset, offset + page_size - 1)
                     .execute()
@@ -1985,6 +1986,8 @@ class IdentityRegistry:
                 }
                 if row.get("merged_into"):
                     identity["merged_into"] = row["merged_into"]
+                if row.get("primary_face_id"):
+                    identity["primary_face_id"] = row["primary_face_id"]
                 # Merge metadata JSONB if present
                 metadata = row.get("metadata")
                 if metadata and isinstance(metadata, dict):
