@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.53] — 2026-03-27 (Session 142: Interactive Feedback + Batch Gemini)
+
+### Critical Fixes
+- **FB-004 (P0)**: "Confirm as [Name]" now actually merges with the suggested target — previously only changed state to CONFIRMED without merging
+- **CSRF**: `/inbox/{id}/confirm` was missing `_check_origin()` CSRF check (Codex audit)
+- **Merge Side Effects**: Confirm+merge now runs `_merge_annotations()` and recalibration hook (Codex audit)
+
+### Fixes
+- **FB-001**: Similar Identities links now go to `/person/{uuid}` instead of review grid anchors
+- **FB-002**: Compare modal "View Photo" button missing community prefix — silently failed
+- **FB-003**: Multi-merge from Focus mode — second merge no longer breaks layout (toast instead of redirect)
+- **FB-006**: Bulk merge "already merged" items shown as info, not warning errors
+- **FB-007**: Similar Identities panel filters out already-merged stale identities
+- **FB-008**: Neighbor fetch limit increased 20→100 to survive merged identity filtering
+- **FB-010**: Face overlay click in Speed Loop navigates to person page
+- **FB-011**: "Confirm Only" button added alongside "Confirm as [Name]"
+- **FB-012**: Similar Identities panel cleared after confirm/merge in browse mode
+- **P2 Rematch**: Post-confirm rematching uses surviving target ID, not merged source
+
+### Features
+- **Batch Gemini**: `scripts/batch_gemini_for_person.py` — full preset estimation with face coordinates, GEDCOM context, Supabase logging
+- **PRD-059**: Temporal co-occurrence analysis for family identification (design)
+
+### Infrastructure
+- Session 140 prompt backfilled (harness gap audit)
+- Codex CLI audit: 3 P1 + 2 P2 findings, all P1s fixed
+- 3815 app tests passing
+
 ## [v0.99.52] — 2026-03-26 (Session 141: Fix Sprint + Refactor + Hardening)
 
 ### Features
