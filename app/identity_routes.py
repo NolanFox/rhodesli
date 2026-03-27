@@ -631,7 +631,9 @@ def get(
             # Eliminates 100-200ms matrix construction per request
             # Session 138: Fetch more when community filter is active, since filtering
             # may eliminate most results from the raw pool (Codex P1 finding)
-            _base_limit = 60 if community_filter in ("same", "cross") else 20
+            # FB-008 (Session 142): Fetch 100 base to survive merged_into + negative_ids
+            # filtering. ~51% of identities are merged, so 20 was far too few.
+            _base_limit = 100 if community_filter in ("same", "cross") else 100
             fetch_limit = max(total_to_fetch, _base_limit)
             all_neighbors = get_all_neighbors(identity_id, limit=fetch_limit)
             _set_cached_neighbors(identity_id, all_neighbors)
