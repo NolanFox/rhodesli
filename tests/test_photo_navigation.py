@@ -415,8 +415,8 @@ class TestConfirmedFaceClick:
             result = photo_view_content("p1", is_partial=True)
             html = to_xml(result)
 
-        # Should have navigation to identity card
-        assert "#identity-id1" in html
+        # Should have navigation to person page (FB-010 Session 142)
+        assert "/person/id1" in html
         # Should NOT have tag dropdown for this confirmed face
         # The dropdown still exists in DOM but the click handler navigates instead
         assert "go to url" in html

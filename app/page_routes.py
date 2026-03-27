@@ -3790,7 +3790,7 @@ def photo_view_content(
                 tag_script = (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #photo-modal "
-                    f"then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{face_identity_id}'"
+                    f"then go to url '{nav_prefix}/person/{face_identity_id}'"
                 )
             else:
                 tag_script = (
@@ -3868,7 +3868,7 @@ def photo_view_content(
                         "Go to Face Card",
                         cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300",
                         **{
-                            "_": f"on click add .hidden to #photo-modal then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{face_identity_id}'"
+                            "_": f"on click add .hidden to #photo-modal then go to url '{nav_prefix}/person/{face_identity_id}'"
                         }
                         if face_identity_id
                         else {},
