@@ -857,6 +857,9 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
                 "created_at": ident.get("created_at"),
                 "updated_at": ident.get("updated_at"),
             }
+            # Session 141: Include primary_face_id when set (column may not exist yet)
+            if ident.get("primary_face_id"):
+                row["primary_face_id"] = ident["primary_face_id"]
             if not skip_name:
                 row["name"] = local_name
 
