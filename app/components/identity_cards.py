@@ -830,19 +830,24 @@ def identity_card(
             f"{nav_prefix}/inbox/{identity_id}/reject" if state == "INBOX" else f"{nav_prefix}/reject/{identity_id}"
         )
 
-        # FB-052: Show merge context when strong match exists
+        # FB-004: Show merge context when strong match exists, and wire auto-merge
         best_match = _m._get_best_match_for_identity(identity_id)
         confirm_label = "\u2713 Confirm"
+        _confirm_url = confirm_url
         if best_match:
             match_name = best_match.get("target_identity_name", "")
-            if match_name and not match_name.startswith("Unidentified"):
+            match_target_id = best_match.get("target_identity_id", "")
+            if match_name and not match_name.startswith("Unidentified") and match_target_id:
                 confirm_label = f"\u2713 Confirm as {match_name}"
+                # Pass merge_target_id so confirm also auto-merges
+                _sep = "&" if "?" in _confirm_url else "?"
+                _confirm_url = f"{_confirm_url}{_sep}merge_target_id={match_target_id}"
 
         triage_btns = [
             Button(
                 confirm_label,
                 cls=f"{_triage_pill} bg-emerald-600 text-white hover:bg-emerald-500",
-                hx_post=confirm_url,
+                hx_post=_confirm_url,
                 hx_target=f"#identity-{identity_id}",
                 hx_swap="outerHTML",
                 type="button",

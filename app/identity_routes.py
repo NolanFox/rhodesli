@@ -79,11 +79,13 @@ def post(
     from_focus: bool = False,
     filter: str = "",
     from_person_page: bool = False,
+    merge_target_id: str = "",
     sess=None,
     request=None,
 ):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
+    When merge_target_id is provided, also auto-merges into that target (FB-004).
     Requires admin.
     """
     origin_err = _check_origin(request)
@@ -160,6 +162,53 @@ def post(
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
+
+    # FB-004: Auto-merge with best match when merge_target_id provided
+    merge_result = None
+    if merge_target_id:
+        try:
+            photo_registry = _main_mod.load_photo_registry()
+            merge_result = registry.merge_identities(
+                source_id=identity_id,
+                target_id=merge_target_id,
+                user_source="web",
+                photo_registry=photo_registry,
+            )
+            if merge_result["success"]:
+                actual_target = merge_result["target_id"]
+                actual_source = merge_result["source_id"]
+                _main_mod.save_registry(registry, changed_ids={actual_target, actual_source})
+                _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+                _log_audit(
+                    "merge",
+                    entity_id=actual_target,
+                    user_email=_user.email if _user else None,
+                    old_value={"source_id": actual_source},
+                    new_value={"merged_into": actual_target, "faces_merged": merge_result.get("faces_merged", 0)},
+                    metadata={"route": "confirm_and_merge", "trigger": "confirm_as_button"},
+                )
+                _main_mod.log_user_action(
+                    "CONFIRM_AND_MERGE",
+                    identity_id=identity_id,
+                    merge_target_id=merge_target_id,
+                    faces_merged=merge_result.get("faces_merged", 0),
+                    direction_swapped=merge_result.get("direction_swapped", False),
+                )
+                logger.info(
+                    "Confirm+merge: %s -> %s, %d faces merged",
+                    identity_id[:8],
+                    merge_target_id[:8],
+                    merge_result.get("faces_merged", 0),
+                )
+            else:
+                logger.warning(
+                    "Confirm succeeded but auto-merge failed: %s -> %s, reason=%s",
+                    identity_id[:8],
+                    merge_target_id[:8],
+                    merge_result.get("reason", "unknown"),
+                )
+        except Exception:
+            logger.exception("Confirm+merge error: %s -> %s", identity_id[:8], merge_target_id[:8])
 
     # AD-150: Fire recalibration hook (best-effort, non-blocking)
     try:
@@ -254,11 +303,23 @@ def post(
     except Exception:
         pass  # Never block confirm on re-matching
 
+    # Build appropriate toast message
+    if merge_result and merge_result.get("success"):
+        actual_target = merge_result["target_id"]
+        target_identity = registry.get_identity(actual_target)
+        target_name = ensure_utf8_display(target_identity.get("name", "identity"))
+        toast_msg = f"Confirmed and merged {merge_result.get('faces_merged', 0)} face(s) into {target_name}."
+    else:
+        toast_msg = "Identity confirmed."
+        if merge_target_id and (not merge_result or not merge_result.get("success")):
+            reason = merge_result.get("reason", "unknown") if merge_result else "error"
+            toast_msg = f"Confirmed, but merge failed ({reason}). You may need to merge manually."
+
     # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
         oob_toast = Div(
-            _main_mod.toast("Identity confirmed.", "success"),
+            _main_mod.toast(toast_msg, "success"),
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
@@ -282,10 +343,29 @@ def post(
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
-            _main_mod.toast("Identity confirmed.", "success"),
+            _main_mod.toast(toast_msg, "success"),
         )
 
     nav_prefix = _nav_prefix_from_request(request)
+
+    # If merge succeeded, show the surviving identity's card instead
+    if merge_result and merge_result.get("success"):
+        actual_target = merge_result["target_id"]
+        actual_source = merge_result["source_id"]
+        crop_files = _main_mod.get_crop_files()
+        surviving = registry.get_identity(actual_target)
+        target_name = ensure_utf8_display(surviving.get("name", "identity"))
+        oob_delete = [
+            Div(id=f"identity-{actual_source}", hx_swap_oob="delete"),
+            Div(id=f"neighbor-{actual_source}", hx_swap_oob="delete"),
+        ]
+        return (
+            _main_mod.identity_card(
+                surviving, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
+            ),
+            _main_mod.toast(toast_msg, "success"),
+            *oob_delete,
+        )
 
     # Return updated card (now CONFIRMED, no action buttons)
     crop_files = _main_mod.get_crop_files()
@@ -609,6 +689,11 @@ def get(
             all_neighbors = [n for n in all_neighbors if f"identity:{n['identity_id']}" not in negative_ids]
     except KeyError:
         pass
+
+    # FB-007 (Session 142): Filter out already-merged identities.
+    # These appear in the embedding index but have merged_into set, causing
+    # "already merged" errors when users try to merge them.
+    all_neighbors = [n for n in all_neighbors if not registry.get_identity(n["identity_id"]).get("merged_into")]
 
     # Determine if more neighbors exist beyond current page (AFTER community + rejection filter)
     has_more = len(all_neighbors) > offset + limit
@@ -2653,13 +2738,26 @@ def post(
         )
 
     # Build toast message
-    # FB-039/FB-056/FB-062: Show per-identity success/failure with reasons
-    if failed_details:
-        failed_items = "; ".join(f"{name} ({reason})" for name, reason in failed_details[:5])
-        if len(failed_details) > 5:
-            failed_items += f" +{len(failed_details) - 5} more"
-        msg = f"Merged {merged_count} ({total_faces} faces). {len(failed_details)} skipped: {failed_items}"
+    # FB-006 (Session 142): Separate "already merged" from real failures
+    real_failures = [(n, r) for n, r in failed_details if r != "already merged"]
+    already_merged_count = len(failed_details) - len(real_failures)
+
+    if real_failures:
+        failed_items = "; ".join(f"{name} ({reason})" for name, reason in real_failures[:5])
+        if len(real_failures) > 5:
+            failed_items += f" +{len(real_failures) - 5} more"
+        msg = f"Merged {merged_count} ({total_faces} faces). {len(real_failures)} blocked: {failed_items}"
+        if already_merged_count:
+            msg += f" ({already_merged_count} already merged)"
         toast_level = "warning"
+    elif already_merged_count and merged_count > 0:
+        msg = f"Merged {merged_count} identities ({total_faces} faces)."
+        if already_merged_count:
+            msg += f" {already_merged_count} were already merged."
+        toast_level = "success"
+    elif already_merged_count and merged_count == 0:
+        msg = f"All {already_merged_count} identities were already merged."
+        toast_level = "info"
     else:
         msg = f"Merged {merged_count} identities ({total_faces} faces)."
         toast_level = "success"
@@ -3960,10 +4058,13 @@ def post(
     from_focus: bool = False,
     filter: str = "",
     from_person_page: bool = False,
+    merge_target_id: str = "",
     sess=None,
     request=None,
 ):
-    """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin."""
+    """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin.
+    When merge_target_id is provided, also auto-merges into that target (FB-004).
+    """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
@@ -4027,11 +4128,70 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
+    # FB-004: Auto-merge with best match when merge_target_id provided
+    merge_result = None
+    if merge_target_id:
+        try:
+            photo_registry = _main_mod.load_photo_registry()
+            merge_result = registry.merge_identities(
+                source_id=identity_id,
+                target_id=merge_target_id,
+                user_source="web_review",
+                photo_registry=photo_registry,
+            )
+            if merge_result["success"]:
+                actual_target = merge_result["target_id"]
+                actual_source = merge_result["source_id"]
+                _main_mod.save_registry(registry, changed_ids={actual_target, actual_source})
+                _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+                _log_audit(
+                    "merge",
+                    entity_id=actual_target,
+                    user_email=_user.email if _user else None,
+                    old_value={"source_id": actual_source},
+                    new_value={"merged_into": actual_target, "faces_merged": merge_result.get("faces_merged", 0)},
+                    metadata={"route": "inbox_confirm_and_merge", "trigger": "confirm_as_button"},
+                )
+                _main_mod.log_user_action(
+                    "CONFIRM_AND_MERGE",
+                    identity_id=identity_id,
+                    merge_target_id=merge_target_id,
+                    faces_merged=merge_result.get("faces_merged", 0),
+                    source_state="INBOX",
+                )
+                logger.info(
+                    "Inbox confirm+merge: %s -> %s, %d faces merged",
+                    identity_id[:8],
+                    merge_target_id[:8],
+                    merge_result.get("faces_merged", 0),
+                )
+            else:
+                logger.warning(
+                    "Inbox confirm succeeded but auto-merge failed: %s -> %s, reason=%s",
+                    identity_id[:8],
+                    merge_target_id[:8],
+                    merge_result.get("reason", "unknown"),
+                )
+        except Exception:
+            logger.exception("Inbox confirm+merge error: %s -> %s", identity_id[:8], merge_target_id[:8])
+
+    # Build toast message
+    if merge_result and merge_result.get("success"):
+        actual_target = merge_result["target_id"]
+        target_identity = registry.get_identity(actual_target)
+        target_name = ensure_utf8_display(target_identity.get("name", "identity"))
+        toast_msg = f"Confirmed and merged {merge_result.get('faces_merged', 0)} face(s) into {target_name}."
+    else:
+        toast_msg = "Identity confirmed."
+        if merge_target_id and (not merge_result or not merge_result.get("success")):
+            reason = merge_result.get("reason", "unknown") if merge_result else "error"
+            toast_msg = f"Confirmed, but merge failed ({reason}). You may need to merge manually."
+
     # If from focus mode, return the next focus card with OOB toast
     if from_focus:
         nav_prefix = _nav_prefix_from_request(request)
         oob_toast = Div(
-            _main_mod.toast("Identity confirmed.", "success"),
+            _main_mod.toast(toast_msg, "success"),
             hx_swap_oob="beforeend:#toast-container",
         )
         return (
@@ -4055,11 +4215,29 @@ def post(
                 id="person-admin-actions",
                 cls="flex items-center justify-center gap-2 mb-3",
             ),
-            _main_mod.toast("Identity confirmed.", "success"),
+            _main_mod.toast(toast_msg, "success"),
         )
 
     nav_prefix = _nav_prefix_from_request(request)
     crop_files = _main_mod.get_crop_files()
+
+    # If merge succeeded, show surviving identity card
+    if merge_result and merge_result.get("success"):
+        actual_target = merge_result["target_id"]
+        actual_source = merge_result["source_id"]
+        surviving = registry.get_identity(actual_target)
+        oob_delete = [
+            Div(id=f"identity-{actual_source}", hx_swap_oob="delete"),
+            Div(id=f"neighbor-{actual_source}", hx_swap_oob="delete"),
+        ]
+        return (
+            _main_mod.identity_card(
+                surviving, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
+            ),
+            _main_mod.toast(toast_msg, "success"),
+            *oob_delete,
+        )
+
     updated_identity = registry.get_identity(identity_id)
 
     # Return updated card (now CONFIRMED)
@@ -4067,7 +4245,7 @@ def post(
         _main_mod.identity_card(
             updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
         ),
-        _main_mod.toast("Identity confirmed.", "success"),
+        _main_mod.toast(toast_msg, "success"),
     )
 
 
