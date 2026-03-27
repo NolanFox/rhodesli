@@ -238,8 +238,8 @@ def run_batch(
     photos = photos_with_files
     logger.info(f"Photos to process: {len(photos)}")
 
-    # Cost estimate
-    cost_per_photo = 0.037  # Gemini 3.1 Pro estimate
+    # Cost estimate — "full" preset has ~2x more output than "quick"
+    cost_per_photo = 0.055  # Gemini 3.1 Pro with full preset (larger response)
     estimated_cost = len(photos) * cost_per_photo
     logger.info(f"Estimated cost: ${estimated_cost:.2f} (at ${cost_per_photo}/photo)")
 
@@ -265,8 +265,233 @@ def run_batch(
             logger.info(f"  ... and {len(photo_list) - 10} more")
         return
 
-    # Import the production estimation function
-    from app.estimate_routes import _call_gemini_date_estimate, _build_gedcom_context_for_photo
+    # Import production functions
+    from app.estimate_routes import _build_gedcom_context_for_photo
+    from rhodesli_ml.gemini_extraction import build_extraction_prompt
+    from rhodesli_ml.gemini_config import GEMINI_MODEL, get_model_pricing
+    from rhodesli_ml.prompt_manifest import build_prompt_lineage_fields, build_prompt_manifest
+    from app.supabase_data import log_gemini_call
+    from google import genai
+    from google.genai import types
+    import numpy as np
+
+    # Pre-load face data for bounding box coordinates
+    embeddings_path = Path("data/embeddings.npy")
+    face_data = {}
+    if embeddings_path.exists():
+        emb = np.load(str(embeddings_path), allow_pickle=True)
+        for entry in emb:
+            fid = entry.get("face_id") or f"{Path(entry.get('filename', '')).stem}:face{list(emb).index(entry)}"
+            face_data[fid] = entry
+        logger.info(f"Loaded {len(face_data)} face entries from embeddings.npy")
+
+    # Pre-load photo_index for face-to-photo + face bbox lookup
+    with open("data/photo_index.json") as f:
+        _pi = json.load(f)
+    local_face_to_photo = _pi.get("face_to_photo", {})
+
+    # Cache GEDCOM context — load once per unique set of identified faces
+    _gedcom_cache = {}
+
+    def _get_cached_gedcom_context(photo_id):
+        if photo_id not in _gedcom_cache:
+            try:
+                ctx = _build_gedcom_context_for_photo(photo_id)
+                _gedcom_cache[photo_id] = ctx
+            except Exception as e:
+                logger.warning(f"  GEDCOM context failed for {photo_id}: {e}")
+                _gedcom_cache[photo_id] = None
+        return _gedcom_cache[photo_id]
+
+    def _get_face_coordinates(photo_id):
+        """Get face bounding boxes for a photo from embeddings data."""
+        coords = []
+        _photos = _pi.get("photos", _pi)
+        photo_entry = _photos.get(photo_id, {})
+        face_ids = photo_entry.get("face_ids", [])
+        for fid in face_ids:
+            fd = face_data.get(fid)
+            if fd is not None:
+                bbox = fd.get("bbox", [])
+                if isinstance(bbox, str):
+                    try:
+                        bbox = json.loads(bbox)
+                    except Exception:
+                        bbox = []
+                if hasattr(bbox, "tolist"):
+                    bbox = bbox.tolist()
+                if bbox:
+                    coords.append({"face_id": fid, "bbox": bbox})
+        return coords if coords else None
+
+    def _call_gemini_full(image_bytes, suffix, photo_id, gedcom_context, photo_metadata, face_coordinates):
+        """Call Gemini with FULL preset — face analysis, subject ages, group composition, etc."""
+        import time as _time
+
+        prompt_text = build_extraction_prompt(
+            preset="full",
+            face_coordinates=face_coordinates,
+            gedcom_context=gedcom_context,
+            photo_metadata=photo_metadata,
+        )
+        enrichment_level = (
+            "gedcom+faces"
+            if gedcom_context and face_coordinates
+            else ("gedcom" if gedcom_context else ("faces" if face_coordinates else "none"))
+        )
+        prompt_variant = f"full_{enrichment_level}"
+        prompt_manifest = build_prompt_manifest(
+            prompt_family="date_estimation",
+            prompt_version="v3",
+            prompt_variant=prompt_variant,
+            prompt_contract_version="2",
+            channel="batch",
+            context_flags={
+                "uses_gedcom": bool(gedcom_context),
+                "uses_geo": True,
+                "uses_time": True,
+                "uses_face_coords": bool(face_coordinates),
+            },
+            template_source="rhodesli_ml.gemini_extraction.build_extraction_prompt",
+        )
+
+        client = genai.Client(
+            api_key=api_key,
+            http_options={"timeout": 180_000},
+        )
+        mime_type = "image/png" if suffix.lower() == ".png" else "image/jpeg"
+
+        start_time = _time.time()
+        status = "success"
+        error_msg = None
+        parsed = None
+        latency_ms = 0
+
+        max_retries = 2
+        retry_delays = [5, 15]
+        try:
+            for attempt in range(1 + max_retries):
+                try:
+                    if attempt > 0:
+                        delay = retry_delays[attempt - 1]
+                        logger.info(f"  Retry {attempt}/{max_retries} after {delay}s")
+                        _time.sleep(delay)
+                        start_time = _time.time()
+
+                    response = client.models.generate_content(
+                        model=GEMINI_MODEL,
+                        contents=[
+                            types.Content(
+                                parts=[
+                                    types.Part.from_text(text=prompt_text),
+                                    types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                                ]
+                            )
+                        ],
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.1,
+                        ),
+                    )
+                    latency_ms = int((_time.time() - start_time) * 1000)
+
+                    text = response.text
+                    if not text:
+                        status = "error"
+                        error_msg = "Empty response"
+                        return None
+
+                    parsed = json.loads(text)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        parsed = parsed[0]
+
+                    # Validate
+                    date_est = parsed.get("date_estimation", parsed)
+                    decade = date_est.get("estimated_decade")
+                    if not isinstance(decade, int) or decade < 1800 or decade > 2030:
+                        status = "error"
+                        error_msg = f"Invalid decade: {decade}"
+                        return None
+
+                    if "location" in parsed and "location" not in date_est:
+                        date_est["location"] = parsed["location"]
+
+                    return parsed  # Return FULL response (not just date_est)
+
+                except Exception as e:
+                    latency_ms = int((_time.time() - start_time) * 1000)
+                    error_msg = str(e)
+                    is_retryable = any(
+                        s in error_msg for s in ["504", "503", "DEADLINE_EXCEEDED", "timeout", "Timeout"]
+                    )
+                    if is_retryable and attempt < max_retries:
+                        logger.warning(f"  Retryable error (attempt {attempt + 1}): {e}")
+                        continue
+                    status = "error"
+                    logger.warning(f"  Gemini API error (final): {e}")
+                    return None
+        finally:
+            # Log to Supabase (AD-152)
+            if photo_id:
+                try:
+                    pricing = get_model_pricing(GEMINI_MODEL)
+                    prompt_tokens = len(prompt_text) // 4
+                    resp_text = json.dumps(parsed) if parsed else ""
+                    completion_tokens = len(resp_text) // 4
+                    total_tokens = prompt_tokens + completion_tokens
+                    cost_usd = (
+                        prompt_tokens * pricing.get("input", 2.0) / 1_000_000
+                        + completion_tokens * pricing.get("output", 12.0) / 1_000_000
+                    )
+                    response_summary = None
+                    if parsed:
+                        date_est = parsed.get("date_estimation", parsed)
+                        loc = parsed.get("location", {})
+                        response_summary = {
+                            "estimated_decade": date_est.get("estimated_decade"),
+                            "best_year_estimate": date_est.get("best_year_estimate"),
+                            "confidence": date_est.get("confidence"),
+                            "location_place": loc.get("place") if isinstance(loc, dict) else None,
+                            "face_count": len(face_coordinates) if face_coordinates else 0,
+                            "subject_ages": parsed.get("subject_ages"),
+                            "group_composition": parsed.get("group_composition"),
+                        }
+                    log_gemini_call(
+                        photo_id=photo_id,
+                        model_used=GEMINI_MODEL,
+                        call_type="batch_full_extraction",
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens,
+                        cost_usd=round(cost_usd, 6),
+                        latency_ms=latency_ms,
+                        status=status,
+                        error_message=error_msg,
+                        gemini_config={
+                            "enrichment_level": enrichment_level,
+                            "prompt_version": "v3_enriched",
+                            "prompt_variant": prompt_variant,
+                            "prompt_manifest_id": prompt_manifest["prompt_manifest_id"],
+                            "temperature": 0.1,
+                            "trigger": "batch_person_analysis",
+                            "preset": "full",
+                            "face_count": len(face_coordinates) if face_coordinates else 0,
+                        },
+                        response_summary=response_summary,
+                        prompt_text=prompt_text,
+                        full_response=parsed if parsed else None,
+                        gedcom_context=gedcom_context,
+                        **build_prompt_lineage_fields(
+                            prompt_manifest,
+                            prompt_text=prompt_text,
+                            full_response=parsed if parsed else None,
+                            request_surface="scripts.batch_gemini_for_person._call_gemini_full",
+                            request_mode="batch",
+                            contract_valid=status == "success" and parsed is not None,
+                        ),
+                    )
+                except Exception as log_err:
+                    logger.warning(f"  Failed to log Gemini call: {log_err}")
 
     # Load existing labels for incremental save
     labels_path = Path("rhodesli_ml/data/date_labels.json")
@@ -298,28 +523,27 @@ def run_batch(
 
         suffix = local_path.suffix
 
-        # Build GEDCOM context for this photo
-        try:
-            gedcom_context = _build_gedcom_context_for_photo(pid)
-        except Exception as e:
-            logger.warning(f"  GEDCOM context failed: {e}")
-            gedcom_context = None
+        # Build GEDCOM context (cached per photo)
+        gedcom_context = _get_cached_gedcom_context(pid)
 
-        # Call Gemini
+        # Get face coordinates for this photo
+        face_coordinates = _get_face_coordinates(pid)
+        if face_coordinates:
+            logger.info(f"  {len(face_coordinates)} faces with bounding boxes")
+
+        # Call Gemini with FULL preset
         try:
-            result = _call_gemini_date_estimate(
+            result = _call_gemini_full(
                 image_bytes=image_bytes,
                 suffix=suffix,
-                api_key=api_key,
                 photo_id=pid,
                 gedcom_context=gedcom_context,
-                call_type="batch_date_estimation",
-                trigger="batch_person_analysis",
                 photo_metadata={
                     "filename": filename,
                     "source": photo.get("source", ""),
                     "collection": photo.get("collection", ""),
                 },
+                face_coordinates=face_coordinates,
             )
         except Exception as e:
             logger.error(f"  Gemini call failed: {e}")
@@ -328,30 +552,46 @@ def run_batch(
             continue
 
         if result:
-            decade = result.get("estimated_decade", "?")
-            year = result.get("best_year_estimate", "?")
-            confidence = result.get("confidence", "?")
+            date_est = result.get("date_estimation", result)
+            decade = date_est.get("estimated_decade", "?")
+            year = date_est.get("best_year_estimate", "?")
+            confidence = date_est.get("confidence", "?")
             logger.info(f"  -> {decade}s (best: {year}, conf: {confidence})")
 
-            # Save to labels
+            # Save to labels — capture FULL response from "full" preset
             label_entry = {
                 "photo_id": pid,
                 "filename": filename,
-                "estimated_decade": result.get("estimated_decade"),
-                "best_year_estimate": result.get("best_year_estimate"),
-                "confidence": result.get("confidence"),
-                "probable_range": result.get("probable_range"),
-                "decade_probabilities": result.get("decade_probabilities"),
+                # Date estimation
+                "estimated_decade": date_est.get("estimated_decade"),
+                "best_year_estimate": date_est.get("best_year_estimate"),
+                "confidence": date_est.get("confidence"),
+                "probable_range": date_est.get("probable_range"),
+                "decade_probabilities": date_est.get("decade_probabilities"),
+                # Location
                 "location_estimate": result.get("location", {}),
+                # Rich metadata (full preset)
                 "scene_description": result.get("scene_description", ""),
-                "clothing_notes": result.get("clothing_notes", ""),
+                "clothing_notes": result.get("clothing_notes", result.get("clothing_era", "")),
                 "subject_ages": result.get("subject_ages", []),
                 "people_count": result.get("people_count"),
                 "photo_type": result.get("photo_type", ""),
                 "setting": result.get("setting", ""),
-                "condition": result.get("condition", ""),
-                "source_method": "gemini_batch_person",
-                "prompt_version": "v3_enriched",
+                "condition": result.get("condition", result.get("photo_condition", "")),
+                "keywords": result.get("keywords", []),
+                "controlled_tags": result.get("controlled_tags", []),
+                # Face analysis (full preset with coords)
+                "face_analysis": result.get("face_analysis", {}),
+                "group_composition": result.get("group_composition", {}),
+                "cultural_markers": result.get("cultural_markers", {}),
+                "photo_technique": result.get("photo_technique", {}),
+                "text_signage": result.get("text_signage", {}),
+                # Provenance
+                "source_method": "gemini_batch_full",
+                "prompt_version": "v3_enriched_full",
+                "preset": "full",
+                "face_coordinates_sent": bool(face_coordinates),
+                "gedcom_context_sent": bool(gedcom_context),
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "batch_context": {
                     "identities": photo.get("identities", []),
