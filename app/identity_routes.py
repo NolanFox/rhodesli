@@ -2092,14 +2092,20 @@ def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_so
     )
 
 
-def toast_with_merge_undo(message: str, target_id: str, nav_prefix: str = "") -> Div:
-    """Toast notification with Undo button for merge actions."""
+def toast_with_merge_undo(message: str, target_id: str, nav_prefix: str = "", target_name: str = "") -> Div:
+    """Toast notification with View link and Undo button for merge actions."""
+    view_label = f"View {target_name}" if target_name and not target_name.startswith("Unidentified") else "View"
     return Div(
         Span("\u2713", cls="mr-2"),
         Span(message, cls="flex-1"),
+        A(
+            view_label,
+            href=f"{nav_prefix}/person/{target_id}",
+            cls="ml-3 px-3 py-1 text-sm font-medium bg-white/20 hover:bg-white/30 rounded transition-colors underline",
+        ),
         Button(
             "Undo",
-            cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            cls="ml-2 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/undo-merge",
             hx_swap="outerHTML",
             hx_target="closest div",
@@ -2288,11 +2294,12 @@ def post(
             ]
         )
 
-    # Toast with undo
+    # Toast with undo + link to surviving identity (FB-002)
     merge_toast = _main_mod.toast_with_merge_undo(
         f"Merged {_main_mod._pl(result['faces_merged'], 'face')} into {target_name}.",
         actual_target_id,
         nav_prefix=_nav_prefix_from_request(request),
+        target_name=target_name,
     )
 
     # Post-merge re-evaluation: suggest nearby unmatched faces (ML-005)
