@@ -5884,7 +5884,7 @@ def get(
         Button(
             "View Photo \u2192",
             cls="text-xs text-amber-400/70 hover:text-amber-400 mt-1",
-            hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}&from_compare=1",
+            hx_get=f"{nav_prefix}/photo/{t_photo_id}/partial?face={t_fid}&from_compare=1",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
@@ -5897,7 +5897,7 @@ def get(
         Button(
             "View Photo \u2192",
             cls="text-xs text-indigo-400/70 hover:text-indigo-400 mt-1",
-            hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}&from_compare=1",
+            hx_get=f"{nav_prefix}/photo/{n_photo_id}/partial?face={n_fid}&from_compare=1",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},

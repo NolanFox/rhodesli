@@ -647,8 +647,6 @@ def neighbor_card(
         else None
     )
 
-    neighbor_section = _section_for_state(neighbor.get("state", "INBOX"))
-
     _cross_slug = _m._identity_home_community_slug(neighbor_id, current_community)
     if _cross_slug:
         _nav_prefix = _m.community_url_prefix(_cross_slug)
@@ -656,24 +654,22 @@ def neighbor_card(
         _community_slug = current_community.get("slug") if current_community else None
         _nav_prefix = nav_prefix or _m.community_url_prefix(_community_slug)
 
-    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-indigo-400 to target then wait 1.5s then remove .ring-2 .ring-indigo-400 from target else go to url '{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
+    _person_url = f"{_nav_prefix}/person/{neighbor_id}"
 
     return Div(
         Div(
             checkbox,
             A(
                 thumbnail_img,
-                href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                href=_person_url,
                 cls="flex-shrink-0 cursor-pointer hover:opacity-80",
-                **{"_": nav_script},
             ),
             Div(
                 Div(
                     A(
                         name,
-                        href=f"{_nav_prefix}/?section={neighbor_section}&view=browse#identity-{neighbor_id}",
+                        href=_person_url,
                         cls="font-medium text-slate-200 hover:text-indigo-400 hover:underline cursor-pointer text-sm leading-tight",
-                        **{"_": nav_script},
                     ),
                     Span(
                         f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label,
