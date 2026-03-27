@@ -856,6 +856,19 @@ def identity_card(
                 else "Confirm as new person",
             ),
         ]
+        # FB-011: When best match exists, also show plain Confirm (no merge)
+        if best_match and confirm_label != "\u2713 Confirm":
+            triage_btns.append(
+                Button(
+                    "\u2713 Confirm Only",
+                    cls=f"{_triage_pill} border border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/20",
+                    hx_post=confirm_url,
+                    hx_target=f"#identity-{identity_id}",
+                    hx_swap="outerHTML",
+                    type="button",
+                    title="Confirm as new person (without merging)",
+                ),
+            )
         if state in ("INBOX", "PROPOSED"):
             triage_btns.append(
                 Button(
