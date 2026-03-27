@@ -2706,3 +2706,13 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Tests**: `tests/test_supabase_shadow.py::TestOptimisticConcurrency` — 4 tests (stale skip, current write, new identity, merge-wins-race).
 - **Gap/Risk**: Version-based concurrency only protects against stale batch writes. It does NOT prevent two simultaneous merges of the same identity (extremely unlikely with single-admin). If multi-admin is added, consider row-level locking.
 - **Affects**: `app/supabase_data.py`, all callers of `save_registry()`
+
+### AD-231: Merge Legacy Prompt Fields into Full Extraction Preset (2026-03-27)
+- **Date**: 2026-03-27 | **Session**: 142
+- **Context**: Session 142 A/B comparison of date estimation prompts revealed the "old" prompt (271 photos) achieved 80% high-confidence results vs only 45% for the "new" full preset (82 photos). A Codex prompt audit identified 3 P0 gaps in the new prompt: (1) missing `capture_vs_print` analysis causing wrong dates on reprints/scans, (2) missing `visible_text` OCR extraction losing date evidence from signs/documents, (3) missing `reasoning_summary` field reducing chain-of-thought quality.
+- **Decision**: Merge the legacy prompt's `capture_vs_print`, `visible_text`, `reasoning_summary`, and `scene_description` fields into the "full" extraction preset. The full preset now combines the new prompt's strengths (face analysis, group composition, clothing era detection) with the old prompt's strengths (evidence-based reasoning, OCR extraction, print-vs-original detection).
+- **Rationale**: The old prompt excelled at evidence reasoning and detecting reprints — a photo of a 1920s family taken from a 1960s reprint would be dated ~1960 without capture_vs_print analysis. The new prompt excelled at face-level analysis and group dynamics. Merging produces a superset that covers both failure modes.
+- **Evidence**: 82 photos processed with full preset, 271 with old prompt. Old prompt: 80% high confidence. New prompt: 45% high confidence. Key failure mode: reprints/scans of older photos dated to original era instead of reproduction era.
+- **Implementation**: `rhodesli_ml/prompts/` — full extraction preset updated to include legacy fields.
+- **Gap/Risk**: Larger prompt increases token cost per Gemini call (~15-20% more output tokens). Monitor cost per call via `gemini_api_calls` table.
+- **Affects**: `rhodesli_ml/prompts/`, `rhodesli_ml/date_estimation.py`, all Gemini batch processing scripts
