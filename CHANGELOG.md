@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.50] — 2026-03-26 (Session 139: Mega Fix Sprint — 4 Parallel Tracks)
+
+### Data Fixes
+- **Track A**: Regenerated 418 missing face crops from embeddings.npy bbox data. 333 from local photos + 85 after downloading from R2. All uploaded to R2. Root cause: CLI-ingested faces had detection data but crop generation incomplete.
+
+### Features
+- **Track C (PRD-057)**: People page name filter tabs — "All" / "Named" / "Needs Name". Confirms workflow: confirm cluster first, identify later. Sidebar shows breakdown.
+- **Track B**: Bulk merge auto-advance in focus mode (FB-008). Returns next focus card + OOB toast instead of just a toast.
+- **Track B**: "Edit in Admin" deep link (FB-014) — uses focus mode `?current={id}` instead of DOM anchor, works regardless of 150-card pagination limit.
+
+### Performance
+- **Track E (E1)**: Dict lookup for _global_identity_info in perf_cache — O(N²) → O(1) per neighbor.
+- **Track E (E2)**: Precomputed best_face_id cache — eliminates per-render quality scoring.
+
+### Tests
+- 3780 tests pass (3748 → 3780, +32 new)
+
 ## [v0.99.49] — 2026-03-26 (Session 138: Interactive Feedback + Refactor Phase 2)
 
 ### Bug Fixes

@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.49 · ~4406 tests (3748 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.50 · ~4438 tests (3780 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
