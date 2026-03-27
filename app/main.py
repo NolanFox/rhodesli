@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 
 # Ensure project root is on sys.path for cross-module imports (compare_routes, estimate_routes, upload_routes).
 # When running `python app/main.py`, sys.path[0] = app/ not project root.
@@ -245,8 +246,17 @@ def posthog_capture(event: str, distinct_id: str = "server", properties: dict | 
         logging.warning(f"PostHog capture failed: {e}")
 
 
+@asynccontextmanager
+async def lifespan(app):
+    """Lifespan context manager replacing deprecated @app.on_event("startup"/"shutdown")."""
+    await startup_event()
+    yield
+    await shutdown_event()
+
+
 app, rt = fast_app(
     pico=False,
+    lifespan=lifespan,
     secret_key=SESSION_SECRET,
     same_site="Strict",
     hdrs=(
@@ -1004,7 +1014,6 @@ def _get_community_identity_ids(community: dict | None) -> set[str] | None:
 
 
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
-@app.on_event("startup")
 async def startup_event():
     """Initialize required directories, sync from Supabase, clean temp files, and log start."""
     # Deployment safety: ensure all required directories exist
@@ -1401,7 +1410,6 @@ def _startup_disk_cleanup(base_path: Path):
         logging.info(f"Startup cleanup: removed {cleaned} stale temp files")
 
 
-@app.on_event("shutdown")
 async def shutdown_event():
     """Log the end of a session/run."""
     get_event_recorder().record(
