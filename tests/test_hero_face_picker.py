@@ -139,7 +139,7 @@ class TestSetPrimaryFaceEndpoint:
 
         with ExitStack() as stack:
             stack.enter_context(patch("app.main._check_admin", return_value=None))
-            stack.enter_context(patch("app.auth._check_origin", return_value=None))
+            stack.enter_context(patch("app.identity_routes._check_origin", return_value=None))
             stack.enter_context(patch("app.main.load_registry", return_value=reg))
             stack.enter_context(patch("app.main.save_registry"))
             stack.enter_context(patch("app.main.log_user_action"))
@@ -166,7 +166,7 @@ class TestSetPrimaryFaceEndpoint:
 
         with ExitStack() as stack:
             stack.enter_context(patch("app.main._check_admin", return_value=None))
-            stack.enter_context(patch("app.auth._check_origin", return_value=None))
+            stack.enter_context(patch("app.identity_routes._check_origin", return_value=None))
             stack.enter_context(patch("app.main.load_registry", return_value=reg))
             stack.enter_context(patch("app.main.save_registry"))
             stack.enter_context(patch("app.main.log_user_action"))
@@ -194,7 +194,7 @@ class TestSetPrimaryFaceEndpoint:
 
         with ExitStack() as stack:
             stack.enter_context(patch("app.main._check_admin", return_value=None))
-            stack.enter_context(patch("app.auth._check_origin", return_value=None))
+            stack.enter_context(patch("app.identity_routes._check_origin", return_value=None))
             stack.enter_context(patch("app.main.load_registry", return_value=reg))
 
             resp = client.post(
@@ -217,7 +217,7 @@ class TestSetPrimaryFaceEndpoint:
 
         with ExitStack() as stack:
             stack.enter_context(patch("app.main._check_admin", return_value=None))
-            stack.enter_context(patch("app.auth._check_origin", return_value=None))
+            stack.enter_context(patch("app.identity_routes._check_origin", return_value=None))
             stack.enter_context(patch("app.main.load_registry", return_value=reg))
 
             resp = client.post(

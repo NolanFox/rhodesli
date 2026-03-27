@@ -225,7 +225,7 @@ def identity_card_mini(
     identity_id = identity["identity_id"]
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     crop_url = None
-    best_fid = _m.get_best_face_id(all_face_ids)
+    best_fid = _m.get_best_face_id(all_face_ids, identity=identity)
     if best_fid:
         crop_url = _m.resolve_face_image_url(best_fid, crop_files)
 
@@ -380,7 +380,7 @@ def search_results_panel(
     return Div(*cards, id=f"search-results-{target_identity_id}")
 
 
-def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach, is_admin=True):
+def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach, is_admin=True, nav_prefix=""):
     """Build face card elements from a list of face entries."""
     import app.main as _m
 
@@ -405,6 +405,7 @@ def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_det
                     photo_id=photo_id,
                     show_detach=can_detach,
                     is_admin=is_admin,
+                    nav_prefix=nav_prefix,
                 )
             )
         else:

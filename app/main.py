@@ -6266,7 +6266,7 @@ def _identity_quality_score(identity: dict) -> float:
     face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     if not face_ids:
         return 0.0
-    best_id = get_best_face_id(face_ids)
+    best_id = get_best_face_id(face_ids, identity=identity)
     if best_id:
         return compute_face_quality_score(best_id)
     return 0.0
@@ -6397,7 +6397,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     # Get best-quality face for main display
     main_crop_url = None
     main_photo_id = None
-    main_face_id = get_best_face_id(all_face_ids)
+    main_face_id = get_best_face_id(all_face_ids, identity=identity)
     if main_face_id:
         main_crop_url = resolve_face_image_url(main_face_id, crop_files)
         main_photo_id = get_photo_id_for_face(main_face_id)

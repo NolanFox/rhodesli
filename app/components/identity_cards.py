@@ -176,7 +176,7 @@ def identity_card_expanded(
     # Get best-quality face for main thumbnail
     main_crop_url = None
     main_photo_id = None
-    best_face_id = _m.get_best_face_id(all_face_ids)
+    best_face_id = _m.get_best_face_id(all_face_ids, identity=identity)
     best_face_idx = 0
     if best_face_id:
         main_crop_url = _m.resolve_face_image_url(best_face_id, crop_files)
@@ -479,7 +479,9 @@ def identity_card(
 
     # Show only first page of faces
     page_entries = all_face_ids[:FACES_PER_PAGE]
-    face_cards = _build_face_cards_for_entries(page_entries, crop_files, identity_id, can_detach, is_admin=is_admin)
+    face_cards = _build_face_cards_for_entries(
+        page_entries, crop_files, identity_id, can_detach, is_admin=is_admin, nav_prefix=nav_prefix
+    )
 
     if not face_cards:
         return None
@@ -618,7 +620,7 @@ def identity_card(
         )
 
     # Quality label from best face for compact header display
-    best_face_id = _m.get_best_face_id(all_face_ids) if all_face_ids else None
+    best_face_id = _m.get_best_face_id(all_face_ids, identity=identity) if all_face_ids else None
     best_quality = None
     if best_face_id:
         best_quality = _m.get_face_quality(best_face_id)
