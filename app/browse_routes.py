@@ -14,7 +14,7 @@ from urllib.parse import quote
 
 from fasthtml.common import *
 
-from core.registry import IdentityState
+from core.registry import IdentityRegistry, IdentityState
 from core.ui_safety import ensure_utf8_display
 from core import storage
 
@@ -770,27 +770,32 @@ def photos_more(
 
 
 @rt("/people")
-def get(sort_by: str = "name", sess=None, request=None):
+def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None):
     """
     Public people browsing page — grid of identified people.
 
     No authentication required. Each person links to /person/{id}.
     No admin actions visible.
+
+    Supports name_filter parameter:
+    - "all" (default): all CONFIRMED identities
+    - "named": only CONFIRMED with real names
+    - "needs_name": only CONFIRMED with placeholder names
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     nav_prefix = _main_mod.community_url_prefix(community_slug)
     community = getattr(request.state, "community", None) if request else None
 
+    # Validate name_filter
+    if name_filter not in ("all", "named", "needs_name"):
+        name_filter = "all"
+
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
 
-    # Get confirmed identities with real names
-    confirmed = [
-        i
-        for i in registry.list_identities(state=IdentityState.CONFIRMED)
-        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
-    ]
+    # Get ALL confirmed identities (not merged)
+    all_confirmed = [i for i in registry.list_identities(state=IdentityState.CONFIRMED) if not i.get("merged_into")]
 
     # Count awaiting identification (non-confirmed, non-merged)
     all_identities = registry.list_identities()
@@ -799,7 +804,7 @@ def get(sort_by: str = "name", sess=None, request=None):
     # Filter by community if available
     community_ids = _main_mod._get_community_identity_ids(community)
     if community_ids is not None:
-        confirmed = [i for i in confirmed if i["identity_id"] in community_ids]
+        all_confirmed = [i for i in all_confirmed if i["identity_id"] in community_ids]
         awaiting_count = len(
             [
                 i
@@ -807,6 +812,18 @@ def get(sort_by: str = "name", sess=None, request=None):
                 if i.get("state") != "CONFIRMED" and not i.get("merged_into") and i["identity_id"] in community_ids
             ]
         )
+
+    # Compute named/unidentified counts (before name_filter, for tab badges)
+    named_count = len([i for i in all_confirmed if IdentityRegistry._is_real_name(i.get("name"))])
+    unidentified_count = len(all_confirmed) - named_count
+
+    # Apply name_filter
+    if name_filter == "named":
+        confirmed = [i for i in all_confirmed if IdentityRegistry._is_real_name(i.get("name"))]
+    elif name_filter == "needs_name":
+        confirmed = [i for i in all_confirmed if not IdentityRegistry._is_real_name(i.get("name"))]
+    else:
+        confirmed = all_confirmed
 
     # Sort
     if sort_by == "photos":
@@ -865,6 +882,32 @@ def get(sort_by: str = "name", sess=None, request=None):
         Option("Newest", value="newest", selected=(sort_by == "newest")),
     ]
 
+    # Build filter tabs
+    def _filter_tab(label, value, count, active):
+        base_cls = "px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+        if active:
+            cls = f"{base_cls} bg-indigo-600 text-white"
+        else:
+            cls = f"{base_cls} bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+        return A(
+            label,
+            Span(f" ({count})", cls="text-xs opacity-70") if count is not None else "",
+            href=f"{nav_prefix}/people?name_filter={value}&sort_by={sort_by}",
+            cls=cls,
+        )
+
+    filter_tabs = Div(
+        _filter_tab("All", "all", len(all_confirmed), name_filter == "all"),
+        _filter_tab("Named", "named", named_count, name_filter == "named"),
+        _filter_tab("Needs Name", "needs_name", unidentified_count, name_filter == "needs_name"),
+        cls="flex items-center gap-2 mb-4",
+    )
+
+    # Subtitle with named/unidentified breakdown
+    subtitle_parts = [f"{len(all_confirmed)} {'person' if len(all_confirmed) == 1 else 'people'} in the archive"]
+    if named_count > 0 and unidentified_count > 0:
+        subtitle_parts.append(f"{named_count} named, {unidentified_count} unidentified")
+
     nav_links = _main_mod._public_nav_links(active="people", user=user, community_slug=community_slug)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
@@ -904,9 +947,9 @@ def get(sort_by: str = "name", sess=None, request=None):
                         cls="flex items-center justify-between",
                     ),
                     P(
-                        f"{len(confirmed)} identified {'person' if len(confirmed) == 1 else 'people'} in the archive",
+                        " · ".join(subtitle_parts),
                         Span(
-                            f" \u00b7 {awaiting_count} awaiting identification",
+                            f" · {awaiting_count} awaiting identification",
                             cls="text-slate-500",
                         )
                         if awaiting_count > 0
@@ -918,12 +961,14 @@ def get(sort_by: str = "name", sess=None, request=None):
             ),
             Section(
                 Div(
+                    # Filter tabs
+                    filter_tabs,
                     Div(
                         Span("Sort:", cls="text-sm text-slate-400 mr-2"),
                         Select(
                             *sort_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2.5",
-                            onchange=f"window.location.href='{nav_prefix}/people?sort_by=' + this.value",
+                            onchange=f"window.location.href='{nav_prefix}/people?name_filter={name_filter}&sort_by=' + this.value",
                         ),
                         cls="flex items-center gap-2 mb-6",
                     ),

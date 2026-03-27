@@ -177,11 +177,11 @@ class TestPublicPeoplePage:
         response = client.get("/people")
         assert "og:title" in response.text
 
-    def test_shows_identified_people_only(self, client):
-        """Only confirmed, named identities appear."""
-        response = client.get("/people")
+    def test_named_filter_excludes_unidentified(self, client):
+        """name_filter=named excludes unidentified entries."""
+        response = client.get("/people?name_filter=named")
         html = response.text
-        # Should not show "Unidentified Person" entries
+        # Named filter should not show "Unidentified Person" entries
         assert "Unidentified Person" not in html
 
     def test_cta_present(self, client):
