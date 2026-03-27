@@ -350,6 +350,8 @@ def post(
 
     # If merge succeeded, show the surviving identity's card instead
     if merge_result and merge_result.get("success"):
+        from app.utils import make_css_id
+
         actual_target = merge_result["target_id"]
         actual_source = merge_result["source_id"]
         crop_files = _main_mod.get_crop_files()
@@ -358,6 +360,9 @@ def post(
         oob_delete = [
             Div(id=f"identity-{actual_source}", hx_swap_oob="delete"),
             Div(id=f"neighbor-{actual_source}", hx_swap_oob="delete"),
+            # FB-012: Clear expansion panels for both source and target
+            Div("", id=f"expand-{make_css_id(identity_id)}", hx_swap_oob="innerHTML"),
+            Div("", id=f"expand-{make_css_id(actual_source)}", hx_swap_oob="innerHTML"),
         ]
         return (
             _main_mod.identity_card(
@@ -378,12 +383,18 @@ def post(
     if identity_id not in existing_links and not identity_name.startswith("Unidentified"):
         gedcom_panel = _main_mod._gedcom_link_panel(identity_id, identity_name)
 
+    # FB-012: Clear the expansion panel (Similar Identities) which is a sibling div
+    from app.utils import make_css_id
+
+    _expand_clear = Div("", id=f"expand-{make_css_id(identity_id)}", hx_swap_oob="innerHTML")
+
     # Return the card plus a success toast (+ GEDCOM link panel if applicable)
     parts = [
         _main_mod.identity_card(
             updated_identity, crop_files, lane_color="emerald", show_actions=False, nav_prefix=nav_prefix
         ),
-        _main_mod.toast("Identity confirmed.", "success"),
+        _main_mod.toast(toast_msg, "success"),
+        _expand_clear,
     ]
     if gedcom_panel:
         parts.append(gedcom_panel)
