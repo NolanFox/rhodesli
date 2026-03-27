@@ -42,6 +42,23 @@
 | P3 #1: create=True non-enforcing | Correct | **AGREE** — intentional for now, could be stricter | NOTE |
 | P3 #2: Deprecated startup hook | Correct | **AGREE** — not Session 141 | NOTE |
 
+## Round 2 Audit — Remaining Items Fix
+
+**Auditor**: Codex CLI v0.115.0 (gpt-5.4)
+**Tokens used**: 67,791
+**Scope**: border_colors removal, create=True scanner xfail, lifespan migration, circular import docs
+
+### Round 2 Findings
+- P0: None
+- P1: None
+- P2: create=True scanner regex self-matches its own comments + misses multiline patch() calls. **FIXED** — skip self-file, match `create=True` on code lines instead of regex-based patch() detection.
+- P3: None
+
+### Round 2 Verification
+Codex confirmed: lifespan migration correct (fast_app supports `lifespan=`), border_colors removal clean, circular import doc accurate.
+
 ## Value Assessment
-- **Codex**: STRONG — P1 finding (hero face picker inert) is exactly the kind of "ships green, doesn't work" bug that unit tests can't catch. P2 CSRF patch finding is a real security test gap. Worth the 356K tokens.
-- **Would we have found this ourselves?** P1: my self-audit noted it but called it P2. Codex correctly elevated it. P2 CSRF: NO — I would not have caught that the patches are inert.
+- **Round 1 Codex** (356K tokens): STRONG — P1 hero face picker inert, P2 CSRF patches inert. Both caught issues we would have missed.
+- **Round 2 Codex** (68K tokens): MODERATE — caught regex self-matching bug in the scanner. Would have eventually noticed but Codex found it immediately.
+- **Total Codex tokens**: ~424K across 2 rounds.
+- **Would we have found this ourselves?** Round 1 P1: self-audit noted but underweighted. Round 1 P2 CSRF: NO. Round 2 P2 regex: eventually, but slower.
