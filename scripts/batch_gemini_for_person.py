@@ -280,8 +280,11 @@ def run_batch(
     face_data = {}
     if embeddings_path.exists():
         emb = np.load(str(embeddings_path), allow_pickle=True)
-        for entry in emb:
-            fid = entry.get("face_id") or f"{Path(entry.get('filename', '')).stem}:face{list(emb).index(entry)}"
+        for idx, entry in enumerate(emb):
+            fid = entry.get("face_id")
+            if not fid:
+                fname = entry.get("filename", "")
+                fid = f"{Path(fname).stem}:face{idx}" if fname else f"face{idx}"
             face_data[fid] = entry
         logger.info(f"Loaded {len(face_data)} face entries from embeddings.npy")
 
@@ -481,14 +484,18 @@ def run_batch(
                         prompt_text=prompt_text,
                         full_response=parsed if parsed else None,
                         gedcom_context=gedcom_context,
-                        **build_prompt_lineage_fields(
-                            prompt_manifest,
-                            prompt_text=prompt_text,
-                            full_response=parsed if parsed else None,
-                            request_surface="scripts.batch_gemini_for_person._call_gemini_full",
-                            request_mode="batch",
-                            contract_valid=status == "success" and parsed is not None,
-                        ),
+                        **{
+                            k: v
+                            for k, v in build_prompt_lineage_fields(
+                                prompt_manifest,
+                                prompt_text=prompt_text,
+                                full_response=parsed if parsed else None,
+                                request_surface="scripts.batch_gemini_for_person._call_gemini_full",
+                                request_mode="batch",
+                                contract_valid=status == "success" and parsed is not None,
+                            ).items()
+                            if k != "contract_valid"  # Not a column in gemini_api_calls table
+                        },
                     )
                 except Exception as log_err:
                     logger.warning(f"  Failed to log Gemini call: {log_err}")
