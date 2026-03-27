@@ -44,13 +44,13 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **SEC-004**: Invite code timing side-channel — `in` operator on list is not constant-time. Negligible at current scale (1-3 codes). Use `hmac.compare_digest()` if code space expands. Source: Session 134 Finding 7.
 
 ### P1 — Session 138 Feedback Items (2026-03-26)
-- **FB-002**: No direct navigation to merged identity from focus mode. After merge, user can't find the result to confirm it.
-- **FB-003/FB-010**: Merge should auto-confirm + advance to next person in focus mode. Needs PRD (complex workflow, see Session 111d lesson).
+- [x] **FB-002**: No direct navigation to merged identity from focus mode. DONE Session 141 — merge toast now includes "View [Name]" link to surviving identity.
+- **FB-003/FB-010**: Merge should auto-confirm + advance to next person in focus mode. PRD-058 written (Session 141 Track E). Needs implementation.
 - **FB-004**: Confirm vs Identify conceptual separation. "Confirmed" conflates cluster validation with name identification. Needs PRD to redesign.
 - **FB-005**: Need filtered view for unidentified confirmed people (confirm without name).
-- **FB-007**: Can't choose which face crop is the hero thumbnail (Google Photos has this). P3.
+- [x] **FB-007**: Can't choose which face crop is the hero thumbnail. DONE Session 141 — primary_face_id field + admin star button + wired through render paths.
 - **FB-008**: Bulk merge (Merge Selected) fails in focus mode. Only single merge works.
-- **FB-001/FB-011**: 750/1000 faces in photo_faces have NULL bbox/quality — crops missing on R2. Systemic data issue affecting many Rhodes community identities. Needs pipeline re-run.
+- [x] **FB-001/FB-011**: 750/1000 faces in photo_faces have NULL bbox/quality — crops missing on R2. DONE Session 139 — 418 crops regenerated and uploaded.
 
 ### P2 — Missing Embeddings (EMBED-001)
 - ~~**EMBED-001**: Reduced from `124` missing embeddings to `2` archival face records after local InsightFace rerun regenerated 130 embeddings.~~ FIXED (Session 96e-cont12) — the final `2` archival records were crop-matched back to current detections and embedded. Final local audit reports `0` missing embeddings. Root cause was registry/artifact drift plus staged-upload publication gaps.

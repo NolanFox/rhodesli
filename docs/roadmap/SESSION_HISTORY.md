@@ -14,6 +14,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 141: Fix Sprint + Refactor + Hardening (2026-03-26) — v0.99.52
+- **Track A**: Structural test for _main_mod references (Lesson 157 prevention). FB-002 merge toast link to surviving identity.
+- **Track B**: FB-007 hero face picker — primary_face_id field, admin star button, POST endpoint, Supabase shadow write.
+- **Track C**: heapq.nsmallest for focus sort (O(n) vs O(n log n)). Parallel cold start via ThreadPoolExecutor.
+- **Track D**: REFACTOR-001 Phase 3 — identity_card + identity_card_expanded extracted to app/components/identity_cards.py. main.py 9,867→8,930. Total: 2,912 lines extracted across 3 phases.
+- **Track E**: PRD-058 merge auto-confirm analysis (docs only).
+- **Codex audit**: P1 primary_face_id not wired (FIXED — identity= passed to all render paths). P2 CSRF test patches inert (FIXED). P2 nav_prefix missing on hero button (FIXED).
+- **Hardening**: Stop-gate now requires codex audit file (docs/session_context/session-{N}-codex-audit.md) with documented "unavailable" exemption.
+- 3813 app tests pass (+33 new).
+
 ## Session 140: P0 Auth Fix + OAuth Redirect (2026-03-27) — v0.99.51
 - **P0**: All auth operations broken since Session 90b (~20 sessions). Re-exported 7 auth functions in main.py.
 - **OAuth redirect**: fetch()+JS redirect → form POST→303 server redirect. Fixes cookie race condition (Lesson 158).
