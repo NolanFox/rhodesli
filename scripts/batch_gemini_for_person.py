@@ -307,7 +307,11 @@ def run_batch(
         return _gedcom_cache[photo_id]
 
     def _get_face_coordinates(photo_id):
-        """Get face bounding boxes for a photo from embeddings data."""
+        """Get face bounding boxes for a photo from embeddings data.
+
+        Codex P0: Sort left-to-right by bbox[0] (x-coordinate) to match
+        the prompt's face_index ordering convention.
+        """
         coords = []
         _photos = _pi.get("photos", _pi)
         photo_entry = _photos.get(photo_id, {})
@@ -323,8 +327,10 @@ def run_batch(
                         bbox = []
                 if hasattr(bbox, "tolist"):
                     bbox = bbox.tolist()
-                if bbox:
+                if bbox and len(bbox) >= 4:
                     coords.append({"face_id": fid, "bbox": bbox})
+        # Sort left-to-right by x-coordinate for consistent face_index ordering
+        coords.sort(key=lambda c: c["bbox"][0])
         return coords if coords else None
 
     def _call_gemini_full(image_bytes, suffix, photo_id, gedcom_context, photo_metadata, face_coordinates):
