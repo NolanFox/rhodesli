@@ -123,3 +123,44 @@ class TestToastWithMergeUndo:
         html = repr(result)
         assert "Undo" in html
         assert "undo-merge" in html
+
+
+class TestCircularImportArchitecturalConstraint:
+    """Document that route files require app.main to be loaded first.
+
+    identity_routes.py (and all other *_routes.py files) import
+    ``app.main as _main_mod`` at module level.  app/main.py imports
+    these route files at the bottom to register routes.  This creates a
+    circular dependency that works ONLY because FastHTML always loads
+    main.py first — standalone ``import app.identity_routes`` in a
+    fresh interpreter would fail.
+
+    This is a KNOWN LIMITATION, not a bug.  The tests below verify:
+    1. The expected import order succeeds.
+    2. Every route file that uses _main_mod actually gets a valid module.
+
+    See: Session 141 codex audit P2 #3.
+    """
+
+    def test_import_order_works(self):
+        """Route modules load successfully when app.main is imported first."""
+        import app.main  # noqa: F401 — must be first
+        import app.identity_routes
+
+        assert hasattr(app.identity_routes, "_main_mod")
+        assert app.identity_routes._main_mod is app.main
+
+    def test_all_route_files_have_valid_main_mod(self):
+        """Every route file that imports _main_mod gets the real app.main module."""
+        import importlib
+
+        import app.main  # noqa: F401 — ensure main loaded first
+
+        route_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app")
+        route_files = [f for f in os.listdir(route_dir) if f.endswith("_routes.py")]
+
+        for fname in route_files:
+            mod_name = f"app.{fname[:-3]}"
+            mod = importlib.import_module(mod_name)
+            if hasattr(mod, "_main_mod"):
+                assert mod._main_mod is app.main, f"{fname}: _main_mod is not app.main"
