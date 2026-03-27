@@ -2081,6 +2081,7 @@ def _admin_nav_bar(active: str = "", request=None) -> Div:
         ("GEDCOM", "/admin/gedcom", "gedcom"),
         ("Audit Log", "/admin/audit", "audit"),
         ("ML Dashboard", "/admin/ml-dashboard", "ml-dashboard"),
+        ("Event Groups", "/admin/event-groups", "event-groups"),
     ]
     nav_items = []
     for label, href, key in links:

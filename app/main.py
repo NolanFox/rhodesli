@@ -5437,6 +5437,12 @@ def sidebar(
                 href=f"{prefix}/admin/gedcom",
                 cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
+            A(
+                Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                Span("Event Groups", cls="sidebar-label ml-2"),
+                href=f"{prefix}/admin/event-groups",
+                cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
+            ),
             cls="mb-3",
         )
         if (user and user.is_admin)
@@ -8830,6 +8836,7 @@ _get_priority_reason = admin_routes._get_priority_reason
 from app import notification_routes  # noqa: E402, F401
 from app import upload_routes  # noqa: E402, F401
 from app import cluster_review_routes  # noqa: E402, F401
+from app import temporal_routes  # noqa: E402, F401
 
 # Re-run route priority after all route modules are imported
 _reorder_routes_atomic()
