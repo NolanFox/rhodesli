@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.52 · ~4471 tests (3813 app + 658 ML) · 971 photos · 1654 identities · 154 confirmed
+Current: v0.99.53 · ~4473 tests (3815 app + 658 ML) · 972 photos · 1768 identities · 154 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -77,6 +77,12 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-14: PRD039-002: Enriched speed-run — all faces, name input, merge search, recent actions, audit trail (Session 100f)
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
+### Near-Term — Temporal Co-Occurrence Analysis (PRD-059)
+- [-] 2026-03-27: Phase 1: Batch Gemini estimation for Esther + Albert photos — 80/279 complete, quota-limited. Full preset with face coords + GEDCOM context.
+- [ ] Phase 2: Event grouping — cluster photos by estimated date + shared faces
+- [ ] Phase 3: Co-occurrence matrix — frequent companions panel on person page
+- [ ] Phase 4: Identity inference — combine age trajectory + GEDCOM + co-occurrence
+
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
 - [x] 2026-03-11: Session 97 foundation shipped — SDD, research pack, implementation bundle, prompt/state lineage spec, and merged-branch verification are wired into the harness
 - [x] 2026-03-11: Phase 0: Eval repair + scorer-path unification
@@ -133,6 +139,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-27: **v0.99.53 — Session 142**: Interactive Feedback + Batch Gemini. 12 feedback items fixed (FB-001–012): Similar Identities links→person page, Compare View Photo prefix, multi-merge Focus mode, "Confirm as [Name]" now merges, bulk merge toast, merged identity filtering, neighbor fetch limit, face overlay navigation, "Confirm Only" button, expansion panel cleanup. 3 Codex P1 security fixes (CSRF on inbox confirm, merge side effects, rematch target). Batch Gemini estimation: 80/279 Esther+Albert photos with full preset (face coords, GEDCOM, subject ages). PRD-059 temporal co-occurrence. Startup retry for Supabase timeout. Lessons 159-160. 3815 app tests pass.
 
 - [x] 2026-03-26: **v0.99.52 — Session 141**: Fix Sprint + Refactor + Hardening. 5 parallel tracks. Track A: structural test for _main_mod refs (prevents auth-style regressions) + FB-002 merge toast link. Track B: FB-007 hero face picker (primary_face_id + admin star button + endpoint). Track C: heapq.nsmallest focus sort + parallel cold start. Track D: REFACTOR-001 Phase 3 — identity_card extraction (937 lines, main.py 9867→8930). Track E: PRD-058 merge auto-confirm analysis. 33 new tests. 3813 app tests pass.
 
