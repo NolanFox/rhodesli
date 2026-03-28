@@ -7895,8 +7895,8 @@ def _load_photo_locations() -> dict:
             )
         except Exception as e:
             logger.error(f"Postgres photo locations load failed, returning empty (no JSON fallback — AD-232): {e}")
-        _photo_locations_cache = {}
-        return _photo_locations_cache
+        # Do NOT cache empty on failure — next request should retry (Codex P1 fix)
+        return {}
 
     # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _photo_locations_cache = {}

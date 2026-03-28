@@ -2319,8 +2319,8 @@ def _load_date_labels() -> dict:
             logging.warning("Postgres date labels: Supabase returned None, returning empty (no JSON fallback — AD-232)")
         except Exception as e:
             logging.error(f"Postgres date labels load failed, returning empty (no JSON fallback — AD-232): {e}")
-        _date_labels_cache = {}
-        return _date_labels_cache
+        # Do NOT cache empty on failure — next request should retry (Codex P1 fix)
+        return {}
 
     # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _date_labels_cache = {}
@@ -2440,8 +2440,8 @@ def _load_birth_year_estimates() -> dict:
             logging.error(
                 f"Postgres birth year estimates load failed, returning empty (no JSON fallback — AD-232): {e}"
             )
-        _birth_year_cache = {}
-        return _birth_year_cache
+        # Do NOT cache empty on failure — next request should retry (Codex P1 fix)
+        return {}
 
     # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _birth_year_cache = {}
@@ -3200,11 +3200,20 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
 
     # Location estimate (from Gemini + geocoded data)
     # Handle both string (web re-analyze) and dict (batch) formats
+    # Batch script writes location_estimate as string + location_evidence as dict
+    # Old batch format may have location_estimate as dict
     raw_location = label.get("location_estimate", "")
+    location_evidence_dict = label.get("location_evidence", {})
     if isinstance(raw_location, dict):
+        # Old batch format — extract from dict
         location_estimate = raw_location.get("visual_evidence", "") or raw_location.get("place", "")
+        if not location_evidence_dict:
+            location_evidence_dict = raw_location
     else:
         location_estimate = raw_location
+    # Enrich location_estimate with evidence from location_evidence if available
+    if not location_estimate and isinstance(location_evidence_dict, dict):
+        location_estimate = location_evidence_dict.get("visual_evidence", "") or location_evidence_dict.get("place", "")
     locations = _load_photo_locations()
     location_data = locations.get(photo_id, {})
     location_name = location_data.get("location_name", "")
