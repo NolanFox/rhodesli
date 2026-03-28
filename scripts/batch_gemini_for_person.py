@@ -165,16 +165,46 @@ def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
 
 
 def load_existing_estimates() -> set[str]:
-    """Load photo IDs that already have Gemini date estimates."""
+    """Load photo IDs that already have Gemini date estimates.
+
+    Checks BOTH local JSON and Supabase (source of truth) to avoid
+    overwriting existing labels — especially human corrections.
+    Codex P1 fix: Session 143.
+    """
     existing = set()
 
-    # Check date_labels.json
+    # Check date_labels.json (local backup)
     labels_path = Path("rhodesli_ml/data/date_labels.json")
     if labels_path.exists():
         with open(labels_path) as f:
             data = json.load(f)
         for entry in data.get("labels", []):
             existing.add(entry.get("photo_id", ""))
+
+    # Also check Supabase (source of truth) — prevents overwriting human corrections
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+        _sb_url = os.environ.get("SUPABASE_URL")
+        _sb_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+        if _sb_url and _sb_key:
+            from supabase import create_client
+
+            sb = create_client(_sb_url, _sb_key)
+            offset = 0
+            while True:
+                resp = sb.table("date_labels").select("photo_id").range(offset, offset + 999).execute()
+                if not resp.data:
+                    break
+                for row in resp.data:
+                    existing.add(row["photo_id"])
+                if len(resp.data) < 1000:
+                    break
+                offset += 1000
+            logger.info(f"Loaded {len(existing)} existing estimates (local + Supabase)")
+    except Exception as e:
+        logger.warning(f"Could not check Supabase for existing estimates: {e}")
 
     return existing
 

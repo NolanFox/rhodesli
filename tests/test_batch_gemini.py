@@ -183,11 +183,14 @@ class TestLoadExistingEstimates:
         labels_path = tmp_path / "date_labels.json"
         labels_path.write_text(json.dumps(labels))
 
-        with patch("scripts.batch_gemini_for_person.Path") as MockPath:
+        with (
+            patch("scripts.batch_gemini_for_person.Path") as MockPath,
+            patch.dict("os.environ", {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""}),
+        ):
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = True
             MockPath.return_value = mock_path_instance
-            # Use the real file
+            # Use the real file; Supabase env vars empty so Supabase check is skipped
             with patch("builtins.open", mock_open(read_data=json.dumps(labels))):
                 result = load_existing_estimates()
 
@@ -196,7 +199,10 @@ class TestLoadExistingEstimates:
         assert len(result) == 2
 
     def test_returns_empty_when_no_labels_file(self):
-        with patch("scripts.batch_gemini_for_person.Path") as MockPath:
+        with (
+            patch("scripts.batch_gemini_for_person.Path") as MockPath,
+            patch.dict("os.environ", {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""}),
+        ):
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = False
             MockPath.return_value = mock_path_instance
@@ -206,7 +212,10 @@ class TestLoadExistingEstimates:
 
     def test_handles_empty_labels_array(self):
         labels = {"labels": []}
-        with patch("scripts.batch_gemini_for_person.Path") as MockPath:
+        with (
+            patch("scripts.batch_gemini_for_person.Path") as MockPath,
+            patch.dict("os.environ", {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""}),
+        ):
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = True
             MockPath.return_value = mock_path_instance
