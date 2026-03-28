@@ -31,9 +31,9 @@ If running interactively (not via runner), these rules apply:
 1. Execute phases sequentially — ONE deliverable per phase
 2. Commit after every phase
 3. /clear IMMEDIATELY after every commit — hooks enforce this:
-   - PostToolUse: counter increments after git commit
-   - PreToolUse: BLOCKS Edit/Write after 2+ commits without /clear
-4. After /clear: `echo 0 > .claude/commits_since_clear.txt`, then re-read prompt
+   - PreToolUse: BLOCKS Edit/Write when transcript exceeds 800 lines
+   - PostToolUse: advisory reminder after git commit
+4. After /clear, re-read the prompt from disk
 5. NEVER use /compact — it's lossy. Use /clear + re-read from disk
 
 ## Commit Discipline

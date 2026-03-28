@@ -57,17 +57,7 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo implementation); if [ \"$MODE\" = \"interactive\" ] || [ \"$MODE\" = \"continuation\" ]; then exit 0; fi; COUNTER_FILE=\".claude/commits_since_clear.txt\"; CURRENT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); if [ \"$CURRENT\" -gt 0 ]; then echo \"BLOCKED: $CURRENT commit(s) since last /clear. You must /clear before starting new work.\" >&2; exit 2; fi; exit 0'",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
+    "UserPromptSubmit": [],
     "Notification": [
       {
         "matcher": "",

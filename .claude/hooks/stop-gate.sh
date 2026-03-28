@@ -9,8 +9,8 @@
 #                    No assessment or session log required.
 #   continuation   — Writing a continuation prompt/handoff. Never block.
 #
-# State files (.claude/commits_since_clear.txt, session_mode.txt, current_session.txt)
-# are always excluded from the dirty check — they're ephemeral session state.
+# State files (session_mode.txt, current_session.txt) are always excluded
+# from the dirty check — they're ephemeral session state.
 #
 # See: HD-025
 
@@ -22,7 +22,6 @@ S=$(cat .claude/current_session.txt 2>/dev/null || echo "unknown")
 if [ "$MODE" = "continuation" ]; then
     echo "Continuation mode — no stop checks required."
     # Reset ephemeral state for next conversation (HD-026)
-    echo 0 > .claude/commits_since_clear.txt
     echo "interactive" > .claude/session_mode.txt
     exit 0
 fi
@@ -31,8 +30,7 @@ fi
 # No assessment or session log required for triage/exploration.
 if [ "$MODE" = "interactive" ]; then
     DIRTY=$(git status --porcelain \
-        -- ':!.claude/commits_since_clear.txt' \
-           ':!.claude/session_mode.txt' \
+        -- ':!.claude/session_mode.txt' \
            ':!.claude/current_session.txt' \
            ':!data/identities.json')
     if [ -n "$DIRTY" ]; then
@@ -41,7 +39,6 @@ if [ "$MODE" = "interactive" ]; then
         exit 2
     fi
     # Reset ephemeral state for next conversation (HD-026)
-    echo 0 > .claude/commits_since_clear.txt
     echo "interactive" > .claude/session_mode.txt
     exit 0
 fi
@@ -80,8 +77,7 @@ fi
 # Check for uncommitted files (exclude ephemeral state + production-origin data)
 # data/identities.json drifts from Supabase runtime syncs — never commit it (Lesson 141)
 DIRTY=$(git status --porcelain \
-    -- ':!.claude/commits_since_clear.txt' \
-       ':!.claude/session_mode.txt' \
+    -- ':!.claude/session_mode.txt' \
        ':!.claude/current_session.txt' \
        ':!data/identities.json')
 if [ -n "$DIRTY" ]; then
@@ -103,6 +99,5 @@ if [ "$AHEAD" -gt 0 ]; then
 fi
 
 # Reset ephemeral state for next conversation (HD-026)
-echo 0 > .claude/commits_since_clear.txt
 echo "interactive" > .claude/session_mode.txt
 exit 0

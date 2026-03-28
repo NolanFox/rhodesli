@@ -168,9 +168,6 @@ $PHASE_CONTENT
 3. Commit changes with conventional commit message
 4. Write a checkpoint summary to $CHECKPOINT_FILE with: what was done, key files changed, any issues found"
 
-        # Reset commit counter for fresh context
-        echo "0" > .claude/commits_since_clear.txt
-
         # Run the phase
         echo "Running phase $PHASE_NUM..."
         if claude -p "$PHASE_PROMPT"; then

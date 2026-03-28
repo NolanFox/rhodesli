@@ -1,16 +1,13 @@
 #!/bin/bash
-# post-commit-clear-gate.sh — Track commits for /clear enforcement
+# post-commit-clear-gate.sh — Advisory reminder after git commits
 #
 # Called as PostToolUse hook on Bash. After a git commit succeeds,
-# increments a counter. The PreToolUse hook (pre-work-clear-gate.sh)
-# blocks further EDITS until /clear resets the conversation.
+# prints a reminder to /clear between phases. Advisory only (exit 0).
 #
-# IMPORTANT: This hook exits 0 (warn only). Blocking happens at the
-# pre-work gate. Exiting 2 here would make the commit tool call appear
-# to fail even though git commit succeeded — confusing and causes the
-# user to have to hit ESC.
+# The actual enforcement is in pre-work-clear-gate.sh which uses
+# transcript line count (ungameable) to detect heavy context.
 #
-# See: HD-025
+# See: HD-032, Session 143 hooks research
 
 INPUT=$(cat)
 CMD=$(echo "$INPUT" | python3 -c "
@@ -23,25 +20,16 @@ except:
     print('')
 " 2>/dev/null)
 
-# Interactive and continuation sessions skip the /clear gate.
+# Interactive and continuation sessions skip the reminder.
 SESSION_MODE=$(cat .claude/session_mode.txt 2>/dev/null || echo "implementation")
 if [ "$SESSION_MODE" = "interactive" ] || [ "$SESSION_MODE" = "continuation" ]; then
     exit 0
 fi
 
-# Detect successful git commit
+# Detect successful git commit — print advisory reminder
 if echo "$CMD" | grep -qE '\bgit commit\b'; then
-    # Session 133: Use git-aware path so worktree agents have their own counter
-    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
-    COUNTER_FILE="$REPO_ROOT/.claude/commits_since_clear.txt"
-    CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
-    NEW=$((CURRENT + 1))
-    echo "$NEW" > "$COUNTER_FILE"
-
-    # Warn (stdout, not stderr) — blocking happens at pre-work-clear-gate
     echo ""
-    echo "=== COMMIT #${NEW} — /clear before next phase ==="
-    echo "Run /clear before starting the next phase."
+    echo "=== COMMIT DONE — /clear before next phase ==="
     echo "Document everything needed, commit docs, THEN /clear."
     echo "================================================"
     echo ""
