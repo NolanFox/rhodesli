@@ -42,3 +42,4 @@
 - **Commits**: 19
 - **Deploy**: SUCCESS (DOCKERFILE builder via railway deploy CLI)
 - **Version**: v0.99.54
+- **Gemini batch**: 275/279 Fox photos processed ($10.50), 547 total date_labels in Supabase
