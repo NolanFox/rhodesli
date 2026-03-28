@@ -3975,14 +3975,17 @@ def photo_view_content(
 
             # Name label: always visible for confirmed, hover for others
             if state == "CONFIRMED":
-                # Always-visible name label below the face box
-                # Include age at time of photo if both birth year and photo year are known
+                # Always-visible name label — position above or below based on face location
+                # Synced with public page logic (UX review fix: prevents label-box overlap)
                 label_text = display_name
                 if age_at_photo is not None and age_at_photo >= 0:
                     label_text = f"{display_name}, ~{age_at_photo}"
+                # Place label above face if face is in bottom 85% of image (avoids overlap with boxes below)
+                name_above = (top_pct + height_pct) > 85
+                name_pos_cls = "-top-5" if name_above else "bottom-0"
                 name_label = Span(
                     label_text,
-                    cls="absolute bottom-0 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded-t whitespace-nowrap pointer-events-none max-w-[200%] truncate",
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[10rem] truncate",
                 )
                 hover_tooltip = None
             else:
