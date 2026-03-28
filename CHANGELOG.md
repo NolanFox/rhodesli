@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.54] — 2026-03-28 (Session 143: Single Source of Truth + Data Audit)
+
+### Critical Fixes
+- **AD-232**: Eliminated JSON fallback paths in 7 data loaders — Supabase is the ONLY source in postgres mode. Prevents the #1 recurring data integrity issue (12 incidents).
+- **Codex P1**: Transient Supabase failures no longer poison caches — return empty without caching so next request retries.
+- **FB-001 (P0)**: Face card names showed doubled/overlapping text from nested `<a>` tags — fixed by using plain text when card is already a link.
+
+### Fixes
+- **FB-002**: Face overlay name labels moved inside bounding box (`bottom-0`) to prevent overlap with adjacent faces on group photos.
+- **P2**: Location evidence from batch labels (`location_evidence` dict) now rendered on photo page.
+- **P2**: Batch script now extracts `evidence`, `reasoning_summary`, `visible_text` from Gemini response for template compatibility.
+
+### Features
+- Photo page renders all Gemini batch fields: face analysis, group composition, clothing notes, AI reasoning summary.
+- Template handles both batch format (dict location, text_signage) and re-analyze format (string location, visible_text).
+- `scripts/comprehensive_data_audit.py` — cross-references ALL Supabase tables for data integrity.
+- `scripts/sync_volume_data_to_supabase.py` — recovers data from gemini_api_calls to date_labels (dry-run verified: 0 gaps).
+
+### Tests
+- 76 new tests (19 structural no-fallback, 9 AI rendering, 48 from parallel agents)
+- `test_no_json_fallback.py` — structural + behavioral enforcement of AD-232
+
 ## [v0.99.53] — 2026-03-27 (Session 142: Interactive Feedback + Batch Gemini)
 
 ### Critical Fixes
