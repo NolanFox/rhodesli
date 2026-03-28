@@ -39127,6 +39127,96 @@
         ],
         "trigger": "session_142_esther_albert"
       }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_277_01985_s_13akf5twbc0203",
+      "filename": "raw_photos/01985_s_13akf5twbc0203.jpg",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "high",
+      "probable_range": [
+        1958,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.3,
+        "1960": 0.65,
+        "1970": 0.05
+      },
+      "location_estimate": {
+        "place": "United States",
+        "confidence": "medium",
+        "visual_evidence": "Interior setting with venetian blinds and typical mid-century American clothing styles.",
+        "biographical_evidence": "None provided.",
+        "missing_child_analysis": "N/A"
+      },
+      "scene_description": "An indoor color photograph of an older couple holding a smiling baby. They are standing in front of a window with closed venetian blinds and plain curtains. The lighting appears to be from a camera flash.",
+      "clothing_notes": "The woman wears a short-sleeved floral dress and cat-eye glasses. The man wears a white dress shirt, a narrow dark tie, high-waisted pleated trousers, and wire-rimmed glasses. The baby is in a light-colored top, patterned shorts, and light blue socks.",
+      "subject_ages": [
+        60,
+        1,
+        65
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "good",
+        "issues": [
+          "slight color shift typical of aged color film",
+          "minor dust/scratches"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 60,
+          "gender": "female",
+          "description": "Older woman with dark hair pulled back, wearing dark-rimmed cat-eye glasses, smiling warmly."
+        },
+        {
+          "face_index": 1,
+          "estimated_age": 1,
+          "gender": "male",
+          "description": "Infant with light hair, smiling, wearing a light-colored outfit and blue socks."
+        },
+        {
+          "face_index": 2,
+          "estimated_age": 65,
+          "gender": "male",
+          "description": "Older man with graying hair, wearing wire-rimmed glasses, smiling."
+        }
+      ],
+      "group_composition": {
+        "type": "candid",
+        "people_count": 3,
+        "arrangement": "An older man and woman standing close together, jointly holding an infant."
+      },
+      "cultural_markers": [
+        "None distinctly visible; typical mid-century American domestic scene."
+      ],
+      "photo_technique": {
+        "type": "color transparency (slide)",
+        "format": "snapshot",
+        "is_color": true,
+        "condition": "good"
+      },
+      "text_signage": {},
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": true,
+      "gedcom_context_sent": false,
+      "created_at": "2026-03-28T00:29:00.486308+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox",
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
     }
   ]
 }
