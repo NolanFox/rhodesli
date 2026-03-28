@@ -2716,3 +2716,15 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Implementation**: `rhodesli_ml/prompts/` — full extraction preset updated to include legacy fields.
 - **Gap/Risk**: Larger prompt increases token cost per Gemini call (~15-20% more output tokens). Monitor cost per call via `gemini_api_calls` table.
 - **Affects**: `rhodesli_ml/prompts/`, `rhodesli_ml/date_estimation.py`, all Gemini batch processing scripts
+
+### AD-232: Single Source of Truth — No JSON Fallback in Postgres Mode (2026-03-27)
+- **Date**: 2026-03-27 | **Session**: 143
+- **Context**: 12th data integrity incident (Session 142). Batch Gemini wrote 84 date labels to local JSON but production reads from Supabase. Data invisible for 20+ hours. Root cause: every data loader had a "try Supabase, fall back to JSON" pattern that silently served stale data when Supabase had gaps.
+- **Decision**: When DATA_SOURCE=postgres (production default), all 7 data loaders return empty on Supabase failure — no JSON fallback. If Supabase is down, the app shows missing data rather than silently serving stale data from a different source.
+- **Rationale**: Silent fallbacks are the #1 recurring data integrity failure. They mask the problem (data not in Supabase) by serving data from a different source. This makes the failure invisible until a user reports it. Returning empty makes failures visible immediately.
+- **Alternative rejected**: "Supabase required, crash on failure" — too aggressive, would cause full outage on Supabase blips. Empty return preserves the page with missing sections.
+- **Alternative rejected**: "Keep fallbacks but add monitoring" — monitoring has been tried (Sessions 105, 108, 114). It doesn't catch data gaps in specific tables.
+- **Emergency rollback**: Set DATA_SOURCE=json on Railway to bypass Supabase entirely (escape hatch preserved).
+- **Affected loaders**: `_load_date_labels`, `_load_birth_year_estimates`, `_load_proposals`, `_load_photo_locations`, `_load_gedcom_matches`, `_load_relationship_graph`, `_load_annotations`
+- **Tests**: 19 structural + behavioral tests in `test_no_json_fallback.py` prevent regression.
+- **Affects**: app/main.py, app/page_routes.py, app/relationship_routes.py, app/engagement_routes.py
