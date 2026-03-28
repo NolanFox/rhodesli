@@ -27,7 +27,10 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 COUNTER_FILE="$REPO_ROOT/.claude/commits_since_clear.txt"
 CURRENT=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
 
-# Block after 1+ commits without /clear
+# Block after 5+ commits without /clear (raised from 1 — Session 143 HD-032)
+# Threshold 1 was too aggressive: forced counter reset after every commit,
+# preventing autonomous work. 5 allows a full phase while still catching
+# runaway context bloat.
 # Exception: allow editing session docs (assessments, logs, session_context)
 # so you can document before the final commit + /clear.
 INPUT=$(cat)
@@ -41,11 +44,11 @@ except:
 " 2>/dev/null)
 
 # Allow session documentation edits even after commits
-if echo "$FILE" | grep -qE '(docs/assessments/|docs/session_logs/|docs/session_context/|CHANGELOG|ROADMAP|BACKLOG|SESSION_LOG|\.claude/)'; then
+if echo "$FILE" | grep -qE '(docs/assessments/|docs/session_logs/|docs/session_context/|docs/feedback/|CHANGELOG|ROADMAP|BACKLOG|SESSION_LOG|\.claude/)'; then
     exit 0
 fi
 
-if [ "$CURRENT" -ge 1 ]; then
+if [ "$CURRENT" -ge 5 ]; then
     echo "BLOCKED: $CURRENT commits since last /clear." >&2
     echo "You MUST /clear before editing more code files." >&2
     echo "(Session docs like assessments/logs/CHANGELOG are still allowed)" >&2
