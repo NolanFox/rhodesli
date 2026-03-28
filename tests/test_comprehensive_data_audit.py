@@ -240,7 +240,7 @@ class TestPhotoFacesCoverage:
     def test_complete_coverage_passes(self):
         data = {
             "photos": [
-                {"photo_id": "p1", "face_ids": ["f1", "f2"]},
+                {"photo_id": "p1", "face_count": 2},
             ],
             "photo_faces": [
                 {"photo_id": "p1", "face_id": "f1"},
@@ -254,7 +254,7 @@ class TestPhotoFacesCoverage:
     def test_missing_photo_faces_fails(self):
         data = {
             "photos": [
-                {"photo_id": "p1", "face_ids": ["f1", "f2"]},
+                {"photo_id": "p1", "face_count": 2},
             ],
             "photo_faces": [],  # No entries!
         }
@@ -265,7 +265,7 @@ class TestPhotoFacesCoverage:
     def test_photos_with_no_faces_ok(self):
         data = {
             "photos": [
-                {"photo_id": "p1", "face_ids": []},
+                {"photo_id": "p1", "face_count": 0},
             ],
             "photo_faces": [],
         }
@@ -389,9 +389,9 @@ class TestDateLabelsVsGemini:
             "gemini_api_calls": [
                 {
                     "photo_id": "p1",
-                    "feature": "estimate",
+                    "call_type": "date_estimation",
                     "status": "success",
-                    "gemini_config": {"feature": "estimate"},
+                    "gemini_config": {"call_type": "date_estimation"},
                 },
             ],
         }
@@ -405,9 +405,9 @@ class TestDateLabelsVsGemini:
             "gemini_api_calls": [
                 {
                     "photo_id": "p1",
-                    "feature": "estimate",
+                    "call_type": "date_estimation",
                     "status": "success",
-                    "gemini_config": {"feature": "estimate"},
+                    "gemini_config": {"call_type": "date_estimation"},
                 },
             ],
         }
@@ -590,10 +590,11 @@ class TestStringEncodedArrays:
         # Should not fail — f1 and f2 are valid anchors
         assert result.passed is True
 
-    def test_string_face_ids_in_photos(self):
+    def test_string_face_count_in_photos(self):
+        """face_count stored as string should be handled gracefully."""
         data = {
             "photos": [
-                {"photo_id": "p1", "face_ids": '["f1"]'},
+                {"photo_id": "p1", "face_count": "1"},
             ],
             "photo_faces": [
                 {"photo_id": "p1", "face_id": "f1"},

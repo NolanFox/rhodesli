@@ -198,51 +198,49 @@ def check_identities_integrity(client, verbose: bool) -> AuditResult:
 
 
 def check_photo_faces_coverage(client, verbose: bool) -> AuditResult:
-    """Every photo with face_ids in the photos table should have photo_faces rows."""
+    """Photos with face_count > 0 should have matching photo_faces rows."""
     result = AuditResult("Photo-faces coverage")
 
-    photos = _paginate_select(client, "photos", "photo_id, face_ids")
+    photos = _paginate_select(client, "photos", "photo_id, face_count")
     photo_faces = _paginate_select(client, "photo_faces", "photo_id, face_id")
 
-    # Build set of (photo_id, face_id) from photo_faces
-    pf_set = {(r["photo_id"], r["face_id"]) for r in photo_faces}
-    pf_photo_ids = {r["photo_id"] for r in photo_faces}
+    # Build map of photo_id -> set of face_ids from photo_faces
+    pf_by_photo: dict[str, set[str]] = {}
+    for r in photo_faces:
+        pf_by_photo.setdefault(r["photo_id"], set()).add(r["face_id"])
 
     result.set_count("photos_total", len(photos))
     result.set_count("photo_faces_rows", len(photo_faces))
 
     photos_missing_pf = 0
-    faces_missing_pf = 0
+    face_count_mismatch = 0
 
     for photo in photos:
-        face_ids = photo.get("face_ids") or []
-        if isinstance(face_ids, str):
-            import json
-
+        face_count = photo.get("face_count") or 0
+        if isinstance(face_count, str):
             try:
-                face_ids = json.loads(face_ids)
+                face_count = int(face_count)
             except (ValueError, TypeError):
-                face_ids = []
+                face_count = 0
 
-        if len(face_ids) > 0 and photo["photo_id"] not in pf_photo_ids:
+        pf_faces = pf_by_photo.get(photo["photo_id"], set())
+
+        if face_count > 0 and len(pf_faces) == 0:
             photos_missing_pf += 1
             if photos_missing_pf <= 3:
-                result.fail(
-                    f"Photo {photo['photo_id']} has {len(face_ids)} faces in photos table but no photo_faces rows"
-                )
+                result.fail(f"Photo {photo['photo_id']} has face_count={face_count} but no photo_faces rows")
 
-        for fid in face_ids:
-            if (photo["photo_id"], fid) not in pf_set:
-                faces_missing_pf += 1
+        if face_count > 0 and len(pf_faces) > 0 and face_count != len(pf_faces):
+            face_count_mismatch += 1
 
     if photos_missing_pf > 3:
         result.fail(f"... and {photos_missing_pf - 3} more photos missing photo_faces rows")
 
     result.set_count("photos_missing_photo_faces", photos_missing_pf)
-    result.set_count("faces_missing_photo_faces", faces_missing_pf)
+    result.set_count("face_count_mismatch", face_count_mismatch)
 
-    if faces_missing_pf > 0:
-        result.fail(f"{faces_missing_pf} individual face(s) in photos.face_ids lack photo_faces rows")
+    if face_count_mismatch > 0:
+        result.warn(f"{face_count_mismatch} photo(s) have face_count != photo_faces row count")
 
     return result
 
@@ -384,17 +382,17 @@ def check_date_labels_vs_gemini(client, verbose: bool) -> AuditResult:
     dl_photo_ids = {r["photo_id"] for r in date_labels}
 
     # Get Gemini API calls that were successful date estimations
-    # The feature is "estimate" and status is typically indicated by presence of response_summary
-    gemini_calls = _paginate_select(client, "gemini_api_calls", "photo_id, feature, status, gemini_config")
+    # The call_type is "date_estimation" and status is typically indicated by presence of response_summary
+    gemini_calls = _paginate_select(client, "gemini_api_calls", "photo_id, call_type, status, gemini_config")
 
     estimate_success_photo_ids = set()
     for call in gemini_calls:
-        feature = call.get("feature") or call.get("gemini_config", {}).get("feature", "")
-        if not feature:
+        call_type = call.get("call_type") or ""
+        if not call_type:
             # Try to infer from gemini_config
             cfg = call.get("gemini_config") or {}
-            feature = cfg.get("feature", "")
-        if "estimate" in str(feature).lower() or "date" in str(feature).lower():
+            call_type = cfg.get("call_type", "") or cfg.get("feature", "")
+        if "estimate" in str(call_type).lower() or "date" in str(call_type).lower():
             pid = call.get("photo_id")
             if pid:
                 estimate_success_photo_ids.add(pid)
@@ -569,7 +567,7 @@ def check_gemini_api_logging(client, verbose: bool) -> AuditResult:
     result = AuditResult("Gemini API call logging completeness")
 
     calls = _paginate_select(
-        client, "gemini_api_calls", "id, photo_id, feature, gemini_config, response_summary, created_at"
+        client, "gemini_api_calls", "id, photo_id, call_type, gemini_config, response_summary, created_at"
     )
 
     result.set_count("total_calls", len(calls))
