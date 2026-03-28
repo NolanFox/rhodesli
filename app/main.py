@@ -3078,6 +3078,20 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
 
     sections = []
 
+    # Normalize old nested format: unwrap date_estimation and location dicts to top level
+    # Old format: {"date_estimation": {"estimated_decade": 1920, ...}, "location": {"place": "..."}}
+    # New format: {"estimated_decade": 1920, "location_estimate": "...", ...}
+    if "date_estimation" in label and isinstance(label["date_estimation"], dict):
+        for k, v in label["date_estimation"].items():
+            if k not in label:
+                label[k] = v
+    if "location" in label and isinstance(label["location"], dict) and "location_estimate" not in label:
+        loc = label["location"]
+        label["location_estimate"] = loc.get("place", loc.get("visual_evidence", ""))
+        label["location_evidence"] = loc
+    if "visible_text" in label and isinstance(label["visible_text"], dict):
+        label["visible_text"] = label["visible_text"].get("text", "")
+
     # Date estimate
     decade = label.get("estimated_decade")
     best_year = label.get("best_year_estimate")
@@ -3391,7 +3405,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         else:
             ages_text = str(ages)
         if ages_text:
-            sections.append(_field("Subject Ages", P(ages_text)))
+            sections.append(_field("Subject Ages", P(ages_text), expanded=True))
 
     # Face analysis (batch preset: per-face age/gender/description)
     face_analysis = label.get("face_analysis")
@@ -3418,7 +3432,9 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                     )
                 )
         if face_items:
-            sections.append(_field("Face Analysis", Ul(*face_items, cls="list-disc list-inside space-y-0.5")))
+            sections.append(
+                _field("Face Analysis", Ul(*face_items, cls="list-disc list-inside space-y-0.5"), expanded=True)
+            )
 
     # Group composition (batch preset: type, count, arrangement)
     group_comp = label.get("group_composition")
@@ -3434,12 +3450,12 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         if arrangement:
             comp_parts.append(P(arrangement, cls="text-sm text-slate-400 italic mt-1"))
         if comp_parts:
-            sections.append(_field("Group Composition", Div(*comp_parts)))
+            sections.append(_field("Group Composition", Div(*comp_parts), expanded=True))
 
     # Clothing notes (batch preset: era clothing description)
     clothing = label.get("clothing_notes", "")
     if clothing and isinstance(clothing, str):
-        sections.append(_field("Clothing & Attire", P(clothing, cls="italic text-slate-400")))
+        sections.append(_field("Clothing & Attire", P(clothing, cls="italic text-slate-400"), expanded=True))
 
     if not sections:
         return None
@@ -3560,8 +3576,15 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
 
     Shows per-face Gemini descriptions (from PRD-015 coordinate bridging).
     Returns None if no alignment data exists for this photo.
+    Also returns None if AI Analysis already has face_analysis data (avoid duplicate).
     Admin users see a "Detect Faces" trigger button if not yet aligned.
     """
+    # Skip if AI Analysis already shows face analysis (avoid duplicate section)
+    labels = _load_date_labels()
+    dl = labels.get(photo_id, {})
+    if isinstance(dl.get("face_analysis"), list) and dl["face_analysis"]:
+        return None
+
     from app.face_alignment import get_cached_alignment, load_alignments
 
     # Check for existing alignment data (Supabase-first, AD-152)
