@@ -3193,8 +3193,18 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         )
         sections.append(_field("Date Estimate", date_content, field_key="date", expanded=True))
 
+    # Reasoning summary (from Gemini date estimation)
+    reasoning = label.get("reasoning_summary", "")
+    if reasoning:
+        sections.append(_field("AI Reasoning", P(reasoning, cls="italic text-slate-400")))
+
     # Location estimate (from Gemini + geocoded data)
-    location_estimate = label.get("location_estimate", "")
+    # Handle both string (web re-analyze) and dict (batch) formats
+    raw_location = label.get("location_estimate", "")
+    if isinstance(raw_location, dict):
+        location_estimate = raw_location.get("visual_evidence", "") or raw_location.get("place", "")
+    else:
+        location_estimate = raw_location
     locations = _load_photo_locations()
     location_data = locations.get(photo_id, {})
     location_name = location_data.get("location_name", "")
@@ -3299,8 +3309,12 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     if scene:
         sections.append(_field("Scene", P(scene), expanded=True))
 
-    # Visible text (OCR)
+    # Visible text (OCR) — handle both string and dict (text_signage) formats
     visible_text = label.get("visible_text", "")
+    if not visible_text:
+        text_signage = label.get("text_signage", {})
+        if isinstance(text_signage, dict) and text_signage.get("detected"):
+            visible_text = text_signage.get("text", "")
     if visible_text:
         sections.append(
             _field("Visible Text", P(visible_text, cls="italic font-mono text-sm sm:text-xs text-slate-400"))
@@ -3369,6 +3383,54 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             ages_text = str(ages)
         if ages_text:
             sections.append(_field("Subject Ages", P(ages_text)))
+
+    # Face analysis (batch preset: per-face age/gender/description)
+    face_analysis = label.get("face_analysis")
+    if face_analysis and isinstance(face_analysis, list):
+        face_items = []
+        for fa in face_analysis:
+            if isinstance(fa, dict):
+                age = fa.get("estimated_age", "")
+                gender = fa.get("gender", "")
+                desc = fa.get("description", "")
+                idx = fa.get("face_index", "")
+                parts = []
+                if age:
+                    parts.append(f"Age ~{age}")
+                if gender:
+                    parts.append(gender.capitalize())
+                label_text = ", ".join(parts)
+                face_items.append(
+                    Li(
+                        Span(f"Face {idx}: " if idx != "" else "", cls="text-slate-500"),
+                        Span(label_text, cls="text-slate-300 font-medium") if label_text else None,
+                        Span(f" — {desc}", cls="text-slate-400") if desc else None,
+                        cls="text-sm sm:text-xs mb-1",
+                    )
+                )
+        if face_items:
+            sections.append(_field("Face Analysis", Ul(*face_items, cls="list-disc list-inside space-y-0.5")))
+
+    # Group composition (batch preset: type, count, arrangement)
+    group_comp = label.get("group_composition")
+    if group_comp and isinstance(group_comp, dict):
+        comp_parts = []
+        gtype = group_comp.get("type", "").replace("_", " ").title()
+        count = group_comp.get("people_count")
+        arrangement = group_comp.get("arrangement", "")
+        if gtype:
+            comp_parts.append(P(gtype, cls="text-amber-200 font-serif"))
+        if count:
+            comp_parts.append(P(f"{count} people", cls="text-sm text-slate-400"))
+        if arrangement:
+            comp_parts.append(P(arrangement, cls="text-sm text-slate-400 italic mt-1"))
+        if comp_parts:
+            sections.append(_field("Group Composition", Div(*comp_parts)))
+
+    # Clothing notes (batch preset: era clothing description)
+    clothing = label.get("clothing_notes", "")
+    if clothing and isinstance(clothing, str):
+        sections.append(_field("Clothing & Attire", P(clothing, cls="italic text-slate-400")))
 
     if not sections:
         return None

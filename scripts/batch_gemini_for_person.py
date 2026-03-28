@@ -672,8 +672,13 @@ def run_batch(
                 "confidence": date_est.get("confidence"),
                 "probable_range": date_est.get("probable_range"),
                 "decade_probabilities": date_est.get("decade_probabilities"),
-                # Location
-                "location_estimate": result.get("location", {}),
+                "evidence": date_est.get("evidence", {}),
+                "reasoning_summary": date_est.get("reasoning_summary", ""),
+                # Location — extract place string for template compatibility
+                "location_estimate": (result.get("location", {}) or {}).get("place", "")
+                if isinstance(result.get("location"), dict)
+                else result.get("location", ""),
+                "location_evidence": result.get("location", {}),
                 # Rich metadata (full preset)
                 "scene_description": result.get("scene_description", ""),
                 "clothing_notes": result.get("clothing_notes", result.get("clothing_era", "")),
@@ -690,6 +695,10 @@ def run_batch(
                 "cultural_markers": result.get("cultural_markers", {}),
                 "photo_technique": result.get("photo_technique", {}),
                 "text_signage": result.get("text_signage", {}),
+                # visible_text: extract from text_signage for template compatibility
+                "visible_text": (result.get("text_signage", {}) or {}).get("text", "")
+                if isinstance(result.get("text_signage"), dict)
+                else "",
                 # Provenance
                 "source_method": "gemini_batch_full",
                 "prompt_version": "v3_enriched_full",
