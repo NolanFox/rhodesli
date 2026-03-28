@@ -2188,11 +2188,13 @@ def _load_proposals() -> dict:
             logging.debug("proposals_cache_populated source=postgres count=%d", len(proposals))
             return _proposals_cache
         except Exception as e:
-            logging.error("proposals: Supabase read failed: %s", e)
-            # Fall through to JSON as emergency fallback for proposals
-            # (unlike registries, proposals are ML output — less critical)
+            logging.error("proposals: Supabase read failed, returning empty (no JSON fallback — AD-232): %s", e)
+            _proposals_cache = empty
+            _proposals_cache_ts = now
+            _proposal_target_counts_cache = None
+            return _proposals_cache
 
-    # JSON mode or Supabase fallback
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     path = data_path / "proposals.json"
     if not path.exists():
         _proposals_cache = empty
@@ -2314,10 +2316,13 @@ def _load_date_labels() -> dict:
                 logging.info(f"Loaded {len(result)} date labels from Postgres")
                 _date_labels_cache = result
                 return _date_labels_cache
-            logging.warning("Postgres date labels load returned None, falling back to JSON")
+            logging.warning("Postgres date labels: Supabase returned None, returning empty (no JSON fallback — AD-232)")
         except Exception as e:
-            logging.warning(f"Postgres date labels load failed, falling back to JSON: {e}")
+            logging.error(f"Postgres date labels load failed, returning empty (no JSON fallback — AD-232): {e}")
+        _date_labels_cache = {}
+        return _date_labels_cache
 
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _date_labels_cache = {}
     ml_data_path = data_path / "date_labels.json"
     if not ml_data_path.exists():
@@ -2428,12 +2433,18 @@ def _load_birth_year_estimates() -> dict:
                 logging.info(f"Loaded {len(result)} birth year estimates from Postgres")
                 _birth_year_cache = result
                 return _birth_year_cache
-            logging.warning("Postgres birth year estimates load returned None, falling back to JSON")
+            logging.warning(
+                "Postgres birth year estimates: Supabase returned None, returning empty (no JSON fallback — AD-232)"
+            )
         except Exception as e:
-            logging.warning(f"Postgres birth year estimates load failed, falling back to JSON: {e}")
+            logging.error(
+                f"Postgres birth year estimates load failed, returning empty (no JSON fallback — AD-232): {e}"
+            )
+        _birth_year_cache = {}
+        return _birth_year_cache
 
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _birth_year_cache = {}
-    # Check both possible locations (ML output dir and data dir)
     for candidate in [
         Path("rhodesli_ml/data/birth_year_estimates.json"),
         data_path / "birth_year_estimates.json",

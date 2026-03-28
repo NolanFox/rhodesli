@@ -537,9 +537,9 @@ def _load_annotations() -> dict:
                 _annotations_cache = result
                 _annotations_cache_ts = now
                 return _annotations_cache
-            logging.warning("Postgres annotations load returned None, returning empty")
+            logging.warning("Postgres annotations: Supabase returned None, returning empty (no JSON fallback — AD-232)")
         except Exception as e:
-            logging.warning(f"Postgres annotations load failed: {e}")
+            logging.error(f"Postgres annotations load failed, returning empty (no JSON fallback — AD-232): {e}")
         _annotations_cache = default
         _annotations_cache_ts = now
         return _annotations_cache

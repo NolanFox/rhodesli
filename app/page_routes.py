@@ -7890,10 +7890,15 @@ def _load_photo_locations() -> dict:
                 logger.info(f"Loaded {len(result)} photo locations from Postgres")
                 _photo_locations_cache = result
                 return _photo_locations_cache
-            logger.warning("Postgres photo locations load returned None, falling back to JSON")
+            logger.warning(
+                "Postgres photo locations: Supabase returned None, returning empty (no JSON fallback — AD-232)"
+            )
         except Exception as e:
-            logger.warning(f"Postgres photo locations load failed, falling back to JSON: {e}")
+            logger.error(f"Postgres photo locations load failed, returning empty (no JSON fallback — AD-232): {e}")
+        _photo_locations_cache = {}
+        return _photo_locations_cache
 
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     _photo_locations_cache = {}
     locations_path = Path(_main_mod.DATA_DIR) / "photo_locations.json"
     if locations_path.exists():

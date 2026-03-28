@@ -75,9 +75,12 @@ def _load_gedcom_matches():
                 logging.debug("gedcom_matches_cache_populated source=postgres count=%d", len(matches))
                 return result
         except Exception as e:
-            logging.error("gedcom_matches: Supabase read failed: %s", e)
+            logging.error("gedcom_matches: Supabase read failed, returning empty (no JSON fallback — AD-232): %s", e)
+        _gedcom_matches_cache = default
+        _gedcom_matches_cache_ts = now
+        return _gedcom_matches_cache
 
-    # JSON mode or Supabase fallback
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     matches_path = _main_mod.data_path / "gedcom_matches.json"
     if not matches_path.exists():
         _gedcom_matches_cache = default
@@ -136,9 +139,12 @@ def _load_relationship_graph():
                 logging.debug("relationship_graph_cache_populated source=postgres count=%d", len(relationships))
                 return result
         except Exception as e:
-            logging.error("relationships: Supabase read failed: %s", e)
+            logging.error("relationships: Supabase read failed, returning empty (no JSON fallback — AD-232): %s", e)
+        _relationship_graph_cache = default
+        _relationship_graph_cache_ts = now
+        return _relationship_graph_cache
 
-    # JSON mode or Supabase fallback
+    # JSON mode (DATA_SOURCE=json) — rollback escape hatch only
     rel_path = _main_mod.data_path / "relationships.json"
     if not rel_path.exists():
         _relationship_graph_cache = default

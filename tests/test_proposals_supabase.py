@@ -96,10 +96,11 @@ class TestProposalsSupabaseRead:
 
         assert result["proposals"] == []
 
-    def test_load_proposals_supabase_error_falls_through_to_json(self, tmp_path):
-        """When Supabase throws, falls back to JSON."""
+    def test_load_proposals_supabase_error_returns_empty_no_json_fallback(self, tmp_path):
+        """When Supabase throws, returns empty — no JSON fallback (AD-232)."""
         import app.main as main
 
+        # JSON file exists but should NOT be read in postgres mode
         proposals_json = {
             "proposals": [{"source_identity_id": "json-id", "target_identity_id": "json-tgt", "distance": 0.9}],
             "generated_at": "2026-01-01",
@@ -117,8 +118,8 @@ class TestProposalsSupabaseRead:
         ):
             result = main._load_proposals()
 
-        assert len(result["proposals"]) == 1
-        assert result["proposals"][0]["source_identity_id"] == "json-id"
+        assert len(result["proposals"]) == 0, "Should return empty on Supabase failure, not JSON data"
+        assert result["generated_at"] == ""
 
 
 class TestProposalsTTLCache:
