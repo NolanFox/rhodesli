@@ -3982,7 +3982,7 @@ def photo_view_content(
                     label_text = f"{display_name}, ~{age_at_photo}"
                 name_label = Span(
                     label_text,
-                    cls="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[150%] truncate",
+                    cls="absolute bottom-0 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded-t whitespace-nowrap pointer-events-none max-w-[200%] truncate",
                 )
                 hover_tooltip = None
             else:
