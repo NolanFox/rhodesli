@@ -11631,21 +11631,6 @@ def public_photo_page(
 
         crop_el = _face_card_thumb(fi)
 
-        # Link to person page for identified people
-        name_el = fi["display_name"]
-        see_all_link = None
-        if fi["is_identified"] and fi["identity_id"]:
-            name_el = A(
-                fi["display_name"],
-                href=f"{nav_prefix}/person/{fi['identity_id']}",
-                cls="text-white hover:text-emerald-300 transition-colors",
-            )
-            see_all_link = A(
-                "See all photos \u2192",
-                href=f"{nav_prefix}/person/{fi['identity_id']}",
-                cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 transition-colors",
-            )
-
         # Card links to person page (identified) or identify page (unidentified)
         if fi["is_identified"] and fi["identity_id"]:
             card_href = f"{nav_prefix}/person/{fi['identity_id']}"
@@ -11656,6 +11641,31 @@ def public_photo_page(
         else:
             card_href = None
             card_title = None
+
+        # Name element: plain text when card is already a link (avoid nested <a> tags
+        # which cause browsers to render doubled/overlapping text — Session 143 fix)
+        name_el = fi["display_name"]
+        see_all_link = None
+        if fi["is_identified"] and fi["identity_id"]:
+            if not card_href:
+                # Only make name a link if the card itself isn't linked
+                name_el = A(
+                    fi["display_name"],
+                    href=f"{nav_prefix}/person/{fi['identity_id']}",
+                    cls="text-white hover:text-emerald-300 transition-colors",
+                )
+            if card_href:
+                # Card is already a link — use plain text to avoid nested <a> tags
+                see_all_link = Span(
+                    "See all photos \u2192",
+                    cls="text-[10px] text-indigo-400 mt-1",
+                )
+            else:
+                see_all_link = A(
+                    "See all photos \u2192",
+                    href=f"{nav_prefix}/person/{fi['identity_id']}",
+                    cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 transition-colors",
+                )
 
         # Quick-identify button for admin on unidentified faces
         quick_id_btn = None
