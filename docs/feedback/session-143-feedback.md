@@ -33,3 +33,10 @@
 - **Severity:** P0 (principle)
 - **Context:** User explicitly stated: "we need to be resilient enough so that we never ever lose data" and "make sure in doing this week you don't do anything destructive to the data." All changes must be additive, reversible, and data-safe.
 - **Fix:** All Session 143 changes are read-path only (no data mutations). JSON files preserved as backup.
+
+## FB-007: Gemini API still on free tier (250/day) — Tier 1 NOT active
+- **Severity:** P1 (blocker for Phase 5)
+- **Context:** Batch script hit 429 RESOURCE_EXHAUSTED with `limit: 250, model: gemini-3.1-pro`. Despite context claiming Tier 1 (1,500/day), actual quota is 250/day. Retry in ~20h.
+- **Root cause:** Billing may not be enabled at https://aistudio.google.com/apikey
+- **Fix:** User needs to verify billing status. Once Tier 1 confirmed, batch can retry.
+- **BACKLOG:** BATCH-005
