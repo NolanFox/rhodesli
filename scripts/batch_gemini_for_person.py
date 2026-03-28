@@ -712,6 +712,29 @@ def run_batch(
             success_count += 1
             total_cost += cost_per_photo
 
+            # Lesson 161: Verify FULL output quality on first successful call
+            if success_count == 1:
+                _missing = []
+                if not label_entry.get("gedcom_context_sent"):
+                    _missing.append("GEDCOM context")
+                if not label_entry.get("face_coordinates_sent"):
+                    _missing.append("face coordinates")
+                if not label_entry.get("face_analysis"):
+                    _missing.append("face_analysis")
+                if not label_entry.get("subject_ages"):
+                    _missing.append("subject_ages")
+                if not label_entry.get("group_composition"):
+                    _missing.append("group_composition")
+                if _missing:
+                    logger.warning(f"  *** FIRST RESULT QUALITY CHECK: Missing enrichments: {', '.join(_missing)} ***")
+                    logger.warning(
+                        "  *** Review this result before continuing. Photos without GEDCOM context produce lower-quality estimates. ***"
+                    )
+                else:
+                    logger.info(
+                        "  FIRST RESULT QUALITY CHECK: All enrichments present (GEDCOM, face coords, ages, groups)"
+                    )
+
             # Incremental save every 10 photos
             if success_count % 10 == 0:
                 with open(labels_path, "w") as f:
