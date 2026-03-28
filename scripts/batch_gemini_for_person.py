@@ -709,6 +709,21 @@ def run_batch(
                 labels_data["labels"].append(label_entry)
                 existing_labels[pid] = len(labels_data["labels"]) - 1
 
+            # Write to Supabase immediately (source of truth — data-layer.md rule)
+            try:
+                from supabase import create_client as _create_sb
+
+                _sb_url = os.environ.get("SUPABASE_URL")
+                _sb_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+                if _sb_url and _sb_key:
+                    _sb = _create_sb(_sb_url, _sb_key)
+                    _sb.table("date_labels").upsert(
+                        {"photo_id": pid, "data": label_entry},
+                        on_conflict="photo_id",
+                    ).execute()
+            except Exception as _sync_err:
+                logger.warning(f"  Supabase date_labels sync failed: {_sync_err}")
+
             success_count += 1
             total_cost += cost_per_photo
 

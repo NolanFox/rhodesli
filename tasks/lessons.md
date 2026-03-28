@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-161 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+162 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -77,6 +77,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 159 | **ALWAYS verify deploy health before ending a session — failed deploy left site down overnight (Session 142)** |
 | 160 | **Batch scripts must verify logging on first call — 79 Gemini calls went unlogged to Supabase (Session 142)** |
 | 161 | **Batch API calls: verify FULL output quality on first call, not just success — 82 photos ran without GEDCOM context (Session 142)** |
+| 162 | **Batch scripts MUST write to Supabase (source of truth), not just local JSON — 84 labels invisible in production for 20h (Session 142)** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
