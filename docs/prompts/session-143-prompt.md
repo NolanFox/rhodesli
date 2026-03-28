@@ -83,7 +83,8 @@ The photo page shows incomplete AI analysis. JSONB `data` column has all fields 
 
 ## Phase 5: Gemini Batch Completion (SEQUENTIAL — after billing enabled)
 
-**PREREQUISITE**: User must enable billing at https://aistudio.google.com/apikey
+**BILLING**: Already on Tier 1 · Postpay (1,500 requests/day). No action needed.
+Investigate why Session 142 hit "250/day" quota — may have been per-minute limit, not per-day.
 
 1. **Re-run ALL 279 photos** with `--no-skip-existing --max-cost 20`
 2. **Verify first result** — STOP if GEDCOM missing or any enrichment fails
@@ -99,13 +100,25 @@ Victoria Capeluto's person page shows "Needs review" / "Conflicting face assignm
 2. If candidates: consider UI change for confirmed people
 3. If conflicts: audit and repair
 
-## Phase 7: Codex Audit — MULTIPLE PASSES
+## Phase 7: Codex Audit — TWO SEPARATE ROLES
 
-1. **Codex Pass 1**: Audit all code changes from this session — security, correctness
-2. **Codex Pass 2**: Audit the data audit scripts — did they miss anything?
-3. **Codex Pass 3**: Have Codex write its OWN independent data audit and run it
-4. **Compare all findings** — document what each pass caught that others missed
-5. **Log Codex performance** per `.claude/rules/ai-tool-audit.md`
+Codex serves TWO distinct purposes this session. Both are mandatory.
+
+### Role 1: Code Audit (standard)
+Codex audits all code changes from this session — security, correctness, test quality.
+Run after each major phase. Fix P0/P1 before continuing.
+
+### Role 2: Independent Deep Data Audit (NEW)
+Codex writes its OWN comprehensive data audit script — completely independent from
+the one Claude writes in Phase 3. The goal: two different AI perspectives checking
+the same data, catching gaps the other misses.
+
+Steps:
+1. `codex exec --full-auto "Write a comprehensive data audit script for the Rhodesli project. Check: (a) every Supabase table the app reads from has complete data, (b) no data exists only on local JSON that should be in Supabase, (c) gemini_api_calls entries all have corresponding date_labels, (d) all identities with faces have photo_faces entries, (e) all confirmed identities have valid anchor_ids, (f) no orphaned faces or identities. Save to scripts/codex_data_audit.py and run it."`
+2. Run Claude's audit (`scripts/comprehensive_data_audit.py`) separately
+3. **Compare both audit reports** — document what each caught that the other missed
+4. Fix ALL findings from BOTH audits
+5. Log Codex data audit value assessment per `.claude/rules/ai-tool-audit.md`
 
 ## Parallelization Plan
 
@@ -116,7 +129,7 @@ Victoria Capeluto's person page shows "Needs review" / "Conflicting face assignm
 | Track C | Phase 3 (audit retrospective) | None | A, B, D |
 | Track D | Phase 6 (face assignment) | None | A, B, C |
 | Sequential | Phase 1 (fallback removal) | Must complete before Phase 5 | — |
-| Sequential | Phase 5 (Gemini batch) | Phase 1 + billing | — |
+| Sequential | Phase 5 (Gemini batch) | Phase 1 (Tier 1 already active) | — |
 | Sequential | Phase 7 (Codex multi-pass) | After all code changes | — |
 
 Launch Tracks A, B, C, D as parallel worktree subagents immediately after Phase 0.
