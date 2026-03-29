@@ -3528,6 +3528,38 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             ),
             P("Estimated by AI \u2014 help us verify", cls="text-[11px] text-indigo-400/70 mb-4"),
             Div(id=f"reanalyze-result-{photo_id.replace('.', '_')}", cls="mb-3"),
+            # Anchor Compare (AD-233) — admin only
+            Div(
+                Details(
+                    Summary(
+                        "Compare with anchor photo",
+                        cls="text-[11px] text-indigo-400 cursor-pointer hover:text-indigo-300",
+                    ),
+                    Div(
+                        Input(
+                            type="text",
+                            name="anchor_photo_id",
+                            placeholder="Anchor photo ID",
+                            cls="bg-slate-800 border border-slate-600 rounded px-3 py-1 text-sm text-white w-64",
+                            id=f"anchor-input-{photo_id[:8]}",
+                        ),
+                        Button(
+                            "Compare",
+                            hx_post=f"/api/photo/{photo_id}/anchor-compare",
+                            hx_include=f"#anchor-input-{photo_id[:8]}",
+                            hx_target=f"#anchor-result-{photo_id[:8]}",
+                            hx_swap="innerHTML",
+                            cls="ml-2 px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded",
+                        ),
+                        cls="flex items-center mt-2",
+                    ),
+                    Div(id=f"anchor-result-{photo_id[:8]}", cls="mt-2"),
+                    data_testid="anchor-compare-panel",
+                ),
+                cls="mb-3",
+            )
+            if is_admin
+            else None,
             Div(
                 *sections,
                 id=f"ai-analysis-sections-{photo_id}",

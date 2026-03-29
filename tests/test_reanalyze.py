@@ -413,3 +413,36 @@ class TestModelBadgeTimestamp:
             html = to_xml(result)
             assert "model-badge" in html
             assert "Gemini 3-flash" in html
+
+
+class TestAnchorCompareEndpoint:
+    """Tests for POST /api/photo/{photo_id}/anchor-compare (AD-233)."""
+
+    def test_requires_admin(self, client):
+        """Non-admin should get 401/403."""
+        with (
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=False)),
+        ):
+            resp = client.post("/api/photo/test123/anchor-compare")
+        assert resp.status_code in (401, 403)
+
+    def test_missing_anchor_id_returns_error(self, client):
+        """Missing anchor_photo_id should return error."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            resp = client.post("/api/photo/test123/anchor-compare")
+        assert resp.status_code == 200
+        assert "select an anchor" in resp.text.lower()
+
+    def test_no_gemini_key_returns_error(self, client):
+        """Missing GEMINI_API_KEY should return error."""
+        with (
+            patch("app.main.is_auth_enabled", return_value=False),
+            patch.dict("os.environ", {"GEMINI_API_KEY": ""}),
+        ):
+            resp = client.post(
+                "/api/photo/test123/anchor-compare",
+                data={"anchor_photo_id": "anchor456"},
+            )
+        assert resp.status_code == 200
+        assert "not configured" in resp.text.lower()

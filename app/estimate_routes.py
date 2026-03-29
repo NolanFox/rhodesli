@@ -1524,3 +1524,211 @@ def _guess_region(location_text: str) -> str:
     if "congo" in text_lower:
         return "Congo"
     return "Unknown"
+
+
+@rt("/api/photo/{photo_id}/anchor-compare")
+async def post(photo_id: str, anchor_photo_id: str = "", sess=None):
+    """Admin-only: Compare this photo with an anchor photo for date refinement.
+
+    AD-233: Uses multi-image Gemini call to compare aging cues between
+    a dated anchor photo and an undated target photo of the same person.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not anchor_photo_id:
+        return Div(
+            P("Please select an anchor photo.", cls="text-red-400 text-sm"),
+            data_testid="anchor-compare-error",
+        )
+
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    if not gemini_key:
+        return Div(
+            P("Gemini API key not configured.", cls="text-red-400 text-sm"),
+            data_testid="anchor-compare-error",
+        )
+
+    # Load both images
+    target_bytes, target_suffix = _load_photo_image_bytes(photo_id)
+    anchor_bytes, anchor_suffix = _load_photo_image_bytes(anchor_photo_id)
+    if not target_bytes or not anchor_bytes:
+        return Div(
+            P("Could not load one or both photo images.", cls="text-red-400 text-sm"),
+            data_testid="anchor-compare-error",
+        )
+
+    # Get labels for both photos — anchor MUST have a date (Codex P1)
+    labels = _main_mod._load_date_labels()
+    target_label = labels.get(photo_id, {})
+    anchor_label = labels.get(anchor_photo_id, {})
+    if not anchor_label.get("best_year_estimate"):
+        return Div(
+            P("Anchor photo has no date estimate. Choose a dated photo as anchor.", cls="text-red-400 text-sm"),
+            data_testid="anchor-compare-error",
+        )
+
+    # Find the person in common
+    _main_mod._build_caches()
+    registry = _main_mod.load_registry()
+    target_faces = []
+    anchor_faces = []
+    if _main_mod._photo_cache:
+        t_data = _main_mod._photo_cache.get(photo_id, {})
+        a_data = _main_mod._photo_cache.get(anchor_photo_id, {})
+        target_faces = [f.get("face_id") for f in t_data.get("faces", []) if isinstance(f, dict)]
+        anchor_faces = [f.get("face_id") for f in a_data.get("faces", []) if isinstance(f, dict)]
+
+    # Find shared person
+    person_name = "Unknown Person"
+    for fid in target_faces:
+        identity = _main_mod.get_identity_for_face(registry, fid)
+        if identity and identity.get("state") == "CONFIRMED":
+            name = identity.get("name", "")
+            if name and not name.startswith("Unidentified"):
+                # Check if this person is also in anchor photo
+                iid = identity.get("identity_id", "")
+                anchor_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+                if any(af in anchor_ids for af in anchor_faces):
+                    person_name = name
+                    break
+                # Even if not in anchor, use the first confirmed person
+                person_name = name
+
+    # Build prompt
+    from rhodesli_ml.multi_pass import build_anchor_comparison_prompt
+
+    gedcom_context = _build_gedcom_context_for_photo(photo_id) or ""
+
+    prompt = build_anchor_comparison_prompt(
+        person_name=person_name,
+        current_photo_label=target_label,
+        anchor_photo_label=anchor_label,
+        gedcom_context=gedcom_context,
+    )
+
+    # Call Gemini with both images
+    import google.generativeai as genai
+
+    genai.configure(api_key=gemini_key)
+    model = genai.GenerativeModel("gemini-2.0-flash")
+
+    import io
+    from PIL import Image
+
+    target_img = Image.open(io.BytesIO(target_bytes))
+    anchor_img = Image.open(io.BytesIO(anchor_bytes))
+
+    try:
+        response = model.generate_content(
+            [
+                "Photo A (ANCHOR - reference date):",
+                anchor_img,
+                "Photo B (TARGET - date to refine):",
+                target_img,
+                prompt,
+            ],
+            generation_config={"temperature": 0.2, "max_output_tokens": 2000},
+        )
+        result_text = response.text
+    except Exception as e:
+        return Div(
+            P(f"Gemini API error: {e}", cls="text-red-400 text-sm"),
+            data_testid="anchor-compare-error",
+        )
+
+    # Parse JSON from response
+    import json
+    import re
+
+    json_match = re.search(r"\{[\s\S]*\}", result_text)
+    result_data = {}
+    if json_match:
+        try:
+            result_data = json.loads(json_match.group())
+        except json.JSONDecodeError:
+            pass
+
+    # Validate result has required fields (Codex P1)
+    if not result_data.get("comparison_result"):
+        return Div(
+            P("Gemini returned an unstructured response. Try again.", cls="text-amber-400 text-sm"),
+            P(result_text[:500], cls="text-slate-500 text-xs mt-1 font-mono"),
+            data_testid="anchor-compare-error",
+        )
+
+    # Build result display
+    comparison = result_data.get("comparison_result", "unknown")
+    gap = result_data.get("estimated_gap_years", "?")
+    refined = result_data.get("refined_date_estimate", "?")
+    refined_range = result_data.get("refined_range", [])
+    refined_conf = result_data.get("refined_confidence", "?")
+    aging = result_data.get("aging_evidence", "")
+    fashion = result_data.get("fashion_comparison", "")
+
+    # Human-readable comparison
+    comp_text = {
+        "subject_older_in_target": "Subject is OLDER in the target photo",
+        "subject_younger_in_target": "Subject is YOUNGER in the target photo",
+        "same_era": "Photos appear to be from the same era",
+    }.get(comparison, comparison)
+
+    parts = [
+        H4(f"Anchor Comparison: {person_name}", cls="text-white font-medium text-sm mb-2"),
+        P(comp_text, cls="text-amber-300 font-medium mb-1"),
+        P(f"Estimated gap: ~{gap} years", cls="text-slate-300 text-sm"),
+        P(f"Refined estimate: circa {refined}", cls="text-emerald-400 font-medium"),
+    ]
+    if refined_range:
+        parts.append(P(f"Refined range: {refined_range[0]}-{refined_range[1]}", cls="text-slate-400 text-xs"))
+    parts.append(P(f"Confidence: {refined_conf}", cls="text-slate-400 text-xs mb-2"))
+    if aging:
+        parts.append(
+            Details(
+                Summary("Aging Evidence", cls="text-indigo-400 text-xs cursor-pointer"),
+                P(aging, cls="text-slate-400 text-xs mt-1"),
+            )
+        )
+    if fashion:
+        parts.append(
+            Details(
+                Summary("Fashion Comparison", cls="text-indigo-400 text-xs cursor-pointer"),
+                P(fashion, cls="text-slate-400 text-xs mt-1"),
+            )
+        )
+
+    # Store result in date_labels — only if label row already exists (Codex P2)
+    try:
+        from app.supabase_data import get_supabase_client as _get_sb
+
+        sb = _get_sb()
+        existing = sb.table("date_labels").select("data").eq("photo_id", photo_id).execute()
+        if not existing.data:
+            logger.info(f"No existing date_label for {photo_id}, skipping anchor comparison storage")
+            return Div(*parts, cls="bg-slate-800/50 rounded-lg p-3 mt-2", data_testid="anchor-compare-result")
+        existing_data = existing.data[0]["data"] or {}
+        comparisons = existing_data.get("anchor_comparisons", [])
+        comparisons.append(
+            {
+                "anchor_photo_id": anchor_photo_id,
+                "anchor_date": anchor_label.get("best_year_estimate"),
+                "comparison_result": comparison,
+                "estimated_gap_years": gap,
+                "refined_date": refined,
+                "refined_range": refined_range,
+                "aging_evidence": aging,
+                "model": "gemini-2.0-flash",
+                "compared_at": datetime.now(timezone.utc).isoformat(),
+                "review_status": "pending",
+            }
+        )
+        existing_data["anchor_comparisons"] = comparisons
+        sb.table("date_labels").upsert(
+            {"photo_id": photo_id, "data": existing_data},
+            on_conflict="photo_id",
+        ).execute()
+    except Exception as e:
+        logger.warning(f"Failed to store anchor comparison: {e}")
+
+    return Div(*parts, cls="bg-slate-800/50 rounded-lg p-3 mt-2", data_testid="anchor-compare-result")
