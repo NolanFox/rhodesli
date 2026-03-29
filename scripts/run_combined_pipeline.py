@@ -34,6 +34,7 @@ import numpy as np
 try:
     import httpx
     from postgrest.exceptions import APIError as PostgRESTError
+
     _SUPABASE_ERRORS = (httpx.HTTPError, PostgRESTError, ConnectionError, TimeoutError, OSError)
 except ImportError:
     _SUPABASE_ERRORS = (ConnectionError, TimeoutError, OSError)
@@ -115,20 +116,21 @@ def build_faces_for_photo(photo_data: dict, identities: dict, embeddings) -> lis
             continue
 
         identity_name = confirmed_faces.get(face_id)
-        faces.append(FaceDetection(
-            face_id=face_id,
-            bbox=bbox,
-            face_index=i,
-            det_score=det_score,
-            quality=quality,
-            identity_name=identity_name,
-        ))
+        faces.append(
+            FaceDetection(
+                face_id=face_id,
+                bbox=bbox,
+                face_index=i,
+                det_score=det_score,
+                quality=quality,
+                identity_name=identity_name,
+            )
+        )
 
     return faces
 
 
-def build_gedcom_context(photo_id: str, faces: list[FaceDetection],
-                         identities: dict, gedcom_data: dict | None) -> str:
+def build_gedcom_context(photo_id: str, faces: list[FaceDetection], identities: dict, gedcom_data: dict | None) -> str:
     """Build GEDCOM context string for a photo's identified faces.
 
     Returns empty string if no GEDCOM data or no identified faces.
@@ -169,6 +171,7 @@ def build_gedcom_context(photo_id: str, faces: list[FaceDetection],
 
     if context:
         from rhodesli_ml.gedcom_context import estimate_context_tokens
+
         token_count = estimate_context_tokens(context)
         enrichment_level = "full" if token_count >= 400 else "partial" if token_count >= 100 else "thin"
         logger.info(f"Photo {photo_id}: GEDCOM context {token_count} tokens ({enrichment_level})")
@@ -184,6 +187,7 @@ def load_gedcom_data() -> dict | None:
     """
     try:
         from app.supabase_data import get_supabase_client
+
         sb = get_supabase_client()
         if not sb:
             return None
@@ -322,41 +326,51 @@ def _build_parsed_gedcom_from_supabase(individuals_data, families_data=None, rel
 
     # 1. Build individuals dict from individuals_data
     individuals = {}
+    _parse_errors = 0
     for row in individuals_data:
-        xref = row["gedcom_id"]
-        birth_event = inflate_event(row.get("birth_event_json"))
-        if birth_event is None and (row.get("birth_date") or row.get("birth_place")):
-            birth_event = GedcomEvent(
-                event_type="birth",
-                date=parse_gedcom_date(row.get("birth_date", "")),
-                place=row.get("birth_place"),
-                raw_date=row.get("birth_date", ""),
+        xref = row.get("gedcom_id")
+        if not xref:
+            continue
+        try:
+            birth_event = inflate_event(row.get("birth_event_json"))
+            if birth_event is None and (row.get("birth_date") or row.get("birth_place")):
+                birth_event = GedcomEvent(
+                    event_type="birth",
+                    date=parse_gedcom_date(row.get("birth_date", "")),
+                    place=row.get("birth_place"),
+                    raw_date=row.get("birth_date", ""),
+                )
+            death_event = inflate_event(row.get("death_event_json"))
+            if death_event is None and (row.get("death_date") or row.get("death_place")):
+                death_event = GedcomEvent(
+                    event_type="death",
+                    date=parse_gedcom_date(row.get("death_date", "")),
+                    place=row.get("death_place"),
+                    raw_date=row.get("death_date", ""),
+                )
+            individuals[xref] = GedcomIndividual(
+                xref_id=xref,
+                given_name=row.get("given_name", ""),
+                surname=row.get("surname", ""),
+                full_name=row.get("name", ""),
+                gender=row.get("gender", "U"),
+                birth=birth_event,
+                death=death_event,
+                events=[inflate_event(event) for event in row.get("events_json") or [] if inflate_event(event)],
+                family_as_spouse=list(row.get("family_as_spouse_json") or []),
+                family_as_child=list(row.get("family_as_child_json") or []),
+                names=[inflate_name(name) for name in row.get("names_json") or []],
+                notes=list(row.get("notes_json") or []),
+                citations=[inflate_citation(citation) for citation in row.get("citations_json") or []],
+                media_refs=[inflate_media_ref(media_ref) for media_ref in row.get("media_refs_json") or []],
+                custom_tags=row.get("custom_tags_json") or {},
             )
-        death_event = inflate_event(row.get("death_event_json"))
-        if death_event is None and (row.get("death_date") or row.get("death_place")):
-            death_event = GedcomEvent(
-                event_type="death",
-                date=parse_gedcom_date(row.get("death_date", "")),
-                place=row.get("death_place"),
-                raw_date=row.get("death_date", ""),
-            )
-        individuals[xref] = GedcomIndividual(
-            xref_id=xref,
-            given_name=row.get("given_name", ""),
-            surname=row.get("surname", ""),
-            full_name=row.get("name", ""),
-            gender=row.get("gender", "U"),
-            birth=birth_event,
-            death=death_event,
-            events=[inflate_event(event) for event in row.get("events_json") or [] if inflate_event(event)],
-            family_as_spouse=list(row.get("family_as_spouse_json") or []),
-            family_as_child=list(row.get("family_as_child_json") or []),
-            names=[inflate_name(name) for name in row.get("names_json") or []],
-            notes=list(row.get("notes_json") or []),
-            citations=[inflate_citation(citation) for citation in row.get("citations_json") or []],
-            media_refs=[inflate_media_ref(media_ref) for media_ref in row.get("media_refs_json") or []],
-            custom_tags=row.get("custom_tags_json") or {},
-        )
+        except Exception as exc:
+            _parse_errors += 1
+            if _parse_errors <= 3:
+                logger.warning("Failed to parse individual %s: %s", xref, exc)
+    if _parse_errors:
+        logger.warning("Total individual parse errors: %d (of %d rows)", _parse_errors, len(individuals_data))
 
     # 2. Legacy event fallback when rows do not yet carry events_json.
     if events_data:
@@ -469,9 +483,15 @@ def _build_parsed_gedcom_from_supabase(individuals_data, families_data=None, rel
     )
 
 
-async def process_photo(photo_id: str, photo_data: dict, identities: dict,
-                        embeddings, model: str, batch_id: str,
-                        gedcom_data: dict | None = None) -> dict:
+async def process_photo(
+    photo_id: str,
+    photo_data: dict,
+    identities: dict,
+    embeddings,
+    model: str,
+    batch_id: str,
+    gedcom_data: dict | None = None,
+) -> dict:
     """Process a single photo through the combined pipeline."""
     # Build faces
     faces = build_faces_for_photo(photo_data, identities, embeddings)
@@ -492,6 +512,7 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
     enrichment_level = "none"
     if has_gedcom:
         from rhodesli_ml.gedcom_context import estimate_context_tokens
+
         gedcom_token_count = estimate_context_tokens(additional_context)
         enrichment_level = "full" if gedcom_token_count >= 400 else "partial" if gedcom_token_count >= 100 else "thin"
 
@@ -539,8 +560,9 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
     }
 
 
-def dry_run_photo(photo_id: str, photo_data: dict, identities: dict,
-                   embeddings, gedcom_data: dict | None = None) -> dict:
+def dry_run_photo(
+    photo_id: str, photo_data: dict, identities: dict, embeddings, gedcom_data: dict | None = None
+) -> dict:
     """Build prompt for a photo without calling Gemini API.
 
     Returns prompt text, token counts, and enrichment metadata.
@@ -558,6 +580,7 @@ def dry_run_photo(photo_id: str, photo_data: dict, identities: dict,
     enrichment_level = "none"
     if has_gedcom:
         from rhodesli_ml.gedcom_context import estimate_context_tokens
+
         gedcom_token_count = estimate_context_tokens(additional_context)
         enrichment_level = "full" if gedcom_token_count >= 400 else "partial" if gedcom_token_count >= 100 else "thin"
 
@@ -597,24 +620,27 @@ def get_failed_photo_ids(results_file: Path) -> list[str]:
 async def main():
     try:
         from dotenv import load_dotenv
+
         load_dotenv()
     except ImportError:
         pass
 
     parser = argparse.ArgumentParser(description="Combined Gemini photo processing pipeline")
-    parser.add_argument('--limit', type=int, default=5, help='Max photos to process (default: 5 validation)')
-    parser.add_argument('--execute', action='store_true', help='Process all eligible photos')
-    parser.add_argument('--model', default=GEMINI_MODEL)
-    parser.add_argument('--delay', type=float, default=2.0, help='Delay between API calls (seconds)')
-    parser.add_argument('--skip-aligned', action='store_true', help='Skip already aligned photos')
-    parser.add_argument('--retry-failed', type=str, help='Path to previous results JSON to retry failures')
-    parser.add_argument('--photo-ids', nargs='+', help='Specific photo IDs to process')
-    parser.add_argument('--gedcom', action='store_true', default=True, help='Include GEDCOM context (default: on)')
-    parser.add_argument('--no-gedcom', action='store_true', help='Disable GEDCOM context')
-    parser.add_argument('--dry-run', action='store_true', help='Build prompts and log token counts without calling Gemini API')
+    parser.add_argument("--limit", type=int, default=5, help="Max photos to process (default: 5 validation)")
+    parser.add_argument("--execute", action="store_true", help="Process all eligible photos")
+    parser.add_argument("--model", default=GEMINI_MODEL)
+    parser.add_argument("--delay", type=float, default=2.0, help="Delay between API calls (seconds)")
+    parser.add_argument("--skip-aligned", action="store_true", help="Skip already aligned photos")
+    parser.add_argument("--retry-failed", type=str, help="Path to previous results JSON to retry failures")
+    parser.add_argument("--photo-ids", nargs="+", help="Specific photo IDs to process")
+    parser.add_argument("--gedcom", action="store_true", default=True, help="Include GEDCOM context (default: on)")
+    parser.add_argument("--no-gedcom", action="store_true", help="Disable GEDCOM context")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Build prompts and log token counts without calling Gemini API"
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     # Check API key (not needed for dry-run)
     if not args.dry_run:
@@ -650,6 +676,7 @@ async def main():
     # Skip already aligned if requested
     if args.skip_aligned:
         from app.face_alignment import load_alignments_from_file
+
         existing = load_alignments_from_file(PROJECT_ROOT / "data")
         before = len(eligible)
         eligible = {pid: p for pid, p in eligible.items() if pid not in existing}
@@ -685,14 +712,14 @@ async def main():
     gedcom_enriched = 0
 
     for i, (pid, pdata) in enumerate(photo_list):
-        logger.info(f"[{i+1}/{len(photo_list)}] {pid} ({len(pdata.get('face_ids', []))} faces)")
+        logger.info(f"[{i + 1}/{len(photo_list)}] {pid} ({len(pdata.get('face_ids', []))} faces)")
 
         if args.dry_run:
-            result = dry_run_photo(pid, pdata, identities, embeddings,
-                                   gedcom_data=gedcom_data)
+            result = dry_run_photo(pid, pdata, identities, embeddings, gedcom_data=gedcom_data)
         else:
-            result = await process_photo(pid, pdata, identities, embeddings, args.model,
-                                         batch_id=batch_id, gedcom_data=gedcom_data)
+            result = await process_photo(
+                pid, pdata, identities, embeddings, args.model, batch_id=batch_id, gedcom_data=gedcom_data
+            )
 
         results.append(result)
 
@@ -701,9 +728,11 @@ async def main():
             gedcom_flag = " +GEDCOM" if result.get("has_gedcom") else ""
             if result.get("has_gedcom"):
                 gedcom_enriched += 1
-            logger.info(f"  PROMPT: {result['prompt_token_count']} tokens, "
-                        f"GEDCOM: {result['gedcom_token_count']} tokens "
-                        f"({result['enrichment_level']}){gedcom_flag}")
+            logger.info(
+                f"  PROMPT: {result['prompt_token_count']} tokens, "
+                f"GEDCOM: {result['gedcom_token_count']} tokens "
+                f"({result['enrichment_level']}){gedcom_flag}"
+            )
             if result.get("identified_faces"):
                 for fn in result["identified_faces"]:
                     logger.info(f"    {fn}")
@@ -713,8 +742,10 @@ async def main():
             gedcom_flag = " +GEDCOM" if result.get("has_gedcom") else ""
             if result.get("has_gedcom"):
                 gedcom_enriched += 1
-            logger.info(f"  OK {result['faces_described']}/{result['faces_detected']} faces, "
-                        f"${result['cost']:.4f}, {result['elapsed']}s{gedcom_flag}")
+            logger.info(
+                f"  OK {result['faces_described']}/{result['faces_detected']} faces, "
+                f"${result['cost']:.4f}, {result['elapsed']}s{gedcom_flag}"
+            )
         elif result["status"] == "skipped":
             skipped += 1
             logger.info(f"  -- Skipped: {result['reason']}")
@@ -727,9 +758,9 @@ async def main():
             await asyncio.sleep(args.delay)
 
     # Summary
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info(f"BATCH COMPLETE ({mode}) — {batch_id}")
-    logger.info(f"{'='*60}")
+    logger.info(f"{'=' * 60}")
     logger.info(f"Success: {success}/{len(photo_list)}")
     logger.info(f"Errors: {errors}")
     logger.info(f"Skipped: {skipped}")
@@ -764,20 +795,24 @@ async def main():
             save_results.append(summary)
 
     with open(output, "w") as f:
-        json.dump({
-            "batch_id": batch_id,
-            "model": args.model,
-            "mode": mode.lower(),
-            "total_photos": len(photo_list),
-            "success": success,
-            "errors": errors,
-            "skipped": skipped,
-            "gedcom_enriched": gedcom_enriched,
-            "total_cost": round(total_cost, 4) if not args.dry_run else 0,
-            "results": save_results,
-        }, f, indent=2)
+        json.dump(
+            {
+                "batch_id": batch_id,
+                "model": args.model,
+                "mode": mode.lower(),
+                "total_photos": len(photo_list),
+                "success": success,
+                "errors": errors,
+                "skipped": skipped,
+                "gedcom_enriched": gedcom_enriched,
+                "total_cost": round(total_cost, 4) if not args.dry_run else 0,
+                "results": save_results,
+            },
+            f,
+            indent=2,
+        )
     logger.info(f"Results saved to {output}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
