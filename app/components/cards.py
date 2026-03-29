@@ -269,6 +269,7 @@ def search_result_card(
     user_role: str = "admin",
     target_name: str = "",
     nav_prefix: str = "",
+    from_person_page: bool = False,
 ) -> Div:
     """Card for a manual search result."""
     import app.main as _m
@@ -310,11 +311,19 @@ def search_result_card(
             if target_name and not target_name.startswith("Unidentified")
             else "Merge these identities? This can be undone."
         )
+        # On person page, target the search result card itself (no #identity-{id} on person page).
+        # On browse page, target the identity card for in-place replacement.
+        if from_person_page:
+            _merge_target = f"#search-result-{result_id}"
+            _merge_url = f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search&from_person_page=true"
+        else:
+            _merge_target = f"#identity-{target_identity_id}"
+            _merge_url = f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search"
         merge_btn = Button(
             "Merge",
             cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold border border-indigo-500/50 text-indigo-400 rounded hover:bg-indigo-500/20",
-            hx_post=f"{nav_prefix}/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
-            hx_target=f"#identity-{target_identity_id}",
+            hx_post=_merge_url,
+            hx_target=_merge_target,
             hx_swap="outerHTML",
             data_auth_action="merge these identities",
             hx_confirm=_confirm_msg,
@@ -363,6 +372,7 @@ def search_results_panel(
     user_role: str = "admin",
     target_name: str = "",
     nav_prefix: str = "",
+    from_person_page: bool = False,
 ) -> Div:
     """Panel showing manual search results."""
     if not results:
@@ -373,7 +383,13 @@ def search_results_panel(
 
     cards = [
         search_result_card(
-            r, target_identity_id, crop_files, user_role=user_role, target_name=target_name, nav_prefix=nav_prefix
+            r,
+            target_identity_id,
+            crop_files,
+            user_role=user_role,
+            target_name=target_name,
+            nav_prefix=nav_prefix,
+            from_person_page=from_person_page,
         )
         for r in results
     ]

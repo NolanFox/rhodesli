@@ -93,11 +93,14 @@ def _suggest_name_form(identity_id: str, nav_prefix: str = "") -> Div:
     )
 
 
-def manual_search_section(identity_id: str, nav_prefix: str = "") -> Div:
+def manual_search_section(identity_id: str, nav_prefix: str = "", from_person_page: bool = False) -> Div:
     """
     Manual search input and results container.
     Positioned in neighbors sidebar after Load More, before Rejected section.
     """
+    _search_url = f"{nav_prefix}/api/identity/{identity_id}/search"
+    if from_person_page:
+        _search_url += "?from_person_page=true"
     return Div(
         H5("Manual Search", cls="text-sm font-semibold text-slate-300 mb-2"),
         Input(
@@ -105,7 +108,7 @@ def manual_search_section(identity_id: str, nav_prefix: str = "") -> Div:
             name="q",
             placeholder="Search by name...",
             cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 text-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-slate-500",
-            hx_get=f"{nav_prefix}/api/identity/{identity_id}/search",
+            hx_get=_search_url,
             hx_trigger="keyup changed delay:300ms",
             hx_target=f"#search-results-{identity_id}",
             hx_include="this",

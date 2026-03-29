@@ -1005,7 +1005,7 @@ def get(identity_id: str, request=None):
 
 
 @rt("/api/identity/{identity_id}/search")
-def get(identity_id: str, q: str = "", sess=None, request=None):
+def get(identity_id: str, q: str = "", from_person_page: bool = False, sess=None, request=None):
     """
     Search for identities by name for manual merge.
 
@@ -1014,6 +1014,7 @@ def get(identity_id: str, q: str = "", sess=None, request=None):
     Args:
         identity_id: Current identity (excluded from results)
         q: Search query (minimum 2 characters)
+        from_person_page: Whether this search is on the person page (affects merge button targets)
 
     Returns HTMX partial with search result cards.
     """
@@ -1045,6 +1046,7 @@ def get(identity_id: str, q: str = "", sess=None, request=None):
         user_role=_main_mod._get_user_role(sess),
         target_name=_target_name,
         nav_prefix=nav_prefix,
+        from_person_page=from_person_page,
     )
 
 
@@ -2499,28 +2501,40 @@ def post(
     if source == "similar_page":
         return HttpHeader("HX-Redirect", return_to or f"{nav_prefix}/person/{actual_target_id}")
 
-    # FB-019/FB-020: On person page, replace the neighbor card with merged indicator
+    # FB-019/FB-020: On person page, replace the neighbor/search-result card with merged indicator
     # instead of replacing the identity card (which doesn't exist on person page).
     # This keeps the Similar panel open after merge.
     if from_person_page:
-        source_name = (
-            ensure_utf8_display(registry.get_identity(actual_target_id).get("name", "identity"))
-            if actual_target_id != source_id
-            else target_name
-        )
+        # Determine the correct element ID for the merged indicator.
+        # Manual search merge targets #search-result-{source_id}, neighbor merge targets #neighbor-{source_id}.
+        if source == "manual_search":
+            _indicator_id = f"search-result-{source_id}"
+        else:
+            _indicator_id = f"neighbor-{actual_source_id}"
+
         merged_indicator = Div(
             Div(
                 Span("\u2713 Merged", cls="text-emerald-400 font-bold text-sm"),
                 cls="p-3 text-center",
             ),
-            id=f"neighbor-{actual_source_id}",
+            id=_indicator_id,
             cls="bg-emerald-900/20 border border-emerald-500/30 rounded-lg mb-2",
             **{"_": "on load wait 2s then transition opacity to 0 over 0.5s then remove me"},
         )
+
+        # Filter OOB elements to avoid deleting the element we just swapped into
+        _person_page_oob = [el for el in oob_elements if el.attrs.get("id") != _indicator_id]
+
+        # Wrap toast in OOB so it appears in the toast container (not in the swap target)
+        oob_toast = Div(
+            merge_toast,
+            hx_swap_oob="beforeend:#toast-container",
+        )
+
         return (
             merged_indicator,
-            *oob_elements,
-            merge_toast,
+            *_person_page_oob,
+            oob_toast,
         )
 
     return (

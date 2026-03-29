@@ -8475,6 +8475,9 @@ def neighbors_sidebar(
             "_": f"on click toggle .hidden on #neighbors-body-{identity_id} then if my.textContent == '▸ Expand' set my.textContent to '▾ Collapse' else set my.textContent to '▸ Expand'"
         },
     )
+    # FB-019: Detect person page context from container_id (used by multiple sections below)
+    _is_person_page = container_id.startswith("person-similar-")
+
     if not neighbors:
         return Div(
             Div(
@@ -8487,7 +8490,7 @@ def neighbors_sidebar(
                 P("No similar identities.", cls="text-slate-400 italic"),
                 cls="flex items-center justify-between",
             ),
-            manual_search_section(identity_id, nav_prefix=nav_prefix),
+            manual_search_section(identity_id, nav_prefix=nav_prefix, from_person_page=_is_person_page),
             cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600 overflow-hidden",
         )
 
@@ -8515,8 +8518,6 @@ def neighbors_sidebar(
         )
 
     # Mergeable neighbors get checkboxes for bulk operations
-    # FB-019: Detect person page context from container_id
-    _is_person_page = container_id.startswith("person-similar-")
     mergeable = [n for n in neighbors if n.get("can_merge")]
     cards = [
         neighbor_card(
@@ -8625,7 +8626,7 @@ def neighbors_sidebar(
         )
 
     # Manual search section - between Load More and Rejected
-    manual_search = manual_search_section(identity_id, nav_prefix=nav_prefix)
+    manual_search = manual_search_section(identity_id, nav_prefix=nav_prefix, from_person_page=_is_person_page)
 
     rejected = (
         Div(
