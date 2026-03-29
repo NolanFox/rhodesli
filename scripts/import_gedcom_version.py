@@ -184,9 +184,7 @@ def _fetch_current_rows(sb, table_name: str) -> tuple[list[dict[str, Any]], bool
             with conn:
                 cursor_factory = RealDictCursor if RealDictCursor is not None else None
                 with conn.cursor(cursor_factory=cursor_factory) as cur:
-                    cur.execute(
-                        f"select * from {table_name} where is_current = true"
-                    )
+                    cur.execute(f"select * from {table_name} where is_current = true")
                     rows = cur.fetchall()
             return [dict(row) for row in rows], False
         except Exception as exc:
@@ -305,12 +303,7 @@ def _bundle_entity_map(bundle: GedcomSnapshotBundle, entity_type: str) -> dict[s
 
 
 def _versions_exist(sb, community_id: str) -> bool:
-    result = (
-        sb.table("gedcom_versions")
-        .select("id,status")
-        .eq("community_id", community_id)
-        .execute()
-    )
+    result = sb.table("gedcom_versions").select("id,status").eq("community_id", community_id).execute()
     for row in result.data or []:
         status = row.get("status") or "applied"
         if status not in {"failed", "rolled_back"}:
@@ -446,8 +439,7 @@ def _build_summary(
     entity_summaries = {entity_type: diff_result["summary"] for entity_type, diff_result in diff_by_entity.items()}
     individual_summary = entity_summaries["individuals"]
     total_changes = sum(
-        summary["added"] + summary["modified"] + summary["removed"]
-        for summary in entity_summaries.values()
+        summary["added"] + summary["modified"] + summary["removed"] for summary in entity_summaries.values()
     )
     return {
         "added": individual_summary["added"],
@@ -471,7 +463,15 @@ def _insert_rows(sb, table_name: str, rows: list[dict[str, Any]], batch_size: in
     direct_rows = _insert_rows_direct_db(table_name, rows, batch_size=batch_size)
     if direct_rows is not None:
         for row in direct_rows:
-            for key_field in ("gedcom_id", "event_key", "family_gedcom_id", "source_xref", "media_xref", "edge_key", "record_key"):
+            for key_field in (
+                "gedcom_id",
+                "event_key",
+                "family_gedcom_id",
+                "source_xref",
+                "media_xref",
+                "edge_key",
+                "record_key",
+            ):
                 if row.get(key_field):
                     inserted_by_key[row[key_field]] = row
                     break
@@ -481,7 +481,15 @@ def _insert_rows(sb, table_name: str, rows: list[dict[str, Any]], batch_size: in
         chunk = rows[index : index + batch_size]
         result = sb.table(table_name).insert(chunk).execute()
         for row in result.data or []:
-            for key_field in ("gedcom_id", "event_key", "family_gedcom_id", "source_xref", "media_xref", "edge_key", "record_key"):
+            for key_field in (
+                "gedcom_id",
+                "event_key",
+                "family_gedcom_id",
+                "source_xref",
+                "media_xref",
+                "edge_key",
+                "record_key",
+            ):
                 if row.get(key_field):
                     inserted_by_key[row[key_field]] = row
                     break
@@ -539,10 +547,7 @@ def _insert_rows_direct_db(
 
                 for index in range(0, len(rows), batch_size):
                     chunk = rows[index : index + batch_size]
-                    values = [
-                        [_adapt_db_value(row.get(column)) for column in columns]
-                        for row in chunk
-                    ]
+                    values = [[_adapt_db_value(row.get(column)) for column in columns] for row in chunk]
                     result = execute_values(
                         cur,
                         query,
@@ -611,9 +616,7 @@ def _swap_current_rows_with_cursor(
     version_id: str | None = None,
 ) -> None:
     if baseline_mode and version_id:
-        cur.execute(
-            f"update {table_name} set is_current = false where is_current = true"
-        )
+        cur.execute(f"update {table_name} set is_current = false where is_current = true")
         cur.execute(
             f"update {table_name} set is_current = true where version_id = %s",
             (version_id,),
@@ -668,7 +671,9 @@ def _activate_rows(sb, table_name: str, rows: list[dict[str, Any]]) -> None:
         sb.table(table_name).update({"is_current": True}).in_("id", chunk).execute()
 
 
-def _supersede_rows(sb, table_name: str, rows: list[dict[str, Any]], inserted_by_key: dict[str, dict[str, Any]], key_field: str) -> None:
+def _supersede_rows(
+    sb, table_name: str, rows: list[dict[str, Any]], inserted_by_key: dict[str, dict[str, Any]], key_field: str
+) -> None:
     del inserted_by_key, key_field
     if not rows:
         return
@@ -807,13 +812,7 @@ def _queue_enrichments(sb, version_id: str, individual_diff: dict[str, Any]) -> 
 
 def _redirect_table_exists(sb, community_id: str) -> bool:
     try:
-        (
-            sb.table(REDIRECT_TABLE)
-            .select("id")
-            .eq("community_id", community_id)
-            .limit(1)
-            .execute()
-        )
+        (sb.table(REDIRECT_TABLE).select("id").eq("community_id", community_id).limit(1).execute())
         return True
     except Exception as exc:
         if _relation_missing_error(exc):
@@ -917,7 +916,11 @@ def import_versioned(
     missing_tables = []
     bootstrap_supersede_rows = {}
     for entity_type in ENTITY_CONFIG:
-        current_result = _load_current_entity_map(sb, entity_type, baseline_mode=baseline_mode) if sb else {"rows": {}, "missing_table": False}
+        current_result = (
+            _load_current_entity_map(sb, entity_type, baseline_mode=baseline_mode)
+            if sb
+            else {"rows": {}, "missing_table": False}
+        )
         current_maps[entity_type] = current_result["rows"]
         if current_result["missing_table"]:
             missing_tables.append(ENTITY_CONFIG[entity_type]["table"])
@@ -956,10 +959,11 @@ def import_versioned(
 
     if required_tables:
         raise RuntimeError(
-            "GEDCOM rich-schema tables are missing; apply the migration before import: "
-            + ", ".join(required_tables)
+            "GEDCOM rich-schema tables are missing; apply the migration before import: " + ", ".join(required_tables)
         )
 
+    # Round-trip through JSON to convert datetime objects to strings
+    summary_json = json.loads(json.dumps(summary, default=str))
     version_result = (
         sb.table("gedcom_versions")
         .insert(
@@ -973,7 +977,7 @@ def import_versioned(
                 "source_count": bundle.counts["sources"],
                 "media_count": bundle.counts["media_objects"],
                 "record_count": bundle.counts["records"],
-                "summary": summary,
+                "summary": summary_json,
                 "notes": notes,
                 "status": "applying",
             }
@@ -1102,7 +1106,7 @@ def main():
         logger.info("Import skipped: %s", result["reason"])
         return
 
-    logger.info("\n%s", json.dumps(result, indent=2, sort_keys=True))
+    logger.info("\n%s", json.dumps(result, indent=2, sort_keys=True, default=str))
 
 
 if __name__ == "__main__":
