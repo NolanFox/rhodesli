@@ -36,3 +36,29 @@
 - **Severity:** P3 (minor)
 - **Issue:** Codex noted that locations like "Dayton, Ohio" are inferred from GEDCOM (family residence), not from visual evidence. The confidence should distinguish "visually confirmed" from "biographically inferred."
 - **Action:** Consider adding location_source field: "visual" vs "biographical" vs "both".
+
+## FB-013: GEDCOM change detection → auto re-run trigger (FUTURE FEATURE)
+- **Severity:** P3 (future feature)
+- **Concept:** When GEDCOM is updated and substantial new information is added for a person (new spouse, death date, birth date correction), photos of that person should be flagged for Gemini re-analysis.
+- **Example:** Adding Rose as Albert's spouse + Esther's death date would improve all post-1966 photo analyses.
+- **Approach:** Track GEDCOM version per identity. On import, diff the before/after context for linked identities. If context changes by >20% or gains new vital events (marriage, death, birth correction), flag photos for re-run.
+- **Harness wire-up:** When reviewing a photo where GEDCOM context has changed since last analysis, show "GEDCOM updated since last analysis — re-run recommended?" banner.
+- **Action:** Log as future feature. Watch for concrete examples during photo review.
+
+## FB-014: Photo co-occurrence as life event evidence (FUTURE FEATURE)
+- **Severity:** P3 (future feature)
+- **Concept:** When people appear together in photos, it provides evidence about life events — marriage timing, moves, visits.
+- **Example:** Rose appears with Albert in photos starting ~late 1960s. Since Esther died 1966 and Rose's husband died ~1959, the photo co-occurrence pattern constrains the Albert-Rose marriage to ~1966-1970. The number and types of photos together helps narrow further.
+- **Example:** Roland (Florida) appearing in Ohio photos suggests special events (weddings, birthdays).
+- **Approach:** Build co-occurrence matrix per identity pair. Detect "first appearance together" and "last appearance together" dates. Cross-reference with GEDCOM events. PRD-059 Phase 3 partially covers this.
+- **Action:** Log as future feature. The temporal co-occurrence infrastructure (event grouping, companion detection) is partially built.
+
+## FB-015: Rose Weiss marriage date unknown — constrained by photo evidence
+- **Severity:** P2 (data context)
+- **Context:** Rose's marriage to Albert has no record found. Known constraints:
+  - Esther died Jun 11, 1966
+  - Rose's first husband died ~1959
+  - Albert remarried Jean in 1975 (implied from Rose's death Jun 27, 1977 and Jean's subsequent marriage)
+  - Marriage was likely late 1960s or very early 1970s based on photo volume/types
+- **Action:** When building GEDCOM context for Albert, note: "Marriage to Rose: between 1966 and 1975 (no exact date found). Photo evidence suggests late 1960s."
+- **This is a case where photo-based dating could INFORM the genealogical record**, not just the other way around.
