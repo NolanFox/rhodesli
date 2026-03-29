@@ -886,6 +886,30 @@ def _write_redirect_rows(
         sb.table("gedcom_individuals").update({"superseded_by": target_row_id}).eq("id", old_row_id).execute()
 
 
+def _prune_old_versions(sb) -> dict[str, int]:
+    """Delete non-current rows from all entity tables to reclaim space.
+
+    Returns a dict mapping table name to number of rows pruned.
+    """
+    pruned: dict[str, int] = {}
+    for entity_type, cfg in ENTITY_CONFIG.items():
+        table = cfg["table"]
+        try:
+            resp = sb.table(table).delete().eq("is_current", False).execute()
+            count = len(resp.data) if resp.data else 0
+            pruned[table] = count
+            if count:
+                logger.info("Pruned %d old rows from %s", count, table)
+            else:
+                logger.info("No old rows to prune in %s", table)
+        except Exception as exc:
+            logger.warning("Failed to prune %s: %s", table, exc)
+            pruned[table] = 0
+    total = sum(pruned.values())
+    logger.info("Total pruned: %d rows across %d tables", total, len(pruned))
+    return pruned
+
+
 def import_versioned(
     sb,
     parsed,
@@ -894,6 +918,8 @@ def import_versioned(
     community_id: str = "rhodesli",
     notes: str | None = None,
     dry_run: bool = False,
+    skip_change_log: bool = False,
+    prune_old_versions: bool = False,
 ) -> dict[str, Any]:
     """Import a new GEDCOM version with full change tracking."""
     existing = check_duplicate_hash(sb, source_hash, community_id) if sb else None
@@ -1022,16 +1048,19 @@ def import_versioned(
         )
 
         # Change log is non-critical — don't let it block import
-        try:
-            _write_change_log(
-                sb,
-                version_id,
-                diff_by_entity,
-                redirects,
-                batch_size=500,
-            )
-        except Exception as cl_exc:
-            logger.warning("Change log write failed (non-fatal): %s", cl_exc)
+        if skip_change_log:
+            logger.info("Skipping change log (--skip-change-log)")
+        else:
+            try:
+                _write_change_log(
+                    sb,
+                    version_id,
+                    diff_by_entity,
+                    redirects,
+                    batch_size=500,
+                )
+            except Exception as cl_exc:
+                logger.warning("Change log write failed (non-fatal): %s", cl_exc)
 
         _queue_enrichments(sb, version_id, diff_by_entity["individuals"])
         _finalize_current_state(sb, current_swap_plans)
@@ -1052,6 +1081,9 @@ def import_versioned(
     applied_summary = {**summary, "status": "applied"}
     _set_version_status(sb, version_id, status="applied", summary=applied_summary)
 
+    if prune_old_versions:
+        _prune_old_versions(sb)
+
     return {
         "version_id": version_id,
         "version_number": version_number,
@@ -1065,6 +1097,16 @@ def main():
     parser.add_argument("--execute", action="store_true", help="Actually import (default: dry-run)")
     parser.add_argument("--community", default="rhodesli", help="Community ID")
     parser.add_argument("--notes", default=None, help="Notes for this version")
+    parser.add_argument(
+        "--skip-change-log",
+        action="store_true",
+        help="Skip writing change_log rows (saves 700K+ rows on large imports)",
+    )
+    parser.add_argument(
+        "--prune-old-versions",
+        action="store_true",
+        help="Delete non-current rows from entity tables after import",
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -1108,6 +1150,8 @@ def main():
         community_id=args.community,
         notes=args.notes,
         dry_run=dry_run,
+        skip_change_log=args.skip_change_log,
+        prune_old_versions=args.prune_old_versions,
     )
 
     if result.get("skipped"):
