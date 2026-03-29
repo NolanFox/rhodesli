@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.55] — 2026-03-29 (Session 144: GEDCOM Re-Import + Context Enrichment)
+
+### Features
+- **AD-234**: GEDCOM context enrichment — spouse timeline with photo dating constraints, birth date confidence annotations, confirmed identities block
+- **Phase 2**: Geographic data model expansion — Gemini prompts now request structured location with primary + candidates + source type; photo page shows "Other possible locations" expandable section
+- **Phase 4 (AD-233)**: Anchor photo comparison prompt builder — multi-image Gemini call for relative age dating
+
+### Fixes
+- **FB-001**: GEDCOM search groups birth/death locations with their respective dates ("b. 1895, Kiev" not "b. 1895 · d. 1974 · Kiev")
+- **FB-002**: Face Analysis section shows person name for single-face identified photos
+- **Codex P1**: Face analysis uses correct cache key (`faces` not `face_ids`), limited to single-face photos
+- **Codex P1**: GEDCOM import datetime serialization for Supabase REST API
+- **Codex P1**: GEDCOM import change log made non-fatal, error handler wrapped in try/except
+- **Codex P2**: GEDCOM search labels place-only entries with "b."/"d." prefix
+
+### Data
+- GEDCOM v9 imported: 21,998 individuals, 6,741 families, 107 face links
+- Albert's 3 wives linked: Esther Burd Fox, Rose Weiss Baygel Fox, Jean Baumann Kassel Fox
+- Batch read-merge-write semantics — re-runs preserve human corrections
+- Lessons 163-164 (GEDCOM import scale + datetime serialization)
+
+### Documentation
+- FB-003: Gemini anchor research — Pioneer Maccabees discovery + 6 feature ideas
+- Batch re-run plan with canary/priority ordering
+- User insight: absence of census data as evidence for departure dating
+
 ## [v0.99.54] — 2026-03-28 (Session 143: Single Source of Truth + Data Audit)
 
 ### Critical Fixes
