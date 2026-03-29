@@ -22,3 +22,10 @@
 - **Feature ideas extracted:** See `docs/feedback/session-144-gemini-anchor-research.md`
 - **Key takeaway:** Iterative human+AI evidence accumulation (census + visual details + GEDCOM) produces dramatically better date estimates than single-image analysis
 - **BACKLOG items:** ANCHOR-002, DETAIL-001, EVIDENCE-001, AGING-001, SOCIAL-001, EVIDENCE-002
+
+## FB-006: Merge button broken on Find Similar + Manual Search
+- **Severity:** P0
+- **Context:** User on person page for Person 3772 (/c/fox-family/person/483e124f-9440-47cd-8de0-fbbd86b852a3). Clicking "Merge" button next to Albert Fox in Find Similar results does nothing. Same for Merge in Manual Search results — button appears clickable but no action.
+- **Screenshots:** User provided 2 screenshots showing both merge surfaces non-functional
+- **Root cause:** TBD — investigating
+- **Fix:** IN PROGRESS
