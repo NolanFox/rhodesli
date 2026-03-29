@@ -3262,6 +3262,41 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                     data_testid="location-evidence",
                 )
             )
+        # Location candidates (AD-234: alternative locations considered)
+        candidates = None
+        if isinstance(label.get("location"), dict):
+            candidates = label["location"].get("candidates", [])
+        elif isinstance(location_evidence_dict, dict):
+            candidates = location_evidence_dict.get("candidates", [])
+        if candidates and isinstance(candidates, list):
+            candidate_items = []
+            for cand in candidates[:3]:
+                if isinstance(cand, dict):
+                    c_place = cand.get("place", "")
+                    c_conf = cand.get("confidence", "")
+                    c_reason = cand.get("reasoning", "")
+                    c_source = cand.get("source", "")
+                    if c_place:
+                        item_parts = [Span(c_place, cls="text-slate-300 font-medium")]
+                        if c_conf:
+                            item_parts.append(Span(f" ({c_conf})", cls="text-slate-500 text-[11px]"))
+                        if c_source:
+                            item_parts.append(Span(f" [{c_source}]", cls="text-slate-600 text-[10px]"))
+                        if c_reason:
+                            item_parts.append(Span(f" — {c_reason}", cls="text-slate-500 text-[11px] italic"))
+                        candidate_items.append(Li(*item_parts, cls="text-sm py-0.5"))
+            if candidate_items:
+                location_parts.append(
+                    Details(
+                        Summary(
+                            "Other possible locations",
+                            cls="text-[11px] text-indigo-400 cursor-pointer mt-2 hover:text-indigo-300",
+                        ),
+                        Ul(*candidate_items, cls="list-disc list-inside mt-1 ml-2"),
+                        data_testid="location-candidates",
+                    )
+                )
+
         # Admin: Correct Location button (simple text input)
         if is_admin:
             location_parts.append(

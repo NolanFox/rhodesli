@@ -87,7 +87,12 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "confidence": "high|medium|low",
     "visual_evidence": "Mediterranean stone architecture, visible Greek signage",
     "biographical_evidence": "Family resided at 33 Elizabeth St, Asheville NC per GEDCOM records",
-    "missing_child_analysis": "3 of 4 children visible; youngest (born 1935) absent, suggesting pre-1935"
+    "missing_child_analysis": "3 of 4 children visible; youngest (born 1935) absent, suggesting pre-1935",
+    "source_type": "visual|biographical|both",
+    "candidates": [
+      {"place": "Asheville, North Carolina", "confidence": "medium", "source": "biographical", "reasoning": "Family address on record"},
+      {"place": "Tampa, Florida", "confidence": "low", "source": "biographical", "reasoning": "Later family residence"}
+    ]
   }""",
     "cultural_markers": """"cultural_markers": ["Sephardic formal attire", "studio backdrop typical of Rhodes photographers"]""",
     "clothing_era": '''"clothing_notes": "Man in dark three-piece suit with pocket watch chain..."''',
@@ -173,9 +178,17 @@ Cross-reference visual observations with known biographical data:
   primary evidence for photo location
 - When RESIDENCE data exists, it ALWAYS overrides immigration/transit data
 
-**Step 3: Confidence Assessment**
+**Step 3: Confidence Assessment & Candidates**
 Rate confidence. If visual evidence AND biographical data agree on a location, rate
-confidence higher. If they conflict, explain the discrepancy.""",
+confidence higher. If they conflict, explain the discrepancy.
+
+For "source_type": use "visual" if location is purely from what you see, "biographical"
+if purely from GEDCOM/genealogical data, or "both" if evidence from both sources.
+
+IMPORTANT: If you considered multiple locations, list up to 3 alternative "candidates"
+with their reasoning. The primary location goes in "place", alternatives in "candidates".
+If evidence is genuinely ambiguous with no clear winner, set confidence to "low" and
+list all options as candidates.""",
     "cultural_markers": """## Cultural Markers
 Identify any culturally specific items, traditions, or markers visible
 (e.g., religious items, traditional dress, community-specific customs).""",

@@ -240,3 +240,51 @@ class TestBatchLabelRendering:
             html = repr(section)
             assert "Face 0:" in html
             assert "Face 1:" in html
+
+    def test_location_candidates_rendered(self, mock_app):
+        """AD-234: Location candidates should render as expandable list."""
+        label_with_candidates = {
+            **self.BATCH_LABEL,
+            "photo_id": "test_candidates",
+            "location_estimate": "Hamilton, Ohio, USA",
+            "location_evidence": {
+                "place": "Hamilton, Ohio, USA",
+                "confidence": "high",
+                "candidates": [
+                    {
+                        "place": "Dayton, Ohio",
+                        "confidence": "medium",
+                        "source": "biographical",
+                        "reasoning": "Albert and Esther lived in Dayton",
+                    },
+                    {
+                        "place": "Detroit, Michigan",
+                        "confidence": "low",
+                        "source": "visual",
+                        "reasoning": "Similar backdrop",
+                    },
+                ],
+            },
+        }
+        with (
+            patch.object(mock_app, "_load_date_labels", return_value={"test_candidates": label_with_candidates}),
+            patch.object(mock_app, "_load_photo_locations", return_value={}),
+            patch.object(mock_app, "_load_search_index", return_value=[]),
+        ):
+            section = mock_app._build_ai_analysis_section("test_candidates", is_admin=True)
+            html = repr(section)
+            assert "Other possible locations" in html
+            assert "Dayton, Ohio" in html
+            assert "Detroit, Michigan" in html
+            assert "biographical" in html
+
+    def test_no_location_candidates_no_section(self, mock_app):
+        """No candidates should not render the expandable section."""
+        with (
+            patch.object(mock_app, "_load_date_labels", return_value={"test_batch_photo": self.BATCH_LABEL}),
+            patch.object(mock_app, "_load_photo_locations", return_value={}),
+            patch.object(mock_app, "_load_search_index", return_value=[]),
+        ):
+            section = mock_app._build_ai_analysis_section("test_batch_photo", is_admin=True)
+            html = repr(section)
+            assert "Other possible locations" not in html
