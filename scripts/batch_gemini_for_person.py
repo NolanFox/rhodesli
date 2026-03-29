@@ -749,6 +749,7 @@ def run_batch(
                 existing_labels[pid] = len(labels_data["labels"]) - 1
 
             # Write to Supabase immediately (source of truth — data-layer.md rule)
+            # Read-merge-write: preserve human corrections + refinement history (Codex P1)
             try:
                 from supabase import create_client as _create_sb
 
@@ -756,6 +757,18 @@ def run_batch(
                 _sb_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
                 if _sb_url and _sb_key:
                     _sb = _create_sb(_sb_url, _sb_key)
+                    # Read existing label to preserve human-sourced fields
+                    existing = _sb.table("date_labels").select("data").eq("photo_id", pid).execute()
+                    existing_data = (existing.data[0]["data"] if existing.data else {}) or {}
+                    # Preserve fields with source="human" and refinement history
+                    preserved_keys = {"date_refinement_history", "human_date_correction", "human_location_correction"}
+                    for key in preserved_keys:
+                        if key in existing_data and key not in label_entry:
+                            label_entry[key] = existing_data[key]
+                    # Preserve any field where existing has source="human"
+                    for key, val in existing_data.items():
+                        if isinstance(val, dict) and val.get("source") == "human":
+                            label_entry[key] = val
                     _sb.table("date_labels").upsert(
                         {"photo_id": pid, "data": label_entry},
                         on_conflict="photo_id",

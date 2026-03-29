@@ -5,6 +5,7 @@ import pytest
 from rhodesli_ml.multi_pass import (
     LOW_CONFIDENCE_THRESHOLD,
     build_reanalysis_prompt,
+    build_anchor_comparison_prompt,
     identify_low_confidence_photos,
 )
 
@@ -163,6 +164,49 @@ class TestBuildReanalysisPrompt:
             previous_result={"location": {"lat": 36.4}, "confidence": 0.3},
         )
         assert "Location:" not in prompt
+
+
+class TestAnchorComparisonPrompt:
+    """AD-233: Anchor photo comparison prompt builder."""
+
+    def test_basic_prompt_structure(self):
+        """Prompt should include both anchor and target labels."""
+        anchor = {"best_year_estimate": 1918, "confidence": "high", "probable_range": [1916, 1920]}
+        target = {"best_year_estimate": 1920, "confidence": "medium", "probable_range": [1918, 1923]}
+        prompt = build_anchor_comparison_prompt("Albert Fox", target, anchor)
+        assert "Albert Fox" in prompt
+        assert "ANCHOR" in prompt
+        assert "TARGET" in prompt
+        assert "1918" in prompt
+        assert "1920" in prompt
+        assert "comparison_result" in prompt
+        assert "aging_evidence" in prompt
+
+    def test_includes_gedcom_context(self):
+        """GEDCOM context should be appended when provided."""
+        prompt = build_anchor_comparison_prompt(
+            "Albert Fox",
+            {},
+            {},
+            gedcom_context="SPOUSE TIMELINE: Esther Burd 1920-1966",
+        )
+        assert "SPOUSE TIMELINE" in prompt
+        assert "Esther Burd" in prompt
+
+    def test_handles_empty_labels(self):
+        """Should not crash with empty label dicts."""
+        prompt = build_anchor_comparison_prompt("Test Person", {}, {})
+        assert "Test Person" in prompt
+        assert "ANCHOR" in prompt
+        assert "TARGET" in prompt
+
+    def test_aging_cues_listed(self):
+        """Prompt should instruct comparison of aging cues."""
+        prompt = build_anchor_comparison_prompt("Test", {}, {})
+        assert "jawline" in prompt.lower() or "Jawline" in prompt
+        assert "Hair" in prompt
+        assert "OLDER" in prompt
+        assert "YOUNGER" in prompt
 
 
 class TestConstants:

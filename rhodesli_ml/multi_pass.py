@@ -126,3 +126,88 @@ def build_reanalysis_prompt(
     )
 
     return "\n".join(parts)
+
+
+def build_anchor_comparison_prompt(
+    person_name: str,
+    current_photo_label: dict,
+    anchor_photo_label: dict,
+    gedcom_context: str = "",
+) -> str:
+    """Build a Gemini prompt for comparing two photos of the same person.
+
+    AD-233: Uses a dated "anchor" photo to refine the date estimate of an
+    undated "current" photo by comparing aging cues (facial maturity, hair,
+    weight, fashion changes).
+
+    Args:
+        person_name: Name of the person appearing in both photos
+        current_photo_label: Label data for the photo being dated
+        anchor_photo_label: Label data for the reference photo with known date
+        gedcom_context: Optional GEDCOM context string
+
+    Returns:
+        Prompt string for multi-image Gemini call
+    """
+    parts = [
+        f"# Anchor Photo Comparison for {person_name}",
+        "",
+        "You are comparing TWO photos of the SAME person to refine date estimation.",
+        "Photo A is the ANCHOR (date is known/high-confidence).",
+        "Photo B is the TARGET (date needs refinement).",
+        "",
+        "## Photo A — ANCHOR (reference date)",
+    ]
+
+    anchor_year = anchor_photo_label.get("best_year_estimate")
+    anchor_conf = anchor_photo_label.get("confidence", "")
+    anchor_range = anchor_photo_label.get("probable_range", [])
+    if anchor_year:
+        parts.append(f"- Estimated date: circa {anchor_year} (confidence: {anchor_conf})")
+    if anchor_range:
+        parts.append(f"- Range: {anchor_range[0]}-{anchor_range[1]}")
+
+    parts.append("")
+    parts.append("## Photo B — TARGET (date to refine)")
+
+    current_year = current_photo_label.get("best_year_estimate")
+    current_conf = current_photo_label.get("confidence", "")
+    current_range = current_photo_label.get("probable_range", [])
+    if current_year:
+        parts.append(f"- Previous estimate: circa {current_year} (confidence: {current_conf})")
+    if current_range:
+        parts.append(f"- Previous range: {current_range[0]}-{current_range[1]}")
+
+    parts.extend(
+        [
+            "",
+            "## Analysis Instructions",
+            f"1. Identify {person_name} in BOTH photos",
+            "2. Compare aging cues between Photo A and Photo B:",
+            "   - Facial maturity (jawline definition, wrinkles, facial fullness)",
+            "   - Hair (color, style, thickness, recession)",
+            "   - Weight/body composition changes",
+            "   - Fashion/clothing era differences",
+            "3. Determine if the subject is OLDER or YOUNGER in Photo B vs Photo A",
+            "4. Estimate the time gap in years between the photos",
+            "5. Refine Photo B's date estimate based on the anchor",
+            "",
+            "## Required Output (JSON)",
+            "```json",
+            "{",
+            '  "comparison_result": "subject_older_in_target|subject_younger_in_target|same_era",',
+            '  "estimated_gap_years": 5,',
+            '  "refined_date_estimate": 1922,',
+            '  "refined_range": [1920, 1925],',
+            '  "refined_confidence": "high|medium|low",',
+            '  "aging_evidence": "Jawline more defined, hair style more mature...",',
+            '  "fashion_comparison": "Both wearing similar era clothing..."',
+            "}",
+            "```",
+        ]
+    )
+
+    if gedcom_context:
+        parts.append(f"\n{gedcom_context}\n")
+
+    return "\n".join(parts)
