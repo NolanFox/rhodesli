@@ -78,6 +78,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 160 | **Batch scripts must verify logging on first call — 79 Gemini calls went unlogged to Supabase (Session 142)** |
 | 161 | **Batch API calls: verify FULL output quality on first call, not just success — 82 photos ran without GEDCOM context (Session 142)** |
 | 162 | **Batch scripts MUST write to Supabase (source of truth), not just local JSON — 84 labels invisible in production for 20h (Session 142)** |
+| 163 | **GEDCOM versioned importer doesn't scale to 175K+ rows — change_log crashes, unchanged rows lost on finalize (Session 144)** |
+| 164 | **datetime objects from direct DB reads must be serialized before Supabase REST API (Session 144)** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 

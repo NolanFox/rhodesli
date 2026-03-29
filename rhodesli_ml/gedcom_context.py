@@ -162,18 +162,28 @@ def build_photo_context(
         return ""
 
     header = "GENEALOGICAL CONTEXT FOR IDENTIFIED INDIVIDUALS:"
-    return f"{header}\n\n" + "\n\n".join(sections)
+    context = f"{header}\n\n" + "\n\n".join(sections)
+
+    # Add structured confirmed identities block (AD-234)
+    confirmed_block = _build_confirmed_identities_block(identified_faces, identities, gedcom_face_links)
+    if confirmed_block:
+        context = f"{confirmed_block}\n\n{context}"
+
+    return context
 
 
 def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None):
     """Build context string for a single person."""
     lines = [f"Person: {indi.full_name}"]
 
-    # Always include birth/death
+    # Always include birth/death with confidence annotation (AD-234)
     if indi.birth:
         birth_str = f"  Born: {indi.birth.raw_date or '?'}"
         if indi.birth.place:
             birth_str += f" in {indi.birth.place}"
+        # Annotate date confidence for Gemini
+        if indi.birth.date and getattr(indi.birth.date, "modifier", None):
+            birth_str += f" [{indi.birth.date.modifier} — use cautiously for age calculations]"
         lines.append(birth_str)
 
     if indi.death:
@@ -224,13 +234,18 @@ def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None
             event_str += " [PORT OF ENTRY — transit point, NOT necessarily residence]"
         lines.append(event_str)
 
-    # Marriages (from family records)
-    marriages = parsed_gedcom.get_marriages(indi)
-    for marriage in marriages:
-        m_str = f"  Marriage: {marriage.raw_date or '?'}"
-        if marriage.place:
-            m_str += f" in {marriage.place}"
-        lines.append(m_str)
+    # Spouse timeline (AD-234: chronological with death dates + photo constraints)
+    spouse_timeline = _build_spouse_timeline(indi, parsed_gedcom)
+    if spouse_timeline:
+        lines.extend(spouse_timeline)
+    else:
+        # Fallback: simple marriage listing
+        marriages = parsed_gedcom.get_marriages(indi)
+        for marriage in marriages:
+            m_str = f"  Marriage: {marriage.raw_date or '?'}"
+            if marriage.place:
+                m_str += f" in {marriage.place}"
+            lines.append(m_str)
 
     # First-order connections
     if variant in ("first_order", "co_occurrence"):
@@ -239,6 +254,98 @@ def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None
             lines.extend(family_lines)
 
     return "\n".join(lines)
+
+
+def _build_spouse_timeline(indi, parsed_gedcom) -> list[str]:
+    """Build chronological spouse timeline with death dates and photo constraints.
+
+    AD-234: For people with multiple spouses, this provides critical dating
+    constraints. If spouse A died in 1966 and spouse B was married after that,
+    any photo with spouse B must be post-1966.
+
+    Returns list of context lines, or empty list if no spouses found.
+    """
+    spouses_with_families = []
+    for fam_xref in indi.family_as_spouse:
+        fam = parsed_gedcom.families.get(fam_xref)
+        if not fam:
+            continue
+        # Find the spouse (the other person in this family)
+        spouse_xref = None
+        if fam.husband_xref == indi.xref_id:
+            spouse_xref = fam.wife_xref
+        elif fam.wife_xref == indi.xref_id:
+            spouse_xref = fam.husband_xref
+        if not spouse_xref:
+            continue
+        spouse = parsed_gedcom.individuals.get(spouse_xref)
+        if not spouse:
+            continue
+        spouses_with_families.append((spouse, fam))
+
+    if not spouses_with_families:
+        return []
+
+    # Sort by marriage date (earliest first), then by spouse birth year
+    def sort_key(item):
+        spouse, fam = item
+        if fam.marriage and fam.marriage.date and fam.marriage.date.year:
+            return fam.marriage.date.year
+        if spouse.birth_year:
+            return spouse.birth_year
+        return 9999
+
+    spouses_with_families.sort(key=sort_key)
+
+    lines = [f"  SPOUSE TIMELINE for {indi.full_name}:"]
+    prev_spouse_death = None
+
+    for i, (spouse, fam) in enumerate(spouses_with_families, 1):
+        # Marriage info
+        marriage_str = ""
+        if fam.marriage:
+            marriage_str = f"married {fam.marriage.raw_date or '?'}"
+            if fam.marriage.place:
+                marriage_str += f" ({fam.marriage.place})"
+        else:
+            marriage_str = "married [date unknown]"
+
+        # Spouse death info
+        death_str = ""
+        if spouse.death:
+            death_str = f"died {spouse.death.raw_date or '?'}"
+            if spouse.death_place:
+                death_str += f" ({spouse.death_place})"
+
+        # Build the spouse entry
+        entry = f"    {i}. {spouse.full_name} — {marriage_str}"
+        if death_str:
+            entry += f" — {death_str}"
+        lines.append(entry)
+
+        # Photo dating constraint
+        constraint_parts = []
+        if fam.marriage and fam.marriage.date and fam.marriage.date.year:
+            start_year = fam.marriage.date.year
+        elif prev_spouse_death:
+            start_year = prev_spouse_death
+        else:
+            start_year = None
+
+        end_year = spouse.death_year
+
+        if start_year and end_year:
+            lines.append(f"       PHOTOS WITH {spouse.given_name or spouse.full_name}: must be {start_year}-{end_year}")
+        elif start_year:
+            lines.append(f"       PHOTOS WITH {spouse.given_name or spouse.full_name}: must be after {start_year}")
+        elif end_year:
+            lines.append(f"       PHOTOS WITH {spouse.given_name or spouse.full_name}: must be before {end_year}")
+
+        # Track for next spouse's constraint
+        if spouse.death_year:
+            prev_spouse_death = spouse.death_year
+
+    return lines
 
 
 def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
@@ -350,6 +457,37 @@ def _filter_events_by_date(events, photo_date, window=15):
         if abs(event.date.year - photo_date) <= window:
             filtered.append(event)
     return filtered
+
+
+def _build_confirmed_identities_block(identified_faces: list, identities: dict, gedcom_face_links: dict) -> str:
+    """Build a structured block listing confirmed identities in this photo.
+
+    AD-234: Provides Gemini with clear signals about who is definitively
+    identified vs who is a candidate. This helps Gemini use the right names
+    and avoid contradicting confirmed identifications.
+    """
+    confirmed = []
+    for face_id in identified_faces:
+        identity_id = _find_identity_for_face(face_id, identities)
+        if not identity_id:
+            continue
+        identity = identities.get(identity_id, {})
+        name = identity.get("name", "Unknown")
+        state = identity.get("state", "")
+        if state == "CONFIRMED" and not name.startswith("Unidentified"):
+            has_gedcom = identity_id in gedcom_face_links
+            confirmed.append((name, has_gedcom))
+
+    if not confirmed:
+        return ""
+
+    lines = ["CONFIRMED IDENTITIES IN THIS PHOTO:"]
+    for name, has_gedcom in confirmed:
+        marker = " [GEDCOM linked]" if has_gedcom else ""
+        lines.append(f"  - {name}{marker}")
+    lines.append("Use these names when describing faces. Do NOT contradict confirmed identifications.")
+
+    return "\n".join(lines)
 
 
 def _find_identity_for_face(face_id, identities):
