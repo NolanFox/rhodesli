@@ -30,13 +30,17 @@
 - Phase 4 Admin UI button: Prompt builder exists but no "Compare with anchor" button on
   photo page. This needs a route handler + UI element. BACKLOG: ANCHOR-UI-001.
 
-## Deferred
-- Batch re-run execution: 355 photos need GEDCOM context. Exceeds 250 RPD daily limit.
-  Plan documented in `docs/session_context/session-144-batch-plan.md`. Not a BACKLOG item —
-  operational, to be run manually.
-- GEDCOM importer architectural rework: 175K+ rows cause OOM/timeout. Lesson 163.
-  This IS a BACKLOG item: GEDCOM-ARCH-001.
-- Dual-write to photo_locations table: Geocoding step needed after batch completes.
+## Previously Deferred — Now Completed
+- [x] Anchor compare admin UI button — "Compare with anchor photo" panel on photo page
+  with Codex P1 validation (anchor must have date, reject unstructured Gemini output)
+- [x] GEDCOM importer --skip-change-log + --prune-old-versions flags (6 new tests)
+- [x] Batch canary run — 3 photos processed ($0.17), location candidates working,
+  GEDCOM context still missing (pre-existing issue in batch GEDCOM loader)
+- [x] Codex audit of anchor compare (2 P1s fixed, 1 P2 fixed)
+
+## Remaining
+- Batch re-run for remaining 352 photos — needs GEDCOM context loader fix first
+- Dual-write to photo_locations table after geocoding
 
 ## Red Flags
 - [medium] GEDCOM importer took 30+ min and crashed on change_log write. Fixed with
