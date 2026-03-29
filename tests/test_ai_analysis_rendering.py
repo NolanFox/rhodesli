@@ -183,11 +183,19 @@ class TestBatchLabelRendering:
             html = repr(section)
             assert "35, 12" in html
 
-    def test_face_analysis_shows_person_name_when_identified(self, mock_app):
-        """FB-002: Face analysis uses person name instead of 'Face N' when identified."""
+    def test_face_analysis_shows_person_name_when_single_face_identified(self, mock_app):
+        """FB-002: Face analysis uses person name for single-face identified photos."""
+        # Single-face label (only face_index 0)
+        single_face_label = {
+            **self.BATCH_LABEL,
+            "photo_id": "test_single_face",
+            "face_analysis": [
+                {"face_index": 0, "estimated_age": 21, "gender": "male", "description": "Young man"},
+            ],
+        }
         mock_photo_cache = {
-            "test_batch_photo": {
-                "face_ids": ["face_0_abc", "face_1_def"],
+            "test_single_face": {
+                "faces": [{"face_id": "face_0_abc"}],
             }
         }
         mock_registry = {
@@ -203,7 +211,7 @@ class TestBatchLabelRendering:
             }
         }
         with (
-            patch.object(mock_app, "_load_date_labels", return_value={"test_batch_photo": self.BATCH_LABEL}),
+            patch.object(mock_app, "_load_date_labels", return_value={"test_single_face": single_face_label}),
             patch.object(mock_app, "_load_photo_locations", return_value={}),
             patch.object(mock_app, "_load_search_index", return_value=[]),
             patch.object(mock_app, "_photo_cache", mock_photo_cache),
@@ -214,13 +222,11 @@ class TestBatchLabelRendering:
                 side_effect=lambda reg, fid: mock_registry["identities"]["id-albert"] if fid == "face_0_abc" else None,
             ),
         ):
-            section = mock_app._build_ai_analysis_section("test_batch_photo", is_admin=True)
+            section = mock_app._build_ai_analysis_section("test_single_face", is_admin=True)
             html = repr(section)
-            # Face 0 should show "Albert Fox" not "Face 0"
+            # Single face should show "Albert Fox" not "Face 0"
             assert "Albert Fox:" in html
             assert "Face 0:" not in html
-            # Face 1 (unidentified) should still show "Face 1"
-            assert "Face 1:" in html
 
     def test_face_analysis_falls_back_to_face_n_when_unidentified(self, mock_app):
         """Face analysis falls back to 'Face N' when no identity is linked."""

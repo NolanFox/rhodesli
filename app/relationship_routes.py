@@ -1159,14 +1159,21 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
         if r.get("birth_year"):
             birth_parts.append(f"b. {r['birth_year']}")
         if r.get("birth_place"):
-            birth_parts.append(r["birth_place"])
+            # Prefix with "b." if place-only (no year) to avoid ambiguity
+            if not r.get("birth_year"):
+                birth_parts.append(f"b. {r['birth_place']}")
+            else:
+                birth_parts.append(r["birth_place"])
         if birth_parts:
             life_span.append(", ".join(birth_parts))
         death_parts = []
         if r.get("death_year"):
             death_parts.append(f"d. {r['death_year']}")
         if r.get("death_place"):
-            death_parts.append(r["death_place"])
+            if not r.get("death_year"):
+                death_parts.append(f"d. {r['death_place']}")
+            else:
+                death_parts.append(r["death_place"])
         if death_parts:
             life_span.append(", ".join(death_parts))
 

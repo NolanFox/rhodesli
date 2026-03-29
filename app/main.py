@@ -3411,17 +3411,20 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     face_analysis = label.get("face_analysis")
     if face_analysis and isinstance(face_analysis, list):
         # Build face_index → identity name mapping
+        # Only reliable for single-face photos (Codex P1: face_index is
+        # left-to-right from Gemini but face_ids are sorted lexically)
         face_index_to_name = {}
         photo_data = _photo_cache.get(photo_id, {}) if _photo_cache else {}
-        face_ids = photo_data.get("face_ids", [])
-        if face_ids:
+        faces = photo_data.get("faces", [])
+        face_ids = [f["face_id"] for f in faces if isinstance(f, dict) and "face_id" in f]
+        if len(face_ids) == 1:
+            # Single face — index mapping is trivially correct
             registry = load_registry()
-            for i, fid in enumerate(face_ids):
-                identity = get_identity_for_face(registry, fid)
-                if identity:
-                    name = identity.get("name", "")
-                    if name and not name.startswith("Unidentified"):
-                        face_index_to_name[i] = name
+            identity = get_identity_for_face(registry, face_ids[0])
+            if identity:
+                name = identity.get("name", "")
+                if name and not name.startswith("Unidentified"):
+                    face_index_to_name[0] = name
 
         face_items = []
         for fa in face_analysis:

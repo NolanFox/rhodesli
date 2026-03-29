@@ -839,7 +839,8 @@ def _set_version_status(
 ) -> None:
     payload: dict[str, Any] = {"status": status}
     if summary is not None:
-        payload["summary"] = summary
+        # Round-trip through JSON to convert datetime objects to strings
+        payload["summary"] = json.loads(json.dumps(summary, default=str))
     if error_message:
         payload["notes"] = error_message
     sb.table("gedcom_versions").update(payload).eq("id", version_id).execute()
@@ -1020,25 +1021,32 @@ def import_versioned(
             current_maps=current_maps,
         )
 
-        _write_change_log(
-            sb,
-            version_id,
-            diff_by_entity,
-            redirects,
-            batch_size=500,
-        )
+        # Change log is non-critical — don't let it block import
+        try:
+            _write_change_log(
+                sb,
+                version_id,
+                diff_by_entity,
+                redirects,
+                batch_size=500,
+            )
+        except Exception as cl_exc:
+            logger.warning("Change log write failed (non-fatal): %s", cl_exc)
 
         _queue_enrichments(sb, version_id, diff_by_entity["individuals"])
         _finalize_current_state(sb, current_swap_plans)
     except Exception as exc:
         failed_summary = {**summary, "status": "failed", "error": str(exc)}
-        _set_version_status(
-            sb,
-            version_id,
-            status="failed",
-            summary=failed_summary,
-            error_message=f"FAILED: {exc}",
-        )
+        try:
+            _set_version_status(
+                sb,
+                version_id,
+                status="failed",
+                summary=failed_summary,
+                error_message=f"FAILED: {exc}",
+            )
+        except Exception as status_exc:
+            logger.error("Failed to set version status: %s", status_exc)
         raise
 
     applied_summary = {**summary, "status": "applied"}

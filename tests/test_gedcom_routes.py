@@ -283,6 +283,17 @@ SAMPLE_GEDCOM_INDIVIDUALS = [
         "death_date": "",
         "death_place": "",
     },
+    {
+        "gedcom_id": "@I6@",
+        "name": "Dora Burd",
+        "given_name": "Dora",
+        "surname": "Burd",
+        "gender": "F",
+        "birth_date": "",
+        "birth_place": "Kiev, Russia",
+        "death_date": "",
+        "death_place": "Dayton, Ohio",
+    },
 ]
 
 
@@ -371,6 +382,22 @@ class TestGedcomSearchAPI:
             assert "d. 1982, Tampa, Florida" in resp.text
             # Old ambiguous format should NOT appear
             assert "b. 1903 · d. 1982 · Rhodes" not in resp.text
+
+    def test_search_labels_place_only_entries(self, admin_client):
+        """Codex P2: Place without year must still have b./d. prefix to avoid ambiguity."""
+        with (
+            patch("app.relationship_routes._query_gedcom_search_candidates", return_value=[]),
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
+            resp = admin_client.get("/api/gedcom/search?q=Dora Burd&identity_id=test-id")
+            assert resp.status_code == 200
+            # Birth place without year should still have "b." prefix
+            assert "b. Kiev, Russia" in resp.text
+            # Death place without year should still have "d." prefix
+            assert "d. Dayton, Ohio" in resp.text
+            # Should NOT show bare "Kiev, Russia" without prefix
+            assert "· Kiev, Russia" not in resp.text
 
 
 class TestGedcomLinkAPI:

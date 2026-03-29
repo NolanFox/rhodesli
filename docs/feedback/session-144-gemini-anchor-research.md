@@ -70,6 +70,27 @@ Gemini enhanced the poster behind Albert in Photo C and identified:
 - **Value**: Progressive refinement — the archive gets smarter with each human contribution
 - **Implementation**: date_refinement_history (already in Phase 4 schema) + trigger re-evaluation on new evidence
 
+## Key Insight: Absence of Data as Evidence (User Feedback)
+
+The 1915 census wasn't just about WHERE Albert was — it was about where he WASN'T.
+The household shrinking from all children to only Isreal(16) and Jacob(12) is itself
+the evidence that Albert had left New York by 1915.
+
+**Implication for GEDCOM context builder:**
+- Census/residence events in GEDCOM can show when someone LEAVES a household
+- If person A is in census 1910 with family, but ABSENT from census 1915,
+  that's a departure window (1910-1915)
+- The context builder should surface these "absence windows" alongside positive events
+- This kind of reasoning (positive + negative evidence) is exactly what makes
+  GEDCOM context so powerful for date estimation
+
+**Possible GEDCOM-derivable reasoning:**
+- Albert's family GEDCOM shows: born 1892 NY → census 1910 NY → married 1920 Hamilton OH
+- Missing: any record 1911-1919. Combined with siblings' household census, this creates
+  the "Detroit window" that helped date Photo C.
+- A smart context builder could emit: "No records for Albert Fox between 1910-1920.
+  Family household in NY shrank by 1915. Next known record: marriage in Ohio 1920."
+
 ## BACKLOG Items
 - ANCHOR-002: Multi-photo chronological ordering tool (extends AD-233)
 - DETAIL-001: Visual detail enhancement + OCR for signs/posters
