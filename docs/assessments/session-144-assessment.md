@@ -21,6 +21,15 @@
 - [x] FB-003: Gemini anchor research logged with 6 feature ideas
 - [x] Lessons 163-164 documented
 
+## Gaps (from prompt review)
+- Phase 1c `verified_facts` parameter: Not wired as explicit parameter. Instead, confirmed
+  identities block is built from existing `identified_faces` + `identities` args. Functionally
+  equivalent but doesn't add a new parameter name. ACCEPTABLE — the block works.
+- Phase 2 map view update: Map pins still use `photo_locations` table. New `location_primary`
+  schema only affects date_labels. Geocoding step needed to populate lat/lng.
+- Phase 4 Admin UI button: Prompt builder exists but no "Compare with anchor" button on
+  photo page. This needs a route handler + UI element. BACKLOG: ANCHOR-UI-001.
+
 ## Deferred
 - Batch re-run execution: 355 photos need GEDCOM context. Exceeds 250 RPD daily limit.
   Plan documented in `docs/session_context/session-144-batch-plan.md`. Not a BACKLOG item —
