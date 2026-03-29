@@ -14,4 +14,11 @@
 - **Root cause:** face_analysis rendering used face_index directly without looking up identity.
 - **Fix:** FIXED — Added face_index→identity name mapping lookup in `_build_ai_analysis_section()`. Falls back to "Face N" for unidentified faces.
 - **Screenshot:** User-provided screenshot showing "Face 0" label
-- **Commit:** pending
+- **Commit:** 98250390
+
+## FB-003: Gemini Anchor Research — Pioneer Maccabees Discovery
+- **Severity:** Enhancement (feature ideation)
+- **Context:** User conducted multi-photo timeline analysis with Gemini Chat. Decoded poster text ("PIONEER MACABEES DETROIT JULY 2X"), cross-referenced with 1910/1915 census data, established 3-photo chronological ordering for Albert Fox.
+- **Feature ideas extracted:** See `docs/feedback/session-144-gemini-anchor-research.md`
+- **Key takeaway:** Iterative human+AI evidence accumulation (census + visual details + GEDCOM) produces dramatically better date estimates than single-image analysis
+- **BACKLOG items:** ANCHOR-002, DETAIL-001, EVIDENCE-001, AGING-001, SOCIAL-001, EVIDENCE-002
