@@ -80,6 +80,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 162 | **Batch scripts MUST write to Supabase (source of truth), not just local JSON — 84 labels invisible in production for 20h (Session 142)** |
 | 163 | **GEDCOM versioned importer doesn't scale to 175K+ rows — change_log crashes, unchanged rows lost on finalize (Session 144)** |
 | 164 | **datetime objects from direct DB reads must be serialized before Supabase REST API (Session 144)** |
+| 165 | **Supabase views with IS NULL clause include unversioned legacy rows — broke GEDCOM context for ALL batch photos (Session 144)** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
