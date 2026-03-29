@@ -2728,3 +2728,22 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affected loaders**: `_load_date_labels`, `_load_birth_year_estimates`, `_load_proposals`, `_load_photo_locations`, `_load_gedcom_matches`, `_load_relationship_graph`, `_load_annotations`
 - **Tests**: 19 structural + behavioral tests in `test_no_json_fallback.py` prevent regression.
 - **Affects**: app/main.py, app/page_routes.py, app/relationship_routes.py, app/engagement_routes.py
+
+### AD-233: Anchor Photo Temporal Refinement — Multi-Model Evaluation (2026-03-28)
+- **Date**: 2026-03-28 | **Session**: 143
+- **Context**: Tested whether an "anchor" photo with a known date can refine the estimate of a related photo by comparing the subject's apparent age across both images.
+- **Decision**: Anchor comparison is valuable but requires human-in-the-loop. Implement as second-pass for uncertain dates. Maps to PRD-059 Phase 4.
+- **Evidence — Three-model comparison** (Albert Fox: Detroit group ~1918 vs oval portrait):
+  - Gemini 3.1 Pro (chat): Portrait LATER ~1919-1920. Caught photo damage vs boutonniere. Connected to 1920 wedding. Strongest.
+  - Claude Opus 4.6: Portrait LATER ~1919-1920. Similar reasoning, missed photo damage.
+  - Codex/GPT-5.4: Portrait EARLIER ~1914-1915. Opposite conclusion — interpreted fuller face as younger.
+- **Key insight**: Facial fullness is ambiguous. Historical context (wedding, collar style) breaks the tie.
+- **Gap/Risk**: Models disagree on age interpretation. Must be human-in-the-loop.
+- **Affects**: PRD-059, rhodesli_ml/multi_pass.py
+
+### AD-234: GEDCOM Context Enrichment — Spouse Timeline + Birth Date Resolution (2026-03-28)
+- **Date**: 2026-03-28 | **Session**: 143
+- **Context**: Batch results revealed Rose (2nd wife) missing from context, alternate birth year 1896 used instead of 1892, Esther's death date (1966) not included.
+- **Decision**: Enrich GEDCOM context with spouse timeline, primary birth dates, structured relationship blocks. Re-import GEDCOM from Downloads/gedcom_20260328/. Link Rose Weiss Baygel Fox and Jean Baumann Kassel Fox to Albert.
+- **Implementation**: P0 GEDCOM re-import, P0 spouse timeline in gedcom_context.py, P1 birth date resolution, P1 structured blocks. Then re-run 83 photos that lack full enrichment.
+- **Affects**: rhodesli_ml/gedcom_context.py, rhodesli_ml/importers/gedcom_parser.py, scripts/run_combined_pipeline.py
