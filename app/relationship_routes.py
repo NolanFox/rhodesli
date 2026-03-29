@@ -1153,14 +1153,22 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
         xref = r["xref_id"]
         is_linked = xref == current_xref
 
-        # Build display info
+        # Build display info — label locations explicitly to avoid ambiguity
         life_span = []
+        birth_parts = []
         if r.get("birth_year"):
-            life_span.append(f"b. {r['birth_year']}")
-        if r.get("death_year"):
-            life_span.append(f"d. {r['death_year']}")
+            birth_parts.append(f"b. {r['birth_year']}")
         if r.get("birth_place"):
-            life_span.append(r["birth_place"])
+            birth_parts.append(r["birth_place"])
+        if birth_parts:
+            life_span.append(", ".join(birth_parts))
+        death_parts = []
+        if r.get("death_year"):
+            death_parts.append(f"d. {r['death_year']}")
+        if r.get("death_place"):
+            death_parts.append(r["death_place"])
+        if death_parts:
+            life_span.append(", ".join(death_parts))
 
         # Match strength indicator (B1)
         score = r.get("score", 0)

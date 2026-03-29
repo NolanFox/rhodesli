@@ -3410,6 +3410,19 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     # Face analysis (batch preset: per-face age/gender/description)
     face_analysis = label.get("face_analysis")
     if face_analysis and isinstance(face_analysis, list):
+        # Build face_index → identity name mapping
+        face_index_to_name = {}
+        photo_data = _photo_cache.get(photo_id, {}) if _photo_cache else {}
+        face_ids = photo_data.get("face_ids", [])
+        if face_ids:
+            registry = load_registry()
+            for i, fid in enumerate(face_ids):
+                identity = get_identity_for_face(registry, fid)
+                if identity:
+                    name = identity.get("name", "")
+                    if name and not name.startswith("Unidentified"):
+                        face_index_to_name[i] = name
+
         face_items = []
         for fa in face_analysis:
             if isinstance(fa, dict):
@@ -3423,9 +3436,11 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 if gender:
                     parts.append(gender.capitalize())
                 label_text = ", ".join(parts)
+                # Use person name if face is identified, otherwise "Face N"
+                face_label = face_index_to_name.get(idx, f"Face {idx}") if idx != "" else ""
                 face_items.append(
                     Li(
-                        Span(f"Face {idx}: " if idx != "" else "", cls="text-slate-500"),
+                        Span(f"{face_label}: " if face_label else "", cls="text-slate-500"),
                         Span(label_text, cls="text-slate-300 font-medium") if label_text else None,
                         Span(f" — {desc}", cls="text-slate-400") if desc else None,
                         cls="text-sm sm:text-xs mb-1",

@@ -356,6 +356,22 @@ class TestGedcomSearchAPI:
             assert "1903" in resp.text
             assert "1982" in resp.text
 
+    def test_search_groups_location_with_date(self, admin_client):
+        """FB-001: Birth place must be grouped with birth date, death place with death date."""
+        with (
+            patch("app.relationship_routes._query_gedcom_search_candidates", return_value=[]),
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
+            resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            # Birth place grouped with birth year: "b. 1903, Rhodes, Greece"
+            assert "b. 1903, Rhodes, Greece" in resp.text
+            # Death place grouped with death year: "d. 1982, Tampa, Florida"
+            assert "d. 1982, Tampa, Florida" in resp.text
+            # Old ambiguous format should NOT appear
+            assert "b. 1903 · d. 1982 · Rhodes" not in resp.text
+
 
 class TestGedcomLinkAPI:
     """Tests for POST /api/gedcom/link and /api/gedcom/unlink (AD-160)."""
