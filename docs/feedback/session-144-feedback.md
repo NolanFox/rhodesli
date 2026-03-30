@@ -28,4 +28,11 @@
 - **Context:** User on person page for Person 3772 (/c/fox-family/person/483e124f-9440-47cd-8de0-fbbd86b852a3). Clicking "Merge" button next to Albert Fox in Find Similar results does nothing. Same for Merge in Manual Search results — button appears clickable but no action.
 - **Screenshots:** User provided 2 screenshots showing both merge surfaces non-functional
 - **Root cause:** TBD — investigating
-- **Fix:** IN PROGRESS
+- **Fix:** FIXED (fc4f19a1) — 3 bugs: HTMX target, OOB delete, toast wrapping. 10 new tests.
+
+## FB-007: Person page photo sort by date doesn't work
+- **Severity:** P1
+- **Context:** On Albert Fox's person page (/c/fox-family/person/85546ebf...), "Sort: Earliest First" dropdown exists but photos appear unsorted (mix of eras). With 196 photos spanning 1910s-1980s, chronological sorting is essential for timeline exploration.
+- **Root cause:** TBD — the sort dropdown may not be reading date_labels estimates, or the sort may be by upload date not estimated date.
+- **Screenshot:** User provided — photos visually out of chronological order despite "Earliest First" selected
+- **Fix:** BACKLOG for Session 144b — SORT-001
