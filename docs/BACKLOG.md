@@ -45,7 +45,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [ ] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge for edge faces (Betty Capeluto Fox). Session 143 FB-002 partial fix.
 - [ ] **BATCH-GEDCOM-38**: 38 photos still lack GEDCOM context. Needs batch GEDCOM loader fix (Session 144 red flag).
 - [ ] **GEO-DUAL-WRITE**: Dual-write location_primary to photo_locations table. Session 144 gap.
-- [ ] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. Session 144 gap.
+- [x] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. DONE (Session 144, commit 79e2a559).
+- [ ] **SORT-001** (P1): Person page "Sort: Earliest First" doesn't work — photos unsorted. FB-007, Session 144.
+- [ ] **DISPLAY-0PCT** (P1): Family resemblance matches show 0% when calibrator gives 27-32%. Session 144 Codex finding.
 - [ ] **FB-013**: GEDCOM change detection → auto re-run trigger. Future feature. Session 143.
 - [ ] **FB-014**: Photo co-occurrence as life event evidence. Future feature. Session 143.
 - [ ] **DATA-AUDIT-001**: 20 CONFIRMED identities with no anchor_ids. Pre-existing. Session 143 audit.
@@ -83,7 +85,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **Merge side effects**: confirm+merge runs annotations + recalibration. DONE.
 - **FB-009** (P2): Speed Loop auto-suggestion for obvious matches. DEFERRED (user approved) — feature gap needing proposal pipeline work.
 - **BATCH-001** (P2): Batch Gemini script atomic JSON writes. Codex finding.
-- **BATCH-002** (P2): Batch Gemini results should also write to Supabase date labels. Codex finding.
+- [x] **BATCH-002** (P2): Batch Gemini results should also write to Supabase date labels. DONE (Session 144, read-merge-write).
 - **BATCH-003** (P1): Backfill 80 Gemini API call audit logs to Supabase. Session 142 logging gap.
 - **BATCH-004** (P0): GEDCOM preload optimization for batch scripts — load once, not per photo. Codex speed audit.
 - **BATCH-005** (P1): Resume Gemini batch for remaining 199 Esther/Albert photos after quota resets.

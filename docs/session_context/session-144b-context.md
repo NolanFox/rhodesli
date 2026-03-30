@@ -1,6 +1,6 @@
 # Session 144b Context
 
-**Predecessor**: Session 144 (docs/assessments/session-144-assessment.md)
+**Predecessor**: Session 144 (docs/session_context/session-144-continuation.md, docs/assessments/session-144-assessment.md)
 **Date**: 2026-03-30
 **State**: v0.99.55, 3949+ tests, 218/279 Fox photos batch-processed with GEDCOM context
 
