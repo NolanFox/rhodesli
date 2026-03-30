@@ -128,6 +128,32 @@ def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
     # Merge face-to-photo mappings (Supabase takes precedence for completeness)
     merged_ftp = {**face_to_photo, **supabase_face_to_photo}
 
+    # Also load photo metadata from Supabase for photos not in local index
+    supabase_photos = {}
+    try:
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            from supabase import create_client as _sc2
+
+            _sb2 = _sc2(url, key)
+            offset = 0
+            while True:
+                r = (
+                    _sb2.table("photos")
+                    .select("photo_id, path, source, collection")
+                    .range(offset, offset + 999)
+                    .execute()
+                )
+                for row in r.data or []:
+                    supabase_photos[row["photo_id"]] = row
+                if len(r.data or []) < 1000:
+                    break
+                offset += 1000
+            logger.info(f"Loaded {len(supabase_photos)} photo metadata entries from Supabase")
+    except Exception as e:
+        logger.warning(f"Could not load photos from Supabase: {e}")
+
     result = {}
     for iid in identity_ids:
         identity = identities.get(iid)
@@ -153,6 +179,16 @@ def get_photos_for_identities(identity_ids: list[str]) -> dict[str, dict]:
         for pid in photo_ids:
             if pid not in result:
                 photo_entry = photos.get(pid, {})
+                # Fallback to Supabase photo metadata for photos not in local index
+                if not photo_entry.get("path") and not photo_entry.get("filename"):
+                    sb_entry = supabase_photos.get(pid, {})
+                    if sb_entry.get("path"):
+                        photo_entry = {
+                            "path": sb_entry["path"],
+                            "filename": Path(sb_entry["path"]).name,
+                            "source": sb_entry.get("source", ""),
+                            "collection": sb_entry.get("collection", ""),
+                        }
                 result[pid] = {
                     **photo_entry,
                     "photo_id": pid,
