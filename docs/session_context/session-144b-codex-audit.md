@@ -1,35 +1,39 @@
-**Auditor**: Codex CLI — UNAVAILABLE
-**Agent type**: N/A
-**Scope**: Session 144b changed files
+**Auditor**: Codex CLI v0.117.0 (o4-mini)
+**Agent type**: Independent (fresh context)
+**Scope**: All Session 144b changed files (13 files)
 **Date**: 2026-03-30
 
-## Why Codex Was Not Run
+## Findings
 
-Codex audit was skipped in this session due to context budget constraints. The session focused on:
-1. Two targeted bug fixes with clear root causes (wrong dict keys, missing dual-keying)
-2. A data repair (Supabase-only, no code changes)
-3. A batch script enhancement (Supabase metadata fallback)
-4. An existing script update (event_grouping.py reads from Supabase)
-5. A UI enhancement (companion photo counts)
+### P0: None
 
-All changes have corresponding tests (8 new tests total). The bug fixes were straightforward key corrections, not architectural changes that would benefit from independent review.
+### P1: `--rerun-without-gedcom` fails open (1 finding)
+- **File**: scripts/batch_gemini_for_person.py:290
+- **Issue**: If SUPABASE_URL/key missing, flag silently falls through to processing ALL photos
+- **Fix**: Added explicit error + return when Supabase env vars missing
+- **Status**: FIXED
 
-## Changed Files
+### P2: 3 findings
+1. **geocode_photos.py incomplete Supabase rows** — New upsert only sent photo_id, data, location_name, location_estimate. Missing lat, lng, confidence, region columns.
+   - **Fix**: Added all denormalized columns to upsert payload
+   - **Status**: FIXED
 
-| File | Change | Risk |
-|------|--------|------|
-| `app/main.py` | Date labels SHA256 dual-keying in Postgres path | LOW — additive, doesn't change existing behavior |
-| `app/identity_routes.py` | Fix 2 wrong dict keys in distance endpoint | LOW — trivial key name fix |
-| `app/person_routes.py` | Companion photo counts + sort by frequency | LOW — UI-only, no data mutations |
-| `scripts/batch_gemini_for_person.py` | Supabase photo metadata fallback | LOW — additive fallback path |
-| `scripts/event_grouping.py` | Read from Supabase + co-occurrence computation | LOW — offline script, no production impact |
-| `tests/test_photo_sorting.py` | 3 new dual-keying tests | N/A |
-| `tests/test_distance_endpoint.py` | Fix mock + 1 regression test | N/A |
-| `tests/test_co_occurrence_display.py` | 4 new co-occurrence tests | N/A |
+2. **event_grouping.py dated photo count mismatch** — Supabase path treats any row with `data` as dated, but downstream grouping filters by `best_year_estimate`. Reported totals can overstate.
+   - **Assessment**: Cosmetic — the actual grouping is correct since it filters by year. The metadata count is advisory only.
+   - **Status**: NOTED (low impact, cosmetic)
 
-## Self-Assessment (in lieu of Codex)
+3. **Test coverage thinner than claimed** — New tests are mostly unit/structural. No integration tests for `--rerun-without-gedcom`, Supabase photo metadata fallback, or geocode Supabase write path.
+   - **Assessment**: Valid observation. The scripts are offline tooling with low blast radius. Integration testing would require Supabase mocking infrastructure that doesn't exist.
+   - **Status**: ACCEPTED (offline scripts, tested manually via execution)
 
-- **Security**: No new routes, no new POST endpoints, no auth changes. Distance endpoint already required admin.
-- **Data integrity**: Supabase writes only in batch script (already had Supabase write path). Person page changes are read-only.
-- **Test coverage**: All 5 code changes have corresponding tests. 3967 tests pass.
-- **Regressions**: Full test suite passed before every commit (3959 → 3967).
+### P3: 2 findings
+1. **face-label CSS needs `display: inline-block`** — `max-width` on `<span>` needs block display for width constraints to apply.
+   - **Fix**: Added `display: inline-block` to `.face-label`
+   - **Status**: FIXED
+
+2. **Structural tests are source-string inspection** — Can pass with dead code or misplaced helpers.
+   - **Assessment**: True limitation, but these are guardrail tests. The actual behavior is tested separately (test_photo_sorting.py::TestDateLabelsDualKeying).
+   - **Status**: ACCEPTED (defense in depth, not sole verification)
+
+## Value Assessment
+**MODERATE** — Caught the P1 fail-open bug and the P2 incomplete columns, both of which would have caused real issues. The P3 CSS fix was also valid.

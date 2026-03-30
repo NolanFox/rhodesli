@@ -1067,6 +1067,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             bottom: -22px;
             left: 50%;
             transform: translateX(-50%);
+            display: inline-block;
             white-space: nowrap;
             font-size: 11px;
             color: #fbbf24;

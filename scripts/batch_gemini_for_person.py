@@ -268,6 +268,7 @@ def run_batch(
     identity_ids: list[str],
     dry_run: bool = False,
     skip_existing: bool = True,
+    rerun_without_gedcom: bool = False,
     max_cost: float = 15.0,
     delay_between: float = 2.0,
 ):
@@ -286,7 +287,41 @@ def run_batch(
     logger.info(f"Total unique photos: {len(photos)}")
 
     # Filter already-estimated
-    if skip_existing:
+    if rerun_without_gedcom:
+        # Only re-run photos that have estimates but lack GEDCOM context
+        # P1 fix (Codex): must NOT fall through to full photo set if Supabase unavailable
+        try:
+            url = os.environ.get("SUPABASE_URL")
+            key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+            if not url or not key:
+                logger.error("--rerun-without-gedcom requires SUPABASE_URL + key. Aborting.")
+                return
+            if url and key:
+                from supabase import create_client as _sc_gedcom
+
+                _sb_gedcom = _sc_gedcom(url, key)
+                all_dl = {}
+                offset = 0
+                while True:
+                    r = _sb_gedcom.table("date_labels").select("photo_id, data").range(offset, offset + 999).execute()
+                    for row in r.data or []:
+                        if row.get("data"):
+                            all_dl[row["photo_id"]] = row["data"]
+                    if len(r.data or []) < 1000:
+                        break
+                    offset += 1000
+                # Keep only photos that have labels WITHOUT gedcom_context_sent
+                before = len(photos)
+                photos = {
+                    pid: p for pid, p in photos.items() if pid in all_dl and not all_dl[pid].get("gedcom_context_sent")
+                }
+                logger.info(
+                    f"Re-running {len(photos)} photos without GEDCOM context (skipped {before - len(photos)} with GEDCOM)"
+                )
+        except Exception as e:
+            logger.error(f"Failed to check GEDCOM context: {e}")
+            return
+    elif skip_existing:
         existing = load_existing_estimates()
         before = len(photos)
         photos = {pid: p for pid, p in photos.items() if pid not in existing}
@@ -866,6 +901,11 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Show plan without calling API")
     parser.add_argument("--skip-existing", action="store_true", default=True, help="Skip already-estimated photos")
     parser.add_argument("--no-skip-existing", dest="skip_existing", action="store_false")
+    parser.add_argument(
+        "--rerun-without-gedcom",
+        action="store_true",
+        help="Re-run only photos that have estimates but lack GEDCOM context",
+    )
     parser.add_argument("--max-cost", type=float, default=15.0, help="Maximum cost in USD")
     parser.add_argument("--delay", type=float, default=2.0, help="Seconds between API calls")
     args = parser.parse_args()
@@ -874,6 +914,7 @@ if __name__ == "__main__":
         identity_ids=args.identity,
         dry_run=args.dry_run,
         skip_existing=args.skip_existing,
+        rerun_without_gedcom=args.rerun_without_gedcom,
         max_cost=args.max_cost,
         delay_between=args.delay,
     )

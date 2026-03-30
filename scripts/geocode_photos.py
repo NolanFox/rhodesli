@@ -296,6 +296,10 @@ def main():
                             "data": loc_data,
                             "location_name": loc_data.get("location_name", ""),
                             "location_estimate": loc_data.get("location_estimate", ""),
+                            "lat": loc_data.get("lat"),
+                            "lng": loc_data.get("lng"),
+                            "confidence": loc_data.get("confidence", ""),
+                            "region": loc_data.get("region", ""),
                         }
                     )
                     if len(batch) >= 100:

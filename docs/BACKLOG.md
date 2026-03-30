@@ -59,7 +59,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### P3 — Security Audit Deferred Items (SEC-002/003/004) — Session 134
 - **SEC-002**: ILIKE wildcard escaping — `_escape_ilike()` added in Session 134. DONE but verify on edge cases. Source: Session 134 Finding 2.
-- **SEC-003**: No CSRF check on `/tools/search` POST — read-only endpoint, low risk. Add `_check_origin()` for consistency. Source: Session 134 Finding 4.
+- [x] **SEC-003**: CSRF check added to `/tools/search` POST — `_check_origin()`. DONE (Session 144b).
 - **SEC-004**: Invite code timing side-channel — `in` operator on list is not constant-time. Negligible at current scale (1-3 codes). Use `hmac.compare_digest()` if code space expands. Source: Session 134 Finding 7.
 
 ### P1 — Session 138 Feedback Items (2026-03-26)
@@ -87,7 +87,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **FB-009** (P2): Speed Loop auto-suggestion for obvious matches. DEFERRED (user approved) — feature gap needing proposal pipeline work.
 - **BATCH-001** (P2): Batch Gemini script atomic JSON writes. Codex finding.
 - [x] **BATCH-002** (P2): Batch Gemini results should also write to Supabase date labels. DONE (Session 144, read-merge-write).
-- **BATCH-003** (P1): Backfill 80 Gemini API call audit logs to Supabase. Session 142 logging gap.
+- [x] **BATCH-003** (P1): Gemini API call audit logs verified — all 82 batch rows present in Supabase. Bug was fixed in Session 144. DONE.
 - **BATCH-004** (P0): GEDCOM preload optimization for batch scripts — load once, not per photo. Codex speed audit.
 - **BATCH-005** (P1): Resume Gemini batch for remaining 199 Esther/Albert photos after quota resets.
 
