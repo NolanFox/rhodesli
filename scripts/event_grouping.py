@@ -41,17 +41,77 @@ OUTPUT_PATH = ROOT / "rhodesli_ml" / "data" / "event_groups.json"
 
 
 def load_date_labels():
-    """Load gemini_batch_full date labels."""
+    """Load date labels from Supabase (source of truth), with local JSON fallback."""
+    try:
+        from supabase import create_client
+
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            all_rows = []
+            offset = 0
+            while True:
+                r = sb.table("date_labels").select("photo_id, data").range(offset, offset + 999).execute()
+                all_rows.extend(r.data or [])
+                if len(r.data or []) < 1000:
+                    break
+                offset += 1000
+            result = {}
+            for row in all_rows:
+                if row.get("data"):
+                    result[row["photo_id"]] = row["data"]
+            print(f"  Loaded {len(result)} date labels from Supabase")
+            return result
+    except Exception as e:
+        print(f"  Supabase failed ({e}), falling back to local JSON")
+
     with open(DATE_LABELS_PATH) as f:
         data = json.load(f)
     labels = data.get("labels", [])
-    return {l["photo_id"]: l for l in labels if l.get("source_method") == "gemini_batch_full"}
+    return {l["photo_id"]: l for l in labels if l.get("best_year_estimate")}
 
 
 def load_photo_index():
-    """Load photo_index.json."""
+    """Load photo face mappings from Supabase + local photo_index.json."""
+    # Local photo_index for face_ids
     with open(PHOTO_INDEX_PATH) as f:
-        return json.load(f)
+        pi = json.load(f)
+
+    photos = pi.get("photos", {})
+    face_to_photo = pi.get("face_to_photo", {})
+
+    # Supplement from Supabase photo_faces table
+    try:
+        from supabase import create_client
+
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            offset = 0
+            supabase_pf = {}
+            while True:
+                r = sb.table("photo_faces").select("face_id, photo_id").range(offset, offset + 999).execute()
+                for row in r.data or []:
+                    supabase_pf[row["face_id"]] = row["photo_id"]
+                if len(r.data or []) < 1000:
+                    break
+                offset += 1000
+            # Merge: Supabase data supplements local
+            for fid, pid in supabase_pf.items():
+                if fid not in face_to_photo:
+                    face_to_photo[fid] = pid
+                # Also ensure photos dict has face_ids for Supabase-only photos
+                if pid not in photos:
+                    photos[pid] = {"face_ids": []}
+                if fid not in (photos[pid].get("face_ids") or []):
+                    photos[pid].setdefault("face_ids", []).append(fid)
+            print(f"  Supplemented with {len(supabase_pf)} face mappings from Supabase")
+    except Exception as e:
+        print(f"  Supabase photo_faces load failed ({e}), using local only")
+
+    return {"photos": photos, "face_to_photo": face_to_photo}
 
 
 def load_identities_from_supabase():
@@ -459,6 +519,52 @@ def print_summary(event_results, frequent_companions, identity_lookup):
     print("=" * 72)
 
 
+def compute_co_occurrence(photos, face_to_identity, identity_lookup):
+    """Compute co-occurrence matrix: for each confirmed identity, count shared photos with other confirmed identities."""
+    # Build photo_id -> set of confirmed identity_ids (with names)
+    photo_identities = defaultdict(set)
+    for pid, photo in photos.items():
+        for fid in photo.get("face_ids", []):
+            iid = face_to_identity.get(fid)
+            if iid:
+                ident = identity_lookup.get(iid, {})
+                if ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
+                    photo_identities[pid].add(iid)
+
+    # Count pairwise co-occurrences
+    pair_counts = defaultdict(int)
+    pair_photos = defaultdict(set)
+    for pid, ids in photo_identities.items():
+        ids_list = sorted(ids)
+        for i in range(len(ids_list)):
+            for j in range(i + 1, len(ids_list)):
+                pair = (ids_list[i], ids_list[j])
+                pair_counts[pair] += 1
+                pair_photos[pair].add(pid)
+
+    # Build per-identity co-occurrence list
+    co_occurrence = {}
+    for (a, b), count in pair_counts.items():
+        for identity_id, partner_id in [(a, b), (b, a)]:
+            if identity_id not in co_occurrence:
+                co_occurrence[identity_id] = []
+            partner = identity_lookup.get(partner_id, {})
+            co_occurrence[identity_id].append(
+                {
+                    "partner_id": partner_id,
+                    "partner_name": partner.get("name", "Unknown"),
+                    "shared_photos": count,
+                    "photo_ids": sorted(pair_photos[(a, b)]),
+                }
+            )
+
+    # Sort each identity's companions by count
+    for iid in co_occurrence:
+        co_occurrence[iid].sort(key=lambda x: -x["shared_photos"])
+
+    return co_occurrence
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -510,6 +616,25 @@ def main():
     )
     print(f"  {len(frequent_companions)} frequent companions found")
 
+    # Compute co-occurrence matrix (all confirmed identities)
+    print("\nComputing co-occurrence matrix...")
+    co_occurrence = compute_co_occurrence(photos, face_to_identity, identity_lookup)
+    identities_with_companions = len(co_occurrence)
+    total_pairs = sum(len(v) for v in co_occurrence.values()) // 2  # Each pair counted twice
+    print(f"  {identities_with_companions} identities with companions, {total_pairs} unique pairs")
+
+    # Print top co-occurrences
+    print("\n  Top co-occurring pairs:")
+    all_pairs_dedup = {}
+    for iid, partners in co_occurrence.items():
+        for p in partners:
+            pair_key = tuple(sorted([iid, p["partner_id"]]))
+            if pair_key not in all_pairs_dedup:
+                name_a = identity_lookup.get(iid, {}).get("name", "?")
+                all_pairs_dedup[pair_key] = (name_a, p["partner_name"], p["shared_photos"])
+    for pair_key, (name_a, name_b, count) in sorted(all_pairs_dedup.items(), key=lambda x: -x[1][2])[:15]:
+        print(f"    {name_a} + {name_b}: {count} photos")
+
     # Build output
     output = {
         "metadata": {
@@ -524,9 +649,10 @@ def main():
         },
         "event_groups": event_results,
         "frequent_companions": frequent_companions,
+        "co_occurrence": co_occurrence,
     }
 
-    # Write output
+    # Write to local JSON
     os.makedirs(OUTPUT_PATH.parent, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(output, f, indent=2)

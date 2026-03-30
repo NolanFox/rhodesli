@@ -561,12 +561,14 @@ def public_person_page(
     photo_entries.sort(key=lambda entry: entry["sort_key"])
     photo_gallery_items = [entry["item"] for entry in photo_entries]
 
-    # --- Build "Appears with" section ---
-    appears_with = []
+    # --- Build "Appears with" section (with shared photo counts) ---
+    companion_counts = {}  # other_id -> count of shared photos
+    companion_info = {}  # other_id -> {name, crop_url}
     for pid in photo_ids:
         pm = _main_mod.get_photo_metadata(pid)
         if not pm:
             continue
+        seen_in_photo = set()
         for face_data in pm.get("faces", []):
             other_fid = face_data.get("face_id", "")
             if other_fid in face_id_strings:
@@ -581,24 +583,33 @@ def public_person_page(
                 continue
             if other_id == person_id:
                 continue
-            # Avoid duplicates
-            if any(a["id"] == other_id for a in appears_with):
+            if other_id in seen_in_photo:
                 continue
-            other_best_face = _main_mod.get_best_face_id(
-                other_identity.get("anchor_ids", []) + other_identity.get("candidate_ids", [])
-            )
-            other_crop = (
-                _main_mod.resolve_face_image_url(other_best_face, crop_files)
-                if other_best_face and crop_files
-                else None
-            )
-            appears_with.append(
-                {
-                    "id": other_id,
-                    "name": other_name,
-                    "crop_url": other_crop,
-                }
-            )
+            seen_in_photo.add(other_id)
+            companion_counts[other_id] = companion_counts.get(other_id, 0) + 1
+            if other_id not in companion_info:
+                other_best_face = _main_mod.get_best_face_id(
+                    other_identity.get("anchor_ids", []) + other_identity.get("candidate_ids", [])
+                )
+                other_crop = (
+                    _main_mod.resolve_face_image_url(other_best_face, crop_files)
+                    if other_best_face and crop_files
+                    else None
+                )
+                companion_info[other_id] = {"name": other_name, "crop_url": other_crop}
+
+    # Sort by shared photo count (most co-occurring first)
+    appears_with = []
+    for other_id, count in sorted(companion_counts.items(), key=lambda x: -x[1]):
+        info = companion_info[other_id]
+        appears_with.append(
+            {
+                "id": other_id,
+                "name": info["name"],
+                "crop_url": info["crop_url"],
+                "shared_photos": count,
+            }
+        )
 
     appears_with_section = None
     if appears_with:
@@ -617,6 +628,8 @@ def public_person_page(
                     cls="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed flex items-center justify-center opacity-70 cursor-pointer group-hover:ring-2 group-hover:ring-amber-400 transition-all",
                 )
             )
+            shared_count = companion.get("shared_photos", 0)
+            count_label = Span(f"{shared_count} photos", cls="text-[9px] text-slate-500") if shared_count > 1 else None
             companion_cards.append(
                 A(
                     crop_el,
@@ -625,9 +638,12 @@ def public_person_page(
                         cls="text-[10px] sm:text-xs text-slate-400 mt-1.5 text-center truncate w-full",
                         title=companion["name"],
                     ),
+                    count_label,
                     href=f"{nav_prefix}/person/{companion['id']}",
                     cls="flex flex-col items-center gap-1 group w-16 sm:w-20",
-                    title=f"View {companion['name']}",
+                    title=f"View {companion['name']} ({shared_count} shared photos)"
+                    if shared_count
+                    else f"View {companion['name']}",
                 )
             )
         if len(appears_with) > 8:
