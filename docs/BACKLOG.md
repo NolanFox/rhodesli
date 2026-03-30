@@ -42,9 +42,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **FB-002**: Face overlay label positioning. Session 143.
 - [x] **HD-032**: Transcript-based /clear hook replaces counter file. Session 143.
 - [x] **Phase 5**: 275/279 Fox photos Gemini batch. Session 143.
-- [ ] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge for edge faces (Betty Capeluto Fox). Session 143 FB-002 partial fix.
+- [x] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge — max-width 120px + text-overflow ellipsis. DONE (Session 144b).
 - [ ] **BATCH-GEDCOM-38**: 38 photos still lack GEDCOM context. Needs batch GEDCOM loader fix (Session 144 red flag).
-- [ ] **GEO-001** (GEO-DUAL-WRITE): Dual-write location_primary to photo_locations table for batch photos. Session 144 gap.
+- [x] **GEO-001** (GEO-DUAL-WRITE): 533 locations geocoded to Supabase photo_locations table (96.2% match). DONE (Session 144b).
 - [x] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. DONE (Session 144, commit 79e2a559).
 - [x] **SORT-001** (P1): Person page "Sort: Earliest First" doesn't work — photos unsorted. FB-007. DONE (Session 144b, date labels dual-keying).
 - [x] **DISPLAY-0PCT** (P1): Family resemblance matches show 0% when calibrator gives 27-32%. DONE (Session 144b).
