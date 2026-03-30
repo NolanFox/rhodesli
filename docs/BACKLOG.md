@@ -44,12 +44,13 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **Phase 5**: 275/279 Fox photos Gemini batch. Session 143.
 - [ ] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge for edge faces (Betty Capeluto Fox). Session 143 FB-002 partial fix.
 - [ ] **BATCH-GEDCOM-38**: 38 photos still lack GEDCOM context. Needs batch GEDCOM loader fix (Session 144 red flag).
-- [ ] **GEO-DUAL-WRITE**: Dual-write location_primary to photo_locations table. Session 144 gap.
+- [ ] **GEO-001** (GEO-DUAL-WRITE): Dual-write location_primary to photo_locations table for batch photos. Session 144 gap.
 - [x] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. DONE (Session 144, commit 79e2a559).
-- [ ] **SORT-001** (P1): Person page "Sort: Earliest First" doesn't work — photos unsorted. FB-007, Session 144.
-- [ ] **DISPLAY-0PCT** (P1): Family resemblance matches show 0% when calibrator gives 27-32%. Session 144 Codex finding.
+- [x] **SORT-001** (P1): Person page "Sort: Earliest First" doesn't work — photos unsorted. FB-007. DONE (Session 144b, date labels dual-keying).
+- [x] **DISPLAY-0PCT** (P1): Family resemblance matches show 0% when calibrator gives 27-32%. DONE (Session 144b).
 - [ ] **FB-013**: GEDCOM change detection → auto re-run trigger. Future feature. Session 143.
 - [ ] **FB-014**: Photo co-occurrence as life event evidence. Future feature. Session 143.
+- [ ] **TIMELINE-002** (P2): Person page inline timeline section — render event groups directly on person page instead of separate /timeline route. PRD-059. Session 144b.
 - [ ] **DATA-AUDIT-001**: 20 CONFIRMED identities with no anchor_ids. Pre-existing. Session 143 audit.
 - [ ] **DATA-AUDIT-002**: 48 multi-hop merges to flatten. Pre-existing. Session 143 audit.
 

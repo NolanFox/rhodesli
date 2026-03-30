@@ -1358,6 +1358,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 | v0.42.0 | 2026-02-17 | 40 | 2194 |
 | v0.41.0+ | 2026-02-17 and earlier | 1-39 | 663-2159 |
 
+## Session 144b: Sort Fix + Batch Completion + Co-Occurrence (2026-03-30) — v0.99.56
+- **FB-007 sort fix**: Date labels dual-keying (photo_id + inbox_id) for correct "Sort: Earliest First" on person page.
+- **0% match display fix**: Family resemblance matches showing 0% when calibrator gives 27-32% — now displays correct percentages.
+- **Person 3481 data repair**: Identity data corrected.
+- **Batch completion**: Albert 196/196 + Esther 141/141 = 100% Fox family batch Gemini estimation complete.
+- **PRD-059 Phase 2+3**: Event grouping (17 groups) + co-occurrence matrix (102 identities, 391 pairs). Person page companion photo counts.
+- 3971 app tests pass (+12 new).
+
 ## Session 143: Single Source of Truth + Data Audit + UX Fixes (2026-03-28) — v0.99.54
 - **AD-232**: Eliminated JSON fallback in 7 data loaders — Supabase is ONLY source in postgres mode. 19 structural tests.
 - **Photo page rendering**: All Gemini batch fields (face_analysis, group_composition, clothing, reasoning). Old nested format normalized.
