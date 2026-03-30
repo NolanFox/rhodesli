@@ -78,9 +78,9 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] PRD037-003: Batch Gemini with GEDCOM context — cost estimate UI, enriched prompts (future session)
 
 ### Near-Term — Temporal Co-Occurrence Analysis (PRD-059)
-- [-] 2026-03-27: Phase 1: Batch Gemini estimation for Esther + Albert photos — 80/279 complete, quota-limited. Full preset with face coords + GEDCOM context.
-- [ ] Phase 2: Event grouping — cluster photos by estimated date + shared faces
-- [ ] Phase 3: Co-occurrence matrix — frequent companions panel on person page
+- [x] 2026-03-30: Phase 1: Batch Gemini estimation COMPLETE — Albert 196/196, Esther 141/141 (100% coverage). Sessions 142-144b.
+- [x] 2026-03-30: Phase 2: Event grouping — 17 event groups from 246 dated photos. 5-year windows with shared-face union-find. Session 144b.
+- [x] 2026-03-30: Phase 3: Co-occurrence matrix — 102 identities, 391 pairs. Person page shows shared photo counts. Session 144b.
 - [ ] Phase 4: Identity inference — combine age trajectory + GEDCOM + co-occurrence
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
@@ -139,6 +139,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-30: **v0.99.56 — Session 144b**: Bug Fixes + Batch Completion + Co-Occurrence. FB-007 P1: date labels dual-keying in Postgres mode (SHA256 aliases). 0% match display P1: wrong dict keys in distance endpoint. Person 3481 data repair (3485/3486 merged). Batch completion: Albert 196/196, Esther 141/141 (100% coverage, $0.17). PRD-059 Phase 2+3: event grouping (17 groups) + co-occurrence matrix (102 identities, 391 pairs). Person page companions show shared photo counts. 4 new tests. 3967 app tests pass.
 
 - [x] 2026-03-28: **v0.99.54 — Session 143**: Single Source of Truth + Data Audit + UX Fixes. AD-232: eliminated JSON fallback in 7 data loaders (19 structural tests). Photo page renders all Gemini batch fields (face_analysis, group_composition, clothing_notes, reasoning_summary). P0: fixed doubled face card text from nested `<a>` tags. P1: Codex-caught cache poisoning on transient Supabase failure. Face overlay labels: adaptive positioning + absolute max-width. Comprehensive data audit script + volume sync script (0 gaps). Victoria "Conflicting face assignment" investigation (no conflicts, 23 CONFIRMED with candidates). 3 parallel worktree agents. Codex audit with 1 P1, 2 P2 findings, all fixed. 76 new tests. 3922 app tests pass.
 

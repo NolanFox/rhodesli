@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.56] — 2026-03-30 (Session 144b: Bug Fixes + Batch Completion + Co-Occurrence)
+
+### Features
+- **PRD-059 Phase 2**: Event grouping regenerated from Supabase (17 groups, 246 dated photos)
+- **PRD-059 Phase 3**: Co-occurrence matrix — 102 confirmed identities, 391 pairs. Top: Charles+Roland Fox (46 photos)
+- **Person page**: "Often appears with" now shows shared photo counts, sorted by co-occurrence frequency
+- **Batch script**: Supabase photo metadata fallback for photos not in local index
+
+### Fixes
+- **FB-007 (P1)**: Person page sort by date — dual-keying missing in Postgres mode. Date labels stored with inbox_* IDs, sort used SHA256 IDs
+- **0% display (P1)**: Distance endpoint used wrong dict keys (`calibrated_score` → `confidence_pct`), always showed 0% match
+- **Data repair**: Person 3481 multi-claimed faces fixed (3485/3486 merged)
+
+### Data
+- Albert Fox: 196/196 photos with date labels (100% coverage)
+- Esther Burd Fox: 141/141 photos with date labels (100% coverage)
+- 3 final photos processed ($0.17): 1928, 1978, 1946
+
+### Tests
+- 3967 app tests pass (+4 new: dual-keying, 0% regression, co-occurrence)
+
 ## [v0.99.55] — 2026-03-29 (Session 144: GEDCOM Re-Import + Context Enrichment)
 
 ### Features
