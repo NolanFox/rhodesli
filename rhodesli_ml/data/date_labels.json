@@ -39217,6 +39217,527 @@
         ],
         "trigger": "session_142_esther_albert"
       }
+    },
+    {
+      "photo_id": "inbox_55868a49_6_69835310_481178612663039_7889927619368452096_n",
+      "filename": "69835310_481178612663039_7889927619368452096_n.jpg",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1928,
+      "confidence": "high",
+      "probable_range": [
+        1926,
+        1932
+      ],
+      "decade_probabilities": {
+        "1920": 0.7,
+        "1930": 0.3
+      },
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Sepia-toned studio portrait, likely a large format print given the framing",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1935
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women's bobbed hair, drop-waist dresses, and cloche-style silhouettes",
+            "strength": "strong",
+            "suggested_range": [
+              1925,
+              1932
+            ]
+          },
+          {
+            "cue": "Men's wide lapels, patterned ties, and three-piece suits",
+            "strength": "strong",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          },
+          {
+            "cue": "Boy's sailor suit (very popular for boys in the 1920s)",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1930
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Formal studio backdrop with painted scenery and ornate wooden chairs",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1935
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Sharp focus and lighting typical of professional studio photography of the era",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1940
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The strongest dating evidence comes from the women's fashion, specifically the bobbed hairstyles and drop-waist dresses, which are quintessential late 1920s styles. The men's suits and the boy's sailor outfit also align perfectly with this era. Allowing for a slight cultural lag, the photo was likely taken between 1926 and 1932.",
+      "location_estimate": "Unknown",
+      "location_evidence": {
+        "place": "Unknown",
+        "confidence": "low",
+        "visual_evidence": "Generic formal studio setting with a painted backdrop and ornate chairs; no specific geographic markers visible.",
+        "biographical_evidence": "None provided.",
+        "missing_child_analysis": "N/A",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "United States",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Fashion is consistent with American styles of the 1920s, though also common in Europe."
+          },
+          {
+            "place": "Rhodes, Greece",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Possible if the family had not yet emigrated, though the fashion looks quite westernized."
+          }
+        ]
+      },
+      "scene_description": "A formal sepia-toned studio portrait of a large family group consisting of nine individuals. Two men are seated in ornate wooden chairs in the foreground, with a young girl and a young boy seated beside them. Five women and older girls stand behind them against a painted studio backdrop. The subjects are dressed in formal attire typical of the late 1920s.",
+      "clothing_notes": "Women are wearing classic late 1920s fashion: bobbed hair, drop-waist dresses, and tiered skirts. Men are in formal suits with wide lapels. The young boy is in a traditional sailor suit, a very common style for children in the 1920s.",
+      "subject_ages": [
+        35,
+        6,
+        38,
+        16,
+        18,
+        40,
+        35,
+        7,
+        15
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "fair",
+        "issues": [
+          "scratches",
+          "dust spots",
+          "slight fading",
+          "framed under glass causing reflections"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 35,
+          "gender": "female",
+          "description": "Standing on the far left, wearing a dark dress with a floral corsage, dark wavy bobbed hair."
+        },
+        {
+          "face_index": 1,
+          "estimated_age": 6,
+          "gender": "female",
+          "description": "Young girl seated on the left, wearing a dark dress with a white collar, dark curly hair, and Mary Jane shoes."
+        },
+        {
+          "face_index": 2,
+          "estimated_age": 38,
+          "gender": "male",
+          "description": "Seated man on the left, wearing a dark suit and striped tie, dark hair parted on the side."
+        },
+        {
+          "face_index": 3,
+          "estimated_age": 16,
+          "gender": "female",
+          "description": "Standing behind the seated man, wearing a light-colored drop-waist dress with an emblem, dark bobbed hair."
+        },
+        {
+          "face_index": 4,
+          "estimated_age": 18,
+          "gender": "female",
+          "description": "Standing in the center back, wearing a light-colored blouse, dark bobbed hair."
+        },
+        {
+          "face_index": 5,
+          "estimated_age": 40,
+          "gender": "male",
+          "description": "Seated man on the right, wearing a lighter three-piece suit and glasses, dark hair."
+        },
+        {
+          "face_index": 6,
+          "estimated_age": 35,
+          "gender": "female",
+          "description": "Standing behind the seated man on the right, wearing a light-colored blouse and necklace, dark bobbed hair."
+        },
+        {
+          "face_index": 7,
+          "estimated_age": 7,
+          "gender": "male",
+          "description": "Young boy seated on the right, wearing a dark sailor suit."
+        },
+        {
+          "face_index": 8,
+          "estimated_age": 15,
+          "gender": "female",
+          "description": "Standing on the far right, wearing a light-colored tiered dress, dark bobbed hair."
+        }
+      ],
+      "group_composition": {
+        "type": "formal_portrait",
+        "people_count": 9,
+        "arrangement": "Two men seated in the center, flanked by two young children. Five women/older girls standing behind them."
+      },
+      "cultural_markers": [
+        "Formal studio portraiture typical of immigrant families documenting their success or family structure."
+      ],
+      "photo_technique": {
+        "type": "gelatin silver print",
+        "format": "large format studio portrait",
+        "is_color": false,
+        "condition": "fair"
+      },
+      "text_signage": {},
+      "visible_text": "",
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": false,
+      "gedcom_context_sent": false,
+      "created_at": "2026-03-30T04:36:15.540198+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox",
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_55868a49_8_15037258_1414640118561175_4049133849589388863_n",
+      "filename": "15037258_1414640118561175_4049133849589388863_n.jpg",
+      "estimated_decade": 1970,
+      "best_year_estimate": 1978,
+      "confidence": "high",
+      "probable_range": [
+        1975,
+        1985
+      ],
+      "decade_probabilities": {
+        "1960": 0.05,
+        "1970": 0.65,
+        "1980": 0.3
+      },
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Color snapshot with typical 1970s/1980s fading (yellow/magenta shift)",
+            "strength": "strong",
+            "suggested_range": [
+              1970,
+              1989
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Wide collar on patterned shirt",
+            "strength": "strong",
+            "suggested_range": [
+              1970,
+              1985
+            ]
+          },
+          {
+            "cue": "Thick-rimmed glasses with metal bridge (browline/combination style)",
+            "strength": "moderate",
+            "suggested_range": [
+              1960,
+              1985
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Screened-in porch/lanai typical of Florida or Southern US homes",
+            "strength": "moderate",
+            "suggested_range": [
+              1960,
+              1990
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Color film photography",
+            "strength": "strong",
+            "suggested_range": [
+              1960,
+              1990
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The wide collar on the shirt is a strong indicator of late 1970s to early 1980s fashion. The color fading (yellow/magenta shift) is very typical of consumer color prints from that era. The screened-in porch setting suggests a warm climate, likely Florida, consistent with the diaspora communities mentioned.",
+      "location_estimate": "Florida, United States",
+      "location_evidence": {
+        "place": "Florida, United States",
+        "confidence": "medium",
+        "visual_evidence": "Screened-in porch (lanai) with pine trees visible outside, very typical of Florida residential architecture.",
+        "biographical_evidence": "None provided, but consistent with known diaspora communities in Miami/Tampa.",
+        "missing_child_analysis": "N/A",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Tampa, Florida",
+            "confidence": "medium",
+            "source": "visual",
+            "reasoning": "Screened porch and pine trees are common in Tampa residential areas."
+          },
+          {
+            "place": "Miami, Florida",
+            "confidence": "medium",
+            "source": "visual",
+            "reasoning": "Screened porch is common in Miami residential areas."
+          }
+        ]
+      },
+      "scene_description": "A casual, close-up color snapshot of an older man sitting on what appears to be a screened-in porch. The background shows trees, possibly pines, out of focus through the screen. The lighting is natural, coming from behind and to the side of the subject, creating a slightly backlit effect.",
+      "clothing_notes": "Light-colored, subtly patterned (plaid/check) short-sleeve or rolled-sleeve shirt with a prominent wide collar, characteristic of 1970s casual menswear. Thick-rimmed glasses with a metal bridge.",
+      "subject_ages": [
+        70
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "fair",
+        "issues": [
+          "color fading (yellow/magenta shift)",
+          "loss of contrast"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 70,
+          "gender": "male",
+          "description": "Older male with thinning white/gray hair, wearing thick-rimmed glasses with a metal bridge. He has a serious expression and is wearing a light-colored patterned shirt with a wide collar."
+        }
+      ],
+      "group_composition": {
+        "type": "candid",
+        "people_count": 1,
+        "arrangement": "Single subject, head and shoulders portrait, likely seated."
+      },
+      "cultural_markers": [],
+      "photo_technique": {
+        "type": "chromogenic color print",
+        "format": "snapshot",
+        "is_color": true,
+        "condition": "fair"
+      },
+      "text_signage": {},
+      "visible_text": "",
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": false,
+      "gedcom_context_sent": false,
+      "created_at": "2026-03-30T04:36:32.051932+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_ed9ff2de_0_gukaylo_burd_smilg_kleinfled_4_generations_IMG_3534",
+      "filename": "gukaylo_burd_smilg_kleinfled_4_generations_IMG_3534.jpg",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1946,
+      "confidence": "high",
+      "probable_range": [
+        1942,
+        1950
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.8,
+        "1950": 0.15
+      },
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white studio portrait, likely gelatin silver print, framed",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women's hairstyles: victory rolls/pompadour style on the left, structured waves on the standing woman, typical of the 1940s to early 1950s.",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1955
+            ]
+          },
+          {
+            "cue": "Clothing: Dark, structured dresses with shoulder pads (especially visible on the standing woman and woman on the left), typical of 1940s fashion.",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1950
+            ]
+          },
+          {
+            "cue": "Jewelry: Multi-strand pearl necklaces worn by the seated women, popular in the 1940s and 1950s.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain studio backdrop with professional lighting",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1970
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Sharp focus, good contrast typical of mid-20th century large format studio cameras",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The strong shoulder pads, structured dark dresses, and specific hairstyles (especially the pompadour/victory roll style on the left) strongly point to the 1940s. The multi-strand pearls and overall studio style corroborate a mid-1940s date. The filename indicates '4 generations', which fits the age spread of the subjects.",
+      "location_estimate": "United States",
+      "location_evidence": {
+        "place": "United States",
+        "confidence": "low",
+        "visual_evidence": "Studio portrait with no specific geographic markers. The fashion suggests an American context (likely New York or Florida based on the prompt's diaspora communities) rather than Rhodes.",
+        "biographical_evidence": "None provided in the prompt.",
+        "missing_child_analysis": "N/A",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "New York City, New York",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Common location for Sephardic diaspora studio portraits of this era."
+          },
+          {
+            "place": "Tampa, Florida",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Common location for Sephardic diaspora studio portraits of this era."
+          }
+        ]
+      },
+      "scene_description": "A formal black-and-white studio portrait of four females, representing four generations of a family. Two women are seated, with the younger one on the left holding an infant, while a middle-aged woman stands behind them in the center. They are dressed in dark, 1940s-style clothing against a plain, softly lit backdrop, and the photo is currently displayed in a dark wood frame behind glass.",
+      "clothing_notes": "The women are wearing formal, dark, structured dresses typical of the 1940s, featuring strong shoulder pads. The seated women wear multi-strand pearl necklaces. The infant is in a traditional light-colored dress with smocking or embroidery.",
+      "subject_ages": [
+        25,
+        1,
+        45,
+        65
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "good",
+        "issues": [
+          "Reflections on the glass of the frame obscuring some details"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 25,
+          "gender": "female",
+          "description": "Young woman seated on the left, dark hair styled in a 1940s updo/pompadour, wearing a dark dress with a curved lapel detail and a multi-strand pearl necklace."
+        },
+        {
+          "face_index": 1,
+          "estimated_age": 1,
+          "gender": "female",
+          "description": "Infant held by the woman on the left, wearing a light-colored dress and white booties."
+        },
+        {
+          "face_index": 2,
+          "estimated_age": 45,
+          "gender": "female",
+          "description": "Woman standing in the center back, dark hair in structured waves, wearing a dark dress with strong shoulder pads and front buttons."
+        },
+        {
+          "face_index": 3,
+          "estimated_age": 65,
+          "gender": "female",
+          "description": "Older woman seated on the right, hair pulled back, wearing a dark dress with decorative buttons/brooch and a multi-strand pearl necklace."
+        }
+      ],
+      "group_composition": {
+        "type": "formal_portrait",
+        "people_count": 4,
+        "arrangement": "Four generations of females: an older matriarch seated right, a middle-aged woman standing center, a young mother seated left holding an infant."
+      },
+      "cultural_markers": [
+        "Four-generation matriarchal portrait, common in close-knit immigrant families."
+      ],
+      "photo_technique": {
+        "type": "gelatin silver print",
+        "format": "framed studio portrait",
+        "is_color": false,
+        "condition": "good"
+      },
+      "text_signage": {},
+      "visible_text": "",
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": false,
+      "gedcom_context_sent": false,
+      "created_at": "2026-03-30T04:36:57.216197+00:00",
+      "batch_context": {
+        "identities": [
+          "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
     }
   ]
 }
