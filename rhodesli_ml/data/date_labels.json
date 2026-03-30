@@ -31737,30 +31737,96 @@
       "photo_id": "inbox_fox-charlie-001_579_01611_p_13akf5twbc0830",
       "filename": "raw_photos/01611_p_13akf5twbc0830.jpg",
       "estimated_decade": 1950,
-      "best_year_estimate": 1950,
+      "best_year_estimate": 1952,
       "confidence": "medium",
       "probable_range": [
-        1945,
-        1955
+        1948,
+        1958
       ],
       "decade_probabilities": {
-        "1930": 0.05,
-        "1940": 0.4,
-        "1950": 0.5,
-        "1960": 0.05
+        "1940": 0.3,
+        "1950": 0.6,
+        "1960": 0.1
       },
-      "location_estimate": {
-        "place": "Unknown Beach",
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot, likely a gelatin silver print, typical of mid-20th century amateur photography.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women's swimwear: The woman on the left wears a dark, strapless or halter-style one-piece swimsuit. The woman on the right wears a patterned one-piece swimsuit with thin straps and a matching headscarf/turban. These styles, particularly the patterned suit and headscarf, are strongly indicative of the late 1940s to 1950s.",
+            "strength": "strong",
+            "suggested_range": [
+              1945,
+              1959
+            ]
+          },
+          {
+            "cue": "Eyewear: The woman on the right wears round, wire-rimmed or lightly framed glasses, common in the 1930s-1950s.",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Beach setting with wooden folding deck chairs (sling chairs) and a large inner tube in the background. These are classic mid-century beach accessories.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Amateur snapshot quality, likely taken with a consumer roll-film camera.",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1970
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The strongest dating evidence comes from the women's swimwear, specifically the patterned suit with thin straps and the matching headscarf, which were very popular in the late 1940s and throughout the 1950s. The presence of wooden sling chairs and the overall snapshot quality align with a post-WWII mid-century timeframe. Given Esther Burd's age (born ~1900), she would be in her late 40s to 50s here, which matches the visual age of the subjects.",
+      "location_estimate": "United States",
+      "location_evidence": {
+        "place": "United States",
         "confidence": "low",
-        "visual_evidence": "Sandy beach, ocean in the background, wooden deck chairs, beach umbrella.",
-        "biographical_evidence": "None provided.",
-        "missing_child_analysis": "N/A"
+        "visual_evidence": "A wide, sandy beach with gentle surf, typical of many coastal areas. No distinct geographical landmarks are visible.",
+        "biographical_evidence": "The family primarily resided in Dayton, Ohio, which is inland. However, they likely vacationed. The collection is from Dayton, Ohio, but this is clearly a coastal location.",
+        "missing_child_analysis": "N/A - children are not the primary subjects.",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Florida, United States",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "A common vacation destination for families from the Midwest (like Ohio) during this era."
+          },
+          {
+            "place": "New Jersey, United States",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Another popular East Coast beach destination."
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "Woman on left: Dark, possibly strapless or halter-neck one-piece bathing suit. Woman on right: Patterned (floral or abstract) one-piece bathing suit with thin straps, wearing a headscarf and round wire-rimmed glasses.",
+      "scene_description": "A black and white snapshot of two women relaxing on a sandy beach. They are seated in wooden folding sling chairs. The woman on the left wears a dark swimsuit, while the woman on the right wears a patterned suit and matching headscarf. In the background, other beachgoers, an umbrella, and a large inner tube are visible near the water's edge under a bright sky.",
+      "clothing_notes": "Mid-century women's swimwear. The woman on the left wears a dark, possibly ruched or structured one-piece. The woman on the right wears a floral or abstract patterned one-piece with a matching fabric head covering (turban style), very fashionable in the 1950s.",
       "subject_ages": [
-        55,
-        60
+        50,
+        55
       ],
       "people_count": null,
       "photo_type": "",
@@ -31777,24 +31843,24 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 55,
+          "estimated_age": 50,
           "gender": "female",
-          "description": "Older woman with short, dark curly hair, wearing a dark bathing suit, smiling."
+          "description": "Woman with dark, curly hair, wearing a dark strapless or halter swimsuit, smiling."
         },
         {
           "face_index": 1,
-          "estimated_age": 60,
+          "estimated_age": 55,
           "gender": "female",
-          "description": "Older woman wearing round glasses and a headscarf, wearing a patterned bathing suit, smiling."
+          "description": "Woman wearing glasses, a patterned swimsuit, and a matching headscarf, smiling."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 2,
-        "arrangement": "Two women seated in beach chairs facing the camera."
+        "arrangement": "Two women seated in beach chairs in the foreground, facing the camera."
       },
       "cultural_markers": [
-        "Modest swimwear typical of older women in this era."
+        "None distinctly visible; typical mid-century American beach leisure."
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -31803,12 +31869,13 @@
         "condition": "good"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T05:48:11.366210+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:43:06.172681+00:00",
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
@@ -31820,28 +31887,101 @@
       "photo_id": "inbox_fox-charlie-001_323_02168_p_13akf5twbc3257",
       "filename": "raw_photos/02168_p_13akf5twbc3257.jpg",
       "estimated_decade": 1950,
-      "best_year_estimate": 1950,
+      "best_year_estimate": 1952,
       "confidence": "medium",
       "probable_range": [
-        1945,
-        1955
+        1948,
+        1956
       ],
       "decade_probabilities": {
-        "1940": 0.4,
-        "1950": 0.5,
+        "1940": 0.3,
+        "1950": 0.6,
         "1960": 0.1
       },
-      "location_estimate": {
-        "place": "United States",
-        "confidence": "low",
-        "visual_evidence": "Sandy beach with wooden lounge chairs and canvas cabanas, typical of American East Coast beaches (e.g., Florida, New York, New Jersey) in the mid-20th century.",
-        "biographical_evidence": "No specific biographical data provided, but the collection name 'Charles Fox Dayton Ohio Collection' suggests a US context, though the beach is clearly not in Ohio.",
-        "missing_child_analysis": "N/A"
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot, likely a gelatin silver print, typical of mid-20th century amateur photography.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "One-piece swimsuit with a bold, large-scale print (possibly floral or abstract) and a relatively modest cut, characteristic of the late 1940s to 1950s.",
+            "strength": "strong",
+            "suggested_range": [
+              1945,
+              1955
+            ]
+          },
+          {
+            "cue": "Hair styled up, possibly with a scarf or band, common in beachwear of the 1940s and 1950s.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1955
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Beach setting with wooden slatted lounge chairs and canvas cabanas/windbreaks, popular in mid-century American beach resorts (like Florida or the East Coast).",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Amateur snapshot camera quality, good depth of field, typical of post-WWII consumer cameras.",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1960
+            ]
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "The subject is wearing a dark, patterned one-piece swimsuit with a modest skirted bottom, very characteristic of late 1940s and 1950s women's swimwear. She appears to have a dark scarf or bandana tied in her hair.",
+      "reasoning_summary": "The subject's swimsuit style (one-piece with a bold print) and hairstyle strongly suggest the late 1940s or early 1950s. The beach furniture, specifically the wooden lounge chairs and canvas cabanas, are typical of mid-century American resorts. Given Esther Burd's estimated age in the photo (around 50), a date in the early 1950s aligns well with her birth year of ~1900.",
+      "location_estimate": "Miami Beach, Florida",
+      "location_evidence": {
+        "place": "Miami Beach, Florida",
+        "confidence": "low",
+        "visual_evidence": "Sandy beach, wooden lounge chairs, and canvas cabanas strongly suggest a popular American beach resort, often associated with Florida or the East Coast during this era.",
+        "biographical_evidence": "The genealogical data shows Esther lived in Dayton, Ohio, for most of her life. However, the collection context mentions Miami and Tampa as diaspora communities. This is likely a vacation photo, possibly in Florida, given the typical vacation patterns of Midwesterners in the mid-20th century.",
+        "missing_child_analysis": "N/A - only one subject clearly visible.",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Miami Beach, Florida",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Typical mid-century beach resort setting, common vacation destination."
+          },
+          {
+            "place": "Atlantic City, New Jersey",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Another popular mid-century beach destination with similar amenities."
+          },
+          {
+            "place": "Dayton, Ohio",
+            "confidence": "low",
+            "source": "biographical",
+            "reasoning": "Primary residence, though the beach setting makes this unlikely unless it's a local lake or pool with imported sand, which is less probable given the cabanas."
+          }
+        ]
+      },
+      "scene_description": "A black and white snapshot of a woman relaxing on a beach. She is reclining in a wooden slatted lounge chair with her hands behind her head, smiling at the camera. She wears a patterned one-piece swimsuit. In the background, there are other beachgoers, wooden lounge chairs, and distinctive canvas cabanas or windbreaks on the sand under a bright sky.",
+      "clothing_notes": "The subject is wearing a one-piece swimsuit with a dark background and a large, light-colored abstract or floral pattern. Her hair is pulled up, possibly secured with a scarf or hairband, which was a practical and fashionable choice for the beach in the 1940s and 1950s.",
       "subject_ages": [
-        45
+        52
       ],
       "people_count": null,
       "photo_type": "",
@@ -31858,18 +31998,18 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 45,
+          "estimated_age": 52,
           "gender": "female",
-          "description": "Middle-aged woman smiling, wearing a patterned swimsuit, with dark hair styled up, possibly with a scarf."
+          "description": "Woman with dark hair styled up, smiling, wearing a patterned one-piece swimsuit, relaxing in a beach chair."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 1,
-        "arrangement": "Single subject reclining in a beach chair, with other beachgoers visible in the background."
+        "arrangement": "Single subject reclining in a beach chair in the foreground, with other beachgoers visible in the background."
       },
       "cultural_markers": [
-        "None explicitly visible; typical mid-century American beach leisure."
+        "Mid-century American beach leisure culture"
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -31878,12 +32018,13 @@
         "condition": "good"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T05:49:13.934458+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:42:46.702793+00:00",
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
@@ -32334,23 +32475,79 @@
         1945
       ],
       "decade_probabilities": {
-        "1930": 0.3,
-        "1940": 0.6,
+        "1930": 0.4,
+        "1940": 0.5,
         "1950": 0.1
       },
-      "location_estimate": {
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot, likely a gelatin silver print, with some fading and surface wear typical of mid-20th century amateur photography.",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "One-piece dark swimsuit with a modest cut, typical of the 1930s to 1940s. The hairstyle is relatively short and styled, consistent with late 1930s or 1940s trends.",
+            "strength": "strong",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Beach setting with a simple rope barrier. Other beachgoers in the background wear attire consistent with the 1930s-1940s (e.g., the man standing in trousers and a light shirt).",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Amateur snapshot quality, likely taken with a box or folding camera common in the era.",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1960
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The subject's one-piece swimsuit and hairstyle strongly suggest the late 1930s to early 1940s. The casual beach setting and background figures' attire further support this era. Given Esther Burd's birth around 1900, she would be in her late 30s to early 40s here, which aligns with her appearance.",
+      "location_estimate": "United States",
+      "location_evidence": {
         "place": "United States",
         "confidence": "low",
-        "visual_evidence": "Generic beach scene, could be anywhere, but typical of US coastal areas where diaspora communities settled (e.g., New York, Florida).",
-        "biographical_evidence": "None provided.",
-        "missing_child_analysis": "N/A"
+        "visual_evidence": "Generic beach scene, no identifiable landmarks.",
+        "biographical_evidence": "Esther Burd lived primarily in Ohio (Dayton, Arcanum) during this period, but this is clearly a coastal location, suggesting a vacation or travel.",
+        "missing_child_analysis": "N/A",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Florida",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Common vacation destination for Midwesterners."
+          },
+          {
+            "place": "New Jersey",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Another common East Coast beach destination."
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "The main subject is wearing a dark, one-piece swimsuit with a relatively high neckline and modest leg cut, characteristic of the 1930s-1940s. A person in the background is wearing trousers on the beach, which was more common in earlier decades.",
+      "scene_description": "A black and white snapshot of a woman seated on a low wooden barrier with a rope running through it at a beach. She is wearing a dark one-piece swimsuit. In the background, the sandy beach stretches to the ocean, with a few other people visible, including a person bending over, a man standing, and a child near the water's edge. A towel and a dark bag or box rest on the sand near the woman.",
+      "clothing_notes": "The primary subject is wearing a dark, form-fitting one-piece swimsuit with a relatively modest neckline and leg cut, typical of the late 1930s to 1940s. Background figures show casual beachwear of the era.",
       "subject_ages": [
-        35,
-        30,
-        10,
         40
       ],
       "people_count": null,
@@ -32359,8 +32556,8 @@
       "condition": {
         "overall": "fair",
         "issues": [
-          "overexposure",
-          "scratches",
+          "fading",
+          "surface scratches",
           "dust spots"
         ]
       },
@@ -32369,25 +32566,17 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 35,
+          "estimated_age": 40,
           "gender": "female",
-          "description": "Woman with dark, styled hair, smiling, wearing a dark one-piece swimsuit."
-        },
-        {
-          "face_index": 1,
-          "estimated_age": 30,
-          "gender": "male",
-          "description": "Man standing in the background, wearing light-colored trousers and a dark shirt or vest."
+          "description": "Woman with dark, shoulder-length hair styled away from the face, wearing a dark one-piece swimsuit, smiling slightly at the camera."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 4,
-        "arrangement": "One main subject seated on a barrier in the foreground, with three other individuals scattered in the background on the beach."
+        "arrangement": "One primary subject seated on a low wooden barrier with a rope, facing the camera. Several other individuals are visible in the background on the beach."
       },
-      "cultural_markers": [
-        "None clearly visible; typical mid-century American beachwear."
-      ],
+      "cultural_markers": [],
       "photo_technique": {
         "type": "gelatin silver print",
         "format": "snapshot",
@@ -32395,12 +32584,13 @@
         "condition": "fair"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T05:57:10.664471+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:43:45.827825+00:00",
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
@@ -32736,30 +32926,97 @@
       "photo_id": "inbox_fox-charlie-001_234_01979_p_13akf5twbc1268",
       "filename": "raw_photos/01979_p_13akf5twbc1268.jpg",
       "estimated_decade": 1950,
-      "best_year_estimate": 1950,
+      "best_year_estimate": 1955,
       "confidence": "medium",
       "probable_range": [
-        1945,
-        1955
+        1950,
+        1960
       ],
       "decade_probabilities": {
-        "1940": 0.3,
-        "1950": 0.6,
+        "1940": 0.2,
+        "1950": 0.7,
         "1960": 0.1
       },
-      "location_estimate": {
-        "place": "United States",
-        "confidence": "low",
-        "visual_evidence": "Generic beach setting; no specific geographic markers visible.",
-        "biographical_evidence": "None provided.",
-        "missing_child_analysis": "N/A"
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot with tall aspect ratio",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Skirted, patterned one-piece swimsuit on the left",
+            "strength": "strong",
+            "suggested_range": [
+              1945,
+              1960
+            ]
+          },
+          {
+            "cue": "Solid one-piece swimsuit and white bathing cap with chin strap on the right",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Ocean beach setting",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              2000
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Amateur snapshot quality, blown-out sky typical of simple consumer cameras",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1970
+            ]
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "Woman on left: patterned one-piece swimsuit with a skirted bottom, patterned headwrap/swim cap. Woman on right: solid dark one-piece swimsuit with a skirted front panel, light-colored swim cap with a chin strap.",
+      "reasoning_summary": "The women's swimwear\u2014specifically the skirted, heavily patterned suit and the bathing cap with a chin strap\u2014strongly points to the late 1940s through the 1950s. Assuming one of the women is Esther Burd (born ~1900), her apparent age of 50-60 aligns perfectly with a 1950s date. The presence of a young boy (possibly a grandchild) further supports a date in the 1950s when Esther's children would be of childbearing age.",
+      "location_estimate": "Unknown Beach Location, United States",
+      "location_evidence": {
+        "place": "Unknown Beach Location, United States",
+        "confidence": "low",
+        "visual_evidence": "Ocean waves and sandy beach indicating a coastal location.",
+        "biographical_evidence": "The family primarily resided in Dayton, Ohio (inland) during this period. This is almost certainly a vacation photograph.",
+        "missing_child_analysis": "Not applicable for a vacation snapshot of older adults.",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Florida, United States",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "A very common vacation destination for Midwestern families in the mid-20th century."
+          },
+          {
+            "place": "Atlantic City, New Jersey",
+            "confidence": "low",
+            "source": "visual",
+            "reasoning": "Another popular coastal vacation spot accessible from Ohio."
+          }
+        ]
+      },
+      "scene_description": "A black and white candid snapshot of two older women standing knee-deep in the ocean, holding hands and smiling at the camera. They are wearing mid-century modest swimwear and head coverings. In the background to the left, a young boy is wading in the surf under a bright, overexposed sky.",
+      "clothing_notes": "The woman on the left wears a distinctive skirted swimsuit with a large botanical print, popular for mature women in the 1950s to provide coverage. She has a patterned scarf tied around her hair. The woman on the right wears a more classic, solid-colored one-piece suit with a functional white rubber bathing cap secured with a chin strap.",
       "subject_ages": [
-        50,
         55,
-        5
+        60,
+        6
       ],
       "people_count": null,
       "photo_type": "",
@@ -32768,7 +33025,7 @@
         "overall": "good",
         "issues": [
           "slight fading",
-          "minor scratches/dust spots"
+          "overexposed sky"
         ]
       },
       "keywords": [],
@@ -32778,22 +33035,22 @@
           "face_index": 0,
           "estimated_age": 55,
           "gender": "female",
-          "description": "Older woman on the right, wearing a dark swimsuit and a light-colored swim cap, smiling."
+          "description": "Older woman smiling, wearing a patterned headscarf and a dark, patterned skirted swimsuit."
         },
         {
           "face_index": 1,
-          "estimated_age": 50,
+          "estimated_age": 60,
           "gender": "female",
-          "description": "Older woman on the left, wearing a patterned swimsuit and a patterned swim cap/headwrap, smiling."
+          "description": "Older woman smiling, wearing a white bathing cap with a chin strap and a solid dark one-piece swimsuit."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 3,
-        "arrangement": "Two women standing in shallow water holding hands, with a child visible in the background to the left."
+        "arrangement": "Two older women standing side-by-side holding hands in the foreground, with a young boy wading in the background to the left."
       },
       "cultural_markers": [
-        "Modest swimwear typical for older women of the era"
+        "Modest swimwear typical of older women in the mid-20th century"
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -32802,12 +33059,13 @@
         "condition": "good"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T06:07:58.901831+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:42:27.734112+00:00",
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
@@ -34526,29 +34784,96 @@
     {
       "photo_id": "inbox_fox-charlie-001_421_01990_p_13akf5twbc1024",
       "filename": "raw_photos/01990_p_13akf5twbc1024.jpg",
-      "estimated_decade": 1910,
-      "best_year_estimate": 1918,
+      "estimated_decade": 1920,
+      "best_year_estimate": 1920,
       "confidence": "high",
       "probable_range": [
-        1917,
-        1920
+        1919,
+        1921
       ],
       "decade_probabilities": {
-        "1910": 0.8,
-        "1920": 0.2
+        "1910": 0.1,
+        "1920": 0.9
       },
-      "location_estimate": {
-        "place": "United States",
-        "confidence": "medium",
-        "visual_evidence": "US military uniform, wooden domestic architecture in background typical of North America.",
-        "biographical_evidence": "None provided.",
-        "missing_child_analysis": "N/A"
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Outdoor snapshot style portrait",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "WWI US Army uniform with campaign hat, high-collar tunic, breeches, and puttees",
+            "strength": "strong",
+            "suggested_range": [
+              1917,
+              1922
+            ]
+          },
+          {
+            "cue": "Bridal fashion with voluminous veil and floral crown",
+            "strength": "strong",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Wooden buildings with dark siding and white trim, typical of North American rural or camp architecture",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1940
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Soft focus, high contrast outdoor exposure typical of early consumer cameras",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1930
+            ]
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "Man is wearing a WWI US Army uniform including a tunic with a high collar, breeches, puttees (leg wrappings), and a campaign hat. He is holding a swagger stick or riding crop. The woman is wearing a white dress with a long veil attached to a floral crown, holding a bouquet.",
+      "reasoning_summary": "The photograph depicts a groom in a World War I US Army uniform and a bride in a wedding dress. Genealogical records confirm that Albert Fox (who served in WWI) and Esther Burd were married on May 6, 1920, which perfectly aligns with the visual evidence.",
+      "location_estimate": "Hamilton, Ohio",
+      "location_evidence": {
+        "place": "Hamilton, Ohio",
+        "confidence": "high",
+        "visual_evidence": "Outdoor setting with wooden buildings, consistent with North American architecture.",
+        "biographical_evidence": "GEDCOM records explicitly state the marriage of Esther Burd and Albert Fox took place on May 6, 1920, in Hamilton, Ohio.",
+        "missing_child_analysis": "N/A - Wedding photo prior to the birth of their first child, Leona, in July 1921.",
+        "source_type": "biographical",
+        "candidates": [
+          {
+            "place": "Dayton, Ohio",
+            "confidence": "medium",
+            "source": "biographical",
+            "reasoning": "Primary residence for both families before and after the marriage."
+          },
+          {
+            "place": "Arcanum, Ohio",
+            "confidence": "low",
+            "source": "biographical",
+            "reasoning": "Frequent location for Esther Burd's family events around this time."
+          }
+        ]
+      },
+      "scene_description": "An outdoor wedding portrait featuring a standing groom in a World War I US Army uniform and a seated bride in a white dress with a floral crown and veil. The groom wears a campaign hat and puttees, holding a swagger stick, while the bride holds a large bouquet. In the background, dark wooden buildings with white window trim are visible against a backdrop of trees.",
+      "clothing_notes": "The standing groom wears a WWI-era US Army uniform consisting of a campaign hat, high-collar tunic with patch pockets, breeches, and puttees (leggings), and holds a swagger stick. The seated bride wears a white, long-sleeved wedding dress with a large veil attached to a floral crown, holding a large bouquet.",
       "subject_ages": [
-        22,
-        25
+        24,
+        20
       ],
       "people_count": null,
       "photo_type": "",
@@ -34556,9 +34881,9 @@
       "condition": {
         "overall": "fair",
         "issues": [
-          "blurry",
-          "creases",
-          "fading"
+          "large vertical crease or tear on the right side",
+          "overexposed highlights",
+          "soft focus"
         ]
       },
       "keywords": [],
@@ -34566,25 +34891,24 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 22,
-          "gender": "female",
-          "description": "Young woman wearing a bridal veil and floral crown, looking towards the camera."
+          "estimated_age": 24,
+          "gender": "male",
+          "description": "Standing individual wearing a wide-brimmed military campaign hat, looking directly at the camera with a neutral expression."
         },
         {
           "face_index": 1,
-          "estimated_age": 25,
-          "gender": "male",
-          "description": "Young man in WWI military uniform, wearing a campaign hat."
+          "estimated_age": 20,
+          "gender": "female",
+          "description": "Seated individual wearing a bridal veil with a floral crown, looking toward the camera with a soft expression."
         }
       ],
       "group_composition": {
-        "type": "candid",
+        "type": "formal_portrait",
         "people_count": 2,
-        "arrangement": "One person standing, one person seated outdoors."
+        "arrangement": "Groom standing on the left, bride seated on the right"
       },
       "cultural_markers": [
-        "WWI US Military Uniform",
-        "Bridal attire"
+        "Wearing a military uniform for a wedding portrait, a common practice immediately following World War I"
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -34593,14 +34917,16 @@
         "condition": "fair"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T08:23:24.217853+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:41:52.972262+00:00",
       "batch_context": {
         "identities": [
+          "Albert Fox",
           "Esther Burd Fox"
         ],
         "trigger": "session_142_esther_albert"
@@ -36901,29 +37227,96 @@
       "photo_id": "inbox_fox-charlie-001_180_02117_p_13akf5twbc3447_r",
       "filename": "raw_photos/02117_p_13akf5twbc3447_r.jpg",
       "estimated_decade": 1910,
-      "best_year_estimate": 1915,
+      "best_year_estimate": 1916,
       "confidence": "medium",
       "probable_range": [
-        1912,
-        1922
+        1914,
+        1919
       ],
       "decade_probabilities": {
         "1900": 0.05,
-        "1910": 0.8,
-        "1920": 0.15
+        "1910": 0.85,
+        "1920": 0.1
       },
-      "location_estimate": {
-        "place": "United States",
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot, likely a contact print or small enlargement, typical of early amateur photography.",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1925
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Light-colored, high-waisted dresses with slightly bloused bodices and long skirts. The dress on the right has short, slightly puffed sleeves and a dark sash/belt with tassels. The dress on the left has 3/4 sleeves. These styles are strongly indicative of the 1910s, specifically the mid-to-late 1910s before hemlines rose significantly in the 1920s.",
+            "strength": "strong",
+            "suggested_range": [
+              1912,
+              1919
+            ]
+          },
+          {
+            "cue": "Hairstyles are relatively full but pulled back, consistent with the 1910s.",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1920
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Outdoor setting with a large fern-like plant (possibly a sumac or similar) and a portion of a wooden clapboard house visible on the left.",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1950
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Slightly soft focus and contrast typical of early consumer box or folding cameras.",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1930
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The strongest dating evidence comes from the women's clothing. The high-waisted, long-skirted dresses with bloused bodices are classic mid-to-late 1910s fashion. The presence of Esther Burd (born ~1900) in the genealogical context, who would be a teenager in this era, aligns perfectly with the apparent age of the subjects if one is her.",
+      "location_estimate": "Dayton, Ohio",
+      "location_evidence": {
+        "place": "Dayton, Ohio",
         "confidence": "medium",
-        "visual_evidence": "The building on the left features horizontal clapboard siding, a construction style very common in the United States and rare in Mediterranean regions like Rhodes.",
-        "biographical_evidence": "Collection name (Dayton Ohio) suggests a US connection, aligning with the architectural visual evidence.",
-        "missing_child_analysis": null
+        "visual_evidence": "Wooden clapboard house siding visible on the left suggests a North American residential setting rather than European stone architecture.",
+        "biographical_evidence": "The Burd family (Sam, Edith, and children including Esther) had established residence in Dayton, Ohio by 1912 and lived there or in nearby Arcanum/Greenville throughout the 1910s.",
+        "missing_child_analysis": "N/A - candid photo of two individuals, likely sisters (e.g., Esther and Dora).",
+        "source_type": "both",
+        "candidates": [
+          {
+            "place": "Arcanum, Ohio",
+            "confidence": "medium",
+            "source": "biographical",
+            "reasoning": "The family had numerous events in Arcanum starting around 1917."
+          },
+          {
+            "place": "Greenville, Ohio",
+            "confidence": "low",
+            "source": "biographical",
+            "reasoning": "Another nearby town where the family had events in the late 1910s."
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "Both women are wearing light-colored, likely cotton or linen dresses typical of the 1910s. The woman on the left has a dress with a wide, possibly ruched waistband. The woman on the right wears a dress with a gathered bodice and a distinctive dark cord or thin sash tied at the waist.",
+      "scene_description": "A black and white outdoor snapshot of two young women standing together. They are wearing light-colored, long dresses typical of the 1910s. Behind them is a large, leafy plant, and to the left, the corner of a wooden house with clapboard siding is visible. The photo is somewhat faded and shows signs of age and wear.",
+      "clothing_notes": "Both women wear light-colored (likely white or pastel cotton/linen) summer dresses typical of the 1910s. The dress on the left features a wide, possibly embroidered waistband and 3/4 sleeves. The dress on the right has short, slightly puffed sleeves, a patterned or textured fabric, and a distinctive dark cord or sash tied at the waist with tassels hanging down.",
       "subject_ages": [
-        22,
-        20
+        18,
+        16
       ],
       "people_count": null,
       "photo_type": "",
@@ -36931,10 +37324,10 @@
       "condition": {
         "overall": "fair",
         "issues": [
-          "creasing across the top",
-          "dark stains or mold spots",
           "fading",
-          "soft focus/blurriness"
+          "creases",
+          "stains",
+          "silver mirroring or uneven development/aging"
         ]
       },
       "keywords": [],
@@ -36942,24 +37335,24 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 22,
+          "estimated_age": 18,
           "gender": "female",
-          "description": "Young woman on the left, dark hair pulled back, wearing a light-colored dress with a wide waistband."
+          "description": "Young woman with dark hair pulled back, wearing a light-colored dress with 3/4 sleeves and a wide waistband."
         },
         {
           "face_index": 1,
-          "estimated_age": 20,
+          "estimated_age": 16,
           "gender": "female",
-          "description": "Young woman on the right, dark hair, wearing a light-colored dress with a dark cord belt."
+          "description": "Young woman with dark hair, possibly a braid over her shoulder, wearing a light-colored dress with short puffed sleeves and a dark tasseled sash."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 2,
-        "arrangement": "Two women standing side-by-side outdoors"
+        "arrangement": "Two young women standing side-by-side outdoors."
       },
       "cultural_markers": [
-        "Modest dress typical of the era and conservative communities"
+        "None explicitly visible; attire is typical American fashion of the era."
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -36968,12 +37361,13 @@
         "condition": "fair"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T09:39:12.655794+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:43:27.896240+00:00",
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
@@ -38971,26 +39365,101 @@
       "confidence": "medium",
       "probable_range": [
         1950,
-        1960
+        1965
       ],
       "decade_probabilities": {
         "1940": 0.1,
-        "1950": 0.7,
-        "1960": 0.2
+        "1950": 0.6,
+        "1960": 0.3
       },
-      "location_estimate": {
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white snapshot, likely 35mm or medium format roll film, typical of mid-20th century amateur photography.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1970
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Men's swim trunks: shorter, fitted styles with patterns (right) and lighter colors (center), typical of the 1950s-1960s.",
+            "strength": "strong",
+            "suggested_range": [
+              1950,
+              1965
+            ]
+          },
+          {
+            "cue": "Eyewear: Center man wears wire-rimmed or clear plastic frames; left man wears dark sunglasses, consistent with mid-century styles.",
+            "strength": "moderate",
+            "suggested_range": [
+              1950,
+              1970
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Beach setting with folding wooden and canvas deck chairs, common in mid-century resorts.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1970
+            ]
+          },
+          {
+            "cue": "Low stone wall and palm trees in the background suggest a coastal resort area like Florida or California.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1980
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Folding beach chairs with striped canvas.",
+            "strength": "weak",
+            "suggested_range": [
+              1940,
+              1970
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The style of the men's swim trunks, particularly the shorter, patterned fit on the right, strongly points to the 1950s or early 1960s. The folding canvas beach chairs and overall casual snapshot aesthetic are consistent with mid-century resort vacations. The apparent ages of the men (likely in their 50s-60s) align with Albert Fox and his brothers during this era.",
+      "location_estimate": "Miami Beach, Florida",
+      "location_evidence": {
         "place": "Miami Beach, Florida",
-        "confidence": "medium",
-        "visual_evidence": "Sandy beach, palm trees, low stone wall separating the beach from a paved area or street, and multi-story white buildings in the background strongly suggest a Florida beach setting, likely Miami Beach given the diaspora context.",
-        "biographical_evidence": "None provided, but Miami is a known diaspora location.",
-        "missing_child_analysis": "N/A"
+        "confidence": "low",
+        "visual_evidence": "Sandy beach, palm trees, low stone wall, and resort-style buildings in the background strongly suggest a coastal vacation destination like Florida.",
+        "biographical_evidence": "Albert Fox later married in Miami-Dade, Florida (1975), and his brother Harry lived in California. The family may have vacationed in Florida prior to moving there.",
+        "missing_child_analysis": "N/A - adult men only.",
+        "source_type": "both",
+        "candidates": [
+          {
+            "place": "Miami Beach, Florida",
+            "confidence": "low",
+            "source": "both",
+            "reasoning": "Visuals match a Florida beach resort; Albert later lived/married in Miami."
+          },
+          {
+            "place": "Los Angeles, California",
+            "confidence": "low",
+            "source": "biographical",
+            "reasoning": "Brothers Harry, Sadie, and Israel lived in the Los Angeles area; this could be a visit to them."
+          }
+        ]
       },
-      "scene_description": "",
-      "clothing_notes": "Men are wearing swim trunks. The man on the right has patterned trunks. The men on the left and middle are wearing sunglasses/glasses. The man on the left is wearing a watch.",
+      "scene_description": "A black and white candid snapshot of three older men relaxing in folding canvas chairs on a sandy beach. The man on the left is looking down, adjusting something; the center man is smoking a cigar and looking toward the camera; the man on the right is smiling and waving. Palm trees, a low stone wall, and buildings are visible in the bright, sunlit background.",
+      "clothing_notes": "Casual beachwear. The man on the right wears dark, patterned swim trunks typical of the 1950s. The center man wears lighter-colored trunks. The man on the left is wearing sunglasses and a watch.",
       "subject_ages": [
-        55,
+        65,
         60,
-        50
+        55
       ],
       "people_count": null,
       "photo_type": "",
@@ -38999,7 +39468,7 @@
         "overall": "good",
         "issues": [
           "slight fading",
-          "minor scratches"
+          "minor contrast loss"
         ]
       },
       "keywords": [],
@@ -39007,30 +39476,24 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 55,
+          "estimated_age": 60,
           "gender": "male",
-          "description": "Older man, balding, wearing sunglasses, looking down."
+          "description": "Older man, mostly bald with white hair on the sides, wearing glasses, smoking a cigar, seated in a beach chair."
         },
         {
           "face_index": 1,
-          "estimated_age": 60,
+          "estimated_age": 55,
           "gender": "male",
-          "description": "Older man, grey hair, wearing glasses, smoking a cigar, looking towards the camera."
-        },
-        {
-          "face_index": 2,
-          "estimated_age": 50,
-          "gender": "male",
-          "description": "Middle-aged man, receding hairline, smiling and waving at the camera."
+          "description": "Middle-aged to older man, receding hairline, smiling and waving at the camera, wearing patterned swim trunks."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 3,
-        "arrangement": "Three men seated in folding beach chairs on the sand."
+        "arrangement": "Three men seated in a row in folding beach chairs on the sand."
       },
       "cultural_markers": [
-        "None explicitly visible; casual beach setting."
+        "Cigar smoking (common among men of this generation)"
       ],
       "photo_technique": {
         "type": "gelatin silver print",
@@ -39039,12 +39502,13 @@
         "condition": "good"
       },
       "text_signage": {},
+      "visible_text": "",
       "source_method": "gemini_batch_full",
       "prompt_version": "v3_enriched_full",
       "preset": "full",
       "face_coordinates_sent": true,
-      "gedcom_context_sent": false,
-      "created_at": "2026-03-27T11:37:51.470766+00:00",
+      "gedcom_context_sent": true,
+      "created_at": "2026-03-30T19:40:19.482097+00:00",
       "batch_context": {
         "identities": [
           "Albert Fox"
@@ -39245,7 +39709,7 @@
         ],
         "fashion": [
           {
-            "cue": "Women's bobbed hair, drop-waist dresses, and cloche-style silhouettes",
+            "cue": "Women's bobbed hair, drop-waist dresses, cloche-era styling",
             "strength": "strong",
             "suggested_range": [
               1925,
@@ -39253,7 +39717,7 @@
             ]
           },
           {
-            "cue": "Men's wide lapels, patterned ties, and three-piece suits",
+            "cue": "Men's wide lapels, patterned ties, three-piece suits",
             "strength": "strong",
             "suggested_range": [
               1925,
@@ -39261,17 +39725,17 @@
             ]
           },
           {
-            "cue": "Boy's sailor suit (very popular for boys in the 1920s)",
+            "cue": "Boy's sailor suit (popular for children in this era)",
             "strength": "moderate",
             "suggested_range": [
-              1920,
-              1930
+              1915,
+              1935
             ]
           }
         ],
         "environment": [
           {
-            "cue": "Formal studio backdrop with painted scenery and ornate wooden chairs",
+            "cue": "Painted studio backdrop with classical/garden elements",
             "strength": "moderate",
             "suggested_range": [
               1910,
@@ -39281,8 +39745,8 @@
         ],
         "technology": [
           {
-            "cue": "Sharp focus and lighting typical of professional studio photography of the era",
-            "strength": "moderate",
+            "cue": "Sharp focus, professional studio lighting",
+            "strength": "weak",
             "suggested_range": [
               1920,
               1940
@@ -39290,32 +39754,32 @@
           }
         ]
       },
-      "reasoning_summary": "The strongest dating evidence comes from the women's fashion, specifically the bobbed hairstyles and drop-waist dresses, which are quintessential late 1920s styles. The men's suits and the boy's sailor outfit also align perfectly with this era. Allowing for a slight cultural lag, the photo was likely taken between 1926 and 1932.",
-      "location_estimate": "Unknown",
+      "reasoning_summary": "The strongest dating evidence comes from the women's fashion, specifically the bobbed hairstyles and drop-waist dresses, which are quintessential late 1920s styles. The men's suits and the boy's sailor outfit also align perfectly with this era. The formal studio setting with a painted backdrop is typical of professional portraits from the 1920s to early 1930s.",
+      "location_estimate": "United States",
       "location_evidence": {
-        "place": "Unknown",
+        "place": "United States",
         "confidence": "low",
-        "visual_evidence": "Generic formal studio setting with a painted backdrop and ornate chairs; no specific geographic markers visible.",
-        "biographical_evidence": "None provided.",
+        "visual_evidence": "Studio portrait setting is generic; fashion suggests a Western/American context but could be a cosmopolitan center elsewhere.",
+        "biographical_evidence": "None provided in prompt.",
         "missing_child_analysis": "N/A",
         "source_type": "visual",
         "candidates": [
           {
-            "place": "United States",
+            "place": "New York City, New York",
             "confidence": "low",
             "source": "visual",
-            "reasoning": "Fashion is consistent with American styles of the 1920s, though also common in Europe."
+            "reasoning": "Common destination for Sephardic immigrants with access to professional studios."
           },
           {
             "place": "Rhodes, Greece",
             "confidence": "low",
             "source": "visual",
-            "reasoning": "Possible if the family had not yet emigrated, though the fashion looks quite westernized."
+            "reasoning": "Possible if the family was wealthy enough for such a formal portrait before emigrating, though fashion looks very Americanized."
           }
         ]
       },
-      "scene_description": "A formal sepia-toned studio portrait of a large family group consisting of nine individuals. Two men are seated in ornate wooden chairs in the foreground, with a young girl and a young boy seated beside them. Five women and older girls stand behind them against a painted studio backdrop. The subjects are dressed in formal attire typical of the late 1920s.",
-      "clothing_notes": "Women are wearing classic late 1920s fashion: bobbed hair, drop-waist dresses, and tiered skirts. Men are in formal suits with wide lapels. The young boy is in a traditional sailor suit, a very common style for children in the 1920s.",
+      "scene_description": "A formal, sepia-toned studio portrait of a large family group consisting of nine individuals. Two men are seated in the center, flanked by standing women and teenagers, with two young children seated in the front. The subjects are dressed in formal, late 1920s attire, posed against a painted studio backdrop featuring soft, indistinct classical or garden elements.",
+      "clothing_notes": "Women predominantly wear late 1920s styles: bobbed hair, drop waists, tiered skirts. Men wear formal suits with wide lapels. The youngest boy is in a classic sailor suit, a very common children's style of the era.",
       "subject_ages": [
         35,
         6,
@@ -39324,7 +39788,7 @@
         18,
         40,
         35,
-        7,
+        8,
         15
       ],
       "people_count": null,
@@ -39333,10 +39797,10 @@
       "condition": {
         "overall": "fair",
         "issues": [
-          "scratches",
+          "surface scratches",
           "dust spots",
-          "slight fading",
-          "framed under glass causing reflections"
+          "minor fading",
+          "framed under glass (causing some glare)"
         ]
       },
       "keywords": [],
@@ -39346,61 +39810,61 @@
           "face_index": 0,
           "estimated_age": 35,
           "gender": "female",
-          "description": "Standing on the far left, wearing a dark dress with a floral corsage, dark wavy bobbed hair."
+          "description": "Standing on far left, dark hair styled in a bob, wearing a dark dress with a floral corsage."
         },
         {
           "face_index": 1,
           "estimated_age": 6,
           "gender": "female",
-          "description": "Young girl seated on the left, wearing a dark dress with a white collar, dark curly hair, and Mary Jane shoes."
+          "description": "Young girl seated front left, dark curly hair, wearing a dark dress with a white collar and knee socks."
         },
         {
           "face_index": 2,
           "estimated_age": 38,
           "gender": "male",
-          "description": "Seated man on the left, wearing a dark suit and striped tie, dark hair parted on the side."
+          "description": "Seated left, dark hair, wearing a dark suit and patterned tie."
         },
         {
           "face_index": 3,
           "estimated_age": 16,
           "gender": "female",
-          "description": "Standing behind the seated man, wearing a light-colored drop-waist dress with an emblem, dark bobbed hair."
+          "description": "Standing center left, dark bobbed hair, wearing a light-colored drop-waist dress with a monogram or pin."
         },
         {
           "face_index": 4,
           "estimated_age": 18,
           "gender": "female",
-          "description": "Standing in the center back, wearing a light-colored blouse, dark bobbed hair."
+          "description": "Standing center right, dark bobbed hair, wearing a light-colored blouse."
         },
         {
           "face_index": 5,
           "estimated_age": 40,
           "gender": "male",
-          "description": "Seated man on the right, wearing a lighter three-piece suit and glasses, dark hair."
+          "description": "Seated right, wearing glasses, a three-piece suit, and patterned tie."
         },
         {
           "face_index": 6,
           "estimated_age": 35,
           "gender": "female",
-          "description": "Standing behind the seated man on the right, wearing a light-colored blouse and necklace, dark bobbed hair."
+          "description": "Standing right, dark bobbed hair, wearing a light-colored dress or blouse."
         },
         {
           "face_index": 7,
-          "estimated_age": 7,
+          "estimated_age": 8,
           "gender": "male",
-          "description": "Young boy seated on the right, wearing a dark sailor suit."
+          "description": "Seated front right, wearing a dark sailor suit."
         },
         {
           "face_index": 8,
           "estimated_age": 15,
           "gender": "female",
-          "description": "Standing on the far right, wearing a light-colored tiered dress, dark bobbed hair."
+          "description": "Standing far right, dark bobbed hair, wearing a light-colored tiered dress."
         }
       ],
       "group_composition": {
         "type": "formal_portrait",
         "people_count": 9,
-        "arrangement": "Two men seated in the center, flanked by two young children. Five women/older girls standing behind them."
+        "arrangement": "Two men seated centrally, surrounded by standing women and older girls, with two young children seated in the foreground."
       },
       "cultural_markers": [
         "Formal studio portraiture typical of immigrant families documenting their success or family structure."
@@ -39418,7 +39882,7 @@
       "preset": "full",
       "face_coordinates_sent": false,
       "gedcom_context_sent": false,
-      "created_at": "2026-03-30T04:36:15.540198+00:00",
+      "created_at": "2026-03-30T19:41:00.030752+00:00",
       "batch_context": {
         "identities": [
           "Albert Fox",
@@ -39435,12 +39899,12 @@
       "confidence": "high",
       "probable_range": [
         1975,
-        1985
+        1982
       ],
       "decade_probabilities": {
         "1960": 0.05,
-        "1970": 0.65,
-        "1980": 0.3
+        "1970": 0.7,
+        "1980": 0.25
       },
       "evidence": {
         "print_format": [
@@ -39448,8 +39912,8 @@
             "cue": "Color snapshot with typical 1970s/1980s fading (yellow/magenta shift)",
             "strength": "strong",
             "suggested_range": [
-              1970,
-              1989
+              1975,
+              1985
             ]
           }
         ],
@@ -39458,15 +39922,15 @@
             "cue": "Wide collar on patterned shirt",
             "strength": "strong",
             "suggested_range": [
-              1970,
-              1985
+              1973,
+              1982
             ]
           },
           {
-            "cue": "Thick-rimmed glasses with metal bridge (browline/combination style)",
+            "cue": "Thick plastic-rimmed glasses with metal bridge (browline style variant)",
             "strength": "moderate",
             "suggested_range": [
-              1960,
+              1965,
               1985
             ]
           }
@@ -39483,22 +39947,22 @@
         ],
         "technology": [
           {
-            "cue": "Color film photography",
+            "cue": "Consumer color film photography",
             "strength": "strong",
             "suggested_range": [
-              1960,
+              1970,
               1990
             ]
           }
         ]
       },
-      "reasoning_summary": "The wide collar on the shirt is a strong indicator of late 1970s to early 1980s fashion. The color fading (yellow/magenta shift) is very typical of consumer color prints from that era. The screened-in porch setting suggests a warm climate, likely Florida, consistent with the diaspora communities mentioned.",
+      "reasoning_summary": "The wide collar on the shirt is a strong indicator of mid-to-late 1970s fashion. The color film fading (yellow/magenta shift) and the style of the glasses further support a late 1970s to early 1980s timeframe. The setting appears to be a typical Florida screened porch.",
       "location_estimate": "Florida, United States",
       "location_evidence": {
         "place": "Florida, United States",
         "confidence": "medium",
         "visual_evidence": "Screened-in porch (lanai) with pine trees visible outside, very typical of Florida residential architecture.",
-        "biographical_evidence": "None provided, but consistent with known diaspora communities in Miami/Tampa.",
+        "biographical_evidence": "None provided, but collection context mentions Tampa/Miami diaspora.",
         "missing_child_analysis": "N/A",
         "source_type": "visual",
         "candidates": [
@@ -39506,20 +39970,20 @@
             "place": "Tampa, Florida",
             "confidence": "medium",
             "source": "visual",
-            "reasoning": "Screened porch and pine trees are common in Tampa residential areas."
+            "reasoning": "Common location for Sephardic diaspora with this type of architecture."
           },
           {
             "place": "Miami, Florida",
             "confidence": "medium",
             "source": "visual",
-            "reasoning": "Screened porch is common in Miami residential areas."
+            "reasoning": "Common location for Sephardic diaspora with this type of architecture."
           }
         ]
       },
-      "scene_description": "A casual, close-up color snapshot of an older man sitting on what appears to be a screened-in porch. The background shows trees, possibly pines, out of focus through the screen. The lighting is natural, coming from behind and to the side of the subject, creating a slightly backlit effect.",
-      "clothing_notes": "Light-colored, subtly patterned (plaid/check) short-sleeve or rolled-sleeve shirt with a prominent wide collar, characteristic of 1970s casual menswear. Thick-rimmed glasses with a metal bridge.",
+      "scene_description": "A close-up, candid color snapshot of an older man seated on what appears to be a screened-in porch. The background shows trees and bright sunlight filtering through the screens. The photo has a noticeable warm, faded color cast typical of aged 1970s color prints.",
+      "clothing_notes": "Man is wearing a casual, light-colored patterned shirt with a prominent wide collar, typical of 1970s menswear. He wears thick-rimmed glasses with a metal bridge.",
       "subject_ages": [
-        70
+        75
       ],
       "people_count": null,
       "photo_type": "",
@@ -39527,8 +39991,9 @@
       "condition": {
         "overall": "fair",
         "issues": [
-          "color fading (yellow/magenta shift)",
-          "loss of contrast"
+          "color fading",
+          "yellow/magenta color shift",
+          "slight blur"
         ]
       },
       "keywords": [],
@@ -39536,15 +40001,15 @@
       "face_analysis": [
         {
           "face_index": 0,
-          "estimated_age": 70,
+          "estimated_age": 75,
           "gender": "male",
-          "description": "Older male with thinning white/gray hair, wearing thick-rimmed glasses with a metal bridge. He has a serious expression and is wearing a light-colored patterned shirt with a wide collar."
+          "description": "Older man with thinning white hair, wearing thick glasses, looking directly at the camera with a neutral expression."
         }
       ],
       "group_composition": {
         "type": "candid",
         "people_count": 1,
-        "arrangement": "Single subject, head and shoulders portrait, likely seated."
+        "arrangement": "Single subject seated close to the camera."
       },
       "cultural_markers": [],
       "photo_technique": {
@@ -39560,7 +40025,7 @@
       "preset": "full",
       "face_coordinates_sent": false,
       "gedcom_context_sent": false,
-      "created_at": "2026-03-30T04:36:32.051932+00:00",
+      "created_at": "2026-03-30T19:40:36.725797+00:00",
       "batch_context": {
         "identities": [
           "Albert Fox"
@@ -39735,6 +40200,155 @@
       "batch_context": {
         "identities": [
           "Esther Burd Fox"
+        ],
+        "trigger": "session_142_esther_albert"
+      }
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_17_01633_p_13akf5twbc0908",
+      "filename": "raw_photos/01633_p_13akf5twbc0908.jpg",
+      "estimated_decade": 1980,
+      "best_year_estimate": 1985,
+      "confidence": "medium",
+      "probable_range": [
+        1975,
+        1995
+      ],
+      "decade_probabilities": {
+        "1970": 0.2,
+        "1980": 0.6,
+        "1990": 0.2
+      },
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Color snapshot film, likely 35mm or similar consumer format, showing typical color dye fading/shifting characteristic of late 20th-century prints.",
+            "strength": "moderate",
+            "suggested_range": [
+              1970,
+              1995
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Short-sleeved, light blue plaid button-down shirt, typical casual wear for older men in warm climates.",
+            "strength": "moderate",
+            "suggested_range": [
+              1970,
+              1990
+            ]
+          },
+          {
+            "cue": "Eyeglasses with thick, light-colored (possibly plastic or horn-rimmed style) frames, popular in the mid-to-late 20th century.",
+            "strength": "moderate",
+            "suggested_range": [
+              1960,
+              1985
+            ]
+          },
+          {
+            "cue": "Hearing aid visible in the ear, a style common in the later decades of the 20th century.",
+            "strength": "moderate",
+            "suggested_range": [
+              1975,
+              1995
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Screened-in pool enclosure (lanai) with white aluminum framing, extremely common in Florida residential architecture from the 1970s onward.",
+            "strength": "strong",
+            "suggested_range": [
+              1975,
+              2000
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Color photography with natural lighting, typical of consumer point-and-shoot cameras of the era.",
+            "strength": "moderate",
+            "suggested_range": [
+              1970,
+              1990
+            ]
+          }
+        ]
+      },
+      "reasoning_summary": "The presence of a screened-in pool enclosure strongly suggests a Florida location in the late 20th century. The subject's casual plaid shirt, eyeglass style, and visible hearing aid align well with the 1970s-1980s era. The color film quality and fading are typical of consumer snapshots from this period.",
+      "location_estimate": "Florida, United States",
+      "location_evidence": {
+        "place": "Florida, United States",
+        "confidence": "high",
+        "visual_evidence": "Screened-in pool enclosure (lanai) with white aluminum framing, very typical of Florida homes. Flat terrain and vegetation visible through the screen.",
+        "biographical_evidence": "None provided, but visual evidence strongly points to a warm climate like Florida.",
+        "missing_child_analysis": "N/A",
+        "source_type": "visual",
+        "candidates": [
+          {
+            "place": "Tampa, Florida",
+            "confidence": "medium",
+            "source": "visual",
+            "reasoning": "Common location for Sephardic diaspora communities in Florida, matching the architectural style."
+          },
+          {
+            "place": "Miami, Florida",
+            "confidence": "medium",
+            "source": "visual",
+            "reasoning": "Another common location for Sephardic diaspora communities in Florida with similar architecture."
+          }
+        ]
+      },
+      "scene_description": "A candid color snapshot of an older man in profile, sitting outdoors next to a swimming pool. He is wearing a light blue plaid shirt, glasses, and a hearing aid. The background features a white aluminum-framed screened enclosure (lanai) with trees and a potted plant visible outside.",
+      "clothing_notes": "Casual short-sleeved button-down shirt in a light blue plaid pattern. Thick-rimmed glasses and a visible in-ear hearing aid.",
+      "subject_ages": [
+        75
+      ],
+      "people_count": null,
+      "photo_type": "",
+      "setting": "",
+      "condition": {
+        "overall": "good",
+        "issues": [
+          "slight color fading/shifting",
+          "minor dust/scratches"
+        ]
+      },
+      "keywords": [],
+      "controlled_tags": [],
+      "face_analysis": [
+        {
+          "face_index": 0,
+          "estimated_age": 75,
+          "gender": "male",
+          "description": "Older man in profile facing left, wearing glasses and a hearing aid, with thinning white hair."
+        }
+      ],
+      "group_composition": {
+        "type": "candid",
+        "people_count": 1,
+        "arrangement": "Single subject in profile, seated near a pool."
+      },
+      "cultural_markers": [],
+      "photo_technique": {
+        "type": "chromogenic color print",
+        "format": "snapshot",
+        "is_color": true,
+        "condition": "good"
+      },
+      "text_signage": {},
+      "visible_text": "",
+      "source_method": "gemini_batch_full",
+      "prompt_version": "v3_enriched_full",
+      "preset": "full",
+      "face_coordinates_sent": true,
+      "gedcom_context_sent": false,
+      "created_at": "2026-03-30T19:41:17.935407+00:00",
+      "batch_context": {
+        "identities": [
+          "Albert Fox"
         ],
         "trigger": "session_142_esther_albert"
       }
