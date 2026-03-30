@@ -1357,3 +1357,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 | v0.43.0 | 2026-02-17 | 41 | 2202 |
 | v0.42.0 | 2026-02-17 | 40 | 2194 |
 | v0.41.0+ | 2026-02-17 and earlier | 1-39 | 663-2159 |
+
+## Session 143: Single Source of Truth + Data Audit + UX Fixes (2026-03-28) — v0.99.54
+- **AD-232**: Eliminated JSON fallback in 7 data loaders — Supabase is ONLY source in postgres mode. 19 structural tests.
+- **Photo page rendering**: All Gemini batch fields (face_analysis, group_composition, clothing, reasoning). Old nested format normalized.
+- **FB-001 P0**: Doubled face card text from nested `<a>` tags — browser verified fix.
+- **FB-002**: Face overlay labels — adaptive positioning + absolute max-width.
+- **Codex P1**: Cache poisoning on transient Supabase failure. Skip-existing checks Supabase.
+- **HD-032**: Transcript-based /clear hook replaces gameable counter file. 20 tests.
+- **Phase 5**: 275/279 Fox photos Gemini batch ($10.50). All writing to Supabase.
+- **AD-233**: Anchor photo comparison — 3-model test (Gemini/Claude/Codex disagree on facial aging).
+- **AD-234**: GEDCOM context enrichment scoped — spouse timeline, birth date resolution.
+- Scripts: comprehensive_data_audit.py, sync_volume_data_to_supabase.py, investigate_victoria.py.
+- 15 feedback items (FB-001 through FB-015). 96 new tests. 3942 app tests pass.
+
+## Session 144: GEDCOM Re-Import + Context Enrichment (2026-03-29) — v0.99.55
+- **GEDCOM v9 import**: 21,998 individuals, 107 face links, Albert's 3 wives linked (Esther, Rose Weiss Baygel Fox, Jean Baumann Kassel Fox).
+- **Spouse timeline**: Chronological spouse block in GEDCOM context with photo dating constraints.
+- **Geographic data model**: Multi-candidate location storage (primary + candidates + source type).
+- **Anchor prototype**: Multi-image comparison prompt builder + admin UI button.
+- **Batch canary**: 3 photos validated. 38 photos still lack GEDCOM context (loader bug).
+- Lessons 163-165. Importer hardened (datetime serialization, non-fatal change log).

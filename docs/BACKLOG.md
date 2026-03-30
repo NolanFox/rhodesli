@@ -35,6 +35,22 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **COMMUNITY-018b**: Consider extracting community_slug from Referer header in middleware for HTMX requests. Currently HTMX POST paths in admin context lack community prefix (DOC-1) — acceptable because operations target entities by ID, but fragile if community-scoped operations are added later. Source: Session 133 community audit recommendation.
 - **COMMUNITY-018c**: Move admin POST routes under `/api/admin/` prefix for consistency with middleware `/api/` skip rule. Low priority — functional correctness not affected. Source: Session 133 community audit recommendation.
 
+### Session 143/144 Items
+
+- [x] **AD-232**: Single source of truth — no JSON fallback in postgres mode. 7 loaders, 19 tests. Session 143.
+- [x] **FB-001**: Doubled face card text (nested `<a>` tags). Session 143.
+- [x] **FB-002**: Face overlay label positioning. Session 143.
+- [x] **HD-032**: Transcript-based /clear hook replaces counter file. Session 143.
+- [x] **Phase 5**: 275/279 Fox photos Gemini batch. Session 143.
+- [ ] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge for edge faces (Betty Capeluto Fox). Session 143 FB-002 partial fix.
+- [ ] **BATCH-GEDCOM-38**: 38 photos still lack GEDCOM context. Needs batch GEDCOM loader fix (Session 144 red flag).
+- [ ] **GEO-DUAL-WRITE**: Dual-write location_primary to photo_locations table. Session 144 gap.
+- [ ] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. Session 144 gap.
+- [ ] **FB-013**: GEDCOM change detection → auto re-run trigger. Future feature. Session 143.
+- [ ] **FB-014**: Photo co-occurrence as life event evidence. Future feature. Session 143.
+- [ ] **DATA-AUDIT-001**: 20 CONFIRMED identities with no anchor_ids. Pre-existing. Session 143 audit.
+- [ ] **DATA-AUDIT-002**: 48 multi-hop merges to flatten. Pre-existing. Session 143 audit.
+
 ### P1 — PostgREST Filter Injection (SEC-001) — Session 134
 - **SEC-001**: `.or_()` in nl_query_executor.py takes raw PostgREST filter strings. Currently safe due to hardcoded allowlist in NL parser, but will become P0 if Gemini-assisted parsing (TOOLS-004 Phase 2) passes user-controlled strings. `_sanitize_postgrest_value()` added as defense-in-depth but the underlying `.or_()` pattern should be replaced with parameterized filters. **Must fix before TOOLS-004 Phase 2 ships.** Source: Session 134 security audit Finding 1.
 
