@@ -1073,6 +1073,9 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             background: rgba(0, 0, 0, 0.8);
             padding: 1px 6px;
             border-radius: 3px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Sepia film border on hero */
@@ -7890,6 +7893,23 @@ def _load_photo_locations() -> dict:
 
             result = load_photo_locations_from_supabase()
             if result is not None:
+                # Dual-key: Supabase stores inbox_* IDs, but _photo_cache uses SHA256 IDs.
+                # Add SHA256 aliases so map lookups work (same fix as date_labels — Session 144b).
+                try:
+                    photo_registry = _main_mod.load_photo_registry()
+                    aliases_added = 0
+                    for pid in list(result.keys()):
+                        if pid.startswith("inbox_"):
+                            path = photo_registry.get_photo_path(pid)
+                            if path:
+                                sha256_id = _main_mod.generate_photo_id(Path(path).name)
+                                if sha256_id not in result:
+                                    result[sha256_id] = result[pid]
+                                    aliases_added += 1
+                    if aliases_added:
+                        logger.info(f"Photo locations: added {aliases_added} SHA256 aliases for inbox IDs")
+                except Exception as alias_err:
+                    logger.warning(f"Photo locations dual-keying failed (non-fatal): {alias_err}")
                 logger.info(f"Loaded {len(result)} photo locations from Postgres")
                 _photo_locations_cache = result
                 return _photo_locations_cache

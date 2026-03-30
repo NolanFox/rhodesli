@@ -1854,6 +1854,22 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_195_01655_p_13akf5twbc1015": {
+      "photo_id": "inbox_fox-charlie-001_195_01655_p_13akf5twbc1015",
+      "lat": 42.3314,
+      "lng": -83.0458,
+      "location_name": "Detroit, Michigan",
+      "location_key": "detroit",
+      "region": "United States",
+      "location_estimate": "Detroit, Michigan",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "detroit",
+          "name": "Detroit, Michigan"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_265_01583_p_13akf5twbc0722": {
       "photo_id": "inbox_fox-charlie-001_265_01583_p_13akf5twbc0722",
       "lat": 39.8283,
@@ -1867,6 +1883,22 @@
         {
           "key": "united_states",
           "name": "United States"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_582_01558_p_13akf5twbc5216_r": {
+      "photo_id": "inbox_fox-charlie-001_582_01558_p_13akf5twbc5216_r",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "location_name": "Hamilton, Ohio",
+      "location_key": "hamilton",
+      "region": "United States",
+      "location_estimate": "Hamilton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "hamilton",
+          "name": "Hamilton, Ohio"
         }
       ]
     },
@@ -2228,17 +2260,33 @@
     },
     "inbox_fox-charlie-001_87_01796_p_13akf5twbc1858": {
       "photo_id": "inbox_fox-charlie-001_87_01796_p_13akf5twbc1858",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+      "lat": 40.4525,
+      "lng": -83.7844,
+      "location_name": "Indian Lake, Ohio",
+      "location_key": "indian_lake",
       "region": "United States",
       "location_estimate": "Indian Lake, United States",
-      "confidence": "low",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "indian_lake",
+          "name": "Indian Lake, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_217_01773_p_13akf5twbc1762_r": {
+      "photo_id": "inbox_fox-charlie-001_217_01773_p_13akf5twbc1762_r",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "location_name": "Hamilton, Ohio",
+      "location_key": "hamilton",
+      "region": "United States",
+      "location_estimate": "Hamilton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "hamilton",
+          "name": "Hamilton, Ohio"
         }
       ]
     },
@@ -2627,6 +2675,22 @@
         {
           "key": "miami",
           "name": "Miami, Florida"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_464_02151_p_13akf5twbc1954_r": {
+      "photo_id": "inbox_fox-charlie-001_464_02151_p_13akf5twbc1954_r",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
+      "region": "United States",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
         }
       ]
     },
@@ -6246,6 +6310,22 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_12_01635_p_13akf5twbc0904": {
+      "photo_id": "inbox_fox-charlie-001_12_01635_p_13akf5twbc0904",
+      "lat": 42.3314,
+      "lng": -83.0458,
+      "location_name": "Detroit, Michigan",
+      "location_key": "detroit",
+      "region": "United States",
+      "location_estimate": "Detroit, Michigan",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "detroit",
+          "name": "Detroit, Michigan"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_5_01673_p_13akf5twbc1069": {
       "photo_id": "inbox_fox-charlie-001_5_01673_p_13akf5twbc1069",
       "lat": 27.6648,
@@ -6311,6 +6391,22 @@
         {
           "key": "miami",
           "name": "Miami, Florida"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_396_02118_p_13akf5twbc3313": {
+      "photo_id": "inbox_fox-charlie-001_396_02118_p_13akf5twbc3313",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "location_name": "Hamilton, Ohio",
+      "location_key": "hamilton",
+      "region": "United States",
+      "location_estimate": "Hamilton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "hamilton",
+          "name": "Hamilton, Ohio"
         }
       ]
     },
@@ -6626,6 +6722,22 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_506_01657_p_13akf5twbc1035_r": {
+      "photo_id": "inbox_fox-charlie-001_506_01657_p_13akf5twbc1035_r",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "location_name": "Hamilton, Ohio",
+      "location_key": "hamilton",
+      "region": "United States",
+      "location_estimate": "Hamilton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "hamilton",
+          "name": "Hamilton, Ohio"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_591_01826_p_13akf5twbc2206": {
       "photo_id": "inbox_fox-charlie-001_591_01826_p_13akf5twbc2206",
       "lat": 27.6648,
@@ -6910,6 +7022,22 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_34_01725_p_13akf5twbc1142": {
+      "photo_id": "inbox_fox-charlie-001_34_01725_p_13akf5twbc1142",
+      "lat": 40.4525,
+      "lng": -83.7844,
+      "location_name": "Indian Lake, Ohio",
+      "location_key": "indian_lake",
+      "region": "United States",
+      "location_estimate": "Indian Lake, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "indian_lake",
+          "name": "Indian Lake, Ohio"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_1_01627_p_13akf5twbc0914": {
       "photo_id": "inbox_fox-charlie-001_1_01627_p_13akf5twbc0914",
       "lat": 39.7589,
@@ -7000,17 +7128,17 @@
     },
     "inbox_fox-charlie-001_448_01710_p_13akf5twbc5260_r": {
       "photo_id": "inbox_fox-charlie-001_448_01710_p_13akf5twbc5260_r",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+      "lat": 42.3314,
+      "lng": -83.0458,
+      "location_name": "Detroit, Michigan",
+      "location_key": "detroit",
       "region": "United States",
       "location_estimate": "Detroit, Michigan, USA",
-      "confidence": "low",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "detroit",
+          "name": "Detroit, Michigan"
         }
       ]
     },
@@ -7080,14 +7208,18 @@
     },
     "inbox_fox-charlie-001_177_02137_p_13akf5twbc1287": {
       "photo_id": "inbox_fox-charlie-001_177_02137_p_13akf5twbc1287",
-      "lat": 39.7589,
-      "lng": -84.1916,
-      "location_name": "Dayton, Ohio",
-      "location_key": "dayton",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
       "region": "United States",
       "location_estimate": "Dayton or Arcanum, Ohio",
       "confidence": "high",
       "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
+        },
         {
           "key": "dayton",
           "name": "Dayton, Ohio"
@@ -7270,6 +7402,22 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_91_02055_p_13akf5twbc3671": {
+      "photo_id": "inbox_fox-charlie-001_91_02055_p_13akf5twbc3671",
+      "lat": 39.1031,
+      "lng": -84.512,
+      "location_name": "Cincinnati, Ohio",
+      "location_key": "cincinnati",
+      "region": "United States",
+      "location_estimate": "Cincinnati, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "cincinnati",
+          "name": "Cincinnati, Ohio"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_266_02132_p_13akf5twbc1041": {
       "photo_id": "inbox_fox-charlie-001_266_02132_p_13akf5twbc1041",
       "lat": 39.8283,
@@ -7368,14 +7516,18 @@
     },
     "inbox_fox-charlie-001_39_02066_p_13akf5twbc3598_r": {
       "photo_id": "inbox_fox-charlie-001_39_02066_p_13akf5twbc3598_r",
-      "lat": 39.7589,
-      "lng": -84.1916,
-      "location_name": "Dayton, Ohio",
-      "location_key": "dayton",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
       "region": "United States",
       "location_estimate": "Dayton or Arcanum, Ohio, USA",
       "confidence": "high",
       "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
+        },
         {
           "key": "dayton",
           "name": "Dayton, Ohio"
@@ -8664,14 +8816,18 @@
     },
     "inbox_fox-charlie-001_109_02049_p_13akf5twbc3432_g": {
       "photo_id": "inbox_fox-charlie-001_109_02049_p_13akf5twbc3432_g",
-      "lat": 39.7589,
-      "lng": -84.1916,
-      "location_name": "Dayton, Ohio",
-      "location_key": "dayton",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
       "region": "United States",
       "location_estimate": "Dayton or Arcanum, Ohio, USA",
       "confidence": "high",
       "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
+        },
         {
           "key": "dayton",
           "name": "Dayton, Ohio"
@@ -8860,17 +9016,17 @@
     },
     "inbox_fox-charlie-001_318_02134_p_13akf5twbc4080": {
       "photo_id": "inbox_fox-charlie-001_318_02134_p_13akf5twbc4080",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "location_name": "Hamilton, Ohio",
+      "location_key": "hamilton",
       "region": "United States",
       "location_estimate": "Hamilton, Ohio, USA",
-      "confidence": "low",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "hamilton",
+          "name": "Hamilton, Ohio"
         }
       ]
     },

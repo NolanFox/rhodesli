@@ -202,6 +202,46 @@
       "region": "South America",
       "notes": "Sephardic diaspora community"
     },
+    "detroit": {
+      "name": "Detroit, Michigan",
+      "lat": 42.3314,
+      "lng": -83.0458,
+      "aliases": ["detroit", "detroit michigan", "detroit, michigan"],
+      "region": "United States",
+      "notes": "Fox family connection — Albert Fox Knights of Maccabees"
+    },
+    "hamilton": {
+      "name": "Hamilton, Ohio",
+      "lat": 39.3995,
+      "lng": -84.5613,
+      "aliases": ["hamilton, ohio", "hamilton ohio"],
+      "region": "United States",
+      "notes": "Near Dayton — Fox family area"
+    },
+    "cincinnati": {
+      "name": "Cincinnati, Ohio",
+      "lat": 39.1031,
+      "lng": -84.5120,
+      "aliases": ["cincinnati", "cincinnati ohio", "cincinnati, ohio"],
+      "region": "United States",
+      "notes": "Major Ohio city near Fox family area"
+    },
+    "indian_lake": {
+      "name": "Indian Lake, Ohio",
+      "lat": 40.4525,
+      "lng": -83.7844,
+      "aliases": ["indian lake"],
+      "region": "United States",
+      "notes": "Recreation area in Ohio"
+    },
+    "arcanum": {
+      "name": "Arcanum, Ohio",
+      "lat": 39.9920,
+      "lng": -84.5530,
+      "aliases": ["arcanum"],
+      "region": "United States",
+      "notes": "Small town near Dayton"
+    },
     "united_states": {
       "name": "United States",
       "lat": 39.8283,

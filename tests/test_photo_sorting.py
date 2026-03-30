@@ -220,6 +220,52 @@ class TestDateLabelsDualKeying:
         assert _normalize_gallery_sort("invalid") == "date_asc"
 
 
+class TestPhotoLocationsDualKeying:
+    """Verify photo_locations also gets SHA256 aliases in Postgres mode."""
+
+    def test_postgres_mode_adds_sha256_aliases_to_locations(self):
+        """Photo locations should be accessible by SHA256 ID."""
+        from unittest.mock import MagicMock, patch
+
+        mock_photo_registry = MagicMock()
+        mock_photo_registry.get_photo_path.side_effect = lambda pid: (
+            "raw_photos/test_location_photo.jpg" if pid == "inbox_loc_001" else None
+        )
+
+        inbox_locations = {
+            "inbox_loc_001": {
+                "photo_id": "inbox_loc_001",
+                "lat": 39.7589,
+                "lng": -84.1916,
+                "location_name": "Dayton, Ohio",
+            }
+        }
+
+        with (
+            patch("app.page_routes._main_mod.DATA_SOURCE", "postgres"),
+            patch("app.page_routes._photo_locations_cache", None),
+            patch(
+                "app.supabase_data.load_photo_locations_from_supabase",
+                return_value=dict(inbox_locations),
+            ),
+            patch("app.page_routes._main_mod.load_photo_registry", return_value=mock_photo_registry),
+        ):
+            from app.page_routes import _load_photo_locations
+
+            # Reset cache
+            import app.page_routes
+
+            app.page_routes._photo_locations_cache = None
+            result = _load_photo_locations()
+
+        assert "inbox_loc_001" in result
+        from app.utils import generate_photo_id
+
+        sha256_id = generate_photo_id("test_location_photo.jpg")
+        assert sha256_id in result, f"SHA256 alias {sha256_id} not found in photo locations"
+        assert result[sha256_id]["location_name"] == "Dayton, Ohio"
+
+
 class TestPhotoSortBySource:
     """Verify 'By Source' sort option works."""
 
