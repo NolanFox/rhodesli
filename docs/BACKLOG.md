@@ -51,8 +51,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [ ] **FB-013**: GEDCOM change detection → auto re-run trigger. Future feature. Session 143.
 - [ ] **FB-014**: Photo co-occurrence as life event evidence. Future feature. Session 143.
 - [ ] **TIMELINE-002** (P2): Person page inline timeline section — render event groups directly on person page instead of separate /timeline route. PRD-059. Session 144b.
-- [ ] **DATA-AUDIT-001**: 20 CONFIRMED identities with no anchor_ids. Pre-existing. Session 143 audit.
-- [ ] **DATA-AUDIT-002**: 48 multi-hop merges to flatten. Pre-existing. Session 143 audit.
+- [x] **DATA-AUDIT-001**: 55 CONFIRMED with empty anchors (not 20). 23 candidates promoted to anchors, 31 merged ghosts (filtered by app), 1 empty shell (Solomon Galante). DONE (Session 144b).
+- [x] **DATA-AUDIT-002**: 52 multi-hop merges flattened (not 48). 50 two-hop + 2 three-hop chains. 0 circular, 0 dangling. DONE (Session 144b).
 
 ### P1 — PostgREST Filter Injection (SEC-001) — Session 134
 - **SEC-001**: `.or_()` in nl_query_executor.py takes raw PostgREST filter strings. Currently safe due to hardcoded allowlist in NL parser, but will become P0 if Gemini-assisted parsing (TOOLS-004 Phase 2) passes user-controlled strings. `_sanitize_postgrest_value()` added as defense-in-depth but the underlying `.or_()` pattern should be replaced with parameterized filters. **Must fix before TOOLS-004 Phase 2 ships.** Source: Session 134 security audit Finding 1.
