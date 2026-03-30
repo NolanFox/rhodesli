@@ -170,6 +170,38 @@
       "region": "Europe",
       "notes": "1,673 Rhodes Jews deported July 1944. Most perished."
     },
+    "dayton": {
+      "name": "Dayton, Ohio",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "aliases": ["dayton", "dayton ohio", "dayton, ohio"],
+      "region": "United States",
+      "notes": "Fox family connection — Charles Fox Dayton Ohio Collection"
+    },
+    "cape_town": {
+      "name": "Cape Town, South Africa",
+      "lat": -33.9249,
+      "lng": 18.4241,
+      "aliases": ["cape town", "capetown", "western cape"],
+      "region": "Africa",
+      "notes": "Rhodes diaspora community in South Africa"
+    },
+    "brussels": {
+      "name": "Brussels, Belgium",
+      "lat": 50.8503,
+      "lng": 4.3517,
+      "aliases": ["brussels", "bruxelles", "brussel"],
+      "region": "Europe",
+      "notes": "European diaspora"
+    },
+    "montevideo": {
+      "name": "Montevideo, Uruguay",
+      "lat": -34.9011,
+      "lng": -56.1645,
+      "aliases": ["montevideo", "uruguay"],
+      "region": "South America",
+      "notes": "Sephardic diaspora community"
+    },
     "united_states": {
       "name": "United States",
       "lat": 39.8283,
