@@ -2313,6 +2313,23 @@ def _load_date_labels() -> dict:
 
             result = load_date_labels_from_supabase()
             if result is not None:
+                # Dual-key: Supabase stores inbox_* IDs, but _photo_cache uses SHA256 IDs.
+                # Add SHA256 aliases so date_labels.get(sha256_id) works in sort/display.
+                try:
+                    photo_registry = load_photo_registry()
+                    aliases_added = 0
+                    for pid in list(result.keys()):
+                        if pid.startswith("inbox_"):
+                            path = photo_registry.get_photo_path(pid)
+                            if path:
+                                sha256_id = generate_photo_id(Path(path).name)
+                                if sha256_id not in result:
+                                    result[sha256_id] = result[pid]
+                                    aliases_added += 1
+                    if aliases_added:
+                        logging.info(f"Date labels: added {aliases_added} SHA256 aliases for inbox IDs")
+                except Exception as alias_err:
+                    logging.warning(f"Date labels dual-keying failed (non-fatal): {alias_err}")
                 logging.info(f"Loaded {len(result)} date labels from Postgres")
                 _date_labels_cache = result
                 return _date_labels_cache

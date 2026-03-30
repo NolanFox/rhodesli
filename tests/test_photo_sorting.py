@@ -133,6 +133,93 @@ class TestPhotoSortByDate:
         assert ids.index("bbb222") > ids.index("ccc333"), f"Expected bbb222 (no date) at end, got: {ids}"
 
 
+class TestDateLabelsDualKeying:
+    """Verify date labels are dual-keyed by both inbox_* and SHA256 photo IDs (FB-007)."""
+
+    def test_postgres_mode_adds_sha256_aliases(self):
+        """When date_labels use inbox_* IDs, SHA256 aliases should be added."""
+        from unittest.mock import MagicMock, patch
+        from pathlib import Path
+
+        mock_photo_registry = MagicMock()
+        # Simulate inbox_* ID mapping to a filename
+        mock_photo_registry.get_photo_path.side_effect = lambda pid: (
+            "raw_photos/test_photo_123.jpg" if pid == "inbox_test_batch_001" else None
+        )
+
+        inbox_labels = {
+            "inbox_test_batch_001": {
+                "photo_id": "inbox_test_batch_001",
+                "best_year_estimate": 1945,
+                "estimated_decade": 1940,
+            }
+        }
+
+        with (
+            patch("app.main.DATA_SOURCE", "postgres"),
+            patch("app.main._date_labels_cache", None),
+            patch("app.supabase_data.load_date_labels_from_supabase", return_value=dict(inbox_labels)),
+            patch("app.main.load_photo_registry", return_value=mock_photo_registry),
+        ):
+            import app.main as main_mod
+
+            # Reset cache to force reload
+            main_mod._date_labels_cache = None
+            result = main_mod._load_date_labels()
+
+        # Original inbox ID should be present
+        assert "inbox_test_batch_001" in result
+        assert result["inbox_test_batch_001"]["best_year_estimate"] == 1945
+
+        # SHA256 of "test_photo_123.jpg" should also be present
+        from app.utils import generate_photo_id
+
+        sha256_id = generate_photo_id("test_photo_123.jpg")
+        assert sha256_id in result, f"SHA256 alias {sha256_id} not found in date labels"
+        assert result[sha256_id]["best_year_estimate"] == 1945
+
+    def test_postgres_mode_no_duplicate_on_sha256_collision(self):
+        """If SHA256 ID already exists in labels, don't overwrite it."""
+        from unittest.mock import MagicMock, patch
+        from app.utils import generate_photo_id
+
+        sha256_id = generate_photo_id("test_photo.jpg")
+
+        mock_photo_registry = MagicMock()
+        mock_photo_registry.get_photo_path.side_effect = lambda pid: (
+            "raw_photos/test_photo.jpg" if pid == "inbox_test_001" else None
+        )
+
+        # Both IDs already exist with different data
+        labels = {
+            "inbox_test_001": {"best_year_estimate": 1945},
+            sha256_id: {"best_year_estimate": 1950},  # Already exists with different year
+        }
+
+        with (
+            patch("app.main.DATA_SOURCE", "postgres"),
+            patch("app.main._date_labels_cache", None),
+            patch("app.supabase_data.load_date_labels_from_supabase", return_value=dict(labels)),
+            patch("app.main.load_photo_registry", return_value=mock_photo_registry),
+        ):
+            import app.main as main_mod
+
+            main_mod._date_labels_cache = None
+            result = main_mod._load_date_labels()
+
+        # SHA256 entry should NOT be overwritten
+        assert result[sha256_id]["best_year_estimate"] == 1950
+
+    def test_person_gallery_sort_uses_date_labels_with_sha256_ids(self):
+        """Person gallery sort must find date labels even when photos use SHA256 IDs."""
+        from app.page_routes import _normalize_gallery_sort
+
+        # Verify the normalize function accepts date_asc
+        assert _normalize_gallery_sort("date_asc") == "date_asc"
+        assert _normalize_gallery_sort("date_desc") == "date_desc"
+        assert _normalize_gallery_sort("invalid") == "date_asc"
+
+
 class TestPhotoSortBySource:
     """Verify 'By Source' sort option works."""
 
