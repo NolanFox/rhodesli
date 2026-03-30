@@ -66,8 +66,12 @@ class TestDistanceEndpoint:
             (["face-t1"], mock_embs_target),
         ]
         mock_conf.return_value = {
-            "calibrated_score": 72,
-            "tier_label": "Strong",
+            "confidence_pct": 72,
+            "short_label": "High",
+            "tier": "POSSIBLE MATCH",
+            "label": "Strong match",
+            "tier_color": "bg-blue-600",
+            "dots": 4,
         }
 
         c = TestClient(main.app)
@@ -77,7 +81,7 @@ class TestDistanceEndpoint:
         html = resp.text
         assert "72% match" in html
         assert "Dist:" in html
-        assert "Strong" in html
+        assert "High" in html
         assert "distance-badge-reveal" in html
 
     @patch("core.neighbors.get_identity_embeddings")
@@ -136,6 +140,42 @@ class TestDistanceEndpoint:
 
         assert resp.status_code == 200
         assert "hidden" in resp.text
+
+    @patch("core.neighbors.get_identity_embeddings")
+    @patch("app.identity_routes._main_mod")
+    def test_distance_never_shows_zero_percent(self, mock_main, mock_get_embs):
+        """Regression: distance endpoint must never show 0% match (FB-007b).
+
+        The bug was using wrong dict keys ('calibrated_score' instead of
+        'confidence_pct'), causing the percentage to default to 0.
+        """
+        from starlette.testclient import TestClient
+        import app.main as main
+
+        registry = self._make_registry_mock()
+        mock_main.load_registry.return_value = registry
+        mock_main._check_admin.return_value = None
+        mock_main.get_face_data.return_value = {}
+
+        # Create embeddings with a known distance (far apart = weak match)
+        mock_embs_source = np.zeros((1, 512), dtype=np.float32)
+        mock_embs_source[0, 0] = 1.0
+        mock_embs_target = np.zeros((1, 512), dtype=np.float32)
+        mock_embs_target[0, 1] = 1.0  # Distance ~1.41
+
+        mock_get_embs.side_effect = [
+            (["face-s1"], mock_embs_source),
+            (["face-t1"], mock_embs_target),
+        ]
+
+        c = TestClient(main.app)
+        resp = c.get("/api/identity/id-source/distance/id-target")
+
+        assert resp.status_code == 200
+        html = resp.text
+        # Must show a real percentage, not 0%
+        assert "0% match" not in html, "Distance endpoint showed 0% match — wrong dict key regression"
+        assert "% match" in html, "Distance endpoint missing percentage display"
 
 
 class TestSearchResultCardScanner:

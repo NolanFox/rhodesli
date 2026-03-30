@@ -1080,8 +1080,8 @@ def get(source_id: str, target_id: str, sess=None, request=None):
     from core.confidence import compute_face_confidence
 
     conf = compute_face_confidence(min_dist)
-    pct = conf.get("calibrated_score", 0)
-    tier = conf.get("tier_label", "")
+    pct = conf.get("confidence_pct", 0)
+    tier = conf.get("short_label", "")
 
     # Color based on tier
     if pct >= 60:
