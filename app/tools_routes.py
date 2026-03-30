@@ -340,6 +340,13 @@ def get(sess=None):
 @rt("/tools/search")
 def post(q: str = "", sess=None, request=None):
     """Handle search query — parse intent and execute against Supabase."""
+    # CSRF origin check (SEC-003 — Session 134 Finding 4)
+    from app.auth import _check_origin
+
+    origin_denied = _check_origin(request) if request else None
+    if origin_denied:
+        return origin_denied
+
     # Rate limit: 60 searches/hr per IP (Security audit Finding 3)
     from app.rate_limit import check_rate_limit
 

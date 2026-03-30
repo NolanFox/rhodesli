@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 51.0 — March 22, 2026
-**Status**: ~3703 tests passing, v0.99.44, 972 photos, 3757 identities (1863 non-merged), ~154 confirmed
+**Version**: 52.0 — March 30, 2026
+**Status**: ~3977 tests passing, v0.99.56, 972 photos, 3757 identities (1765 non-merged), ~164 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
