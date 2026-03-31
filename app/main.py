@@ -6193,15 +6193,19 @@ def render_confirmed_section(
     linked_total = sum(1 for identity in confirmed if _has_tree_link(identity))
     unlinked_total = max(total_confirmed - linked_total, 0)
 
-    # Count needs_name before filtering
-    needs_name_total = sum(1 for identity in confirmed if (identity.get("name") or "").startswith("Unidentified"))
+    # Count needs_name before filtering — use canonical placeholder prefix (Codex P2)
+    needs_name_total = sum(
+        1 for identity in confirmed if (identity.get("name") or "").startswith("Unidentified Person ")
+    )
 
     if confirmed_filter == "tree_unlinked":
         confirmed = [identity for identity in confirmed if not _has_tree_link(identity)]
     elif confirmed_filter == "tree_linked":
         confirmed = [identity for identity in confirmed if _has_tree_link(identity)]
     elif confirmed_filter == "needs_name":
-        confirmed = [identity for identity in confirmed if (identity.get("name") or "").startswith("Unidentified")]
+        confirmed = [
+            identity for identity in confirmed if (identity.get("name") or "").startswith("Unidentified Person ")
+        ]
 
     # Apply sorting
     if sort_by == "faces":
