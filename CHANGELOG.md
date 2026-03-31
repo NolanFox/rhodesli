@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.58] — 2026-03-31 (Session 145: Family Research + Identity Inference + UX Fix)
+
+### Features
+- **Rachel Fox Newman identified**: Person 82863536 confirmed as Rachel by grandson Howard Newman. First validated use of Family Cluster Score approach + descendant confirmation workflow.
+- **AD-235 Family Cluster Score**: Aggregate kinship signal from embedding space. Mean L2 distance, threshold 1.34-1.35, 0.89 balanced accuracy. Academic kinship verification literature validates approach.
+- **PRD-059 Phase 4 specified**: Multi-signal identity inference engine with 6 scoring signals (Family Cluster Score, co-occurrence, age trajectory, GEDCOM, human testimony, source provenance). SDD with data model and UI wireframe.
+- **1894 Minsk revision list**: Definitive Fox sibling birth order for all 8 surviving children. Cross-validated 3/3 against JewishGen birth records.
+- **Fader collection ingested**: 147 photos (328 faces) from Sarah Fox Fader's granddaughter's collection. No Fox overlap found.
+
+### Fixes
+- **FB-001 (P2)**: "View in Admin Queue" on identify page and similar cards now links directly to person page instead of queue anchor navigation. 4 call sites fixed across page_routes, browse_routes, compare_routes, identity_routes.
+
+### Documentation
+- Rachel branch intake: Howard Newman + Sara Murray correspondence documented
+- Sarah branch intake: Erik Josowitz correspondence, Fader family tree documented
+- Person 3299 investigation: Jean Baumann ruled out, Elizabeth Tischler hypothesis
+- Fox family complete sibling mapping with 1894 census cross-validation
+
 ## [v0.99.57] — 2026-03-30 (Session 144b: Bugs + Batch + Co-Occurrence + Security + Data Integrity)
 
 ### Features

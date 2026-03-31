@@ -81,7 +81,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-30: Phase 1: Batch Gemini estimation COMPLETE — Albert 196/196, Esther 141/141 (100% coverage). Sessions 142-144b.
 - [x] 2026-03-30: Phase 2: Event grouping — 17 event groups from 246 dated photos. 5-year windows with shared-face union-find. Session 144b.
 - [x] 2026-03-30: Phase 3: Co-occurrence matrix — 102 identities, 391 pairs. Person page shows shared photo counts. Session 144b.
-- [ ] Phase 4: Identity inference — combine age trajectory + GEDCOM + co-occurrence
+- [-] 2026-03-31: Phase 4: Identity inference — PRD + SDD specified (Session 145). AD-235 Family Cluster Score. Implementation pending (Session 146+).
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
 - [x] 2026-03-11: Session 97 foundation shipped — SDD, research pack, implementation bundle, prompt/state lineage spec, and merged-branch verification are wired into the harness
@@ -139,6 +139,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-31: **v0.99.58 — Session 145**: Interactive family research + identity inference. Rachel Fox Newman identified via Family Cluster Score + descendant confirmation (Howard Newman). 1894 Minsk revision list: definitive Fox sibling birth order (8 children). AD-235 Family Cluster Score (0.89 balanced accuracy). PRD-059 Phase 4 + SDD specified. Fader collection ingested locally (147 photos, 328 faces, no Fox overlap). FB-001 UX fix (identify page → person page). Person 3299 investigated (likely Elizabeth Tischler). 4 Codex audits. 10 commits. 3980 app tests pass.
 
 - [x] 2026-03-30: **v0.99.57 — Session 144b**: Full-day session. 3 P1 bug fixes (sort, 0% display, data repair). Batch completion (Albert+Esther 100%). PRD-059 Phase 2+3 (18 event groups, co-occurrence 391 pairs). Geo dual-write (541 map pins, 97.7%). SEC-001 filter hardening + SEC-003 CSRF. FB-005 Needs Name filter. DATA-AUDIT-001 (23 anchors promoted) + DATA-AUDIT-002 (52 merges flattened). GEDCOM backfill 277/282. 2 Codex audits. 17 new tests. 3980 app tests pass. $1.82 Gemini. 12 BACKLOG items closed.
 
