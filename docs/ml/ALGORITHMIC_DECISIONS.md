@@ -2747,3 +2747,21 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Decision**: Enrich GEDCOM context with spouse timeline, primary birth dates, structured relationship blocks. Re-import GEDCOM from Downloads/gedcom_20260328/. Link Rose Weiss Baygel Fox and Jean Baumann Kassel Fox to Albert.
 - **Implementation**: P0 GEDCOM re-import, P0 spouse timeline in gedcom_context.py, P1 birth date resolution, P1 structured blocks. Then re-run 83 photos that lack full enrichment.
 - **Affects**: rhodesli_ml/gedcom_context.py, rhodesli_ml/importers/gedcom_parser.py, scripts/run_combined_pipeline.py
+
+### AD-235: Family Cluster Score — Aggregate Kinship Signal from Embedding Space (2026-03-31)
+- **Date**: 2026-03-31 | **Session**: 145
+- **Context**: Identity inference for unidentified Fox family members requires signals beyond pairwise face matching. Siblings and close relatives cluster in embedding space but with narrow margins. AD-067/068 previously rejected a weaker surname-based version (Cohen's d=0.43, >40% FPR). This revisits with blood relatives only.
+- **Decision**: Implement "Family Cluster Score" — average L2 embedding distance from an unknown face's centroid to all confirmed members of a target family. Use as a soft signal in multi-evidence identity inference (PRD-059 Phase 4), alongside co-occurrence, age trajectory, and GEDCOM data.
+- **Key parameters**:
+  - Aggregation: mean distance (0.892 balanced accuracy, beats median 0.845 and min 0.778)
+  - Threshold: 1.34–1.35 (86% recall, 90% precision). NOT 1.30 (only 17% recall)
+  - Fox family internal average: 1.319, non-Fox baseline: 1.391, gap: 0.07
+  - N=8 confirmed Fox members; threshold is per-family, not global
+- **Rationale**: Academic kinship verification literature validates approach (FIW dataset, graph-based joint evidence, ArcFace ~78% baseline). Aggregate evidence from multiple family members is stronger than any pairwise comparison. Difference from AD-067/068: this uses blood relatives only (not surname grouping), achieving 0.89 vs ~0.65 balanced accuracy.
+- **Risks**:
+  - Endogamy false positives (Jewish community → shared ethnic features compress margins)
+  - N=8 is borderline — threshold won't generalize; must be per-family calibrated
+  - Spouses invisible (biological signal only)
+- **Implementation**: Batch-computed Supabase table, recomputed on identity mutations. Surface as continuous "Family Affinity" score on person page, not binary flag. Stays out of AD-179 clustering pipeline — orthogonal signal.
+- **Gap/Risk**: Need second family (e.g., Capeluto) to validate cross-family generalization. Consider z-score approach vs absolute threshold.
+- **Affects**: PRD-059 Phase 4, future app/identity_routes.py, future Supabase family_scores table
