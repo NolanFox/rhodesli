@@ -140,9 +140,69 @@
 - Person 4044 = Bessie Fox (uncertain — 1954 photo may be different person)
 - Person 3481 = NOT Rachel, NOT a Fox relative (embedding evidence + Howard testimony)
 
+## Fox Siblings Complete List (from Ancestry tree screenshot)
+
+From the Sarah Fox Fader family tree page, ALL Fox siblings visible:
+| Name | Birth | Death | Notes |
+|------|-------|-------|-------|
+| Bessie (B) Fox (Fuks) | 1877 | ? | Oldest sibling per Ancestry |
+| Sarah (S D) Fox (Fuks) | 1879 | 1967 | Married Harry Onifater (1880-1965) |
+| Harry (H) Fox (Fuks) | 1880 | 1965 | |
+| Yudel N (N) Fox (Fuks) | 1881 | ? | |
+| Harry (H G) Fox | 1881 | 1979 | Different Harry? |
+| Sadie (S S) Fox (Fuks) | 1884 | 1966 | Confirmed via naturalization form |
+| Jacob E (J) Fox (Fuks) | 1885 | 1931 | Died young |
+| Rose Scheckzner | 1886 | 1959 | |
+| Malka Fox (Fuks) | 1886 | 1891 | Died in infancy |
+| Rachel (R) Fox (Fuks) | 1889 | 1965 | Confirmed via Howard Newman photos |
+| Albert (Elia E) Fox | ~1892 | ? | Our primary subject |
+
+**Key insight**: Bessie is listed as born 1877 in Ancestry. GEDCOM has "abt 1884" and another record "Jan 1892". The Ancestry tree supports the older date, making Person 3299 (1975/77 photos) very unlikely to be Bessie (would be ~98-100).
+
+**Note**: Two "Harry" entries (1880 and 1881) — may be the same Harry with conflicting records, or two different people (Harry Isaackovich vs Harry H G Fox).
+
 ## Phase 2: Sarah Branch Findings
 
-*(To be filled during interactive session)*
+### Contact
+**Erik Josowitz** (ejosowitz@gmail.com) — great-grandson of Sarah Fox Fader
+- Erik's lineage: Sarah Fox Fader → Abraham Fader (1905-1958) → Ira A L Josowitz → Erik Alan Josowitz
+- Erik's late mother: Sherry Ann Fader (Oni) 1944-2019
+
+### Sarah Fox Fader Family (from Ancestry tree)
+- **Sarah (S D) Fox (Fuks)** 1879-1967 married **Harry (H) Onifater (U)** 1880-1965
+- Children: Abraham (1905-1958), Lenore (1906-1991), Louis Silvers (1906-1941), Rose (1909-), Nellie Kubrin (1910-1983), Samuel (1911-), Alexander Rubler (1913-), Yetta (1915-), Beulah Winkler (1916-2009), Stanley Gostel (1919-), Gloria (1923-2016), Hauer (dates unknown)
+- Abraham's children: Singer, Janice Fader (1939-), Ira A L Josowitz, Sherry Ann Fader (1944-2019)
+
+### Email Exchange Summary
+- Erik doesn't have old photos of Sarah specifically
+- Shared iCloud album of ~202 photos from his mother Sherry's collection (scanned after she passed)
+- Photos include Sherry's wedding (mid-1960s) and some older ones
+- No labels or identifications on any photos
+- Erik doesn't know who is in the older photos and has no one left to ask
+- Nolan asked about whether Sarah would have been at Sherry's wedding — Erik unsure
+
+### Photo Collection
+- **Location**: ~/Downloads/fox_sibling_pictures/sarah_fox_fader/
+- **Total files**: 202 JPGs (147 unique, 55 iCloud download duplicates)
+- **Size**: ~134 MB total, ~100 MB unique
+- **Resolution**: ~1600-2050 px (scanned prints)
+- **Filenames**: iCloud UUIDs (e.g., FE3A8246-1D44-4547-8757-7E5EE9D3F483.jpg)
+- **Content sampling**: Mostly Sherry's nuclear family (babies, toddlers, modern). Wedding head table photo is highest value for Fox connections. Some older B&W photos.
+
+### Recommended Approach: Hybrid Community + Cross-Match
+1. **Deduplicate** — remove 55 `(1)` duplicate files
+2. **Create "Fader Collection" community** — clean separation from Fox Family
+3. **Quick win first**: Run face detection on 10-15 oldest/group photos against Fox family embeddings
+4. **Full ingest** (147 photos) if quick win shows Fox connections
+5. **Cross-community matching** surfaces Fox connections automatically
+6. **Triage** cross-community proposals in Speed-Run mode
+
+**Time estimate**: ~2-3 hours for full pipeline, ~30 min for quick win
+
+### Open Leads
+- Erik has no more photos and no relatives to ask
+- Wedding photo is highest value — would Fox siblings have attended Sherry's wedding? (Sherry born 1944, wedding ~1965, Sarah would be ~86)
+- Older B&W photos may contain Fox family members from earlier era
 
 ## Phase 3: Temporal Analysis
 
