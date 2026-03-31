@@ -2347,7 +2347,7 @@ def get(
     if section not in valid_sections:
         section = "to_review"
 
-    if confirmed_filter not in {"all", "tree_unlinked", "tree_linked"}:
+    if confirmed_filter not in {"all", "tree_unlinked", "tree_linked", "needs_name"}:
         confirmed_filter = "all"
 
     # Validate view parameter

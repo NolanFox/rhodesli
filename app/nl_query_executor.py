@@ -186,15 +186,15 @@ def _execute_photo_filter(intent_result: dict, sb) -> dict[str, Any]:
     # For temporal queries (date_labels join), these would need PostgREST nested filters
     # which aren't supported yet — skip gracefully.
     if not has_temporal:
-        # Location filter (sanitized against PostgREST injection — Finding 1)
+        # Location filter — SEC-001: sanitize + escape before .or_()
         if "location" in filters:
-            loc = _sanitize_postgrest_value(filters["location"])
+            loc = _escape_ilike(_sanitize_postgrest_value(filters["location"]))
             query = query.or_(f"source.ilike.%{loc}%,collection.ilike.%{loc}%")
             query_desc_parts.append(f"from {filters['location']}")
 
-        # Photo type filter (sanitized against PostgREST injection — Finding 1)
+        # Photo type filter — SEC-001: sanitize + escape before .or_()
         if "photo_type" in filters:
-            ptype = _sanitize_postgrest_value(filters["photo_type"])
+            ptype = _escape_ilike(_sanitize_postgrest_value(filters["photo_type"]))
             query = query.or_(f"source.ilike.%{ptype}%,collection.ilike.%{ptype}%")
             query_desc_parts.append(f"{filters['photo_type']} photos")
 

@@ -69,3 +69,39 @@ class TestSearchEndpointCSRF:
         # The post function at /tools/search
         source = inspect.getsource(post)
         assert "_check_origin" in source, "/tools/search POST must call _check_origin for CSRF protection (SEC-003)"
+
+
+class TestSEC001OrFilterSanitization:
+    """Verify .or_() calls in nl_query_executor use both sanitize and escape (SEC-001)."""
+
+    def test_or_calls_use_sanitize_and_escape(self):
+        """Every .or_() call must use _sanitize_postgrest_value AND _escape_ilike."""
+        from pathlib import Path
+
+        source = (Path(__file__).parent.parent / "app" / "nl_query_executor.py").read_text()
+        # Count actual code calls (lines starting with whitespace + query), not comments
+        code_or_calls = [
+            line
+            for line in source.splitlines()
+            if ".or_(" in line and not line.strip().startswith(("#", '"""', "Security", "///"))
+        ]
+        assert len(code_or_calls) >= 2, f"Expected at least 2 .or_() code calls, found {len(code_or_calls)}"
+        assert "_sanitize_postgrest_value" in source
+        assert "_escape_ilike" in source
+
+    def test_sanitize_strips_metacharacters(self):
+        """_sanitize_postgrest_value must strip PostgREST metacharacters."""
+        from app.nl_query_executor import _sanitize_postgrest_value
+
+        assert _sanitize_postgrest_value("normal text") == "normal text"
+        assert "," not in _sanitize_postgrest_value("a,b")
+        assert "." not in _sanitize_postgrest_value("a.b")
+        assert "(" not in _sanitize_postgrest_value("a(b)")
+
+    def test_escape_ilike_handles_wildcards(self):
+        """_escape_ilike must escape % and _ characters."""
+        from app.nl_query_executor import _escape_ilike
+
+        assert _escape_ilike("100%") == r"100\%"
+        assert _escape_ilike("test_value") == r"test\_value"
+        assert _escape_ilike("normal") == "normal"

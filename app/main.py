@@ -6193,10 +6193,15 @@ def render_confirmed_section(
     linked_total = sum(1 for identity in confirmed if _has_tree_link(identity))
     unlinked_total = max(total_confirmed - linked_total, 0)
 
+    # Count needs_name before filtering
+    needs_name_total = sum(1 for identity in confirmed if (identity.get("name") or "").startswith("Unidentified"))
+
     if confirmed_filter == "tree_unlinked":
         confirmed = [identity for identity in confirmed if not _has_tree_link(identity)]
     elif confirmed_filter == "tree_linked":
         confirmed = [identity for identity in confirmed if _has_tree_link(identity)]
+    elif confirmed_filter == "needs_name":
+        confirmed = [identity for identity in confirmed if (identity.get("name") or "").startswith("Unidentified")]
 
     # Apply sorting
     if sort_by == "faces":
@@ -6233,6 +6238,8 @@ def render_confirmed_section(
         subtitle = f"{len(confirmed)} of {counts['confirmed']} identified still need family tree links"
     elif confirmed_filter == "tree_linked":
         subtitle = f"{len(confirmed)} of {counts['confirmed']} identified already have family tree links"
+    elif confirmed_filter == "needs_name":
+        subtitle = f"{len(confirmed)} confirmed but still unnamed — add names to help identify them"
     else:
         subtitle = (
             f"{counts['confirmed']} identified — {unlinked_total} still need family tree links"
@@ -6242,6 +6249,7 @@ def render_confirmed_section(
 
     filter_options = [
         ("all", f"All ({counts['confirmed']})"),
+        ("needs_name", f"Needs Name ({needs_name_total})"),
         ("tree_unlinked", f"Needs Tree ({unlinked_total})"),
         ("tree_linked", f"Linked ({linked_total})"),
     ]
