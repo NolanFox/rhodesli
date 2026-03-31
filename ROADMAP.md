@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.53 · ~4473 tests (3815 app + 658 ML) · 972 photos · 1768 identities · 154 confirmed
+Current: v0.99.59 · ~4654 tests (3996 app + 658 ML) · 1121 photos · 1977 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -81,7 +81,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-30: Phase 1: Batch Gemini estimation COMPLETE — Albert 196/196, Esther 141/141 (100% coverage). Sessions 142-144b.
 - [x] 2026-03-30: Phase 2: Event grouping — 17 event groups from 246 dated photos. 5-year windows with shared-face union-find. Session 144b.
 - [x] 2026-03-30: Phase 3: Co-occurrence matrix — 102 identities, 391 pairs. Person page shows shared photo counts. Session 144b.
-- [-] 2026-03-31: Phase 4: Identity inference — PRD + SDD specified (Session 145). AD-235 Family Cluster Score. Implementation pending (Session 146+).
+- [-] 2026-03-31: Phase 4: Identity inference — PRD + SDD specified (Session 145). AD-235 Family Cluster Score. Session 146: identity_suggestions table + batch script + 16 tests. Remaining: evidence panel UI, execute mode, co-occurrence integration.
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
 - [x] 2026-03-11: Session 97 foundation shipped — SDD, research pack, implementation bundle, prompt/state lineage spec, and merged-branch verification are wired into the harness
@@ -139,6 +139,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-03-31: **v0.99.59 — Session 146**: Deploy + Fader Collection + PRD-059 Phase 4 Foundation. Fader collection live (147 photos, 328 faces, R2+Supabase). identity_suggestions table created. Family Cluster Score batch script (19 candidates scored, top at 1.14). 16 new tests. 3996 app tests pass.
 
 - [x] 2026-03-31: **v0.99.58 — Session 145**: Interactive family research + identity inference. Rachel Fox Newman identified via Family Cluster Score + descendant confirmation (Howard Newman). 1894 Minsk revision list: definitive Fox sibling birth order (8 children). AD-235 Family Cluster Score (0.89 balanced accuracy). PRD-059 Phase 4 + SDD specified. Fader collection ingested locally (147 photos, 328 faces, no Fox overlap). FB-001 UX fix (identify page → person page). Person 3299 investigated (likely Elizabeth Tischler). 4 Codex audits. 10 commits. 3980 app tests pass.
 

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.59] — 2026-03-31 (Session 146: Fader Deploy + PRD-059 Phase 4 Foundation)
+
+### Features
+- **Fader collection live on production**: 147 photos, 328 faces deployed to R2 + Supabase. Photos page shows decade filters, scene categories, face counts. Attributed to Erik Josowitz.
+- **identity_suggestions table**: Supabase migration for PRD-059 Phase 4 identity inference engine. 13 columns with RLS, indexes on target_identity_id, status, confidence, family_id.
+- **Family Cluster Score batch script**: `scripts/compute_identity_suggestions.py` — multi-signal evidence pipeline with 6 scoring signals. Dry-run tested: 19 Fox family candidates scored, closest at family_dist=1.14 (Esther Burd Fox 1.04). PFE + flat embedding format support.
+
+### Infrastructure
+- Deploy v0.99.58 to Railway (DOCKERFILE builder, Supabase OK)
+- Supabase data sync: 147 photos, 328 photo_faces, 328 identities, 147 photo_communities, 328 identity_communities
+- R2 upload: 147 raw photos + 328 face crops
+
+### Tests
+- 16 new tests for identity suggestion scoring functions
+- 3996 app tests pass (was 3980)
+
 ## [v0.99.58] — 2026-03-31 (Session 145: Family Research + Identity Inference + UX Fix)
 
 ### Features
