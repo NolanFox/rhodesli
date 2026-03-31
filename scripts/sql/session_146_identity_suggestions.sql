@@ -28,16 +28,24 @@ CREATE INDEX IF NOT EXISTS idx_identity_suggestions_confidence
 CREATE INDEX IF NOT EXISTS idx_identity_suggestions_family
     ON identity_suggestions(family_id);
 
--- Enable RLS (allow authenticated reads, admin writes)
+-- Unique constraint for upsert support (Codex P2 fix)
+ALTER TABLE identity_suggestions ADD CONSTRAINT uq_target_family
+    UNIQUE (target_identity_id, family_id);
+
+-- Enable RLS (Codex P1 fix: tightened from USING(true) to role-based)
 ALTER TABLE identity_suggestions ENABLE ROW LEVEL SECURITY;
 
--- Policy: anyone can read suggestions
+-- Read: authenticated users only (not anon)
 CREATE POLICY "identity_suggestions_read" ON identity_suggestions
-    FOR SELECT USING (true);
+    FOR SELECT USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
 
--- Policy: authenticated users can insert/update (admin check in app layer)
+-- Write: service_role only (batch script uses service key)
 CREATE POLICY "identity_suggestions_write" ON identity_suggestions
-    FOR ALL USING (true) WITH CHECK (true);
+    FOR INSERT WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "identity_suggestions_update" ON identity_suggestions
+    FOR UPDATE USING (auth.role() = 'service_role');
+CREATE POLICY "identity_suggestions_delete" ON identity_suggestions
+    FOR DELETE USING (auth.role() = 'service_role');
 
 COMMENT ON TABLE identity_suggestions IS 'ML-generated identity suggestions with multi-signal evidence scores (PRD-059 Phase 4)';
 COMMENT ON COLUMN identity_suggestions.evidence_json IS 'Per-signal breakdown: family_cluster, co_occurrence, age_trajectory, gedcom_match, testimony, provenance';

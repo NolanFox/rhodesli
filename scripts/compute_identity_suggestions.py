@@ -364,7 +364,9 @@ def run_pipeline(family_name: str, dry_run: bool = True):
 
     from supabase import create_client
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"])
+    # Use service_role key for writes (RLS requires it), fall back to anon for reads
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
+    sb = create_client(os.environ["SUPABASE_URL"], key)
 
     if family_name not in FAMILY_CONFIG:
         logger.error(f"Unknown family: {family_name}. Available: {list(FAMILY_CONFIG.keys())}")
