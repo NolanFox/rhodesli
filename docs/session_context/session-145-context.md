@@ -189,9 +189,31 @@ From the Sarah Fox Fader family tree page, ALL Fox siblings visible:
 | Rachel (R) Fox (Fuks) | 1889 | 1965 | Confirmed via Howard Newman photos |
 | Albert (Elia E) Fox | ~1892 | ? | Our primary subject |
 
-**Key insight**: Bessie is listed as born 1877 in Ancestry. GEDCOM has "abt 1884" and another record "Jan 1892". The Ancestry tree supports the older date, making Person 3299 (1975/77 photos) very unlikely to be Bessie (would be ~98-100).
+### 1894 Minsk Revision List — DEFINITIVE Fox Sibling Data
 
-**Note**: Two "Harry" entries (1880 and 1881) — may be the same Harry with conflicting records, or two different people (Harry Isaackovich vs Harry H G Fox).
+Nolan found the 1894 census (revision list) for Meyer (Meer) Fuks family in Minsk.
+Cross-validated against JewishGen birth records: Rachel, Sarah, Albert all match perfectly.
+
+| Name (Russian) | Age 1894 | Birth | Modern Name | Notes |
+|----------------|----------|-------|-------------|-------|
+| Basya-Minya | 17 | ~1877 | **Bessie Fox** | MARRIED by 1894 |
+| Sora-Dvoura | 15 | 21/9/1879 | **Sarah Fox Fader** | JewishGen confirmed |
+| Geshel-Lazar | 12 | 5/1/1881 | **Harry Fox** | |
+| Shima | 10 | ~1884 | **Unknown** — Rose? | Unaccounted sibling |
+| Ronya | 5 | 4/7/1889 | **Rachel Fox Newman** | JewishGen confirmed |
+| El'ya | 1 | 15/1/1892 | **Albert Fox** | JewishGen confirmed |
+| Yisra'el | — | 11/12/1898 | **Irving Israel Fox** | Added to list later |
+| Yakov | — | 1/1/1901 | **Jacob Fox** | Added to list later |
+| Yudel-Noson | — | — | — | Deceased 26/1/1877 |
+| Leyba | — | — | — | Deceased 3/8/1898 |
+
+**Bessie birth year RESOLVED: ~1877.** GEDCOM "abt 1884" is WRONG (likely confused with Shima).
+GEDCOM "Jan 1892" Bessie Fox Fuchs is a DIFFERENT person.
+
+**Person 3299 timeline INVALIDATED**: Bessie born 1877 → age 98-100 in 1975/77 photos.
+Person 3299 (85% match to Bessie at 0.51) is likely a daughter/granddaughter, not Bessie herself.
+
+**Open question**: Who is Shima (born ~1884)? Ancestry lists Rose Scheckzner (1886-1959) and Sadie (1884-1966). Could Shima = Sadie? (birth years close: ~1884 vs 1884)
 
 ## Phase 2: Sarah Branch Findings
 
