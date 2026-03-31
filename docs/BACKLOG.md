@@ -43,7 +43,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **HD-032**: Transcript-based /clear hook replaces counter file. Session 143.
 - [x] **Phase 5**: 275/279 Fox photos Gemini batch. Session 143.
 - [x] **FACE-OVERLAY-EDGE**: Face overlay labels overflow right edge — max-width 120px + text-overflow ellipsis. DONE (Session 144b).
-- [ ] **BATCH-GEDCOM-38**: 38 photos still lack GEDCOM context. Needs batch GEDCOM loader fix (Session 144 red flag).
+- [x] **BATCH-GEDCOM-38**: 36/41 photos re-run with GEDCOM context ($1.65). 277/282 now have GEDCOM. 5 remain (rate-limited). DONE (Session 144b).
 - [x] **GEO-001** (GEO-DUAL-WRITE): 533 locations geocoded to Supabase photo_locations table (96.2% match). DONE (Session 144b).
 - [x] **ANCHOR-UI-001**: "Compare with anchor photo" admin button on photo page. DONE (Session 144, commit 79e2a559).
 - [x] **SORT-001** (P1): Person page "Sort: Earliest First" doesn't work — photos unsorted. FB-007. DONE (Session 144b, date labels dual-keying).
