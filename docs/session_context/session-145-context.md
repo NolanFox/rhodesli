@@ -84,6 +84,62 @@
 - Ken Newman likely has more Rachel/Fox family photos
 - Sara checking if Howard has old Fox family photos
 
+## Deep Analysis: Fox Family Identity Clusters
+
+### Embedding Distance Matrix (Rachel + Person 4044 MISSING — production only)
+
+**Confirmed Fox siblings — internal distances:**
+| Pair | Distance |
+|------|----------|
+| Charles ↔ Roland | 0.93 |
+| Albert ↔ Harry | 1.11 |
+| Albert ↔ Irving | 1.13 |
+
+**Unidentified persons — average distance to confirmed Fox family:**
+| Person | Avg→Fox | Closest | Distance | Assessment |
+|--------|---------|---------|----------|------------|
+| 3299 | 1.29 | Bessie | 0.97 | STRONGEST — borderline same-person |
+| 82863528 | 1.30 | Bessie | 1.07 | Strong Bessie cluster |
+| 82863536 | 1.30 | Albert | 1.18 | Moderate — male Fox line |
+| 4044 | 1.34 | Bessie | 1.23 | Weak-moderate |
+| 3481 | 1.43 | Sadie | 1.37 | Very weak — NOT Fox relative |
+| 3378 | 1.40 | Irving | 1.36 | Very weak |
+
+### GEDCOM Discoveries
+
+**"Ervin Fox" = Irving Israel Fox** (@I132128488728@, b. 10 Jan 1898, d. 16 Jun 1985)
+- Person 82863536 was labeled "Ervin Fox's sister Sadie" by a Fox cousin
+- Nolan compared with confirmed Sadie (naturalization form) and says NOT Sadie
+- Remaining candidates: Rachel or Bessie
+
+**Bessie Fox birth year ambiguity:**
+- @I132128502300@: Bessie (Basya Minya) Fox (Fuks), b. abt 1884
+- @I132332301866@: Bessie Fox Fuchs, b. Jan 1892
+- If 1884: age 91-93 in Person 3299's photos (1975/77) — very unlikely
+- If 1892: age 83-85 in Person 3299's photos — plausible!
+- 0.51 distance (85% match) between 3299 and Bessie = essentially same-person
+
+**Person 3299 photo dates:** 1975 and 1977 (both color photos of elderly woman)
+
+**Person 4044 photo dates:**
+- 02064: 1920, subject ages 18-24
+- 02146: 1930, subject ages 30-48
+- 01556: 1954, subject ages 30-60
+- Nolan suspects the 1954 photo face may not match the younger faces
+
+### Family Cluster Approach (Research-Backed)
+- Kinship verification is well-established (FIW dataset, ArcFace ~78% baseline)
+- Aggregate evidence from multiple family members stronger than pairwise
+- "Family Cluster Score" valid as soft signal for admin review
+- Risk: endogamy false positives in tight Jewish community
+
+### Nolan's Working Hypotheses
+- Person 82863536 = Rachel Fox Newman
+- Person 3299 = Bessie Fox (if birth year allows)
+- Person 82863528 = Bessie Fox
+- Person 4044 = Bessie Fox (uncertain — 1954 photo may be different person)
+- Person 3481 = NOT Rachel, NOT a Fox relative (embedding evidence + Howard testimony)
+
 ## Phase 2: Sarah Branch Findings
 
 *(To be filled during interactive session)*
