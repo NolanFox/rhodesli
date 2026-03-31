@@ -1258,22 +1258,6 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_58_01968_p_13akf5twbc3367": {
-      "photo_id": "inbox_fox-charlie-001_58_01968_p_13akf5twbc3367",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
     "inbox_fox-charlie-001_575_01711_p_13akf5twbc5286": {
       "photo_id": "inbox_fox-charlie-001_575_01711_p_13akf5twbc5286",
       "lat": 39.7589,
@@ -1338,40 +1322,24 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_349_02108_p_13akf5twbc3594": {
-      "photo_id": "inbox_fox-charlie-001_349_02108_p_13akf5twbc3594",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_58_01968_p_13akf5twbc3367": {
+      "photo_id": "inbox_fox-charlie-001_58_01968_p_13akf5twbc3367",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
         }
       ]
     },
     "inbox_fox-charlie-001_605_02164_p_13akf5twbc3438": {
       "photo_id": "inbox_fox-charlie-001_605_02164_p_13akf5twbc3438",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_29_01833_p_13akf5twbc2275": {
-      "photo_id": "inbox_fox-charlie-001_29_01833_p_13akf5twbc2275",
       "lat": 39.8283,
       "lng": -98.5795,
       "location_name": "United States",
@@ -1482,6 +1450,54 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_29_01833_p_13akf5twbc2275": {
+      "photo_id": "inbox_fox-charlie-001_29_01833_p_13akf5twbc2275",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_349_02108_p_13akf5twbc3594": {
+      "photo_id": "inbox_fox-charlie-001_349_02108_p_13akf5twbc3594",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
+      "region": "United States",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_510_01969_p_13akf5twbc3325": {
+      "photo_id": "inbox_fox-charlie-001_510_01969_p_13akf5twbc3325",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
     "a3d2695fe0804844": {
       "photo_id": "a3d2695fe0804844",
       "lat": 25.7617,
@@ -1498,22 +1514,6 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_327_02067_p_13akf5twbc3597": {
-      "photo_id": "inbox_fox-charlie-001_327_02067_p_13akf5twbc3597",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
     "inbox_fox-charlie-001_458_01658_p_13akf5twbc1033_r": {
       "photo_id": "inbox_fox-charlie-001_458_01658_p_13akf5twbc1033_r",
       "lat": 39.7589,
@@ -1527,22 +1527,6 @@
         {
           "key": "dayton",
           "name": "Dayton, Ohio"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_400_02181_p_13akf5twbc3217": {
-      "photo_id": "inbox_fox-charlie-001_400_02181_p_13akf5twbc3217",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
         }
       ]
     },
@@ -1662,6 +1646,38 @@
         }
       ]
     },
+    "inbox_fox-charlie-001_400_02181_p_13akf5twbc3217": {
+      "photo_id": "inbox_fox-charlie-001_400_02181_p_13akf5twbc3217",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_327_02067_p_13akf5twbc3597": {
+      "photo_id": "inbox_fox-charlie-001_327_02067_p_13akf5twbc3597",
+      "lat": 39.8283,
+      "lng": -98.5795,
+      "location_name": "United States",
+      "location_key": "united_states",
+      "region": "United States",
+      "location_estimate": "Ohio, United States",
+      "confidence": "low",
+      "all_matches": [
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
     "inbox_fox-charlie-001_285_01699_s_13akf5twbc0358": {
       "photo_id": "inbox_fox-charlie-001_285_01699_s_13akf5twbc0358",
       "lat": 39.7589,
@@ -1742,67 +1758,19 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_278_02107_p_13akf5twbc3566": {
-      "photo_id": "inbox_fox-charlie-001_278_02107_p_13akf5twbc3566",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_240_01987_p_13akf5twbc0802_r": {
+      "photo_id": "inbox_fox-charlie-001_240_01987_p_13akf5twbc0802_r",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_328_01907_p_13akf5twbc1991_r": {
-      "photo_id": "inbox_fox-charlie-001_328_01907_p_13akf5twbc1991_r",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_11_02167_p_13akf5twbc3161": {
-      "photo_id": "inbox_fox-charlie-001_11_02167_p_13akf5twbc3161",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_33_02156_p_13akf5twbc3634": {
-      "photo_id": "inbox_fox-charlie-001_33_02156_p_13akf5twbc3634",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2014,19 +1982,67 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_587_01595_p_13akf5twbc0738": {
-      "photo_id": "inbox_fox-charlie-001_587_01595_p_13akf5twbc0738",
-      "lat": 27.6648,
-      "lng": -81.5158,
-      "location_name": "Florida",
-      "location_key": "florida",
+    "inbox_fox-charlie-001_11_02167_p_13akf5twbc3161": {
+      "photo_id": "inbox_fox-charlie-001_11_02167_p_13akf5twbc3161",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
       "region": "United States",
-      "location_estimate": "Unknown Resort Location (possibly Florida or Caribbean)",
-      "confidence": "medium",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "florida",
-          "name": "Florida"
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_278_02107_p_13akf5twbc3566": {
+      "photo_id": "inbox_fox-charlie-001_278_02107_p_13akf5twbc3566",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
+      "region": "United States",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_328_01907_p_13akf5twbc1991_r": {
+      "photo_id": "inbox_fox-charlie-001_328_01907_p_13akf5twbc1991_r",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_33_02156_p_13akf5twbc3634": {
+      "photo_id": "inbox_fox-charlie-001_33_02156_p_13akf5twbc3634",
+      "lat": 39.8283,
+      "lng": -98.5795,
+      "location_name": "United States",
+      "location_key": "united_states",
+      "region": "United States",
+      "location_estimate": "Ohio, United States",
+      "confidence": "low",
+      "all_matches": [
+        {
+          "key": "united_states",
+          "name": "United States"
         }
       ]
     },
@@ -2047,22 +2063,6 @@
         {
           "key": "tampa",
           "name": "Tampa, Florida"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_23_01906_p_13akf5twbc1990": {
-      "photo_id": "inbox_fox-charlie-001_23_01906_p_13akf5twbc1990",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
         }
       ]
     },
@@ -2162,51 +2162,35 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_209_01816_p_13akf5twbc3322_g": {
-      "photo_id": "inbox_fox-charlie-001_209_01816_p_13akf5twbc3322_g",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_587_01595_p_13akf5twbc0738": {
+      "photo_id": "inbox_fox-charlie-001_587_01595_p_13akf5twbc0738",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Miami, Florida",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "miami",
+          "name": "Miami, Florida"
         }
       ]
     },
-    "inbox_fox-charlie-001_612_01977_p_13akf5twbc1816_r": {
-      "photo_id": "inbox_fox-charlie-001_612_01977_p_13akf5twbc1816_r",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_23_01906_p_13akf5twbc1990": {
+      "photo_id": "inbox_fox-charlie-001_23_01906_p_13akf5twbc1990",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_45_02040_p_13akf5twbc3152": {
-      "photo_id": "inbox_fox-charlie-001_45_02040_p_13akf5twbc3152",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2271,6 +2255,70 @@
         {
           "key": "united_states",
           "name": "United States"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_209_01816_p_13akf5twbc3322_g": {
+      "photo_id": "inbox_fox-charlie-001_209_01816_p_13akf5twbc3322_g",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_612_01977_p_13akf5twbc1816_r": {
+      "photo_id": "inbox_fox-charlie-001_612_01977_p_13akf5twbc1816_r",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_219_02044_p_13akf5twbc3226": {
+      "photo_id": "inbox_fox-charlie-001_219_02044_p_13akf5twbc3226",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_45_02040_p_13akf5twbc3152": {
+      "photo_id": "inbox_fox-charlie-001_45_02040_p_13akf5twbc3152",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2354,19 +2402,19 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_233_01836_p_13akf5twbc2214": {
-      "photo_id": "inbox_fox-charlie-001_233_01836_p_13akf5twbc2214",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_603_02146_p_13akf5twbc1331": {
+      "photo_id": "inbox_fox-charlie-001_603_02146_p_13akf5twbc1331",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2538,43 +2586,19 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_186_02113_p_13akf5twbc1356": {
-      "photo_id": "inbox_fox-charlie-001_186_02113_p_13akf5twbc1356",
-      "lat": 27.6648,
-      "lng": -81.5158,
-      "location_name": "Florida",
-      "location_key": "florida",
+    "inbox_fox-charlie-001_233_01836_p_13akf5twbc2214": {
+      "photo_id": "inbox_fox-charlie-001_233_01836_p_13akf5twbc2214",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
       "region": "United States",
-      "location_estimate": "United States (likely Florida or East Coast)",
-      "confidence": "medium",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "florida",
-          "name": "Florida"
-        },
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
-    "inbox_fox-charlie-001_627_01638_p_13akf5twbc0880_r": {
-      "photo_id": "inbox_fox-charlie-001_627_01638_p_13akf5twbc0880_r",
-      "lat": 27.6648,
-      "lng": -81.5158,
-      "location_name": "Florida",
-      "location_key": "florida",
-      "region": "United States",
-      "location_estimate": "United States (likely Florida or East Coast)",
-      "confidence": "medium",
-      "all_matches": [
-        {
-          "key": "florida",
-          "name": "Florida"
-        },
-        {
-          "key": "united_states",
-          "name": "United States"
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2678,19 +2702,43 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_220_02152_p_13akf5twbc1989": {
-      "photo_id": "inbox_fox-charlie-001_220_02152_p_13akf5twbc1989",
-      "lat": 39.7589,
-      "lng": -84.1916,
-      "location_name": "Dayton, Ohio",
-      "location_key": "dayton",
+    "inbox_fox-charlie-001_627_01638_p_13akf5twbc0880_r": {
+      "photo_id": "inbox_fox-charlie-001_627_01638_p_13akf5twbc0880_r",
+      "lat": 27.6648,
+      "lng": -81.5158,
+      "location_name": "Florida",
+      "location_key": "florida",
       "region": "United States",
-      "location_estimate": "Dayton, Ohio",
-      "confidence": "high",
+      "location_estimate": "Florida, United States",
+      "confidence": "medium",
       "all_matches": [
         {
-          "key": "dayton",
-          "name": "Dayton, Ohio"
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_186_02113_p_13akf5twbc1356": {
+      "photo_id": "inbox_fox-charlie-001_186_02113_p_13akf5twbc1356",
+      "lat": 27.6648,
+      "lng": -81.5158,
+      "location_name": "Florida",
+      "location_key": "florida",
+      "region": "United States",
+      "location_estimate": "Florida, United States",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
         }
       ]
     },
@@ -2739,6 +2787,22 @@
         {
           "key": "arcanum",
           "name": "Arcanum, Ohio"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_220_02152_p_13akf5twbc1989": {
+      "photo_id": "inbox_fox-charlie-001_220_02152_p_13akf5twbc1989",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
@@ -2806,22 +2870,6 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_556_01978_p_13akf5twbc1266": {
-      "photo_id": "inbox_fox-charlie-001_556_01978_p_13akf5twbc1266",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
-      "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
-      "all_matches": [
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
     "inbox_fox-charlie-001_628_01809_p_13akf5twbc3554_r": {
       "photo_id": "inbox_fox-charlie-001_628_01809_p_13akf5twbc3554_r",
       "lat": 40.7128,
@@ -2874,19 +2922,19 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_401_02059_p_13akf5twbc3610": {
-      "photo_id": "inbox_fox-charlie-001_401_02059_p_13akf5twbc3610",
-      "lat": 39.8283,
-      "lng": -98.5795,
-      "location_name": "United States",
-      "location_key": "united_states",
+    "inbox_fox-charlie-001_556_01978_p_13akf5twbc1266": {
+      "photo_id": "inbox_fox-charlie-001_556_01978_p_13akf5twbc1266",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
       "region": "United States",
-      "location_estimate": "United States",
-      "confidence": "low",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
       "all_matches": [
         {
-          "key": "united_states",
-          "name": "United States"
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
         }
       ]
     },
@@ -2963,6 +3011,22 @@
         {
           "key": "united_states",
           "name": "United States"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_401_02059_p_13akf5twbc3610": {
+      "photo_id": "inbox_fox-charlie-001_401_02059_p_13akf5twbc3610",
+      "lat": 39.992,
+      "lng": -84.553,
+      "location_name": "Arcanum, Ohio",
+      "location_key": "arcanum",
+      "region": "United States",
+      "location_estimate": "Arcanum, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "arcanum",
+          "name": "Arcanum, Ohio"
         }
       ]
     },
@@ -4390,26 +4454,6 @@
         }
       ]
     },
-    "inbox_fox-charlie-001_17_01633_p_13akf5twbc0908": {
-      "photo_id": "inbox_fox-charlie-001_17_01633_p_13akf5twbc0908",
-      "lat": 27.6648,
-      "lng": -81.5158,
-      "location_name": "Florida",
-      "location_key": "florida",
-      "region": "United States",
-      "location_estimate": "Florida, United States",
-      "confidence": "medium",
-      "all_matches": [
-        {
-          "key": "florida",
-          "name": "Florida"
-        },
-        {
-          "key": "united_states",
-          "name": "United States"
-        }
-      ]
-    },
     "a616aba825dda705": {
       "photo_id": "a616aba825dda705",
       "lat": 25.7617,
@@ -4488,6 +4532,26 @@
           "key": "nyc",
           "name": "New York City"
         },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_17_01633_p_13akf5twbc0908": {
+      "photo_id": "inbox_fox-charlie-001_17_01633_p_13akf5twbc0908",
+      "lat": 27.6648,
+      "lng": -81.5158,
+      "location_name": "Florida",
+      "location_key": "florida",
+      "region": "United States",
+      "location_estimate": "Florida, United States",
+      "confidence": "medium",
+      "all_matches": [
         {
           "key": "florida",
           "name": "Florida"
@@ -5803,6 +5867,22 @@
         {
           "key": "florida",
           "name": "Florida"
+        }
+      ]
+    },
+    "inbox_fox-charlie-001_607_02155_p_13akf5twbc3556": {
+      "photo_id": "inbox_fox-charlie-001_607_02155_p_13akf5twbc3556",
+      "lat": 39.7589,
+      "lng": -84.1916,
+      "location_name": "Dayton, Ohio",
+      "location_key": "dayton",
+      "region": "United States",
+      "location_estimate": "Dayton, Ohio",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "dayton",
+          "name": "Dayton, Ohio"
         }
       ]
     },
