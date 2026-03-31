@@ -2,26 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.99.56] — 2026-03-30 (Session 144b: Bug Fixes + Batch Completion + Co-Occurrence)
+## [v0.99.57] — 2026-03-30 (Session 144b: Bugs + Batch + Co-Occurrence + Security + Data Integrity)
 
 ### Features
-- **PRD-059 Phase 2**: Event grouping regenerated from Supabase (17 groups, 246 dated photos)
-- **PRD-059 Phase 3**: Co-occurrence matrix — 102 confirmed identities, 391 pairs. Top: Charles+Roland Fox (46 photos)
-- **Person page**: "Often appears with" now shows shared photo counts, sorted by co-occurrence frequency
-- **Batch script**: Supabase photo metadata fallback for photos not in local index
+- **PRD-059 Phase 2+3**: Event grouping (18 groups) + co-occurrence matrix (102 identities, 391 pairs)
+- **Person page**: "Often appears with" shows shared photo counts, sorted by frequency
+- **FB-005**: "Needs Name" filter on confirmed section — find unnamed confirmed identities
+- **Batch script**: Supabase photo metadata fallback + `--rerun-without-gedcom` flag
+
+### Security
+- **SEC-001**: PostgREST `.or_()` filter injection — added `_escape_ilike` alongside `_sanitize_postgrest_value`
+- **SEC-003**: CSRF `_check_origin()` on `/tools/search` POST
+- **Codex P1**: `--rerun-without-gedcom` fails closed when Supabase unavailable
 
 ### Fixes
-- **FB-007 (P1)**: Person page sort by date — dual-keying missing in Postgres mode. Date labels stored with inbox_* IDs, sort used SHA256 IDs
-- **0% display (P1)**: Distance endpoint used wrong dict keys (`calibrated_score` → `confidence_pct`), always showed 0% match
-- **Data repair**: Person 3481 multi-claimed faces fixed (3485/3486 merged)
+- **FB-007 (P1)**: Person page sort — date_labels + photo_locations dual-keying in Postgres mode
+- **0% display (P1)**: Distance endpoint wrong dict keys (`calibrated_score` → `confidence_pct`)
+- **FACE-OVERLAY-EDGE**: CSS `max-width: 120px` + `display: inline-block` + `text-overflow: ellipsis`
+- **Data repair**: Person 3481 multi-claimed faces (3485/3486 merged)
+- **Codex P2**: Needs Name filter uses canonical `"Unidentified Person "` prefix
+- **Codex P2**: Geocode Supabase upsert includes all denormalized columns
 
-### Data
-- Albert Fox: 196/196 photos with date labels (100% coverage)
-- Esther Burd Fox: 141/141 photos with date labels (100% coverage)
-- 3 final photos processed ($0.17): 1928, 1978, 1946
+### Data Integrity
+- **DATA-AUDIT-001**: 23 candidates promoted to anchors for CONFIRMED identities
+- **DATA-AUDIT-002**: 52 multi-hop merge chains flattened
+- **BATCH-GEDCOM-38**: 277/282 Albert+Esther photos with GEDCOM context (was 241)
+- **Geocode**: 541/554 photos (97.7%) — 9 new Ohio locations added
+- **Map pins**: 268 → 541
 
 ### Tests
-- 3967 app tests pass (+4 new: dual-keying, 0% regression, co-occurrence)
+- 3980 app tests pass (+17 new: dual-keying, SEC-001, co-occurrence, event grouping)
 
 ## [v0.99.55] — 2026-03-29 (Session 144: GEDCOM Re-Import + Context Enrichment)
 
