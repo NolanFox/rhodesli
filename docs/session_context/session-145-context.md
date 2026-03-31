@@ -133,12 +133,44 @@
 - "Family Cluster Score" valid as soft signal for admin review
 - Risk: endogamy false positives in tight Jewish community
 
-### Nolan's Working Hypotheses
-- Person 82863536 = Rachel Fox Newman
-- Person 3299 = Bessie Fox (if birth year allows)
-- Person 82863528 = Bessie Fox
-- Person 4044 = Bessie Fox (uncertain — 1954 photo may be different person)
-- Person 3481 = NOT Rachel, NOT a Fox relative (embedding evidence + Howard testimony)
+### COMPLETE Rachel Embedding Analysis (production sync done)
+
+**Rachel vs all key identities (sorted by distance):**
+| Distance | Person | Assessment |
+|----------|--------|------------|
+| 0.92 | Harry Fox | Closest — brother |
+| 0.95 | Albert Fox | Brother |
+| **0.95** | **Person 82863536** | **Same distance as Albert — STRONG Rachel hypothesis** |
+| 0.95 | Person 4044 | Fox family signal |
+| 0.97 | Irving Israel Fox | Nephew |
+| 0.98 | Roland Fox | Nephew |
+| 1.04 | Bessie Fox | Sister |
+| 1.05 | Charles Fox | Nephew |
+| 1.09 | Sadie Fox Levine | Sister |
+| 1.11 | Person 3299 | Moderate |
+| 1.24 | Person 3481 | Very distant — NOT Rachel |
+
+### Person 4044 Internal Consistency
+| Pair | Distance |
+|------|----------|
+| 1920 ↔ 1930 | 1.23 |
+| 1920 ↔ 1954 | 1.27 |
+| 1930 ↔ 1954 | 1.22 |
+All three faces are roughly equidistant — no outlier. Supports same person across decades.
+
+### Person 4044 Per-Face vs Fox Sisters
+| Photo | Rachel | Bessie | Sadie | Albert |
+|-------|--------|--------|-------|--------|
+| 02064 (1920) | 1.28 | 1.23 | 1.25 | 1.14 |
+| 02146 (1930) | 1.20 | 1.21 | 1.19 | 1.18 |
+| 01556 (1954) | **1.10** | 1.14 | 1.16 | 1.14 |
+The 1954 face is closest to Rachel (1.10) — interesting signal.
+
+### Updated Hypotheses
+- **Person 82863536 = Rachel Fox Newman**: STRONG (0.95 to Rachel = same as Albert, her brother)
+- Person 3299 = Bessie Fox: moderate (1.11 to Rachel, 0.97 to Bessie — clearly Bessie-side)
+- Person 4044: unclear — Fox family signal but no dominant sister match
+- Person 3481 = NOT Rachel: CONFIRMED (1.24 — farthest of all)
 
 ## Fox Siblings Complete List (from Ancestry tree screenshot)
 
