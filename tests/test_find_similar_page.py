@@ -8,16 +8,26 @@ import pytest
 _TEST_IDENTITIES = {
     "identities": {
         "id-leon": {
-            "identity_id": "id-leon", "name": "Big Leon Capeluto", "state": "CONFIRMED",
-            "anchor_ids": ["face-leon1", "face-leon2"], "candidate_ids": [],
-            "metadata": {"gender": "M"}, "version_id": 1,
-            "created_at": "2025-01-01T00:00:00Z", "updated_at": "2025-01-01T00:00:00Z",
+            "identity_id": "id-leon",
+            "name": "Big Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-leon1", "face-leon2"],
+            "candidate_ids": [],
+            "metadata": {"gender": "M"},
+            "version_id": 1,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
         },
         "id-nace": {
-            "identity_id": "id-nace", "name": "Nace Capeluto", "state": "CONFIRMED",
-            "anchor_ids": ["face-nace1"], "candidate_ids": [],
-            "metadata": {"gender": "M"}, "version_id": 1,
-            "created_at": "2025-01-01T00:00:00Z", "updated_at": "2025-01-01T00:00:00Z",
+            "identity_id": "id-nace",
+            "name": "Nace Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-nace1"],
+            "candidate_ids": [],
+            "metadata": {"gender": "M"},
+            "version_id": 1,
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
         },
     }
 }
@@ -40,14 +50,16 @@ def mock_similar_data():
         {"identity_id": "id-nace", "distance": 0.95, "can_merge": True, "merge_blocked_reason": ""},
     ]
 
-    with patch("app.main.is_auth_enabled", return_value=False), \
-         patch("app.main.load_registry", return_value=mock_reg), \
-         patch("app.main.get_crop_files", return_value={"face-leon1.jpg", "face-nace1.jpg"}), \
-         patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
-         patch("app.main.get_best_face_id", return_value="face-leon1"), \
-         patch("app.main.get_face_data", return_value={}), \
-         patch("app.main.load_photo_registry", return_value=MagicMock()), \
-         patch("core.neighbors.find_nearest_neighbors", return_value=mock_neighbors):
+    with (
+        patch("app.main.is_auth_enabled", return_value=False),
+        patch("app.main.load_registry", return_value=mock_reg),
+        patch("app.main.get_crop_files", return_value={"face-leon1.jpg", "face-nace1.jpg"}),
+        patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"),
+        patch("app.main.get_best_face_id", return_value="face-leon1"),
+        patch("app.main.get_face_data", return_value={}),
+        patch("app.main.load_photo_registry", return_value=MagicMock()),
+        patch("core.neighbors.find_nearest_neighbors", return_value=mock_neighbors),
+    ):
         yield
 
 
@@ -114,21 +126,24 @@ class TestFindSimilarPage:
         assert "Not Same" in resp.text
         assert "/api/identity/id-leon/merge/id-nace?source=similar_page" in resp.text
         assert 'data-testid="similar-admin-summary"' in resp.text
-        assert "Review in Queue" in resp.text
+        assert "View Person" in resp.text
         assert 'data-testid="similar-result-state"' in resp.text
 
     def test_community_route_preserves_prefixed_links(self, client, mock_similar_data):
         """Community-scoped similar page should keep person and API links inside the community."""
-        with patch(
-            "app.supabase_data.get_community_by_slug",
-            return_value={"slug": "fox-family", "name": "Fox Family Archive"},
-        ), patch(
-            "app.main._get_proposal_targets_for_identity",
-            return_value=[{"face_id": "inbox-1"}, {"face_id": "inbox-2"}],
+        with (
+            patch(
+                "app.supabase_data.get_community_by_slug",
+                return_value={"slug": "fox-family", "name": "Fox Family Archive"},
+            ),
+            patch(
+                "app.main._get_proposal_targets_for_identity",
+                return_value=[{"face_id": "inbox-1"}, {"face_id": "inbox-2"}],
+            ),
         ):
             resp = client.get("/c/fox-family/people/id-leon/similar")
         html = resp.text
-        assert '/c/fox-family/person/id-leon' in html
-        assert '/c/fox-family/person/id-nace' in html
-        assert '/c/fox-family/api/identity/id-leon/merge/id-nace?source=similar_page' in html
-        assert '/c/fox-family/admin/upload-review#identity-group-id-leon' in html
+        assert "/c/fox-family/person/id-leon" in html
+        assert "/c/fox-family/person/id-nace" in html
+        assert "/c/fox-family/api/identity/id-leon/merge/id-nace?source=similar_page" in html
+        assert "/c/fox-family/admin/upload-review#identity-group-id-leon" in html

@@ -5599,7 +5599,7 @@ def _compare_photo_with_overlays(
                 (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #compare-modal "
-                    f"then go to url '{nav_prefix}/?section={nav_section}&view=browse#identity-{identity_id}'"
+                    f"then go to url '{nav_prefix}/person/{identity_id}'"
                 )
                 if identity_id
                 else ""

@@ -3040,7 +3040,7 @@ def get(identity_id: str, index: int = 0, request=None):
                 click_script = (
                     f"on click halt the event's bubbling "
                     f"then add .hidden to #photo-modal "
-                    f"then go to url '{nav_prefix}/?section={fi_section}&view=browse#identity-{fi_id}'"
+                    f"then go to url '{nav_prefix}/person/{fi_id}'"
                 )
 
             face_overlays.append(
