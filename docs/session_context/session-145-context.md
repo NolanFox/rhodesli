@@ -167,8 +167,8 @@ All three faces are roughly equidistant — no outlier. Supports same person acr
 The 1954 face is closest to Rachel (1.10) — interesting signal.
 
 ### Updated Hypotheses
-- **Person 82863536 = Rachel Fox Newman**: STRONG (0.95 to Rachel = same as Albert, her brother)
-- Person 3299 = Bessie Fox: moderate (1.11 to Rachel, 0.97 to Bessie — clearly Bessie-side)
+- **Person 82863536 = Rachel Fox Newman**: STRONG — Nolan merged into Rachel Fox Newman. Photo sent to Howard Newman for confirmation. Can unmerge if needed.
+- **Person 3299 = NOT Jean Baumann**: Timeline doesn't match (Jean married Albert April 1975, died Oct 1983; photo ~1975 but embedding distance to Jean's 10 confirmed faces is 1.26 — very distant). **NOT Bessie Fox** either (born 1877, would be 98-100 in 1975). **Leading hypothesis: Elizabeth Lillian Tischler (née Assness)**, Bessie's daughter (b. 1905, d. 1993 in Miami). Elizabeth would be ~70 in 1975, lived in Miami, and is Albert's niece. Person 3299 appears WITH Albert Fox in both photos at a ~1975 banquet in what appears to be Miami. Strong Fox family resemblance. Confirmed as **unidentified** for now — would need to track down Elizabeth's descendants or find photos to confirm.
 - Person 4044: unclear — Fox family signal but no dominant sister match
 - Person 3481 = NOT Rachel: CONFIRMED (1.24 — farthest of all)
 
@@ -257,6 +257,41 @@ Person 3299 (85% match to Bessie at 0.51) is likely a daughter/granddaughter, no
 - Erik has no more photos and no relatives to ask
 - Wedding photo is highest value — would Fox siblings have attended Sherry's wedding? (Sherry born 1944, wedding ~1965, Sarah would be ~86)
 - Older B&W photos may contain Fox family members from earlier era
+
+## Jean Baumann Investigation — Conclusion
+
+**Question**: Is Person 3299 Jean Baumann (Albert Fox's second wife)?
+
+**Evidence against**:
+1. **Timeline**: Jean and Albert married April 1975. Jean died October 1983. Photo dated ~1975.
+2. **Embedding distance**: Person 3299 → Jean Baumann's 10 confirmed faces = **1.26** (very distant, well outside same-person range)
+3. **Visual**: Person 3299 is an elderly woman (~70+) appearing with Albert at a banquet in what appears to be Miami
+
+**Conclusion**: Person 3299 is **NOT Jean Baumann**. The embedding distance alone (1.26) rules it out — Jean's confirmed faces form a tight cluster and 3299 is far outside it.
+
+**New leading hypothesis**: **Elizabeth Lillian Tischler (née Assness)**, Bessie Fox's daughter:
+- Born 1905, died 1993 in Miami
+- Would be ~70 in 1975 — matches visual age estimate
+- Lived in Miami — matches apparent photo location
+- Albert's niece (Bessie's daughter) — explains strong Fox family resemblance
+- Person 3299's closest embedding match is Bessie (0.97) — consistent with mother-daughter relationship
+
+**Status**: Confirmed as **unidentified** pending further evidence. Would need Elizabeth's descendants or reference photos to confirm.
+
+## Person 82863536 → Rachel Fox Newman Merge
+
+Nolan merged Person 82863536 into Rachel Fox Newman based on:
+- Embedding distance to Rachel: 0.95 (same as Albert, her brother)
+- Photo sent to Howard Newman for confirmation
+- **Reversible**: Can unmerge if Howard or other family members disagree
+
+## UX Feedback
+
+### FB-001: "View in Admin Queue" link misdirects
+- **Page**: `/identify/` (Help Identify page)
+- **Issue**: "View in Admin Queue" link goes to New Matches queue instead of the person page
+- **Expected**: Link should go directly to the person page for that identity
+- **Severity**: P2
 
 ## Phase 3: Temporal Analysis
 
