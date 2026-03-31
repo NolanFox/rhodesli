@@ -213,7 +213,7 @@ GEDCOM "Jan 1892" Bessie Fox Fuchs is a DIFFERENT person.
 **Person 3299 timeline INVALIDATED**: Bessie born 1877 → age 98-100 in 1975/77 photos.
 Person 3299 (85% match to Bessie at 0.51) is likely a daughter/granddaughter, not Bessie herself.
 
-**Open question**: Who is Shima (born ~1884)? Ancestry lists Rose Scheckzner (1886-1959) and Sadie (1884-1966). Could Shima = Sadie? (birth years close: ~1884 vs 1884)
+**Shima = Sadie Fox Levine** (confirmed by Nolan). Birth years match exactly: ~1884 revision list, 1884 Ancestry. Yiddish "Shima" → American "Sadie."
 
 ## Phase 2: Sarah Branch Findings
 
