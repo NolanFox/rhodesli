@@ -184,8 +184,8 @@ class TestGap2BidirectionalLinks:
             stack.enter_context(patch("app.main.get_current_user", return_value=admin_user))
             resp = client.get("/identify/unknown-1")
         assert resp.status_code == 200
-        assert "View in Admin Queue" in resp.text
-        assert "view=browse#identity-unknown-1" in resp.text
+        assert "View Person Page" in resp.text
+        assert "/person/unknown-1" in resp.text
 
     def test_identify_page_admin_link_source_uses_community_prefix_helper(self):
         """Identify-page admin link should stay community-aware instead of hardcoding root routes."""
@@ -193,7 +193,7 @@ class TestGap2BidirectionalLinks:
 
         source = Path("app/page_routes.py").read_text()
         assert "community_url_prefix(community_slug)" in source
-        assert "view=browse#identity-{person_id}" in source
+        assert "/person/{person_id}" in source
 
 
 # ============================================================

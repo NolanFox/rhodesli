@@ -283,7 +283,8 @@ Person 3299 (85% match to Bessie at 0.51) is likely a daughter/granddaughter, no
 Nolan merged Person 82863536 into Rachel Fox Newman based on:
 - Embedding distance to Rachel: 0.95 (same as Albert, her brother)
 - Photo sent to Howard Newman for confirmation
-- **Reversible**: Can unmerge if Howard or other family members disagree
+- **CONFIRMED by Howard Newman** — descendant verified this is his grandmother Rachel
+- Merge validated: Family Cluster Score approach + descendant confirmation workflow successful
 
 ## UX Feedback
 

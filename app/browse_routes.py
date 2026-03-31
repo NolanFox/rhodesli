@@ -1136,8 +1136,8 @@ def get(identity_id: str, sess=None, request=None):
             )
             admin_actions.append(
                 A(
-                    "Review in Queue",
-                    href=f"{nav_prefix}/?section={neighbor_section}&view=browse#identity-{nid}",
+                    "View Person",
+                    href=f"{nav_prefix}/person/{nid}",
                     cls="text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 border border-slate-600 text-slate-300 rounded hover:border-slate-500 hover:text-white transition-colors",
                     data_testid="similar-review-queue-link",
                 )

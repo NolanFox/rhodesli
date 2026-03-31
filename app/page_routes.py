@@ -5186,8 +5186,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None, request=
                     # Gap 2: Admin quick-nav on identify page
                     Div(
                         A(
-                            "View in Admin Queue",
-                            href=f"{_main_mod.community_url_prefix(community_slug)}/?section={_main_mod._section_for_state(state)}&view=browse#identity-{person_id}",
+                            "View Person Page",
+                            href=f"{_main_mod.community_url_prefix(community_slug)}/person/{person_id}",
                             cls="text-sm sm:text-xs text-indigo-400 hover:text-indigo-300 underline",
                             data_testid="identify-admin-link",
                         ),
