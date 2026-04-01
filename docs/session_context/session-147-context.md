@@ -107,23 +107,33 @@ SQL: `scripts/sql/session_146_identity_suggestions.sql`
 
 ## Pre-Implementation Audit Findings
 
-### P1 — Cache Invalidation on Accept
-When a suggestion is accepted and the identity is renamed/confirmed, the registry caches (`_identities_cache`, `_suggestions_cache`, `perf_cache`) must be invalidated. The ML review accept endpoint at admin_routes.py:440 demonstrates the pattern: call `save_registry()` with `changed_ids`, which triggers cache invalidation. Follow the same path.
+### Codex CLI Audit (gpt-5.4, 2026-04-01)
 
-### P1 — CSRF on New POST Endpoints
-All three new POST endpoints (accept/reject/needs-more) MUST include `_check_origin()` for CSRF protection, following the pattern at admin_routes.py:395.
+**P0 — Batch rerun resurrects reviewed suggestions**: The upsert in `--execute` mode overwrites ALL rows with `status="PENDING"`, destroying REJECTED/NEEDS_MORE/ACCEPTED review decisions. Fix: query existing reviewed rows before upsert, skip any with non-PENDING status. Add idempotency test.
 
-### P1 — Accept Must Not Double-Confirm
-If an identity is already CONFIRMED (race condition: admin confirmed via another surface), the accept endpoint must handle gracefully — check state before rename/confirm.
+**P1 — Accept with suggested_identity_id should MERGE**: When a suggestion points to an existing confirmed identity (via `suggested_identity_id`), accept should merge the unidentified person INTO the confirmed one using `merge_identities()`, not rename the unidentified person. Rename+confirm only when `suggested_identity_id` is NULL.
 
-### P2 — GEDCOM birth_date Parsing
-The `gedcom_individuals.birth_date` field stores varied formats ("1889", "ABT 1890", "BEF 1895", "1 JAN 1890"). The `compute_gedcom_match_score()` function needs robust year extraction via regex.
+**P1 — GEDCOM linking uses wrong API**: `set_metadata({"gedcom_id": ...})` doesn't exist in the registry. Canonical GEDCOM links are stored via `gedcom_face_links` table through the existing link flow in `relationship_routes.py:1293`. Use the existing link mechanism.
 
-### P2 — Suggestion Staleness
-If identities are merged or confirmed between batch run and admin review, the suggestion may be stale. Accept endpoint should verify target identity still exists and is unconfirmed.
+**P1 — CSRF request parameter**: Endpoint functions must include `request` in their signature to call `_check_origin(request)`. The ML review pattern endpoints don't currently have origin checks — add them.
 
-### P3 — Hardcoded Testimony
-Hardcoding testimony in the script is pragmatic for Phase 4 but should be tagged with a TODO for migration to `testimony_evidence` table.
+**P1 — Cache invalidation on accept**: Call `save_registry()` with `changed_ids` to trigger cache invalidation (same pattern as ML review accept at admin_routes.py:440).
+
+### Own Analysis
+
+**P1 — Accept must not double-confirm**: If identity is already CONFIRMED (race condition), handle gracefully.
+
+**P2 — One suggestion per (target, family)**: UNIQUE constraint means 1 row, not "top 3". UI shows single card.
+
+**P2 — GEDCOM birth_date parsing**: Varied TEXT formats need regex extraction.
+
+**P2 — Suggestion staleness**: Target may have been merged/confirmed between batch run and review. Accept must verify.
+
+**P2 — Test coverage gaps**: Need tests for rerun idempotency, stale targets, merge case, GEDCOM link persistence, Supabase read failure.
+
+**P3 — Helper function names**: `_main_mod._get_supabase_client()` and `_main_mod._load_full_registry()` don't exist. Grep for actual names.
+
+**P3 — Hardcoded testimony provenance**: Tag with TODO, include session source in payloads.
 
 ---
 

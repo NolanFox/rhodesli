@@ -10,6 +10,22 @@ This session runs autonomously. Follow all harness rules in `.claude/rules/`. Co
 
 **Three parallel tracks** — Tracks A, B, C can run simultaneously in worktrees. No file conflicts.
 
+## Codex Pre-Audit Findings (MUST address during implementation)
+
+**P0 — Batch rerun resurrects reviewed suggestions**: The current upsert in `--execute` mode overwrites ALL rows with `status="PENDING"`, destroying REJECTED/NEEDS_MORE/ACCEPTED states. **FIX**: Before upsert, query existing suggestions. Skip any row where status != PENDING. Add `test_rerun_preserves_reviewed_status()`.
+
+**P1 — Accept with suggested_identity_id should MERGE, not rename**: When a suggestion points to an existing confirmed identity (via `suggested_identity_id`), accepting should merge the unidentified person INTO the confirmed one — not rename the unidentified person. Use `registry.merge_identities()` for this case, `rename + confirm` only when `suggested_identity_id` is NULL.
+
+**P1 — GEDCOM linking uses wrong API**: `set_metadata({"gedcom_id": ...})` does NOT exist. Canonical GEDCOM links are stored via `gedcom_face_links` table through the existing link flow in `relationship_routes.py`. Either call the existing link function or write directly to `gedcom_face_links`.
+
+**P1 — CSRF request parameter**: The endpoint function signatures must include `request` as a parameter (not just `sess`) to call `_check_origin(request)`. Verify the ML review pattern actually passes request.
+
+**P2 — One suggestion per (target, family)**: The UNIQUE constraint on `(target_identity_id, family_id)` means only 1 suggestion row per person per family. The UI should show 1 card, not "top 3". Remove `.limit(3)` from the query and render a single card.
+
+**P2 — Test coverage gaps**: Add tests for: rerun idempotency, stale/merged target on accept, Supabase read failure on person page, GEDCOM link persistence.
+
+**P3 — Helper function names**: `_main_mod._get_supabase_client()` and `_main_mod._load_full_registry()` don't exist. Use actual function names from the codebase (grep for the correct Supabase client accessor and registry loader).
+
 ---
 
 ## Phase 0: Orient (SEQUENTIAL — 3 min)
@@ -77,13 +93,24 @@ KNOWN_PROVENANCE = {
 ```
 Also: query photo source/collection for family name mentions as secondary signal.
 
-### 1e: Run execute mode
+### 1e: Fix batch rerun idempotency (CODEX P0)
+Before the upsert loop in `--execute` mode, query existing suggestions:
+```python
+# Preserve reviewed suggestions — never overwrite REJECTED/ACCEPTED/NEEDS_MORE
+existing = sb.table("identity_suggestions").select("target_identity_id,family_id,status") \
+    .eq("family_id", family_name).in_("status", ["REJECTED", "ACCEPTED", "NEEDS_MORE"]).execute()
+reviewed_keys = {(r["target_identity_id"], r["family_id"]) for r in existing.data}
+# Skip upsert for any (target_id, family_id) in reviewed_keys
+```
+This prevents batch reruns from resurrecting rejected/accepted suggestions.
+
+### 1f: Run execute mode
 ```bash
 source venv/bin/activate
 python scripts/compute_identity_suggestions.py --family fox --dry-run  # Verify scores > 0.288
 python scripts/compute_identity_suggestions.py --family fox --execute  # Write to Supabase
 ```
-Verify in Supabase: `SELECT count(*), avg(confidence), max(confidence) FROM identity_suggestions`
+Verify in Supabase: `SELECT count(*), avg(confidence), max(confidence) FROM identity_suggestions WHERE status='PENDING'`
 
 ### Tests (add to tests/test_identity_suggestions.py)
 - `test_age_trajectory_wired_in_pipeline()` — age_trajectory no longer returns placeholder
@@ -92,8 +119,9 @@ Verify in Supabase: `SELECT count(*), avg(confidence), max(confidence) FROM iden
 - `test_testimony_known_negative()` — Person 3481 testimony score = 0.0
 - `test_provenance_known_fox()` — known provenance identity scores > 0
 - `test_aggregate_with_all_signals_active()` — confidence higher than 2-signal baseline
+- `test_rerun_preserves_reviewed_status()` — REJECTED/ACCEPTED rows not overwritten by batch rerun (CODEX P0)
 
-**Acceptance**: All 16 existing tests pass + 6 new tests pass. Dry-run confidence > 0.4 for top candidate.
+**Acceptance**: All 16 existing tests pass + 7 new tests pass. Dry-run confidence > 0.4 for top candidate.
 
 ---
 
@@ -103,20 +131,21 @@ Verify in Supabase: `SELECT count(*), avg(confidence), max(confidence) FROM iden
 **New test file**: `tests/test_identity_suggestion_ui.py`
 
 ### 2a: Load suggestions from Supabase
-In the person page handler (around line 964, after ML birth year check):
+In the person page handler (around line 964, after ML birth year check).
+**NOTE**: The UNIQUE(target_identity_id, family_id) constraint means at most 1 row per person per family. Don't `.limit(3)` — there's only 1. Render a single card, not a list.
+**NOTE**: Use the actual Supabase client accessor from the codebase (grep for it — NOT `_main_mod._get_supabase_client()` which doesn't exist). Handle Supabase read failure gracefully (empty list, no crash).
 ```python
-identity_suggestions = []
+identity_suggestion = None
 if is_admin:
-    sb = _main_mod._get_supabase_client()  # or however the app gets the client
+    sb = ...  # Use actual Supabase client accessor from this codebase
     if sb:
         try:
             resp = sb.table("identity_suggestions").select("*") \
                 .eq("target_identity_id", person_id) \
-                .eq("status", "PENDING") \
-                .order("confidence", desc=True).limit(3).execute()
-            identity_suggestions = resp.data or []
+                .eq("status", "PENDING").execute()
+            identity_suggestion = resp.data[0] if resp.data else None
         except Exception:
-            identity_suggestions = []
+            identity_suggestion = None
 ```
 
 ### 2b: Build evidence panel
@@ -165,61 +194,32 @@ Add after `ml_suggestion_card` in the page build:
 Follow the ML birth year review pattern at lines 391-535 exactly.
 
 ### 3a: POST `/api/identity-suggestion/{suggestion_id}/accept`
+
+**CRITICAL (Codex P1)**: Two cases depending on `suggested_identity_id`:
+- **NULL** (general "Fox family member" suggestion): Rename target + confirm in place
+- **Non-NULL** (points to existing confirmed person): MERGE target INTO the confirmed person using `registry.merge_identities()`. Do NOT rename.
+
+**CRITICAL (Codex P1)**: GEDCOM linking does NOT use `set_metadata()`. Use the existing GEDCOM link flow from `relationship_routes.py` — write to `gedcom_face_links` table directly or call the existing link function.
+
+**CRITICAL (Codex P1)**: Include `request` in function signature for `_check_origin(request)`.
+
+**NOTE (Codex P3)**: Use the actual registry loader and Supabase client from this codebase — grep for them. `_main_mod._load_full_registry()` and `_main_mod._get_supabase_client()` do NOT exist.
+
+Pseudocode:
 ```python
 @rt("/api/identity-suggestion/{suggestion_id}/accept")
-async def post(suggestion_id: str, sess):
-    # 1. Admin + CSRF check
-    err = _main_mod._check_admin(sess)
-    if err: return err
-    _main_mod._check_origin(request)
-
+async def post(suggestion_id: str, request, sess):
+    # 1. Admin + CSRF check (request in signature!)
     # 2. Load suggestion from Supabase
-    sb = _main_mod._get_supabase_client()
-    resp = sb.table("identity_suggestions").select("*").eq("id", suggestion_id).single().execute()
-    suggestion = resp.data
-    if not suggestion:
-        return Div("Suggestion not found", cls="text-red-400 text-sm")
-
-    # 3. Verify target identity exists and is not already confirmed
-    target_id = suggestion["target_identity_id"]
-    registry = _main_mod._load_full_registry()
-    identity = registry.get_identity(target_id)
-    if not identity:
-        return Div("Identity no longer exists", cls="text-red-400 text-sm")
-    if identity.get("state") == "CONFIRMED":
-        # Already confirmed — just mark suggestion as accepted
-        sb.table("identity_suggestions").update({"status": "ACCEPTED", ...}).eq("id", suggestion_id).execute()
-        return Div("✓ Already confirmed", cls="text-emerald-400 text-sm", ...)
-
-    # 4. Rename + confirm
-    suggested_name = suggestion["suggested_name"]
-    registry.rename_identity(target_id, suggested_name)
-    registry.confirm_identity(target_id)
-
-    # 5. Link GEDCOM if available
-    if suggestion.get("suggested_gedcom_id"):
-        registry.set_metadata(target_id, {"gedcom_id": suggestion["suggested_gedcom_id"]})
-
-    # 6. Save + cache invalidation
-    _main_mod.save_registry(registry, changed_ids={target_id})
-
-    # 7. Update suggestion status
-    sb.table("identity_suggestions").update({
-        "status": "ACCEPTED",
-        "reviewed_at": datetime.utcnow().isoformat(),
-        "reviewed_by": sess.get("email", "admin"),
-    }).eq("id", suggestion_id).execute()
-
-    # 8. Audit log
-    _main_mod._audit_log("identity_suggestion_accepted", target_id, ...)
-
-    # 9. Return success (auto-dismiss after 4s like ML review)
-    return Div(
-        "✓ Accepted — confirmed as " + suggested_name,
-        cls="text-emerald-400 text-sm p-3",
-        id=f"identity-suggestion-{suggestion_id}",
-        **{"_": "on load wait 4s then add .opacity-0 to me then wait 500ms then remove me"},
-    )
+    # 3. Verify target identity exists
+    # 4. If target already CONFIRMED → mark suggestion ACCEPTED, return
+    # 5a. If suggested_identity_id is set → MERGE target into confirmed identity
+    # 5b. If suggested_identity_id is NULL → rename + confirm target
+    # 6. Save registry with changed_ids for cache invalidation
+    # 7. GEDCOM link: write to gedcom_face_links table if suggested_gedcom_id set
+    # 8. Update suggestion: status=ACCEPTED, reviewed_at, reviewed_by
+    # 9. Audit log
+    # 10. Return success Div (auto-dismiss 4s)
 ```
 
 ### 3b: POST `/api/identity-suggestion/{suggestion_id}/reject`
@@ -235,15 +235,18 @@ async def post(suggestion_id: str, sess):
 
 ### Tests (new file: tests/test_identity_suggestion_actions.py)
 - `test_accept_renames_and_confirms()` — mock registry + Supabase, verify rename + confirm called
+- `test_accept_merges_when_suggested_identity_exists()` — when suggested_identity_id is set, calls merge_identities NOT rename (CODEX P1)
 - `test_accept_requires_admin()` — 401/403 for non-admin
-- `test_accept_already_confirmed()` — graceful handling
+- `test_accept_already_confirmed()` — graceful handling, marks ACCEPTED without mutation
+- `test_accept_stale_merged_target()` — target was merged since batch ran, returns graceful error (CODEX P2)
 - `test_accept_nonexistent_suggestion()` — returns error div
 - `test_reject_stores_reason()` — verify Supabase update with reason
 - `test_reject_without_reason()` — still works
 - `test_needs_more_sets_status()` — verify status=NEEDS_MORE
-- `test_all_endpoints_check_csrf()` — verify _check_origin called
+- `test_all_endpoints_check_csrf()` — verify _check_origin called with request param
+- `test_gedcom_link_persisted_on_accept()` — GEDCOM link written to gedcom_face_links, not set_metadata (CODEX P1)
 
-**Acceptance**: All 8 tests pass. Endpoints admin-gated and CSRF-protected.
+**Acceptance**: All 11 tests pass. Endpoints admin-gated and CSRF-protected.
 
 ---
 
@@ -252,7 +255,8 @@ async def post(suggestion_id: str, sess):
 ### 4a: Merge parallel tracks
 ```bash
 ./scripts/merge.sh track-a-branch track-b-branch track-c-branch
-make test-fast  # All tests pass post-merge
+make test-fast  # App tests pass post-merge
+make test-ml    # ML tests pass post-merge (CODEX P2 — both suites required)
 ```
 
 ### 4b: Run batch execute on production data
