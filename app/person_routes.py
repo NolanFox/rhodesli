@@ -1062,6 +1062,27 @@ def public_person_page(
                 data_testid="ml-suggestion-card",
             )
 
+    # --- Admin: Identity inference suggestion (PRD-059 Phase 4) ---
+    identity_suggestion_panel = None
+    if is_admin:
+        try:
+            from app.supabase_data import get_supabase_client
+
+            sb = get_supabase_client()
+            if sb:
+                resp = (
+                    sb.table("identity_suggestions")
+                    .select("*")
+                    .eq("target_identity_id", person_id)
+                    .eq("status", "PENDING")
+                    .execute()
+                )
+                if resp.data:
+                    suggestion = resp.data[0]
+                    identity_suggestion_panel = _build_identity_suggestion_panel(suggestion)
+        except Exception:
+            pass  # Graceful degradation
+
     # --- Stats line ---
     stats_parts = []
     if birth_year_line:
@@ -1308,6 +1329,8 @@ def public_person_page(
                     can_you_help_cta,
                     # Admin: ML birth year suggestion card (Gatekeeper pattern)
                     ml_suggestion_card,
+                    # Admin: Identity inference suggestion (PRD-059 Phase 4)
+                    identity_suggestion_panel,
                     # Admin: inline metadata editing
                     Div(
                         Form(
@@ -2221,3 +2244,123 @@ def post(person_id: str, comment_id: str, sess=None):
             break
     _main_mod._save_person_comments(comments_data)
     return Div(P("Comment hidden.", cls="text-sm sm:text-xs text-slate-500 italic py-2"))
+
+
+# ---------------------------------------------------------------------------
+# Identity Suggestion Evidence Panel (PRD-059 Phase 4)
+# ---------------------------------------------------------------------------
+
+_SIGNAL_DISPLAY_NAMES = {
+    "family_cluster": "Family Resemblance",
+    "co_occurrence": "Co-occurrence",
+    "age_trajectory": "Age Consistency",
+    "gedcom_match": "GEDCOM Match",
+    "testimony": "Testimony",
+    "provenance": "Photo Source",
+}
+
+
+def _signal_bar(display_name: str, score: float, detail_text: str | None = None):
+    """Render a single signal bar with label, bar, and value."""
+    if score > 0.7:
+        color_cls = "bg-emerald-500"
+    elif score > 0.4:
+        color_cls = "bg-amber-500"
+    else:
+        color_cls = "bg-slate-500"
+
+    bar_or_na = (
+        Div(
+            Div(cls=f"h-full rounded {color_cls}", style=f"width: {int(score * 100)}%"),
+            cls="flex-1 h-2 bg-slate-700 rounded overflow-hidden",
+        )
+        if score > 0
+        else Span("(not available)", cls="text-xs text-slate-600 italic")
+    )
+
+    return Div(
+        Span(display_name, cls="text-xs text-slate-400 w-32 shrink-0"),
+        bar_or_na,
+        Span(f"{score:.2f}" if score > 0 else "", cls="text-xs text-slate-500 w-10 text-right"),
+        cls="flex items-center gap-2 mb-1",
+    )
+
+
+def _build_identity_suggestion_panel(suggestion: dict):
+    """Build the identity suggestion evidence card for the person page."""
+    signals = suggestion.get("signals", {}) or {}
+    if isinstance(signals, str):
+        import json as _json
+
+        try:
+            signals = _json.loads(signals)
+        except (ValueError, TypeError):
+            signals = {}
+
+    composite = suggestion.get("composite_score", 0) or 0
+    suggested_name = suggestion.get("suggested_name", "Unknown")
+    suggestion_id = suggestion.get("id", "")
+
+    # Confidence color
+    if composite > 0.7:
+        conf_cls = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+    elif composite >= 0.4:
+        conf_cls = "text-amber-400 bg-amber-500/10 border-amber-500/20"
+    else:
+        conf_cls = "text-slate-400 bg-slate-500/10 border-slate-500/20"
+
+    # Build signal bars
+    signal_bars = []
+    for key, display_name in _SIGNAL_DISPLAY_NAMES.items():
+        score = signals.get(key, 0) or 0
+        signal_bars.append(_signal_bar(display_name, float(score)))
+
+    return Div(
+        # Header
+        Div(
+            Span("\U0001f50d ", cls="mr-1"),
+            Span("Identity Suggestion", cls="text-sm font-semibold text-amber-300"),
+            cls="mb-2",
+        ),
+        # Suggested name + composite score
+        Div(
+            Span(f"Suggested: {suggested_name}", cls="text-white text-sm font-medium"),
+            Span(
+                f"{composite:.2f}",
+                cls=f"text-xs px-2 py-0.5 rounded-full border ml-2 {conf_cls}",
+            ),
+            cls="mb-3",
+        ),
+        # Signal bars
+        Div(*signal_bars, cls="mb-2"),
+        # Action buttons
+        Div(
+            Button(
+                f"Accept as {suggested_name}",
+                hx_post=f"/api/identity-suggestion/{suggestion_id}/accept",
+                hx_target=f"#identity-suggestion-{suggestion_id}",
+                hx_swap="outerHTML",
+                hx_disabled_elt="this",
+                cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+            ),
+            Button(
+                "Reject",
+                hx_post=f"/api/identity-suggestion/{suggestion_id}/reject",
+                hx_target=f"#identity-suggestion-{suggestion_id}",
+                hx_swap="outerHTML",
+                hx_confirm="Reject this identity suggestion?",
+                cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded",
+            ),
+            Button(
+                "Need More Evidence",
+                hx_post=f"/api/identity-suggestion/{suggestion_id}/needs-more",
+                hx_target=f"#identity-suggestion-{suggestion_id}",
+                hx_swap="outerHTML",
+                cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
+            ),
+            cls="flex gap-2 flex-wrap mt-3",
+        ),
+        id=f"identity-suggestion-{suggestion_id}",
+        cls="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 mt-3 mb-3 text-left max-w-sm mx-auto",
+        data_testid="identity-suggestion-card",
+    )
