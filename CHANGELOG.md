@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.60] — 2026-04-01 (Session 147: PRD-059 Phase 4 Completion + Restore UX)
+
+### Features
+- **Identity inference signals complete**: All 6 scoring signals wired — age_trajectory, gedcom_match, testimony, provenance now active alongside family_cluster and co_occurrence. Batch rerun idempotency (Codex P0 fix).
+- **Evidence panel UI**: Admin-only card on person page shows per-signal progress bars with Accept/Reject/NeedMore buttons for identity suggestions.
+- **Accept/Reject/NeedMore API**: Three HTMX endpoints for identity suggestion review. Accept branches on merge-vs-rename (Codex P1). GEDCOM linking via gedcom_face_links. All CSRF-protected.
+- **Restore-to-inbox**: New POST /api/identity/{id}/restore endpoint + "Restore to Inbox" button on rejected person pages. Fixes missing undo path for accidental rejections (FB-001).
+
+### Fixes
+- **Person 82863849**: Accidentally rejected in Fader collection — restored to INBOX via Supabase
+- Batch rerun no longer overwrites REJECTED/ACCEPTED/NEEDS_MORE suggestions (Codex P0)
+
+### Tests
+- 58 new tests (4054 total, was 3996)
+
+### Harness
+- Lessons 166-167: worktree commit discipline + git lock contention
+- Parallelization postmortem documented
+- worktree-enforcement.md updated with new rules
+
 ## [v0.99.59] — 2026-03-31 (Session 146: Fader Deploy + PRD-059 Phase 4 Foundation)
 
 ### Features

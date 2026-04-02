@@ -3,12 +3,14 @@ Started: 2026-04-01
 Prompt: docs/prompts/session-147-prompt.md
 
 ## Phase Checklist
-- [x] Phase 0: Orient — baseline tests running, helper names resolved
-- [ ] Phase 1: Wire signals + execute (Track A)
-- [ ] Phase 2: Evidence panel UI (Track B)
-- [ ] Phase 3: Accept/Reject/NeedMore endpoints (Track C)
-- [ ] Phase 4: Integration + browser verify
-- [ ] Phase 5: Self-evaluation + close
+- [x] Phase 0: Orient — baseline 3996 tests, helper names resolved
+- [x] Phase 1: Wire signals + execute (Track A) — 13 new tests, 4 signals wired, idempotency fix
+- [x] Phase 2: Evidence panel UI (Track B) — 6 new tests, admin card with signal bars
+- [x] Phase 3: Accept/Reject/NeedMore endpoints (Track C) — 28 new tests, merge-vs-rename branching
+- [x] FB-001: Restore-to-inbox + Person 82863849 fix — 11 new tests
+- [x] Merge: All 4 tracks merged clean, 4054 tests pass
+- [ ] Phase 4: Deploy + batch execute + browser verify (DEFERRED — next session)
+- [x] Phase 5: Assessment written, lessons 166-167 documented
 
 ## Key Findings (Phase 0)
 - Supabase client: `from app.supabase_data import get_supabase_client`

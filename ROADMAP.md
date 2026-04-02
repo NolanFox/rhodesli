@@ -81,7 +81,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-30: Phase 1: Batch Gemini estimation COMPLETE — Albert 196/196, Esther 141/141 (100% coverage). Sessions 142-144b.
 - [x] 2026-03-30: Phase 2: Event grouping — 17 event groups from 246 dated photos. 5-year windows with shared-face union-find. Session 144b.
 - [x] 2026-03-30: Phase 3: Co-occurrence matrix — 102 identities, 391 pairs. Person page shows shared photo counts. Session 144b.
-- [-] 2026-03-31: Phase 4: Identity inference — PRD + SDD specified (Session 145). AD-235 Family Cluster Score. Session 146: identity_suggestions table + batch script + 16 tests. Remaining: evidence panel UI, execute mode, co-occurrence integration.
+- [-] 2026-04-01: Phase 4: Identity inference — All 6 signals wired (Session 147). Evidence panel UI + Accept/Reject/NeedMore endpoints shipped. 58 new tests. Remaining: deploy, batch execute on production data, browser verify.
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
 - [x] 2026-03-11: Session 97 foundation shipped — SDD, research pack, implementation bundle, prompt/state lineage spec, and merged-branch verification are wired into the harness
@@ -139,6 +139,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-04-01: **v0.99.60 — Session 147**: PRD-059 Phase 4 Completion + Restore UX. All 6 identity inference signals wired (age_trajectory, gedcom_match, testimony, provenance). Evidence panel UI on person page with signal bars. Accept/Reject/NeedMore API endpoints (merge-vs-rename branching). Restore-to-inbox feature for rejected identities (FB-001). Person 82863849 restored. Codex gpt-5.4 pre-audit: 9 findings all addressed. Parallelization postmortem + lessons 166-167. 58 new tests. 4054 app tests pass. Remaining: deploy, batch execute, browser verify.
 
 - [x] 2026-03-31: **v0.99.59 — Session 146**: Deploy + Fader Collection + PRD-059 Phase 4 Foundation. Fader collection live (147 photos, 328 faces, R2+Supabase). identity_suggestions table created. Family Cluster Score batch script (19 candidates scored, top at 1.14). 16 new tests. 3996 app tests pass.
 
