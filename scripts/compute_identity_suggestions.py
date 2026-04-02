@@ -20,6 +20,7 @@ See: AD-235, PRD-059 Phase 4 SDD
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -195,6 +196,208 @@ def compute_age_feasibility(
         "observations": observations[:5],
         "mean_absolute_deviation": round(mad, 2),
     }
+
+
+# --- Fox Sibling GEDCOM Data (1894 Minsk revision list) ---
+
+FOX_SIBLINGS_BIRTH_YEARS = {
+    "Bessie Fox": 1877,
+    "Sarah Fox": 1882,
+    "Harry Fox": 1884,
+    "Sadie Fox": 1884,
+    "Rachel Fox": 1889,
+    "Albert Fox": 1893,
+    "Irving Fox": 1899,
+    "Jacob Fox": 1903,
+}
+
+# Birth year range for feasibility checks on unidentified candidates
+FOX_BIRTH_YEAR_RANGE = (1877, 1910)  # Siblings + spouses born ~1877-1910
+FOX_BIRTH_YEAR_MIDDLE = (FOX_BIRTH_YEAR_RANGE[0] + FOX_BIRTH_YEAR_RANGE[1]) // 2  # 1893
+
+# Already confirmed/linked siblings — exclude from unlinked matching
+CONFIRMED_FOX_SIBLINGS = {"Albert Fox", "Harry Fox", "Bessie Fox", "Rachel Fox"}
+# Esther Burd Fox is a spouse, not a sibling
+
+UNLINKED_FOX_SIBLINGS = {
+    name: year for name, year in FOX_SIBLINGS_BIRTH_YEARS.items() if name not in CONFIRMED_FOX_SIBLINGS
+}
+
+
+# --- Known Testimony (hardcoded until testimony_evidence Supabase table) ---
+
+KNOWN_TESTIMONY = {
+    "273ac560-bf13-43f5-8f87-e0f7ec967b2c": {  # Person 3481
+        "score": 0.0,
+        "entries": [
+            {
+                "source": "Howard Newman",
+                "relationship": "grandson of Rachel Fox",
+                "statement": "almost certain NOT my grandmother",
+                "polarity": "NEGATIVE",
+                "session": "145",
+                "date": "2026-03-31",
+            }
+        ],
+    },
+}
+# TODO(PRD-059-P5): migrate to testimony_evidence Supabase table
+
+
+# --- Known Provenance (hardcoded until structured Supabase table) ---
+
+KNOWN_PROVENANCE: dict[str, dict] = {
+    # TODO(PRD-059-P5): migrate provenance to structured Supabase table
+    # Add identity_id -> {"score": float, "labels": [...]} entries as discovered
+}
+
+
+def load_gedcom_birth_years(sb) -> dict[str, int]:
+    """Load birth years from GEDCOM individuals table.
+
+    Tries current_gedcom_individuals view first, falls back to gedcom_individuals.
+    Parses birth_date TEXT field to extract 4-digit years from formats like
+    "1889", "ABT 1890", "BEF 1895", etc.
+    """
+    birth_years = {}
+    raw_data = []
+
+    for table_name in ["current_gedcom_individuals", "gedcom_individuals"]:
+        try:
+            resp = sb.table(table_name).select("id,given_names,surname,birth_date").execute()
+            raw_data = resp.data or []
+            if raw_data:
+                logger.info(f"  Loaded {len(raw_data)} GEDCOM individuals from {table_name}")
+                break
+        except Exception as e:
+            logger.warning(f"  Could not load {table_name}: {e}")
+
+    for row in raw_data:
+        birth_date = row.get("birth_date", "")
+        if not birth_date:
+            continue
+        # Extract 4-digit year from various formats
+        match = re.search(r"\b(\d{4})\b", str(birth_date))
+        if match:
+            year = int(match.group(1))
+            if 1700 < year < 2030:  # Sanity check
+                given = row.get("given_names", "") or ""
+                surname = row.get("surname", "") or ""
+                full_name = f"{given} {surname}".strip()
+                if full_name:
+                    birth_years[full_name] = year
+                # Also store by ID for direct lookups
+                row_id = row.get("id")
+                if row_id:
+                    birth_years[f"gedcom:{row_id}"] = year
+
+    return birth_years
+
+
+def compute_gedcom_match_score(
+    target_id: str,
+    family_identity_ids: set[str],
+    co_occurrence_pairs: dict,
+    date_labels: dict,
+    identity_photos: dict,
+) -> dict:
+    """Score how well a target matches an unlinked Fox sibling based on GEDCOM data.
+
+    Score 1.0 if target co-occurs with confirmed family AND estimated age range
+    matches an unlinked sibling.
+    Score 0.5 if partial match (right generation but no specific sibling match).
+    Score 0.0 if contradicts (impossible era).
+    """
+    # Check co-occurrence with confirmed family
+    co_occur_count = 0
+    for fid in family_identity_ids:
+        key = tuple(sorted([target_id, fid]))
+        co_occur_count += co_occurrence_pairs.get(key, 0)
+
+    has_family_co_occurrence = co_occur_count > 0
+
+    # Estimate the target's likely birth year from photos
+    target_photos = identity_photos.get(target_id, [])
+    estimated_birth_years = []
+
+    for photo_id in target_photos:
+        label = date_labels.get(photo_id)
+        if not label or not isinstance(label, dict):
+            continue
+        photo_year = label.get("estimated_year") or label.get("year_estimate")
+        estimated_age = label.get("estimated_age")
+        if photo_year and estimated_age and estimated_age > 0:
+            estimated_birth_years.append(photo_year - estimated_age)
+
+    if not estimated_birth_years:
+        # No age data — can only score based on co-occurrence
+        if has_family_co_occurrence:
+            return {"score": 0.5, "reason": "co_occurrence_only", "co_occur_count": co_occur_count}
+        return {"score": 0.0, "reason": "no_data"}
+
+    mean_estimated_birth = int(np.mean(estimated_birth_years))
+
+    # Check if birth year is impossible for the Fox generation
+    if mean_estimated_birth < 1860 or mean_estimated_birth > 1930:
+        return {
+            "score": 0.0,
+            "reason": "impossible_era",
+            "estimated_birth_year": mean_estimated_birth,
+        }
+
+    # Check match against unlinked siblings
+    best_match = None
+    best_diff = 999
+    for name, birth_year in UNLINKED_FOX_SIBLINGS.items():
+        diff = abs(mean_estimated_birth - birth_year)
+        if diff < best_diff:
+            best_diff = diff
+            best_match = name
+
+    if has_family_co_occurrence and best_diff <= 5:
+        # Strong match: co-occurs with family AND age matches a specific sibling
+        return {
+            "score": 1.0,
+            "reason": "full_match",
+            "estimated_birth_year": mean_estimated_birth,
+            "best_sibling_match": best_match,
+            "birth_year_diff": best_diff,
+            "co_occur_count": co_occur_count,
+        }
+    elif best_diff <= 10:
+        # Partial match: right generation
+        return {
+            "score": 0.5,
+            "reason": "partial_match",
+            "estimated_birth_year": mean_estimated_birth,
+            "best_sibling_match": best_match,
+            "birth_year_diff": best_diff,
+            "co_occur_count": co_occur_count,
+        }
+    else:
+        return {
+            "score": 0.0,
+            "reason": "wrong_generation",
+            "estimated_birth_year": mean_estimated_birth,
+            "best_sibling_match": best_match,
+            "birth_year_diff": best_diff,
+        }
+
+
+def get_testimony(target_identity_id: str) -> dict:
+    """Look up known testimony for a target identity."""
+    return KNOWN_TESTIMONY.get(
+        target_identity_id,
+        {"score": 0.0, "entries": []},
+    )
+
+
+def get_provenance(target_identity_id: str) -> dict:
+    """Look up known provenance for a target identity."""
+    return KNOWN_PROVENANCE.get(
+        target_identity_id,
+        {"score": 0.0, "labels": []},
+    )
 
 
 def aggregate_evidence(signals: dict, weights: dict | None = None) -> float:
@@ -406,6 +609,10 @@ def run_pipeline(family_name: str, dry_run: bool = True):
     identity_photos = load_photo_faces_by_identity(sb)
     logger.info(f"  {len(identity_photos)} identities with photos")
 
+    logger.info("Loading GEDCOM birth years...")
+    gedcom_birth_years = load_gedcom_birth_years(sb)
+    logger.info(f"  {len(gedcom_birth_years)} GEDCOM birth years loaded")
+
     # Get all unidentified people in the community
     community_id = config["community_id"]
     logger.info(f"Loading community identities (community_id={community_id})...")
@@ -471,17 +678,23 @@ def run_pipeline(family_name: str, dry_run: bool = True):
         # Signal 2: Co-occurrence
         co_score = compute_co_occurrence_score(cand["identity_id"], family_identity_ids, co_occurrence_pairs)
 
-        # Signal 3: Age trajectory (placeholder — needs GEDCOM candidate matching)
-        age_score = {"score": 0.5, "reason": "not_yet_implemented"}
+        # Signal 3: Age trajectory — use middle of Fox birth year range for general feasibility
+        age_score = compute_age_feasibility(cand["identity_id"], FOX_BIRTH_YEAR_MIDDLE, date_labels, identity_photos)
 
-        # Signal 4: GEDCOM match (placeholder)
-        gedcom_score = {"score": 0.5, "reason": "not_yet_implemented"}
+        # Signal 4: GEDCOM match — check if target matches an unlinked Fox sibling
+        gedcom_score = compute_gedcom_match_score(
+            cand["identity_id"],
+            family_identity_ids,
+            co_occurrence_pairs,
+            date_labels,
+            identity_photos,
+        )
 
-        # Signal 5: Testimony (placeholder)
-        testimony_score = {"score": 0.0, "entries": []}
+        # Signal 5: Testimony — known human statements about this identity
+        testimony_score = get_testimony(cand["identity_id"])
 
-        # Signal 6: Provenance (placeholder)
-        provenance_score = {"score": 0.0, "labels": []}
+        # Signal 6: Provenance — known provenance labels for this identity
+        provenance_score = get_provenance(cand["identity_id"])
 
         evidence = {
             "family_cluster": family_score,
@@ -529,9 +742,30 @@ def run_pipeline(family_name: str, dry_run: bool = True):
 
     # Write to Supabase (only in execute mode)
     if not dry_run:
+        # Preserve reviewed suggestions — never overwrite REJECTED/ACCEPTED/NEEDS_MORE
+        try:
+            existing_resp = (
+                sb.table("identity_suggestions")
+                .select("target_identity_id,family_id,status")
+                .eq("family_id", family_name)
+                .in_("status", ["REJECTED", "ACCEPTED", "NEEDS_MORE"])
+                .execute()
+            )
+            reviewed_keys = {(r["target_identity_id"], r["family_id"]) for r in (existing_resp.data or [])}
+            if reviewed_keys:
+                logger.info(f"  Preserving {len(reviewed_keys)} reviewed suggestions (REJECTED/ACCEPTED/NEEDS_MORE)")
+        except Exception as e:
+            logger.warning(f"  Could not load reviewed suggestions: {e}")
+            reviewed_keys = set()
+
         logger.info(f"\nWriting {len(suggestions)} suggestions to Supabase...")
         written = 0
+        skipped_reviewed = 0
         for s in suggestions:
+            # Skip suggestions that have already been reviewed by admin
+            if (s["target_identity_id"], s["family_id"]) in reviewed_keys:
+                skipped_reviewed += 1
+                continue
             row = {
                 "target_identity_id": s["target_identity_id"],
                 "suggested_name": s["suggested_name"],
@@ -553,6 +787,8 @@ def run_pipeline(family_name: str, dry_run: bool = True):
                     logger.error(f"  Insert also failed: {e2}")
 
         logger.info(f"  Written: {written}/{len(suggestions)}")
+        if skipped_reviewed > 0:
+            logger.info(f"  Skipped (already reviewed): {skipped_reviewed}")
     else:
         logger.info("\nDRY RUN — no changes written to Supabase")
 
