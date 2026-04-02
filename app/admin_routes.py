@@ -4700,3 +4700,236 @@ def _community_form(action: str, submit_label: str = "Save", community: dict = N
         method="post",
         data_testid="community-form",
     )
+
+
+# ---------------------------------------------------------------------------
+# Identity Suggestion Action Endpoints (PRD-059 Phase 4)
+# ---------------------------------------------------------------------------
+
+
+@rt("/api/identity-suggestion/{suggestion_id}/accept")
+def post(suggestion_id: str, sess=None, request=None):
+    """Accept an identity suggestion — rename+confirm or merge into existing."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    from app.supabase_data import get_supabase_client
+
+    sb = get_supabase_client()
+    if not sb:
+        return Div(
+            "Database unavailable",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    # Load suggestion
+    try:
+        resp = sb.table("identity_suggestions").select("*").eq("id", suggestion_id).execute()
+        suggestion = resp.data[0] if resp.data else None
+    except Exception:
+        suggestion = None
+    if not suggestion:
+        return Div(
+            "Suggestion not found",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    target_id = suggestion["target_identity_id"]
+    registry = _main_mod.load_registry()
+    identity = registry.get_identity(target_id)
+
+    if not identity:
+        return Div(
+            "Identity no longer exists",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+    if identity.get("merged_into"):
+        return Div(
+            "Identity was already merged",
+            cls="text-amber-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    suggested_identity_id = suggestion.get("suggested_identity_id")
+    suggested_name = suggestion["suggested_name"]
+
+    if suggested_identity_id:
+        # MERGE into existing confirmed identity
+        photo_registry = _main_mod.load_photo_registry()
+        result = registry.merge_identities(
+            source_id=target_id,
+            target_id=suggested_identity_id,
+            user_source="identity_suggestion_accept",
+            photo_registry=photo_registry,
+        )
+        if not result.get("success"):
+            return Div(
+                f"Merge failed: {result.get('error', 'unknown')}",
+                cls="text-red-400 text-sm p-3",
+                id=f"identity-suggestion-{suggestion_id}",
+            )
+        _main_mod.save_registry(registry, changed_ids={target_id, suggested_identity_id})
+        _main_mod.save_photo_registry(photo_registry)
+        action_text = f"Merged into {suggested_name}"
+    else:
+        # Rename + confirm
+        if identity.get("state") != "CONFIRMED":
+            registry.rename_identity(target_id, suggested_name, user_source="identity_suggestion")
+            try:
+                registry.confirm_identity(target_id, user_source="identity_suggestion_accept")
+            except ValueError:
+                pass
+        _main_mod.save_registry(registry, changed_ids={target_id})
+        action_text = f"Confirmed as {suggested_name}"
+
+    # GEDCOM link
+    if suggestion.get("suggested_gedcom_id"):
+        try:
+            sb.table("gedcom_face_links").upsert(
+                {
+                    "identity_id": suggested_identity_id or target_id,
+                    "gedcom_individual_id": suggestion["suggested_gedcom_id"],
+                    "link_type": "identity_suggestion",
+                    "created_by": "session_147",
+                },
+                on_conflict="identity_id,gedcom_individual_id",
+            ).execute()
+        except Exception as e:
+            logger.warning(f"Failed to link GEDCOM: {e}")
+
+    # Update suggestion status
+    try:
+        user = get_current_user(sess or {})
+        email = user.email if user else "admin"
+        sb.table("identity_suggestions").update(
+            {
+                "status": "ACCEPTED",
+                "reviewed_at": datetime.now(timezone.utc).isoformat(),
+                "reviewed_by": email,
+            }
+        ).eq("id", suggestion_id).execute()
+    except Exception:
+        pass
+
+    _main_mod.log_user_action(
+        "IDENTITY_SUGGESTION_ACCEPTED",
+        identity_id=target_id,
+        suggested_name=suggested_name,
+        suggestion_id=suggestion_id,
+    )
+
+    return Div(
+        f"✓ {action_text}",
+        cls="text-emerald-400 text-sm p-3",
+        id=f"identity-suggestion-{suggestion_id}",
+        **{"_": "on load wait 4s then add .opacity-0 to me then wait 500ms then remove me"},
+    )
+
+
+@rt("/api/identity-suggestion/{suggestion_id}/reject")
+def post(suggestion_id: str, reason: str = "", sess=None, request=None):
+    """Reject an identity suggestion with optional reason."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    from app.supabase_data import get_supabase_client
+
+    sb = get_supabase_client()
+    if not sb:
+        return Div(
+            "Database unavailable",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    try:
+        user = get_current_user(sess or {})
+        email = user.email if user else "admin"
+        update_data = {
+            "status": "REJECTED",
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": email,
+        }
+        if reason:
+            update_data["rejection_reason"] = reason
+        sb.table("identity_suggestions").update(update_data).eq("id", suggestion_id).execute()
+    except Exception:
+        return Div(
+            "Failed to update suggestion",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    _main_mod.log_user_action(
+        "IDENTITY_SUGGESTION_REJECTED",
+        suggestion_id=suggestion_id,
+        reason=reason,
+    )
+
+    return Div(
+        "✗ Rejected",
+        cls="text-red-400 text-sm p-3",
+        id=f"identity-suggestion-{suggestion_id}",
+        **{"_": "on load wait 4s then add .opacity-0 to me then wait 500ms then remove me"},
+    )
+
+
+@rt("/api/identity-suggestion/{suggestion_id}/needs-more")
+def post(suggestion_id: str, sess=None, request=None):
+    """Flag an identity suggestion for further investigation."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    from app.supabase_data import get_supabase_client
+
+    sb = get_supabase_client()
+    if not sb:
+        return Div(
+            "Database unavailable",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    try:
+        user = get_current_user(sess or {})
+        email = user.email if user else "admin"
+        sb.table("identity_suggestions").update(
+            {
+                "status": "NEEDS_MORE",
+                "reviewed_at": datetime.now(timezone.utc).isoformat(),
+                "reviewed_by": email,
+            }
+        ).eq("id", suggestion_id).execute()
+    except Exception:
+        return Div(
+            "Failed to update suggestion",
+            cls="text-red-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
+    _main_mod.log_user_action(
+        "IDENTITY_SUGGESTION_NEEDS_MORE",
+        suggestion_id=suggestion_id,
+    )
+
+    return Div(
+        "⚑ Flagged for follow-up",
+        cls="text-amber-400 text-sm p-3",
+        id=f"identity-suggestion-{suggestion_id}",
+        **{"_": "on load wait 4s then add .opacity-0 to me then wait 500ms then remove me"},
+    )
