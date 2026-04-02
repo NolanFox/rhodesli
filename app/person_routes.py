@@ -1545,7 +1545,36 @@ def public_person_page(
                             data_testid="person-state-actions",
                         )
                         if state in ("INBOX", "PROPOSED", "SKIPPED")
-                        else None,
+                        # Restore button for REJECTED/CONTESTED identities
+                        else (
+                            Div(
+                                Span(
+                                    "\u2717 REJECTED" if state == "REJECTED" else "\u26a0 CONTESTED",
+                                    cls="text-sm sm:text-xs px-2 py-0.5 rounded-full font-medium "
+                                    + (
+                                        "bg-red-500/20 text-red-400"
+                                        if state == "REJECTED"
+                                        else "bg-amber-500/20 text-amber-400"
+                                    ),
+                                ),
+                                Button(
+                                    "\u21a9 Restore to Inbox",
+                                    hx_post=f"/api/identity/{person_id}/restore?from_person_page=true",
+                                    hx_target="#person-admin-actions",
+                                    hx_swap="outerHTML",
+                                    hx_confirm="Restore this person to inbox for re-review?",
+                                    hx_disabled_elt="this",
+                                    cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded disabled:opacity-50",
+                                    type="button",
+                                    **{"_": "on click put 'Restoring...' into me"},
+                                ),
+                                id="person-admin-actions",
+                                cls="flex items-center justify-center gap-2 mb-3",
+                                data_testid="person-state-actions",
+                            )
+                            if state in ("REJECTED", "CONTESTED") and is_admin
+                            else None
+                        ),
                         # Merge search (with confirmation gate for CONFIRMED persons)
                         Div(
                             Input(

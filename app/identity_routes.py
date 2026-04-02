@@ -4504,6 +4504,134 @@ def post(
 
 
 # =============================================================================
+# ROUTES — RESTORE (UNDO REJECT)
+# =============================================================================
+
+
+@rt("/api/identity/{identity_id}/restore")
+def post(
+    identity_id: str,
+    from_person_page: bool = False,
+    sess=None,
+    request=None,
+):
+    """Restore a REJECTED or CONTESTED identity back to INBOX. Requires admin.
+
+    This is the undo for accidental rejections. Uses reset_identity() which
+    transitions from any terminal state (REJECTED, CONTESTED, CONFIRMED, SKIPPED)
+    back to INBOX.
+    """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+    try:
+        registry = _main_mod.load_registry()
+    except Exception:
+        return Response(
+            to_xml(_main_mod.toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    is_merged, canonical_id = _main_mod._check_merged_identity(identity_id, registry)
+    if is_merged:
+        nav_prefix = _nav_prefix_from_request(request)
+        return HttpHeader("HX-Redirect", f"{nav_prefix}/person/{canonical_id}")
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(_main_mod.toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    old_state = identity.get("state", "UNKNOWN")
+    if old_state not in ("REJECTED", "CONTESTED"):
+        return Response(
+            to_xml(
+                _main_mod.toast(f"Cannot restore from state '{old_state}' (must be REJECTED or CONTESTED).", "error")
+            ),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    try:
+        registry.reset_identity(identity_id, user_source="web_restore")
+        _main_mod.save_registry(registry, changed_ids={identity_id})
+        _main_mod.log_user_action(
+            "RESTORE",
+            identity_id=identity_id,
+            identity_name=identity.get("name", "Unknown"),
+            source_state=old_state,
+            context="person_page" if from_person_page else "browse",
+        )
+        _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+        _log_audit(
+            "restore",
+            entity_id=identity_id,
+            user_email=_user.email if _user else None,
+            old_value={"state": old_state, "name": identity.get("name")},
+            new_value={"state": "INBOX"},
+            metadata={"route": "restore"},
+        )
+    except ValueError as e:
+        return Response(
+            to_xml(_main_mod.toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+
+    # On person page, return the INBOX action buttons so admin can take further action
+    if from_person_page:
+        return (
+            Div(
+                Button(
+                    "\u2713 Confirm",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50",
+                    hx_post=f"/inbox/{identity_id}/confirm?from_person_page=true",
+                    hx_target="#person-admin-actions",
+                    hx_swap="outerHTML",
+                    hx_disabled_elt="this",
+                    type="button",
+                ),
+                Button(
+                    "\u23f8 Skip",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50",
+                    hx_post=f"/identity/{identity_id}/skip?from_person_page=true",
+                    hx_target="#person-admin-actions",
+                    hx_swap="outerHTML",
+                    hx_disabled_elt="this",
+                    type="button",
+                ),
+                Button(
+                    "\u2717 Reject",
+                    cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20 disabled:opacity-50",
+                    hx_post=f"/inbox/{identity_id}/reject?from_person_page=true",
+                    hx_target="#person-admin-actions",
+                    hx_swap="outerHTML",
+                    hx_disabled_elt="this",
+                    type="button",
+                ),
+                id="person-admin-actions",
+                cls="flex items-center justify-center gap-2 mb-3",
+                data_testid="person-state-actions",
+            ),
+            _main_mod.toast(f"Restored to inbox (was {old_state}).", "success"),
+        )
+
+    nav_prefix = _nav_prefix_from_request(request)
+    return (
+        _main_mod.toast(f"Restored to inbox (was {old_state}).", "success"),
+        HttpHeader("HX-Redirect", f"{nav_prefix}/person/{identity_id}"),
+    )
+
+
+# =============================================================================
 # ROUTES — ADMIN FORCE STATE CHANGE
 # =============================================================================
 
