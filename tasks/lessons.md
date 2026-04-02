@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-162 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+164 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -204,3 +204,5 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 140 | **Hooks that exit 0 are advisory only — Claude ignores warnings, must exit 2 to block** |
 | 143 | **Hook audit must be exhaustive — partial fixes create false confidence** |
 | 148 | **25 commits never pushed — every session must verify git log origin/main..HEAD is empty** |
+| 166 | **Worktree agents must commit before returning — uncommitted changes require manual recovery** |
+| 167 | **Git lock contention when launching 3+ worktree agents simultaneously — stagger or retry** |
