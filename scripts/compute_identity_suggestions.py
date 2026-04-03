@@ -497,7 +497,7 @@ def run_pipeline(family_name: str, dry_run: bool = True):
         suggestions.append(
             {
                 "target_identity_id": cand["identity_id"],
-                "suggested_name": f"Fox family member (score: {confidence})",
+                "suggested_name": cand["name"],  # Use existing identity name, not a placeholder
                 "family_id": family_name,
                 "confidence": confidence,
                 "evidence_json": evidence,

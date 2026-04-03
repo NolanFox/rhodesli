@@ -535,6 +535,225 @@ def post(identity_id: str, reason: str = "", sess=None):
     )
 
 
+# --- Identity Inference Suggestion Review (PRD-059 Phase 4) ---
+
+
+def _update_suggestion_status(suggestion_id: str, status: str, reviewed_by: str = "admin", reason: str = "") -> bool:
+    """Update an identity suggestion's status in Supabase. Returns True on success."""
+    try:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if not sb:
+            return False
+        update = {
+            "status": status,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": reviewed_by,
+        }
+        if reason:
+            update["rejection_reason"] = reason
+        resp = sb.table("identity_suggestions").update(update).eq("id", suggestion_id).execute()
+        return bool(resp.data)
+    except Exception as e:
+        logging.error(f"Failed to update suggestion {suggestion_id}: {e}")
+        return False
+
+
+def _load_suggestion_by_id(suggestion_id: str) -> dict | None:
+    """Load a single suggestion by its ID."""
+    try:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if not sb:
+            return None
+        resp = (
+            sb.table("identity_suggestions")
+            .select("id,target_identity_id,suggested_name,confidence,evidence_json,family_id,status")
+            .eq("id", suggestion_id)
+            .limit(1)
+            .execute()
+        )
+        return resp.data[0] if resp.data else None
+    except Exception as e:
+        logging.error(f"Failed to load suggestion {suggestion_id}: {e}")
+        return None
+
+
+@rt("/api/ml-review/identity/{identity_id}/accept")
+def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
+    """Accept an identity inference suggestion. Admin-only.
+
+    Confirms the identity — sets state to CONFIRMED.
+    Updates the suggestion status in Supabase.
+    """
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not suggestion_id:
+        return Div(
+            Span("Missing suggestion ID", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    # Load the suggestion and verify it's still PENDING
+    suggestion = _load_suggestion_by_id(suggestion_id)
+    if not suggestion:
+        return Div(
+            Span("Suggestion not found", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+    if suggestion.get("status") != "PENDING":
+        return Div(
+            Span(f"Already {suggestion.get('status', 'processed').lower()}", cls="text-amber-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    registry = _main_mod.load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Div(
+            Span("Identity not found", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    # If identity is REJECTED or CONTESTED, restore to INBOX first
+    current_state = identity.get("state", "INBOX")
+    if current_state in ("REJECTED", "CONTESTED"):
+        try:
+            registry.reset_identity(identity_id, user_source="ml_review_restore")
+            identity = registry.get_identity(identity_id)
+        except Exception as e:
+            logging.error(f"Failed to restore identity {identity_id} from {current_state}: {e}")
+
+    # Confirm the identity
+    try:
+        registry.confirm_identity(identity_id, user_source="ml_inference_accepted")
+        _main_mod.save_registry(registry, changed_ids={identity_id})
+    except Exception as e:
+        logging.error(f"Failed to confirm identity {identity_id}: {e}")
+        return Div(
+            Span(f"Confirm failed: {e}", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    # Update suggestion status in Supabase
+    _update_suggestion_status(suggestion_id, "ACCEPTED")
+
+    # Audit log
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _log_audit(
+        "identity_suggestion_accepted",
+        suggestion_id,
+        _user.email if _user else "admin",
+        f"identity={identity_id} confidence={suggestion.get('confidence', 0)}",
+    )
+
+    name = identity.get("name", "Unknown")
+    return Div(
+        Div(
+            Span("\u2705 ", cls="mr-1"),
+            Span(f"Confirmed as {name}", cls="text-emerald-400 text-sm font-medium"),
+            cls="mb-1",
+        ),
+        Span("Identity accepted via ML inference", cls="text-xs text-slate-500"),
+        id=f"identity-suggestion-{identity_id}",
+        cls="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 mt-3 mb-3 text-center max-w-sm mx-auto",
+        data_testid="identity-suggestion-accepted",
+        _="on load wait 4s then transition my opacity to 0 over 0.5s then remove me",
+    )
+
+
+@rt("/api/ml-review/identity/{identity_id}/reject")
+def post(identity_id: str, suggestion_id: str = "", reason: str = "", sess=None, request=None):
+    """Reject/dismiss an identity inference suggestion. Admin-only."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not suggestion_id:
+        return Div(
+            Span("Missing suggestion ID", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    suggestion = _load_suggestion_by_id(suggestion_id)
+    if suggestion and suggestion.get("status") != "PENDING":
+        return Div(
+            Span(f"Already {suggestion.get('status', 'processed').lower()}", cls="text-amber-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    _update_suggestion_status(suggestion_id, "REJECTED", reason=reason)
+
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _log_audit(
+        "identity_suggestion_rejected",
+        suggestion_id,
+        _user.email if _user else "admin",
+        f"identity={identity_id} reason={reason}",
+    )
+
+    return Div(
+        Span("\u274c Suggestion dismissed", cls="text-slate-500 text-xs"),
+        id=f"identity-suggestion-{identity_id}",
+        cls="text-center py-2",
+        data_testid="identity-suggestion-rejected",
+        _="on load wait 4s then transition my opacity to 0 over 0.5s then remove me",
+    )
+
+
+@rt("/api/ml-review/identity/{identity_id}/needs-more")
+def post(identity_id: str, suggestion_id: str = "", sess=None, request=None):
+    """Mark an identity suggestion as needing more evidence. Admin-only."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not suggestion_id:
+        return Div(
+            Span("Missing suggestion ID", cls="text-red-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    suggestion = _load_suggestion_by_id(suggestion_id)
+    if suggestion and suggestion.get("status") != "PENDING":
+        return Div(
+            Span(f"Already {suggestion.get('status', 'processed').lower()}", cls="text-amber-400 text-xs"),
+            id=f"identity-suggestion-{identity_id}",
+        )
+
+    _update_suggestion_status(suggestion_id, "NEEDS_MORE")
+
+    _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    _log_audit(
+        "identity_suggestion_needs_more",
+        suggestion_id,
+        _user.email if _user else "admin",
+        f"identity={identity_id}",
+    )
+
+    return Div(
+        Span("\u23f3 Marked for more evidence", cls="text-amber-400 text-xs"),
+        id=f"identity-suggestion-{identity_id}",
+        cls="text-center py-2",
+        data_testid="identity-suggestion-needs-more",
+        _="on load wait 4s then transition my opacity to 0 over 0.5s then remove me",
+    )
+
+
 @rt("/admin/pending")
 def get(request, sess=None):
     """
