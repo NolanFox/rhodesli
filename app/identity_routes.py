@@ -4700,6 +4700,9 @@ def post(identity_id: str, name: str = "", sess=None, request=None):
 @rt("/identity/{identity_id}/reset")
 def post(identity_id: str, sess=None, request=None):
     """Reset identity back to Inbox. Requires admin."""
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied

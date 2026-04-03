@@ -54,6 +54,157 @@ def _detect_person_community(person_id: str) -> str | None:
 # HELPERS — Person-exclusive (not used outside person routes)
 # =============================================================================
 
+
+def _load_identity_suggestions(identity_id: str, status: str = "PENDING") -> list[dict]:
+    """Load identity suggestions from Supabase for a given identity.
+
+    Returns list of suggestion dicts with keys: id, suggested_name, confidence,
+    evidence_json, family_id, status, etc.
+    """
+    try:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if not sb:
+            return []
+        resp = (
+            sb.table("identity_suggestions")
+            .select("id,target_identity_id,suggested_name,confidence,evidence_json,family_id,status")
+            .eq("target_identity_id", identity_id)
+            .eq("status", status)
+            .order("confidence", desc=True)
+            .limit(5)
+            .execute()
+        )
+        return resp.data or []
+    except Exception as e:
+        logger.warning(f"Failed to load identity suggestions for {identity_id}: {e}")
+        return []
+
+
+def _render_signal_bar(label: str, score: float, detail: str = "") -> object:
+    """Render a single signal bar with label, score bar, and detail."""
+    pct = max(0, min(100, int(score * 100)))
+    if score >= 0.7:
+        bar_color = "bg-emerald-500"
+    elif score >= 0.4:
+        bar_color = "bg-amber-500"
+    else:
+        bar_color = "bg-slate-500"
+
+    return Div(
+        Div(
+            Span(label, cls="text-xs text-slate-400 w-28 shrink-0"),
+            Div(
+                Div(cls=f"{bar_color} h-full rounded-full transition-all", style=f"width: {pct}%"),
+                cls="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden",
+            ),
+            Span(f"{score:.2f}", cls="text-xs text-slate-500 w-10 text-right tabular-nums"),
+            cls="flex items-center gap-2",
+        ),
+        Span(detail, cls="text-xs text-slate-600 ml-[7.5rem]") if detail else None,
+        cls="mb-1",
+    )
+
+
+def _render_identity_suggestion_panel(person_id: str, nav_prefix: str) -> object | None:
+    """Render the identity inference suggestion panel for admin on person page.
+
+    Shows PENDING suggestions from the identity_suggestions table with
+    signal breakdowns and accept/reject/needs-more buttons.
+    """
+    suggestions = _load_identity_suggestions(person_id)
+    if not suggestions:
+        return None
+
+    # Take the top suggestion (highest confidence)
+    s = suggestions[0]
+    confidence = s.get("confidence", 0.0)
+    evidence = s.get("evidence_json", {})
+    suggestion_id = s.get("id", "")
+    family_id = s.get("family_id", "")
+
+    # Build signal bars from evidence
+    signal_bars = []
+    signal_config = [
+        ("Family Cluster", "family_cluster", lambda e: e.get("closest_member", "")),
+        ("Co-occurrence", "co_occurrence", lambda e: f"{e.get('shared_photos_with_family', 0)} shared photos"),
+        ("Age Trajectory", "age_trajectory", lambda e: e.get("reason", "")),
+        ("GEDCOM Match", "gedcom_match", lambda e: e.get("reason", "")),
+        ("Testimony", "testimony", lambda e: f"{len(e.get('entries', []))} entries"),
+        ("Provenance", "provenance", lambda e: ""),
+    ]
+    for label, key, detail_fn in signal_config:
+        sig = evidence.get(key, {})
+        score = sig.get("score", 0.0)
+        detail = detail_fn(sig)
+        signal_bars.append(_render_signal_bar(label, score, detail))
+
+    # Confidence tier
+    if confidence >= 0.7:
+        conf_label, conf_cls = "Strong", "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+    elif confidence >= 0.4:
+        conf_label, conf_cls = "Moderate", "text-amber-400 bg-amber-500/10 border-amber-500/20"
+    else:
+        conf_label, conf_cls = "Weak", "text-slate-400 bg-slate-500/10 border-slate-500/20"
+
+    return Div(
+        # Header
+        Div(
+            Span("\U0001f9ec ", cls="mr-1"),
+            Span("Identity Inference", cls="text-sm font-semibold text-indigo-300"),
+            Span(
+                conf_label,
+                cls=f"text-xs px-2 py-0.5 rounded-full border {conf_cls} ml-2",
+            ),
+            cls="mb-3 flex items-center",
+        ),
+        # Overall confidence
+        Div(
+            Span(f"Confidence: {confidence:.2f}", cls="text-sm text-white font-medium"),
+            Span(f" ({family_id} family)" if family_id else "", cls="text-sm text-slate-400"),
+            cls="mb-3",
+        ),
+        # Signal bars
+        Div(*signal_bars, cls="mb-3"),
+        # Action buttons
+        Div(
+            Button(
+                "Accept",
+                type="button",
+                hx_post=f"{nav_prefix}/api/ml-review/identity/{person_id}/accept",
+                hx_target=f"#identity-suggestion-{person_id}",
+                hx_swap="outerHTML",
+                hx_vals=json.dumps({"suggestion_id": suggestion_id}),
+                hx_confirm="Accept this identity suggestion? The person will be confirmed.",
+                cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+            ),
+            Button(
+                "Needs More Evidence",
+                type="button",
+                hx_post=f"{nav_prefix}/api/ml-review/identity/{person_id}/needs-more",
+                hx_target=f"#identity-suggestion-{person_id}",
+                hx_swap="outerHTML",
+                hx_vals=json.dumps({"suggestion_id": suggestion_id}),
+                cls="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs rounded",
+            ),
+            Button(
+                "Dismiss",
+                type="button",
+                hx_post=f"{nav_prefix}/api/ml-review/identity/{person_id}/reject",
+                hx_target=f"#identity-suggestion-{person_id}",
+                hx_swap="outerHTML",
+                hx_vals=json.dumps({"suggestion_id": suggestion_id}),
+                cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded",
+            ),
+            cls="flex gap-2 flex-wrap",
+        ),
+        id=f"identity-suggestion-{person_id}",
+        cls="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-4 mt-3 mb-3 text-left max-w-md mx-auto",
+        data_testid="identity-suggestion-panel",
+    )
+
+
 # --- Person Comments ---
 # _load_person_comments, _save_person_comments, and _person_comments_cache
 # remain in app.main so that test patches on app.main work correctly.
@@ -1062,6 +1213,11 @@ def public_person_page(
                 data_testid="ml-suggestion-card",
             )
 
+    # --- Identity inference suggestion panel (PRD-059 Phase 4, admin-only) ---
+    identity_suggestion_panel = None
+    if is_admin and not is_state_confirmed:
+        identity_suggestion_panel = _render_identity_suggestion_panel(person_id, nav_prefix)
+
     # --- Stats line ---
     stats_parts = []
     if birth_year_line:
@@ -1308,6 +1464,8 @@ def public_person_page(
                     can_you_help_cta,
                     # Admin: ML birth year suggestion card (Gatekeeper pattern)
                     ml_suggestion_card,
+                    # Admin: Identity inference suggestion panel (PRD-059 Phase 4)
+                    identity_suggestion_panel,
                     # Admin: inline metadata editing
                     Div(
                         Form(
