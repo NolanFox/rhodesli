@@ -5186,7 +5186,7 @@ def post(photo_id: str, request=None, sess=None, known_people: str = ""):
             status_code=503,
         )
 
-    from rhodesli_ml.gemini_extraction import build_extraction_prompt
+    from rhodesli_ml.gemini_extraction import build_extraction_prompt, build_response_schema
     from rhodesli_ml.gemini_config import GEMINI_MODEL
 
     prompt_text = build_extraction_prompt(
@@ -5200,7 +5200,7 @@ def post(photo_id: str, request=None, sess=None, known_people: str = ""):
         },
     )
 
-    # Call Gemini via google-genai SDK (same pattern as estimate_routes)
+    # Call Gemini via google-genai SDK with response_schema for structured output
     from google import genai
     from google.genai import types
 
@@ -5208,6 +5208,9 @@ def post(photo_id: str, request=None, sess=None, known_people: str = ""):
         api_key=api_key,
         http_options={"timeout": 180_000},
     )
+
+    # Build schema to enforce event_context + relationship_inference fields
+    response_schema = build_response_schema(preset="identification")
 
     mime_type = "image/png" if suffix == ".png" else "image/jpeg"
     start_time = _time.time()
@@ -5228,6 +5231,7 @@ def post(photo_id: str, request=None, sess=None, known_people: str = ""):
             ],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
+                response_schema=response_schema,
                 temperature=0.1,
             ),
         )

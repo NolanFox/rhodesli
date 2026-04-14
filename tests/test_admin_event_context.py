@@ -182,3 +182,66 @@ class TestBuildExtractionPromptIdentificationPreset:
         prompt = build_extraction_prompt(preset="identification", verified_facts=facts)
         assert "Albert Fox" in prompt
         assert "Esther Burd Fox" in prompt
+
+
+class TestBuildResponseSchema:
+    """Tests for build_response_schema structured output enforcement."""
+
+    def test_identification_schema_includes_event_context(self):
+        """Schema for identification preset must include event_context."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="identification")
+        assert "event_context" in schema["properties"]
+        assert "event_context" in schema["required"]
+
+    def test_identification_schema_includes_relationship_inference(self):
+        """Schema for identification preset must include relationship_inference."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="identification")
+        assert "relationship_inference" in schema["properties"]
+        assert "relationship_inference" in schema["required"]
+
+    def test_event_context_schema_has_event_type_enum(self):
+        """event_context event_type must have valid enum values."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="identification")
+        ec = schema["properties"]["event_context"]
+        event_type = ec["properties"]["event_type"]
+        assert "enum" in event_type
+        assert "wedding_ceremony" in event_type["enum"]
+        assert "portrait" in event_type["enum"]
+
+    def test_quick_preset_schema_excludes_event_context(self):
+        """Quick preset should NOT include event_context (backward compat)."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="quick")
+        assert "event_context" not in schema.get("properties", {})
+
+    def test_full_preset_schema_excludes_event_context(self):
+        """Full preset should NOT include event_context (it's identification-only)."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="full")
+        assert "event_context" not in schema.get("properties", {})
+
+    def test_schema_has_valid_structure(self):
+        """Schema root must be OBJECT type with properties and required."""
+        from rhodesli_ml.gemini_extraction import build_response_schema
+
+        schema = build_response_schema(preset="identification")
+        assert schema["type"] == "OBJECT"
+        assert isinstance(schema["properties"], dict)
+        assert isinstance(schema["required"], list)
+        assert len(schema["properties"]) > 0
+
+    def test_endpoint_uses_response_schema(self):
+        """Admin endpoint must use build_response_schema for structured output."""
+        source = Path("app/admin_routes.py").read_text()
+        idx = source.index("/api/admin/analyze-event-context/")
+        handler = source[idx : idx + 8000]
+        assert "build_response_schema" in handler
+        assert "response_schema=" in handler

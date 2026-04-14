@@ -421,6 +421,224 @@ def build_extraction_prompt(
     return "\n\n".join(sections)
 
 
+def build_response_schema(
+    preset: str = "full",
+    include: list[str] | None = None,
+    exclude: list[str] | None = None,
+) -> dict:
+    """Build a Gemini response_schema dict for enforced structured output.
+
+    The schema uses Gemini's supported subset of JSON Schema (type, properties,
+    items, enum, required). This forces the model to produce all requested fields.
+
+    Args:
+        preset: One of EXTRACTION_PRESETS keys
+        include: Additional extraction types to enable
+        exclude: Extraction types to disable from preset
+
+    Returns:
+        Dict compatible with google.genai types.GenerateContentConfig response_schema
+    """
+    if preset not in EXTRACTION_PRESETS:
+        raise ValueError(f"Unknown preset '{preset}'. Valid: {list(EXTRACTION_PRESETS.keys())}")
+
+    config = EXTRACTION_PRESETS[preset].copy()
+    if include:
+        for key in include:
+            config[key] = True
+    if exclude:
+        for key in exclude:
+            config[key] = False
+
+    properties: dict = {}
+    required: list[str] = []
+
+    active_types = [k for k, v in config.items() if v]
+
+    for extraction_type in active_types:
+        schema = _RESPONSE_SCHEMA_FRAGMENTS.get(extraction_type)
+        if schema:
+            properties[schema["key"]] = schema["schema"]
+            required.append(schema["key"])
+
+    return {
+        "type": "OBJECT",
+        "properties": properties,
+        "required": required,
+    }
+
+
+# Response schema fragments for Gemini structured output enforcement.
+# Each maps an extraction_type to a JSON Schema fragment that Gemini enforces.
+_RESPONSE_SCHEMA_FRAGMENTS: dict[str, dict] = {
+    "date_estimation": {
+        "key": "date_estimation",
+        "schema": {
+            "type": "OBJECT",
+            "properties": {
+                "estimated_decade": {"type": "INTEGER"},
+                "best_year_estimate": {"type": "INTEGER"},
+                "confidence": {"type": "STRING", "enum": ["high", "medium", "low"]},
+                "probable_range": {"type": "ARRAY", "items": {"type": "INTEGER"}},
+                "reasoning_summary": {"type": "STRING"},
+                "cultural_lag_applied": {"type": "BOOLEAN"},
+                "cultural_lag_note": {"type": "STRING"},
+            },
+            "required": ["estimated_decade", "best_year_estimate", "confidence", "probable_range", "reasoning_summary"],
+        },
+    },
+    "face_analysis": {
+        "key": "face_analysis",
+        "schema": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "face_index": {"type": "INTEGER"},
+                    "estimated_age": {"type": "INTEGER"},
+                    "gender": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                },
+                "required": ["face_index", "estimated_age", "gender"],
+            },
+        },
+    },
+    "location": {
+        "key": "location",
+        "schema": {
+            "type": "OBJECT",
+            "properties": {
+                "place": {"type": "STRING"},
+                "confidence": {"type": "STRING", "enum": ["high", "medium", "low"]},
+                "visual_evidence": {"type": "STRING"},
+                "source_type": {"type": "STRING", "enum": ["visual", "biographical", "both"]},
+            },
+            "required": ["place", "confidence"],
+        },
+    },
+    "cultural_markers": {
+        "key": "cultural_markers",
+        "schema": {"type": "ARRAY", "items": {"type": "STRING"}},
+    },
+    "clothing_era": {
+        "key": "clothing_notes",
+        "schema": {"type": "STRING"},
+    },
+    "group_composition": {
+        "key": "group_composition",
+        "schema": {
+            "type": "OBJECT",
+            "properties": {
+                "type": {"type": "STRING"},
+                "people_count": {"type": "INTEGER"},
+                "arrangement": {"type": "STRING"},
+            },
+            "required": ["type", "people_count"],
+        },
+    },
+    "subject_ages": {
+        "key": "subject_ages",
+        "schema": {"type": "ARRAY", "items": {"type": "INTEGER"}},
+    },
+    "scene_description": {
+        "key": "scene_description",
+        "schema": {"type": "STRING"},
+    },
+    "event_context": {
+        "key": "event_context",
+        "schema": {
+            "type": "OBJECT",
+            "properties": {
+                "event_type": {
+                    "type": "STRING",
+                    "enum": [
+                        "wedding_ceremony",
+                        "wedding_reception",
+                        "bar_mitzvah",
+                        "funeral",
+                        "holiday",
+                        "school",
+                        "military",
+                        "casual",
+                        "portrait",
+                        "formal_dinner",
+                        "party",
+                        "religious_ceremony",
+                        "graduation",
+                        "reunion",
+                        "unknown",
+                    ],
+                },
+                "event_subtype": {"type": "STRING"},
+                "role_indicators": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "face_index": {"type": "INTEGER"},
+                            "roles": {"type": "ARRAY", "items": {"type": "STRING"}},
+                        },
+                        "required": ["face_index", "roles"],
+                    },
+                },
+                "formality_level": {
+                    "type": "STRING",
+                    "enum": ["very_formal", "formal", "semi_formal", "casual", "intimate"],
+                },
+            },
+            "required": ["event_type", "formality_level"],
+        },
+    },
+    "relationship_inference": {
+        "key": "relationship_inference",
+        "schema": {
+            "type": "OBJECT",
+            "properties": {
+                "couple_pairs": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "face_indices": {"type": "ARRAY", "items": {"type": "INTEGER"}},
+                            "confidence": {"type": "NUMBER"},
+                            "evidence": {"type": "STRING"},
+                        },
+                        "required": ["face_indices", "confidence", "evidence"],
+                    },
+                },
+                "parent_child_pairs": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "parent_index": {"type": "INTEGER"},
+                            "child_index": {"type": "INTEGER"},
+                            "confidence": {"type": "NUMBER"},
+                            "evidence": {"type": "STRING"},
+                        },
+                        "required": ["parent_index", "child_index", "confidence", "evidence"],
+                    },
+                },
+                "sibling_pairs": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "face_indices": {"type": "ARRAY", "items": {"type": "INTEGER"}},
+                            "confidence": {"type": "NUMBER"},
+                            "evidence": {"type": "STRING"},
+                        },
+                        "required": ["face_indices", "confidence", "evidence"],
+                    },
+                },
+                "positioning_notes": {"type": "STRING"},
+            },
+            "required": ["positioning_notes"],
+        },
+    },
+}
+
+
 def get_active_extractions(
     preset: str = "full", include: list[str] | None = None, exclude: list[str] | None = None
 ) -> list[str]:
