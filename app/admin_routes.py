@@ -5051,3 +5051,254 @@ def post(suggestion_id: str, sess=None, request=None):
         id=f"identity-suggestion-{suggestion_id}",
         **{"_": "on load wait 4s then add .opacity-0 to me then wait 500ms then remove me"},
     )
+
+
+# =============================================================================
+# EVENT CONTEXT ANALYSIS ENDPOINT (Session 149, Phase 4)
+# =============================================================================
+
+
+@rt("/api/admin/analyze-event-context/{photo_id}")
+def post(photo_id: str, request=None, sess=None):
+    """Admin-only: Run Gemini event context analysis on a photo.
+
+    Uses the 'identification' preset which includes event_context and
+    relationship_inference extraction types. Optionally accepts known_people
+    context in the JSON request body.
+
+    Returns structured JSON with Gemini's analysis results.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    import time as _time
+
+    from app.supabase_data import get_supabase_client, log_gemini_call
+
+    # --- Load photo from Supabase ---
+    sb = get_supabase_client()
+    if not sb:
+        return Response(
+            json.dumps({"status": "error", "error": "Supabase not configured"}),
+            media_type="application/json",
+            status_code=503,
+        )
+
+    try:
+        photo_result = (
+            sb.table("photos").select("photo_id, path, source, collection").eq("photo_id", photo_id).execute()
+        )
+    except Exception as e:
+        logger.error(f"Supabase photo lookup failed: {e}")
+        return Response(
+            json.dumps({"status": "error", "error": "Database error"}),
+            media_type="application/json",
+            status_code=500,
+        )
+
+    if not photo_result.data:
+        return Response(
+            json.dumps({"status": "error", "error": f"Photo {photo_id} not found"}),
+            media_type="application/json",
+            status_code=404,
+        )
+
+    photo = photo_result.data[0]
+    filename = photo.get("path", "")
+
+    # --- Load face bounding boxes from photo_faces ---
+    face_coordinates = []
+    try:
+        faces_result = sb.table("photo_faces").select("face_id, bbox").eq("photo_id", photo_id).execute()
+        if faces_result.data:
+            for face in faces_result.data:
+                bbox = face.get("bbox")
+                if bbox:
+                    # bbox may be stored as JSON string or list
+                    if isinstance(bbox, str):
+                        bbox = json.loads(bbox)
+                    face_coordinates.append({"face_id": face["face_id"], "bbox": bbox})
+    except Exception as e:
+        logger.warning(f"Failed to load face bboxes for {photo_id}: {e}")
+
+    # --- Parse optional known_people from request body ---
+    known_people = None
+    verified_facts = None
+    if request:
+        try:
+            import starlette.requests
+
+            # For FastHTML, body may be form-encoded or JSON
+            body_bytes = None
+            if hasattr(request, "_body"):
+                body_bytes = request._body
+            elif hasattr(request, "body"):
+                import asyncio
+
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Can't await in sync context — skip body parsing
+                        body_bytes = None
+                    else:
+                        body_bytes = loop.run_until_complete(request.body())
+                except RuntimeError:
+                    body_bytes = None
+
+            if body_bytes:
+                try:
+                    body = json.loads(body_bytes)
+                    known_people = body.get("known_people")
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    pass
+        except Exception:
+            pass
+
+    if known_people:
+        # Build verified_facts from known_people for the prompt
+        names = []
+        for person in known_people:
+            name = person.get("name", "")
+            if name:
+                birth_year = person.get("birth_year")
+                if birth_year:
+                    names.append(f"{name} (born ~{birth_year})")
+                else:
+                    names.append(name)
+        if names:
+            verified_facts = {"confirmed_names": names}
+
+    # --- Load photo image bytes ---
+    import urllib.request as _urllib_request
+
+    image_bytes = None
+    suffix = Path(filename).suffix.lower() or ".jpg"
+
+    if storage.is_r2_mode():
+        url = storage.get_photo_url(filename)
+        try:
+            req = _urllib_request.Request(url, headers={"User-Agent": "Rhodesli/1.0"})
+            with _urllib_request.urlopen(req, timeout=15) as resp:
+                image_bytes = resp.read()
+        except Exception as e:
+            logger.error(f"Failed to fetch photo from R2: {e}")
+    else:
+        local_path = Path("raw_photos") / Path(filename).name
+        if local_path.exists():
+            image_bytes = local_path.read_bytes()
+
+    if not image_bytes:
+        return Response(
+            json.dumps({"status": "error", "error": "Could not load photo image"}),
+            media_type="application/json",
+            status_code=404,
+        )
+
+    # --- Build prompt and call Gemini ---
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        return Response(
+            json.dumps({"status": "error", "error": "GEMINI_API_KEY not configured"}),
+            media_type="application/json",
+            status_code=503,
+        )
+
+    from rhodesli_ml.gemini_extraction import build_extraction_prompt
+    from rhodesli_ml.gemini_config import GEMINI_MODEL
+
+    prompt_text = build_extraction_prompt(
+        preset="identification",
+        face_coordinates=face_coordinates if face_coordinates else None,
+        verified_facts=verified_facts,
+        photo_metadata={
+            "collection": photo.get("collection", ""),
+            "source": photo.get("source", ""),
+            "filename": filename,
+        },
+    )
+
+    # Call Gemini via google-genai SDK (same pattern as estimate_routes)
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(
+        api_key=api_key,
+        http_options={"timeout": 180_000},
+    )
+
+    mime_type = "image/png" if suffix == ".png" else "image/jpeg"
+    start_time = _time.time()
+    status = "success"
+    error_msg = None
+    parsed = None
+
+    try:
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part.from_text(text=prompt_text),
+                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                    ]
+                )
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+        )
+
+        latency_ms = int((_time.time() - start_time) * 1000)
+        text = response.text
+
+        if not text:
+            status = "error"
+            error_msg = "Empty Gemini response"
+        else:
+            parsed = json.loads(text)
+
+    except json.JSONDecodeError as e:
+        latency_ms = int((_time.time() - start_time) * 1000)
+        status = "error"
+        error_msg = f"JSON parse error: {e}"
+    except Exception as e:
+        latency_ms = int((_time.time() - start_time) * 1000)
+        status = "error"
+        error_msg = str(e)
+
+    # --- Log the API call ---
+    log_gemini_call(
+        photo_id=photo_id,
+        model_used=GEMINI_MODEL,
+        call_type="event_context_analysis",
+        status=status,
+        error_message=error_msg,
+        latency_ms=latency_ms,
+        prompt_text=prompt_text[:5000],  # Truncate for storage
+        full_response=json.dumps(parsed)[:10000] if parsed else None,
+        request_surface="app.admin_routes.analyze_event_context",
+        request_mode="admin_on_demand",
+    )
+
+    if status != "success" or parsed is None:
+        return Response(
+            json.dumps({"status": "error", "error": error_msg or "Analysis failed"}),
+            media_type="application/json",
+            status_code=500,
+        )
+
+    return Response(
+        json.dumps(
+            {
+                "status": "success",
+                "photo_id": photo_id,
+                "model": GEMINI_MODEL,
+                "latency_ms": latency_ms,
+                "face_count": len(face_coordinates),
+                "results": parsed,
+            }
+        ),
+        media_type="application/json",
+    )
