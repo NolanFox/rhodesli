@@ -1635,7 +1635,10 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     # Write metadata (same format as Upload page)
     import json as _json_compare
 
-    uploader_email = user.email if user else "anonymous"
+    # UPLOAD-003 fix: preserve logged-in user's email for attribution.
+    # Previously defaulted to "anonymous" even for logged-in users when
+    # session was not properly resolved. Use "unknown" to match upload_routes.py.
+    uploader_email = user.email if user else "unknown"
     metadata = {
         "job_id": job_id,
         "source": "Compare Upload",

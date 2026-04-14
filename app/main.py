@@ -3713,7 +3713,16 @@ def _upload_new_files_to_r2(data_dir: Path, job_id: str):
             logging.warning(f"Failed to upload {r2_key}: {e}")
 
     # Upload crops (new crops from this job)
-    crops_dir = data_dir / "crops" if (data_dir / "crops").exists() else data_dir.parent / "app" / "static" / "crops"
+    # UPLOAD-003 fix: On Railway, data_dir is a volume mount (e.g., /storage/data),
+    # so data_dir.parent / "app/static/crops" points to wrong location.
+    # Check the project root's crops dir as a fallback.
+    _project_root = Path(__file__).resolve().parent.parent
+    crops_candidates = [
+        data_dir / "crops",
+        data_dir.parent / "app" / "static" / "crops",
+        _project_root / "app" / "static" / "crops",
+    ]
+    crops_dir = next((d for d in crops_candidates if d.exists()), crops_candidates[-1])
     if crops_dir.exists():
         for pid, pdata in photo_index.get("photos", {}).items():
             if job_id in pid:

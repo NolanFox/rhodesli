@@ -1314,6 +1314,43 @@ def post(job_id: str, sess=None, request=None):
                             f"R2 upload failed for job {job_id}: {r2_err}"
                         )
 
+                    # UPLOAD-003 fix: Sync to Supabase so DATA_SOURCE=postgres sees new data.
+                    # process_directory() writes to local JSON only. Without this sync,
+                    # load_photo_registry() reads stale Supabase data, causing 404 on photo pages.
+                    if ingest_result.get("status") in ("success", "partial"):
+                        try:
+                            from core.registry import IdentityRegistry
+                            from core.photo_registry import PhotoRegistry
+                            from app.supabase_data import (
+                                shadow_write_photos_batch,
+                                shadow_write_identities_batch,
+                                shadow_write_photo_faces_batch,
+                            )
+
+                            json_registry = IdentityRegistry.load(_main_mod.data_path / "identities.json")
+                            json_photo_reg = PhotoRegistry.load(_main_mod.data_path / "photo_index.json")
+
+                            photo_items = [dict(v, photo_id=k) for k, v in json_photo_reg._photos.items()]
+                            shadow_write_photos_batch(photo_items)
+
+                            face_items = [
+                                {"photo_id": k, "face_ids": list(v.get("face_ids", []))}
+                                for k, v in json_photo_reg._photos.items()
+                            ]
+                            shadow_write_photo_faces_batch(face_items)
+
+                            id_items = [dict(v, identity_id=k) for k, v in json_registry._identities.items()]
+                            shadow_write_identities_batch(id_items)
+
+                            _bg_logging.getLogger("core.ingest_inbox").info(
+                                f"Synced {len(photo_items)} photos + {len(id_items)} identities "
+                                f"to Supabase for approved job {job_id}"
+                            )
+                        except Exception as sync_err:
+                            _bg_logging.getLogger("core.ingest_inbox").error(
+                                f"Supabase sync failed for approved job {job_id}: {sync_err}"
+                            )
+
                     # Invalidate caches so new photo appears immediately in browse/landing
                     _main_mod._invalidate_all_caches()
                 except Exception:
@@ -1693,6 +1730,32 @@ async def post(request, sess=None):
                             except Exception as r2_err:
                                 _bg_logging.getLogger("core.ingest_inbox").warning(
                                     f"R2 upload failed for job {jid}: {r2_err}"
+                                )
+
+                            # UPLOAD-003 fix: Sync to Supabase (same as single approve)
+                            try:
+                                from core.registry import IdentityRegistry
+                                from core.photo_registry import PhotoRegistry
+                                from app.supabase_data import (
+                                    shadow_write_photos_batch,
+                                    shadow_write_identities_batch,
+                                    shadow_write_photo_faces_batch,
+                                )
+
+                                json_reg = IdentityRegistry.load(_main_mod.data_path / "identities.json")
+                                json_photo = PhotoRegistry.load(_main_mod.data_path / "photo_index.json")
+                                p_items = [dict(v, photo_id=k) for k, v in json_photo._photos.items()]
+                                shadow_write_photos_batch(p_items)
+                                f_items = [
+                                    {"photo_id": k, "face_ids": list(v.get("face_ids", []))}
+                                    for k, v in json_photo._photos.items()
+                                ]
+                                shadow_write_photo_faces_batch(f_items)
+                                i_items = [dict(v, identity_id=k) for k, v in json_reg._identities.items()]
+                                shadow_write_identities_batch(i_items)
+                            except Exception as sync_err:
+                                _bg_logging.getLogger("core.ingest_inbox").error(
+                                    f"Supabase sync failed for batch job {jid}: {sync_err}"
                                 )
 
                             _main_mod._invalidate_all_caches()
