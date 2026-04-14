@@ -9,9 +9,10 @@ Execute backlog items from Session 148's priority list while user sleeps. Browse
 - [x] Phase 1a: Browser verify evidence panel on production — PASS
 - [x] Phase 1b: Restore button on dismissed identity cards — shipped + deployed
 - [x] Phase 2: REFACTOR-001 Phase 4 — 997 lines extracted, main.py 9180→8183
-- [-] Phase 3: TOOLS-007 cross-collection person search — worktree agent running
-- [-] Phase 4: Upload pipeline audit UPLOAD-003 — worktree agent running
-- [ ] Phase 5: Session close
+- [x] Phase 3: TOOLS-007 cross-collection person search — GET /api/admin/search-person-in-collection, 8 tests
+- [x] Phase 4: Upload pipeline audit UPLOAD-003 — 3 bugs fixed, 7 tests
+- [x] Codex audit: 1 P1 fixed (registry API), 1 P2 fixed (regex), 1 P2 deferred, 1 P3 noted
+- [x] Phase 5: Session close
 
 ## Commits
 - 880703c7: memory protection (git backup + integrity check + deletion rule)
