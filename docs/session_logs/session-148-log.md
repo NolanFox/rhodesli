@@ -21,6 +21,25 @@ Search the Sarah Fox Fader Collection (147 photos, 328 faces) for Fox family mem
 - **Fix:** (1) Supabase direct restore + audit entry. (2) Guard: only INBOX auto-rejected. (3) Audit logging added. (4) 2 new tests.
 - **Commit:** dc4f3415, e131e536
 
+### FB-002: No Gemini date labels on Fader collection (P1)
+- **Severity:** P1
+- **Context:** All 147 Fader photos have zero date labels. Gemini batch estimation was never run on this collection (only on Fox Family/Albert+Esther). Without date estimates, temporal bracketing for identification is impossible in-app.
+- **Fix needed:** Run Gemini batch estimation on Fader collection (same as Sessions 142-144b did for Fox Family).
+- **BACKLOG:** BATCH-FADER-001
+
+### FB-003: Cross-batch clustering missed Sherry matches (P1)
+- **Severity:** P1
+- **Context:** Sherry has 3 confirmed anchors but only 1 embedding exists in local embeddings.npy. The other 2 were uploaded via web pipeline and only exist on Railway volume. Cross-batch clustering compared Fader faces against existing collections but couldn't find Sherry because her local embedding coverage is incomplete. Result: 0 auto-clustered Sherry matches despite 21 candidates under distance 1.0.
+- **Root cause:** Embeddings.npy on local and production are out of sync (Lesson 147). Cross-batch matching only uses local embeddings.
+- **Fix needed:** Sync production embeddings to local, re-run cross-batch clustering for Fader collection.
+- **BACKLOG:** CLUSTER-FADER-001
+
+### FB-004: No "search by person across collections" feature (P2)
+- **Severity:** P2
+- **Context:** To find Sherry in the Fader collection, we had to write a custom script. There's no in-app way to say "show me faces in Collection X that look like Person Y." This is the core use case for expanding to new collections.
+- **Fix needed:** Admin tool: "Search for [Person] in [Collection]" → ranked face results with distances. Maps to existing Find Similar but scoped to a specific collection.
+- **BACKLOG:** TOOLS-007
+
 ## Phase 0: DONE
 Fixed Person 82863849, hardened auto-rejection, lessons 168-170.
 
