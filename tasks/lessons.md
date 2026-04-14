@@ -171,6 +171,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 41 | Confidence gap > absolute distance for human decision-making |
 | 61 | SKIPPED faces must participate in clustering, not just proposals |
 | 115 | **Single-linkage union-find creates transitive snowball clusters — use complete-linkage** |
+| 171 | **Genealogical name collisions are common — always verify with primary sources (death certificates, cemetery records), not other Ancestry trees. "Abe Fader" (d.1958) was a different person from Abraham "Al" Fader (d.1984). Cascading error temporarily reversed entire identification hypothesis (Session 148c)** |
+| 172 | **Embedding kinship distance is a WEAK identification signal (0.09 gap mother vs non-blood). Event context (corsage, aisle walk, dance partners) is the STRONGEST signal. Cross-collection similarity is useless for in-laws (Session 148c)** |
 
 ## Harness & Process — `tasks/lessons/harness-lessons.md`
 
