@@ -640,7 +640,7 @@ def public_person_page(
                     ),
                     count_label,
                     href=f"{nav_prefix}/person/{companion['id']}",
-                    cls="flex flex-col items-center gap-1 group w-16 sm:w-20",
+                    cls="flex flex-col items-center gap-1 group w-16 sm:w-20 flex-shrink-0",
                     title=f"View {companion['name']} ({shared_count} shared photos)"
                     if shared_count
                     else f"View {companion['name']}",
@@ -652,7 +652,11 @@ def public_person_page(
             )
         appears_with_section = Div(
             H3("Often appears with", cls="text-3xl font-serif tracking-tight text-white mb-6"),
-            Div(*companion_cards, cls="flex flex-wrap gap-4 sm:gap-6 items-start"),
+            Div(
+                *companion_cards,
+                cls="flex overflow-x-auto gap-4 sm:gap-6 items-start pb-2",
+                data_testid="appears-with-strip",
+            ),
             cls="mt-10 pt-8 border-t border-slate-800",
         )
 
@@ -1238,7 +1242,7 @@ def public_person_page(
             '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
         ),
         "Share",
-        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center active:scale-95",
+        cls="px-4 py-2 min-h-[44px] min-w-[44px] bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center justify-center active:scale-95",
         type="button",
         data_action="share-photo",
         data_share_url=og_page_url,
@@ -1299,9 +1303,10 @@ def public_person_page(
                     # Name + badge
                     Div(
                         H1(
-                            display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3 tracking-tight"
+                            display_name,
+                            cls="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white mb-3 tracking-tight break-words",
                         ),
-                        badge,
+                        Div(badge, cls="flex justify-center mb-2"),
                         _name_provenance_line(person_id, is_admin),
                         cls="text-center mb-3",
                     ),
@@ -1673,28 +1678,28 @@ def public_person_page(
                         A(
                             "Timeline",
                             href=f"{nav_prefix}/timeline?person={person_id}",
-                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Map",
                             href=f"{nav_prefix}/map?person={person_id}",
-                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                             data_testid="person-map-link",
                         ),
                         A(
                             "Family Tree",
                             href=f"{nav_prefix}/tree?person={person_id}",
-                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Connections",
                             href=f"{nav_prefix}/connect?person_a={person_id}",
-                            cls="px-3 py-2 text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                            cls="px-3 py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
                         ),
                         A(
                             "Compare with a photo",
                             href=f"{nav_prefix}/compare?person_id={person_id}",
-                            cls="px-3 py-2 text-sm rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
+                            cls="px-3 py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
                             data_testid="compare-cta",
                         ),
                         cls="flex flex-wrap justify-center gap-2 mb-8",

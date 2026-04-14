@@ -984,9 +984,9 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
     landing_style = Style("""
         /* ============ LANDING PAGE STYLES ============ */
         html, body { height: 100%; margin: 0; }
-        body { background-color: #1a1511; overflow-x: hidden; }
+        body { background-color: #1a1511; overflow-x: hidden; max-width: 100vw; }
         /* UX-134: Prevent horizontal overflow on mobile */
-        .landing-container { overflow-x: hidden; max-width: 100vw; }
+        .landing-container { overflow-x: hidden; max-width: 100vw; width: 100%; }
         .landing-container * { box-sizing: border-box; }
         .landing-container img { max-width: 100%; }
         .landing-container .hero-mosaic img { max-width: none; }
@@ -1130,8 +1130,11 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
             gap: 2rem;
             animation: scroll-names 30s linear infinite;
             width: max-content;
+            max-width: none;
             position: absolute;
-            inset: 0 auto 0 0;
+            left: 0;
+            top: 0;
+            bottom: 0;
             align-items: center;
         }
         @keyframes scroll-names {
@@ -1252,6 +1255,30 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
         @media (max-width: 640px) {
             .stat-number { font-size: 1.75rem; }
             .stat-card { padding: 1rem 0.5rem; }
+            /* UX-134: Mobile button sizing */
+            .btn-ui99-primary, .btn-ui99-secondary {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* UX-134: Constrain all sections on mobile */
+        @media (max-width: 767px) {
+            .landing-container section,
+            .landing-container nav,
+            .landing-container footer {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+            /* Landing nav title truncation */
+            .ui99-landing-title {
+                font-size: 1.75rem !important;
+                word-break: break-word;
+            }
+            .ui99-landing-body {
+                font-size: 1rem !important;
+            }
         }
 
         /* ============================================================
@@ -1441,7 +1468,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                             Div(
                                 A("Start Exploring", href="/photos", cls="btn-ui99-primary"),
                                 A("Do you recognize anyone?", href="/help", cls="btn-ui99-secondary"),
-                                cls="mt-10 flex flex-wrap gap-5 justify-center",
+                                cls="mt-10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 justify-center items-center",
                             ),
                             cls="text-center animate-fade-in-up",
                         ),
@@ -1840,7 +1867,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                     Div(
                         A("Start Exploring", href=f"{nav_prefix}/?section=photos", cls="btn-ui99-primary"),
                         A("Browse People", href=f"{nav_prefix}/?section=confirmed", cls="btn-ui99-secondary"),
-                        cls="flex flex-wrap gap-4 justify-center",
+                        cls="flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center",
                     ),
                     cls="max-w-3xl mx-auto text-center",
                 ),
@@ -1865,7 +1892,7 @@ def landing_page(stats, featured_photos, nav_prefix: str = ""):
                 ),
                 cls="border-t border-amber-900/20",
             ),
-            cls="min-h-screen landing-bg landing-container",
+            cls="min-h-screen landing-bg landing-container overflow-x-hidden w-full",
         ),
     )
 
@@ -11483,7 +11510,7 @@ def public_photo_page(
                 )
                 name_el = Span(
                     "Needs review",
-                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-rose-200 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[220%] truncate",
+                    cls=f"face-overlay-label absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-rose-200 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[min(220%,calc(100vw-2rem))] truncate",
                 )
             elif fi["is_context_identity"]:
                 overlay_cls = (
@@ -11492,25 +11519,25 @@ def public_photo_page(
                 )
                 name_el = Span(
                     fi["display_name"],
-                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate",
+                    cls=f"face-overlay-label absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[min(200%,calc(100vw-2rem))] truncate",
                 )
             elif fi["is_identified"]:
                 overlay_cls = "face-overlay-box absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
                 name_el = Span(
                     fi["display_name"],
-                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate",
+                    cls=f"face-overlay-label absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[min(200%,calc(100vw-2rem))] truncate",
                 )
             elif fi["state"] == "SKIPPED":
                 overlay_cls = "face-overlay-box absolute border-2 border-dashed border-slate-500/40 bg-slate-500/5 hover:bg-slate-500/10 transition-all cursor-pointer group"
                 name_el = Span(
                     "Dismissed",
-                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-slate-400 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
+                    cls=f"face-overlay-label absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-slate-400 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
                 )
             else:
                 overlay_cls = "face-overlay-box absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
                 name_el = Span(
                     "Unidentified",
-                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
+                    cls=f"face-overlay-label absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
                 )
 
             # Click navigates to person page (identified) or identify page (unidentified)
@@ -11859,7 +11886,7 @@ def public_photo_page(
     photo_metadata_overlay = (
         Div(
             *_interleaved_meta,
-            cls="photo-info-overlay absolute top-3 left-3 bg-black/70 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity pointer-events-none",
+            cls="photo-info-overlay absolute top-3 left-3 bg-black/70 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs backdrop-blur-sm z-[5] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none",
             data_testid="photo-metadata-overlay",
         )
         if overlay_meta_parts
@@ -11913,6 +11940,36 @@ def public_photo_page(
         @media (min-width: 1024px) {
             .person-strip, .person-grid {
                 grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        /* Mobile: single-column person grid at narrow viewports */
+        @media (max-width: 400px) {
+            .person-strip, .person-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Mobile: constrain face overlay labels to viewport */
+        @media (max-width: 639px) {
+            .face-overlay-label {
+                max-width: calc(100vw - 2rem) !important;
+            }
+            .photo-hero-container {
+                overflow: hidden;
+                padding-top: 0.5rem;
+            }
+            /* Touch targets: 44px minimum on mobile */
+            .photo-page-container a,
+            .photo-page-container button {
+                min-height: 44px;
+            }
+            /* Stack action bar vertically on narrow screens */
+            .photo-action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .photo-action-bar > * {
+                justify-content: center;
+                text-align: center;
             }
         }
         /* CSS 3D Flip Animation — Premium "turning over a real photo" feel */
@@ -12125,7 +12182,7 @@ def public_photo_page(
                     Span(
                         "Needs review" if (context_identity_conflict or context_identity_missing) else "Viewing",
                         cls=(
-                            "text-[11px] font-semibold uppercase tracking-wide px-4 py-3 sm:px-2 sm:py-1 rounded-full"
+                            "text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
                             + (
                                 " text-rose-200 bg-rose-500/15 border border-rose-500/30"
                                 if (context_identity_conflict or context_identity_missing)
@@ -12230,7 +12287,7 @@ def public_photo_page(
                                         cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"
                                     ),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="photo-info-overlay absolute top-3 right-3 bg-black/70 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 flex items-center gap-1 text-sm sm:text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
+                                    cls="photo-info-overlay absolute top-3 right-3 bg-black/70 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 text-[10px] sm:text-xs backdrop-blur-sm face-overlay-legend-public pointer-events-none hidden sm:flex sm:opacity-0 sm:group-hover:opacity-100 transition-opacity",
                                     id="face-overlay-legend-public",
                                     style=""
                                     if (is_admin or any(fi["is_identified"] for fi in face_info_list))
@@ -12241,7 +12298,7 @@ def public_photo_page(
                                 # Front label badge (only when back exists)
                                 Div(
                                     "Front",
-                                    cls="absolute top-3 left-3 bg-black/60 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm z-10",
+                                    cls="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm z-10",
                                     id="photo-side-label",
                                 )
                                 if has_back
@@ -12261,7 +12318,7 @@ def public_photo_page(
                                 # Back label badge
                                 Div(
                                     "Back",
-                                    cls="absolute top-3 left-3 bg-amber-600/80 text-white text-sm sm:text-xs px-4 py-3 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm z-10",
+                                    cls="absolute top-3 left-3 bg-amber-600/80 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm z-10",
                                 ),
                                 P(
                                     "Back of photograph",
@@ -12457,7 +12514,7 @@ def public_photo_page(
                         )
                         if is_admin and unidentified_count >= 2
                         else None,
-                        cls="flex flex-wrap items-center justify-center gap-3 mt-4",
+                        cls="photo-action-bar flex flex-wrap items-center justify-center gap-3 mt-4",
                     ),
                     Span(
                         "This photograph has writing on the back"
@@ -12484,12 +12541,12 @@ def public_photo_page(
                                         type="text",
                                         name="back_transcription",
                                         placeholder="Transcribe writing on back (optional)...",
-                                        cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white placeholder-slate-500",
+                                        cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 min-h-[44px]",
                                     ),
                                     Button(
                                         "Upload",
                                         type="submit",
-                                        cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
+                                        cls="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg min-h-[44px]",
                                     ),
                                     cls="flex gap-2 mt-2",
                                 ),
@@ -12512,12 +12569,12 @@ def public_photo_page(
                                 name="back_transcription",
                                 placeholder="Transcribe writing on back...",
                                 value=back_transcription or "",
-                                cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-white placeholder-slate-500",
+                                cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 min-h-[44px]",
                             ),
                             Button(
                                 "Save",
                                 type="submit",
-                                cls="px-5 py-4 sm:px-3 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg",
+                                cls="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg min-h-[44px]",
                             ),
                             hx_post=f"/api/photo/{photo_id}/back-transcription",
                             hx_target="#transcription-result",
@@ -12661,7 +12718,7 @@ def public_photo_page(
                         ),
                         Span(
                             "Potential tag conflicts detected",
-                            cls="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-4 py-3 sm:px-2 sm:py-1 rounded-full",
+                            cls="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-full",
                             data_testid="photo-face-conflict-banner",
                         )
                         if has_bbox_conflicts
