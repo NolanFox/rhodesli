@@ -82,3 +82,12 @@ from app.components.identity_cards import (  # noqa: F401
     _proposal_banner,
     _proposal_badge_inline,
 )
+
+from app.components.photo_analysis import (  # noqa: F401
+    _get_date_badge,
+    _build_photo_date_badge,
+    _build_ai_analysis_section,
+    _build_ai_sections_list,
+    _build_face_alignment_section,
+    _render_date_badge_overlay,
+)

@@ -102,6 +102,7 @@ class TestMainPyAriaLabels:
             "forms.py",
             "layouts.py",
             "identity_cards.py",
+            "photo_analysis.py",
         ):
             try:
                 self.content += _read_file(f"app/components/{comp_file}")
