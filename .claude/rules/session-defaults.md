@@ -22,7 +22,8 @@ Triggers: At the start of any implementation session.
 5. Deploy: `git push origin main`, verify health 200
 6. Browser verify: landing, people grid, person page, compare, estimate, 404
 7. `git log origin/main..HEAD` must be empty
-8. Run /session-review skill
+8. Memory backup: `./scripts/backup-memory.sh` (backs up + integrity check)
+9. Run /session-review skill
 
 ### Skills (use without being asked)
 - /session-review — at session end
