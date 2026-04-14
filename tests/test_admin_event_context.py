@@ -105,6 +105,47 @@ class TestAnalyzeEventContextEndpoint:
         handler = source[idx : idx + 8000]
         assert "prompt_text=prompt_text[:5000]" in handler, "Must truncate prompt for logging"
 
+    def test_endpoint_has_csrf_origin_check(self):
+        """Endpoint must validate request origin (CSRF protection)."""
+        source = Path("app/admin_routes.py").read_text()
+        idx = source.index("/api/admin/analyze-event-context/")
+        handler = source[idx : idx + 800]
+        assert "_check_origin" in handler, "Must have CSRF origin check"
+
+    def test_endpoint_sorts_face_coordinates_by_x(self):
+        """Face coordinates must be sorted by bbox x-coordinate (left-to-right)."""
+        source = Path("app/admin_routes.py").read_text()
+        idx = source.index("/api/admin/analyze-event-context/")
+        handler = source[idx : idx + 3000]
+        assert "face_coordinates.sort" in handler, "Must sort face coordinates"
+        assert 'bbox"][0]' in handler or "bbox[0]" in handler, "Must sort by x-coordinate"
+
+    def test_endpoint_uses_form_parameter_for_known_people(self):
+        """Endpoint must accept known_people as a form parameter, not async body parsing."""
+        source = Path("app/admin_routes.py").read_text()
+        idx = source.index("/api/admin/analyze-event-context/")
+        # Check the function signature has known_people parameter
+        sig_end = source.index(":", idx + 10)
+        sig_start = source.rfind("def ", 0, sig_end)
+        signature = source[sig_start : sig_end + 50]
+        assert "known_people: str" in signature, "Must have known_people form parameter"
+        # Should NOT have async body parsing
+        handler = source[idx : idx + 3000]
+        assert "asyncio" not in handler, "Should not use async body parsing"
+        assert "request._body" not in handler, "Should not access private request body"
+
+    def test_face_coordinate_sorting_logic(self):
+        """Verify face sorting produces left-to-right order."""
+        coords = [
+            {"face_id": "face_2", "bbox": [300, 10, 400, 200]},
+            {"face_id": "face_0", "bbox": [10, 20, 100, 200]},
+            {"face_id": "face_1", "bbox": [150, 30, 250, 220]},
+        ]
+        coords.sort(key=lambda f: f["bbox"][0] if isinstance(f["bbox"], list) and len(f["bbox"]) >= 1 else 0)
+        assert coords[0]["face_id"] == "face_0"
+        assert coords[1]["face_id"] == "face_1"
+        assert coords[2]["face_id"] == "face_2"
+
 
 class TestBuildExtractionPromptIdentificationPreset:
     """Verify the identification preset includes event_context and relationship_inference."""

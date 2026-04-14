@@ -5059,18 +5059,22 @@ def post(suggestion_id: str, sess=None, request=None):
 
 
 @rt("/api/admin/analyze-event-context/{photo_id}")
-def post(photo_id: str, request=None, sess=None):
+def post(photo_id: str, request=None, sess=None, known_people: str = ""):
     """Admin-only: Run Gemini event context analysis on a photo.
 
     Uses the 'identification' preset which includes event_context and
     relationship_inference extraction types. Optionally accepts known_people
-    context in the JSON request body.
+    context as a JSON-encoded form parameter.
 
     Returns structured JSON with Gemini's analysis results.
     """
     denied = _main_mod._check_admin(sess)
     if denied:
         return denied
+
+    origin_err = _check_origin(request)
+    if origin_err:
+        return origin_err
 
     import time as _time
 
@@ -5119,46 +5123,24 @@ def post(photo_id: str, request=None, sess=None):
                     if isinstance(bbox, str):
                         bbox = json.loads(bbox)
                     face_coordinates.append({"face_id": face["face_id"], "bbox": bbox})
+        # Sort by x-coordinate so role indicators map to correct faces (left-to-right)
+        face_coordinates.sort(key=lambda f: f["bbox"][0] if isinstance(f["bbox"], list) and len(f["bbox"]) >= 1 else 0)
     except Exception as e:
         logger.warning(f"Failed to load face bboxes for {photo_id}: {e}")
 
-    # --- Parse optional known_people from request body ---
-    known_people = None
+    # --- Parse optional known_people from form parameter ---
+    known_people_parsed = None
     verified_facts = None
-    if request:
+    if known_people:
         try:
-            import starlette.requests
-
-            # For FastHTML, body may be form-encoded or JSON
-            body_bytes = None
-            if hasattr(request, "_body"):
-                body_bytes = request._body
-            elif hasattr(request, "body"):
-                import asyncio
-
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # Can't await in sync context — skip body parsing
-                        body_bytes = None
-                    else:
-                        body_bytes = loop.run_until_complete(request.body())
-                except RuntimeError:
-                    body_bytes = None
-
-            if body_bytes:
-                try:
-                    body = json.loads(body_bytes)
-                    known_people = body.get("known_people")
-                except (json.JSONDecodeError, UnicodeDecodeError):
-                    pass
-        except Exception:
+            known_people_parsed = json.loads(known_people)
+        except (json.JSONDecodeError, TypeError):
             pass
 
-    if known_people:
+    if known_people_parsed:
         # Build verified_facts from known_people for the prompt
         names = []
-        for person in known_people:
+        for person in known_people_parsed:
             name = person.get("name", "")
             if name:
                 birth_year = person.get("birth_year")

@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_investigations_candidates_gin
 ALTER TABLE identification_investigations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "investigations_read" ON identification_investigations
-    FOR SELECT USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+    FOR SELECT USING (auth.role() = 'service_role');
 
 CREATE POLICY "investigations_write" ON identification_investigations
     FOR INSERT WITH CHECK (auth.role() = 'service_role');
