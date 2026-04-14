@@ -54,6 +54,17 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **DATA-AUDIT-001**: 55 CONFIRMED with empty anchors (not 20). 23 candidates promoted to anchors, 31 merged ghosts (filtered by app), 1 empty shell (Solomon Galante). DONE (Session 144b).
 - [x] **DATA-AUDIT-002**: 52 multi-hop merges flattened (not 48). 50 two-hop + 2 three-hop chains. 0 circular, 0 dangling. DONE (Session 144b).
 
+### Session 148c — Fader Identification Feature Ideas (2026-04-14)
+Source: Session 148c learnings (docs/session_context/session-148c-learnings.md)
+
+- [ ] **FEATURE-F1**: Gemini Event Context Analyzer — Classify event type (wedding, family gathering, formal portrait, casual), identify role indicators (bride/groom position, clothing formality, spatial arrangement). Strongest identification signal found in Session 148c. File: new `rhodesli_ml/event_analyzer.py`. Effort: ~2-3 sessions. Source: Session 148c methodology.
+- [ ] **FEATURE-F2**: Kinship-Aware Search — Weight search results by co-occurrence frequency, embedding kinship distance, and age consistency. Current embedding-only search misses family context. File: `app/identity_routes.py`, `core/neighbors.py` extension. Effort: ~1-2 sessions. Source: Session 148c — kinship embedding proved weak signal alone.
+- [ ] **FEATURE-F3**: Cross-Photo Person Tracker — Find same unidentified person across collection by embedding clustering, then surface as "appears in N photos" candidates. File: new endpoint + batch script. Effort: ~1-2 sessions. Source: Session 148c — manual cross-photo tracking was most time-consuming step.
+- [ ] **FEATURE-F4**: Investigation Workflow UI — Structured accept/reject/possible with evidence trail for identity candidates. Replace ad-hoc investigation with guided workflow showing signals, confidence, and decision history. File: new route + PRD needed. Effort: ~2-3 sessions. Source: Session 148c — investigation was entirely manual with no UI support.
+- [ ] **FEATURE-F5**: Genealogical Cross-Reference — Auto-generate "who could be in photos from year X" lists from GEDCOM data (alive, right age, right location). File: new `scripts/genealogical_candidates.py` + UI surface. Effort: ~1-2 sessions. Source: Session 148c — manual cross-referencing of family trees was effective but slow.
+- [ ] **FEATURE-F6**: Name Collision Detector — Flag when same name appears in same era/geography across GEDCOM records (e.g., Abraham Fader vs Abraham Al Fader). Prevent misidentification from genealogical name collisions. File: GEDCOM query + admin warning UI. Effort: ~1 session. Source: Lesson 171.
+- [ ] **DATA-FMT-001**: Investigation data → Supabase table schema (`identification_investigations`) — Store structured investigation records (candidate, signals evaluated, evidence, decision, confidence) rather than markdown logs. Enables analytics on identification methodology effectiveness. File: SQL migration + app integration. Effort: ~1 session. Source: Session 148c.
+
 ### P1 — PostgREST Filter Injection (SEC-001) — Session 134
 - **SEC-001**: `.or_()` in nl_query_executor.py takes raw PostgREST filter strings. Currently safe due to hardcoded allowlist in NL parser, but will become P0 if Gemini-assisted parsing (TOOLS-004 Phase 2) passes user-controlled strings. `_sanitize_postgrest_value()` added as defense-in-depth but the underlying `.or_()` pattern should be replaced with parameterized filters. **Must fix before TOOLS-004 Phase 2 ships.** Source: Session 134 security audit Finding 1.
 
