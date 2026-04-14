@@ -1,0 +1,106 @@
+{
+  "photo": "raw_photos/Image 001_compress.jpg",
+  "model": "gemini-3.1-pro-preview",
+  "latency_s": 12.5,
+  "results": {
+    "date_estimation": {
+      "estimated_decade": 1980,
+      "best_year_estimate": 1982,
+      "confidence": "high",
+      "probable_range": [
+        1978,
+        1985
+      ],
+      "reasoning_summary": "The color film quality, lighting, and fashion strongly point to the late 1970s or early 1980s. The younger woman's feathered hairstyle and sheer, layered dress are classic late 70s/early 80s styles. The older woman's large, wire-rimmed glasses and patterned dress also fit this era perfectly.",
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "No significant cultural lag applied; the fashion appears contemporary for a formal event in the US during this period."
+    },
+    "face_analysis": [
+      {
+        "face_index": 0,
+        "estimated_age": 65,
+        "gender": "male",
+        "description": "Older man wearing a tuxedo, white kippah, and a white boutonniere, holding a drink."
+      },
+      {
+        "face_index": 1,
+        "estimated_age": 25,
+        "gender": "female",
+        "description": "Young woman with feathered brown hair, wearing a dark sheer dress over a solid slip, smiling."
+      },
+      {
+        "face_index": 2,
+        "estimated_age": 85,
+        "gender": "female",
+        "description": "Elderly woman with white hair, wearing large glasses, a patterned dress, and a blue scarf, seated."
+      }
+    ],
+    "location": {
+      "place": "United States",
+      "confidence": "medium",
+      "visual_evidence": "Interior of a hotel or banquet hall, typical of American formal event venues.",
+      "source_type": "visual"
+    },
+    "cultural_markers": [
+      "White kippah (yarmulke) worn by the man, indicating a Jewish event."
+    ],
+    "clothing_notes": "Man: Black tuxedo, white shirt, black bowtie, white boutonniere. Younger woman: Dark, sheer, short-sleeved dress with a subtle pattern over a solid black underlayer, gold necklace. Older woman: Long-sleeved dress with a brown and white abstract pattern, sheer blue scarf, large wire-rimmed glasses, gold watch/bracelet.",
+    "group_composition": {
+      "type": "formal_portrait",
+      "people_count": 3,
+      "arrangement": "One elderly woman seated in a chair, flanked by a standing older man and a standing younger woman."
+    },
+    "subject_ages": [
+      65,
+      25,
+      85
+    ],
+    "scene_description": "A formal, posed photograph taken indoors, likely at a reception or banquet hall. An elderly woman is seated in a striped armchair, while an older man in a tuxedo and a younger woman stand behind her. The man is holding a glass with a drink. The setting features patterned carpet and paneled doors.",
+    "event_context": {
+      "event_type": "wedding_reception",
+      "event_subtype": "family portrait at reception",
+      "role_indicators": [
+        {
+          "face_index": 0,
+          "roles": [
+            "guest",
+            "father_of_bride",
+            "father_of_groom"
+          ]
+        },
+        {
+          "face_index": 1,
+          "roles": [
+            "guest"
+          ]
+        },
+        {
+          "face_index": 2,
+          "roles": [
+            "honored_guest"
+          ]
+        }
+      ],
+      "formality_level": "very_formal"
+    },
+    "relationship_inference": {
+      "couple_pairs": [],
+      "parent_child_pairs": [
+        {
+          "parent_index": 0,
+          "child_index": 1,
+          "confidence": 0.6,
+          "evidence": "Age gap suggests a possible father-daughter relationship, though they could also be uncle/niece or other relatives."
+        },
+        {
+          "parent_index": 2,
+          "child_index": 0,
+          "confidence": 0.7,
+          "evidence": "Age gap suggests the seated woman could be the mother of the standing man."
+        }
+      ],
+      "sibling_pairs": [],
+      "positioning_notes": "The elderly woman is seated centrally, indicating a position of respect or physical necessity, with the younger generations standing behind her, suggesting a multi-generational family group."
+    }
+  }
+}
