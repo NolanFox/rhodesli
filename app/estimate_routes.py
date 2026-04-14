@@ -328,6 +328,20 @@ def get(photo: str = "", sess=None, request=None):
                                 ),
                                 cls="mb-3",
                             ),
+                            # Optional text hints
+                            Div(
+                                Label(
+                                    "What do you know about this photo? (optional)",
+                                    cls="text-sm text-slate-400 mb-1 block",
+                                ),
+                                Textarea(
+                                    placeholder="e.g., This is my grandmother in the 1940s, taken in Rhodes before the war",
+                                    name="text_hints",
+                                    cls="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 text-sm resize-y",
+                                    rows="3",
+                                ),
+                                cls="mt-3",
+                            ),
                             action="/api/estimate/upload",
                             method="post",
                             enctype="multipart/form-data",
@@ -485,6 +499,7 @@ def _call_gemini_date_estimate(
     call_type: str = "date_estimation",
     trigger: str = "interactive_upload",
     photo_metadata: dict | None = None,
+    text_hints: str | None = None,
 ) -> dict | None:
     """Call Gemini Vision API for date/location estimation using the enriched prompt.
 
@@ -680,7 +695,7 @@ def _call_gemini_date_estimate(
 
 
 @rt("/api/estimate/upload")
-async def post(photo: UploadFile = None, sess=None, request=None):
+async def post(photo: UploadFile = None, text_hints: str = "", sess=None, request=None):
     """Upload a photo for date estimation.
 
     Graceful degradation matrix:
@@ -704,6 +719,9 @@ async def post(photo: UploadFile = None, sess=None, request=None):
     content = await photo.read()
     original_filename = photo.filename or "upload.jpg"
     suffix = _Path(original_filename).suffix.lower() or ".jpg"
+
+    # Sanitize text hints
+    text_hints = (text_hints or "").strip()[:1000]
 
     # Server-side validation
     if suffix not in (".jpg", ".jpeg", ".png"):
@@ -922,12 +940,18 @@ async def post(photo: UploadFile = None, sess=None, request=None):
     gemini_result = None
     if gemini_key:
         try:
+            # Build gedcom_context from text hints if provided
+            _user_context = None
+            if text_hints:
+                _user_context = f"User-provided context about this photo:\n{text_hints}"
             gemini_result = _call_gemini_date_estimate(
                 content,
                 suffix,
                 gemini_key,
                 photo_id=f"upload_{upload_id}",
+                gedcom_context=_user_context,
                 trigger="interactive_upload",
+                text_hints=text_hints,
             )
         except Exception as e:
             logger.warning(f"[estimate] Gemini API error: {e}")
@@ -1048,7 +1072,17 @@ async def post(photo: UploadFile = None, sess=None, request=None):
         data_testid="estimate-ctas",
     )
 
-    return Div(photo_preview, *parts, cta_section, cls="py-4", data_testid="estimate-upload-result")
+    # Show user-provided text hints in results
+    hints_section = None
+    if text_hints:
+        hints_section = Div(
+            P("You mentioned:", cls="text-sm text-slate-400 font-medium"),
+            P(text_hints, cls="text-sm text-amber-200 italic"),
+            cls="bg-slate-800/50 border border-slate-700 rounded-lg p-3 mb-3",
+            data_testid="estimate-text-hints-used",
+        )
+
+    return Div(photo_preview, hints_section, *parts, cta_section, cls="py-4", data_testid="estimate-upload-result")
 
 
 # =============================================================================

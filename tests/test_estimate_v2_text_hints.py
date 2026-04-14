@@ -5,7 +5,7 @@ Flow 2 from PRD-055: User provides free-text hints alongside a photo upload.
 Hints are appended to the Gemini prompt in a structured "User context" section.
 Results indicate which hints were used.
 
-All tests are xfail — the feature is not yet implemented.
+Tests cover the text hints textarea, Gemini prompt integration, and results display.
 """
 
 import io
@@ -37,6 +37,7 @@ def _upload_patches():
         patch("core.storage.can_write_r2", return_value=False),
         patch("core.storage.get_upload_url", return_value="/uploads/test.jpg"),
         patch("app.estimate_routes.check_rate_limit", return_value=True),
+        patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}),
     ]
 
 
@@ -58,7 +59,6 @@ def _page_patches():
 class TestEstimateV2TextHints:
     """Tests for text hint input on the estimate upload flow."""
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_estimate_page_has_text_hints_field(self, client):
         """GET /tools/estimate should render an optional text hints input field.
 
@@ -72,7 +72,6 @@ class TestEstimateV2TextHints:
             assert resp.status_code == 200
             assert "What do you know about this photo?" in resp.text
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_text_hints_passed_to_gemini_prompt(self, client):
         """POST /api/estimate/upload with text_hints should include hints in the
         Gemini prompt as a 'User context' section.
@@ -106,7 +105,6 @@ class TestEstimateV2TextHints:
                 or (kwargs.get("photo_metadata", {}).get("text_hints"))
             )
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_empty_text_hints_falls_back_to_visual_only(self, client):
         """POST /api/estimate/upload with empty text_hints should behave
         identically to a photo-only upload — no regression.
@@ -134,7 +132,6 @@ class TestEstimateV2TextHints:
             # gedcom_context should be None (visual-only)
             assert kwargs.get("gedcom_context") is None
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_results_show_which_hints_were_used(self, client):
         """When text hints are provided, the results HTML should indicate
         which hints influenced the estimate (e.g., 'You mentioned: wedding in Rhodes').
