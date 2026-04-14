@@ -5802,6 +5802,14 @@ def get(
             if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ")
             else "Merge these identities? This can be undone."
         )
+        # FB-009: If swap target #identity-{target_id} doesn't exist on page
+        # (e.g. person page), fall back to page reload after merge.
+        _merge_hs = (
+            "on htmx:afterRequest "
+            "add .hidden to #compare-modal "
+            f"then if document.querySelector('#identity-{target_id}') is null "
+            "location.reload() "
+        )
         m_btn = Button(
             "Merge",
             cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
@@ -5809,7 +5817,7 @@ def get(
             hx_target=f"#identity-{target_id}",
             hx_swap="outerHTML",
             hx_confirm=_merge_confirm,
-            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+            **{"_": _merge_hs},
             type="button",
         )
     ns_btn = Button(
