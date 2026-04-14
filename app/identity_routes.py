@@ -21,6 +21,7 @@ from app.auth import _check_origin
 from app.main import rt
 from app.utils import photo_url, _section_for_state
 from app.audit import _log_audit
+from app.supabase_data import load_photos_for_community
 
 import app.main as _main_mod
 
@@ -5136,3 +5137,116 @@ def post(identity_id: str, face_id: str, sess=None, request=None):
         f"Set hero face for {identity.get('name', 'this person')}",
         "success",
     )
+
+
+# =============================================================================
+# ROUTES — ADMIN CROSS-COLLECTION PERSON SEARCH (TOOLS-007)
+# =============================================================================
+
+
+@rt("/api/admin/search-person-in-collection")
+def get(identity_id: str = "", community_id: str = "", limit: int = 20, sess=None, request=None):
+    """Search for a person across collections by embedding distance.
+
+    Given an identity, compute the centroid of its anchor embeddings and find
+    the closest faces in photos belonging to the target community.
+
+    Admin-only, read-only operation.
+    """
+    import numpy as np
+    from starlette.responses import JSONResponse
+
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    if not identity_id or not community_id:
+        return JSONResponse(
+            {"error": "identity_id and community_id are required"},
+            status_code=400,
+        )
+
+    # 1. Load the identity and get anchor face IDs
+    registry = _main_mod.load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return JSONResponse({"error": "Identity not found"}, status_code=404)
+
+    anchor_ids = identity.get("anchor_ids", [])
+    if not anchor_ids:
+        return JSONResponse(
+            {"error": "Identity has no anchor faces"},
+            status_code=404,
+        )
+
+    # 2. Load all face embeddings
+    face_embeddings = _main_mod.load_face_embeddings()
+    if not face_embeddings:
+        return JSONResponse(
+            {"error": "No embeddings loaded"},
+            status_code=404,
+        )
+
+    # 3. Compute centroid of anchor embeddings (L2-normalized)
+    anchor_vecs = []
+    for fid in anchor_ids:
+        fe = face_embeddings.get(fid)
+        if fe is not None:
+            mu = fe["mu"]
+            if hasattr(mu, "tolist"):
+                mu = np.asarray(mu, dtype=np.float32)
+            anchor_vecs.append(mu)
+
+    if not anchor_vecs:
+        return JSONResponse(
+            {"error": "No embeddings found for anchor faces"},
+            status_code=404,
+        )
+
+    centroid = np.mean(anchor_vecs, axis=0)
+    norm = np.linalg.norm(centroid)
+    if norm > 0:
+        centroid = centroid / norm
+
+    # 4. Get photo IDs in target community
+    community_photo_ids = load_photos_for_community(community_id)
+    if not community_photo_ids:
+        return JSONResponse([], status_code=200)
+
+    community_photo_set = set(community_photo_ids)
+
+    # 5. Build face_id -> photo_id mapping from photo cache
+    _main_mod._build_caches()
+    face_to_photo = _main_mod._face_to_photo_cache or {}
+
+    # 6. Compute distances for faces in target community
+    results = []
+    for fid, fe in face_embeddings.items():
+        photo_id = face_to_photo.get(fid)
+        if not photo_id or photo_id not in community_photo_set:
+            continue
+
+        mu = fe["mu"]
+        if hasattr(mu, "tolist"):
+            mu = np.asarray(mu, dtype=np.float32)
+        mu_norm = np.linalg.norm(mu)
+        if mu_norm > 0:
+            mu = mu / mu_norm
+
+        distance = float(np.linalg.norm(centroid - mu))
+        photo_data = (_main_mod._photo_cache or {}).get(photo_id, {})
+        results.append(
+            {
+                "face_id": fid,
+                "photo_id": photo_id,
+                "distance": round(distance, 4),
+                "photo_path": f"raw_photos/{photo_data.get('filename', '')}",
+            }
+        )
+
+    # 7. Sort by distance and limit
+    results.sort(key=lambda r: r["distance"])
+    results = results[:limit]
+
+    return JSONResponse(results, status_code=200)
