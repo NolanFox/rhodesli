@@ -27,4 +27,27 @@
 ## FB-005: Codex Audit of Visual Analysis
 - **Severity:** P3 (process)
 - **Context:** User wants Codex to audit the visual analysis methodology and findings
-- **Fix:** Run Codex audit after completing the photo review
+- **Fix:** Codex was at capacity; self-audit performed instead
+- **Commit:** 9ab7ef16
+
+## FB-006: Name Collision is Common in Genealogical Research
+- **Severity:** P2 (methodology / feature opportunity)
+- **Context:** During investigation, the 1958 death date for "Abraham Fader" turned out to be a DIFFERENT Abe Fader (son of Isaac and Rachel Fader, buried at Montefiore Cemetery). User notes this kind of false lead from similarly-named relatives is "fairly common, especially with further off family." Ancestry trees can propagate incorrect links.
+- **Root cause:** Common surnames + common first names + overlapping geographies = frequent name collisions in genealogical records
+- **Methodology learning:** Always validate death/birth dates against primary sources (death certificates, cemetery records), not just other trees. Check burial plots for family groupings. Verify informant relationships on death certificates.
+- **Feature ideas:**
+  - When importing GEDCOM or linking identities to records, flag potential name collisions (same name, overlapping dates, same geography)
+  - "Confidence level" on GEDCOM links: primary source vs. other-tree-derived
+  - Disambiguation helper: show all people with same name in same geography/time period
+- **Fix:** Documented as methodology learning in investigation log
+
+## FB-007: Use Local Photos Instead of Chrome Browser
+- **Severity:** P1 (process efficiency)
+- **Context:** Session started by viewing photos via Chrome browser plugin, which is expensive in credits/context and makes it hard for Codex to audit. User pointed out all photos exist locally and should be read with the Read tool instead.
+- **Fix:** Switched to local photo reading mid-session. Future sessions should default to local.
+- **Rule:** For photo analysis work, ALWAYS use local Read tool. Chrome is for production verification only.
+
+## FB-008: Log Everything for Future Reuse and Feature Development
+- **Severity:** P2 (process)
+- **Context:** User emphasized: (1) findings must be structured for future searches of other relatives, (2) methodology must be recorded so we know what works, (3) similarity scores to known relatives are kinship signals, (4) data should fit existing API call format
+- **Fix:** Created structured investigation JSON + detailed search log with methodology learnings
