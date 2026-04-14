@@ -11,6 +11,13 @@ Search the Sarah Fox Fader Collection (147 photos, 328 faces) for Fox family mem
 - [-] Phase 2: UX feedback on cross-collection search workflow (3 issues logged)
 - [ ] Phase 3: Session close (assessment, docs, deploy) → deferred to 148c
 
+## 148b Progress (Overnight Sprint)
+- [x] Phase 1a: Browser verify evidence panel — PASS (identity suggestion card, 6 signal bars, accept/reject/needmore buttons all rendering on production)
+- [x] Phase 1b: Restore button on dismissed cards — DONE (commit 39259300), deployed
+- [x] Phase 2: REFACTOR-001 Phase 4 — 997 lines extracted to app/components/photo_analysis.py. main.py: 9180→8183. All 4056 tests pass. (commit aa136feb)
+- [-] Phase 3: TOOLS-007 cross-collection search — worktree agent running
+- [-] Phase 4: Upload pipeline audit UPLOAD-003 — worktree agent running
+
 ## Feedback Log
 
 ### FB-001: Person 82863849 erroneously REJECTED (P0)
