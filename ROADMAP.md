@@ -81,7 +81,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-30: Phase 1: Batch Gemini estimation COMPLETE — Albert 196/196, Esther 141/141 (100% coverage). Sessions 142-144b.
 - [x] 2026-03-30: Phase 2: Event grouping — 17 event groups from 246 dated photos. 5-year windows with shared-face union-find. Session 144b.
 - [x] 2026-03-30: Phase 3: Co-occurrence matrix — 102 identities, 391 pairs. Person page shows shared photo counts. Session 144b.
-- [-] 2026-04-01: Phase 4: Identity inference — All 6 signals wired (Session 147). Evidence panel UI + Accept/Reject/NeedMore endpoints shipped. 58 new tests. Remaining: deploy, batch execute on production data, browser verify.
+- [x] 2026-04-13: Phase 4: Identity inference — All 6 signals wired, evidence panel UI, accept/reject/needs-more endpoints (Session 147). 18 suggestions in Supabase. Deployed + smoke tested. 58 new tests. Remaining: browser verify with Chrome plugin, rejected list UX enhancement.
 
 ### Near-Term — Longitudinal Face Modeling (PRD-038)
 - [x] 2026-03-11: Session 97 foundation shipped — SDD, research pack, implementation bundle, prompt/state lineage spec, and merged-branch verification are wired into the harness
