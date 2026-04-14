@@ -1,0 +1,387 @@
+{
+  "parents_portrait": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white gelatin silver print, typical of mid-20th century wedding photography",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Bride's bouffant hairstyle with bangs, short veil with large floral headpiece, and sleeveless satin gown with a full skirt",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1968
+          ]
+        },
+        {
+          "cue": "Mother's cat-eye glasses with thick dark frames, bouffant hairstyle, sleeveless brocade dress, and long white gloves",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1968
+          ]
+        },
+        {
+          "cue": "Father's classic tuxedo with a narrow bow tie",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1975
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Studio or reception hall setting with vertical pleated drapery and patterned wallpaper",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1970
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Sharp focus, professional lighting typical of mid-century medium format cameras",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The fashion appears very current for the early-to-mid 1960s American mainstream, showing little to no cultural lag.",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1964,
+    "confidence": "high",
+    "probable_range": [
+      1962,
+      1966
+    ],
+    "decade_probabilities": {
+      "1950": 0.05,
+      "1960": 0.9,
+      "1970": 0.05
+    },
+    "reasoning_summary": "The strong fashion cues, particularly the bride's and mother's bouffant hairstyles, the mother's cat-eye glasses, and the style of the wedding dress and veil, firmly place this in the early to mid-1960s. The provided genealogical context confirms a 1960s wedding for Sherry Ann Fader (born 1944), making her around 20 years old in 1964, which aligns perfectly with her appearance.",
+    "scene_description": "A formal black-and-white portrait of a bride with her parents. The father stands in the center in a tuxedo, with the mother to his left in a brocade dress and long gloves, and the bride to his right in her wedding gown and veil. They are posed against a backdrop of vertical pleated drapery and patterned wallpaper.",
+    "visible_text": {
+      "detected": false,
+      "text": "",
+      "language": "",
+      "script": ""
+    },
+    "keywords": null,
+    "controlled_tags": null,
+    "setting": null,
+    "photo_type": null,
+    "people_count": null,
+    "condition": {
+      "overall": "good",
+      "issues": [
+        "minor dust or scratches"
+      ]
+    },
+    "clothing_notes": "Bride: Sleeveless satin gown with a full skirt, short veil with a large fabric rose headpiece, pearl necklace, short white gloves. Mother: Sleeveless brocade dress, long white opera gloves, pearl necklace, cat-eye glasses. Father: Classic black tuxedo, white shirt, black bow tie, boutonniere.",
+    "subject_ages": [
+      20,
+      54,
+      60
+    ]
+  },
+  "head_table": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white flash photography typical of mid-century event coverage",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Bouffant hairstyles on the women",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1969
+          ]
+        },
+        {
+          "cue": "Narrow lapel tuxedos and skinny bow ties on the men",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1968
+          ]
+        },
+        {
+          "cue": "Cat-eye glasses worn by the older woman and young girl",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Mirrored wall with veined pattern and scalloped valance in banquet hall",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1975
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Multi-tiered wedding cake style with pillars",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1980
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion appears current for mainstream 1960s American trends.",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1965,
+    "confidence": "high",
+    "probable_range": [
+      1963,
+      1967
+    ],
+    "decade_probabilities": {
+      "1950": 0.1,
+      "1960": 0.9
+    },
+    "reasoning_summary": "The fashion cues, particularly the bouffant hairstyles, narrow lapel tuxedos, and cat-eye glasses, strongly point to the early to mid-1960s. Cross-referencing with the biographical data (bride born in 1944), a wedding date around 1965 aligns perfectly with her appearing to be in her early twenties.",
+    "scene_description": "A black and white photograph capturing a formal wedding party standing behind a long head table at a reception. The bride and groom are centrally located, flanked by family members, including the bride's parents on the right. The table is decorated with a multi-tiered wedding cake, floral arrangements, and bottles of champagne, set against a backdrop of a mirrored wall and draped fabric valance.",
+    "visible_text": {
+      "detected": false,
+      "text": "",
+      "language": "",
+      "script": ""
+    },
+    "keywords": null,
+    "controlled_tags": null,
+    "setting": null,
+    "photo_type": null,
+    "people_count": null,
+    "condition": {
+      "overall": "good",
+      "issues": [
+        "slight fading",
+        "minor edge wear"
+      ]
+    },
+    "clothing_notes": "The men are dressed in formal tuxedos featuring the narrow lapels and skinny bow ties characteristic of the early 1960s. The women are wearing formal sleeveless gowns, with several sporting opera gloves. The prominent bouffant hairstyles and cat-eye glasses are quintessential early-to-mid 1960s fashion.",
+    "subject_ages": [
+      12,
+      8,
+      35,
+      32,
+      21,
+      31,
+      55,
+      61
+    ]
+  },
+  "father_daughter_dance": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white event photography with direct flash",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Bride's bouffant hairstyle and cap-sleeve gown with full skirt",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1968
+          ]
+        },
+        {
+          "cue": "Father's thick-rimmed glasses",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1970
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Banquet hall with parquet dance floor and draped curtains",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1980
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "On-camera flash creating distinct shadows",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1980
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "As a Jewish American wedding in the 1960s, the fashion appears contemporary to mainstream trends of the era.",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1965,
+    "confidence": "high",
+    "probable_range": [
+      1963,
+      1968
+    ],
+    "decade_probabilities": {
+      "1950": 0.05,
+      "1960": 0.9,
+      "1970": 0.05
+    },
+    "reasoning_summary": "The bride's prominent bouffant hairstyle and the father's thick-rimmed glasses strongly indicate the early to mid-1960s. Given the bride's birth year of 1944, a wedding date around 1965 aligns perfectly with a typical marriage age of 21.",
+    "scene_description": "A black and white photograph capturing a joyful father-daughter dance at a wedding reception. The bride and her father are the central focus, dancing on a parquet floor, while guests in formal attire observe from tables in a banquet hall with draped curtains in the background.",
+    "visible_text": {
+      "detected": false,
+      "text": "",
+      "language": "unknown",
+      "script": "unknown"
+    },
+    "keywords": null,
+    "controlled_tags": null,
+    "setting": null,
+    "photo_type": null,
+    "people_count": null,
+    "condition": {
+      "overall": "good",
+      "issues": [
+        "minor dust",
+        "slight silvering or glare on the right edge"
+      ]
+    },
+    "clothing_notes": "The bride wears a classic 1960s white gown with cap sleeves, a fitted bodice, a full skirt, and a large bow detail at the back waist, accessorized with a simple pearl necklace. The father wears a formal black tuxedo with a white shirt, black bow tie, and a floral boutonniere. Guests in the background are in formal evening wear.",
+    "subject_ages": [
+      21,
+      61,
+      55
+    ]
+  },
+  "couple_portrait": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white glossy event photography",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's cat-eye glasses and sleeveless brocade sheath dress",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1969
+          ]
+        },
+        {
+          "cue": "Man's tuxedo with relatively narrow lapels and bow tie",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1970
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Catering hall decor with diamond-lattice mirrored walls and artificial planters",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1975
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Direct flash photography typical of mid-century event photographers",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "As an American wedding in the 1960s, mainstream fashion trends are highly applicable without significant lag.",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1965,
+    "confidence": "high",
+    "probable_range": [
+      1964,
+      1968
+    ],
+    "decade_probabilities": {
+      "1950": 0.05,
+      "1960": 0.9,
+      "1970": 0.05
+    },
+    "reasoning_summary": "The visual evidence of the woman's cat-eye glasses and brocade dress strongly points to the 1960s. Biographical data confirms the bride was born in 1944, making a mid-1960s wedding highly probable when she would be in her early twenties. The parents' apparent ages (approx. 55 and 60) perfectly align with their birth years (1910 and 1904) for a circa 1965 date.",
+    "scene_description": "A formal black and white portrait of an older couple standing together at an indoor event venue. The woman wears a brocade dress and cat-eye glasses, while the man wears a tuxedo with a boutonniere. They are positioned in front of a decorative planter and a mirrored wall with a diamond lattice pattern, typical of a mid-century catering hall.",
+    "visible_text": {
+      "detected": false,
+      "text": "",
+      "language": "unknown",
+      "script": "unknown"
+    },
+    "keywords": null,
+    "controlled_tags": null,
+    "setting": null,
+    "photo_type": null,
+    "people_count": null,
+    "condition": {
+      "overall": "good",
+      "issues": [
+        "minor edge wear"
+      ]
+    },
+    "clothing_notes": "The woman is wearing a sleeveless, floor-length patterned brocade dress, a pearl necklace, and pointed-toe low heels, holding a dark clutch. She has a corsage pinned to her dress. The man is wearing a classic black tuxedo with a white shirt, dark bow tie, and a white floral boutonniere.",
+    "subject_ages": [
+      55,
+      61
+    ]
+  }
+}
