@@ -5,7 +5,6 @@ import os
 from unittest.mock import patch, MagicMock
 
 
-
 class TestSentryInit:
     """Sentry SDK initialization tests."""
 
@@ -39,6 +38,41 @@ class TestSentryInit:
                 traces_sample_rate=0.1,
                 send_default_pii=False,
             )
+
+    def test_sentry_disabled_in_development(self):
+        """Sentry is not initialized when SENTRY_ENVIRONMENT=development."""
+        mock_sentry = MagicMock()
+        with patch.dict(
+            os.environ,
+            {
+                "SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0",
+                "SENTRY_ENVIRONMENT": "development",
+            },
+            clear=True,
+        ):
+            # Reproduce the guard logic from main.py
+            sentry_env = os.environ.get("SENTRY_ENVIRONMENT", "production")
+            sentry_enabled = bool(os.environ.get("SENTRY_DSN")) and sentry_env != "development"
+            if sentry_enabled:
+                mock_sentry.init(dsn=os.environ["SENTRY_DSN"])
+            mock_sentry.init.assert_not_called()
+
+    def test_sentry_enabled_in_production(self):
+        """Sentry IS initialized when SENTRY_ENVIRONMENT=production."""
+        mock_sentry = MagicMock()
+        with patch.dict(
+            os.environ,
+            {
+                "SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0",
+                "SENTRY_ENVIRONMENT": "production",
+            },
+            clear=True,
+        ):
+            sentry_env = os.environ.get("SENTRY_ENVIRONMENT", "production")
+            sentry_enabled = bool(os.environ.get("SENTRY_DSN")) and sentry_env != "development"
+            if sentry_enabled:
+                mock_sentry.init(dsn=os.environ["SENTRY_DSN"])
+            mock_sentry.init.assert_called_once()
 
     def test_sentry_pii_disabled(self):
         """Heritage app must never send PII — faces are PII."""

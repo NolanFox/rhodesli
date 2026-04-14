@@ -167,8 +167,9 @@ from app.components.photo_analysis import (  # noqa: E402, F811
 )
 
 # --- Observability init (all gated on env vars) ---
-# Sentry error tracking — no-op when SENTRY_DSN is not set
-_sentry_enabled = bool(os.environ.get("SENTRY_DSN"))
+# Sentry error tracking — no-op when SENTRY_DSN is not set or env is development
+_sentry_env = os.environ.get("SENTRY_ENVIRONMENT", "production")
+_sentry_enabled = bool(os.environ.get("SENTRY_DSN")) and _sentry_env != "development"
 if _sentry_enabled:
     import sentry_sdk
     from sentry_sdk.integrations.logging import LoggingIntegration
