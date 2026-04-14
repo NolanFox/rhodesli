@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-164 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+170 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -158,6 +158,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 154 | **Merge face transfer must be verified post-write — 10th data integrity occurrence. 175 faces orphaned across 18 identities. Merged sources hidden but faces never transferred to targets. Post-merge verification + structural tests added** |
 | 155 | **Data repair scripts must snapshot before EACH step — un-merging created 692 secondary multi-claimed faces requiring a 7th fix step** |
 | 156 | **Database mutations need comprehensive audit trail — 11th data integrity occurrence, 691 dangling merges untraceable** |
+| 168 | **Automated side effects of admin actions must be audited and guarded — upload rejection silently auto-rejected Person 82863849 (Session 148)** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 
@@ -206,3 +207,5 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 148 | **25 commits never pushed — every session must verify git log origin/main..HEAD is empty** |
 | 166 | **Worktree agents must commit before returning — uncommitted changes require manual recovery** |
 | 167 | **Git lock contention when launching 3+ worktree agents simultaneously — stagger or retry** |
+| 169 | **Memory files (~/.claude/projects/) live outside git — must be backed up to .claude/memory_backup/ (Session 148)** |
+| 170 | **Fix scripts must write to Supabase (production data store), not just local JSON — Session 147 "fix" never reached production** |
