@@ -68,7 +68,7 @@ Fixed Person 82863849, hardened auto-rejection, lessons 168-170.
 
 ### Photo 291103717c75045f — 18-person group (table/dinner scene)
 - **Sherry confirmed**: Person bb7d05ba-a3b5-4459-aaea-34299feeff15 is Sherry Ann Fader. User merging with confirmed Sherry identity (37611153-36d1-4f20-9535-d994e1893e13).
-- **Ira Josowitz confirmed**: [person URL pending — user pasted same link twice]
+- **Ira Josowitz confirmed**: Person f1fa358b-f3c1-4347-83fb-71f9379abeff. First Josowitz identification in archive.
 - This photo is a high-value anchor: 18 faces, likely a family gathering. Once Sherry and Ira are confirmed, other faces become identifiable via family context.
 
 ## Notes
