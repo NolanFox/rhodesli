@@ -19,7 +19,31 @@ Search the Sarah Fox Fader Collection (147 photos, 328 faces) for Fox family mem
 - **Root cause:** `_cleanup_orphaned_identities_for_upload()` auto-rejects ALL non-CONFIRMED identities whose faces come from a rejected upload batch. Bypasses registry.reject_identity(), no audit logging, no guard for triaged identities.
 - **Secondary cause:** Session 147 "fix" wrote to local JSON only, never Supabase. Production reads Supabase.
 - **Fix:** (1) Supabase direct restore + audit entry. (2) Guard: only INBOX auto-rejected. (3) Audit logging added. (4) 2 new tests.
-- **Commit:** pending
+- **Commit:** dc4f3415, e131e536
+
+## Phase 0: DONE
+Fixed Person 82863849, hardened auto-rejection, lessons 168-170.
+
+## Family Research — Josowitz/Fader/Fox
+
+### Key People (from Ancestry screenshots)
+- **Sherry Ann Fader** (1944-2018): Daughter of Abraham I. Fader (1901-1993) and Nadia Kubrin (1909-1988)
+  - 1st marriage: 1965 to Ira Leon Josowitz (marriage license NYC, license #4285)
+  - 2nd marriage: Jan 1976 to Paul DiPasquale (Lakewood Township, NJ, cert #09137)
+  - Children: Erik Alan Josowitz, Michael H (from 2nd marriage?)
+- **Ira Josowitz**: Son of David Josowitz (head, age 45) and Anna Josowitz (wife, age 42)
+  - 1940 Census: Brighton 12th Street, house 3029, apt A1, Brooklyn
+  - Siblings: Renee Josowitz (16), Greta Josowitz (12), Ira (6)
+- **Abraham I. Fader** (Oki): 1901-1993 — Sarah Fox Fader's husband? Or son?
+- **Nadia Kubrin**: 1909-1988 — Sherry's mother
+- **Erik's great-grandparents (paternal)**: Harry H (Onhejm?) and Susan (S.D. Fox/Fader?)
+- **Erik's great-grandparents (maternal)**: [need to confirm] — linked to Fox family
+
+### Strategy
+1. Start with confirmed Sherry photos → find her across Fader collection
+2. Use wedding photos (1965, 1976) as temporal anchors
+3. Grandparents Abraham (d.1993) and Nadia (d.1988) — bracket older photos
+4. Work outward: identify Ira, siblings, parents, then Fox connections
 
 ## Findings
 (Cross-collection identification findings logged here)
