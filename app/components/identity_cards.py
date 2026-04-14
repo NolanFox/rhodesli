@@ -808,8 +808,22 @@ def identity_card(
         cls="mt-3 px-1",
     )
 
+    # Restore button for dismissed/rejected identities (Session 148b)
+    restore_btn = None
+    if is_admin and state in ("REJECTED", "CONTESTED"):
+        restore_btn = Button(
+            "Restore",
+            cls=f"{_pill} bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25",
+            hx_post=f"{nav_prefix}/api/identity/{identity_id}/restore",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            type="button",
+            title="Restore this identity to the inbox for re-triage",
+        )
+
     # Action buttons — clean icon pills
     action_section = Div(
+        restore_btn,
         view_all_photos_btn,
         faces_btn,
         find_similar_btn,
