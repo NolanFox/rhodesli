@@ -514,7 +514,7 @@ class TestGedcomBirthYearParser:
         mock_sb = MagicMock()
         mock_resp = MagicMock()
         mock_resp.data = [
-            {"id": "1", "given_names": "Albert", "surname": "Fox", "birth_date": "1893"},
+            {"id": "1", "given_name": "Albert", "surname": "Fox", "birth_date": "1893"},
         ]
         mock_sb.table.return_value.select.return_value.execute.return_value = mock_resp
 
@@ -527,7 +527,7 @@ class TestGedcomBirthYearParser:
         mock_sb = MagicMock()
         mock_resp = MagicMock()
         mock_resp.data = [
-            {"id": "2", "given_names": "Sarah", "surname": "Fox", "birth_date": "ABT 1882"},
+            {"id": "2", "given_name": "Sarah", "surname": "Fox", "birth_date": "ABT 1882"},
         ]
         mock_sb.table.return_value.select.return_value.execute.return_value = mock_resp
 
@@ -540,7 +540,7 @@ class TestGedcomBirthYearParser:
         mock_sb = MagicMock()
         mock_resp = MagicMock()
         mock_resp.data = [
-            {"id": "3", "given_names": "Jacob", "surname": "Fox", "birth_date": "BEF 1905"},
+            {"id": "3", "given_name": "Jacob", "surname": "Fox", "birth_date": "BEF 1905"},
         ]
         mock_sb.table.return_value.select.return_value.execute.return_value = mock_resp
 

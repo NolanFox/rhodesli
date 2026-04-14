@@ -2317,7 +2317,8 @@ def _signal_bar(display_name: str, score: float, detail_text: str | None = None)
 
 def _build_identity_suggestion_panel(suggestion: dict):
     """Build the identity suggestion evidence card for the person page."""
-    signals = suggestion.get("signals", {}) or {}
+    # evidence_json contains per-signal breakdown (batch writes this column)
+    signals = suggestion.get("evidence_json", {}) or {}
     if isinstance(signals, str):
         import json as _json
 
@@ -2326,7 +2327,16 @@ def _build_identity_suggestion_panel(suggestion: dict):
         except (ValueError, TypeError):
             signals = {}
 
-    composite = suggestion.get("composite_score", 0) or 0
+    # Extract scores from nested signal dicts: {"family_cluster": {"score": 0.82}, ...}
+    signal_scores = {}
+    for key in _SIGNAL_DISPLAY_NAMES:
+        sig_data = signals.get(key, {})
+        if isinstance(sig_data, dict):
+            signal_scores[key] = sig_data.get("score", 0) or 0
+        else:
+            signal_scores[key] = float(sig_data) if sig_data else 0
+
+    composite = suggestion.get("confidence", 0) or 0
     suggested_name = suggestion.get("suggested_name", "Unknown")
     suggestion_id = suggestion.get("id", "")
 
@@ -2341,17 +2351,66 @@ def _build_identity_suggestion_panel(suggestion: dict):
     # Build signal bars
     signal_bars = []
     for key, display_name in _SIGNAL_DISPLAY_NAMES.items():
-        score = signals.get(key, 0) or 0
+        score = signal_scores.get(key, 0) or 0
         signal_bars.append(_signal_bar(display_name, float(score)))
 
+    # Build accept button — name input for placeholder names, direct accept for real names
+    _is_placeholder = suggested_name.startswith("Fox family member") or "(score:" in suggested_name
+    if _is_placeholder:
+        accept_el = Div(
+            Input(
+                type="text",
+                name="override_name",
+                placeholder="Enter name to confirm as...",
+                cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-full mb-2",
+            ),
+            Button(
+                "Accept with Name",
+                hx_post=f"/api/identity-suggestion/{suggestion_id}/accept",
+                hx_target=f"#identity-suggestion-{suggestion_id}",
+                hx_swap="outerHTML",
+                hx_include="closest div",
+                hx_disabled_elt="this",
+                cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+            ),
+            cls="mb-1",
+        )
+    else:
+        accept_el = Button(
+            f"Accept as {suggested_name}",
+            hx_post=f"/api/identity-suggestion/{suggestion_id}/accept",
+            hx_target=f"#identity-suggestion-{suggestion_id}",
+            hx_swap="outerHTML",
+            hx_disabled_elt="this",
+            cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+        )
+
+    action_div = Div(
+        accept_el,
+        Button(
+            "Reject",
+            hx_post=f"/api/identity-suggestion/{suggestion_id}/reject",
+            hx_target=f"#identity-suggestion-{suggestion_id}",
+            hx_swap="outerHTML",
+            hx_confirm="Reject this identity suggestion?",
+            cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded",
+        ),
+        Button(
+            "Need More Evidence",
+            hx_post=f"/api/identity-suggestion/{suggestion_id}/needs-more",
+            hx_target=f"#identity-suggestion-{suggestion_id}",
+            hx_swap="outerHTML",
+            cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
+        ),
+        cls="flex gap-2 flex-wrap mt-3",
+    )
+
     return Div(
-        # Header
         Div(
             Span("\U0001f50d ", cls="mr-1"),
             Span("Identity Suggestion", cls="text-sm font-semibold text-amber-300"),
             cls="mb-2",
         ),
-        # Suggested name + composite score
         Div(
             Span(f"Suggested: {suggested_name}", cls="text-white text-sm font-medium"),
             Span(
@@ -2360,35 +2419,8 @@ def _build_identity_suggestion_panel(suggestion: dict):
             ),
             cls="mb-3",
         ),
-        # Signal bars
         Div(*signal_bars, cls="mb-2"),
-        # Action buttons
-        Div(
-            Button(
-                f"Accept as {suggested_name}",
-                hx_post=f"/api/identity-suggestion/{suggestion_id}/accept",
-                hx_target=f"#identity-suggestion-{suggestion_id}",
-                hx_swap="outerHTML",
-                hx_disabled_elt="this",
-                cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
-            ),
-            Button(
-                "Reject",
-                hx_post=f"/api/identity-suggestion/{suggestion_id}/reject",
-                hx_target=f"#identity-suggestion-{suggestion_id}",
-                hx_swap="outerHTML",
-                hx_confirm="Reject this identity suggestion?",
-                cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded",
-            ),
-            Button(
-                "Need More Evidence",
-                hx_post=f"/api/identity-suggestion/{suggestion_id}/needs-more",
-                hx_target=f"#identity-suggestion-{suggestion_id}",
-                hx_swap="outerHTML",
-                cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
-            ),
-            cls="flex gap-2 flex-wrap mt-3",
-        ),
+        action_div,
         id=f"identity-suggestion-{suggestion_id}",
         cls="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 mt-3 mb-3 text-left max-w-sm mx-auto",
         data_testid="identity-suggestion-card",

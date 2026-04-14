@@ -47,17 +47,17 @@ def _get_any_identity(registry):
 MOCK_SUGGESTION = {
     "id": "test-suggestion-001",
     "target_identity_id": "test-person-id",
-    "family_id": "fox-family",
-    "suggested_name": "Fox family member",
-    "composite_score": 0.45,
+    "family_id": "fox",
+    "suggested_name": "Fox family member (score: 0.45)",
+    "confidence": 0.45,
     "status": "PENDING",
-    "signals": {
-        "family_cluster": 0.82,
-        "co_occurrence": 0.65,
-        "age_trajectory": 0.50,
-        "gedcom_match": 0.50,
-        "testimony": 0,
-        "provenance": 0,
+    "evidence_json": {
+        "family_cluster": {"score": 0.82, "raw_distance": 1.18, "threshold": 1.35},
+        "co_occurrence": {"score": 0.65, "shared_photos_with_family": 8},
+        "age_trajectory": {"score": 0.50, "reason": "neutral"},
+        "gedcom_match": {"score": 0.50, "reason": "partial"},
+        "testimony": {"score": 0, "entries": []},
+        "provenance": {"score": 0, "labels": []},
     },
 }
 

@@ -264,7 +264,7 @@ def load_gedcom_birth_years(sb) -> dict[str, int]:
 
     for table_name in ["current_gedcom_individuals", "gedcom_individuals"]:
         try:
-            resp = sb.table(table_name).select("id,given_names,surname,birth_date").execute()
+            resp = sb.table(table_name).select("id,given_name,surname,birth_date").execute()
             raw_data = resp.data or []
             if raw_data:
                 logger.info(f"  Loaded {len(raw_data)} GEDCOM individuals from {table_name}")
@@ -281,7 +281,7 @@ def load_gedcom_birth_years(sb) -> dict[str, int]:
         if match:
             year = int(match.group(1))
             if 1700 < year < 2030:  # Sanity check
-                given = row.get("given_names", "") or ""
+                given = row.get("given_name", "") or ""
                 surname = row.get("surname", "") or ""
                 full_name = f"{given} {surname}".strip()
                 if full_name:

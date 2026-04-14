@@ -4708,7 +4708,7 @@ def _community_form(action: str, submit_label: str = "Save", community: dict = N
 
 
 @rt("/api/identity-suggestion/{suggestion_id}/accept")
-def post(suggestion_id: str, sess=None, request=None):
+def post(suggestion_id: str, override_name: str = "", sess=None, request=None):
     """Accept an identity suggestion — rename+confirm or merge into existing."""
     origin_err = _check_origin(request)
     if origin_err:
@@ -4757,8 +4757,20 @@ def post(suggestion_id: str, sess=None, request=None):
             id=f"identity-suggestion-{suggestion_id}",
         )
 
+    # Check suggestion is still PENDING (P2: prevent stale-tab re-reviews)
+    if suggestion.get("status") != "PENDING":
+        return Div(
+            f"Suggestion already {suggestion.get('status', 'reviewed')}",
+            cls="text-amber-400 text-sm p-3",
+            id=f"identity-suggestion-{suggestion_id}",
+        )
+
     suggested_identity_id = suggestion.get("suggested_identity_id")
     suggested_name = suggestion["suggested_name"]
+
+    # Allow admin to override placeholder names (P0: prevent "Fox family member (score: 0.45)" corruption)
+    if override_name and override_name.strip():
+        suggested_name = override_name.strip()
 
     if suggested_identity_id:
         # MERGE into existing confirmed identity
@@ -4779,8 +4791,14 @@ def post(suggestion_id: str, sess=None, request=None):
         _main_mod.save_photo_registry(photo_registry)
         action_text = f"Merged into {suggested_name}"
     else:
-        # Rename + confirm
-        if identity.get("state") != "CONFIRMED":
+        # Rename + confirm — restore to INBOX first if REJECTED/CONTESTED (P1)
+        current_state = identity.get("state", "")
+        if current_state in ("REJECTED", "CONTESTED"):
+            try:
+                registry.reset_identity(target_id, user_source="identity_suggestion_pre_confirm")
+            except (ValueError, KeyError):
+                pass
+        if current_state != "CONFIRMED":
             registry.rename_identity(target_id, suggested_name, user_source="identity_suggestion")
             try:
                 registry.confirm_identity(target_id, user_source="identity_suggestion_accept")
@@ -4789,17 +4807,17 @@ def post(suggestion_id: str, sess=None, request=None):
         _main_mod.save_registry(registry, changed_ids={target_id})
         action_text = f"Confirmed as {suggested_name}"
 
-    # GEDCOM link
+    # GEDCOM link — use correct column name: gedcom_id (not gedcom_individual_id) (P1)
     if suggestion.get("suggested_gedcom_id"):
         try:
             sb.table("gedcom_face_links").upsert(
                 {
                     "identity_id": suggested_identity_id or target_id,
-                    "gedcom_individual_id": suggestion["suggested_gedcom_id"],
+                    "gedcom_id": suggestion["suggested_gedcom_id"],
                     "link_type": "identity_suggestion",
                     "created_by": "session_147",
                 },
-                on_conflict="identity_id,gedcom_individual_id",
+                on_conflict="identity_id,gedcom_id",
             ).execute()
         except Exception as e:
             logger.warning(f"Failed to link GEDCOM: {e}")
@@ -4852,6 +4870,18 @@ def post(suggestion_id: str, reason: str = "", sess=None, request=None):
             cls="text-red-400 text-sm p-3",
             id=f"identity-suggestion-{suggestion_id}",
         )
+
+    # Check current status is PENDING (P2: prevent stale-tab re-reviews)
+    try:
+        check_resp = sb.table("identity_suggestions").select("status").eq("id", suggestion_id).execute()
+        if check_resp.data and check_resp.data[0].get("status") != "PENDING":
+            return Div(
+                f"Already {check_resp.data[0].get('status', 'reviewed')}",
+                cls="text-amber-400 text-sm p-3",
+                id=f"identity-suggestion-{suggestion_id}",
+            )
+    except Exception:
+        pass  # Non-fatal, proceed with update
 
     try:
         user = get_current_user(sess or {})
