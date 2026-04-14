@@ -59,6 +59,22 @@ EXTRACTION_PRESETS: dict[str, dict[str, bool]] = {
         "photo_condition": False,
         "subject_ages": True,
     },
+    "identification": {
+        "date_estimation": True,
+        "face_analysis": True,
+        "location": True,
+        "cultural_markers": True,
+        "clothing_era": True,
+        "photo_technique": True,
+        "text_signage": True,
+        "group_composition": True,
+        "photo_condition": True,
+        "subject_ages": True,
+        "scene_description": True,
+        "capture_vs_print": True,
+        "event_context": True,
+        "relationship_inference": True,
+    },
 }
 
 # JSON output schema fragments per extraction type
@@ -122,6 +138,21 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "capture_vs_print": """"capture_vs_print": {
     "classification": "original_capture|later_print|scan_of_original|uncertain",
     "evidence": "Visible halftone dots suggest newspaper reproduction"
+  }""",
+    "event_context": """"event_context": {
+    "event_type": "wedding_ceremony|wedding_reception|bar_mitzvah|funeral|holiday|school|military|casual|portrait|formal_dinner|party|religious_ceremony|graduation|reunion|unknown",
+    "event_subtype": "head table dinner|aisle walk|father-daughter dance|...",
+    "role_indicators": [
+      {"face_index": 0, "roles": ["bride"]},
+      {"face_index": 1, "roles": ["groom"]}
+    ],
+    "formality_level": "very_formal|formal|semi_formal|casual|intimate"
+  }""",
+    "relationship_inference": """"relationship_inference": {
+    "couple_pairs": [{"face_indices": [0, 1], "confidence": 0.9, "evidence": "Central positioning, matching formal attire, physical proximity"}],
+    "parent_child_pairs": [{"parent_index": 0, "child_index": 2, "confidence": 0.8, "evidence": "Age gap ~25 years, protective positioning"}],
+    "sibling_pairs": [{"face_indices": [2, 3], "confidence": 0.7, "evidence": "Similar age, matching outfits, side-by-side placement"}],
+    "positioning_notes": "Central couple flanked by younger generation, elders seated"
   }""",
 }
 
@@ -223,6 +254,48 @@ visible page edges or binding (book/album scan), digital artifacts vs analog gra
 color shifts from re-photography.
 Classify as: original_capture / later_print / scan_of_original / uncertain.
 This distinction is CRITICAL — a 1960s reprint of a 1920s photo should be dated to the 1920s.""",
+    "event_context": """## Event Context
+Identify the type of event or occasion depicted in this photograph.
+
+**Event types** (choose one): wedding_ceremony, wedding_reception, bar_mitzvah, funeral,
+holiday, school, military, casual, portrait, formal_dinner, party, religious_ceremony,
+graduation, reunion, unknown.
+
+**Event subtype**: Provide a more specific description if possible (e.g., "head table dinner",
+"aisle walk", "father-daughter dance", "family seated portrait", "beach outing").
+
+**Role indicators**: For each detected face, identify any event-specific roles visible from
+positioning, attire, or ceremony context. Roles include: bride, groom, mother_of_bride,
+father_of_bride, mother_of_groom, father_of_groom, bridesmaid, best_man, officiant,
+guest, honored_guest. Only assign roles when evidence is clear — omit faces with no
+discernible role.
+
+**Formality level**: very_formal (black tie, ceremony), formal (suits/dresses, posed),
+semi_formal (smart casual, structured event), casual (everyday clothing, relaxed setting),
+intimate (small private gathering).
+{face_coordinates_section}""",
+    "relationship_inference": """## Relationship Inference
+Analyze the spatial arrangement, body language, physical contact, age differences, and
+attire coordination to infer likely relationships between people in the photograph.
+
+**Couple pairs**: Identify pairs who appear to be romantic partners (spouses, engaged).
+Evidence: matching attire, central positioning together, physical contact (arm-in-arm,
+hand-holding), ring fingers, coordinated poses.
+
+**Parent-child pairs**: Identify likely parent-child relationships.
+Evidence: significant age gap (typically 20-35 years), protective positioning, resemblance,
+hand on shoulder, child seated on lap.
+
+**Sibling pairs**: Identify likely siblings.
+Evidence: similar age range, matching or coordinated outfits, side-by-side placement,
+physical resemblance.
+
+For each pair, provide a confidence score (0.0-1.0) and specific evidence from the photo.
+Only include pairs where you have meaningful evidence — do not guess.
+
+**Positioning notes**: Describe the overall spatial arrangement and what it suggests about
+family structure and hierarchy (e.g., "elders seated centrally, younger generation standing behind").
+{face_coordinates_section}""",
 }
 
 _PREAMBLE = """You are a forensic photo analyst specializing in dating historical photographs
@@ -249,7 +322,7 @@ def build_extraction_prompt(
     """Build a unified Gemini prompt that extracts all requested info in one call.
 
     Args:
-        preset: One of EXTRACTION_PRESETS keys ("full", "quick", "compare")
+        preset: One of EXTRACTION_PRESETS keys ("full", "quick", "compare", "identification")
         include: Additional extraction types to enable
         exclude: Extraction types to disable from preset
         face_coordinates: InsightFace bounding box data for face_analysis
@@ -320,10 +393,12 @@ def build_extraction_prompt(
         sections.append(meta_section)
 
     # Add enabled extraction sections
+    # Sections that benefit from face coordinate data
+    _FACE_COORD_SECTIONS = {"face_analysis", "event_context", "relationship_inference"}
     active_types = [k for k, v in config.items() if v]
     for extraction_type in active_types:
         section = _PROMPT_SECTIONS.get(extraction_type, "")
-        if extraction_type == "face_analysis" and face_coordinates:
+        if extraction_type in _FACE_COORD_SECTIONS and face_coordinates:
             coords_text = "InsightFace detected faces at these bounding boxes:\n"
             for i, fc in enumerate(face_coordinates):
                 bbox = fc.get("bbox", [])
