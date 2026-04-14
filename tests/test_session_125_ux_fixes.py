@@ -41,7 +41,7 @@ def test_person_bottom_nav_uses_py2_text_sm():
     """Bottom nav action bar chips should use py-2 text-sm for touch targets."""
     src = _read("app/person_routes.py")
     # Timeline, Map, Family Tree, Connections chips
-    assert "py-2 text-sm rounded-full bg-slate-800/60" in src
+    assert "py-2 min-h-[44px] inline-flex items-center text-sm rounded-full bg-slate-800/60" in src
 
 
 def test_person_admin_chips_use_py2():

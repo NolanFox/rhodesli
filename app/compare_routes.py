@@ -731,9 +731,9 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, r
             # Workspace: Source + Target slots
             Section(
                 Div(
-                    Div(source_slot, cls="flex-1 min-w-[300px]"),
-                    Div(target_slot, cls="flex-1 min-w-[300px]"),
-                    cls="flex flex-col lg:flex-row gap-4",
+                    Div(source_slot, cls="flex-1 min-w-0 sm:min-w-[300px]"),
+                    Div(target_slot, cls="flex-1 min-w-0 sm:min-w-[300px]"),
+                    cls="flex flex-col lg:flex-row gap-4 overflow-hidden",
                 ),
                 cls="max-w-6xl mx-auto px-6 pb-4",
                 data_testid="workspace-slots",
@@ -3560,7 +3560,7 @@ def get(result_id: str, sess=None, request=None):
                 Div(
                     Img(
                         src=hero_source_url,
-                        cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
+                        cls="w-[120px] h-[120px] sm:w-[200px] sm:h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
                         alt="Source face",
                     ),
                     P("Source", cls="text-xs text-slate-500 text-center mt-2"),
@@ -3580,7 +3580,7 @@ def get(result_id: str, sess=None, request=None):
                     A(
                         Img(
                             src=hero_match_url,
-                            cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
+                            cls="w-[120px] h-[120px] sm:w-[200px] sm:h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
                             alt=hero_match_name or "Match",
                         ),
                         href=hero_match_link,
@@ -3600,8 +3600,8 @@ def get(result_id: str, sess=None, request=None):
 
         hero_section = Div(
             H2(hero_question, cls="text-xl font-serif text-white text-center mb-4", data_testid="result-hero-question"),
-            Div(*hero_parts, cls="flex items-center justify-center gap-3 sm:gap-6"),
-            cls="mb-8 p-6 bg-slate-800/40 rounded-2xl border border-slate-700/50",
+            Div(*hero_parts, cls="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6"),
+            cls="mb-8 p-4 sm:p-6 bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden",
             data_testid="result-hero",
         )
 
@@ -3747,13 +3747,13 @@ def get(result_id: str, sess=None, request=None):
                             ),
                             cls="flex items-center gap-2 mt-1",
                         ),
-                        P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
-                        cls="flex-1 min-w-0",
+                        P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5 break-words"),
+                        cls="flex-1 min-w-0 overflow-hidden",
                     ),
-                    cls="flex items-center gap-4",
+                    cls="flex items-center gap-3 sm:gap-4",
                 ),
-                Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
-                cls="p-3 bg-slate-800/70 rounded-lg",
+                Div(*action_buttons, cls="flex flex-wrap gap-2 mt-2 justify-end") if action_buttons else None,
+                cls="p-3 bg-slate-800/70 rounded-lg overflow-hidden",
                 id=f"result-face-{i}",
                 data_testid=f"result-card-{i}",
             )
@@ -5728,7 +5728,7 @@ def get(
         pb = (
             Button(
                 "\u2190",
-                cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                cls="px-3 py-2 min-h-[44px] min-w-[44px] text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm flex items-center justify-center",
                 hx_get=pu,
                 hx_target="#compare-modal-content",
                 hx_swap="innerHTML",
@@ -5737,13 +5737,16 @@ def get(
             )
             if cur > 0
             else Button(
-                "\u2190", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button"
+                "\u2190",
+                cls="px-3 py-2 min-h-[44px] min-w-[44px] text-slate-500 opacity-30 rounded text-sm flex items-center justify-center",
+                disabled=True,
+                type="button",
             )
         )
         nb = (
             Button(
                 "\u2192",
-                cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                cls="px-3 py-2 min-h-[44px] min-w-[44px] text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm flex items-center justify-center",
                 hx_get=nu,
                 hx_target="#compare-modal-content",
                 hx_swap="innerHTML",
@@ -5752,7 +5755,10 @@ def get(
             )
             if cur < tot - 1
             else Button(
-                "\u2192", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button"
+                "\u2192",
+                cls="px-3 py-2 min-h-[44px] min-w-[44px] text-slate-500 opacity-30 rounded text-sm flex items-center justify-center",
+                disabled=True,
+                type="button",
             )
         )
         return Div(
@@ -5789,7 +5795,7 @@ def get(
     if _role == "contributor":
         m_btn = Button(
             "Suggest Merge",
-            cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            cls="px-4 py-3 sm:py-2 min-h-[44px] text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/suggest-merge/{neighbor_id}",
             hx_swap="none",
             **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
@@ -5806,7 +5812,7 @@ def get(
         # merge response may not fit the modal, so reload after swap.
         m_btn = Button(
             "Merge",
-            cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
+            cls="px-4 py-3 sm:py-2 min-h-[44px] text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{neighbor_id}",
             hx_target="#compare-modal-content",
             hx_swap="innerHTML",
@@ -5818,7 +5824,7 @@ def get(
     # on pages that use tile layout instead of neighbor cards
     ns_btn = Button(
         "Not Same",
-        cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+        cls="px-4 py-3 sm:py-2 min-h-[44px] text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
         hx_post=f"{nav_prefix}/api/identity/{target_id}/reject/{neighbor_id}",
         hx_swap="none",
         **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
@@ -5826,7 +5832,7 @@ def get(
     )
     cl_btn = Button(
         "Close",
-        cls="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
+        cls="px-4 py-3 sm:py-2 min-h-[44px] text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
         **{"_": "on click add .hidden to #compare-modal"},
         type="button",
     )
@@ -5931,7 +5937,10 @@ def get(
                 data_compare_side="target",
                 aria_label="Source panel",
             ),
-            Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
+            Div(
+                Span("vs", cls="text-slate-500 text-sm font-bold"),
+                cls="flex items-center justify-center px-2 sm:px-4 py-1 sm:py-0",
+            ),
             Div(
                 Span("Match", cls="text-xs text-indigo-400/60 uppercase tracking-wider"),
                 A(
@@ -5947,7 +5956,7 @@ def get(
                 data_compare_side="neighbor",
                 aria_label="Match panel",
             ),
-            cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start",
+            cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start overflow-hidden max-w-full",
         ),
         Div(
             m_btn,
