@@ -1772,6 +1772,111 @@ def add_identity_to_community(identity_id: str, community_id: str, is_primary: b
         return False
 
 
+def log_identification_investigation(data: dict) -> bool:
+    """Log an identification investigation to Supabase.
+
+    Args:
+        data: Dict with keys matching identification_investigations table columns.
+              Required: investigation_name, session_id, target_name.
+              Optional: all other columns (community_id, candidates, etc.)
+
+    Returns True on success, False on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return False
+
+    # Required fields
+    row = {}
+    for field in ["investigation_name", "session_id", "target_name"]:
+        if field not in data:
+            logger.warning(f"log_identification_investigation missing required field: {field}")
+            return False
+        row[field] = data[field]
+
+    # Optional fields
+    for field in [
+        "community_id",
+        "collection_id",
+        "target_birth_year",
+        "target_death_year",
+        "target_relationship",
+        "target_gedcom_id",
+        "target_spouse",
+        "target_geography",
+        "known_references",
+        "methodology_steps",
+        "candidates",
+        "clusters",
+        "outcome",
+        "confirmed_identity_id",
+        "confirmed_face_ids",
+        "confidence_overall",
+        "signals_used",
+        "also_identified",
+        "feature_ideas",
+        "investigator",
+    ]:
+        if field in data and data[field] is not None:
+            row[field] = data[field]
+
+    try:
+        sb.table("identification_investigations").insert(row).execute()
+        logger.debug(f"Logged investigation: {data.get('investigation_name')} (session {data.get('session_id')})")
+        return True
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase investigation log failed: {e}")
+        return False
+
+
+def get_investigations_for_family(target_name: str, community_id: str = None) -> list:
+    """Retrieve past investigations by target name (case-insensitive).
+
+    Args:
+        target_name: Name to search for (uses ilike for case-insensitive match).
+        community_id: Optional community filter.
+
+    Returns list of investigation dicts, or empty list on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return []
+
+    try:
+        query = sb.table("identification_investigations").select("*")
+        query = query.ilike("target_name", f"%{target_name}%")
+        if community_id:
+            query = query.eq("community_id", community_id)
+        query = query.order("created_at", desc=True)
+        result = query.execute()
+        return result.data or []
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase investigation family search failed: {e}")
+        return []
+
+
+def get_investigation(investigation_id: str) -> dict | None:
+    """Retrieve a single investigation by ID.
+
+    Args:
+        investigation_id: UUID string of the investigation.
+
+    Returns investigation dict, or None if not found or on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("identification_investigations").select("*").eq("id", investigation_id).limit(1).execute()
+        if result.data:
+            return result.data[0]
+        return None
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase investigation lookup failed: {e}")
+        return None
+
+
 def load_person_comments_from_supabase(identity_id: str = None) -> list | None:
     """Load person comments from Supabase. Returns list or None."""
     sb = get_supabase_client()
