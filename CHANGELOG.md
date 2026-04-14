@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.64] — 2026-04-14 (Session 148d: Codex Fixes + Gemini Structured Output)
+
+### Fixes
+- **CSRF origin check** on event context analysis endpoint (Codex P3)
+- **Face coordinate sorting** by bbox x-coordinate for correct role indicator mapping (Codex P2)
+- **Form parameter** for known_people — replaced dead async body parsing (Codex P2)
+- **RLS policy** restricted to service_role only on identification_investigations table (Codex P1)
+
+### Features
+- **Gemini response_schema enforcement** — `build_response_schema()` forces structured output with event_context and relationship_inference fields. Validated: wedding_reception event type, role_indicators, parent_child pairs all populated on real photos.
+- **identification_investigations table** created in Supabase (26 columns) with Session 148c Nellie Kubrin investigation backfilled
+
+### Tests
+- 11 new tests (CSRF, face sorting, form param, schema structure, preset compatibility)
+- 4109 app tests pass
+
 ## [v0.99.63] — 2026-04-14 (Session 148c: Interactive Fader Identification)
 
 ### Identification

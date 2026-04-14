@@ -1,22 +1,25 @@
-# Session 148d Assessment — IN PROGRESS
+# Session 148d Assessment
 
-## Status: PAUSED — Context limit reached, /clear needed
+## Shipped
+- [x] Phase 1: Fix Codex Findings — Evidence: 4 fixes applied (CSRF, face sort, form param, RLS), 4 new tests, commit `908b812d`
+- [x] Phase 2: Gemini Prompt Refinement — Evidence: `build_response_schema()` added to gemini_extraction.py, wired into admin endpoint, 7 new tests, validated on real photo (event_context: wedding_reception, relationship_inference: 2 parent_child pairs), commit `2674d7f1`
+- [x] Phase 3: Supabase Migration + Backfill — Evidence: table created via psycopg2 (26 columns), Nellie Kubrin investigation backfilled, round-trip verified via `get_investigations_for_family()`
+- [x] Phase 4: Deploy + Verify — Evidence: pushed to main, site returns 200
 
-Session 148d prompt and context files written. Implementation not yet started — transcript hit 1138 lines triggering pre-work-clear-gate hook before any code edits.
+## Deferred
+- Phase 2c partial: Only validated on 1 photo (Image 001) instead of 5 Fader photos. Fader photos not in local raw_photos. Sufficient to confirm schema enforcement works.
 
-## What's Done
-- [x] Prompt: `docs/prompts/session-148d-prompt.md`
-- [x] Context: `docs/session_context/session-148d-context.md`
+## Red Flags
+- [LOW] Railway CLI auth expired — couldn't verify deploy builder type. Site 200 confirms it deployed.
+- [LOW] Fader photos not in local raw_photos/ — couldn't do the 5-photo validation from prompt. One photo validation sufficient.
 
-## What's Pending (resume after /clear)
-- [ ] Phase 1: Fix 4 Codex findings (RLS, face sort, body parsing, CSRF)
-- [ ] Phase 2: Gemini prompt refinement with response_schema
-- [ ] Phase 3: Supabase migration execution + backfill
-- [ ] Phase 4: Deploy + verify
-- [ ] Phase 5: Session close
-
-## Resume Instructions
-After /clear: "Resume session 148d. Read docs/prompts/session-148d-prompt.md and continue from Phase 1."
+## Test Results
+- 4109 passed, 8 skipped, 14 xfailed, 2 xpassed (11 new tests)
 
 ## AI Tool Usage
-- No AI tools used in 148d yet (prompt writing only)
+- No external AI tools used in this session (Codex findings were from Session 149's audit)
+
+## Next Session Should Verify
+1. Test admin endpoint on production with a real photo_id
+2. Run Gemini on Fader photos from production (via admin endpoint) to get event_context data
+3. Railway CLI login refresh
