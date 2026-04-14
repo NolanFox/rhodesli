@@ -5718,7 +5718,7 @@ def get(
     def _cn(side, cur, tot, oth):
         if tot <= 1:
             return None
-        b = f"/api/identity/{target_id}/compare/{neighbor_id}"
+        b = f"{nav_prefix}/api/identity/{target_id}/compare/{neighbor_id}"
         if side == "t":
             pu = f"{b}?target_idx={cur - 1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
             nu = f"{b}?target_idx={cur + 1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
@@ -5802,22 +5802,16 @@ def get(
             if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ")
             else "Merge these identities? This can be undone."
         )
-        # FB-009: If swap target #identity-{target_id} doesn't exist on page
-        # (e.g. person page), fall back to page reload after merge.
-        _merge_hs = (
-            "on htmx:afterRequest "
-            "add .hidden to #compare-modal "
-            f"then if document.querySelector('#identity-{target_id}') is null "
-            "location.reload() "
-        )
+        # FB-009: Merge from compare modal — use hx_swap="none" and always
+        # reload. The modal is always a full-page context, and page reload
+        # after merge is correct UX regardless of calling page.
         m_btn = Button(
             "Merge",
             cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{neighbor_id}",
-            hx_target=f"#identity-{target_id}",
-            hx_swap="outerHTML",
+            hx_swap="none",
             hx_confirm=_merge_confirm,
-            **{"_": _merge_hs},
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
             type="button",
         )
     ns_btn = Button(
