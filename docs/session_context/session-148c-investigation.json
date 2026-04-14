@@ -1,0 +1,117 @@
+{
+  "investigation": "Nellie Kubrin Identification",
+  "session": "148c",
+  "date": "2026-04-14",
+  "target": {
+    "name": "Nellie Kubrin",
+    "birth_year": 1909,
+    "death_year": 1988,
+    "relationship_to_known": "Mother of Sherry Ann Fader (CONFIRMED)",
+    "spouse": "Abraham 'Al' I. Fader (1901-1993)",
+    "geography": "NYC tristate area",
+    "key_events": ["1965 Sherry-Ira wedding (age ~56)", "1976 Sherry-Paul wedding (age ~67)", "Family gatherings 1950s-1980s"]
+  },
+  "known_references": {
+    "sherry": {
+      "identity_id": "37611153-36d1-4f20-9535-d994e1893e13",
+      "anchor_count": 35,
+      "centroid_source": "top 10 faces by distance to solo bridal portrait"
+    },
+    "ira": {
+      "identity_id": "f1fa358b-f3c1-4347-83fb-71f9379abeff",
+      "anchor_count": 27
+    }
+  },
+  "methodology": {
+    "step_1": "Built Sherry centroid from solo bridal portrait + 9 closest faces",
+    "step_2": "Ranked ALL 328 non-Sherry Fader faces by L2 distance to Sherry centroid (kinship signal)",
+    "step_3": "Clustered top 50 faces using <1.0 intra-cluster distance threshold",
+    "step_4": "Visually reviewed cluster photos for age-appropriate women",
+    "step_5": "Cross-referenced with event context (wedding, family gatherings) and temporal anchors",
+    "step_6": "Compared recurring-person clusters across photos for consistency"
+  },
+  "clusters_of_interest": {
+    "cluster_1_young_women": {
+      "faces": 5,
+      "photos": 5,
+      "avg_sherry_dist": 0.8945,
+      "assessment": "Young women similar age to Sherry — likely friends or cousins. NOT Nellie candidates.",
+      "status": "ELIMINATED",
+      "reason": "Too young (appear 18-25)"
+    },
+    "cluster_2_wedding_mother": {
+      "faces": 4,
+      "photos": 3,
+      "avg_sherry_dist": 0.9292,
+      "face_ids": ["inbox_484e92285abb", "inbox_d2bd952b941a", "inbox_495d58508d74", "inbox_e38b794cf717"],
+      "filenames": ["D72A1E71 (cake topper handoff)", "E4BDA57D (two young women)", "D5AD8ABB (party hats)"],
+      "assessment": "D72A photo is CRITICAL — older woman in glasses/brocade handing bride the cake topper. Same person as parents portrait. Other photos in cluster are younger women — likely miscluster.",
+      "nellie_evidence": {
+        "D72A1E71": "Woman in glasses, brocade dress, pearls, long gloves handing Sherry cake topper figurine. SAME outfit as parents portrait and ceremony. Mother-of-bride behavior.",
+        "confidence": "VERY HIGH for D72A face (inbox_484e92285abb)"
+      },
+      "status": "CANDIDATE_PENDING_USER_REVIEW"
+    },
+    "cluster_3_glasses_woman_outdoor": {
+      "faces": 3,
+      "photos": 3,
+      "avg_sherry_dist": 1.0023,
+      "face_ids": ["inbox_0871455a1d0f", "inbox_8d21c3428a8b", "inbox_4a75ae3d3128"],
+      "filenames": ["E4A0952B (Apr 67 baby photo — BUT this is Sherry, not the other person)", "D3CA0B24 (Apr 64 street photo with glasses woman + children)", "7FEA86B0"],
+      "assessment": "D3CA photo (Apr 64) shows woman with glasses on city street with Sherry and two children. Age ~55, one year before wedding. Glasses + build consistent with wedding photos. Could be Nellie in non-wedding context.",
+      "nellie_evidence": {
+        "D3CA0B24": "Dated Apr 1964. Woman with dark glasses, dark hair, ~55yo, standing with Sherry (~20) and two children on Brooklyn-looking street. Mother-daughter outing with grandchildren or young relatives.",
+        "confidence": "HIGH for D3CA face (inbox_8d21c3428a8b)"
+      },
+      "status": "CANDIDATE_PENDING_USER_REVIEW"
+    },
+    "cluster_11_wedding_formal": {
+      "faces": 3,
+      "photos": 3,
+      "avg_sherry_dist": 1.2922,
+      "face_ids": ["inbox_bfe60ad388ab", "inbox_10fed4a7c613", "inbox_446627a0e243"],
+      "filenames": ["A08EAB11 (8-person head table)", "0FBD3088 (ceremony aisle walk)", "9A116A4C (dancing with groom)"],
+      "assessment": "THIS IS THE KEY CLUSTER. Same older woman across 3 wedding photos: seated at head table, walking bride down aisle, dancing with groom. All classic mother-of-bride activities at Jewish wedding.",
+      "nellie_evidence": {
+        "A08EAB11_head_table": "Older woman with glasses, brocade dress seated at head table. Position to Ira's right could be non-traditional seating.",
+        "0FBD3088_ceremony": "Same woman walking Sherry down the aisle — parent escort.",
+        "9A116A4C_dancing": "Same woman (glasses, brocade full-length gown) dancing with Ira (groom). Mother-in-law/groom dance is traditional at Jewish weddings.",
+        "confidence": "VERY HIGH — consistent person across 3 independent wedding contexts"
+      },
+      "status": "CANDIDATE_PENDING_USER_REVIEW"
+    }
+  },
+  "consolidated_nellie_candidate": {
+    "summary": "One woman appears across AT LEAST 5 wedding photos in the same brocade/gold patterned dress with glasses, pearl necklace, and long white gloves. She performs mother-of-bride activities: corsage, walking bride down aisle, handing bride cake topper, dancing with groom.",
+    "face_ids_likely_same_person": [
+      {"face_id": "inbox_484e92285abb", "photo": "D72A1E71 (cake topper)", "sherry_dist": 0.8773},
+      {"face_id": "inbox_bfe60ad388ab", "photo": "A08EAB11 (head table)", "sherry_dist": 1.2889},
+      {"face_id": "inbox_10fed4a7c613", "photo": "0FBD3088 (ceremony)", "sherry_dist": 1.2914},
+      {"face_id": "inbox_446627a0e243", "photo": "9A116A4C (dancing)", "sherry_dist": 1.2963},
+      {"face_id": "inbox_8702ce09b7f4", "photo": "F8B131D2 (parents portrait)", "sherry_dist": "TBD"},
+      {"face_id": "inbox_8d21c3428a8b", "photo": "D3CA0B24 (Apr 64 street)", "sherry_dist": 0.964}
+    ],
+    "cross_cluster_note": "Embedding system split this person across Clusters 2, 3, and 11. The intra-person distances are high (0.96-1.29) because: (a) age gap between 1964 casual and 1965 formal photos, (b) different lighting/angles, (c) glasses create embedding noise. But visual review confirms same person across all 5+ photos.",
+    "overall_confidence": "VERY HIGH",
+    "awaiting": "User visual confirmation"
+  },
+  "also_identified": {
+    "abraham_fader_candidate": {
+      "description": "Bald man in tuxedo with boutonniere in parents portrait (F8B131D2). Age ~64. Different from glasses/yarmulke man in ceremony (0FBD3088).",
+      "face_id": "inbox_2c727d767be2",
+      "photo": "F8B131D2",
+      "status": "CANDIDATE_PENDING"
+    }
+  },
+  "feature_ideas_from_methodology": [
+    "Gemini API: classify event type from photo (wedding, party, casual, formal, outdoor)",
+    "Gemini API: estimate age of each person → filter by GEDCOM birth year",
+    "Gemini API: identify clothing/outfit matches across photos in same event",
+    "Gemini API: identify traditional role indicators (corsage, boutonniere, veil, party hat)",
+    "New signal: 'kinship embedding distance' — distance to known relative as soft indicator of family relationship",
+    "New signal: 'co-occurrence with known person' — appears in photos WITH confirmed person",
+    "New signal: 'age trajectory consistency' — same person should age consistently across dated photos",
+    "API format: structure all this as a Gemini API call with photo context, known people, family tree, and ask for identification suggestions"
+  ],
+  "data_format_note": "This investigation data should mirror gemini_api_calls table structure: prompt_text (the question), full_response (the analysis), context (family tree, known people, event info). Future: store as 'identification_investigations' in Supabase."
+}
