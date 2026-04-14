@@ -141,6 +141,8 @@ All planned sessions through 105b are COMPLETE. See Recently Completed above and
 
 ## Recently Completed
 
+- [x] 2026-04-14: **v0.99.63 — Session 148c**: Interactive Fader identification. Abraham Al Fader CONFIRMED (16 anchors). Nellie Kubrin identified (pending confirmation). FB-009: 6 compare modal bugs fixed (missing confirm_modal on person page, swap targets, nav_prefix). Identification methodology documented — event context strongest signal, kinship embedding weak. Lessons 171-172. 4064 app tests pass.
+
 - [x] 2026-04-14: **v0.99.62 — Session 148b**: Overnight Implementation Sprint. TOOLS-007 cross-collection person search API. UPLOAD-003 pipeline fixes (3 bugs: 404 after approval, anonymous attribution, missing thumbnails). REFACTOR-001 Phase 4 (997 lines → photo_analysis.py, main.py 8183). Restore button on dismissed cards. Codex audit: P1 registry API fix. 8 new tests. 4064 app tests pass.
 
 - [x] 2026-04-13: **v0.99.61 — Session 148**: Interactive Fader Collection Fox Search. P0 fix: auto-rejection hardened (only INBOX). Memory system: 6 lost files recovered, git backup added. Fader identification: Sherry Ann Fader + Ira Josowitz confirmed in 18-person group photo. 21 candidate photos ranked. Josowitz/Fader family tree researched. 3 feedback items (date labels, embedding sync, cross-collection search). Lessons 168-170. 2 new tests. 4056 app tests pass.

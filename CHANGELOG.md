@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.63] — 2026-04-14 (Session 148c: Interactive Fader Identification)
+
+### Identification
+- **Abraham Al Fader CONFIRMED** — 16 anchors across Fader collection. Identified via event context analysis (wedding photos, family groupings), embedding distance ranking, and cross-collection person search. Methodology documented.
+- **Nellie Kubrin identified** — Pending confirmation. Found via genealogical cross-reference (Ira Josowitz's wife).
+
+### Fixes
+- **FB-009: Compare modal 6-bug fix** — (1) Missing `confirm_modal` on person page compare. (2) Swap target selectors wrong. (3) `nav_prefix` missing from compare routes. (4-6) Related compare modal rendering issues.
+
+### Research
+- Identification methodology documented with quantitative signal evaluation — event context strongest signal, kinship embedding weakest
+- Genealogical name collision analysis (Abraham Fader vs Abraham Al Fader)
+
+### Harness
+- Lessons 171-172 (genealogical name collisions require era/geography disambiguation; kinship signal strength hierarchy)
+- 2 new memory files, comprehensive investigation log
+
 ## [v0.99.62] — 2026-04-14 (Session 148b: Overnight Implementation Sprint)
 
 ### Features
