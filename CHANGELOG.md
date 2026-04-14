@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.62] — 2026-04-14 (Session 148b: Overnight Implementation Sprint)
+
+### Features
+- **TOOLS-007: Cross-collection person search** — `GET /api/admin/search-person-in-collection` finds faces in one collection that match a person from another, ranked by embedding distance. Enables the Fader→Fox identification workflow.
+- **Restore button on dismissed cards** — Pill-style "Restore" button renders on REJECTED/CONTESTED identity cards in the Dismissed section. Admin-only.
+
+### Fixes
+- **UPLOAD-003: Upload pipeline 3-bug fix** — (1) 404 after approval: added Supabase sync in approval handlers. (2) Anonymous attribution: fixed default from "anonymous" to "unknown". (3) Missing thumbnails: added project-root crops dir fallback for Railway.
+- **Auto-rejection hardened** — `_cleanup_orphaned_identities_for_upload()` now only auto-rejects INBOX identities (not PROPOSED/SKIPPED), uses `registry.reject_identity()` for proper version/history tracking, and writes audit_log entries.
+- **Memory backup regex** — `backup-memory.sh` now matches filenames with digits.
+
+### Refactoring
+- **REFACTOR-001 Phase 4** — 997 lines extracted from main.py to `app/components/photo_analysis.py`. main.py: 9180→8183 lines.
+
+### Tests
+- 8 new tests (4064 total, was 4056)
+
+### Harness
+- Memory protection: 6 lost files recovered, git backup at `.claude/memory_backup/`, protection rule, integrity check
+- Lessons 168-170 added (auto-rejection side effects, memory backup, fix-script target)
+
+## [v0.99.61] — 2026-04-13 (Session 148: Interactive Fader Collection Fox Search)
+
+### Features
+- **Fader collection identification started** — Sherry Ann Fader confirmed (merged with existing identity), Ira Josowitz identified (Person f1fa358b). Both found in 18-person group photo.
+- **Sherry search analysis script** — `scripts/sherry_search.py` computes embedding distances from confirmed person to all faces in a collection. Found 21 candidates under distance 1.0.
+
+### Fixes
+- **P0: Person 82863849 erroneously rejected** — Restored to INBOX via Supabase. Root cause: automated upload cleanup rejected non-INBOX identities. Session 147 "fix" wrote local JSON only, never reached Supabase.
+
+### Research
+- Josowitz/Fader/Fox family tree documented from Ancestry records (1940 Census, marriage licenses, family tree)
+- 3 feedback items logged: FB-002 (no Fader date labels), FB-003 (embedding sync gap), FB-004 (no cross-collection search)
+
 ## [v0.99.60] — 2026-04-01 (Session 147: PRD-059 Phase 4 Completion + Restore UX)
 
 ### Features

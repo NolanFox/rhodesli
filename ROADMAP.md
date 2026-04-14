@@ -58,6 +58,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [x] 2026-03-19: TOOLS-003: Face Compare Real-Time — POST /api/compare/realtime endpoint (Session 122). Needs tests + production verification.
 - [x] 2026-03-22: TOOLS-004: NL Query MVP — `/tools/search` with rule-based parser + Supabase executor (Session 133). Remaining: Gemini-assisted parsing, chatbot mode
 - [ ] TOOLS-005: Estimate v2 — GEDCOM upload + text context + geography retry (Nolan feedback). PRD: `docs/prds/055_estimate_v2.md`. See `docs/BACKLOG.md`
+- [x] 2026-04-14: TOOLS-007: Cross-Collection Person Search — `GET /api/admin/search-person-in-collection`. Session 148b.
 - [ ] TOOLS-006: Self-service archive creation — "Create Your Archive" flow for community upload onboarding (Nolan feedback). See `docs/BACKLOG.md`
 - [x] 2026-03-09: ROUTE-001: /facecompare → 301 redirect to /tools/compare (shipped post-Session 95)
 - [x] 2026-03-10: COMMUNITY-001: Community data scoping — photos section, sidebar counts, admin bar scoped (Session 96 hotfix + 96d). Remaining: about page, tools photo picker.
@@ -97,7 +98,7 @@ Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalon
 - [ ] ENV-001: Dev/staging/prod environment separation — `SENTRY_ENVIRONMENT=development` in local `.env` (immediate), disable Sentry in local dev (medium-term), full env split (long-term). See OD-008, BACKLOG.md.
 - [ ] OBS-001: Observability data retention — Sentry 90-day, PostHog 1-year. Export to Supabase if longer needed. See OD-009.
 - [x] 2026-03-17: AUDIT-001: Audit logging foundation — 22 audit_log calls across route files, new app/audit.py. Remaining: entity timelines on `/person` + `/photo`, canonical actor fields. See `docs/BACKLOG.md`.
-- [x] 2026-03-26: REFACTOR-001: main.py refactoring — Phase 1 (Session 137): 1,127 lines. Phase 2 (Session 138): 848 lines. Phase 3 (Session 141): 937 lines (identity_card, identity_card_expanded). Total: 2,912 lines extracted, main.py at 8,930. Remaining: photo.py routes. PRD-056, DD-017.
+- [x] 2026-04-14: REFACTOR-001: main.py refactoring — Phase 1 (Session 137): 1,127 lines. Phase 2 (Session 138): 848 lines. Phase 3 (Session 141): 937 lines. Phase 4 (Session 148b): 997 lines (photo_analysis). Total: 3,909 lines extracted, main.py at 8,183. PRD-056, DD-017.
 
 ### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — consolidated into TOOLS-003 (depends on TOOLS-002 ML service)
@@ -139,6 +140,10 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-04-14: **v0.99.62 — Session 148b**: Overnight Implementation Sprint. TOOLS-007 cross-collection person search API. UPLOAD-003 pipeline fixes (3 bugs: 404 after approval, anonymous attribution, missing thumbnails). REFACTOR-001 Phase 4 (997 lines → photo_analysis.py, main.py 8183). Restore button on dismissed cards. Codex audit: P1 registry API fix. 8 new tests. 4064 app tests pass.
+
+- [x] 2026-04-13: **v0.99.61 — Session 148**: Interactive Fader Collection Fox Search. P0 fix: auto-rejection hardened (only INBOX). Memory system: 6 lost files recovered, git backup added. Fader identification: Sherry Ann Fader + Ira Josowitz confirmed in 18-person group photo. 21 candidate photos ranked. Josowitz/Fader family tree researched. 3 feedback items (date labels, embedding sync, cross-collection search). Lessons 168-170. 2 new tests. 4056 app tests pass.
 
 - [x] 2026-04-01: **v0.99.60 — Session 147**: PRD-059 Phase 4 Completion + Restore UX. All 6 identity inference signals wired (age_trajectory, gedcom_match, testimony, provenance). Evidence panel UI on person page with signal bars. Accept/Reject/NeedMore API endpoints (merge-vs-rename branching). Restore-to-inbox feature for rejected identities (FB-001). Person 82863849 restored. Codex gpt-5.4 pre-audit: 9 findings all addressed. Parallelization postmortem + lessons 166-167. 58 new tests. 4054 app tests pass. Remaining: deploy, batch execute, browser verify.
 
