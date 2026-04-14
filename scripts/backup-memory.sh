@@ -33,7 +33,7 @@ if [ -f "$MEMORY_SRC/MEMORY.md" ]; then
             echo "WARNING: MEMORY.md references missing file: $ref"
             MISSING=$((MISSING + 1))
         fi
-    done < <(grep -o '([a-z_]*\.md)' "$MEMORY_SRC/MEMORY.md" | tr -d '()')
+    done < <(grep -o '([a-z0-9_]*\.md)' "$MEMORY_SRC/MEMORY.md" | tr -d '()')
 
     ORPHANS=0
     for f in "$MEMORY_SRC"/*.md; do

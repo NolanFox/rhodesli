@@ -1527,9 +1527,15 @@ def _cleanup_orphaned_identities_for_upload(upload: dict) -> list[str]:
             continue
         # Orphaned: every face belongs to this upload batch
         if all_faces.issubset(upload_face_ids):
-            identity["state"] = IdentityState.REJECTED.value
-            identity["rejection_source"] = "upload_rejected"
-            registry._identities[iid] = identity
+            try:
+                registry.reject_identity(iid, user_source="upload_rejected")
+            except ValueError:
+                # State guard — should not happen since we check INBOX above
+                logger.warning(f"Could not reject {iid}: state={state}")
+                continue
+            # Tag with rejection source for traceability
+            if iid in registry._identities:
+                registry._identities[iid]["rejection_source"] = "upload_rejected"
             orphaned_ids.append(iid)
             changed = True
             # Audit trail for automated rejections
