@@ -6,10 +6,10 @@ Mode: Interactive (feedback-driven)
 Search the Sarah Fox Fader Collection (147 photos, 328 faces) for Fox family members — siblings, nieces/nephews of Albert Fox. Collect feedback on cross-collection search UX to inform future expansion.
 
 ## Phases
-- [ ] Phase 0: Fix Person 82863849 erroneous rejection + harden
-- [ ] Phase 1: Systematic Fader collection review for Fox identifications
-- [ ] Phase 2: UX feedback on cross-collection search workflow
-- [ ] Phase 3: Session close (assessment, docs, deploy)
+- [x] Phase 0: Fix Person 82863849 erroneous rejection + harden
+- [-] Phase 1: Systematic Fader collection review for Fox identifications (started, paused for sleep)
+- [-] Phase 2: UX feedback on cross-collection search workflow (3 issues logged)
+- [ ] Phase 3: Session close (assessment, docs, deploy) → deferred to 148c
 
 ## Feedback Log
 
@@ -71,6 +71,46 @@ Fixed Person 82863849, hardened auto-rejection, lessons 168-170.
 - **Ira Josowitz confirmed**: Person f1fa358b-f3c1-4347-83fb-71f9379abeff. First Josowitz identification in archive.
 - This photo is a high-value anchor: 18 faces, likely a family gathering. Once Sherry and Ira are confirmed, other faces become identifiable via family context.
 
+### Sherry Candidate Photos — Remaining to Review
+Ranked by embedding distance to Sherry anchor. User reviewed photo 1 (18-person group). Remaining:
+
+| # | Dist  | Faces | URL | Notes |
+|---|-------|-------|-----|-------|
+| 2 | 0.897 | 1f | /photo/4bb9897005241971 | Wedding photo — user already confirmed as Sherry |
+| 3 | 0.906 | 2f | /photo/afac6767bfac5005 | |
+| 4 | 0.907 | 1f | /photo/85b66ac12eb916cc | |
+| 5 | 0.914 | 2f | /photo/38d906aab85a7477 | |
+| 6 | 0.921 | 4f | /photo/97db3387982454f3 | Group — high value |
+| 7 | 0.921 | 6f | /photo/496bce2281e8d7b8 | Group — high value |
+| 8 | 0.928 | 1f | /photo/3cdd2f418aa8350b | |
+| 9 | 0.929 | 1f | /photo/849b3a76dc1aa143 | |
+| 10 | 0.936 | 1f | /photo/5597dde7cb5ecd49 | |
+| 11 | 0.938 | 2f | /photo/9d164660ad0a7cb6 | |
+| 12 | 0.939 | 3f | /photo/eb8e9667c6fbbd2e | Group |
+| 13 | 0.939 | 1f | /photo/982f7e511b28778b | |
+| 14 | 0.943 | 2f | /photo/e4a8eb380173fc92 | |
+| 15 | 0.954 | 8f | /photo/68832ba89824c706 | Group — high value |
+| 16 | 0.955 | 2f | /photo/7cd9f8a8924794d6 | |
+| 17 | 0.969 | 2f | /photo/0a8b082d356ecc05 | |
+| 18 | 0.972 | 2f | /photo/f7a83f1785647269 | |
+| 19 | 0.975 | 1f | /photo/89c2fef69b6429bb | |
+| 20 | 0.976 | 2f | /photo/cb94862600dad21f | |
+| 21 | 0.987 | 18f | /photo/291103717c75045f | REVIEWED — Sherry + Ira confirmed |
+| 22 | 0.995 | 1f | /photo/17093d708e2189e6 | |
+
+All URLs are relative to `https://rhodesli.nolanandrewfox.com/c/fader-collection`
+
+### Confirmed Identities So Far
+| Person | Identity ID | Confirmed In |
+|--------|------------|--------------|
+| Sherry Ann Fader | 37611153-36d1-4f20-9535-d994e1893e13 | Pre-existing (3 anchors) + merged bb7d05ba |
+| Ira Josowitz | f1fa358b-f3c1-4347-83fb-71f9379abeff | Photo 291103717c75045f |
+
+### Analysis Script
+`scripts/sherry_search.py` — READ-ONLY, computes embedding distances from Sherry anchor to all 328 Fader faces. Can be reused for other person searches by changing the anchor face ID.
+
 ## Notes
 - Interactive session — phases may shift based on user direction
 - Session 147 deferred: browser verify evidence panel, rejected list UX
+- User went to sleep after Phase 1 partial. Resume Fader identification work in 148c.
+- Session 148b: overnight implementation work on backlog items
