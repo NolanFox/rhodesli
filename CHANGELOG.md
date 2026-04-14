@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.65] — 2026-04-14 (Session 150: Mobile Polish + Quick Wins + Tool Foundations)
+
+### Features
+- **TOOLS-005 Flow 2**: Text hints textarea on /tools/estimate — users can provide context like "my grandmother in the 1940s" to improve Gemini estimates. Sanitized (strip + 1000 char limit), shown in results.
+- **PRD-060**: Self-service archive creation PRD (TOOLS-006) — user flows, data model, scope, estimates.
+
+### Mobile Responsive
+- **UX-134**: Landing page horizontal overflow at 375px fixed — body/container overflow constraints, mobile button stacking, title word-break, section overflow guards, face overlay labels capped to viewport width.
+- **Person page**: Companion strip overflow-x-auto, 44px touch targets on action buttons and nav links, responsive title sizing, badge centering.
+- **Compare modal**: Stacked layout (flex-col) on mobile, hero images scale down, workspace slots min-w-0, action buttons 44px targets, result cards overflow-hidden.
+- **Photo page**: Face overlay labels responsive text (10px mobile, 11px desktop), viewport-capped max-width.
+
+### Fixes
+- **ENV-001**: Sentry disabled in local development when SENTRY_ENVIRONMENT=development
+- **Security**: Prompt boundary hardened on text_hints per Codex audit (P1)
+
+### Verified
+- **PRD-059 Phase 4**: Identity inference suggestions panel browser-verified on production (admin-only, signal bars, accept/reject/needmore buttons)
+
+### Tests
+- 42 new tests (14 landing mobile, 14 photo mobile, 8 compare mobile, 4 text hints, 2 Sentry)
+- 4151 app tests pass (was 4109)
+
 ## [v0.99.64] — 2026-04-14 (Session 148d: Codex Fixes + Gemini Structured Output)
 
 ### Fixes
