@@ -172,3 +172,33 @@ From the 20 candidate photos (sorted by Sherry embedding distance), only 3 photo
 2. Search the FULL 147-photo collection for the same face (glasses-brocade woman) — she may appear in non-wedding photos too
 3. Run embedding search for Abraham Fader (bald man from Photo 4) across the collection
 4. Do Ancestry research for 1965 wedding attendees to build elimination list
+
+## Critical Update: Abraham Fader Died 1958
+
+### New Ancestry Data (provided by user)
+- **Abraham "Al" I. Fader**: Death 23 FEB 1958, New York, NY — 7 years BEFORE the 1965 wedding
+- **Anna Ashen Josowitz** (Ira's mother): Born 15 Jan 1907, Rzeshov, Poland. Father: Kalmen Ashen, Mother: Rachel Sheck. Died 30 Jun 1995. Claim date 13 Jan 1970.
+- **David Josowitz** (Ira's father): Born 10 Sep 1904. Died 15 Jul 1973, Dade, Florida. Age 68.
+- **Open question:** Did Nellie Kubrin remarry after Al's death in 1958?
+
+### Impact on Investigation
+1. The bald man with boutonniere in parents portrait (F8B131D2) canNOT be Abraham Fader.
+2. If Nellie did NOT remarry, there is no father-of-bride figure — the man must be someone else.
+3. If the couple in the parents portrait is David + Anna Josowitz (groom's parents), then:
+   - **Group A = Anna Josowitz, not Nellie**
+   - Group A woman: born 1907, would be ~58 in 1965. Fits age appearance.
+   - David Josowitz: born 1904, would be ~61 in 1965. Fits bald man's appearance.
+4. If this is true, then **Group B (cake topper + Apr 64 street) becomes the stronger Nellie candidate**
+   - Group B woman is CLOSER to Sherry in embedding space (0.88-0.96) — consistent with mother-daughter kinship signal
+   - The cake topper interaction (handing bride the figurine) is still a mother-of-bride activity
+
+### Revised Hypothesis
+- **Group A = likely Anna Josowitz** (groom's mother). 4 faces, tight cluster. Corsage, dancing with groom (her son), seated at head table next to Ira (her son).
+- **Group B = possibly Nellie Kubrin** (bride's mother). 2 faces, closer to Sherry. Handing cake topper to daughter. Street photo with Sherry and children.
+- **Key disambiguation:** Did Nellie remarry? Ancestry search needed.
+
+### Revised Priority
+1. FIRST: Search Ancestry for Nellie Kubrin/Fader marriage records 1958-1965
+2. If no remarriage: Group A man with boutonniere = David Josowitz, Group A woman = Anna Josowitz
+3. Then search collection for other Nellie-age women NOT in Group A
+4. Group B cake topper woman is new top candidate
