@@ -1480,8 +1480,10 @@ def _cleanup_orphaned_identities_for_upload(upload: dict) -> list[str]:
         if not identity:
             continue
         state = identity.get("state", "")
-        # Never touch confirmed identities
-        if state == IdentityState.CONFIRMED.value:
+        # Only auto-reject INBOX identities — any other state means admin
+        # or ML pipeline has already triaged this identity.  CONFIRMED,
+        # PROPOSED, SKIPPED, and CONTESTED must never be auto-rejected.
+        if state != IdentityState.INBOX.value:
             continue
         all_faces = set(identity.get("anchor_ids", [])) | set(identity.get("candidate_ids", []))
         if not all_faces:
@@ -1493,6 +1495,23 @@ def _cleanup_orphaned_identities_for_upload(upload: dict) -> list[str]:
             registry._identities[iid] = identity
             orphaned_ids.append(iid)
             changed = True
+            # Audit trail for automated rejections
+            try:
+                from app.audit import _log_audit
+
+                _log_audit(
+                    action="AUTO_REJECT",
+                    entity_id=iid,
+                    user_email="system:upload_cleanup",
+                    old_value={"state": IdentityState.INBOX.value},
+                    new_value={"state": IdentityState.REJECTED.value},
+                    metadata={
+                        "upload_job_id": upload.get("job_id"),
+                        "rejection_source": "upload_rejected",
+                    },
+                )
+            except Exception:
+                logger.warning(f"Failed to log audit for auto-reject of {iid}")
 
     if changed:
         try:

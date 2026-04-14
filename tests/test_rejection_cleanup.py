@@ -237,6 +237,58 @@ class TestCleanupOrphanedIdentities:
         assert iid not in result
         assert registry._identities[iid]["state"] == "CONFIRMED"
 
+    def test_proposed_identity_not_auto_rejected(self):
+        """PROPOSED identities must not be auto-rejected — ML has triaged them."""
+        from core.registry import IdentityRegistry
+
+        import app.main as main_mod
+        from app.admin_routes import _cleanup_orphaned_identities_for_upload
+
+        iid = str(uuid.uuid4())
+        face_id = "inbox_proposed_face"
+        registry = IdentityRegistry()
+        registry._identities[iid] = _make_identity(iid, anchor_ids=[face_id], state="PROPOSED")
+
+        photo_registry = _make_photo_registry_mock({"photo1": {"path": "photo1.jpg", "faces": {face_id}}})
+
+        upload = _make_upload("job_proposed", files=["photo1.jpg"])
+
+        with (
+            patch.object(main_mod, "load_registry", return_value=registry),
+            patch.object(main_mod, "load_photo_registry", return_value=photo_registry),
+            patch.object(main_mod, "save_registry"),
+        ):
+            result = _cleanup_orphaned_identities_for_upload(upload)
+
+        assert iid not in result
+        assert registry._identities[iid]["state"] == "PROPOSED"
+
+    def test_skipped_identity_not_auto_rejected(self):
+        """SKIPPED identities must not be auto-rejected — admin deferred them."""
+        from core.registry import IdentityRegistry
+
+        import app.main as main_mod
+        from app.admin_routes import _cleanup_orphaned_identities_for_upload
+
+        iid = str(uuid.uuid4())
+        face_id = "inbox_skipped_face"
+        registry = IdentityRegistry()
+        registry._identities[iid] = _make_identity(iid, anchor_ids=[face_id], state="SKIPPED")
+
+        photo_registry = _make_photo_registry_mock({"photo1": {"path": "photo1.jpg", "faces": {face_id}}})
+
+        upload = _make_upload("job_skipped", files=["photo1.jpg"])
+
+        with (
+            patch.object(main_mod, "load_registry", return_value=registry),
+            patch.object(main_mod, "load_photo_registry", return_value=photo_registry),
+            patch.object(main_mod, "save_registry"),
+        ):
+            result = _cleanup_orphaned_identities_for_upload(upload)
+
+        assert iid not in result
+        assert registry._identities[iid]["state"] == "SKIPPED"
+
     def test_no_upload_files_returns_empty(self):
         """Upload with no files listed skips cleanup gracefully."""
         from app.admin_routes import _cleanup_orphaned_identities_for_upload
