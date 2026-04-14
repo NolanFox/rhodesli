@@ -7388,7 +7388,7 @@ def review_action_buttons(
             Button(
                 "Reset",
                 cls="px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 rounded transition-colors",
-                hx_post=f"/identity/{identity_id}/reset",
+                hx_post=f"{nav_prefix}/identity/{identity_id}/reset",
                 hx_target=f"#identity-{identity_id}",
                 hx_swap="outerHTML",
                 hx_indicator=f"#loading-{identity_id}",

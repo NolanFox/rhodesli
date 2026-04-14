@@ -5791,9 +5791,8 @@ def get(
             "Suggest Merge",
             cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/suggest-merge/{neighbor_id}",
-            hx_target=f"#neighbor-{neighbor_id}",
-            hx_swap="outerHTML",
-            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+            hx_swap="none",
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
             type="button",
         )
     else:
@@ -5802,25 +5801,27 @@ def get(
             if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ")
             else "Merge these identities? This can be undone."
         )
-        # FB-009: Merge from compare modal — use hx_swap="none" and always
-        # reload. The modal is always a full-page context, and page reload
-        # after merge is correct UX regardless of calling page.
+        # FB-009: Merge from compare modal — swap into modal content area
+        # so name conflict modals render. On success (non-conflict), the
+        # merge response may not fit the modal, so reload after swap.
         m_btn = Button(
             "Merge",
             cls="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500",
             hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{neighbor_id}",
-            hx_swap="none",
+            hx_target="#compare-modal-content",
+            hx_swap="innerHTML",
             hx_confirm=_merge_confirm,
-            **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
+            **{"_": "on htmx:afterSwap wait 500ms then js location.reload()"},
             type="button",
         )
+    # FB-009: Not Same also needs fallback — #neighbor-{id} may not exist
+    # on pages that use tile layout instead of neighbor cards
     ns_btn = Button(
         "Not Same",
         cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
         hx_post=f"{nav_prefix}/api/identity/{target_id}/reject/{neighbor_id}",
-        hx_target=f"#neighbor-{neighbor_id}",
-        hx_swap="outerHTML",
-        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+        hx_swap="none",
+        **{"_": "on htmx:afterRequest add .hidden to #compare-modal then wait 200ms then js location.reload()"},
         type="button",
     )
     cl_btn = Button(

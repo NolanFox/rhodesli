@@ -2127,7 +2127,7 @@ def post(source_id: str, target_id: str, sess=None, request=None):
     return (Div(), oob_toast)
 
 
-def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_source: str) -> Div:
+def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_source: str, nav_prefix: str = "") -> Div:
     """Render a name conflict resolution modal for two-named merges."""
     a = details["identity_a"]
     b = details["identity_b"]
@@ -2191,9 +2191,9 @@ def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_so
                     ),
                     cls="flex justify-end gap-3",
                 ),
-                hx_post=f"/api/identity/{target_id}/merge/{source_id}",
-                hx_target=f"#identity-{target_id}",
-                hx_swap="outerHTML",
+                hx_post=f"{nav_prefix}/api/identity/{target_id}/merge/{source_id}",
+                hx_swap="none",
+                **{"_": "on htmx:afterRequest remove closest .fixed then wait 200ms then js location.reload()"},
             ),
             cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6 relative border border-slate-700",
         ),
@@ -2344,11 +2344,14 @@ def post(
         )
         # Handle name conflict -- show resolution modal
         if result["reason"] == "name_conflict":
+            community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+            _nav = _main_mod.community_url_prefix(community_slug)
             return _main_mod._name_conflict_modal(
                 target_id,
                 source_id,
                 result["name_conflict_details"],
                 merge_source=source,
+                nav_prefix=_nav,
             )
 
         error_messages = {
