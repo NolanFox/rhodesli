@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.66] — 2026-04-14 (Session 151: Batch Event Context + Harness Audit)
+
+### Features
+- **Batch event context script**: `scripts/batch_event_context.py` — Gemini "identification" preset with response_schema on community photos. Extracts event_context + relationship_inference, upserts to Supabase date_labels. 5/5 Fader photos validated.
+
+### Fixes
+- **Security**: Path traversal protection in resolve_photo_path() (Codex P1)
+- **Data integrity**: Supabase upsert failures no longer silently counted as success (Codex P1)
+
+### Harness
+- Sessions 149-150 harness compliance audited — all 12 documentation categories present and substantive
+
+### Tests
+- 12 new tests (11 batch script + 1 path traversal regression)
+- 4163 app tests pass (was 4151)
+
 ## [v0.99.65] — 2026-04-14 (Session 150: Mobile Polish + Quick Wins + Tool Foundations)
 
 ### Features

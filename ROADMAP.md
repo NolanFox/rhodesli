@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.65 · ~4874 tests (4151 app + 723 ML) · 1121 photos · 1977 identities · 167 confirmed
+Current: v0.99.66 · ~4886 tests (4163 app + 723 ML) · 1121 photos · 1977 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -140,6 +140,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-04-14: **v0.99.66 — Session 151**: Batch Event Context + Harness Audit. `scripts/batch_event_context.py` — Gemini "identification" preset on community photos (event_context + relationship_inference). 5/5 Fader photos validated. Codex P1 fixes: path traversal, upsert failure. Sessions 149-150 harness audit: full compliance. Browser verified: mobile 375px, text hints, identity suggestions. 12 new tests. 4163 app tests pass.
 
 - [x] 2026-04-14: **v0.99.65 — Session 150**: Mobile Polish + Quick Wins + Tool Foundations. ENV-001: Sentry disabled in local dev. PRD-059 Phase 4 browser-verified (identity suggestions). Mobile responsive: landing (UX-134 overflow), person (touch targets, companion strip), compare (stacked layout), photo (face labels). TOOLS-005 Flow 2: text hints on /tools/estimate. PRD-060: TOOLS-006 self-service archive. Codex audit: P1 prompt injection hardened. 42 new tests. 4151 app tests pass.
 
