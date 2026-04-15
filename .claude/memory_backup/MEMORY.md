@@ -49,6 +49,7 @@
 - [feedback_collage_same_photo_override.md](feedback_collage_same_photo_override.md) — Co-occurrence false positives on collages need override
 - [feedback_comparison_workflow.md](feedback_comparison_workflow.md) — Manual comparison should be an admin UI tool
 - [feedback_complete_ml_pipeline.md](feedback_complete_ml_pipeline.md) — Don't stop at dry-run. Execute full pipeline end-to-end.
+- [feedback_identification_methodology.md](feedback_identification_methodology.md) — Event context > embedding distance for identification. Full-collection clustering, not filtered. Verify genealogical data.
 
 ## Project State
 - [project_supabase_egress.md](project_supabase_egress.md) — Upgraded to Pro for 1 month; TTL reductions should allow downgrade back to free
@@ -59,6 +60,7 @@
 - [project_ml_service_railway.md](project_ml_service_railway.md) — Service ID, rootDirectory config, env vars, troubleshooting
 - [project_session130_findings.md](project_session130_findings.md) — identity_overrides startup bug + 212 missing photo_faces rows (both fixed)
 - [project_upload_testing_reminder.md](project_upload_testing_reminder.md) — AD-229: 1/3 uploads done, 0/1 cosine comparison (as of 2026-03-19)
+- [project_fader_identification_status.md](project_fader_identification_status.md) — Fader collection: Sherry, Ira, Al confirmed. Nellie identified not confirmed. Anna/David Josowitz TBD.
 - [agent_comparison.md](agent_comparison.md) — Claude Code vs Codex CLI vs Antigravity comparison
 
 ## Reference
