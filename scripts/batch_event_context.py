@@ -123,14 +123,20 @@ def load_existing_event_context() -> set[str]:
 
 
 def resolve_photo_path(photo_entry: dict) -> Path | None:
-    """Resolve the local file path for a photo."""
+    """Resolve the local file path for a photo.
+
+    Security: rejects absolute paths and path traversal (Codex P1).
+    Only resolves within raw_photos/ directory.
+    """
     filename = photo_entry.get("path", "")
     if not filename:
         return None
-    path = Path("raw_photos") / Path(filename).name
-    if path.exists():
-        return path
-    path = Path(filename)
+    basename = Path(filename).name
+    # Reject path traversal attempts
+    if ".." in basename or basename.startswith("/"):
+        logger.warning(f"  Rejected suspicious path: {filename}")
+        return None
+    path = Path("raw_photos") / basename
     if path.exists():
         return path
     return None
@@ -515,7 +521,10 @@ def run_batch(
                     on_conflict="photo_id",
                 ).execute()
             except Exception as sync_err:
-                logger.warning(f"  Supabase date_labels upsert failed: {sync_err}")
+                logger.error(f"  Supabase date_labels upsert FAILED: {sync_err}")
+                error_count += 1
+                time.sleep(delay_between)
+                continue  # Don't count as success if write failed (Codex P1)
 
             success_count += 1
             total_cost += cost_per_photo

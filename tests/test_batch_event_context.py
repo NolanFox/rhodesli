@@ -102,6 +102,14 @@ class TestResolvePhotoPath:
         assert resolve_photo_path({}) is None
         assert resolve_photo_path({"path": ""}) is None
 
+    def test_rejects_path_traversal(self):
+        """Codex P1: path traversal must be rejected."""
+        from scripts.batch_event_context import resolve_photo_path
+
+        assert resolve_photo_path({"path": "../../etc/passwd"}) is None
+        assert resolve_photo_path({"path": "/etc/passwd"}) is None
+        assert resolve_photo_path({"path": "raw_photos/../../../secrets.json"}) is None
+
     def test_returns_path_when_file_exists(self, tmp_path):
         photo_file = tmp_path / "raw_photos" / "test.jpg"
         photo_file.parent.mkdir(parents=True)
