@@ -67,7 +67,9 @@ Someone at the event labeled faces on the original photograph:
 | Irving | ~48 | LA | CONFIRMED (honoree) |
 | Jack | ~45 | ? | ? |
 
-Sarah died 1937 — not present.
+**Sarah** — GEDCOM says died 1937, but Ancestry tree says **died Oct 1967 in Miami Beach, FL**. GEDCOM is WRONG. Sarah was alive in 1946 and could be in this photo (~67 years old).
+
+**All 8 surviving adult siblings were alive in 1946:** Bessie, Harry, Sarah, Sadie, Rachel, Albert, Irving, Jack.
 
 ### Open Questions for User
 1. Where was the party held? (LA since Irving lived there? Or NYC since Rosenthal family is Brooklyn-based?)
