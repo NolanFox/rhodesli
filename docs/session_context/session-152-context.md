@@ -99,8 +99,47 @@ Full inventory from data analysis:
 - Re-run with full signal strength
 - Review top candidates with user
 
+## Infrastructure Status (from research agents)
+
+### PRD-059 Phase 4 — Identity Inference Signals
+6 signals, weighted sum → 0.0-1.0 composite score:
+
+| Signal | Weight | Status |
+|--------|--------|--------|
+| Family Cluster Score (AD-235) | 0.25 | IMPLEMENTED |
+| Co-Occurrence Frequency | 0.10 | BLOCKED — needs `co_occurrence_pairs` table |
+| Age Trajectory Consistency | 0.20 | IMPLEMENTED |
+| GEDCOM Relationship Match | 0.10 | IMPLEMENTED |
+| Human Testimony | 0.30 | STUB (hardcoded) |
+| Source Provenance | 0.05 | STUB (hardcoded) |
+
+### BLOCKER: Missing `co_occurrence_pairs` Supabase Table
+- Script `scripts/compute_identity_suggestions.py` expects this table
+- Without it, Signal 3 returns 0 for all candidates
+- Fix: CREATE TABLE + populate from `scripts/event_grouping.py` output
+- Estimated: 30 min
+
+### Current Identity Suggestions
+- 18 rows in `identity_suggestions` table from Session 147
+- Average confidence was low (0.288) because co-occurrence signal was missing
+- After creating the table + re-running, confidence should improve to 0.5+
+
+### Admin Endpoints Available
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /api/admin/analyze-event-context/{photo_id}` | Gemini event context extraction |
+| `GET /api/compare` | Find similar faces across archive |
+| `POST /api/compare/vs-person` | Compare upload against specific person |
+| `POST /api/admin/ml-compare` | Extract embeddings from photo |
+
+### Embedding Neighbor API
+- `core/neighbors.py` (FROZEN) — `find_nearest_neighbors()`, `find_similar_faces()`
+- Confidence tiers: STRONG (<0.80), POSSIBLE (<1.05), SIMILAR (<1.15)
+- **Warning:** siblings score 0.96-1.12 (within POSSIBLE range) — not diagnostic for Fox family
+
 ## Key Risks
 - **Albert/Harry confusion** — ML cannot distinguish them (biological, not bug)
 - **Context degradation** — interactive sessions are long; use /clear between phases
 - **READ-ONLY on production** — never click action buttons (Lesson 149)
 - **Verify genealogical data** — don't trust other Ancestry trees (Lesson 171)
+- **co_occurrence_pairs table missing** — blocks full-strength identity scoring
