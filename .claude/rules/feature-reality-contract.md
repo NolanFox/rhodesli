@@ -1,5 +1,9 @@
 # Feature Reality Contract
 
+**Parent rule**: `session-defaults.md` — Session End checklist step 6 (browser
+verify) is the operational expression of this contract. This file defines the
+5 truth conditions that gate "done."
+
 A feature is NOT considered "done" unless ALL of these are true:
 
 1. **Data exists**: The source data file is present and valid

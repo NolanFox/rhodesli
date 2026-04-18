@@ -1,5 +1,8 @@
 # Self-Assessment Protocol (Mandatory)
 
+**Parent rule**: `session-defaults.md` — Session End checklist step 1 requires
+the assessment file. This file defines the assessment's content and template.
+
 Every session MUST end with a self-assessment phase. This cannot be
 skipped, even if context is running low.
 

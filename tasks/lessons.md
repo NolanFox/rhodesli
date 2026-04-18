@@ -7,6 +7,29 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
 
+## REPEAT-OFFENDER FAILURE MODES (read these FIRST)
+
+These patterns have each recurred 3+ times despite individual lessons. The
+original lessons are preserved for audit trail but the consolidated pattern
+is what you need to internalize.
+
+| Pattern | Occurrences | Canonical lessons | Structural fix |
+|---------|-------------|-------------------|----------------|
+| **Local↔production data divergence** (split-brain) | 9 | 78, 144, 147, 150, 153 | Supabase single source of truth (AD-135, in progress) |
+| **Production-origin files re-added to deploy sync** | 6 | 56, 69, 78, 85, 141 | .gitignore allowlist + AD-134 safety gate |
+| **Silent Supabase writes with `except: pass`** | 3 | 123, 136, 153 | Remove fire-and-forget; surface all write failures |
+| **Schema drift between code and live Supabase tables** | 3 | 105, 134, 152 | Integration tests against live schema (mock tests insufficient) |
+| **Post-write data verification missing (orphans)** | 3 | 145, 146, 154 | Post-mutation integrity checks; structural tests |
+| **Batch script outputs don't reach production read path** | 3 | 160, 161, 162 | Pre-flight: verify logging, enrichment, write target before bulk run |
+| **Behavioral rules that must be hooks** | 4 | 89, 102, 103, 140, 143 | Transcript-based detection (HD-032); exit 2 to block |
+| **Worktree agents don't commit before returning** | 2 | 87, 166, 167 | Orchestrator verifies `git status --porcelain` clean post-return |
+
+When you're about to do work adjacent to any of these categories, re-read the
+canonical lessons. These are not one-off mistakes — they are structural failure
+modes the codebase keeps regenerating.
+
+---
+
 ## Auth & Permissions — `tasks/lessons/auth-lessons.md`
 
 | # | Summary |

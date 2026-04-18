@@ -16,11 +16,13 @@ fi
 mkdir -p "$BACKUP_DST"
 
 # Sync all .md files (rsync preserves timestamps, --delete removes files deleted from source)
-rsync -av --include='*.md' --exclude='*' "$MEMORY_SRC/" "$BACKUP_DST/"
+# Fixed 2026-04-18: comment said --delete but flag was missing (Codex P1).
+# Memory deletions should propagate to backup — otherwise integrity checks lie.
+rsync -av --delete --include='*.md' --exclude='*' "$MEMORY_SRC/" "$BACKUP_DST/"
 
-# Count files
-SRC_COUNT=$(ls -1 "$MEMORY_SRC"/*.md 2>/dev/null | wc -l | tr -d ' ')
-DST_COUNT=$(ls -1 "$BACKUP_DST"/*.md 2>/dev/null | wc -l | tr -d ' ')
+# Count files (NUL-safe enumeration — Codex P2, robust against unusual names)
+SRC_COUNT=$(find "$MEMORY_SRC" -maxdepth 1 -type f -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+DST_COUNT=$(find "$BACKUP_DST" -maxdepth 1 -type f -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 echo ""
 echo "Memory backup complete: $SRC_COUNT source → $DST_COUNT backed up"
@@ -37,9 +39,12 @@ if [ -f "$MEMORY_SRC/MEMORY.md" ]; then
 
     ORPHANS=0
     for f in "$MEMORY_SRC"/*.md; do
+        [ -f "$f" ] || continue
         fname=$(basename "$f")
         [ "$fname" = "MEMORY.md" ] && continue
-        if ! grep -q "$fname" "$MEMORY_SRC/MEMORY.md"; then
+        # Fixed 2026-04-18: use -F for literal match to prevent regex chars
+        # in filenames from confusing grep (Codex P2).
+        if ! grep -Fq -- "$fname" "$MEMORY_SRC/MEMORY.md"; then
             echo "WARNING: File not in MEMORY.md index: $fname"
             ORPHANS=$((ORPHANS + 1))
         fi

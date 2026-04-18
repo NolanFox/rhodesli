@@ -29,7 +29,9 @@ case "$MODE" in
         # Pre-commit gate: run core test files that cover registry, supabase,
         # and photo rendering. Full suite has pre-existing ordering flakes
         # (PERF-001) that block commits on unrelated changes.
-        $PYTEST tests/test_postgres_reads.py tests/test_supabase_shadow.py \
+        # Deselect reason: confirmed-anchor coverage test is PERF-001 flaky —
+        # tracked separately, not a silent skip.
+        "$PYTEST" tests/test_postgres_reads.py tests/test_supabase_shadow.py \
             tests/test_registry.py tests/test_data_integrity.py \
             tests/test_deploy_safety_gate.py \
             -x -q --timeout=30 \
@@ -37,17 +39,26 @@ case "$MODE" in
             2>&1 | tail -20
         ;;
     full)
-        $PYTEST tests/ -x -q -n auto --timeout=60 2>&1 | tail -20
+        "$PYTEST" tests/ -x -q -n auto --timeout=60 2>&1 | tail -20
         ;;
     ml)
-        $PYTEST rhodesli_ml/tests/ -x -q -n auto --timeout=60 2>&1 | tail -20
+        "$PYTEST" rhodesli_ml/tests/ -x -q -n auto --timeout=60 2>&1 | tail -20
         ;;
     all)
+        # Fixed 2026-04-18: capture BOTH exit codes. Previously `all` exited
+        # with only the ML status, silently hiding app-test failures (Codex P0).
         echo "=== App Tests ==="
-        $PYTEST tests/ -x -q -n auto --timeout=60 2>&1 | tail -10
+        "$PYTEST" tests/ -x -q -n auto --timeout=60 2>&1 | tail -10
+        APP_STATUS=${PIPESTATUS[0]}
         echo ""
         echo "=== ML Tests ==="
-        $PYTEST rhodesli_ml/tests/ -x -q -n auto --timeout=60 2>&1 | tail -10
+        "$PYTEST" rhodesli_ml/tests/ -x -q -n auto --timeout=60 2>&1 | tail -10
+        ML_STATUS=${PIPESTATUS[0]}
+        if [ "$APP_STATUS" -ne 0 ] || [ "$ML_STATUS" -ne 0 ]; then
+            echo ""
+            echo "FAIL: app=$APP_STATUS ml=$ML_STATUS" >&2
+            exit 1
+        fi
         ;;
     *)
         echo "Usage: scripts/test-gate.sh [fast|full|ml|all]" >&2

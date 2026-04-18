@@ -1,5 +1,8 @@
 # Verification Gate — Feature Reality Contract
 
+**Parent rule**: `session-defaults.md` — Session End checklist is the canonical
+sequence. This file elaborates verification mechanics for step-by-step checks.
+
 Triggers: After all phases of a multi-phase session are complete,
 BEFORE declaring the session done or pushing to main.
 

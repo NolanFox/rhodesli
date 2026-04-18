@@ -5,16 +5,36 @@ Triggers: At the start of any implementation session.
 ## These are ALWAYS true. The user should NEVER have to say them.
 
 ### Execution
-- **Parallelize** via worktree subagents for independent file changes
-- **/clear between phases** — commit first, /clear immediately, no exceptions
+- **Parallelize** via worktree subagents for independent file changes.
+  On Opus 4.7, explicitly instruct parallelization in prompts — 4.7 spawns
+  fewer subagents by default than 4.6 did.
+- **/clear between phases** — commit first, /clear immediately, no exceptions.
+  Opus 4.7's MRCR v2 recall drops to 32.2% (vs 4.6's 78.3%); aggressive /clear
+  is MORE important on 4.7, not less. Transcript gate now blocks at 600 lines
+  (was 800) to reflect this.
 - **Every change gets tests** — happy path + failure + regression
 - **Zero regressions** — `make test-fast` must pass before every commit
 - **Browser automation is READ-ONLY on production** (Lesson 149)
 
+### Opus 4.7 Behavioral Adjustments (2026-04-18)
+- **Literal instruction following**: 4.7 does exactly what it's asked, not
+  what it infers. Session prompts need explicit acceptance criteria, not
+  vibes. Ambiguous "fix the UI issue" will fix only that exact issue —
+  related cleanup must be listed.
+- **Adaptive thinking cues**: inject "think carefully, step-by-step" for
+  data-integrity/ML work; inject "respond quickly" for UX tweaks. No
+  fixed thinking budgets — 4.7 adapts.
+- **Default effort is xhigh**; reserve `max` for data-integrity audits
+  (the Lesson 153–156 category of bug).
+- **Token inflation**: 4.7's tokenizer uses 1x–1.35x more tokens per unit
+  of English text. CLAUDE.md stays ≤ 80 lines, docs stay ≤ 300 lines.
+
 ### Frozen Files (never modify)
 - `core/neighbors.py`, `core/pfe.py`, `data/*` files
 
-### Session End (mandatory, every session)
+### Session End (mandatory, every session) — SINGLE SOURCE OF TRUTH
+**This is the canonical session-end checklist.** `verification-gate.md` and
+`self-assessment.md` elaborate sub-steps but do NOT define their own sequences.
 1. Assessment: `docs/assessments/session-NN-assessment.md`
 2. CHANGELOG: increment version
 3. ROADMAP + SESSION_HISTORY: update both
@@ -22,7 +42,8 @@ Triggers: At the start of any implementation session.
 5. Deploy: `git push origin main`, verify health 200
 6. Browser verify: landing, people grid, person page, compare, estimate, 404
 7. `git log origin/main..HEAD` must be empty
-8. Memory backup: `./scripts/backup-memory.sh` (backs up + integrity check)
+8. Memory backup: automated by stop-gate.sh (runs `scripts/backup-memory.sh`).
+   Manually invoke if the hook reports failure.
 9. Run /session-review skill
 
 ### Skills (use without being asked)
@@ -35,9 +56,11 @@ Triggers: At the start of any implementation session.
 echo "NN" > .claude/current_session.txt
 echo "implementation" > .claude/session_mode.txt
 source venv/bin/activate
-make test-fast  # Baseline
+make test-fast                  # Baseline
+bash scripts/harness-check.sh   # Verify hooks/memory/doc caps are healthy
 ```
-Create session log immediately.
+Create session log immediately. If `harness-check.sh` fails, stop and fix
+BEFORE starting the session — a broken harness wastes more time than it saves.
 
 ### Dual-Audit Protocol (MANDATORY after every phase) — HD-030, Session 137
 After completing each implementation phase (not at session end — after EACH phase):
@@ -74,7 +97,9 @@ After merging parallel worktrees:
 ### Parallelization Decision (R4 — Session 133 research)
 **Parallel** (subagents + worktrees): independent bug fixes, test writing, docs + code simultaneously
 **Sequential** (same agent): anything touching app/main.py, data migrations, identity write paths
-**Agent teams** (future): cross-layer features spanning auth + upload + UI + tests (try on WORKSPACE-001)
+**Agent teams** (experimental, 2026): cross-layer features spanning auth + upload + UI + tests.
+Enable per-session with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. Candidates:
+TOOLS-002 (ML service extraction), WORKSPACE-001 (personal archive).
 
 ## Why This Exists (Session 127 — HD-029)
 User had to repeat the same instructions in Sessions 125, 126, and 127.
