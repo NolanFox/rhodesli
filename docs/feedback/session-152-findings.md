@@ -76,3 +76,94 @@ Someone at the event labeled faces on the original photograph:
 2. Do you recognize any Fox siblings among the unidentified faces?
 3. Are the Appels, Solomons, Eckarts connected to the Rosenthal or Fox families?
 4. Is Renee Fox Brown (age 17 in 1946) one of the young women in the front row?
+
+---
+
+## Phase 2: Person 3051 Analysis
+
+**Identity ID:** `307a92a6-5e08-4faa-99bc-6c0ea48ce621`
+**State:** INBOX, 5 anchor faces, 0 candidates
+
+### Photos (all from fox-charlie-001 collection)
+| Photo | Year | Total Faces | Other Identified People |
+|-------|------|-------------|----------------------|
+| `_219_02044_p_13akf5twbc3226` | 1920 | 2 | Esther Burd Fox |
+| `_607_02155_p_13akf5twbc3556` | 1919 | 2 | Esther Burd Fox |
+| `_220_02152_p_13akf5twbc1989` | 1920 | 4 | Esther Burd Fox + 2 unknowns |
+| `_201_02165_p_13akf5twbc3436` | 1927 | 6 | Esther Burd Fox + 4 unknowns |
+| `_609_02064_p_13akf5twbc3595_r` | 1920 | 4 | Esther Burd Fox, Albert Fox + 1 unknown |
+
+**Co-occurrence:** Esther in 5/5, Albert in 1/5, Leona Fox in "Often appears with" panel.
+
+### Cluster Consistency (embedding pairwise L2 distances)
+| Pair | Distance | Tier |
+|------|----------|------|
+| 45b1ed7a8ef8 vs 95a8db662708 | 0.338 | STRONG |
+| 45b1ed7a8ef8 vs 12e660e8181d | 0.966 | GOOD |
+| 12e660e8181d vs 95a8db662708 | 0.967 | GOOD |
+| b03d740961c4 vs 12e660e8181d | 1.045 | POSSIBLE |
+| b03d740961c4 vs 45b1ed7a8ef8 | 1.081 | POSSIBLE |
+| b03d740961c4 vs 95a8db662708 | 1.081 | POSSIBLE |
+| 45b1ed7a8ef8 vs 0aa9d6ebcbd2 | 1.094 | POSSIBLE |
+| 95a8db662708 vs 0aa9d6ebcbd2 | 1.099 | POSSIBLE |
+| 12e660e8181d vs 0aa9d6ebcbd2 | 1.194 | UNLIKELY |
+| b03d740961c4 vs 0aa9d6ebcbd2 | 1.272 | UNLIKELY |
+
+**Verdict:** Mostly consistent cluster. Face `0aa9d6ebcbd2` (from the 1920 photo with Albert) is the weakest link — could be a misclassified face contaminating the cluster.
+
+### Candidate Analysis: Esther's Burd Sisters
+
+Esther's siblings (from GEDCOM):
+- **Dora Burd Shane** (b. ~1895, d. 1974) — CONFIRMED identity, 5 photos
+- Samuel Burd (b. 1897, d. ~1917) — deceased before these photos
+- **Esther Burd Fox** (b. ~1900, d. 1966) — already confirmed separately
+- **Fannie (Feiga) Burd** (b. 1904, d. 1960) — CONFIRMED identity, 3 photos
+- Ralph Burd (b. ~1905) — male, eliminated
+- Bernard Burd (b. 1907) — male, eliminated
+
+**Embedding distances (Person 3051 vs candidates):**
+| Comparison | Avg Distance | Min | Max | Verdict |
+|-----------|-------------|-----|-----|---------|
+| 3051 vs Dora | 1.364 | 1.317 | 1.462 | UNLIKELY |
+| 3051 vs Fannie | 1.392 | 1.359 | 1.414 | UNLIKELY |
+| Dora vs Fannie | 1.167 | 1.102 | 1.241 | POSSIBLE (sisters) |
+
+**Same-era comparison:** Dora has ONE face from 1919 (same era as 3051). Even that same-era face gives 1.43 distance — still UNLIKELY. This is the strongest evidence against Dora=3051.
+
+**Photo overlap analysis:**
+- Dora appears with Esther in 5/5 of Dora's photos. Person 3051 is in NONE of them.
+- Fannie appears with Esther in 2/3 of Fannie's photos. Person 3051 is in NONE of them.
+- No hard elimination (never in same photo), but no overlap either.
+
+### Age Analysis
+Person 3051 appears ~18-22 in 1919-1920 → born ~1898-1902.
+- Dora (b. ~1895) would be ~25 — plausible but slightly old
+- Fannie (b. 1904) would be ~16 — too young for appearance
+- Esther's mother Ida (b. 1884) would be ~36 — ELIMINATED by age, do not suggest again
+
+### Conclusion
+**INCONCLUSIVE.** User's theory of a Burd sister is contextually strong (always with Esther, female, right age range), but embeddings reject both Dora and Fannie. The distance could be due to poor crop quality, but even the same-era Dora comparison is high. Person 3051 could be:
+1. Dora Burd (despite embeddings — if the 1919 Dora face is a bad crop or misidentified)
+2. Fannie Burd (despite appearing too young in 1920 — age estimation from photos is unreliable)
+3. A close friend, cousin, or other Burd relative not in the GEDCOM
+4. Someone from Albert's circle in NYC/Brooklyn
+
+**Next step:** Visual comparison by user, or Ancestry research for other Burd relatives.
+
+---
+
+## Session Errors & Corrections
+
+### Errors Made (self-assessment)
+1. **Reva Heft = Irving's wife** — WRONG. Reva married Meyer Fox (the father). Corrected by user.
+2. **Cities for all 3 brothers** — inherited wrong from context file without GEDCOM verification.
+3. **Sarah died 1937** — GEDCOM data was wrong, Ancestry says 1967. User caught this.
+4. **Suggested Ida Gukaylo Burd as Person 3051** — born 1884, would be 35-43 in photos. Person 3051 is clearly ~20. Embarrassingly lazy suggestion that the user rightly flagged.
+5. **Photo date 1928** — banner clearly says 1946. Context file was wrong.
+
+### Lessons Reinforced
+- Lesson 171: Always verify genealogical data against Ancestry, not just GEDCOM
+- Lesson 172: Event context > embedding distance for identification
+- NEW: Never suggest candidates that fail basic age/timeline arithmetic
+- NEW: GEDCOM death dates can be completely wrong — always cross-reference
+- NEW: Handwritten annotations on original photos are primary sources — zoom in first
