@@ -63,6 +63,14 @@ TEST_SET = [
         "gt_source": "Session 153 audit: Albert Fox GEDCOM 1917-1918 Detroit + Belle Isle Conservatory visual match (external Burton Historical Collection comparison needed for full certainty)",
         "bucket": "Detroit control",
     },
+    # Detroit control #2 — second Belle Isle Conservatory frame. Session 153b Phase 5 gate.
+    {
+        "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+        "expected_location": "Detroit, Michigan",
+        "expected_aliases": ["Belle Isle", "Detroit"],
+        "gt_source": "Same event as 02068 per Gemini 3.1 Pro 100%-confidence cross-frame match (Session 153 visual audit). Same 3 seated men + 2 standing women, identical outfits + conservatory backdrop.",
+        "bucket": "Detroit control",
+    },
     # Rhodes — 4 community-submitted photos. GT is high-prior from context but caveat: Rhodes community photos can also depict diaspora.
     {
         "photo_id": "inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n",

@@ -1,0 +1,216 @@
+{
+  "target_face": "inbox_ed3f214545b9",
+  "bessie_anchors": [
+    "inbox_fad6b0654cc7",
+    "inbox_0ae416754174"
+  ],
+  "direct_distances": {
+    "inbox_fad6b0654cc7": 1.359166145324707,
+    "inbox_0ae416754174": 1.2753372192382812
+  },
+  "bessie_internal": 1.0810861505276,
+  "bessie_rank_in_full_list": 46,
+  "top_25_neighbors": [
+    {
+      "identity_id": "63a1c0c1-aed2-4429-9e54-9dfae1b099d4",
+      "name": "Unidentified Person 3009",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 0.0,
+      "d_mean": 0.0
+    },
+    {
+      "identity_id": "4369c2f0-5c5e-43ff-9e47-1b6806a46531",
+      "name": "Caden Franco Sadis",
+      "state": "CONFIRMED",
+      "n_anchors": 1,
+      "d_min": 1.1482904150094422,
+      "d_mean": 1.1482904150094422
+    },
+    {
+      "identity_id": "167c0251-3941-4f9c-9c08-4c8a9cd5aaa6",
+      "name": "Jacob Cohen",
+      "state": "CONFIRMED",
+      "n_anchors": 1,
+      "d_min": 1.1598465888023233,
+      "d_mean": 1.1598465888023233
+    },
+    {
+      "identity_id": "830649ad-27be-4d98-b5dd-0243f18f4529",
+      "name": "Unidentified Person 639",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.1944754972853295,
+      "d_mean": 1.1944754972853295
+    },
+    {
+      "identity_id": "2bb42080-5013-45aa-991f-feb1880e0a36",
+      "name": "Unidentified Person 82863852",
+      "state": "INBOX",
+      "n_anchors": 3,
+      "d_min": 1.1960508312631677,
+      "d_mean": 1.212606850778451
+    },
+    {
+      "identity_id": "e1ac5b23-b8b7-4dea-8b39-736f4162f5bb",
+      "name": "Unidentified Person 490",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.1966951135951311,
+      "d_mean": 1.1966951135951311
+    },
+    {
+      "identity_id": "66d9e73f-3ebb-4eee-a1ee-19288299f44d",
+      "name": "Unidentified Person 2785",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.1973261855787776,
+      "d_mean": 1.1973261855787776
+    },
+    {
+      "identity_id": "121c9aa7-ed47-4adc-97a0-46588d5c24de",
+      "name": "Unidentified Person 3007",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2068487144381614,
+      "d_mean": 1.2068487144381614
+    },
+    {
+      "identity_id": "66401ae3-3436-415d-a56c-c24d798b272a",
+      "name": "Unidentified Person 82863540",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2104144301049824,
+      "d_mean": 1.2104144301049824
+    },
+    {
+      "identity_id": "f5cb7f86-d461-4ac4-932f-dc8424ce4323",
+      "name": "Unidentified Person 2748",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2105825118059381,
+      "d_mean": 1.2105825118059381
+    },
+    {
+      "identity_id": "fe958f7d-b716-4603-896b-c683da4e56d1",
+      "name": "Judith Judy Smilg Kleinfeld",
+      "state": "CONFIRMED",
+      "n_anchors": 9,
+      "d_min": 1.2123892417183366,
+      "d_mean": 1.308349587803888
+    },
+    {
+      "identity_id": "f4fa1cc9-3239-4093-96dc-c763e8791f92",
+      "name": "Unidentified Person 525",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2145735040378383,
+      "d_mean": 1.2145735040378383
+    },
+    {
+      "identity_id": "77b20228-7ecf-4e85-8ac5-a35f36a910eb",
+      "name": "Unidentified Person 420",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2176423502266285,
+      "d_mean": 1.2176423502266285
+    },
+    {
+      "identity_id": "bae435a8-6b48-4a88-8b23-dc943cce566b",
+      "name": "Unidentified Person 3273",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2204563880622452,
+      "d_mean": 1.2204563880622452
+    },
+    {
+      "identity_id": "e889a985-df9a-4d8b-85b8-95322890efdc",
+      "name": "Leona Fox Smilg",
+      "state": "CONFIRMED",
+      "n_anchors": 31,
+      "d_min": 1.2393961355202983,
+      "d_mean": 1.342378232563772
+    },
+    {
+      "identity_id": "26ce82fc-bb53-4db4-a7e5-a5df97be8fd2",
+      "name": "Unidentified Person 135",
+      "state": "INBOX",
+      "n_anchors": 2,
+      "d_min": 1.2411626087697323,
+      "d_mean": 1.2411626087697323
+    },
+    {
+      "identity_id": "3151468b-0552-4a9e-87d6-38734ba13953",
+      "name": "Unidentified Person 272",
+      "state": "SKIPPED",
+      "n_anchors": 1,
+      "d_min": 1.2411626087697323,
+      "d_mean": 1.2411626087697323
+    },
+    {
+      "identity_id": "e67b5151-dea5-4d6f-886c-bca253bd5054",
+      "name": "Unidentified Person 4050",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2427047171136885,
+      "d_mean": 1.2427047171136885
+    },
+    {
+      "identity_id": "b9fd0c77-263a-48e6-bb73-512182b81a28",
+      "name": "Unidentified Person 3378",
+      "state": "CONFIRMED",
+      "n_anchors": 3,
+      "d_min": 1.24583203622185,
+      "d_mean": 1.3043528686620929
+    },
+    {
+      "identity_id": "9108e4a3-ccf8-4493-a7da-c3964db62ab8",
+      "name": "Unidentified Person 301",
+      "state": "SKIPPED",
+      "n_anchors": 1,
+      "d_min": 1.2484591246228682,
+      "d_mean": 1.2484591246228682
+    },
+    {
+      "identity_id": "0e2f9bdb-2217-44ca-b665-e304b9248bad",
+      "name": "Unidentified Person 2859",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2531372774691847,
+      "d_mean": 1.2531372774691847
+    },
+    {
+      "identity_id": "64ad91cc-080c-47fd-b96a-8941e7ab1370",
+      "name": "Unidentified Person 64ad91cc",
+      "state": "INBOX",
+      "n_anchors": 5,
+      "d_min": 1.2562138518019113,
+      "d_mean": 1.3181686547095008
+    },
+    {
+      "identity_id": "7f221f1f-9113-42d8-952b-6705e87e09c5",
+      "name": "Unidentified Person 82863617",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2572214949302518,
+      "d_mean": 1.2572214949302518
+    },
+    {
+      "identity_id": "377aaf60-35f5-44b6-b993-7a6b63769f1c",
+      "name": "Unidentified Person 82863569",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.260007490167011,
+      "d_mean": 1.260007490167011
+    },
+    {
+      "identity_id": "a9a96848-fe9f-41a2-a73e-107a2bedc6be",
+      "name": "Unidentified Person 3152",
+      "state": "INBOX",
+      "n_anchors": 1,
+      "d_min": 1.2600166660164462,
+      "d_mean": 1.2600166660164462
+    }
+  ],
+  "canonical_identities_indexed": 1630
+}
