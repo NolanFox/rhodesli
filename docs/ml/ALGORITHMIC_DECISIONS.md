@@ -2748,6 +2748,25 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Implementation**: P0 GEDCOM re-import, P0 spouse timeline in gedcom_context.py, P1 birth date resolution, P1 structured blocks. Then re-run 83 photos that lack full enrichment.
 - **Affects**: rhodesli_ml/gedcom_context.py, rhodesli_ml/importers/gedcom_parser.py, scripts/run_combined_pipeline.py
 
+### AD-241: GEDCOM Context Injection in Gemini Location Shadow-Eval Prompts (2026-04-19) — PLANNED
+- **Date**: 2026-04-19 | **Session**: 154 (planned, not yet executed)
+- **Context**: Session 153b ran the Gemini location shadow eval (`scripts/session153_shadow_eval.py`) with a candidate 3-round prompt that references "biographical context" / "subject's RESIDENCE" 15+ times but the script never populates `gedcom_context`. Only `collection`, `source`, `filename` reach Gemini. Result: candidate prompt hallucinated "New York Botanical Garden" for a 1917 Detroit Belle Isle Conservatory photo. The A/B measured **data availability**, not prompt structure.
+- **Planned decision**: Both `baseline` and `candidate` variants must receive a `gedcom_context` string derived from confirmed subjects' GEDCOM records (RESI, OCCUPATION, children's BIRTH events, preferring subject's own residences over relatives'). Production pipeline `rhodesli_ml/gemini_extraction.py:319,364-369` already accepts this kwarg — re-use the same formatter.
+- **Rationale**: prompt-structure A/B is invalidated without parity in input data. Albert Fox's GEDCOM clearly states "RESI Detroit 1917" — that fact MUST reach Gemini if we're testing the prompt's ability to use it.
+- **Affects**: `scripts/session153_shadow_eval.py` `build_prompt()`, new `resolve_gedcom_context(photo_id, sb)` helper, fixture at `tests/fixtures/session154_detroit_gedcom_context.json`.
+- **Evidence to gather in 154**: re-run Detroit-only (2 photos × 3 variants = 6 calls). If candidate with GEDCOM correctly labels Detroit, confirms prompt was never the problem; if it still fails, prompt genuinely needs redesign (probably multi-frame via PRD-061).
+- **Gap/Risk**: GEDCOM coverage is uneven; if a test photo has no confirmed subjects with RESI events at the photo's era, we can't inject meaningful context for that photo. Detroit controls (02068, 01659) both have Albert → plenty of RESI data.
+
+### AD-242: Iterative Refinement (Prior-Prediction Retry) in Gemini Location Prompts (2026-04-19) — PLANNED
+- **Date**: 2026-04-19 | **Session**: 154 (planned, not yet executed)
+- **Context**: Single-pass Gemini prompts have no self-correction mechanism. In Session 153b, the candidate prompt confidently predicted "New York Botanical Garden" for a Detroit photo — a confident hallucination. User asked: "Is there a way if Gemini has already given a prediction about a place that that could be included in a retry?"
+- **Planned decision**: Add a `candidate_with_prior` variant that makes a 2-call sequence — first call runs normal `candidate` variant; second call embeds the first call's `place` + `confidence` + `reasoning` inside a `## Prior prediction to cross-check` block and demands Gemini either (a) confirm with a specific GEDCOM or visual fact, (b) refute with a specific feature. The prompt forbids simple agreement; Gemini must name the corroborating or refuting evidence.
+- **Rationale**: catches confident-hallucination errors at marginal cost (~$0.01-0.02 per retry). Standard iterative-refinement pattern.
+- **Failure mode + mitigation**: sycophancy (Gemini may simply accept its own prior). Mitigation: prompt requires a refuting feature OR a confirming GEDCOM fact — "you agree" is not a valid response. If Gemini returns a null refuting-feature, downgrade confidence.
+- **Affects**: `scripts/session153_shadow_eval.py` (add variant), future `rhodesli_ml/gemini_extraction.py` production option (NOT to be wired to production in 154; that's a separate PR).
+- **Logging**: both passes logged under the same `experiment_id` with sub-keys `pass=1` and `pass=2`.
+- **Gap/Risk**: some classes of hallucination (e.g., confident misreading of architecture) won't be caught by this — the prior-prediction retry helps only when GEDCOM or diagnostic-feature evidence can cite a specific fact.
+
 ### AD-235: Family Cluster Score — Aggregate Kinship Signal from Embedding Space (2026-03-31)
 - **Date**: 2026-03-31 | **Session**: 145
 - **Context**: Identity inference for unidentified Fox family members requires signals beyond pairwise face matching. Siblings and close relatives cluster in embedding space but with narrow margins. AD-067/068 previously rejected a weaker surname-based version (Cohen's d=0.43, >40% FPR). This revisits with blood relatives only.

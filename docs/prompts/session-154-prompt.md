@@ -1,141 +1,268 @@
-# Session 154 — Harry Isaackovitz Repair + Loose-End Sweep
+# Session 154 — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s
 
-**Mode:** Implementation (with interactive identification mid-session)
-**Predecessor:** Session 153 (commits 4430f1ad → 3cd841d1)
+**Mode:** Implementation + interactive (mixed)
+**Predecessor:** Session 153b (`docs/assessments/session-153b-assessment.md`)
+**Context file (MANDATORY first read):** `docs/session_context/session-154-context.md`
+**Why this session exists:** The Session 153b shadow eval was invalidated by a design bug — the candidate prompt's 3-round scaffold expects GEDCOM context but the script never passes any. Fix that, validate, and in parallel unblock the Harry Fox anchor repair + close the remaining Session 153 Codex P0s.
 
-## Orientation
+## Orientation (READ IN ORDER before any work)
 
-Read at session start (in order):
-1. `docs/feedback/session-153-harry-isaackovitz-breakthrough.md` — the user-confirmed Harry Isaackovitz identification, repair plan
-2. `docs/feedback/session-153-harry-verification.md` — original ML evidence
-3. `docs/feedback/session-153-corrective-analysis.md` — 3007/3009 revised hypotheses
-4. `docs/feedback/session-153-codex-audit.md` — 3 P0, 4 P1, 2 P2, 1 P3 still open
-5. Any session-153 feedback docs created after commit 3cd841d1 (shadow-eval, baselines, event-clustering research, Gemini-Chrome validation — check for docs/feedback/session-153-*.md files not yet referenced)
+1. `docs/session_context/session-154-context.md` — full carry-over state from Session 153b
+2. `docs/assessments/session-153b-assessment.md` — what shipped / deferred / red-flagged in 153b
+3. `docs/feedback/session-153b-shadow-eval-results.md` — the invalidated eval + root-cause analysis
+4. `docs/feedback/session-153b-harry-repair-decision.md` — the 6-gate list blocking repair
+5. `docs/feedback/session-153b-bessie-validation.md` — current honest confidence on Bessie = 3009
+6. `scripts/session153_shadow_eval.py` lines 278-314 (`build_prompt`) — the design bug
+7. `rhodesli_ml/gemini_extraction.py` lines 319, 364-369 — production `gedcom_context` plumbing (REFERENCE for how to pass it)
+8. `tasks/lessons.md` lessons 89, 171, 172
 
-Set session:
+## Session setup
+
 ```bash
 echo "154" > .claude/current_session.txt
 echo "implementation" > .claude/session_mode.txt
 source venv/bin/activate
-make test-fast
-bash scripts/harness-check.sh
+bash scripts/harness-check.sh          # If this fails, STOP and fix first
+make test-fast                         # Baseline
+git log origin/main..HEAD              # Should be empty after 153b closeout
 ```
 
----
+## Non-negotiable rules
 
-## Phase 1: Execute the Harry Fox anchor repair (HIGHEST PRIORITY)
-
-**User has authorized the Harry Isaackovitz identification via Ancestry**, but the anchor-detach mutation on CONFIRMED identity Harry Fox was NOT executed in Session 153. Execute with full data safety.
-
-### Steps
-1. Snapshot `identities` row for Harry Fox (`d74cb556-6d44-4288-ade3-1cc8fa2b45a6`) to `backups/session-154/harry-fox-before-split-<UTC-ts>.json`.
-2. Snapshot any audit_log entries for Harry Fox in the same file.
-3. Create new identity for Harry Isaackovitz:
-   - `identity_id`: generate UUID
-   - `state`: CONFIRMED (user has confirmed via Ancestry)
-   - `name`: "Harry Isaackovich" (match GEDCOM canonical form from `@I132506612777@`)
-   - `anchor_ids`: 2 faces (validate exact IDs vs `docs/feedback/session-153-harry-verification.md` — agent labeled them F and G; one is in 02068-Detroit-center, the other in 01659-conservatory-companion)
-4. Detach those 2 anchors from Harry Fox.
-5. Hold anchor "E" (1968-74 banquet photo) for user visual review — Harry verification agent flagged it as an outlier.
-6. Create gedcom_match row linking new identity to `@I132506612777@`.
-7. Write audit_log entries for both mutations with `metadata={"route": "session_154_harry_repair", "evidence_ancestry_id": "132506612777"}`.
-8. Verify post-repair: Harry Fox now has 5 anchors (7 - 2), new Harry Isaackovitz identity has 2 anchors, no orphaned faces.
-9. Browser-verify the Detroit photo on production — the center man's identity label should now read "Harry Isaackovich" (or whatever canonical form we chose).
-
-**Data safety gate:** Before writing ANY mutation, run the existing structural test `tests/test_merge_pipeline.py` or equivalent to confirm no post-merge orphans would result. If any test fails: STOP.
+1. **READ-ONLY on production** (`.claude/rules/browser-read-only.md`).
+2. **Never over-claim.** STRONG/GOOD/POSSIBLE/WEAK/UNKNOWN — not "confirmed" unless triangulated across ≥3 independent sources WITH reference data.
+3. **Every phase commits atomically.** `/clear` between phases at 300+ transcript lines.
+4. **Every ML decision gets an AD entry** (`docs/ml/ALGORITHMIC_DECISIONS.md`). Session 154 will create AD-241 and AD-242 (see below).
+5. **Harness closeout is mandatory.** Do all 9 steps from `.claude/rules/session-defaults.md` Session End. Sessions 152 + 153 drifted; 153b backfilled. DO NOT repeat that drift.
 
 ---
 
-## Phase 2: Confirm 3009 = Bessie Fox
+## Parallelization plan
 
-With Harry Isaackovitz confirmed as the center man, Bessie Fox is the leading 3009 candidate (his wife).
+Three tracks can run mostly independently, with one merge point.
 
-1. Visual compare 3009 (`inbox_ed3f214545b9`) to Bessie's 2 known anchors (both old-age).
-2. Compute embedding distance to Bessie + to Harry Isaackovitz's Ancestry-tree photo if available via the Ancestry API or user-provided JPG.
-3. If confidence STRONG: propose to user to confirm 3009 = Bessie Fox.
-4. If AMBIGUOUS: leave as INBOX with a note.
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Track A — Gemini prompt fix (MAIN thread)                        │
+│   Phases A0, A1, A2, A3, A4                                      │
+│                                                                  │
+│ Track B — Harry anchor repair unblock (worktree subagent)        │
+│   Phases B1, B2                                                  │
+│                                                                  │
+│ Track C — 153 Codex P0 closure (worktree subagent)               │
+│   Phases C1, C2                                                  │
+└──────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                   Merge point — Phase D (close)
+```
 
----
-
-## Phase 3: Close remaining Codex P0/P1 from Session 153
-
-Still open after Session 153:
-
-### P0
-- **Production `date_labels` still reads "New York, New York"** for Detroit photo. User said "feel free to ignore B" in Session 153 — so leave as-is. (Double-check with user at start of Session 154.)
-- **Belle Isle as "ground truth" needs independent archival citation.** Look for Burton Historical Collection reference. Session 153 Gemini transcript has a lead — they mentioned a specific Burton archival photo.
-
-### P1
-- **Gemini prompt shadow-eval** — `scripts/session153_shadow_eval.py` was committed but may not have run to completion (rate-limit blocked Session 153). Verify whether it has, and if not run it. Should include 02068 + 91b6f6b296e93a60 + 01659 (the 3 Belle Isle photos) + ≥7 other known-location photos as controls.
-- **Embedding baselines** — `scripts/compute_embedding_baselines.py` was committed; Session 153 tried to run it with a bad `timeout` command (macOS). Re-run without `timeout`. Output to `docs/feedback/session-153-embedding-baselines.md`.
-- **Recalibrate tier thresholds** using the baselines output. Update `docs/feedback/session-153-corrective-analysis.md` and any ML docs with the honest threshold.
+All three tracks work on DIFFERENT files (see §Parallelization constraints in the context file). Launch Track B + Track C as background worktree subagents at the start, run Track A in main thread, then synthesize.
 
 ---
 
-## Phase 4: Photo event-clustering feature (PRD)
+## Track A — Gemini location prompt fix (main thread)
 
-Session 153 launched an agent to research this (agent `af0449b5cd9e68ea0` — photo event-clustering). Check `docs/feedback/session-153-event-clustering-research.md`. If the agent's output has a recommended tier:
+### Phase A0 — Schema drift + API stability (~10 min)
 
-1. Read the research findings.
-2. Decide with user: proceed with Tier 1 (rule-based) or stop?
-3. If proceeding: write PRD `docs/prds/061_event_clustering.md`.
-4. Tie into existing PRD-059 (temporal co-occurrence) since they overlap.
+1. **Fix `gemini_api_calls.experiment_id` column missing**:
+   - `ALTER TABLE gemini_api_calls ADD COLUMN experiment_id TEXT;`
+   - Verify with a read: `SELECT COUNT(*) FROM gemini_api_calls WHERE experiment_id IS NULL;`
+   - Commit migration SQL under `scripts/migrations/` (or wherever existing convention places them — check `ls scripts/ | grep -i migra` first).
+
+2. **Add retry-with-backoff to `scripts/session153_shadow_eval.py`** `call_gemini()`:
+   - Currently no retry — a 503/504 counts as a permanent fail on that call
+   - Use exponential backoff: 2s, 5s, 15s (3 retries max)
+   - Don't retry on 4xx (those are request-side failures)
+
+Acceptance: re-run `session153_shadow_eval.py --dry-run` — verifies test-set pulls and emits `experiment_id`. Real run in Phase A3.
+
+### Phase A1 — Patch shadow eval to pass `gedcom_context` (~20 min)
+
+**Root cause reminder:** `build_prompt()` at `scripts/session153_shadow_eval.py:278` only passes `collection`, `source`, `filename`. The prompt references "GEDCOM context" 15+ times but it's never populated.
+
+**Changes:**
+1. Add a `gedcom_context` kwarg to `build_prompt()`. When provided, append a `## Genealogical Context` section (match the production format at `rhodesli_ml/gemini_extraction.py:364-369`).
+2. Add `resolve_gedcom_context(photo_id, sb)` helper: for each photo in the test set, look up confirmed subjects → their GEDCOM records → their RESI events → format as a concise bulleted list. Prefer:
+   - Subject's own RESI events at dates compatible with photo era
+   - Subject's OCCUPATION events
+   - Subject's children's BIRTH events
+   - Deprioritize spouse's residences unless subject has no RESI near the era
+3. Pass `gedcom_context` into BOTH variants (baseline + candidate) so the A/B is measuring prompt structure, not data availability. THIS IS CRITICAL.
+4. Log the resolved `gedcom_context` alongside each Gemini call for auditability.
+5. Record the Detroit-control subjects explicitly in a fixture file at `tests/fixtures/session154_detroit_gedcom_context.json` so re-runs are deterministic.
+
+**Write `AD-241` in `docs/ml/ALGORITHMIC_DECISIONS.md`:**
+- Title: `AD-241: GEDCOM context injection in Gemini location prompts (shadow eval)`
+- Context: 153b shadow eval invalidated because the prompt expected biographical data it never got
+- Decision: location prompts (baseline + candidate) both receive `gedcom_context` derived from confirmed subjects' GEDCOM records
+- Rationale: A/B must measure prompt structure, not data availability
+- Affects: `scripts/session153_shadow_eval.py`, future `rhodesli_ml/gemini_extraction.py` eval scripts
+
+### Phase A2 — Add iterative refinement / prior-prediction retry (~30 min)
+
+User question answered: "Is there a way if Gemini has already given a prediction about a place that that could be included in a retry?" — Yes. Implementing it.
+
+**Design:**
+1. Add a new variant `candidate_with_prior` to `build_prompt()`. It works as a second-pass call:
+   - First call: run `candidate` variant (gets an initial prediction)
+   - Second call: re-issue with an additional `## Prior prediction to cross-check` block containing the initial prediction's `place` + `confidence` + `reasoning`
+   - The block instructs Gemini to **validate the prior prediction against the GEDCOM context and the visual features** and either confirm, refute (with reason), or amend.
+2. Key prompt addition (inside the retry section):
+   ```
+   Your first-pass prediction: place=<X>, confidence=<Y>.
+   Cross-check this against:
+   - The subjects' GEDCOM residences at the photo's likely date range
+   - The diagnostic visual features from Round 1
+   Does the prior prediction stand? If not, name the specific feature or GEDCOM fact that refutes it and amend.
+   ```
+3. **Cost note**: this doubles the per-photo call cost. Log both calls under the same `experiment_id` with sub-keys `pass=1` and `pass=2`.
+4. **Failure mode to guard against**: Gemini may sycophantically accept its own prior prediction even when wrong. Mitigation: the prompt explicitly asks for a refuting feature OR a confirming GEDCOM fact — can't just agree with yourself.
+
+**Write `AD-242` in `docs/ml/ALGORITHMIC_DECISIONS.md`:**
+- Title: `AD-242: Iterative refinement / prior-prediction retry in Gemini location prompts`
+- Context: Session 153b candidate hallucinated "NYBG" for Detroit photo with no biographical context; single-pass prompts have no self-correction mechanism
+- Decision: optional second-pass call that embeds prior prediction + demands specific refuting feature or confirming GEDCOM fact
+- Rationale: catches confident-hallucination class of errors; cheap ($0.01-0.02 per retry)
+- Failure modes + mitigations: sycophancy (guarded by refuting-feature requirement)
+- Affects: `scripts/session153_shadow_eval.py`; future `rhodesli_ml/gemini_extraction.py` production option
+
+### Phase A3 — Rerun shadow eval on Detroit-only subset (~10 min)
+
+1. Run ONLY the 2 Detroit photos (02068 + 01659) with THREE variants: `baseline`, `candidate`, `candidate_with_prior`. 6 calls total, <$0.10.
+2. Accept the run if:
+   - Both Detroit photos get `place` = Detroit/Belle Isle/Michigan at `≥medium` confidence under `candidate_with_prior`
+   - Neither regresses under `candidate` (vs baseline) when given GEDCOM context
+3. Commit raw output as `docs/feedback/session-154-shadow-eval-detroit-rerun.json`.
+
+### Phase A4 — Full eval if Detroit subset passes (~30 min, Gemini rate-limit dependent)
+
+1. If Phase A3 passes on Detroit, run full 12-photo shadow eval with all 3 variants: 36 calls, ~$0.50 cost cap.
+2. Write summary doc `docs/feedback/session-154-shadow-eval-full.md` with per-photo verdicts and a go/no-go on prompt deployment.
+3. **Deployment decision is NOT in this session** — per 153b prompt, deployment is always a separate reviewed PR. Session 154 produces evidence, not the deploy commit.
 
 ---
 
-## Phase 5: UX fix deploy verification
+## Track B — Harry anchor repair unblock (background worktree subagent)
 
-Session 153 commit `3ba5dbff` landed the accidental-skip undo path (server + client + render). Verify:
+Launch at session start. Runs parallel to Track A.
 
-1. `git push origin main` (if not yet pushed) and wait for Railway deploy.
-2. Browser-verify on production: skip a test face from a safe photo, confirm the amber toast appears with Undo button, click Undo, confirm restore works.
-3. READ-ONLY on real identity data — use a throwaway INBOX identity for this test.
-4. Full e2e smoke via `python scripts/production_smoke_test.py`.
+### Phase B1 — Resolve face-ID discrepancy (~15 min)
 
----
+**The discrepancy:** Codex audit cited face `inbox_1fea75...`; Session 153 breakthrough doc cited `inbox_2bc31a40c34a`. They should be the same face (F in the F+G cluster that is NOT Harshel). One is wrong.
 
-## Still-open work items (background)
+**How to resolve:**
+1. Grep `data/embeddings.npy` entries: which face IDs actually exist and correspond to 02068?
+2. Query Supabase `photo_faces` for `photo_id = inbox_fox-charlie-001_204_02068_p_13akf5twbc3600`
+3. Query Supabase `identities.anchor_ids` for the Harry Fox identity (`d74cb556-6d44-4288-ade3-1cc8fa2b45a6`) — which 7 face IDs does it currently claim?
+4. Cross-reference: which of F and G are in the anchor list, and which actual face IDs are they?
+5. Produce `docs/feedback/session-154-harry-face-id-resolution.md` with the definitive 2 face IDs + evidence.
 
-- Session 153 agents that may have completed after the session ended:
-  - `ad830473561c8e8e1` — Gemini-via-Chrome Harry validation. Findings: `docs/feedback/session-153-gemini-harry-validation.md`
-  - `af0449b5cd9e68ea0` — Event-clustering feature research. Findings: `docs/feedback/session-153-event-clustering-research.md`
-  - Codex CLI audit of Harry thesis (Bash command `bwuwbjfsw`) — check completion
-  - Embedding baselines script (Bash command `b0tjphf91`) — check completion
+### Phase B2 — Strengthen Bessie hypothesis (or falsify) (~20 min)
 
-If any of these completed, incorporate findings into Session 154 phases.
+**Three tests to run (any one of which can materially move the needle):**
 
----
+1. **Multi-frame triangulation**: if face 3009-equivalent appears in 01659 (second Belle Isle frame), that's independent corroboration of the woman's presence at the event. Use embedding proximity search across 01659's detected faces vs 3009's embedding. Threshold: d < 1.10 = same person.
+2. **Kinship proximity test**: Bessie's confirmed daughter Leona Fox Smilg ranked #15 at d=1.24 for 3009 in the 153b run. Check systematically: does 3009 have similar proximity to OTHER Bessie-adjacent identities (Bessie's other children, grandchildren, Albert as her brother)? A kinship-cluster pattern would strengthen the hypothesis.
+3. **Age-adjacent Bessie photos**: search Ancestry tree 162873127 for a 1910s Bessie photo (user task / Ancestry search). If found, run embedding distance against 3009. A 1915-1920 Bessie photo near 3009 would be the strongest possible signal.
 
-## Harness gap to address in Session 154
-
-New rule: `.claude/rules/proactive-context-management.md` (created Session 153). The assistant should proactively recommend session wrap at 60% context or 5+ commits. Session 153 failed at this — the user had to explicitly tell the assistant to wrap.
-
-Consider: add a transcript-line hook that echoes a "session getting long, consider wrap" message to the USER (not just the assistant) at 300 lines.
+Produce `docs/feedback/session-154-bessie-strengthening.md` with the test results + updated confidence.
 
 ---
 
-## Key identity IDs (reference)
+## Track C — Session 153 Codex P0 closure (background worktree subagent)
 
-| Person | Identity ID | State |
-|--------|-------------|-------|
-| Albert Fox | `85546ebf-75b9-4971-a9d4-b2ce2271bc19` | CONFIRMED |
-| Bessie Fox | `b4a43575-9312-40ec-a574-85bf4294d0af` | CONFIRMED |
-| Harry Fox (currently contaminated) | `d74cb556-6d44-4288-ade3-1cc8fa2b45a6` | CONFIRMED — Phase 1 splits off 2 anchors |
-| Irving Israel Fox | `7e6aae2b-2b70-4a8a-9ee5-46e2b2c16c41` | CONFIRMED |
-| Person 2510 (restored) | `c39e8284-871d-4a1d-88ae-888793f4b151` | INBOX |
-| Person 3007 (Detroit back-left) | `121c9aa7-ed47-4adc-97a0-46588d5c24de` | INBOX |
-| Person 3009 (Detroit back-right) | `63a1c0c1-aed2-4429-9e54-9dfae1b099d4` | INBOX — Phase 2 may confirm as Bessie |
-| Person 3010 (Detroit background) | `ee0f3026-1459-4cf1-b184-538acf11131d` | SKIPPED (Session 153) |
+Launch at session start. Runs parallel.
 
-| GEDCOM Key | Ancestry ID |
+### Phase C1 — Belle Isle archival citation (~20 min)
+
+**Goal:** independent archival confirmation that 02068 + 01659 are at Belle Isle Conservatory, Detroit. Should not require site access — publicly available archives should suffice.
+
+1. Search the Burton Historical Collection (Detroit Public Library) catalog online for "Belle Isle Conservatory" 1917-1918 photos
+2. If any publicly indexed photo shows the same conservatory architecture as 02068 + 01659, cite it (URL, date, accession number)
+3. Alternative archives: Detroit Historical Society, Wayne State archives
+4. Produce `docs/feedback/session-154-belle-isle-citation.md` with the citations + confidence rating
+
+### Phase C2 — Irving anchor verification (~15 min)
+
+**Goal:** confirm seated-left man in 02068 IS Irving Fox (as asserted in Session 153, but never verified — Codex flagged the gap).
+
+1. Pull Irving Fox's 8 confirmed anchors from Supabase
+2. Compute embedding distance from the 02068 seated-left face to each of Irving's anchors
+3. Compare to cross-sibling baseline (Albert↔Irving min = 1.095 per Codex's baseline analysis)
+4. Produce `docs/feedback/session-154-irving-verification.md` with the distance matrix + verdict (STRONG / GOOD / POSSIBLE / WEAK / UNKNOWN)
+
+---
+
+## Merge point — Phase D (main thread only, after A+B+C finish)
+
+### D1 — Harry anchor repair decision (revisit)
+Given Phase B1 + B2 outputs, re-evaluate the 6 gates from `docs/feedback/session-153b-harry-repair-decision.md`. If all met:
+- Snapshot the Harry Fox identity to `backups/session-154/harry-fox-before-{UTC}.json`
+- Draft audit_log row
+- Execute the anchor move (detach the 2 wrong anchors from Harry, create new INBOX identity "Belle Isle Conservatory Young Man c.1917-1918" with those 2 faces, link to GEDCOM Harry Isaackovitz record as a *candidate*, not confirmed)
+- Run structural tests
+- Browser verify the Harry Fox person page + the new identity
+
+If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated decision doc.
+
+### D2 — Full harness closeout (mandatory 9 steps)
+
+1. `docs/assessments/session-154-assessment.md` — with full AI tool usage section
+2. CHANGELOG: add v0.99.70 for Session 154
+3. ROADMAP: add to Recently Completed
+4. BACKLOG: close items resolved (shadow eval validation, Harry repair status, schema fix, etc.)
+5. `git push origin main`
+6. Browser verify the 6 canonical pages (landing, people, person, compare, estimate, 404)
+7. `git log origin/main..HEAD` must be empty
+8. `bash scripts/backup-memory.sh`
+9. Run `/session-review` skill
+
+---
+
+## Success gates
+
+| Gate | How to check |
 |---|---|
-| Harry Isaackovich @I132506612777@ | 132506612777 |
-| Bessie Fox (Basya Minya Fuks) | (look up in gedcom_individuals by surname=Fuks or name=Bessie Fox) |
-| Fox/Capeluto/Fogel/Waldorf tree | 162873127 |
+| Gemini schema drift fixed | `\d gemini_api_calls` shows `experiment_id TEXT` column |
+| Shadow eval passes GEDCOM context | `grep gedcom_context scripts/session153_shadow_eval.py` shows the new kwarg + helper |
+| Detroit subset passes under `candidate_with_prior` | Both photos → `place` includes Detroit/Belle Isle/Michigan at ≥medium |
+| Face-ID discrepancy resolved | `docs/feedback/session-154-harry-face-id-resolution.md` exists with evidence |
+| Bessie hypothesis updated | `docs/feedback/session-154-bessie-strengthening.md` has a confidence delta vs 153b |
+| Belle Isle archival citation | `docs/feedback/session-154-belle-isle-citation.md` exists |
+| Irving verification | `docs/feedback/session-154-irving-verification.md` has a verdict |
+| Harry repair executed OR blockers documented | Either audit_log row exists OR updated decision doc |
+| Full harness closeout | 9 steps done; `git log origin/main..HEAD` empty |
 
-## Data safety reminders
-- Backups before ANY mutation to `identities` rows: `backups/session-154/*-before-<UTC-ts>.json`.
-- Audit_log entries for all state changes.
-- Browser is READ-ONLY on production (never click action buttons).
-- Run `make test-fast` before every commit.
-- `/clear` after every commit (Opus 4.7 recall cliff at 300 lines).
+## Anti-patterns to avoid (from 153b post-mortem)
+
+- ❌ Running shadow eval piped through `tail` (buffers output; looks stuck)
+- ❌ Retrying Claude Chrome MCP upload_image (architecturally blocked, not transient)
+- ❌ Relying on `codex exec --full-auto` for audits (stdin hangs — same bug in 3 sessions now)
+- ❌ Declaring a session complete without pushing (153 left 18 commits unpushed)
+- ❌ Single-source hypothesis claims without triangulation ("user-confirmed via Ancestry" → not actually confirmed)
+- ❌ Over-scoped phases that can't /clear cleanly
+
+## Phase timing estimates (for parallelization decisions)
+
+| Track | Phase | Solo-time |
+|---|---|---|
+| A | A0 schema + backoff | 10 min |
+| A | A1 GEDCOM injection | 20 min |
+| A | A2 iterative refinement | 30 min |
+| A | A3 Detroit rerun | 10 min (+3-5 min Gemini wait) |
+| A | A4 full eval | 30 min (+15-30 min Gemini wait) |
+| B | B1 face-ID resolution | 15 min |
+| B | B2 Bessie strengthening | 20 min |
+| C | C1 Belle Isle citation | 20 min (web research) |
+| C | C2 Irving verification | 15 min |
+| D | D1 Harry repair | 20 min (if gates met) |
+| D | D2 Closeout | 15 min |
+| **Total** | sequential | **~3h 30min** |
+| **Parallel** | A main + B/C in subagents | **~2h 15min** |
+
+## Explicit user decisions to surface
+
+Before executing Track D1 (Harry repair), surface these to user:
+- **Replacement identity label**: "Harry Isaackovich" (risky) vs "Belle Isle Conservatory Young Man c.1917-1918" (conservative). Default: conservative, per Opus audit recommendation.
+- **Whether to link new identity to GEDCOM Harry Isaackovitz record** as a candidate (not confirmed). Default: yes, with `confidence=possible` and provenance note.

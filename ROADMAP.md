@@ -135,6 +135,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Planned Sessions
 
+- **Session 154** — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s. Prompt: `docs/prompts/session-154-prompt.md`. Context: `docs/session_context/session-154-context.md`. Planned ADs: AD-241 (GEDCOM injection), AD-242 (iterative refinement). Parallel tracks: Gemini prompt fix (main), Harry face-ID + Bessie strengthening (worktree agent), Belle Isle citation + Irving verification (worktree agent).
+
 All planned sessions through 114 are COMPLETE. See Recently Completed below and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details.
 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.

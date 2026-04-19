@@ -54,6 +54,23 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - [x] **DATA-AUDIT-001**: 55 CONFIRMED with empty anchors (not 20). 23 candidates promoted to anchors, 31 merged ghosts (filtered by app), 1 empty shell (Solomon Galante). DONE (Session 144b).
 - [x] **DATA-AUDIT-002**: 52 multi-hop merges flattened (not 48). 50 two-hop + 2 three-hop chains. 0 circular, 0 dangling. DONE (Session 144b).
 
+### Session 153b → 154 Queue (2026-04-19)
+Source: `docs/assessments/session-153b-assessment.md`, `docs/feedback/session-153b-shadow-eval-results.md`, `docs/feedback/session-153b-harry-repair-decision.md`. Composed into `docs/prompts/session-154-prompt.md`.
+
+- [ ] **ML-154-001 (P0)**: `gemini_api_calls` table missing `experiment_id` column — every Supabase write in 153b shadow eval run failed with PGRST204. Fix: `ALTER TABLE gemini_api_calls ADD COLUMN experiment_id TEXT;`. Session 154 Phase A0.
+- [ ] **ML-154-002 (P0)**: `scripts/session153_shadow_eval.py` does not pass `gedcom_context` to Gemini — candidate 3-round prompt references biographical context 15+ times but script only sends collection/source/filename. Shadow eval results invalidated. Fix: add `resolve_gedcom_context()` helper + `gedcom_context` kwarg to `build_prompt()`. AD-241 planned. Session 154 Phase A1.
+- [ ] **ML-154-003 (P1)**: Add iterative refinement / prior-prediction retry variant to shadow eval and production option in `rhodesli_ml/gemini_extraction.py`. AD-242 planned. Session 154 Phase A2.
+- [ ] **ML-154-004 (P1)**: Shadow eval has no retry-with-backoff — 503/504 from Gemini counts as permanent fail. Add exponential backoff (2s, 5s, 15s × 3 attempts). Session 154 Phase A0.
+- [ ] **DATA-154-001 (P0)**: Face-ID discrepancy in Harry Fox repair — Codex cited `inbox_1fea75...`, breakthrough doc cited `inbox_2bc31a40c34a`. Hard blocker on anchor repair. Resolve via grep of embeddings.npy + `photo_faces` table + `identities.anchor_ids`. Session 154 Phase B1.
+- [ ] **DATA-154-002 (P1)**: Strengthen-or-falsify Bessie = 3009 hypothesis. Three tests (multi-frame triangulation in 01659, kinship proximity to Leona and other Bessie-adjacent identities, Ancestry 1910s Bessie photo search). Current confidence: POSSIBLE trending WEAK (~40%). Session 154 Phase B2.
+- [ ] **CITATION-154-001 (P0 from 153 Codex audit)**: Belle Isle archival citation — confirm 02068 + 01659 at Belle Isle Conservatory Detroit via Burton Historical Collection or Detroit Historical Society catalog. Session 154 Phase C1.
+- [ ] **DATA-154-003 (P1 from 153 Codex audit)**: Irving anchor verification — confirm seated-left man in 02068 IS Irving Fox by embedding distance to his 8 confirmed anchors. Session 154 Phase C2.
+- [ ] **OPS-154-001 (P2)**: Codex CLI `--full-auto` stdin hang — occurred in Sessions 152, 153, 153b (3 consecutive). Investigate whether `--full-auto` needs TTY; otherwise switch Codex audits to interactive invocation or document substitution pattern.
+- [ ] **OPS-154-002 (P2)**: `scripts/compute_embedding_baselines.py` times out on Supabase `photo_faces` fetch. Reduce page size or scope filter. Session 153b used a targeted alternative (`scripts/session153b_bessie_neighbors.py`); full baselines still deferred.
+- [ ] **MCP-154-001 (P3, architectural)**: Claude Chrome `upload_image` cannot upload local files (cross-tab imageId limit + CORS + file:// scheme rejection). Escalated to user in 153b. No in-session fix possible. Re-evaluate after Claude Chrome MCP version bump.
+- [ ] **DOCS-154-001 (P2)**: 78 docs over 300-line cap (pre-existing, flagged by `scripts/harness-check.sh`). Split per Lesson 106 rule — don't trim content, create sub-files under a subdirectory.
+- [ ] **SESSION-HISTORY-154-001 (P2)**: `docs/roadmap/SESSION_HISTORY.md` stops at Session 144b. Sessions 145-153b live in ROADMAP "Recently Completed" pending archive at next natural trim point.
+
 ### Session 148c — Fader Identification Feature Ideas (2026-04-14)
 Source: Session 148c learnings (docs/session_context/session-148c-learnings.md)
 
