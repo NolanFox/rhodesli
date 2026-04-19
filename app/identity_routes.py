@@ -1774,13 +1774,46 @@ def post(
         seq_mode=seq == "1",
         community_slug=community_slug,
     )
-    oob_toast = Div(
-        _main_mod.toast(
-            "Ignored for now. You can still rediscover it later." if action == "skip" else f"{action_name}ed identity!",
-            "success",
-        ),
-        hx_swap_oob="beforeend:#toast-container",
-    )
+    # Session 153: skip action returns an inline Undo toast so admins can
+    # reverse an accidental-skip without leaving the photo viewer. The Undo
+    # button POSTs to /api/identity/{id}/restore (SKIPPED -> INBOX), and the
+    # data-undo-* attributes feed the global Z-key undo stack.
+    if action == "skip":
+        nav_prefix = _nav_prefix_from_request(request)
+        identity_name = identity.get("name", "Unknown") or "Unknown"
+        undo_url = f"{nav_prefix}/api/identity/{identity_id}/restore"
+        undo_label = f"Restore Person {identity_name}"
+        toast_body = Div(
+            Span("\u2713", cls="mr-2"),
+            Span("Ignored for now. You can still rediscover it later.", cls="flex-1"),
+            Button(
+                "Undo (Z)",
+                cls="ml-3 px-4 py-3 sm:px-2 sm:py-1 text-sm sm:text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+                hx_post=undo_url,
+                hx_swap="outerHTML",
+                hx_target="closest div",
+                type="button",
+                # Data attributes feed window._undoStack in page_routes.py
+                **{
+                    "data-undo-type": "skip",
+                    "data-undo-identity": identity_id,
+                    "data-undo-url": undo_url,
+                    "data-undo-label": undo_label,
+                },
+            ),
+            cls="px-4 py-3 rounded shadow-lg flex items-center bg-emerald-600 text-white animate-fade-in",
+            # Longer dismiss time to give admins a chance to click Undo
+            **{"_": "on load wait 8s then remove me"},
+        )
+        oob_toast = Div(
+            toast_body,
+            hx_swap_oob="beforeend:#toast-container",
+        )
+    else:
+        oob_toast = Div(
+            _main_mod.toast(f"{action_name}ed identity!", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
     return (*photo_content, oob_toast)
 
 
@@ -4555,10 +4588,16 @@ def post(
         )
 
     old_state = identity.get("state", "UNKNOWN")
-    if old_state not in ("REJECTED", "CONTESTED"):
+    # Session 153: SKIPPED added to allowlist so accidental-skip mis-clicks are
+    # reversible from the person page. core.registry.reset_identity() already
+    # accepts SKIPPED as a source state; only the API gate needed relaxing.
+    if old_state not in ("REJECTED", "CONTESTED", "SKIPPED"):
         return Response(
             to_xml(
-                _main_mod.toast(f"Cannot restore from state '{old_state}' (must be REJECTED or CONTESTED).", "error")
+                _main_mod.toast(
+                    f"Cannot restore from state '{old_state}' (must be REJECTED, CONTESTED, or SKIPPED).",
+                    "error",
+                )
             ),
             status_code=400,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},

@@ -808,17 +808,28 @@ def identity_card(
         cls="mt-3 px-1",
     )
 
-    # Restore button for dismissed/rejected identities (Session 148b)
+    # Restore button for dismissed/rejected/skipped identities (Session 148b, extended Session 153)
     restore_btn = None
-    if is_admin and state in ("REJECTED", "CONTESTED"):
+    if is_admin and state in ("REJECTED", "CONTESTED", "SKIPPED"):
+        # Session 153: SKIPPED uses amber accent to match the skip pill color;
+        # REJECTED/CONTESTED keep the existing emerald "undo" affordance.
+        if state == "SKIPPED":
+            _btn_cls = f"{_pill} bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+            _btn_label = "Restore (was skipped)"
+            _btn_title = "Restore this person to the inbox — accidentally skipped"
+        else:
+            _btn_cls = f"{_pill} bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+            _btn_label = "Restore"
+            _btn_title = "Restore this identity to the inbox for re-triage"
         restore_btn = Button(
-            "Restore",
-            cls=f"{_pill} bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25",
+            _btn_label,
+            cls=_btn_cls,
             hx_post=f"{nav_prefix}/api/identity/{identity_id}/restore",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
             type="button",
-            title="Restore this identity to the inbox for re-triage",
+            title=_btn_title,
+            data_testid=f"identity-card-restore-{state.lower()}",
         )
 
     # Action buttons — clean icon pills

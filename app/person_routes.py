@@ -1545,6 +1545,23 @@ def public_person_page(
                             )
                             if state in ("INBOX", "PROPOSED", "SKIPPED")
                             else None,
+                            # Session 153: Restore button for SKIPPED identities so
+                            # an accidental skip can be reversed directly from the
+                            # person page (amber accent mirrors the SKIPPED pill).
+                            Button(
+                                "\u21a9 Restore (was skipped)",
+                                cls="px-5 py-4 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded hover:bg-amber-500/30 disabled:opacity-50",
+                                hx_post=f"/api/identity/{person_id}/restore?from_person_page=true",
+                                hx_target="#person-admin-actions",
+                                hx_swap="outerHTML",
+                                hx_confirm="Restore this person to inbox? They will appear in review queues again.",
+                                hx_disabled_elt="this",
+                                type="button",
+                                data_testid="person-restore-skipped",
+                                **{"_": "on click put 'Restoring...' into me"},
+                            )
+                            if state == "SKIPPED"
+                            else None,
                             id="person-admin-actions",
                             cls="flex items-center justify-center gap-2 mb-3",
                             data_testid="person-state-actions",

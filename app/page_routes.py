@@ -3126,8 +3126,15 @@ def get(
                     e.preventDefault();
                     if (!window._undoStack || window._undoStack.length === 0) return;
                     var last = window._undoStack.pop();
-                    if (last.type === 'skip') {
-                        // Skip undo: navigate back to the skipped identity
+                    if (last.type === 'skip' && last.url) {
+                        // Session 153: inline skip pill provides a restore URL. POST
+                        // to it and refresh the page so the overlay shows INBOX state.
+                        fetch(last.url, {method: 'POST', headers: {'HX-Request': 'true'}}).then(function(r) {
+                            if (r.ok) { window.location.reload(); }
+                        });
+                    } else if (last.type === 'skip') {
+                        // Legacy skip (skipped focus mode): no restore URL, navigate
+                        // back to the skipped identity so admin can re-review.
                         window.location.href = '/?section=skipped&view=focus&current=' + last.identity;
                     } else if (last.url) {
                         // Merge/reject undo: POST to undo endpoint, then reload focus on that identity
@@ -3963,24 +3970,6 @@ def photo_view_content(
                         **{"_": "on click halt the event's bubbling"},
                     )
                 )
-                # Skip button (not for SKIPPED state)
-                if state in ("INBOX", "PROPOSED"):
-                    action_btns.append(
-                        Button(
-                            "\u23f8",
-                            cls="w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-sm sm:text-xs "
-                            "flex items-center justify-center",
-                            hx_post=(
-                                f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
-                                f"&action=skip&photo_id={photo_id}{action_context_suffix}{seq_param}"
-                            ),
-                            hx_target="#photo-modal-content",
-                            hx_swap="innerHTML",
-                            title="Ignore / Skip",
-                            type="button",
-                            **{"_": "on click halt the event's bubbling"},
-                        )
-                    )
                 # Reject button
                 action_btns.append(
                     Button(
@@ -3998,10 +3987,50 @@ def photo_view_content(
                         **{"_": "on click halt the event's bubbling"},
                     )
                 )
+                # Session 153: Skip pill is OUTSIDE the face bbox (not mixed in
+                # with Confirm/Reject) so mis-clicks on the face don't flip the
+                # identity to SKIPPED. Larger hitbox (36x36 min) + text label
+                # + hx_confirm + data-undo-* for Z-key undo.
+                skip_pill = None
+                if state in ("INBOX", "PROPOSED"):
+                    _skip_url = (
+                        f"{nav_prefix}/api/face/quick-action?identity_id={face_identity_id}"
+                        f"&action=skip&photo_id={photo_id}{action_context_suffix}{seq_param}"
+                    )
+                    _restore_url = f"{nav_prefix}/api/identity/{face_identity_id}/restore"
+                    skip_pill = Button(
+                        Span("Skip", cls="text-xs sm:text-sm font-semibold tracking-wide"),
+                        cls=(
+                            "skip-pill absolute -bottom-10 left-1/2 -translate-x-1/2 "
+                            "min-h-[36px] min-w-[72px] px-3 py-1.5 rounded-full bg-amber-500 "
+                            "hover:bg-amber-400 text-white shadow-lg "
+                            "opacity-0 group-hover:opacity-100 transition-opacity z-10 "
+                            "flex items-center justify-center whitespace-nowrap"
+                        ),
+                        hx_post=_skip_url,
+                        hx_target="#photo-modal-content",
+                        hx_swap="innerHTML",
+                        hx_confirm="Skip this face? You can restore from the person page.",
+                        title="Skip this face — defer for later review (you can restore from the person page)",
+                        type="button",
+                        data_testid=f"face-skip-pill-{face_identity_id}",
+                        # Feed the Z-undo stack with a restore URL so the accidental
+                        # skip can be reversed with Z or the toast Undo button.
+                        **{
+                            "data-undo-type": "skip",
+                            "data-undo-identity": face_identity_id,
+                            "data-undo-url": _restore_url,
+                            "data-undo-label": "Restore accidentally skipped person",
+                            "_": "on click halt the event's bubbling",
+                        },
+                    )
                 quick_actions = Div(
-                    *action_btns,
-                    cls="quick-actions absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 "
-                    "opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                    Div(
+                        *action_btns,
+                        cls="quick-actions absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 "
+                        "opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                    ),
+                    skip_pill,
                 )
 
             # Name label: always visible for confirmed, hover for others
