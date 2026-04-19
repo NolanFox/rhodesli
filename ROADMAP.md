@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.66 · ~4886 tests (4163 app + 723 ML) · 1121 photos · 1977 identities · 167 confirmed
+Current: v0.99.69 · ~4886 tests (4163 app + 723 ML) · 1121 photos · 1977 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -140,6 +140,12 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-04-19: **v0.99.69 — Session 153b**: Honest Validation + Harness Closeout Backfill. Bessie Fox = 3009 synthesized POSSIBLE-trending-WEAK across 4 independent signals (Local ML rank #46, Claude multimodal ~55%, direct visual WEAK, Opus audit top-1.7% on beach anchor). Center-man honest table: "NOT Harshel" triangulated (4 sources), "IS Harry Isaackovitz" has ZERO confirming sources. PRD-061 (event clustering) + PRD-062 (anchor inspector) shipped. Harry anchor repair NOT EXECUTED (4 of 6 gates unmet). Shadow eval ran 12-photo / 24-call with Detroit regression gate (02068 + 01659). Backfilled CHANGELOG entries + ROADMAP Recently Completed for Sessions 152, 153, 153b (harness drift closeout). Retroactive assessment for Session 153. Blockers documented: Gemini-via-Chrome fundamentally blocked by MCP (3 retries), Codex CLI `--full-auto` hangs on stdin (same as 152), `gemini_api_calls` missing `experiment_id` column.
+
+- [x] 2026-04-18: **v0.99.68 — Session 153**: Multi-model Harry Fox validation + 14-doc trail. "NOT Harshel Fox" triangulated across local ML + Gemini 3.1 Pro + Codex (3 sources) + 4th Codex independent audit. Corrective analysis replacing earlier Esther/Dora hypothesis. UX fix: accidental-skip undo (commit `3ba5dbff`, 15 new tests). Shadow-eval + embedding-baselines scripts committed (not yet run — rate-limit blocked). `.claude/rules/proactive-context-management.md` rule drafted. 3010 marked SKIPPED. **Over-claimed** "Harry Isaackovitz" — retracted in `docs/feedback/session-153-what-weve-done.md` and formalized in 153b (no reference photo exists, cannot positively identify). Closeout skipped at the time — CHANGELOG/ROADMAP/assessment backfilled in 153b.
+
+- [x] 2026-04-14: **v0.99.67 — Session 152**: 1946 Anniversary Photo + Person 3051 Cross-Reference. Date correction 1928→1946; city corrections for all 3 Fox brothers; Reva Heft correction (Meyer's wife, not Irving's); Sarah death-date correction. Handwritten annotations cataloged (15+ names). Irving's wife Edith Rosenthal Fox identified. Person 3051 cluster consistency verified; Burd-sister hypothesis inconclusive. 5 factual errors corrected via user + Ancestry. Codex CLI failed (stdin/tty — first occurrence of the recurring bug). Assessment at `docs/assessments/session-152-assessment.md`. CHANGELOG/ROADMAP entries backfilled in 153b.
 
 - [x] 2026-04-14: **v0.99.66 — Session 151**: Batch Event Context + Harness Audit. `scripts/batch_event_context.py` — Gemini "identification" preset on community photos (event_context + relationship_inference). 5/5 Fader photos validated. Codex P1 fixes: path traversal, upsert failure. Sessions 149-150 harness audit: full compliance. Browser verified: mobile 375px, text hints, identity suggestions. 12 new tests. 4163 app tests pass.
 

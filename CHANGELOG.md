@@ -2,6 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.69] — 2026-04-19 (Session 153b: Honest Validation + Harness Closeout Backfill)
+
+### Validation / research
+- **Bessie Fox = 3009 hypothesis**: synthesized POSSIBLE-trending-WEAK across 4 independent sources (local ML, Opus audit, Claude multimodal subagent, direct visual). Bessie ranks #46 in similarity list; top 1.7% on beach anchor but noise on FB anchor. Do NOT label 3009 as Bessie.
+- **Center-man honest hypothesis table**: "NOT Harshel" triangulated (STRONG, 4 sources). "IS Harry Isaackovitz" has ZERO confirming sources. Recommended conservative replacement label: "Belle Isle Conservatory Young Man c.1917-1918".
+- **Opus independent audit**: 2,961 words; flagged 5 cognitive errors from Session 153 (conflating absence-of-contradiction with positive confirmation; premature closure; skipped user's first-stated hypothesis; 14-doc sprawl hiding the over-claim; circular biographical-pairing).
+- **Coverage audit**: 50 Session 152+153 user requests enumerated; 18 DONE, 10 PARTIAL, 17 NOT DONE (16 scheduled in 153b), 1 declined.
+- **Harness compliance audit**: sessions 152 and 153 closeout drift documented.
+
+### PRDs
+- **PRD-061** (event clustering — Tier-1 rule-based fusion, Belle Isle trio as positive control, 30-pair validation gate)
+- **PRD-062** (anchor inspector + identity repair UX — addresses P1 data integrity category from Lessons 153-156)
+
+### Phase 7 decision
+- Harry Fox anchor repair NOT EXECUTED. 4 of 6 gates unmet. Face-ID discrepancy (`1fea75…` vs `2bc31…`) is a hard blocker.
+
+### Shadow eval (Phase 5)
+- Detroit regression gate added (02068 + 01659 second Belle Isle frame) to `scripts/session153_shadow_eval.py`.
+- Ran 12-photo / 24-call shadow-eval with Gemini 3.1 Pro. Raw output: `docs/feedback/session-153-gemini-shadow-eval-raw.json`. Experiment ID logged.
+- Schema drift found: `gemini_api_calls` missing `experiment_id` column — Supabase writes fail, JSON dump still persists. Non-blocking for eval; schema fix tracked.
+
+### Harness closeout backfill
+- Added retroactive assessment for Session 153 (`docs/assessments/session-153-assessment.md`).
+- Added CHANGELOG entries for Sessions 152 (v0.99.67), 153 (v0.99.68), 153b (this).
+- Added ROADMAP "Recently Completed" entries for 152, 153, 153b.
+- Restored 1 missing memory file (`feedback_reva_heft_correction.md`) from repo backup at session start.
+
+### Issues not resolved
+- **Gemini via Claude Chrome** blocked by MCP architectural limits (3 retries, all failed — cross-tab screenshot IDs, CORS, file:// scheme). Escalated to user.
+- **Codex CLI `--full-auto`** hangs on stdin (same issue as Session 152). No Codex output for Phase 1C.
+- **78 docs over 300-line cap** (pre-existing from before 153b).
+- **Session 153 "breakthrough" doc title still says "user-confirmed"** — recommended follow-up header annotation.
+
+## [v0.99.68] — 2026-04-18 (Session 153: Multi-model Harry Fox validation + 14-doc trail)
+
+### Shipped
+- Harry Fox "NOT Harshel" triangulated across local ML, Gemini 3.1 Pro, Codex (3 sources) + 4th Codex audit.
+- Corrective analysis replacing the earlier Esther/Dora hypothesis for 1917 Detroit photo.
+- UX fix: accidental-skip undo path (commit `3ba5dbff`, 15 new tests).
+- Session 153 prompt, scripts (`compute_embedding_baselines.py`, `session153_shadow_eval.py`), and 14 feedback docs committed.
+- 3010 marked SKIPPED (background passerby, reversible).
+- `.claude/rules/proactive-context-management.md` rule drafted.
+
+### Over-claimed (retracted in 153b)
+- **`session-153-harry-isaackovitz-breakthrough.md`** positively identified center man as "Harry Isaackovitz" without a reference photo existing. 4 sources confirmed "NOT Harshel"; 0 sources could confirm "IS Isaackovitz". See `docs/feedback/session-153-what-weve-done.md` retraction and 153b corrective docs.
+
+### Not done
+- Bessie hypothesis never validated with the 3-model rigor applied to Harry (addressed in 153b Phase 1).
+- Claude Chrome multimodal subagent (3rd validation path user requested) never launched (addressed in 153b Phase 1D).
+- Opus 1M-context audit not run (addressed in 153b Phase 3).
+- Harry anchor repair not executed (correctly deferred).
+
+### Harness drift
+- **No assessment file produced.** Backfilled retroactively in Session 153b.
+- **No CHANGELOG entry.** This entry written in 153b.
+- **No ROADMAP Recently Completed entry.** Backfilled in 153b.
+
+## [v0.99.67] — 2026-04-14 (Session 152: 1946 Anniversary Photo + Person 3051 Cross-Reference)
+
+### Shipped
+- 1946 anniversary photo analysis: date correction (1928→1946), city corrections for all 3 Fox brothers, Reva Heft correction (Meyer's wife, not Irving's), Sarah death-date correction.
+- Handwritten annotations cataloged (15+ names from GEDCOM + Ancestry cross-reference).
+- Irving's wife Edith Rosenthal Fox identified (married ~1921 per 25th anniversary 1946).
+- Person 3051 cross-reference: cluster consistency verified; Burd-sister hypothesis tested against embeddings (inconclusive, well-reasoned limitations documented).
+
+### Red flags (per session-152-assessment.md)
+- 5 factual errors in Phase 1 from trusting inherited context/GEDCOM without verification; corrected via user feedback + Ancestry.
+- Ida Burd (35-43) suggested as candidate for Person 3051 (apparent age ~20) — basic timeline check failure.
+- Codex CLI failed to run (stdin/tty issue) — first occurrence of the same issue that recurred in Sessions 153 and 153b.
+
+### Harness drift
+- **No CHANGELOG entry.** Written retroactively in Session 153b.
+- **No ROADMAP Recently Completed entry.** Backfilled in 153b.
+
 ## [v0.99.66] — 2026-04-14 (Session 151: Batch Event Context + Harness Audit)
 
 ### Features

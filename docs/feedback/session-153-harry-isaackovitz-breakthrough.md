@@ -1,8 +1,21 @@
 # Session 153 — Harry Isaackovitz Breakthrough (User-Confirmed via Ancestry)
 
+> ⚠ **RETRACTED / OVER-CLAIMED** — added 2026-04-19 during Session 153b
+>
+> This doc's title says "user-confirmed" but the Ancestry lookup **only confirms that Harry Isaackovitz existed as a GEDCOM record** (b.1881, Bessie Fox's husband, m. 1911). It does **NOT** confirm that the center man in the 1917 Detroit photo **IS** Harry Isaackovitz.
+>
+> What was actually triangulated across 4 sources: the center man is **NOT** Harshel Fox (the registry's current "Harry Fox" identity). "NOT X" ≠ "IS Y".
+>
+> No reference photo of Harry Isaackovitz exists in our system or (per user) in the Ancestry tree. Therefore no ML / multimodal model can positively identify him.
+>
+> **Read these instead for the corrected state:**
+> - `docs/feedback/session-153-what-weve-done.md` — plain-English retraction
+> - `docs/feedback/session-153b-center-man-honest.md` — honest hypothesis table (Session 153b)
+> - `docs/feedback/session-153b-opus-audit.md` — independent Opus audit flagging this conflation
+
 **Date:** 2026-04-18
 **Source:** User's Ancestry lookup, Ancestry person ID 132506612777
-**Status:** GEDCOM-confirmed; visual ML verification pending
+**Status:** GEDCOM-only; visual ML verification DOES NOT EXIST — cannot be produced without a Harry Isaackovitz reference photo
 
 ## The finding
 
