@@ -73,10 +73,19 @@ Run Codex with the 3009 face + Bessie anchor context. Ask:
 - What's the strongest alternative hypothesis?
 - What's needed to increase confidence?
 
-### Phase 1D — Claude (this session) visual comparison
+### Phase 1D — Claude Chrome multimodal subagent (**MISSING in Session 153 — DO THIS**)
+User's Session 153 request included THREE validation paths, not two: Codex + Gemini-via-Chrome + "another subagent investigate it in claude chrome and figure out how to use the new multimodal skills of the recent model." The third path was never launched. Do it now.
+
+Launch a subagent that:
+- Uses Claude Chrome tools to open both Bessie anchor photos AND the 3009 face crop in Chrome tabs
+- Uses Claude's own multimodal vision (pass images via Read tool, or via the agent inheriting multimodal capability) to produce an independent visual assessment — NOT via Gemini
+- Compares bone structure, eye shape, ear shape, jawline across the 3 images
+- Produces its own confidence rating independent of ML embedding numbers
+
+### Phase 1E — Claude (this session) visual comparison
 Use Read tool to view the photos directly. Write an honest visual assessment — is 3009 visibly the same bone structure as Bessie's anchors, given 35-year age gap?
 
-### Phase 1E — Synthesis
+### Phase 1F — Synthesis
 Write `docs/feedback/session-153b-bessie-validation.md` with:
 - Per-source verdict (Local ML / Gemini-via-Chrome / Codex / Claude)
 - Honest confidence level (WEAK / POSSIBLE / GOOD / STRONG)
@@ -152,19 +161,49 @@ Written to `docs/feedback/session-153b-coverage-audit.md`.
 
 ---
 
-## Phase 5 — Run the rate-limit-blocked work
+## Phase 5 — Run the rate-limit-blocked work + explicit Detroit regression gate
 
-1. `scripts/compute_embedding_baselines.py` — failed with Supabase statement timeout. Fix: reduce SUPABASE_PAGE_SIZE, add WHERE clauses to limit scope, or fetch per-family instead of global
-2. `scripts/session153_shadow_eval.py` — rate-limit blocked. Can now run. Use ≥10 photos including both Belle Isle photos as controls
+1. `scripts/compute_embedding_baselines.py` — failed with Supabase statement timeout. Fix: reduce SUPABASE_PAGE_SIZE, add WHERE clauses to limit scope, or fetch per-family instead of global.
+
+2. `scripts/session153_shadow_eval.py` — rate-limit blocked. Can now run.
+
+   **Explicit Detroit regression gate (the user called this out — don't soften it):**
+   - The test set MUST include BOTH known-Detroit conservatory photos as positive controls:
+     - Photo `02068_p_13akf5twbc3600.jpg` (`b39d6cbe7fe63fca` in URL form)
+     - Photo `91b6f6b296e93a60` (Session 143 reference, second conservatory frame)
+     - Optionally also `01659_p_13akf5twbc5249.jpg` as the third frame
+   - The candidate prompt (3-round scaffold) MUST predict Detroit / Belle Isle for ALL Detroit photos at ≥medium confidence
+   - The baseline prompt will almost certainly say NYC for at least 2 of them (that's the bug we're fixing)
+   - Additionally test ≥7 other known-location photos (Rhodes, Tampa, Dayton, Miami, Newspapers) to catch regressions on non-Detroit photos
+   - PASS criterion: candidate prompt ≥20% better Top-1 accuracy than baseline AND zero regressions (no photo where candidate is wrong and baseline was right)
+   - If candidate prompt fails any Detroit photo: do NOT recommend deployment; investigate which signal is missing
+   - Log ALL runs to `gemini_api_calls` with `experiment_id=session153b_shadow_eval_<ts>` (never to `date_labels`)
+
+3. **After shadow-eval passes on Detroit:** propose permanent deployment as a separate PR with reviewer checkoff, NOT as part of 153b. Deployment is a separate decision from validation.
 
 ---
 
-## Phase 6 — Write two PRDs
+## Phase 6 — Write two PRDs (research already complete — just codify)
 
-If Phase 4 coverage audit + user review agree:
+Both PRDs have underlying research already committed. This phase is codification + implementation plan, not fresh research.
 
-1. `docs/prds/061_event_clustering.md` — from agent `af0449b5` research. Tier-1 rule-based fusion.
-2. `docs/prds/062_anchor_inspector_and_repair_ux.md` — from FB-001. Product-level repair tools so misassignment fixes don't require Claude Code sessions.
+1. **`docs/prds/061_event_clustering.md`** — "Photos taken at the same time" auto-grouping
+   - Foundation: `docs/feedback/session-153-event-clustering-research.md` (agent `af0449b5` output, 191 lines)
+   - Key findings from the research:
+     - Apple Photos' two-pass architecture (clothing within event + face across events) is the direct existence proof
+     - `core/temporal.py` already vendors CLIP — no new dependencies needed for Tier 2
+     - Existing `scripts/event_grouping.py` + `rhodesli_ml/data/event_groups.json` already implements Tier-1 for Esther/Albert only (18 groups, 246/554 dated photos) — generalizing community-wide is ~1 session
+     - Recommended: Tier 1 rule-based (shared identities + clothing + location + filename), Tier 2 CLIP scene embedding after Tier 1 validates
+   - The PRD must include the Belle Isle case as a hand-verified positive: 02068 + 91b6f6b296e93a60 + 01659 should cluster as one event
+   - Validation gate: 30-pair labeled set, ≥85% precision before shipping
+   - Note honest prioritization: this is #2 behind PRD-059 Phase 4 closure per the research agent
+
+2. **`docs/prds/062_anchor_inspector_and_repair_ux.md`** — Product-level misassignment repair
+   - Foundation: `docs/feedback/session-153-feedback.md` FB-001
+   - Capabilities: identity health score, anchor inspector grid, one-click split, Ancestry link repair in same flow, visual side-by-side anchor comparison
+   - Tie-in: the Harry Fox misassignment we found in Session 153 is the canonical test case — would admin-surface tools have let you catch and fix it without a Claude Code session?
+
+Write BOTH PRDs even if they land behind other priority work. This PRD writing is the deliverable, not the implementation.
 
 ---
 
@@ -226,5 +265,20 @@ From Session 153 post-mortem:
 - ❌ Falling back to Playwright/API when Claude Chrome fails once
 - ❌ Proactively declaring session done without coverage verification
 - ❌ Generating 14 doc files without a single plain-English summary
+- ❌ Launching 2 validation agents when user asked for 3 (Codex + Gemini + **Claude Chrome multimodal** — the last one was missed)
+- ❌ Writing PRDs without explicit reference to the underlying research docs
+- ❌ Shadow-eval criteria that don't require both known-Detroit photos to pass
 
 Session 153b MUST NOT repeat these.
+
+## Explicit success gates (binary checks — either met or not)
+
+| Gate | Met by |
+|---|---|
+| Bessie Fox 3-model + multimodal validation complete | Phase 1F synthesis with 4 independent source verdicts |
+| Center-man hypothesis table honest | Phase 2 doc distinguishes confirmed-NOT-Harshel from unconfirmed-IS-Harry-Isaackovitz |
+| Opus 4.6/4.7 independent audit | Phase 3 doc exists with fresh-context Opus output |
+| Coverage audit: 0 NOT-DONE without justification | Phase 4 doc lists every user-prompt item from Sessions 152+153 |
+| Gemini shadow-eval passes on both Belle Isle photos | Phase 5 results show candidate prompt identifies Detroit for 02068 AND 91b6f6b296e93a60 |
+| PRD-061 + PRD-062 exist | Phase 6 files committed |
+| Harry repair executed OR blockers documented | Phase 7 decision recorded |
