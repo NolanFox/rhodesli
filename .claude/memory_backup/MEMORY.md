@@ -17,6 +17,7 @@
 - [feedback_platform_reliability.md](feedback_platform_reliability.md) — Data integrity and reliability trump all new features
 - [feedback_implicit_harness.md](feedback_implicit_harness.md) — Harness compliance is DEFAULT — user should never repeat standard instructions
 - [feedback_fox_family_relations.md](feedback_fox_family_relations.md) — Definitive Fox siblings from 1894 Minsk list. Rose Scheckzner = Harry's WIFE.
+- [feedback_reva_heft_correction.md](feedback_reva_heft_correction.md) — Reva Heft = Meyer's wife (mother), NOT Irving's wife. Verify GEDCOM before stating relations.
 - [feedback_face_photo_mapping.md](feedback_face_photo_mapping.md) — Face IDs (inbox_*) vs photo URLs (SHA256) differ. Hash-verify before mutations.
 - [feedback_feedback_persistence.md](feedback_feedback_persistence.md) — Write all feedback to disk via background subagents immediately
 - [feedback_mobile_usability_critical.md](feedback_mobile_usability_critical.md) — App "almost unusable" on mobile. Blocks adoption. Trumps new features.
