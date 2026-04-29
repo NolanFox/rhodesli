@@ -34,6 +34,18 @@ def _run_hook(
         (returncode, stdout, stderr)
     """
     with tempfile.TemporaryDirectory() as tmpdir:
+        # The hook canonicalizes file paths against `git rev-parse --show-toplevel`
+        # to defeat `../` traversal bypasses (Codex P0 fix, commit ba91f949).
+        # Without a git repo at cwd, REPO="" and the session-doc allowlist branch
+        # is skipped — making it impossible to test exemptions. Initialize a
+        # minimal repo in tmpdir so the canonicalization branch fires.
+        subprocess.run(
+            ["git", "init", "--quiet"],
+            cwd=tmpdir,
+            capture_output=True,
+            check=True,
+        )
+
         # Create session mode file
         claude_dir = os.path.join(tmpdir, ".claude")
         os.makedirs(claude_dir, exist_ok=True)
@@ -102,9 +114,9 @@ class TestTranscriptBasedClearGate:
         assert rc == 2
         assert "BLOCKED" in stderr
 
-    def test_399_lines_no_warning(self):
-        """Just under threshold: no warning."""
-        rc, stdout, stderr = _run_hook(transcript_lines=399)
+    def test_299_lines_no_warning(self):
+        """Just under the 300-line warning threshold: no warning."""
+        rc, stdout, stderr = _run_hook(transcript_lines=299)
         assert rc == 0
         assert "advisory" not in stdout.lower()
         assert "Context" not in stdout
