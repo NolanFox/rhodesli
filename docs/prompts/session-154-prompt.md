@@ -1,9 +1,15 @@
-# Session 154 — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s
+# Session 154 — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s + Supabase Free-Tier Compliance
 
 **Mode:** Implementation + interactive (mixed)
 **Predecessor:** Session 153b (`docs/assessments/session-153b-assessment.md`)
 **Context file (MANDATORY first read):** `docs/session_context/session-154-context.md`
-**Why this session exists:** The Session 153b shadow eval was invalidated by a design bug — the candidate prompt's 3-round scaffold expects GEDCOM context but the script never passes any. Fix that, validate, and in parallel unblock the Harry Fox anchor repair + close the remaining Session 153 Codex P0s.
+**Why this session exists:**
+1. The Session 153b shadow eval was invalidated by a design bug — the candidate prompt's 3-round scaffold expects GEDCOM context but the script never passes any. Fix that and validate.
+2. In parallel, unblock the Harry Fox anchor repair and close the remaining Session 153 Codex P0s.
+3. **NEW (added 2026-04-28 by user):** Supabase organization received a quota-exceeded notice — DB storage is at **2.39 GB** but free-tier "Fair Use" threshold is **1.1 GB**. Grace period until **2026-05-29** (~31 days). This is **storage**, not egress (OD-011/OD-012 already addressed egress). New track E adds a one-shot pruning pass + retention policy + monitoring so we don't trip restrictions.
+4. **Closeout backfill:** SESSION_HISTORY ends at Session 142 — sessions 143-153b never archived. Roll up at 154 close.
+
+**Codex CLI baseline:** v0.125.0 with `model = "gpt-5.5"` and `model_reasoning_effort = "xhigh"` (already set in `~/.codex/config.toml`). DO NOT use `--full-auto` — it hung on stdin in sessions 152/153/153b. Use `codex exec "<prompt>"` with prompt as positional arg, or pipe via `<<< "prompt"` heredoc. Test in Phase A0 before relying on it.
 
 ## Orientation (READ IN ORDER before any work)
 
@@ -39,7 +45,7 @@ git log origin/main..HEAD              # Should be empty after 153b closeout
 
 ## Parallelization plan
 
-Three tracks can run mostly independently, with one merge point.
+Four tracks can run mostly independently, with one merge point.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -51,13 +57,18 @@ Three tracks can run mostly independently, with one merge point.
 │                                                                  │
 │ Track C — 153 Codex P0 closure (worktree subagent)               │
 │   Phases C1, C2                                                  │
+│                                                                  │
+│ Track E — Supabase free-tier compliance (worktree subagent)      │
+│   Phases E0, E1, E2, E3                                          │
 └──────────────────────────────────────────────────────────────────┘
                                │
                                ▼
                    Merge point — Phase D (close)
 ```
 
-All three tracks work on DIFFERENT files (see §Parallelization constraints in the context file). Launch Track B + Track C as background worktree subagents at the start, run Track A in main thread, then synthesize.
+All four tracks work on DIFFERENT files (see §Parallelization constraints in the context file + §Track E file scope below). Launch Tracks B, C, E as background worktree subagents at the start, run Track A in main thread, then synthesize.
+
+**Track-E parallelism note:** E0/E1 are read-only Supabase queries + analysis docs — fully parallel-safe. E2 (DELETE / VACUUM) is destructive; it MUST run last and MUST snapshot first (see Phase E2 gates). E3 (retention policy code) touches new files only and can run in parallel with A.
 
 ---
 
@@ -194,7 +205,120 @@ Launch at session start. Runs parallel.
 
 ---
 
-## Merge point — Phase D (main thread only, after A+B+C finish)
+## Track E — Supabase free-tier compliance (background worktree subagent)
+
+**Why:** Supabase emailed 2026-04-28 — org "Nolan Fox Projects" exceeded free-tier database-storage quota. **Current size: 2.39 GB. Threshold for restrictions: 1.1 GB.** Grace until **2026-05-29**. This is *database storage* (table+index bytes on disk), distinct from egress (OD-011/OD-012, network bytes shipped). User just downgraded back to free after a 1-month Pro stint that addressed egress — storage was never pruned.
+
+**Hard rule:** Track E is **READ-ONLY in Phases E0+E1**. The destructive Phase E2 (DELETE/VACUUM) only fires if E1 produces a written plan that the user (or main thread, if user has approved the auto-prune list ahead of time) explicitly authorizes. Default behavior at session end if no authorization: stop after E1, leave a written plan, do NOT prune.
+
+### Phase E0 — Size discovery (~10 min, READ-ONLY)
+
+Run a Supabase SQL query that lists every table + index by size on disk. Save raw output to `docs/feedback/session-154-supabase-size-baseline.json`.
+
+```sql
+-- run in Supabase SQL editor or via psql
+SELECT
+  schemaname,
+  relname AS table_name,
+  pg_size_pretty(pg_total_relation_size(relid)) AS total_size,
+  pg_total_relation_size(relid) AS total_bytes,
+  pg_size_pretty(pg_relation_size(relid)) AS table_size,
+  pg_size_pretty(pg_total_relation_size(relid) - pg_relation_size(relid)) AS index_size,
+  n_live_tup AS row_estimate
+FROM pg_catalog.pg_statio_user_tables
+JOIN pg_stat_user_tables USING (relid)
+ORDER BY pg_total_relation_size(relid) DESC
+LIMIT 30;
+```
+
+Also dump per-column average size for the top 5 tables (helps identify JSONB/text columns eating space):
+
+```sql
+-- replace 'gemini_api_calls' for each top-5 table
+SELECT
+  attname,
+  pg_size_pretty(SUM(pg_column_size(t.*))::bigint) AS total
+FROM gemini_api_calls t, LATERAL (SELECT * FROM jsonb_each(to_jsonb(t))) j
+GROUP BY attname
+ORDER BY SUM(pg_column_size(t.*))::bigint DESC;
+```
+(Adjust per actual schema — pseudocode above; the agent should write the right SQL for each table.)
+
+Acceptance: baseline JSON committed; top-5 tables identified with byte counts.
+
+### Phase E1 — Pruning plan (~30 min, READ-ONLY)
+
+Based on E0, write `docs/feedback/session-154-supabase-prune-plan.md` with:
+
+1. **Table-by-table verdict** for the top 10 tables: KEEP_ALL / PRUNE_OLD / PRUNE_COLUMNS / VACUUM_ONLY
+2. **Suspected biggest culprits to evaluate** (verify against actual sizes from E0):
+   - `gemini_api_calls.prompt_text` + `full_response` + `gedcom_context` (Session 92 added these — can balloon at 5-50KB per row × hundreds of rows)
+   - `change_log` (Lesson 163 noted 175K+ rows for GEDCOM versioning)
+   - `gedcom_*` versioned mirror tables (`002_gedcom_versioning.sql`, `003_gedcom_rich_mirror.sql`)
+   - `ml_proposals` (Session 109b added 1130 rows)
+   - `audit_log` (Session 113 — 22 call sites)
+3. **Per-table proposed action** with row-count estimate, byte savings estimate, and reversibility:
+   - Example: `gemini_api_calls`: archive rows where `created_at < NOW() - INTERVAL '90 days'` to local JSONL backup at `backups/session-154/gemini_api_calls_pre-prune-{UTC}.jsonl.gz`, then DELETE. Reversible via re-import.
+   - Example: `change_log` for GEDCOM versions ≥3 versions stale: ditto.
+4. **VACUUM FULL plan**: which tables need it (DELETE alone doesn't reclaim disk — Postgres requires VACUUM FULL or `pg_repack` to actually shrink).
+5. **Target final size**: ≤900 MB (gives 200 MB headroom under the 1.1 GB threshold).
+6. **Authorization gate**: explicit "USER MUST APPROVE before E2 runs" line. Default = STOP.
+
+Acceptance: plan doc committed; final-size estimate ≤ 900 MB; user-approval gate present.
+
+### Phase E2 — Execute pruning (~30 min, DESTRUCTIVE — gated)
+
+**Gates** (ALL must be met before any DELETE / TRUNCATE / VACUUM FULL runs):
+1. Phase E1 plan exists and is committed.
+2. User authorization recorded in `docs/feedback/session-154-supabase-prune-authorization.md` (single line: `Authorized by Nolan Fox 2026-04-28` or similar). If absent: STOP.
+3. Snapshot script `scripts/session154_supabase_prune.py` written and dry-run tested. Each pruning step gets its own snapshot file under `backups/session-154/`. NO step runs without writing its snapshot first.
+4. `make test-fast` passes after each individual prune step (catches table-disappearance regressions).
+
+If gates met:
+1. Run `scripts/session154_supabase_prune.py --execute --step <name>` once per step from the plan, sequentially.
+2. After each step, re-run the E0 size query and append to `docs/feedback/session-154-supabase-size-progress.json` (size-over-time evidence).
+3. Final step: `VACUUM FULL` on each pruned table (this is the only way to actually reclaim disk on Postgres — DELETE alone returns space to the table's free list, not the OS). Note: VACUUM FULL takes an exclusive table lock — should be brief at our scale but flag if any table > 100K rows.
+4. Re-query DB size; confirm ≤ 1.1 GB (mandatory) and ≤ 900 MB (target).
+5. Browser-verify the production app works post-prune (admin pages that read from pruned tables — `/admin/audit`, photo pages with Gemini analysis, GEDCOM triage). READ-ONLY browser checks per `.claude/rules/browser-read-only.md`.
+
+If ANY gate fails OR ANY step regresses tests: STOP, revert from snapshot, document in plan doc.
+
+### Phase E3 — Retention policy + monitoring (~20 min)
+
+Add ongoing prevention so this doesn't recur:
+
+1. **Retention policy code** in a new module (e.g., `app/retention.py` or `scripts/retention_sweep.py`):
+   - `gemini_api_calls`: rows older than 90 days → archive to local JSONL → DELETE. Run weekly.
+   - `change_log`: keep latest 3 versions per entity, archive + DELETE older.
+   - `audit_log`: keep 365 days, archive + DELETE older. (User may want longer — flag for decision.)
+   - `ml_proposals`: keep when REJECTED/ACCEPTED for 30 days then archive; KEEP all PENDING.
+
+2. **Monitoring**: add a `/api/admin/db-size` endpoint that returns current DB size + top-10 table sizes. Optional: add a Sentry breadcrumb if size > 800 MB (warning) or > 1 GB (critical).
+
+3. **Document as `OD-013` in `docs/ops/OPS_DECISIONS.md`** with full provenance:
+   - Date, Session 154, Context (the Supabase email), Decision (the prune plan + retention policy), Tradeoffs, Monitoring thresholds, Alternatives rejected (e.g., upgrade to Pro: deferred — user wants free-tier sustainability), Breadcrumbs (OD-011, OD-012, this email).
+
+4. **Update `.claude/rules/egress-budget.md`** → rename mentally to "Supabase budget awareness" — it currently only covers egress. Add a "Database storage" section pointing to OD-013. Don't rename the file; add a header section.
+
+5. **BACKLOG entries** for follow-ups identified during E0/E1 that aren't fixed in this session.
+
+Acceptance: retention script committed (with tests), `/api/admin/db-size` endpoint live + browser-verified, OD-013 written, rule updated.
+
+### Track E file scope (parallelism)
+
+E owns these files exclusively:
+- `docs/feedback/session-154-supabase-*.md` and `*.json`
+- `scripts/session154_supabase_prune.py`
+- `scripts/retention_sweep.py` or `app/retention.py`
+- New `/api/admin/db-size` endpoint (route file extension OR a small new file — prefer new file `app/admin_db_routes.py`)
+- `docs/ops/OPS_DECISIONS.md` (OD-013 append — coordinate with main if both editing)
+- `.claude/rules/egress-budget.md` (header section append)
+
+E does NOT touch: `rhodesli_ml/gemini_extraction.py`, `scripts/session153_shadow_eval.py`, identity registry code, photos.
+
+---
+
+## Merge point — Phase D (main thread only, after A+B+C+E finish)
 
 ### D1 — Harry anchor repair decision (revisit)
 Given Phase B1 + B2 outputs, re-evaluate the 6 gates from `docs/feedback/session-153b-harry-repair-decision.md`. If all met:
@@ -206,17 +330,18 @@ Given Phase B1 + B2 outputs, re-evaluate the 6 gates from `docs/feedback/session
 
 If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated decision doc.
 
-### D2 — Full harness closeout (mandatory 9 steps)
+### D2 — Full harness closeout (mandatory 9 steps + SESSION_HISTORY backfill)
 
 1. `docs/assessments/session-154-assessment.md` — with full AI tool usage section
 2. CHANGELOG: add v0.99.70 for Session 154
 3. ROADMAP: add to Recently Completed
-4. BACKLOG: close items resolved (shadow eval validation, Harry repair status, schema fix, etc.)
-5. `git push origin main`
-6. Browser verify the 6 canonical pages (landing, people, person, compare, estimate, 404)
-7. `git log origin/main..HEAD` must be empty
-8. `bash scripts/backup-memory.sh`
-9. Run `/session-review` skill
+4. BACKLOG: close items resolved (shadow eval validation, Harry repair status, schema fix, Supabase prune execution, OD-013, etc.)
+5. **SESSION_HISTORY backfill** (was deferred at 153b): archive sessions 143 → 153b from ROADMAP "Recently Completed" into `docs/roadmap/SESSION_HISTORY.md` (it currently stops at Session 142). Per Lesson 77: backfill SESSION_HISTORY entries first, then trim ROADMAP in the same commit. Keep entries terse (1-2 lines + version + date) to match the existing format. NEW sessions 143-153b need entries; 154 itself does NOT get archived yet (lives in ROADMAP for the next ~10 sessions).
+6. `git push origin main`
+7. Browser verify the 6 canonical pages (landing, people, person, compare, estimate, 404) PLUS the new `/api/admin/db-size` endpoint if Track E shipped E3
+8. `git log origin/main..HEAD` must be empty
+9. `bash scripts/backup-memory.sh`
+10. Run `/session-review` skill
 
 ---
 
@@ -232,16 +357,41 @@ If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated d
 | Belle Isle archival citation | `docs/feedback/session-154-belle-isle-citation.md` exists |
 | Irving verification | `docs/feedback/session-154-irving-verification.md` has a verdict |
 | Harry repair executed OR blockers documented | Either audit_log row exists OR updated decision doc |
-| Full harness closeout | 9 steps done; `git log origin/main..HEAD` empty |
+| **Supabase E0 baseline captured** | `docs/feedback/session-154-supabase-size-baseline.json` exists with top-30 tables |
+| **Supabase E1 prune plan written** | `docs/feedback/session-154-supabase-prune-plan.md` exists with target ≤900 MB and authorization gate |
+| **Supabase E2 executed (if gated)** | DB size ≤1.1 GB confirmed via re-query; OR plan committed and STOP documented |
+| **Supabase E3 retention shipped** | OD-013 in OPS_DECISIONS, `/api/admin/db-size` returns 200 |
+| **SESSION_HISTORY archived 143-153b** | `grep "Session 143" docs/roadmap/SESSION_HISTORY.md` returns ≥1 line |
+| Full harness closeout | All 10 steps done; `git log origin/main..HEAD` empty |
 
 ## Anti-patterns to avoid (from 153b post-mortem)
 
 - ❌ Running shadow eval piped through `tail` (buffers output; looks stuck)
 - ❌ Retrying Claude Chrome MCP upload_image (architecturally blocked, not transient)
-- ❌ Relying on `codex exec --full-auto` for audits (stdin hangs — same bug in 3 sessions now)
+- ❌ Relying on `codex exec --full-auto` for audits (stdin hangs — same bug in 3 sessions now). Use `codex exec "prompt as positional arg"` or `codex exec <<< "prompt heredoc"` instead.
 - ❌ Declaring a session complete without pushing (153 left 18 commits unpushed)
 - ❌ Single-source hypothesis claims without triangulation ("user-confirmed via Ancestry" → not actually confirmed)
 - ❌ Over-scoped phases that can't /clear cleanly
+- ❌ Pruning Supabase tables without per-step snapshots (Lesson 155 — un-merging required a 7th repair step because of un-snapshotted intermediate state)
+- ❌ DELETE without VACUUM FULL (DELETE returns space to table free list, NOT to the OS — DB size on disk does not shrink)
+
+## Codex audit invocation pattern (gpt-5.5 + xhigh)
+
+`~/.codex/config.toml` defaults are correct: `model = "gpt-5.5"`, `model_reasoning_effort = "xhigh"`. Invoke:
+
+```bash
+codex exec "Review the changes in {files}. Flag P0/P1/P2/P3 by severity. Focus on: security, data-integrity, test coverage, regression risk."
+```
+
+If the above hangs (same 3-session bug), fall back to:
+
+```bash
+echo "Review the changes in ..." | codex exec -
+# or
+codex exec <<< "Review the changes in ..."
+```
+
+If still hung after 60 seconds, abandon Codex audit for that phase and substitute a Claude subagent (general-purpose, fresh context) with the same review prompt.
 
 ## Phase timing estimates (for parallelization decisions)
 
@@ -256,10 +406,14 @@ If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated d
 | B | B2 Bessie strengthening | 20 min |
 | C | C1 Belle Isle citation | 20 min (web research) |
 | C | C2 Irving verification | 15 min |
+| E | E0 Size discovery | 10 min |
+| E | E1 Prune plan | 30 min |
+| E | E2 Execute prune (if gated) | 30 min |
+| E | E3 Retention + monitoring | 20 min |
 | D | D1 Harry repair | 20 min (if gates met) |
-| D | D2 Closeout | 15 min |
-| **Total** | sequential | **~3h 30min** |
-| **Parallel** | A main + B/C in subagents | **~2h 15min** |
+| D | D2 Closeout (incl. SESSION_HISTORY backfill) | 25 min |
+| **Total** | sequential | **~5h 15min** |
+| **Parallel** | A main + B/C/E in subagents | **~3h** |
 
 ## Explicit user decisions to surface
 
