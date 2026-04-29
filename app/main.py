@@ -8054,6 +8054,11 @@ from app import browse_routes  # noqa: E402, F401
 from app import person_routes  # noqa: E402, F401
 from app import event_routes  # noqa: E402, F401
 
+# Session 154 Track E E3: /api/admin/db-size for OD-013 storage monitoring.
+from app.admin_db_routes import register_admin_db_routes  # noqa: E402
+
+register_admin_db_routes(app)
+
 # Backward-compat: tests that import person helpers from app.main still work
 public_person_page = person_routes.public_person_page
 _comment_rate_limit = person_routes._comment_rate_limit
