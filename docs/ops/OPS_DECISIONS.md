@@ -224,3 +224,78 @@ This document records deployment, infrastructure, and operational decisions for 
   add a lightweight `error_log` Supabase table. For now, Sentry's 90-day window + issue persistence
   is sufficient — we rarely need to analyze errors older than 90 days.
 - **Breadcrumbs**: Session 95b observability discussion, BACKLOG.md OBS-001
+
+## OD-013: Supabase Database Storage Compliance — E1 Stopgap + E3 Retention + E4 Redesign
+- **Date**: 2026-04-28
+- **Session**: 154 (Track E)
+- **Context**: Supabase emailed 2026-04-28 — org "Nolan Fox Projects" exceeded free-tier database
+  storage quota. Database size: 2.39 GB. Threshold for restrictions: 1.1 GB. Grace ends 2026-05-29.
+  This is *database storage* (table+index bytes on disk), distinct from egress (OD-011/OD-012,
+  network bytes shipped). User just downgraded back to free after 1-month Pro stint that addressed
+  egress — storage was never pruned.
+- **Phase E0 baseline** (`docs/feedback/session-154-supabase-size-summary.md`): 97.9% of bytes
+  (2.17 GB of 2.22 GB `pg_database_size`) are in `gedcom_*` tables. Everything else (auth,
+  identities, photos, embeddings, faces, gemini, audit) totals ~50 MB combined.
+- **Phase E0.5 root cause** (`docs/feedback/session-154-supabase-bloat-root-cause.md`): three
+  identifiable root causes account for ~1.42 GB of the 2.17 GB GEDCOM footprint:
+  1. **Failed imports retained** (~1 GB): 7 of 9 `gedcom_versions` rows are `status='failed'`. The
+     importer wrote full row sets and never rolled back. v1-v6 + v8 retain ~131K individual rows,
+     ~440K relationships, ~144K events, ~590K change_log rows that have no historical value.
+  2. **`payload_hash` populated but never used at INSERT** (~400 MB): Migration 003 added
+     `idx_gedcom_individuals_payload_hash` (line 41 of the SQL) but the importer writes blindly
+     without checking it. Top-20 duplicated hashes all repeat exactly 7 times — same byte-identical
+     payload sitting in 7 separate version rows for the same `gedcom_id`.
+  3. **`change_log` phantom rows** (~300 MB): 1.24M of 1.65M rows (75%) have NULL old_value AND
+     NULL new_value. They are journal rows for `change_type='added'` and `'removed'` carrying
+     per-row UUID + version_id overhead with no payload.
+- **Decision**: Three-phase response.
+  - **E1 stopgap prune** (text plan only at session 154 closeout, gated on user authorization
+    message naming plan commit hash + every table + every DELETE predicate + every snapshot path
+    + full VACUUM list — "approved" alone NOT sufficient). Plan reclaims ~1.43 GB → final ~840 MB.
+    Snapshot-validate-mutate-verify per Lessons 155, 156. Pre-flight grep checks before user is
+    even asked. Plan: `docs/feedback/session-154-supabase-prune-plan.md`. Tripwire script:
+    `scripts/session154_supabase_prune.py` (--dry-run default, --execute requires
+    `SESSION154_PRUNE_AUTH=approved-<plan-commit>` env var).
+  - **E3 retention sweep** (steady-state guard). Module: `scripts/retention_sweep.py` or
+    `app/retention.py`. Default `--dry-run`. `--execute` requires `RETENTION_AUTH=approved-*`
+    env var (same tripwire pattern as E2). Targets: `gemini_api_calls` (90d), `gedcom_change_log`
+    (keep latest 3 versions per entity), `audit_log` (365d), `ml_proposals` (REJECTED/ACCEPTED 30d,
+    PENDING KEEP_ALL). **Scheduler enablement (cron / Railway cron / GitHub Action) is OUT OF
+    SCOPE for this OD — requires written approval at the same level as E2 before any unattended
+    run.** Plus admin endpoint `GET /api/admin/db-size` returning total + top-10 tables for
+    monitoring.
+  - **E4 redesign** (PRD-063, follow-up session). Goal: preserve current functionality (in-app
+    GEDCOM search, identity↔GEDCOM linking AD-160, business-name lookup AD-210, subject GEDCOM
+    context AD-211/AD-241, /tree, versioning) while reducing storage 10-30× via hash-dedup at
+    INSERT, single canonical row per individual + R2 archive of raw payloads, per-import change
+    manifest replacing per-cell journal. Migration is gated, dual-read for one session, all
+    archives written before any DROP TABLE.
+- **Monitoring thresholds**:
+  - **800 MB warn** — alert via Sentry breadcrumb if `pg_database_size` exceeds 800 MB.
+  - **1.0 GB critical** — alert + block new imports + page admin.
+  - **1.1 GB ceiling** — Supabase free-tier restriction triggers. Below this is mandatory.
+- **Tradeoffs**:
+  - The E1 stopgap loses 7 failed-version "history" — but those versions failed at import time
+    and have no functional value (their `is_current=TRUE` row count is 0). Real history (v7 + v9
+    applied) is preserved.
+  - The E1 stopgap does NOT address Cause #2 (broken dedup at INSERT). If the user re-imports
+    GEDCOM before E4 lands, bloat returns. Mitigation: warn user not to re-import until E4.
+  - E3 retention sweeps reduce future audit-trail depth. `gemini_api_calls` 90-day retention may
+    feel short — flagged for user feedback before scheduler is enabled.
+  - E4 redesign is a multi-session effort. Stopgap buys time, doesn't fix root cause.
+- **Alternatives rejected**:
+  - **Upgrade to Pro** ($25/mo, 8 GB storage) — user explicitly chose to stay on free tier
+    after the prior month's Pro stint. Egress optimizations (OD-012) made free tier viable for
+    egress; storage just needed the same attention.
+  - **Truncate `gedcom_change_log` entirely** — could not confirm in E1's scope that no read
+    path queries it. The conservative approach (drop failed-version + NULL/NULL phantoms) reclaims
+    most of the same bytes without that risk.
+  - **Drop `raw_record_json` columns** — too aggressive for stopgap. Belongs in E4 with archive
+    path.
+  - **Stop versioning** — would lose Migration 002's "audit/rollback" guarantee. The redesign
+    keeps versioning but makes it efficient.
+- **Breadcrumbs**: OD-011 (egress TTL), OD-012 (egress crisis), Lesson 163 (change_log scale),
+  Lesson 165 (IS NULL view bug — same hypothesis), Migration 002, Migration 003, AD-098, the
+  Supabase email itself, `docs/prds/063_gedcom_mirror_efficient_redesign.md` (E4),
+  `docs/feedback/session-154-supabase-prune-plan.md` (E1), `.claude/rules/egress-budget.md`
+  (Database storage section).
