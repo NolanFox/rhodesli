@@ -246,6 +246,35 @@ ORDER BY SUM(pg_column_size(t.*))::bigint DESC;
 
 Acceptance: baseline JSON committed; top-5 tables identified with byte counts.
 
+### Phase E0.5 — GEDCOM bloat ROOT CAUSE investigation (~30 min, READ-ONLY) — added 2026-04-28 per user pushback
+
+**User concern (verbatim):** "I'm still not following how the gedcom file has ballooned to such a large size. I have only updated the gedcom a handful of times, and the base file itself is only in the MB order of magnitude. It doesn't make sense to me that several updates to the same gedcom would generate between 2-3 orders of magnitude more data."
+
+**The user is right.** Pruning is a triage that addresses symptoms. The real question is the architecture. Phase E0.5 must answer:
+
+1. **How many DISTINCT individuals are in the user's actual GEDCOM?** Run `SELECT COUNT(DISTINCT gedcom_id) FROM gedcom_individuals;` — compare to the ~196K total row count. The ratio = the version-bloat factor.
+
+2. **How many `gedcom_versions` rows exist?** This is the import count. If 5-15: each import retained as full snapshot (the design from Migration 003, Session 98). If many more: the importer is creating phantom versions.
+
+3. **Is `payload_hash` actually being used to dedup?** Migration 003 added `payload_hash` and an index on it (line 41). Check: `SELECT payload_hash, COUNT(*) FROM gedcom_individuals WHERE payload_hash IS NOT NULL GROUP BY payload_hash HAVING COUNT(*) > 1 ORDER BY 2 DESC LIMIT 20;` — if this returns big counts, the SAME unchanged record is being written over and over across versions instead of being recognized as identical and skipped.
+
+4. **Storage layout audit per individual:** for one specific individual (pick `gedcom_id = '@I132506612777@'` — Harry Isaackovitz from session 153), `SELECT version_id, is_current, payload_hash, octet_length(raw_record_json::text) AS raw_bytes, octet_length(names_json::text) AS names_bytes, octet_length(events_json::text) AS events_bytes FROM gedcom_individuals WHERE gedcom_id = '@I132506612777@' ORDER BY created_at;` — does each version store the FULL record even when nothing changed?
+
+5. **The same audit on `gedcom_change_log`**: how many rows per import? `SELECT version_id, COUNT(*) FROM gedcom_change_log GROUP BY version_id ORDER BY 2 DESC LIMIT 20;` — if every import generates ~165K change_log rows regardless of whether anything actually changed, the importer is recording phantom changes (Lesson 165's IS NULL view bug or similar).
+
+6. **The `raw_record_json` redundancy**: this column stores the full raw GEDCOM payload (Migration 003 line 32). Every other JSONB column on the same row is a STRUCTURED view of fields extracted from `raw_record_json`. So every byte is potentially stored twice. Run `SELECT pg_size_pretty(SUM(octet_length(raw_record_json::text))) FROM gedcom_individuals WHERE is_current = TRUE;` for the current-version footprint of the raw column alone. Compare to total table size.
+
+**Output:** `docs/feedback/session-154-supabase-bloat-root-cause.md` with:
+- Distinct-individual count vs total-row count (the duplication factor)
+- Version count + per-version row counts
+- Top-10 duplicated `payload_hash` groups (proof or refutation that dedup is broken)
+- Per-individual storage breakdown for one example
+- Per-version `change_log` size
+- `raw_record_json` redundancy footprint
+- **Verdict: which of these is the dominant cause** — versioning-with-no-dedup, double-storage of raw vs structured, change_log phantom rows, or some combination
+
+This phase is gated BEFORE E1 — the prune plan needs to know which root cause to attack.
+
 ### Phase E1 — Pruning plan (~30 min, READ-ONLY)
 
 Based on E0, write `docs/feedback/session-154-supabase-prune-plan.md` with:
@@ -308,6 +337,46 @@ Add ongoing prevention so this doesn't recur. **Critical safety constraints from
 5. **BACKLOG entries** for follow-ups identified during E0/E1 that aren't fixed in this session.
 
 Acceptance: retention script committed (with tests), `/api/admin/db-size` endpoint live + browser-verified, OD-013 written, rule updated.
+
+### Phase E4 — GEDCOM mirror REDESIGN proposal (~45 min, design-only, NO code) — added 2026-04-28
+
+**User strategic ask (verbatim):** "I want to make sure nothing is lost and we have a clear way to track how things get updated for all the reasons we've outlined (see all our notes about how to use the gedcom). However this should be possible in a way more efficient fashion. I'd imagine this would also speed up the functionality of linking to the tree as well and have other advantages."
+
+The current schema (Migration 003, `scripts/supabase_migration_003_gedcom_rich_mirror.sql`) was designed to "preserve full GEDCOM lineage." That goal is correct; the implementation is wasteful. Phase E4 produces a written redesign as `docs/prds/063_gedcom_mirror_efficient_redesign.md` (under 300 lines) that:
+
+1. **Preserves all current functionality**:
+   - In-app GEDCOM search (person lookup by name/date/place)
+   - Identity ↔ GEDCOM linking (AD-160)
+   - Business-name → owner lookup (AD-210)
+   - Subject GEDCOM context for Gemini prompts (AD-211, AD-241 planned for Track A)
+   - Family tree view rendering (`/tree`)
+   - Versioning (audit trail of imports + ability to roll back to a prior version)
+
+2. **Reduces storage by 10-30x** through one or more of these mechanisms (the PRD evaluates each):
+   - **Hash-based dedup at INSERT**: if `payload_hash` matches an existing CURRENT row, no-op the insert and bump version-range tracking. Phase E0.5 will tell us whether this is already being done; if not, ~70-90% of bloat is eliminable.
+   - **Single canonical row per individual + versioned delta archive**: `gedcom_individuals_current` (one row per `gedcom_id`, ~10K rows) + `gedcom_individuals_archive` (compressed JSONL on R2 or in a TOAST-friendly archive table, fetched only when historical view is requested).
+   - **Drop `raw_record_json` from runtime tables**: keep parsed structured columns; stash the raw payload in a per-version archive blob (one blob per import, gzipped, on R2).
+   - **Per-import change manifest** instead of per-cell `change_log`: ONE row per import naming the version and a JSONB summary of "what tables changed and how many rows" — replaces 165K-row-per-import journal with a single row per import.
+   - **Drop unused indexes** (Phase E0.5 audits `pg_stat_user_indexes` first).
+
+3. **Speeds up tree linking + tree page rendering**: smaller table = faster index scans + smaller TOAST reads + better PostgreSQL planner stats. The PRD must include an estimated query-time delta for the 5 most-frequent GEDCOM read paths, based on E0.5's measurements.
+
+4. **Defines the migration path** with zero data loss:
+   - Step 1: archive every existing version to R2 as compressed JSONL (one file per `gedcom_versions` row). Reversible: re-import any version from archive.
+   - Step 2: build the new schema in parallel (e.g., `gedcom_individuals_v2`).
+   - Step 3: backfill from current `is_current = TRUE` rows.
+   - Step 4: dual-read in app code (read v2 if exists, fall back to v1) for one session as a confidence check.
+   - Step 5: cut over reads + drop v1 tables.
+   - Step 6: VACUUM FULL on database.
+
+5. **Operational guardrails**:
+   - All current GEDCOM .ged files must be backed up to R2 BEFORE any prune/redesign work (we have the canonical source of truth there).
+   - Before any DROP TABLE: snapshot to JSONL and verify roundtrip restoration on a separate test database.
+   - Migration is gated on user authorization message at the same level as E2.
+
+**Phase E4 produces ONLY the PRD.** No code, no migrations. Implementation is a future session (likely 155 or 155b) once the user has reviewed the PRD.
+
+**Phase E2 (the "just prune now") becomes a STOPGAP** — it gets us under the 1.1 GB threshold by 2026-05-29 to avoid restrictions, but the real fix is the E4 redesign that lands in a follow-up session. The Phase E1 plan should NOT prune things the redesign would let us reorganize for free; it should focus on the highest-confidence wins (truncate change_log, drop redundant raw_*_json columns IF E0.5 confirms they're not queried).
 
 ### Track E file scope (parallelism — clarified per Codex P2 audit)
 
@@ -413,10 +482,12 @@ If still hung after 60 seconds, abandon Codex audit for that phase and substitut
 | B | B2 Bessie strengthening | 20 min |
 | C | C1 Belle Isle citation | 20 min (web research) |
 | C | C2 Irving verification | 15 min |
-| E | E0 Size discovery | 10 min |
-| E | E1 Prune plan | 30 min |
+| E | E0 Size discovery | 10 min (DONE pre-154 in 153b kickoff) |
+| E | **E0.5 Bloat root-cause investigation** (NEW) | 30 min |
+| E | E1 Prune plan (focused stopgap) | 30 min |
 | E | E2 Execute prune (if gated) | 30 min |
 | E | E3 Retention + monitoring | 20 min |
+| E | **E4 Mirror redesign PRD** (NEW, design-only) | 45 min |
 | D | D1 Harry repair | 20 min (if gates met) |
 | D | D2 Closeout (incl. SESSION_HISTORY backfill) | 25 min |
 | **Total** | sequential | **~5h 15min** |
