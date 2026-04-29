@@ -1,0 +1,206 @@
+{
+  "captured_at": "2026-04-29T03:38:40.477492+00:00",
+  "queries": {
+    "records_per_version": [
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "rows": 30154,
+        "raw_text_total": "17 MB",
+        "root_json_total": "52 MB"
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "rows": 30154,
+        "raw_text_total": "17 MB",
+        "root_json_total": "52 MB"
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "rows": 30154,
+        "raw_text_total": "17 MB",
+        "root_json_total": "52 MB"
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "rows": 28362,
+        "raw_text_total": "16 MB",
+        "root_json_total": "51 MB"
+      }
+    ],
+    "relationships_per_version": [
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "rows": 146592,
+        "payload_total": "2191 kB"
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "rows": 146592,
+        "payload_total": "2191 kB"
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "rows": 146592,
+        "payload_total": "2191 kB"
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "rows": 146592,
+        "payload_total": "2191 kB"
+      },
+      {
+        "version_id": null,
+        "rows": 145574,
+        "payload_total": "284 kB"
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "rows": 140796,
+        "payload_total": "2101 kB"
+      }
+    ],
+    "events_per_version": [
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "rows": 41526,
+        "raw_node_total": "18 MB"
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "rows": 41526,
+        "raw_node_total": "18 MB"
+      },
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "rows": 41526,
+        "raw_node_total": "18 MB"
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "rows": 41526,
+        "raw_node_total": "18 MB"
+      },
+      {
+        "version_id": null,
+        "rows": 40140,
+        "raw_node_total": "78 kB"
+      },
+      {
+        "version_id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+        "rows": 19000,
+        "raw_node_total": "9031 kB"
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "rows": 872,
+        "raw_node_total": "754 kB"
+      }
+    ],
+    "families_per_version": [
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "rows": 6722,
+        "raw_total": "5992 kB"
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "rows": 6722,
+        "raw_total": "5992 kB"
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "rows": 6722,
+        "raw_total": "5992 kB"
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "rows": 6722,
+        "raw_total": "5992 kB"
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "rows": 6436,
+        "raw_total": "5747 kB"
+      }
+    ],
+    "safe_rows_individuals": [
+      {
+        "rows": 43172
+      }
+    ],
+    "safe_rows_records": [
+      {
+        "rows": 58516
+      }
+    ],
+    "failed_version_rows": [
+      {
+        "tbl": "gedcom_individuals",
+        "rows": 131664
+      },
+      {
+        "tbl": "gedcom_records",
+        "rows": 60308
+      },
+      {
+        "tbl": "gedcom_events",
+        "rows": 143578
+      },
+      {
+        "tbl": "gedcom_relationships",
+        "rows": 439776
+      },
+      {
+        "tbl": "gedcom_families",
+        "rows": 20166
+      },
+      {
+        "tbl": "gedcom_change_log",
+        "rows": 589594
+      }
+    ],
+    "null_version_audit": [
+      {
+        "tbl": "gedcom_individuals",
+        "null_rows": 21809,
+        "null_current": 0,
+        "null_legacy": 21809
+      },
+      {
+        "tbl": "gedcom_records",
+        "null_rows": 0,
+        "null_current": 0,
+        "null_legacy": 0
+      },
+      {
+        "tbl": "gedcom_events",
+        "null_rows": 40140,
+        "null_current": 0,
+        "null_legacy": 40140
+      },
+      {
+        "tbl": "gedcom_relationships",
+        "null_rows": 145574,
+        "null_current": 0,
+        "null_legacy": 145574
+      }
+    ],
+    "change_log_phantom": [
+      {
+        "failed_version_rows": 589594,
+        "null_payload_rows": 1236678,
+        "combined_droppable": 1239990
+      }
+    ],
+    "gemini_api_age_distribution": [
+      {
+        "total": 1034,
+        "over_90d": 0,
+        "over_180d": 0,
+        "oldest": "2026-02-23T15:13:58.069508+00:00",
+        "newest": "2026-04-18T22:14:31.423321+00:00",
+        "payload_total": "25 MB"
+      }
+    ]
+  }
+}

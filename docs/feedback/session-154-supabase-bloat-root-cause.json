@@ -1,0 +1,798 @@
+{
+  "captured_at": "2026-04-29T03:31:13.727195+00:00",
+  "queries": {
+    "q1_distinct_individuals": [
+      {
+        "distinct_individuals": 22010
+      }
+    ],
+    "q2_total_rows": [
+      {
+        "total_rows": 196645
+      }
+    ],
+    "q3_version_count": [
+      {
+        "version_count": 9
+      }
+    ],
+    "q4_per_version_counts": [
+      {
+        "version_id": null,
+        "is_current": false,
+        "row_count": 21809
+      },
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "is_current": false,
+        "row_count": 21174
+      },
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "is_current": true,
+        "row_count": 770
+      },
+      {
+        "version_id": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+        "is_current": false,
+        "row_count": 21944
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "is_current": true,
+        "row_count": 21228
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "is_current": false,
+        "row_count": 21944
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "is_current": false,
+        "row_count": 21944
+      },
+      {
+        "version_id": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+        "is_current": false,
+        "row_count": 21944
+      },
+      {
+        "version_id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+        "is_current": false,
+        "row_count": 21944
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "is_current": false,
+        "row_count": 21944
+      }
+    ],
+    "q5_top20_duplicated_hashes": [
+      {
+        "payload_hash": "00036506d65b68ea40d046e1e90711bbcb775afe47d29c4dcb9c9df63f7343a4",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000873ec7e382d0b5e456973ceb1557e447b7aa790df56f2d1c48b9127281969",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000c30b20914800d15554df2e17f7a56ba21085087287178d9531d1580462149",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000ca53fd8b9be5ce0f5b831432a03d43730d7880306acae536ae92ffb022434",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000d6b29c043d0fb480f03fe18317cdd5aa026d83ec9ec6e314b8c21ee23001e",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000db4d40c6800544f242b0a294d09b5fe973cb2dd4ac5f702e20c9552cb6a9d",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000dbe01e717f0587cce277dffaa11b0138b05396acc91f157a36a034fd26f01",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000eae9ee6fdbb9e47fe77bc0930bdc939d28c7e77b2007980a98a931e40f26f",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "000f127284004fa05716f4dcc8f84ff6853d742aaefc141c880d97ba1ab31a01",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "001088da294128147b5b6b9875e07c2402529cde387e9a16775d9f930b05818d",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "00109fdd504c925c49d080ad232ff0aba5e2d6b1829ad757fef31e098a5efb55",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0010e0dd1661b530f4c07b809ef83a05552abd3927b89d946fd3e9e85de5d0b4",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0012dd3472aca57873fff85282c0e52544bab9508890916107eaa8032d8393ff",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0014b28bf8b4c86decf5ff504ca4899ff7825a6126f5c72c1a6b0a91ed5ac783",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0014fcf04ddc4ca74e5fc826b076aad988805b05f2d56ebb784d95593dd26f7e",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "001b389e3f01df5e89c79b03fa346fbfb90ec98ef7d9ecfdd4625a6ea2544d92",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0025af46f4d6a158a2249c7da34d1be831f6dae50217c25e941b9e1e43919f63",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "002b679ccbfa9f22f017b27d7c564cbeee069d9bb0bed82be02fff1a7949bed8",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "0030b764d072b7b1870816bdc6a0676f743c46d2ebf03c5b0e0bfcf3fa5c1bf3",
+        "dup_count": 7
+      },
+      {
+        "payload_hash": "00028538a985aea11cef0bd2133f1f3b3922f1e18ebb3c02544787742bf6162a",
+        "dup_count": 7
+      }
+    ],
+    "q5b_payload_hash_coverage": [
+      {
+        "total_rows": 196645,
+        "rows_with_hash": 174836,
+        "rows_without_hash": 21809
+      }
+    ],
+    "q6_example_individual": [
+      {
+        "version_id": null,
+        "is_current": false,
+        "payload_hash": null,
+        "raw_bytes": 2,
+        "names_bytes": 2,
+        "events_bytes": 2,
+        "birth_bytes": 2,
+        "death_bytes": 2,
+        "created_at": "2026-02-23T06:55:18.055928+00:00"
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T20:45:39.319018+00:00"
+      },
+      {
+        "version_id": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T21:20:07.859473+00:00"
+      },
+      {
+        "version_id": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T21:28:53.235761+00:00"
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T21:36:50.801606+00:00"
+      },
+      {
+        "version_id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T22:24:29.994179+00:00"
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T22:58:11.940713+00:00"
+      },
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "is_current": false,
+        "payload_hash": "bcdb1c1fb2bf95e9a2daefe300a504be32e62796a1752cc8312e68459e403698",
+        "raw_bytes": 3182,
+        "names_bytes": 2442,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-11T23:58:06.215956+00:00"
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "is_current": true,
+        "payload_hash": "6177caf0547aec5d5a86115a39da817e9b173dec1fed5046f0f29c8d19f5cb97",
+        "raw_bytes": 3246,
+        "names_bytes": 2522,
+        "events_bytes": 2,
+        "birth_bytes": 449,
+        "death_bytes": null,
+        "created_at": "2026-03-29T03:46:52.368470+00:00"
+      }
+    ],
+    "q7_change_log_per_version": [
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "row_count": 686500
+      },
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "row_count": 370594
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "row_count": 370594
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "row_count": 219000
+      }
+    ],
+    "q8_raw_record_json_current": [
+      {
+        "pretty": "67 MB",
+        "bytes": 70392854
+      }
+    ],
+    "q9_raw_record_json_total": [
+      {
+        "pretty": "533 MB",
+        "bytes": 558477792
+      }
+    ],
+    "q10_index_usage": [
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "uq_gedcom_relationships_current",
+        "idx_scan": 0,
+        "bytes": 27123712,
+        "pretty": "26 MB"
+      },
+      {
+        "relname": "gedcom_events",
+        "indexrelname": "uq_gedcom_events_current",
+        "idx_scan": 0,
+        "bytes": 2850816,
+        "pretty": "2784 kB"
+      },
+      {
+        "relname": "gedcom_versions",
+        "indexrelname": "gedcom_versions_community_id_version_number_key",
+        "idx_scan": 0,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_enrichment_queue",
+        "indexrelname": "gedcom_enrichment_queue_pkey",
+        "idx_scan": 0,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_entity_redirects",
+        "indexrelname": "uq_gedcom_entity_redirects_old_key",
+        "idx_scan": 0,
+        "bytes": 8192,
+        "pretty": "8192 bytes"
+      },
+      {
+        "relname": "gedcom_change_log",
+        "indexrelname": "gedcom_change_log_pkey",
+        "idx_scan": 1,
+        "bytes": 66920448,
+        "pretty": "64 MB"
+      },
+      {
+        "relname": "gedcom_change_log",
+        "indexrelname": "idx_gedcom_change_log_xref",
+        "idx_scan": 1,
+        "bytes": 58441728,
+        "pretty": "56 MB"
+      },
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "idx_gedcom_relationships_payload_hash",
+        "idx_scan": 1,
+        "bytes": 48218112,
+        "pretty": "46 MB"
+      },
+      {
+        "relname": "gedcom_events",
+        "indexrelname": "idx_gedcom_events_payload_hash",
+        "idx_scan": 1,
+        "bytes": 9166848,
+        "pretty": "8952 kB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "idx_gedcom_individuals_payload_hash",
+        "idx_scan": 1,
+        "bytes": 8855552,
+        "pretty": "8648 kB"
+      },
+      {
+        "relname": "gedcom_face_links",
+        "indexrelname": "gedcom_face_links_pkey",
+        "idx_scan": 1,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_entity_redirects",
+        "indexrelname": "gedcom_entity_redirects_pkey",
+        "idx_scan": 1,
+        "bytes": 8192,
+        "pretty": "8192 bytes"
+      },
+      {
+        "relname": "gedcom_entity_redirects",
+        "indexrelname": "idx_gedcom_entity_redirects_version",
+        "idx_scan": 2,
+        "bytes": 8192,
+        "pretty": "8192 bytes"
+      },
+      {
+        "relname": "gedcom_records",
+        "indexrelname": "gedcom_records_pkey",
+        "idx_scan": 3,
+        "bytes": 6275072,
+        "pretty": "6128 kB"
+      },
+      {
+        "relname": "gedcom_records",
+        "indexrelname": "idx_gedcom_records_type",
+        "idx_scan": 3,
+        "bytes": 2056192,
+        "pretty": "2008 kB"
+      },
+      {
+        "relname": "gedcom_enrichment_queue",
+        "indexrelname": "idx_enrichment_queue_status",
+        "idx_scan": 5,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_face_links",
+        "indexrelname": "idx_gedcom_face_links_gedcom",
+        "idx_scan": 5,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_matches",
+        "indexrelname": "idx_gedcom_matches_identity",
+        "idx_scan": 5,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_events",
+        "indexrelname": "idx_gedcom_events_individual",
+        "idx_scan": 8,
+        "bytes": 3588096,
+        "pretty": "3504 kB"
+      },
+      {
+        "relname": "gedcom_media_objects",
+        "indexrelname": "gedcom_media_objects_pkey",
+        "idx_scan": 13,
+        "bytes": 172032,
+        "pretty": "168 kB"
+      },
+      {
+        "relname": "gedcom_face_links",
+        "indexrelname": "idx_gedcom_face_links_identity",
+        "idx_scan": 13,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_sources",
+        "indexrelname": "gedcom_sources_pkey",
+        "idx_scan": 15,
+        "bytes": 163840,
+        "pretty": "160 kB"
+      },
+      {
+        "relname": "gedcom_media_objects",
+        "indexrelname": "idx_gedcom_media_version",
+        "idx_scan": 20,
+        "bytes": 114688,
+        "pretty": "112 kB"
+      },
+      {
+        "relname": "gedcom_sources",
+        "indexrelname": "idx_gedcom_sources_version",
+        "idx_scan": 20,
+        "bytes": 98304,
+        "pretty": "96 kB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "idx_gedcom_individuals_surname",
+        "idx_scan": 22,
+        "bytes": 2752512,
+        "pretty": "2688 kB"
+      },
+      {
+        "relname": "gedcom_entity_redirects",
+        "indexrelname": "idx_gedcom_entity_redirects_new_key",
+        "idx_scan": 22,
+        "bytes": 8192,
+        "pretty": "8192 bytes"
+      },
+      {
+        "relname": "gedcom_records",
+        "indexrelname": "uq_gedcom_records_current",
+        "idx_scan": 24,
+        "bytes": 1671168,
+        "pretty": "1632 kB"
+      },
+      {
+        "relname": "gedcom_records",
+        "indexrelname": "idx_gedcom_records_version",
+        "idx_scan": 27,
+        "bytes": 2555904,
+        "pretty": "2496 kB"
+      },
+      {
+        "relname": "gedcom_media_objects",
+        "indexrelname": "uq_gedcom_media_current",
+        "idx_scan": 27,
+        "bytes": 57344,
+        "pretty": "56 kB"
+      },
+      {
+        "relname": "gedcom_families",
+        "indexrelname": "idx_gedcom_families_version",
+        "idx_scan": 28,
+        "bytes": 696320,
+        "pretty": "680 kB"
+      },
+      {
+        "relname": "gedcom_sources",
+        "indexrelname": "uq_gedcom_sources_current",
+        "idx_scan": 29,
+        "bytes": 57344,
+        "pretty": "56 kB"
+      },
+      {
+        "relname": "gedcom_change_log",
+        "indexrelname": "idx_gedcom_change_log_version",
+        "idx_scan": 31,
+        "bytes": 11698176,
+        "pretty": "11 MB"
+      },
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "idx_gedcom_relationships_current",
+        "idx_scan": 32,
+        "bytes": 3596288,
+        "pretty": "3512 kB"
+      },
+      {
+        "relname": "gedcom_events",
+        "indexrelname": "idx_gedcom_events_current",
+        "idx_scan": 33,
+        "bytes": 1409024,
+        "pretty": "1376 kB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "idx_gedcom_individuals_version",
+        "idx_scan": 47,
+        "bytes": 3481600,
+        "pretty": "3400 kB"
+      },
+      {
+        "relname": "gedcom_versions",
+        "indexrelname": "idx_gedcom_versions_community",
+        "idx_scan": 97,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_face_links",
+        "indexrelname": "gedcom_face_links_identity_id_gedcom_id_key",
+        "idx_scan": 126,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_matches",
+        "indexrelname": "gedcom_matches_pkey",
+        "idx_scan": 132,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      },
+      {
+        "relname": "gedcom_families",
+        "indexrelname": "uq_gedcom_families_current",
+        "idx_scan": 148,
+        "bytes": 303104,
+        "pretty": "296 kB"
+      },
+      {
+        "relname": "gedcom_families",
+        "indexrelname": "gedcom_families_pkey",
+        "idx_scan": 542,
+        "bytes": 1867776,
+        "pretty": "1824 kB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "uq_gedcom_individuals_current",
+        "idx_scan": 1819,
+        "bytes": 1449984,
+        "pretty": "1416 kB"
+      },
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "idx_gedcom_rels_individual",
+        "idx_scan": 21870,
+        "bytes": 11264000,
+        "pretty": "11 MB"
+      },
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "idx_gedcom_rels_related",
+        "idx_scan": 21873,
+        "bytes": 11264000,
+        "pretty": "11 MB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "gedcom_individuals_pkey",
+        "idx_scan": 21958,
+        "bytes": 9248768,
+        "pretty": "9032 kB"
+      },
+      {
+        "relname": "gedcom_individuals",
+        "indexrelname": "idx_gedcom_individuals_current",
+        "idx_scan": 26297,
+        "bytes": 761856,
+        "pretty": "744 kB"
+      },
+      {
+        "relname": "gedcom_events",
+        "indexrelname": "gedcom_events_pkey",
+        "idx_scan": 52676,
+        "bytes": 10887168,
+        "pretty": "10 MB"
+      },
+      {
+        "relname": "gedcom_relationships",
+        "indexrelname": "gedcom_relationships_pkey",
+        "idx_scan": 134604,
+        "bytes": 40747008,
+        "pretty": "39 MB"
+      },
+      {
+        "relname": "gedcom_versions",
+        "indexrelname": "gedcom_versions_pkey",
+        "idx_scan": 3325819,
+        "bytes": 16384,
+        "pretty": "16 kB"
+      }
+    ],
+    "q11_change_log_total": [
+      {
+        "rows": 1646688,
+        "size": "397 MB"
+      }
+    ],
+    "q12_per_version_avg_bytes": [
+      {
+        "version_id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+        "rows": 21944,
+        "raw_total": "67 MB",
+        "avg_raw_bytes_per_row": 3189.0
+      },
+      {
+        "version_id": null,
+        "rows": 21809,
+        "raw_total": "43 kB",
+        "avg_raw_bytes_per_row": 2.0
+      },
+      {
+        "version_id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "rows": 21228,
+        "raw_total": "65 MB",
+        "avg_raw_bytes_per_row": 3228.0
+      }
+    ],
+    "q13_change_log_payload_audit": [
+      {
+        "total": 1646688,
+        "with_values": 410010,
+        "without_values": 1236678,
+        "added": 785872,
+        "modified": 438958,
+        "removed": 421858
+      }
+    ],
+    "q14_individuals_json_breakdown": [
+      {
+        "raw_record": "533 MB",
+        "names": "199 MB",
+        "events": "168 MB",
+        "birth": "131 MB",
+        "death": "55 MB",
+        "family_as_spouse": "1277 kB",
+        "family_as_child": "1534 kB",
+        "notes": "1751 kB",
+        "citations": "127 MB"
+      }
+    ],
+    "q15_versions_detail": [
+      {
+        "id": "f008b3d1-6060-472c-9265-bf599b09132f",
+        "version_number": 1,
+        "imported_at": "2026-03-11T20:43:46.584819+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+        "version_number": 2,
+        "imported_at": "2026-03-11T21:17:57.453468+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+        "version_number": 3,
+        "imported_at": "2026-03-11T21:26:32.576750+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+        "version_number": 4,
+        "imported_at": "2026-03-11T21:34:39.903719+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+        "version_number": 5,
+        "imported_at": "2026-03-11T22:22:22.971822+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+        "version_number": 6,
+        "imported_at": "2026-03-11T22:58:10.945383+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "failed"
+      },
+      {
+        "id": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+        "version_number": 7,
+        "imported_at": "2026-03-11T23:58:05.220618+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21944,
+        "record_count": 30154,
+        "status": "applied"
+      },
+      {
+        "id": "ad077b5f-4a97-443e-89e6-863e593c144a",
+        "version_number": 8,
+        "imported_at": "2026-03-29T03:30:34.912907+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21998,
+        "record_count": 30255,
+        "status": "failed"
+      },
+      {
+        "id": "5d380adc-bb25-43e0-8950-db883b898f11",
+        "version_number": 9,
+        "imported_at": "2026-03-29T03:46:50.796245+00:00",
+        "source_file": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+        "individual_count": 21998,
+        "record_count": 30255,
+        "status": "applied"
+      }
+    ]
+  }
+}
