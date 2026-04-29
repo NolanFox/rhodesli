@@ -275,12 +275,53 @@ CANDIDATE_LOCATION_SCHEMA = """"location": {
 }"""
 
 
-def build_prompt(variant: str, photo_metadata: dict | None = None) -> str:
+# --- Iterative refinement block (AD-242, Session 154 Phase A2). ---
+# Embedded into the candidate_with_prior variant on the second pass. The
+# refuting-feature requirement guards against sycophantic self-agreement.
+PRIOR_PREDICTION_BLOCK = """## Prior prediction to cross-check
+Your first-pass prediction for this photo: place=<PLACE>, confidence=<CONF>.
+First-pass reasoning: <REASONING>
+
+Cross-check this prior prediction against:
+- The subjects' GEDCOM residences at the photo's likely date range (above)
+- The diagnostic visual features from Round 1
+
+Decide ONE of the following and state which:
+  - CONFIRM the prior prediction. To do so, name at least ONE specific
+    GEDCOM fact OR ONE specific Round-1 visual feature that POSITIVELY
+    supports it (not just absence of refutation).
+  - REFUTE the prior prediction. To do so, name the specific feature or
+    GEDCOM fact that REFUTES it, and propose an amended `place`.
+  - LOWER CONFIDENCE without changing place. To do so, name the specific
+    feature or GEDCOM fact that introduces doubt.
+
+Do NOT simply agree with the prior prediction without naming a positive
+supporting feature or fact. "It seems plausible" is not a confirmation."""
+
+
+def build_prompt(
+    variant: str,
+    photo_metadata: dict | None = None,
+    gedcom_context: str | None = None,
+    prior_prediction: dict | None = None,
+) -> str:
     """Build a minimal prompt (preamble + one task section) for A/B comparison.
 
-    To isolate the prompt-structure effect, both variants receive the same
-    preamble, the same photo_metadata, and the same task framing. Only the
-    location section and the JSON schema fragment differ.
+    To isolate the prompt-structure effect, all variants receive the same
+    preamble, the same photo_metadata, the same gedcom_context (when available),
+    and the same task framing. Only the location section and the JSON schema
+    fragment differ.
+
+    Args:
+        variant: One of "baseline", "candidate", "candidate_with_prior".
+        photo_metadata: Dict with collection / source / filename.
+        gedcom_context: Optional GEDCOM-derived biographical context string
+            (residences, occupations, children's birth events) for confirmed
+            subjects in the photo. Threading this through both baseline and
+            candidate is mandatory: AD-241. The shadow eval is invalid otherwise.
+        prior_prediction: Dict with `place`, `confidence`, `reasoning` keys.
+            Required ONLY when variant == "candidate_with_prior" — embeds the
+            first-pass prediction in a refute-or-confirm block per AD-242.
     """
     from rhodesli_ml.gemini_extraction import _PREAMBLE, _SCHEMA_FRAGMENTS
 
@@ -301,17 +342,146 @@ def build_prompt(variant: str, photo_metadata: dict | None = None) -> str:
         )
         parts.append(meta)
 
+    # Genealogical context — mirrors production format at
+    # rhodesli_ml/gemini_extraction.py:364-369. Threaded through ALL variants
+    # so the A/B measures prompt structure, not data availability (AD-241).
+    if gedcom_context:
+        parts.append(
+            f"## Genealogical Context\n{gedcom_context}\n\n"
+            "Use this genealogical data to improve location analysis. The subject's "
+            "OWN residence at the photo's likely date range outweighs a relative's "
+            "residence. Immigration / port-of-entry events are NEVER evidence of "
+            "where someone lived."
+        )
+
     if variant == "baseline":
         parts.append(BASELINE_LOCATION_SECTION)
         schema = "{\n  " + _SCHEMA_FRAGMENTS["location"] + "\n}"
     elif variant == "candidate":
         parts.append(CANDIDATE_LOCATION_SECTION)
         schema = "{\n  " + CANDIDATE_LOCATION_SCHEMA + "\n}"
+    elif variant == "candidate_with_prior":
+        if not prior_prediction:
+            raise ValueError("candidate_with_prior requires prior_prediction kwarg")
+        parts.append(CANDIDATE_LOCATION_SECTION)
+        # Inject prior-prediction values into the refinement block
+        prior_block = PRIOR_PREDICTION_BLOCK
+        prior_block = prior_block.replace("<PLACE>", str(prior_prediction.get("place", "<unknown>")))
+        prior_block = prior_block.replace("<CONF>", str(prior_prediction.get("confidence", "<unknown>")))
+        prior_block = prior_block.replace("<REASONING>", str(prior_prediction.get("reasoning", "<none provided>"))[:500])
+        parts.append(prior_block)
+        schema = "{\n  " + CANDIDATE_LOCATION_SCHEMA + "\n}"
     else:
         raise ValueError(f"Unknown variant: {variant}")
 
     parts.append(f"\n## Response Format (JSON only)\n{schema}")
     return "\n\n".join(parts)
+
+
+def resolve_gedcom_context(photo_id: str, sb) -> str | None:
+    """Build a GEDCOM context string for a shadow-eval photo.
+
+    For each face in the photo, look up its identity (in identities table) and
+    check whether that identity has a confirmed GEDCOM link. For each linked
+    confirmed subject, build a curated residence/occupation/family-events
+    summary using the production helper at
+    `rhodesli_ml.gedcom_context.build_photo_context`.
+
+    Returns the formatted context string, or None if no confirmed subjects in
+    this photo have GEDCOM links.
+
+    Notes:
+        - Wraps `scripts.run_combined_pipeline.load_gedcom_data()` which already
+          fetches face_links + parsed_gedcom from Supabase.
+        - Uses variant="first_order" (matches production batch pipeline default).
+        - Honest fallback: if any step fails, log + return None. The caller
+          decides whether to send no-context or skip the photo.
+    """
+    try:
+        # Photo's faces
+        photo_faces_resp = sb.table("photo_faces").select("face_id").eq("photo_id", photo_id).execute()
+        if not photo_faces_resp.data:
+            logger.info(f"resolve_gedcom_context: no photo_faces rows for {photo_id}")
+            return None
+        face_ids = [r["face_id"] for r in photo_faces_resp.data]
+
+        # Identities for those faces. Supabase REST defaults to 1000 rows per page;
+        # the registry has ~4000 identities so we MUST paginate or we silently miss
+        # the bulk of confirmed identities (root cause of the empty-context dry-run
+        # observed during 154 A1 development).
+        all_identity_rows: list[dict] = []
+        page_size = 1000
+        offset = 0
+        while True:
+            resp = (
+                sb.table("identities")
+                .select("identity_id, name, state, anchor_ids, candidate_ids")
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            if not resp or not resp.data:
+                break
+            all_identity_rows.extend(resp.data)
+            if len(resp.data) < page_size:
+                break
+            offset += page_size
+
+        if not all_identity_rows:
+            logger.info("resolve_gedcom_context: no identities rows")
+            return None
+
+        # Build face_id -> identity record map (only CONFIRMED count toward GEDCOM context;
+        # mirror production's _build_gedcom_context_for_photo logic)
+        face_to_identity = {}
+        identities_dict = {}
+        for ident in all_identity_rows:
+            iid = ident["identity_id"]
+            identities_dict[iid] = ident
+            for fid in (ident.get("anchor_ids") or []):
+                face_to_identity[fid] = ident
+
+        confirmed_face_ids_in_photo = [
+            fid for fid in face_ids
+            if face_to_identity.get(fid, {}).get("state") == "CONFIRMED"
+        ]
+        if not confirmed_face_ids_in_photo:
+            logger.info(f"resolve_gedcom_context: photo {photo_id} has no CONFIRMED faces")
+            return None
+
+        # Pull the heavy GEDCOM data via the canonical loader (face_links + parsed_gedcom)
+        from scripts.run_combined_pipeline import load_gedcom_data
+        from rhodesli_ml.gedcom_context import build_photo_context
+
+        gedcom_data = load_gedcom_data()
+        if not gedcom_data:
+            logger.info("resolve_gedcom_context: load_gedcom_data() returned None")
+            return None
+        parsed_gedcom = gedcom_data.get("parsed_gedcom")
+        face_links = gedcom_data.get("face_links", {})
+        if not parsed_gedcom or not face_links:
+            return None
+
+        # Filter to faces whose identities have GEDCOM links
+        identified_face_ids = [
+            fid for fid in confirmed_face_ids_in_photo
+            if face_to_identity[fid]["identity_id"] in face_links
+        ]
+        if not identified_face_ids:
+            logger.info(f"resolve_gedcom_context: no GEDCOM-linked confirmed faces in {photo_id}")
+            return None
+
+        context = build_photo_context(
+            photo_id=photo_id,
+            identified_faces=identified_face_ids,
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=face_links,
+            identities=identities_dict,
+            variant="first_order",
+        )
+        return context or None
+    except Exception as e:
+        logger.warning(f"resolve_gedcom_context({photo_id}) failed: {e}", exc_info=True)
+        return None
 
 
 def resolve_photo(photo_id: str, sb) -> dict | None:
@@ -328,52 +498,106 @@ def resolve_photo(photo_id: str, sb) -> dict | None:
     return {"photo_id": p["photo_id"], "path": str(path), "collection": p.get("collection"), "source": p.get("source")}
 
 
+# Backoff schedule for transient Gemini 5xx (Session 154 Phase A0).
+# Session 153b observed intermittent 503/504 from Gemini 3.1 Pro; the original
+# script treated those as permanent failures, throwing away expensive prompt
+# context. Three retries with exponential backoff is cheap insurance.
+_RETRY_BACKOFF_SECONDS = (2, 5, 15)
+_RETRYABLE_STATUS_CODES = (500, 502, 503, 504, 408, 429)
+
+
+def _is_retryable_error(err_str: str) -> bool:
+    """Decide whether a Gemini failure is worth retrying.
+
+    We retry only on (a) transient HTTP statuses raised by the SDK, (b) network
+    timeouts, and (c) explicitly-empty responses. We do NOT retry on 4xx other
+    than 408/429 — those are the caller's fault and will keep failing.
+    """
+    if not err_str:
+        return False
+    e = err_str.lower()
+    if "empty_response" in e or "json_parse" in e:
+        # JSON parse failures might be a model glitch; one retry is reasonable.
+        return True
+    if "timeout" in e or "connection" in e or "transport" in e:
+        return True
+    for code in _RETRYABLE_STATUS_CODES:
+        if str(code) in e:
+            return True
+    return False
+
+
 def call_gemini(prompt_text: str, image_bytes: bytes, suffix: str, model: str, api_key: str):
-    """Call Gemini with the given prompt + image. Returns (parsed_dict, latency_ms, usage_meta, err)."""
+    """Call Gemini with retry-with-backoff. Returns (parsed_dict, latency_ms, usage_meta, err).
+
+    Retries 5xx / 408 / 429 / network errors with exponential backoff (2s, 5s, 15s).
+    Does NOT retry on 4xx (other than 408/429) — those are request-side failures.
+    The latency_ms returned reflects total wall-clock for the FINAL attempt only;
+    the err string includes attempt count for retried calls.
+    """
     from google import genai
     from google.genai import types
 
     client = genai.Client(api_key=api_key, http_options={"timeout": 180_000})
     mime = "image/png" if suffix.lower() == ".png" else "image/jpeg"
-    t0 = time.time()
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part.from_text(text=prompt_text),
-                        types.Part.from_bytes(data=image_bytes, mime_type=mime),
-                    ]
-                )
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1,
-            ),
-        )
-        latency_ms = int((time.time() - t0) * 1000)
-        text = response.text
-        if not text:
-            return None, latency_ms, None, "empty_response"
+
+    last_err = None
+    for attempt in range(len(_RETRY_BACKOFF_SECONDS) + 1):
+        t0 = time.time()
         try:
-            parsed = json.loads(text)
-            if isinstance(parsed, list) and parsed:
-                parsed = parsed[0]
-        except Exception as parse_err:
-            return None, latency_ms, None, f"json_parse: {parse_err}"
-        # Extract usage metadata if present
-        usage = None
-        if hasattr(response, "usage_metadata") and response.usage_metadata:
-            um = response.usage_metadata
-            usage = {
-                "prompt_token_count": getattr(um, "prompt_token_count", None),
-                "candidates_token_count": getattr(um, "candidates_token_count", None),
-                "total_token_count": getattr(um, "total_token_count", None),
-            }
-        return parsed, latency_ms, usage, None
-    except Exception as e:
-        return None, int((time.time() - t0) * 1000), None, str(e)
+            response = client.models.generate_content(
+                model=model,
+                contents=[
+                    types.Content(
+                        parts=[
+                            types.Part.from_text(text=prompt_text),
+                            types.Part.from_bytes(data=image_bytes, mime_type=mime),
+                        ]
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+            latency_ms = int((time.time() - t0) * 1000)
+            text = response.text
+            if not text:
+                last_err = "empty_response"
+            else:
+                try:
+                    parsed = json.loads(text)
+                    if isinstance(parsed, list) and parsed:
+                        parsed = parsed[0]
+                except Exception as parse_err:
+                    last_err = f"json_parse: {parse_err}"
+                else:
+                    usage = None
+                    if hasattr(response, "usage_metadata") and response.usage_metadata:
+                        um = response.usage_metadata
+                        usage = {
+                            "prompt_token_count": getattr(um, "prompt_token_count", None),
+                            "candidates_token_count": getattr(um, "candidates_token_count", None),
+                            "total_token_count": getattr(um, "total_token_count", None),
+                        }
+                    return parsed, latency_ms, usage, None
+        except Exception as e:
+            latency_ms = int((time.time() - t0) * 1000)
+            last_err = str(e)
+
+        # Decide whether to retry
+        if attempt < len(_RETRY_BACKOFF_SECONDS) and _is_retryable_error(last_err):
+            wait = _RETRY_BACKOFF_SECONDS[attempt]
+            logger.warning(
+                f"    Gemini call failed (attempt {attempt + 1}/{len(_RETRY_BACKOFF_SECONDS) + 1}): "
+                f"{last_err[:140]} — retrying in {wait}s"
+            )
+            time.sleep(wait)
+            continue
+        break
+
+    annotated_err = f"{last_err} [after {attempt + 1} attempt(s)]" if last_err else "unknown_error"
+    return None, latency_ms, None, annotated_err
 
 
 def evaluate_result(parsed: dict | None, expected_aliases: list[str], special: str | None = None) -> dict:
@@ -428,6 +652,33 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--max-cost", type=float, default=2.0)
     ap.add_argument("--limit", type=int, default=None, help="limit to first N photos (after dedup)")
+    ap.add_argument(
+        "--variants",
+        default="baseline,candidate,candidate_with_prior",
+        help="Comma-separated list of variants to run. Default: all three.",
+    )
+    ap.add_argument(
+        "--photo-ids",
+        default=None,
+        help="Comma-separated photo_ids to filter test set (e.g. for Detroit-only rerun).",
+    )
+    ap.add_argument(
+        "--gedcom-context-fixture",
+        default=None,
+        help=(
+            "Path to a JSON fixture mapping photo_id -> gedcom_context string. "
+            "When set, the script READS context from the fixture instead of "
+            "re-resolving from Supabase. Use this for deterministic re-runs. "
+            "If a photo_id is missing from the fixture, the script resolves it "
+            "from Supabase and writes back to the fixture so subsequent runs "
+            "are stable. Default: tests/fixtures/session154_gedcom_context.json"
+        ),
+    )
+    ap.add_argument(
+        "--no-gedcom-context",
+        action="store_true",
+        help="Disable GEDCOM context entirely (legacy 153b behavior — use only to reproduce that run).",
+    )
     args = ap.parse_args()
 
     from dotenv import load_dotenv
@@ -452,9 +703,16 @@ def main():
     pricing = get_model_pricing(GEMINI_MODEL)
     logger.info(f"Model: {GEMINI_MODEL}  pricing(input/output per 1M): {pricing.get('input')}/{pricing.get('output')}")
 
-    # Resolve test photos
+    # Resolve test photos (optionally filter by --photo-ids)
+    photo_id_filter = None
+    if args.photo_ids:
+        photo_id_filter = {x.strip() for x in args.photo_ids.split(",") if x.strip()}
+        logger.info(f"Filtering test set to {len(photo_id_filter)} photo_ids: {sorted(photo_id_filter)}")
+
     test_rows = []
     for entry in TEST_SET:
+        if photo_id_filter and entry["photo_id"] not in photo_id_filter:
+            continue
         photo = resolve_photo(entry["photo_id"], sb)
         if not photo:
             logger.warning(f"SKIP {entry['photo_id']} — not found or no local file")
@@ -468,12 +726,62 @@ def main():
     for r in test_rows:
         logger.info(f"  {r['photo_id'][:55]:55s}  bucket={r['bucket']}  gt={r['expected_location']}")
 
+    # Resolve variants
+    variants = [v.strip() for v in args.variants.split(",") if v.strip()]
+    valid_variants = {"baseline", "candidate", "candidate_with_prior"}
+    bad = set(variants) - valid_variants
+    if bad:
+        logger.error(f"Unknown variants: {bad}. Valid: {valid_variants}")
+        sys.exit(1)
+    logger.info(f"Variants: {variants}")
+
+    # Resolve GEDCOM context for each photo (fixture-cached for determinism, AD-241).
+    fixture_path = Path(args.gedcom_context_fixture or "tests/fixtures/session154_gedcom_context.json")
+    fixture_data: dict[str, str | None] = {}
+    if fixture_path.exists():
+        try:
+            with open(fixture_path) as f:
+                fixture_data = json.load(f)
+            logger.info(f"GEDCOM fixture: loaded {len(fixture_data)} entries from {fixture_path}")
+        except Exception as e:
+            logger.warning(f"GEDCOM fixture {fixture_path} unreadable: {e} — re-resolving")
+
+    context_map: dict[str, str | None] = {}
+    if not args.no_gedcom_context:
+        for r in test_rows:
+            pid = r["photo_id"]
+            if pid in fixture_data:
+                context_map[pid] = fixture_data[pid]
+                logger.info(
+                    f"GEDCOM context: {pid[:50]:50s} fixture-hit  "
+                    f"({'present' if fixture_data[pid] else 'NULL'})"
+                )
+            else:
+                ctx = resolve_gedcom_context(pid, sb)
+                context_map[pid] = ctx
+                logger.info(
+                    f"GEDCOM context: {pid[:50]:50s} resolved  "
+                    f"({'present, ' + str(len(ctx)) + ' chars' if ctx else 'NULL'})"
+                )
+        # Persist the resolved contexts so subsequent runs are deterministic
+        try:
+            fixture_path.parent.mkdir(parents=True, exist_ok=True)
+            persisted = {**fixture_data, **context_map}
+            with open(fixture_path, "w") as f:
+                json.dump(persisted, f, indent=2)
+            logger.info(f"GEDCOM fixture: wrote {len(persisted)} entries to {fixture_path}")
+        except Exception as e:
+            logger.warning(f"Could not persist GEDCOM fixture {fixture_path}: {e}")
+    else:
+        logger.warning("--no-gedcom-context set: running shadow eval WITHOUT GEDCOM context (legacy 153b mode)")
+
     if args.dry_run:
         logger.info("Dry run — exiting before any API calls")
+        # Useful side-effect: dry-run still resolves+writes the fixture above.
         return
 
     # Unique experiment ID for this run
-    experiment_id = f"session153_shadow_eval_{int(time.time())}"
+    experiment_id = f"session154_shadow_eval_{int(time.time())}"
     logger.info(f"Experiment ID: {experiment_id}")
 
     results = []
@@ -490,16 +798,72 @@ def main():
             continue
 
         photo_metadata = {"collection": row["_collection"], "source": row["_source"], "filename": photo_path.name}
+        photo_gedcom_context = context_map.get(pid)
 
-        for variant in ("baseline", "candidate"):
+        # Per-photo cache of first-pass candidate result for the candidate_with_prior variant.
+        # Same photo's `candidate` run feeds the prior_prediction for `candidate_with_prior`.
+        first_pass_cache = None
+
+        for variant in variants:
             if total_cost >= args.max_cost:
                 logger.warning(f"Cost cap ${args.max_cost} reached — halting")
                 break
 
-            prompt_text = build_prompt(variant, photo_metadata=photo_metadata)
+            # Build the prompt — candidate_with_prior needs a first-pass result
+            if variant == "candidate_with_prior":
+                if first_pass_cache is None:
+                    # If `candidate` wasn't run for this photo (e.g. user passed
+                    # --variants candidate_with_prior alone), run a silent first pass
+                    # so the prior-prediction has substance. Cost still bills under
+                    # the same budget.
+                    fp_prompt = build_prompt(
+                        "candidate", photo_metadata=photo_metadata, gedcom_context=photo_gedcom_context
+                    )
+                    logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant=candidate (silent first pass)")
+                    fp_parsed, _, fp_usage, fp_err = call_gemini(fp_prompt, image_bytes, suffix, GEMINI_MODEL, api_key)
+                    if fp_err or not fp_parsed:
+                        logger.warning(f"    silent first pass failed ({fp_err}); skipping candidate_with_prior")
+                        continue
+                    fp_loc = fp_parsed.get("location", fp_parsed) if isinstance(fp_parsed.get("location"), dict) else fp_parsed
+                    first_pass_cache = {
+                        "place": fp_loc.get("place"),
+                        "confidence": fp_loc.get("confidence"),
+                        "reasoning": (
+                            fp_loc.get("round1_description")
+                            or json.dumps(fp_loc.get("candidates"))[:400]
+                        ),
+                    }
+                    # Token accounting for the silent first pass
+                    fp_pt = (fp_usage or {}).get("prompt_token_count") or len(fp_prompt) // 4
+                    fp_ct = (fp_usage or {}).get("candidates_token_count") or len(json.dumps(fp_parsed)) // 4
+                    total_cost += fp_pt * pricing.get("input", 2.0) / 1_000_000 + fp_ct * pricing.get("output", 12.0) / 1_000_000
+                prompt_text = build_prompt(
+                    variant,
+                    photo_metadata=photo_metadata,
+                    gedcom_context=photo_gedcom_context,
+                    prior_prediction=first_pass_cache,
+                )
+            else:
+                prompt_text = build_prompt(
+                    variant, photo_metadata=photo_metadata, gedcom_context=photo_gedcom_context
+                )
+
             logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant={variant}")
 
             parsed, latency_ms, usage, err = call_gemini(prompt_text, image_bytes, suffix, GEMINI_MODEL, api_key)
+
+            # If this is the candidate variant, cache the result for any subsequent
+            # candidate_with_prior pass (avoids the silent first-pass spend above).
+            if variant == "candidate" and parsed is not None and "candidate_with_prior" in variants:
+                cand_loc = parsed.get("location", parsed) if isinstance(parsed.get("location"), dict) else parsed
+                first_pass_cache = {
+                    "place": cand_loc.get("place"),
+                    "confidence": cand_loc.get("confidence"),
+                    "reasoning": (
+                        cand_loc.get("round1_description")
+                        or json.dumps(cand_loc.get("candidates"))[:400]
+                    ),
+                }
 
             # Token accounting (prefer Gemini's own counts, fall back to char/4 estimate)
             if usage and usage.get("prompt_token_count"):
@@ -518,10 +882,13 @@ def main():
                 f"verdict={graded['verdict']} cost=${cost:.4f}"
             )
 
-            # Log to gemini_api_calls
+            # Log to gemini_api_calls — record gedcom_context presence + variant.
+            # Sub-keys pass=1 (candidate) vs pass=2 (candidate_with_prior) per AD-242.
+            pass_num = 2 if variant == "candidate_with_prior" else 1
             response_summary = {
                 "experiment_variant": variant,
                 "experiment_id": experiment_id,
+                "pass": pass_num,
                 "predicted_place": graded["place"],
                 "predicted_confidence": graded["confidence"],
                 "ground_truth_location": row["expected_location"],
@@ -530,6 +897,8 @@ def main():
                 "verdict": graded["verdict"],
                 "bucket": row["bucket"],
                 "candidates": graded.get("candidates"),
+                "gedcom_context_present": photo_gedcom_context is not None,
+                "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
             }
             try:
                 log_gemini_call(
@@ -547,12 +916,14 @@ def main():
                     gemini_config={
                         "experiment_id": experiment_id,
                         "variant": variant,
-                        "attempt_label": f"{variant}_shadow_eval",
+                        "pass": pass_num,
+                        "attempt_label": f"{variant}_shadow_eval_pass{pass_num}",
                         "request_surface": "scripts.session153_shadow_eval",
                         "request_mode": "experiment",
                         "trigger": "shadow_eval_prompt_ab",
                         "preset": "location_only",
                         "temperature": 0.1,
+                        "gedcom_context_present": photo_gedcom_context is not None,
                     },
                     prompt_text=prompt_text,
                     full_response=parsed,
@@ -566,6 +937,7 @@ def main():
                     "photo_id": pid,
                     "bucket": row["bucket"],
                     "variant": variant,
+                    "pass": pass_num,
                     "expected_location": row["expected_location"],
                     "predicted_place": graded["place"],
                     "predicted_confidence": graded["confidence"],
@@ -576,6 +948,8 @@ def main():
                     "latency_ms": latency_ms,
                     "error": err,
                     "candidates": graded.get("candidates"),
+                    "gedcom_context_present": photo_gedcom_context is not None,
+                    "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
                 }
             )
         if total_cost >= args.max_cost:
@@ -583,16 +957,29 @@ def main():
 
     logger.info(f"Total cost: ${total_cost:.4f}  results rows: {len(results)}")
 
-    # Write raw results to disk for the markdown writeup
-    out_path = Path("docs/feedback/session-153-gemini-shadow-eval-raw.json")
+    # Write raw results to disk. Output path mirrors the test-set scope so
+    # Detroit-only reruns and full-eval runs don't clobber each other.
+    is_detroit_only = bool(photo_id_filter) and photo_id_filter.issubset({
+        "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+        "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+    })
+    if is_detroit_only:
+        out_path = Path("docs/feedback/session-154-shadow-eval-detroit-rerun.json")
+    elif args.no_gedcom_context:
+        out_path = Path("docs/feedback/session-154-shadow-eval-no-context.json")
+    else:
+        out_path = Path("docs/feedback/session-154-shadow-eval-full.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(
             {
                 "experiment_id": experiment_id,
                 "model": GEMINI_MODEL,
+                "variants": variants,
                 "total_cost_usd": round(total_cost, 6),
                 "n_photos": len({r["photo_id"] for r in results}),
+                "n_calls": len(results),
+                "gedcom_context_disabled": args.no_gedcom_context,
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "results": results,
             },
