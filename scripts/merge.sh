@@ -7,7 +7,24 @@ REPO_ROOT=$(git rev-parse --git-common-dir 2>/dev/null | xargs dirname)
 PYTEST="${REPO_ROOT}/venv/bin/pytest"
 [ ! -f "$PYTEST" ] && PYTEST="venv/bin/pytest"
 
-git checkout main && git pull origin main 2>/dev/null || true
+# Pre-check: this script MUST run from the primary worktree, not a sub-worktree.
+# A sub-worktree cannot checkout `main` because it's checked out in the primary.
+# Without this guard, the merges silently land on the wrong branch (Lesson 176).
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || echo "")
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || echo "")
+if [ -z "$GIT_COMMON_DIR" ] || [ -z "$GIT_DIR" ]; then
+    echo "ERROR: not inside a git repository" >&2
+    exit 1
+fi
+if [ "$GIT_COMMON_DIR" != "$GIT_DIR" ] && [ "$GIT_COMMON_DIR" != ".git" ]; then
+    echo "ERROR: scripts/merge.sh must run from the primary worktree (cwd=$(pwd))" >&2
+    echo "       The primary worktree is at: $(dirname "$GIT_COMMON_DIR")" >&2
+    echo "       Sub-worktrees can't checkout main because it's checked out elsewhere." >&2
+    exit 1
+fi
+
+git checkout main
+git pull origin main 2>/dev/null || true
 
 for BRANCH in "$@"; do
   echo "=== Merging: $BRANCH ==="
