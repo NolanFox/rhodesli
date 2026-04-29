@@ -1386,3 +1386,91 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Anchor prototype**: Multi-image comparison prompt builder + admin UI button.
 - **Batch canary**: 3 photos validated. 38 photos still lack GEDCOM context (loader bug).
 - Lessons 163-165. Importer hardened (datetime serialization, non-fatal change log).
+
+## Session 145: Family Research + Identity Inference (2026-03-31) — v0.99.58
+- **Rachel Fox Newman identified** via Family Cluster Score + descendant confirmation (Howard Newman).
+- **1894 Minsk revision list**: definitive Fox sibling birth order (8 children).
+- **AD-235 Family Cluster Score** (0.89 balanced accuracy). PRD-059 Phase 4 + SDD specified.
+- **Fader collection** ingested locally (147 photos, 328 faces, no Fox overlap).
+- **FB-001** UX fix (identify page → person page). Person 3299 investigated (likely Elizabeth Tischler).
+- 4 Codex audits. 10 commits. 3980 app tests pass.
+
+## Session 146: Deploy + Fader Collection + PRD-059 Phase 4 Foundation (2026-03-31) — v0.99.59
+- **Fader collection live** (147 photos, 328 faces, R2+Supabase).
+- **identity_suggestions table** created.
+- **Family Cluster Score batch script** (19 candidates scored, top at 1.14).
+- 16 new tests. 3996 app tests pass.
+
+## Session 147: PRD-059 Phase 4 Completion + Restore UX (2026-04-01) — v0.99.60
+- **All 6 identity inference signals wired** (age_trajectory, gedcom_match, testimony, provenance).
+- **Evidence panel UI** on person page with signal bars. Accept/Reject/NeedMore API endpoints (merge-vs-rename branching).
+- **Restore-to-inbox** for rejected identities (FB-001). Person 82863849 restored.
+- **Codex gpt-5.4 pre-audit**: 9 findings all addressed.
+- Parallelization postmortem + lessons 166-167. 58 new tests. 4054 app tests pass. Remaining: deploy, batch execute, browser verify.
+
+## Session 148: Interactive Fader Collection Fox Search (2026-04-13) — v0.99.61
+- **P0 fix**: auto-rejection hardened (only INBOX).
+- **Memory system**: 6 lost files recovered, git backup added.
+- **Fader identification**: Sherry Ann Fader + Ira Josowitz confirmed in 18-person group photo. 21 candidate photos ranked.
+- Josowitz/Fader family tree researched. 3 feedback items (date labels, embedding sync, cross-collection search).
+- Lessons 168-170. 2 new tests. 4056 app tests pass.
+
+## Session 148b: Overnight Implementation Sprint (2026-04-14) — v0.99.62
+- **TOOLS-007**: cross-collection person search API.
+- **UPLOAD-003** pipeline fixes (3 bugs: 404 after approval, anonymous attribution, missing thumbnails).
+- **REFACTOR-001 Phase 4** (997 lines → photo_analysis.py, main.py 8183).
+- Restore button on dismissed cards. Codex audit: P1 registry API fix.
+- 8 new tests. 4064 app tests pass.
+
+## Session 148c: Interactive Fader Identification (2026-04-14) — v0.99.63
+- **Abraham Al Fader CONFIRMED** (16 anchors). Nellie Kubrin identified (pending confirmation).
+- **FB-009**: 6 compare modal bugs fixed (missing confirm_modal on person page, swap targets, nav_prefix).
+- Identification methodology documented — event context strongest signal, kinship embedding weak.
+- Lessons 171-172. 4064 app tests pass.
+
+## Session 148d: Codex Fixes + Gemini Structured Output (2026-04-14) — v0.99.64
+- **Codex fixes**: CSRF origin check (P3), face coordinate sorting by bbox x (P2), form parameter for known_people (P2), RLS policy service_role only on identification_investigations (P1).
+- **Gemini response_schema enforcement** — `build_response_schema()` forces structured output (event_context + relationship_inference). Validated wedding_reception event type, role_indicators, parent_child pairs.
+- **identification_investigations table** created in Supabase (26 columns) with Session 148c Nellie Kubrin investigation backfilled.
+- 11 new tests. 4109 app tests pass.
+
+## Session 150: Mobile Polish + Quick Wins + Tool Foundations (2026-04-14) — v0.99.65
+- **ENV-001**: Sentry disabled in local dev.
+- **PRD-059 Phase 4** browser-verified (identity suggestions).
+- **Mobile responsive**: landing (UX-134 overflow), person (touch targets, companion strip), compare (stacked layout), photo (face labels).
+- **TOOLS-005 Flow 2**: text hints on /tools/estimate. **PRD-060**: TOOLS-006 self-service archive.
+- **Codex audit**: P1 prompt injection hardened.
+- 42 new tests. 4151 app tests pass.
+
+## Session 151: Batch Event Context + Harness Audit (2026-04-14) — v0.99.66
+- **`scripts/batch_event_context.py`**: Gemini "identification" preset on community photos (event_context + relationship_inference).
+- **5/5 Fader photos validated**.
+- **Codex P1 fixes**: path traversal, upsert failure.
+- **Sessions 149-150 harness audit**: full compliance.
+- Browser verified: mobile 375px, text hints, identity suggestions.
+- 12 new tests. 4163 app tests pass.
+
+## Session 152: 1946 Anniversary Photo + Person 3051 Cross-Reference (2026-04-14) — v0.99.67
+- **Date correction** 1928→1946; city corrections for all 3 Fox brothers; Reva Heft correction (Meyer's wife, not Irving's); Sarah death-date correction.
+- **Handwritten annotations** cataloged (15+ names). Irving's wife Edith Rosenthal Fox identified.
+- **Person 3051**: cluster consistency verified; Burd-sister hypothesis inconclusive.
+- 5 factual errors corrected via user + Ancestry. Codex CLI failed (stdin/tty — first occurrence of recurring bug).
+- Assessment at `docs/assessments/session-152-assessment.md`. CHANGELOG/ROADMAP entries backfilled in 153b.
+
+## Session 153: Multi-Model Harry Fox Validation + 14-Doc Trail (2026-04-18) — v0.99.68
+- **"NOT Harshel Fox" triangulated** across local ML + Gemini 3.1 Pro + Codex (3 sources) + 4th independent Codex audit.
+- **Corrective analysis** replacing earlier Esther/Dora hypothesis.
+- **UX fix**: accidental-skip undo (commit `3ba5dbff`, 15 new tests).
+- Shadow-eval + embedding-baselines scripts committed (rate-limit blocked).
+- `.claude/rules/proactive-context-management.md` rule drafted. 3010 marked SKIPPED.
+- **Over-claimed "Harry Isaackovitz"** — retracted in `docs/feedback/session-153-what-weve-done.md` and formalized in 153b (no reference photo exists).
+- Closeout skipped at the time — CHANGELOG/ROADMAP/assessment backfilled in 153b.
+
+## Session 153b: Honest Validation + Harness Closeout Backfill (2026-04-19) — v0.99.69
+- **Bessie Fox = 3009 synthesized POSSIBLE-trending-WEAK** across 4 independent signals (Local ML rank #46, Claude multimodal ~55%, direct visual WEAK, Opus audit top-1.7% on beach anchor).
+- **Center-man honest table**: "NOT Harshel" triangulated (4 sources), "IS Harry Isaackovitz" has ZERO confirming sources.
+- **PRD-061** (event clustering) + **PRD-062** (anchor inspector) shipped.
+- **Harry anchor repair NOT EXECUTED** (4 of 6 gates unmet).
+- **Shadow eval** ran 12-photo / 24-call with Detroit regression gate (02068 + 01659).
+- **Backfilled** CHANGELOG entries + ROADMAP Recently Completed for Sessions 152, 153, 153b (harness drift closeout). Retroactive assessment for Session 153.
+- Blockers: Gemini-via-Chrome blocked by MCP (3 retries), Codex CLI `--full-auto` hangs on stdin (same as 152), `gemini_api_calls` missing `experiment_id` column.
