@@ -148,7 +148,15 @@ def test_db_size_password_in_error_is_redacted(db_size_app):
 
 def test_query_db_size_handles_missing_password():
     """Direct unit test of the helper: SUPABASE_DB_PASSWORD missing → error,
-    no connection attempt."""
+    no connection attempt.
+
+    Skips when psycopg2 isn't installed — the helper short-circuits on
+    `ImportError` before reaching the password check, so this branch
+    can only be exercised in environments with psycopg2 (the local dev
+    venv has it; minimal-dep CI may not). Discovered in CI failure
+    `25116160211` Session 154.
+    """
+    pytest.importorskip("psycopg2")
     from app import admin_db_routes
     with patch.dict("os.environ", {}, clear=False):
         import os
