@@ -71,10 +71,15 @@ print(os.path.realpath(abs_path))
         "$REPO"/docs/session_logs/*|\
         "$REPO"/docs/session_context/*|\
         "$REPO"/docs/feedback/*|\
+        "$REPO"/docs/prompts/*|\
+        "$REPO"/docs/BACKLOG.md|\
         "$REPO"/CHANGELOG.md|\
         "$REPO"/ROADMAP.md|\
         "$REPO"/BACKLOG.md|\
         "$REPO"/SESSION_LOG.md|\
+        "$REPO"/tasks/lessons.md|\
+        "$REPO"/tasks/lessons/*|\
+        "$REPO"/tasks/todo.md|\
         "$REPO"/.claude/*)
             exit 0
             ;;
