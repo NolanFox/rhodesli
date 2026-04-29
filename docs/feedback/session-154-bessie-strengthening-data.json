@@ -1,0 +1,166 @@
+{
+  "target_face": "inbox_ed3f214545b9",
+  "test_1_multiframe": {
+    "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+    "results": [
+      {
+        "face_id": "inbox_1fea75ce2caf",
+        "distance": 1.4032117128372192,
+        "bbox": [
+          513.8277587890625,
+          282.70037841796875,
+          691.0903930664062,
+          506.6405029296875
+        ],
+        "in_embeddings": true,
+        "owner_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+        "owner_name": "Harry Fox"
+      },
+      {
+        "face_id": "inbox_6a7ee543444c",
+        "distance": 1.383270502090454,
+        "bbox": [
+          739.6490478515625,
+          884.7617797851562,
+          957.9679565429688,
+          1145.1787109375
+        ],
+        "in_embeddings": true,
+        "owner_id": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
+        "owner_name": "Albert Fox"
+      },
+      {
+        "face_id": "inbox_ebe31fa5211e",
+        "distance": 1.4202241897583008,
+        "bbox": [
+          184.04055786132812,
+          890.4684448242188,
+          381.1484069824219,
+          1150.7401123046875
+        ],
+        "in_embeddings": true,
+        "owner_id": "7e6aae2b-2b70-4a8a-9ee5-46e2b2c16c41",
+        "owner_name": "Irving Israel Fox"
+      }
+    ],
+    "same_person_likely_count": 0,
+    "same_person_highconf_count": 0
+  },
+  "test_2_kinship": {
+    "candidates_evaluated": 11,
+    "kin_distances": [
+      {
+        "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+        "name": "Roland Fox",
+        "category": "Fox sibling (name match)",
+        "distance": 1.2788426810728322,
+        "d_mean": 1.367247258747341,
+        "n_anchors": 57
+      },
+      {
+        "identity_id": "b7a78ac4-034d-4c4d-9301-b3121fd6ba16",
+        "name": "Leonard Larry Fox",
+        "category": "name match: 'leona'",
+        "distance": 1.3510645121880223,
+        "d_mean": 1.3510645121880223,
+        "n_anchors": 1
+      },
+      {
+        "identity_id": "85546ebf-75b9-4971-a9d4-b2ce2271bc19",
+        "name": "Albert Fox",
+        "category": "Albert Fox (sibling)",
+        "distance": 1.304733333913466,
+        "d_mean": 1.4181779367780416,
+        "n_anchors": 197
+      },
+      {
+        "identity_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+        "name": "Harry Fox",
+        "category": "Fox sibling (name match)",
+        "distance": 1.4030342069981632,
+        "d_mean": 1.4642424074428007,
+        "n_anchors": 7
+      },
+      {
+        "identity_id": "429cf1b6-04be-475d-9a9d-a3f37dd2f1db",
+        "name": "Charles Fox",
+        "category": "Fox sibling (name match)",
+        "distance": 1.2801537896862094,
+        "d_mean": 1.3759412848581007,
+        "n_anchors": 256
+      },
+      {
+        "identity_id": "b4a43575-9312-40ec-a574-85bf4294d0af",
+        "name": "Bessie Fox",
+        "category": "Bessie Fox (subject \u2014 should rank ~46)",
+        "distance": 1.2753371466720695,
+        "d_mean": 1.3172516300175214,
+        "n_anchors": 2
+      },
+      {
+        "identity_id": "fe958f7d-b716-4603-896b-c683da4e56d1",
+        "name": "Judith Judy Smilg Kleinfeld",
+        "category": "name match: 'smilg'",
+        "distance": 1.2123892417183366,
+        "d_mean": 1.308349587803888,
+        "n_anchors": 9
+      },
+      {
+        "identity_id": "01f9c2a4-f5b5-4fe3-a446-9b1516ce166d",
+        "name": "Robbin Smilg Sejud",
+        "category": "name match: 'smilg'",
+        "distance": 1.3492677911839046,
+        "d_mean": 1.3779256557985187,
+        "n_anchors": 4
+      },
+      {
+        "identity_id": "e889a985-df9a-4d8b-85b8-95322890efdc",
+        "name": "Leona Fox Smilg",
+        "category": "name match: 'leona'",
+        "distance": 1.2393961355202983,
+        "d_mean": 1.342378232563772,
+        "n_anchors": 31
+      },
+      {
+        "identity_id": "b4c00f92-3845-4af6-92a3-2d396ec5eee5",
+        "name": "Michael Smilg",
+        "category": "name match: 'smilg'",
+        "distance": 1.387425448074065,
+        "d_mean": 1.4212021408220294,
+        "n_anchors": 5
+      },
+      {
+        "identity_id": "0ca7b7d1-a7a7-4319-8636-1eeb84fbd5de",
+        "name": "Ben Smilg",
+        "category": "name match: 'smilg'",
+        "distance": 1.3934545096273878,
+        "d_mean": 1.4166768455726724,
+        "n_anchors": 6
+      }
+    ],
+    "rank_lookup": {
+      "ae0b181b-db55-4c3e-853d-0fdc904a1000": 59,
+      "b7a78ac4-034d-4c4d-9301-b3121fd6ba16": 428,
+      "85546ebf-75b9-4971-a9d4-b2ce2271bc19": 108,
+      "d74cb556-6d44-4288-ade3-1cc8fa2b45a6": 1211,
+      "429cf1b6-04be-475d-9a9d-a3f37dd2f1db": 63,
+      "b4a43575-9312-40ec-a574-85bf4294d0af": 51,
+      "fe958f7d-b716-4603-896b-c683da4e56d1": 11,
+      "01f9c2a4-f5b5-4fe3-a446-9b1516ce166d": 409,
+      "e889a985-df9a-4d8b-85b8-95322890efdc": 18,
+      "b4c00f92-3845-4af6-92a3-2d396ec5eee5": 954,
+      "0ca7b7d1-a7a7-4319-8636-1eeb84fbd5de": 1034
+    },
+    "total_ranked_identities": 2020,
+    "baseline_stats": {
+      "n": 80,
+      "median": 1.3750328211301925,
+      "mean": 1.3687705094865232,
+      "min": 1.1482904150094422,
+      "p10": 1.3064503971069354,
+      "p25": 1.331783067877186
+    },
+    "kin_in_top50": 2,
+    "kin_in_top100": 5
+  }
+}
