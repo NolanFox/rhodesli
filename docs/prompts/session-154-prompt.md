@@ -268,11 +268,13 @@ Acceptance: plan doc committed; final-size estimate ≤ 900 MB; user-approval ga
 
 ### Phase E2 — Execute pruning (~30 min, DESTRUCTIVE — gated)
 
-**Gates** (ALL must be met before any DELETE / TRUNCATE / VACUUM FULL runs):
-1. Phase E1 plan exists and is committed.
-2. User authorization recorded in `docs/feedback/session-154-supabase-prune-authorization.md` (single line: `Authorized by Nolan Fox 2026-04-28` or similar). If absent: STOP.
-3. Snapshot script `scripts/session154_supabase_prune.py` written and dry-run tested. Each pruning step gets its own snapshot file under `backups/session-154/`. NO step runs without writing its snapshot first.
+**Gates** (ALL must be met before any DELETE / TRUNCATE / VACUUM FULL runs — Codex P1, Session 154 prep audit):
+1. Phase E1 plan exists, committed, and the commit hash is recorded.
+2. **User authorization message captured verbatim** in `docs/feedback/session-154-supabase-prune-authorization.md`. The agent must NOT compose this from a one-liner — it must be a copy-paste of the user's actual message authorizing the specific E1 plan commit hash, the exact tables being touched, the exact DELETE predicates, the exact snapshot output paths, and the exact VACUUM FULL list. If the captured message is missing any of those five items, STOP. ("Or similar" is not acceptable.)
+3. Snapshot script `scripts/session154_supabase_prune.py` written and dry-run tested. **Each snapshot must include**: (a) every primary key being touched, (b) total row count, (c) checksum/hash of serialized rows, (d) generated restore command embedded in the snapshot file's header. Each pruning step gets its own snapshot under `backups/session-154/`. NO step runs without writing AND validating its snapshot first (re-read snapshot, verify row count + checksum match before mutating).
 4. `make test-fast` passes after each individual prune step (catches table-disappearance regressions).
+5. DELETE predicates must use the snapshotted PK set (not free-form WHERE clauses) so the prune cannot expand beyond what was reviewed.
+6. Restore command for every step must be generated BEFORE VACUUM FULL runs (VACUUM FULL takes an exclusive lock and changes physical layout; restore commands generated after may be wrong).
 
 If gates met:
 1. Run `scripts/session154_supabase_prune.py --execute --step <name>` once per step from the plan, sequentially.
@@ -285,10 +287,13 @@ If ANY gate fails OR ANY step regresses tests: STOP, revert from snapshot, docum
 
 ### Phase E3 — Retention policy + monitoring (~20 min)
 
-Add ongoing prevention so this doesn't recur:
+Add ongoing prevention so this doesn't recur. **Critical safety constraints from Codex P1 audit**:
+- Retention sweeps must be **DRY-RUN BY DEFAULT**. Destructive execution requires `--execute` AND fresh user authorization at the same level of rigor as Phase E2 gates.
+- Retention sweeps must use the same snapshot-with-PK-and-checksum pattern as Phase E2 (re-read validation before mutation).
+- **NO scheduler enablement (cron / Railway cron / GitHub Action / etc.) until the user has explicitly approved OD-013 in writing.** A retention sweep that runs unattended is just E2 with weaker gates — that's not acceptable.
 
-1. **Retention policy code** in a new module (e.g., `app/retention.py` or `scripts/retention_sweep.py`):
-   - `gemini_api_calls`: rows older than 90 days → archive to local JSONL → DELETE. Run weekly.
+1. **Retention policy code** in a new module (e.g., `app/retention.py` or `scripts/retention_sweep.py`) — must implement `--dry-run` (default) and `--execute` (gated) modes:
+   - `gemini_api_calls`: rows older than 90 days → archive to local JSONL → DELETE. Run weekly *only after OD-013 approved*.
    - `change_log`: keep latest 3 versions per entity, archive + DELETE older.
    - `audit_log`: keep 365 days, archive + DELETE older. (User may want longer — flag for decision.)
    - `ml_proposals`: keep when REJECTED/ACCEPTED for 30 days then archive; KEEP all PENDING.
@@ -304,17 +309,17 @@ Add ongoing prevention so this doesn't recur:
 
 Acceptance: retention script committed (with tests), `/api/admin/db-size` endpoint live + browser-verified, OD-013 written, rule updated.
 
-### Track E file scope (parallelism)
+### Track E file scope (parallelism — clarified per Codex P2 audit)
 
 E owns these files exclusively:
-- `docs/feedback/session-154-supabase-*.md` and `*.json`
+- `docs/feedback/session-154-supabase-*.md` and `docs/feedback/session-154-supabase-*.json` (NOT all `*.json` — the shadow eval JSON in `docs/feedback/session-154-shadow-eval-*.json` is owned by Track A)
 - `scripts/session154_supabase_prune.py`
 - `scripts/retention_sweep.py` or `app/retention.py`
-- New `/api/admin/db-size` endpoint (route file extension OR a small new file — prefer new file `app/admin_db_routes.py`)
+- New `/api/admin/db-size` endpoint — prefer a new file `app/admin_db_routes.py`. **If `app/main.py` needs an import to register the new route, that import is a coordination point with main thread**. Track E proposes the one-line import edit; main thread (orchestrator) merges it explicitly. NEVER both edit `app/main.py` simultaneously.
 - `docs/ops/OPS_DECISIONS.md` (OD-013 append — coordinate with main if both editing)
 - `.claude/rules/egress-budget.md` (header section append)
 
-E does NOT touch: `rhodesli_ml/gemini_extraction.py`, `scripts/session153_shadow_eval.py`, identity registry code, photos.
+E does NOT touch: `rhodesli_ml/gemini_extraction.py`, `scripts/session153_shadow_eval.py`, identity registry code, photos, anything outside the file scope above.
 
 ---
 
@@ -340,8 +345,10 @@ If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated d
 6. `git push origin main`
 7. Browser verify the 6 canonical pages (landing, people, person, compare, estimate, 404) PLUS the new `/api/admin/db-size` endpoint if Track E shipped E3
 8. `git log origin/main..HEAD` must be empty
-9. `bash scripts/backup-memory.sh`
-10. Run `/session-review` skill
+9. `git status --short` must be empty (Codex P2 — push-gate doesn't catch uncommitted files)
+10. `bash scripts/harness-check.sh` must exit 0 (re-run after all doc edits — Codex P2)
+11. `bash scripts/backup-memory.sh`
+12. Run `/session-review` skill
 
 ---
 
@@ -361,8 +368,8 @@ If ANY gate still fails: do NOT execute. Document the blocker(s) in an updated d
 | **Supabase E1 prune plan written** | `docs/feedback/session-154-supabase-prune-plan.md` exists with target ≤900 MB and authorization gate |
 | **Supabase E2 executed (if gated)** | DB size ≤1.1 GB confirmed via re-query; OR plan committed and STOP documented |
 | **Supabase E3 retention shipped** | OD-013 in OPS_DECISIONS, `/api/admin/db-size` returns 200 |
-| **SESSION_HISTORY archived 143-153b** | `grep "Session 143" docs/roadmap/SESSION_HISTORY.md` returns ≥1 line |
-| Full harness closeout | All 10 steps done; `git log origin/main..HEAD` empty |
+| **SESSION_HISTORY archived 143-153b** | `grep -E "Session 14[3-9]\\|Session 14[3-8]b\\|Session 14[3-8]c\\|Session 14[3-8]d\\|Session 15[0-3]\\|Session 153b" docs/roadmap/SESSION_HISTORY.md` returns ≥15 hits BEFORE any ROADMAP trim (Codex P3 — full coverage required, not just Session 143) |
+| Full harness closeout | All 12 steps done; `git log origin/main..HEAD` AND `git status --short` empty; `harness-check.sh` exits 0 |
 
 ## Anti-patterns to avoid (from 153b post-mortem)
 

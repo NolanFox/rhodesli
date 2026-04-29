@@ -65,9 +65,11 @@ BEFORE starting the session — a broken harness wastes more time than it saves.
 ### Dual-Audit Protocol (MANDATORY after every phase) — HD-030, Session 137
 After completing each implementation phase (not at session end — after EACH phase):
 
-1. **Codex CLI audit** (independent, fresh context):
+1. **Codex CLI audit** (independent, fresh context — uses gpt-5.5 + xhigh per `~/.codex/config.toml`; verify pin via `.claude/rules/codex-model-pin.txt`):
    ```bash
-   codex exec --full-auto "Audit [changed files]. Security, code quality, test quality. P0/P1/P2/P3 report."
+   codex exec "Audit [changed files]. Security, code quality, test quality. P0/P1/P2/P3 report."
+   # NEVER use --full-auto — it hangs on stdin (Sessions 152, 153, 153b).
+   # Fallback if `codex exec` itself hangs: substitute a Claude general-purpose subagent.
    ```
 2. **Claude Code reviews** the Codex findings:
    - P0/P1: fix immediately before next phase

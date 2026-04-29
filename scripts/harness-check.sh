@@ -31,7 +31,7 @@ check() {
 echo "=== Claude Code Harness Check ==="
 echo ""
 
-echo "[1/5] Hook scripts"
+echo "[1/6] Hook scripts"
 for script in .claude/hooks/*.sh; do
     [ -f "$script" ] || continue
     name=$(basename "$script")
@@ -43,7 +43,7 @@ for script in .claude/hooks/*.sh; do
 done
 
 echo ""
-echo "[2/5] Blocking hooks exit 2 on trigger"
+echo "[2/6] Blocking hooks exit 2 on trigger"
 # pre-work-clear-gate should exit 2 when transcript is long
 tmp_transcript=$(mktemp)
 yes "line" | head -700 > "$tmp_transcript"
@@ -75,7 +75,7 @@ else
 fi
 
 echo ""
-echo "[3/5] Memory integrity"
+echo "[3/6] Memory integrity"
 MEMORY_DIR="$HOME/.claude/projects/-Users-nolanfox-rhodesli/memory"
 if [ -f "$MEMORY_DIR/MEMORY.md" ]; then
     missing=0
@@ -94,7 +94,7 @@ else
 fi
 
 echo ""
-echo "[4/5] Doc size caps"
+echo "[4/6] Doc size caps"
 claude_md_lines=$(wc -l < CLAUDE.md 2>/dev/null | tr -d ' ')
 if [ "${claude_md_lines:-999}" -le 80 ]; then
     check "CLAUDE.md <= 80 lines ($claude_md_lines)" "OK"
@@ -112,7 +112,30 @@ else
 fi
 
 echo ""
-echo "[5/5] Rules referenced by CLAUDE.md exist"
+echo "[5/6] Codex model pin freshness"
+PIN_FILE=".claude/rules/codex-model-pin.txt"
+if [ -f "$PIN_FILE" ]; then
+    PIN_LINE=$(grep -v '^#' "$PIN_FILE" | grep -v '^$' | head -1)
+    PIN_DATE=$(echo "$PIN_LINE" | awk -F'|' '{print $4}')
+    PIN_MODEL=$(echo "$PIN_LINE" | awk -F'|' '{print $1}')
+    if [ -n "$PIN_DATE" ] && date -j -f "%Y-%m-%d" "$PIN_DATE" "+%s" >/dev/null 2>&1; then
+        PIN_EPOCH=$(date -j -f "%Y-%m-%d" "$PIN_DATE" "+%s")
+        NOW_EPOCH=$(date "+%s")
+        AGE_DAYS=$(( (NOW_EPOCH - PIN_EPOCH) / 86400 ))
+        if [ "$AGE_DAYS" -gt 14 ]; then
+            check "Codex model pin ($PIN_MODEL, ${AGE_DAYS}d old)" "FAIL" "stale > 14 days; refresh per .claude/rules/ai-tool-audit.md 'Staying current'"
+        else
+            check "Codex model pin ($PIN_MODEL, ${AGE_DAYS}d old)" "OK"
+        fi
+    else
+        check "Codex model pin" "FAIL" "missing or unparseable date in $PIN_FILE"
+    fi
+else
+    check "Codex model pin" "FAIL" "$PIN_FILE missing — see .claude/rules/ai-tool-audit.md"
+fi
+
+echo ""
+echo "[6/6] Rules referenced by CLAUDE.md exist"
 while IFS= read -r rule_path; do
     if [ -f "$rule_path" ]; then
         check "$rule_path" "OK"

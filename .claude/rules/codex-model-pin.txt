@@ -1,0 +1,9 @@
+# Codex Model Pin — last-verified best-available model
+# Format (single data line below the header):
+#   <codex_model>|<reasoning_effort>|<codex_cli_version_min>|<verified_date_iso>|<source_url>|<note>
+#
+# Rule: harness-check.sh reads this. If verified_date is older than 14 days,
+# warns at session start and prompts a refresh. To refresh, see
+# .claude/rules/ai-tool-audit.md → "Staying current with model releases".
+
+gpt-5.5|xhigh|0.125.0|2026-04-28|https://developers.openai.com/codex/models|gpt-5.5 is current best for code/audit work per OpenAI Codex docs (Apr 2026); supersedes gpt-5.4 / gpt-5.3 / o4-mini
