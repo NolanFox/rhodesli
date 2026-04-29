@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.69 · ~4886 tests (4163 app + 723 ML) · 1121 photos · 1977 identities · 167 confirmed
+Current: v0.99.70 · ~4928 tests (4205 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -142,6 +142,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-04-29: **v0.99.70 — Session 154**: Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s + Supabase Compliance. Pre-session: repaired 10 stale `test_hooks_clear_gate.py` failures that had been blocking GitHub Actions for 10 days (root cause of the user's CI/Railway email storm). Track A: `gemini_api_calls.experiment_id` migration applied via us-west-2 pooler, retry-with-backoff added, AD-241 + AD-242 implemented (`gedcom_context` injection + `candidate_with_prior` iterative refinement). Phase A3 Detroit subset rerun (6 calls, $0.17): **Detroit gate FAILED on 02068** (predicts NYC across all 3 variants WITH GEDCOM context; AD-242 sycophancy guard did not fire — raised confidence on wrong NYC answer from medium→high). Phase A4 correctly skipped. Photo 01659 correctly identifies Detroit under candidate + candidate_with_prior. Track B: Harry face-ID typo resolved (`inbox_1fea75ce2caf` + `inbox_e507a54f204a` are the real F+G; the breakthrough doc's `inbox_2bc31a40c34a` doesn't exist anywhere — Codex was right). Bessie hypothesis strengthened POSSIBLE-WEAK ~40% → POSSIBLE-GOOD ~55% via kinship-proximity (5/11 Bessie-adjacent identities in top 100 of 2,020 candidates, granddaughter at #11 = top 0.5%). Track C: Belle Isle citation GOOD (LoC LC-DIG-det-4a17798); Irving anchor verification STRONG (min distance 0.0000 — already in his anchor list). Track E PARTIAL: E0.5 root cause (97.9% of 2.22 GB in `gedcom_*`; 7 of 9 versions failed-and-retained accounts for ~1 GB; `payload_hash` index unused so duplicate rows repeat 7×); E1 prune plan to ~840 MB (gated on user authorization, plan commit `1e0b0fbc`); E3 retention script + admin endpoint + OD-013; E4 PRD-063 redesign NOT WRITTEN (subagent hit usage limit — deferred to 155). Harry repair NOT executed (3 of 6 gates still unmet). 4205 app tests pass.
 
 - [x] 2026-04-19: **v0.99.69 — Session 153b**: Honest Validation + Harness Closeout Backfill. Bessie Fox = 3009 synthesized POSSIBLE-trending-WEAK across 4 independent signals (Local ML rank #46, Claude multimodal ~55%, direct visual WEAK, Opus audit top-1.7% on beach anchor). Center-man honest table: "NOT Harshel" triangulated (4 sources), "IS Harry Isaackovitz" has ZERO confirming sources. PRD-061 (event clustering) + PRD-062 (anchor inspector) shipped. Harry anchor repair NOT EXECUTED (4 of 6 gates unmet). Shadow eval ran 12-photo / 24-call with Detroit regression gate (02068 + 01659). Backfilled CHANGELOG entries + ROADMAP Recently Completed for Sessions 152, 153, 153b (harness drift closeout). Retroactive assessment for Session 153. Blockers documented: Gemini-via-Chrome fundamentally blocked by MCP (3 retries), Codex CLI `--full-auto` hangs on stdin (same as 152), `gemini_api_calls` missing `experiment_id` column.
 

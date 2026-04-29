@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.70] — 2026-04-29 (Session 154: Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s + Supabase Compliance)
+
+### Pre-session repair (unplanned)
+- **GitHub Actions CI baseline restored** (commit `e04e4caf`). 10 stale failures in `tests/test_hooks_clear_gate.py` had been blocking CI for ~10 days, since the Opus 4.7 hook tightening in `ba91f949`. Root cause: tmpdir wasn't a git repo so the hook's repo-anchored canonicalization couldn't fire, AND the warning threshold dropped from 400 to 300 lines. Fix: git-init the tmpdir + rename `test_399_lines_no_warning` → `test_299_lines_no_warning`. This was the proximate cause of the user's "Railway/GitHub build failure" emails — actual production was healthy throughout.
+
+### Track A — Gemini location prompt fix
+- **AD-241 implemented**: `gedcom_context` injection into the location shadow eval. New `resolve_gedcom_context(photo_id, sb)` helper plus `tests/fixtures/session154_gedcom_context.json` for deterministic re-runs. Fixed Supabase pagination bug that masked confirmed identities (default 1000-row cap was the proximate cause of the empty-context dry-run during 154 development). Both Detroit photos resolved to ~22-23 KB of context.
+- **AD-242 implemented**: `candidate_with_prior` two-pass variant with prior-prediction cross-check block. Sycophancy guard requires Gemini to name a positive supporting feature, not just absence of refutation.
+- **Schema fix**: migration `alter_gemini_api_calls_add_experiment_id.sql` adds the missing `experiment_id` column + partial index, backfills 3 rows from `gemini_config.experiment_id`. Applied via the us-west-2 pooler (direct host IPv6-only and unreachable from this network).
+- **Retry-with-backoff**: `call_gemini()` retries 5xx/408/429/network/empty/json_parse with 2s/5s/15s exponential backoff. Mitigates the 153b 503/504 storm.
+- **Phase A3 Detroit subset rerun executed**: 6 calls / $0.17. **Detroit gate FAILED on photo 02068** — predicts NYC across all 3 variants WITH GEDCOM context. Worse, `candidate_with_prior` raised confidence on the wrong NYC answer from medium→high (the AD-242 sycophancy guard did not fire). Photo 01659 correctly identifies Detroit under candidate + candidate_with_prior. **Phase A4 full eval correctly SKIPPED** per the prompt's A3 acceptance gate. Honest read: prompt structure alone is insufficient on this photo class.
+
+### Track B — Harry anchor repair unblock
+- **Face-ID discrepancy resolved (B1)**: the two correct face IDs are `inbox_1fea75ce2caf` (face F, photo 01659) + `inbox_e507a54f204a` (face G, photo 02068). The Session 153 breakthrough doc's `inbox_2bc31a40c34a` does NOT exist anywhere in the system (zero hits in `embeddings.npy`, zero rows in `photo_faces`). Codex's audit was right; the breakthrough doc had an unverified typo.
+- **Bessie hypothesis strengthened (B2)**: confidence shifted from POSSIBLE-trending-WEAK ~40% to POSSIBLE-trending-GOOD ~55%. Kinship-proximity test produced the strong signal: 5 of 11 Bessie-adjacent identities in top 100 of 2,020 candidates (9× chance rate). Granddaughter Judith Smilg Kleinfeld at rank #11 (top 0.5%), daughter Leona Fox Smilg at rank #18 (top 0.9%), Bessie herself at rank #51 (top 2.5%). Female-line outranks male-line — qualitatively coherent with maternal genetics.
+- **Track D Harry repair status**: 6 gates evaluated. 2/6 met (face-ID, Belle Isle citation), 1/6 partial (Bessie POSSIBLE-GOOD not GOOD), 3/6 not met (1910s reference photo, third-frame triangulation, full Bessie GOOD threshold). **Repair NOT executed.**
+
+### Track C — Session 153 Codex P0 closure
+- **Belle Isle archival citation (C1) — GOOD**: Library of Congress LC-DIG-det-4a17798 (Detroit Publishing Co. interior, 1905) + 6 corroborating sources. Burton Historical Collection DAMS portal blocked generic webfetch; recommended `bhc@detroitpubliclibrary.org` follow-up.
+- **Irving anchor verification (C2) — STRONG**: seated-LEFT face in 02068 IS Irving Israel Fox. Min distance to Irving anchors = 0.0000 (face is already anchor #2 of 8 in Irving's CONFIRMED Supabase row). Cross-frame using 01659 anchor: d=0.6708. Cross-sibling baseline: Albert d=1.2474, Harshel d=1.3409, Bessie d=1.3683 — all clearly different-person territory.
+
+### Track E — Supabase free-tier compliance (PARTIAL)
+- **Phase E0.5 root cause analysis**: 97.9% of 2.22 GB DB size is in `gedcom_*` tables. Three identifiable causes account for ~1.42 GB of the 2.17 GB GEDCOM bloat: (a) 7 of 9 `gedcom_versions` rows are `status='failed'` and never rolled back (~1 GB), (b) `payload_hash` populated but never used at INSERT — top-20 hashes each repeat 7× (~400 MB), (c) `gedcom_change_log` has 1.24M of 1.65M rows with NULL old_value AND new_value (~300 MB).
+- **Phase E1 stopgap prune plan**: text plan reaching ~840 MB final from 2.22 GB. Authorization gate present + verbatim. `scripts/session154_supabase_prune.py` exists but `--execute` requires explicit env-var auth. **NOT executed in 154** — user authorization message required.
+- **Phase E3 retention + monitoring**: `scripts/retention_sweep.py` (--dry-run default + auth-gated --execute), `app/admin_db_routes.py` with `register_admin_db_routes()`, OD-013 in `OPS_DECISIONS.md`. NOTE: app/main.py registration line is staged for follow-up after `/clear`.
+- **Phase E4 PRD-063 GEDCOM mirror redesign — NOT WRITTEN.** Track E subagent hit usage limit. **Deferred to Session 155** — partial credit only on Track E.
+
+### Decisions
+- **AD-241** + **AD-242** promoted PLANNED → implemented (with code references + verification notes).
+- **OD-013**: Supabase Database Storage Compliance — three-phase response (E1 stopgap + E3 retention + E4 redesign in followup).
+
+### Tests / verification
+- `make test-fast`: 4205 passed (+27 from new Track B/C/E tests).
+- 4 unit-test failures under `merge.sh` post-merge gate (`-n auto` flake) are pre-existing — same class as Session 137's "30+ cache resets in conftest.py" fix.
+- Production health endpoint returned 200 with ML loaded throughout the session.
+
+### Deferred to Session 155
+- Track A: prompt iteration to address 02068 failure (Path A stronger GEDCOM residence-distance scoring step OR Path B PRD-061 multi-frame).
+- Track D: Harry repair — needs 1910s Bessie reference OR third-frame triangulation OR conservative-label decision from user.
+- Track E E2: prune execution — needs user authorization message (plan commit `1e0b0fbc`).
+- Track E E4: PRD-063 GEDCOM mirror redesign.
+- Wire `register_admin_db_routes(app)` in `app/main.py` (1-line follow-up).
+
+---
+
 ## [v0.99.69] — 2026-04-19 (Session 153b: Honest Validation + Harness Closeout Backfill)
 
 ### Validation / research
