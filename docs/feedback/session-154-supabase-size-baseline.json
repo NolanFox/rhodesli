@@ -1,0 +1,947 @@
+{
+  "captured_at": "2026-04-29T03:06:30.320038+00:00",
+  "total_db_size_bytes": 2379345043,
+  "total_db_size_pretty": "2269 MB",
+  "top_tables": [
+    {
+      "table": "public.gedcom_individuals",
+      "total_bytes": 821256192,
+      "total_pretty": "783 MB",
+      "table_bytes": 455483392,
+      "table_pretty": "434 MB",
+      "index_bytes": 26648576,
+      "index_pretty": "25 MB",
+      "toast_bytes": 339124224,
+      "approx_rows": 197319,
+      "exact_rows": 196645
+    },
+    {
+      "table": "public.gedcom_relationships",
+      "total_bytes": 425771008,
+      "total_pretty": "406 MB",
+      "table_bytes": 283369472,
+      "table_pretty": "270 MB",
+      "index_bytes": 142286848,
+      "index_pretty": "136 MB",
+      "toast_bytes": 114688,
+      "approx_rows": 872197,
+      "exact_rows": 872738
+    },
+    {
+      "table": "public.gedcom_change_log",
+      "total_bytes": 416284672,
+      "total_pretty": "397 MB",
+      "table_bytes": 272752640,
+      "table_pretty": "260 MB",
+      "index_bytes": 137084928,
+      "index_pretty": "131 MB",
+      "toast_bytes": 6447104,
+      "approx_rows": 1602890,
+      "exact_rows": 1646688
+    },
+    {
+      "table": "public.gedcom_events",
+      "total_bytes": 286449664,
+      "total_pretty": "273 MB",
+      "table_bytes": 256622592,
+      "table_pretty": "245 MB",
+      "index_bytes": 27975680,
+      "index_pretty": "27 MB",
+      "toast_bytes": 1851392,
+      "approx_rows": 226249,
+      "exact_rows": 226116
+    },
+    {
+      "table": "public.gedcom_records",
+      "total_bytes": 284917760,
+      "total_pretty": "272 MB",
+      "table_bytes": 246890496,
+      "table_pretty": "235 MB",
+      "index_bytes": 12632064,
+      "index_pretty": "12 MB",
+      "toast_bytes": 25395200,
+      "approx_rows": 118829,
+      "exact_rows": 118824
+    },
+    {
+      "table": "public.gedcom_families",
+      "total_bytes": 78258176,
+      "total_pretty": "75 MB",
+      "table_bytes": 72048640,
+      "table_pretty": "69 MB",
+      "index_bytes": 2916352,
+      "index_pretty": "2848 kB",
+      "toast_bytes": 3293184,
+      "approx_rows": 33324,
+      "exact_rows": null
+    },
+    {
+      "table": "public.gemini_api_calls",
+      "total_bytes": 12361728,
+      "total_pretty": "12 MB",
+      "table_bytes": 1286144,
+      "table_pretty": "1256 kB",
+      "index_bytes": 204800,
+      "index_pretty": "200 kB",
+      "toast_bytes": 10870784,
+      "approx_rows": 904,
+      "exact_rows": null
+    },
+    {
+      "table": "public.gedcom_media_objects",
+      "total_bytes": 9084928,
+      "total_pretty": "8872 kB",
+      "table_bytes": 8486912,
+      "table_pretty": "8288 kB",
+      "index_bytes": 368640,
+      "index_pretty": "360 kB",
+      "toast_bytes": 229376,
+      "approx_rows": 3352,
+      "exact_rows": null
+    },
+    {
+      "table": "public.gedcom_sources",
+      "total_bytes": 7045120,
+      "total_pretty": "6880 kB",
+      "table_bytes": 6660096,
+      "table_pretty": "6504 kB",
+      "index_bytes": 344064,
+      "index_pretty": "336 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 3228,
+      "exact_rows": null
+    },
+    {
+      "table": "public.relationships",
+      "total_bytes": 6799360,
+      "total_pretty": "6640 kB",
+      "table_bytes": 360448,
+      "table_pretty": "352 kB",
+      "index_bytes": 6397952,
+      "index_pretty": "6248 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 1240,
+      "exact_rows": null
+    },
+    {
+      "table": "public.date_labels",
+      "total_bytes": 4022272,
+      "total_pretty": "3928 kB",
+      "table_bytes": 1032192,
+      "table_pretty": "1008 kB",
+      "index_bytes": 278528,
+      "index_pretty": "272 kB",
+      "toast_bytes": 2711552,
+      "approx_rows": 551,
+      "exact_rows": null
+    },
+    {
+      "table": "public.identities",
+      "total_bytes": 2220032,
+      "total_pretty": "2168 kB",
+      "table_bytes": 1531904,
+      "table_pretty": "1496 kB",
+      "index_bytes": 507904,
+      "index_pretty": "496 kB",
+      "toast_bytes": 180224,
+      "approx_rows": 4111,
+      "exact_rows": null
+    },
+    {
+      "table": "public.comparison_results",
+      "total_bytes": 1310720,
+      "total_pretty": "1280 kB",
+      "table_bytes": 1179648,
+      "table_pretty": "1152 kB",
+      "index_bytes": 90112,
+      "index_pretty": "88 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 1359,
+      "exact_rows": null
+    },
+    {
+      "table": "public.photo_locations",
+      "total_bytes": 1228800,
+      "total_pretty": "1200 kB",
+      "table_bytes": 892928,
+      "table_pretty": "872 kB",
+      "index_bytes": 294912,
+      "index_pretty": "288 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 543,
+      "exact_rows": null
+    },
+    {
+      "table": "public.photo_faces",
+      "total_bytes": 1064960,
+      "total_pretty": "1040 kB",
+      "table_bytes": 630784,
+      "table_pretty": "616 kB",
+      "index_bytes": 393216,
+      "index_pretty": "384 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 3338,
+      "exact_rows": null
+    },
+    {
+      "table": "public.audit_log",
+      "total_bytes": 901120,
+      "total_pretty": "880 kB",
+      "table_bytes": 393216,
+      "table_pretty": "384 kB",
+      "index_bytes": 466944,
+      "index_pretty": "456 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 1972,
+      "exact_rows": null
+    },
+    {
+      "table": "public.discovery_log",
+      "total_bytes": 819200,
+      "total_pretty": "800 kB",
+      "table_bytes": 483328,
+      "table_pretty": "472 kB",
+      "index_bytes": 294912,
+      "index_pretty": "288 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 2496,
+      "exact_rows": null
+    },
+    {
+      "table": "public.photos",
+      "total_bytes": 679936,
+      "total_pretty": "664 kB",
+      "table_bytes": 417792,
+      "table_pretty": "408 kB",
+      "index_bytes": 221184,
+      "index_pretty": "216 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 1127,
+      "exact_rows": null
+    },
+    {
+      "table": "public.face_gemini_alignments",
+      "total_bytes": 630784,
+      "total_pretty": "616 kB",
+      "table_bytes": 417792,
+      "table_pretty": "408 kB",
+      "index_bytes": 90112,
+      "index_pretty": "88 kB",
+      "toast_bytes": 122880,
+      "approx_rows": 255,
+      "exact_rows": null
+    },
+    {
+      "table": "public.identity_overrides",
+      "total_bytes": 598016,
+      "total_pretty": "584 kB",
+      "table_bytes": 0,
+      "table_pretty": "0 bytes",
+      "index_bytes": 368640,
+      "index_pretty": "360 kB",
+      "toast_bytes": 229376,
+      "approx_rows": 0,
+      "exact_rows": null
+    },
+    {
+      "table": "public.photo_communities",
+      "total_bytes": 352256,
+      "total_pretty": "344 kB",
+      "table_bytes": 131072,
+      "table_pretty": "128 kB",
+      "index_bytes": 188416,
+      "index_pretty": "184 kB",
+      "toast_bytes": 32768,
+      "approx_rows": 1120,
+      "exact_rows": null
+    },
+    {
+      "table": "public.ml_proposals",
+      "total_bytes": 303104,
+      "total_pretty": "296 kB",
+      "table_bytes": 172032,
+      "table_pretty": "168 kB",
+      "index_bytes": 90112,
+      "index_pretty": "88 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 1130,
+      "exact_rows": null
+    },
+    {
+      "table": "public.gedcom_versions",
+      "total_bytes": 286720,
+      "total_pretty": "280 kB",
+      "table_bytes": 16384,
+      "table_pretty": "16 kB",
+      "index_bytes": 49152,
+      "index_pretty": "48 kB",
+      "toast_bytes": 221184,
+      "approx_rows": -1,
+      "exact_rows": null
+    },
+    {
+      "table": "public.identity_communities",
+      "total_bytes": 237568,
+      "total_pretty": "232 kB",
+      "table_bytes": 98304,
+      "table_pretty": "96 kB",
+      "index_bytes": 106496,
+      "index_pretty": "104 kB",
+      "toast_bytes": 32768,
+      "approx_rows": 1126,
+      "exact_rows": null
+    },
+    {
+      "table": "public.calibration_pairs",
+      "total_bytes": 196608,
+      "total_pretty": "192 kB",
+      "table_bytes": 49152,
+      "table_pretty": "48 kB",
+      "index_bytes": 114688,
+      "index_pretty": "112 kB",
+      "toast_bytes": 32768,
+      "approx_rows": 348,
+      "exact_rows": null
+    },
+    {
+      "table": "public.identity_suggestions",
+      "total_bytes": 188416,
+      "total_pretty": "184 kB",
+      "table_bytes": 57344,
+      "table_pretty": "56 kB",
+      "index_bytes": 98304,
+      "index_pretty": "96 kB",
+      "toast_bytes": 32768,
+      "approx_rows": -1,
+      "exact_rows": null
+    },
+    {
+      "table": "public.birth_year_estimates",
+      "total_bytes": 172032,
+      "total_pretty": "168 kB",
+      "table_bytes": 98304,
+      "table_pretty": "96 kB",
+      "index_bytes": 32768,
+      "index_pretty": "32 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 150,
+      "exact_rows": null
+    },
+    {
+      "table": "auth.users",
+      "total_bytes": 172032,
+      "total_pretty": "168 kB",
+      "table_bytes": 8192,
+      "table_pretty": "8192 bytes",
+      "index_bytes": 155648,
+      "index_pretty": "152 kB",
+      "toast_bytes": 8192,
+      "approx_rows": 3,
+      "exact_rows": null
+    },
+    {
+      "table": "public.identification_investigations",
+      "total_bytes": 155648,
+      "total_pretty": "152 kB",
+      "table_bytes": 8192,
+      "table_pretty": "8192 bytes",
+      "index_bytes": 122880,
+      "index_pretty": "120 kB",
+      "toast_bytes": 24576,
+      "approx_rows": -1,
+      "exact_rows": null
+    },
+    {
+      "table": "public.gedcom_matches",
+      "total_bytes": 139264,
+      "total_pretty": "136 kB",
+      "table_bytes": 65536,
+      "table_pretty": "64 kB",
+      "index_bytes": 32768,
+      "index_pretty": "32 kB",
+      "toast_bytes": 40960,
+      "approx_rows": 56,
+      "exact_rows": null
+    }
+  ],
+  "top_columns_by_table": {
+    "public.gedcom_individuals": [
+      {
+        "column": "raw_record_json",
+        "data_type": "jsonb",
+        "total_bytes": 188267745,
+        "total_pretty": "179.55 MB",
+        "avg_bytes_per_row": 957
+      },
+      {
+        "column": "names_json",
+        "data_type": "jsonb",
+        "total_bytes": 92257315,
+        "total_pretty": "87.98 MB",
+        "avg_bytes_per_row": 469
+      },
+      {
+        "column": "birth_event_json",
+        "data_type": "jsonb",
+        "total_bytes": 71585133,
+        "total_pretty": "68.27 MB",
+        "avg_bytes_per_row": 429
+      },
+      {
+        "column": "citations_json",
+        "data_type": "jsonb",
+        "total_bytes": 66096923,
+        "total_pretty": "63.03 MB",
+        "avg_bytes_per_row": 336
+      },
+      {
+        "column": "events_json",
+        "data_type": "jsonb",
+        "total_bytes": 38673402,
+        "total_pretty": "36.88 MB",
+        "avg_bytes_per_row": 197
+      },
+      {
+        "column": "death_event_json",
+        "data_type": "jsonb",
+        "total_bytes": 36232990,
+        "total_pretty": "34.55 MB",
+        "avg_bytes_per_row": 338
+      },
+      {
+        "column": "record_hash",
+        "data_type": "text",
+        "total_bytes": 11364340,
+        "total_pretty": "10.84 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "payload_hash",
+        "data_type": "text",
+        "total_bytes": 11364340,
+        "total_pretty": "10.84 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "source_file",
+        "data_type": "text",
+        "total_bytes": 8455735,
+        "total_pretty": "8.06 MB",
+        "avg_bytes_per_row": 43
+      },
+      {
+        "column": "custom_tags_json",
+        "data_type": "jsonb",
+        "total_bytes": 4324985,
+        "total_pretty": "4.12 MB",
+        "avg_bytes_per_row": 22
+      },
+      {
+        "column": "name",
+        "data_type": "text",
+        "total_bytes": 4062090,
+        "total_pretty": "3.87 MB",
+        "avg_bytes_per_row": 21
+      },
+      {
+        "column": "birth_place",
+        "data_type": "text",
+        "total_bytes": 3687774,
+        "total_pretty": "3.52 MB",
+        "avg_bytes_per_row": 26
+      },
+      {
+        "column": "id",
+        "data_type": "uuid",
+        "total_bytes": 3146320,
+        "total_pretty": "3.00 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "gedcom_id",
+        "data_type": "text",
+        "total_bytes": 3146320,
+        "total_pretty": "3.00 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "version_id",
+        "data_type": "uuid",
+        "total_bytes": 2797376,
+        "total_pretty": "2.67 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "raw_record_key",
+        "data_type": "text",
+        "total_bytes": 2797376,
+        "total_pretty": "2.67 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "family_as_child_json",
+        "data_type": "jsonb",
+        "total_bytes": 2426366,
+        "total_pretty": "2.31 MB",
+        "avg_bytes_per_row": 12
+      },
+      {
+        "column": "death_place",
+        "data_type": "text",
+        "total_bytes": 2411207,
+        "total_pretty": "2.30 MB",
+        "avg_bytes_per_row": 29
+      },
+      {
+        "column": "given_name",
+        "data_type": "text",
+        "total_bytes": 2248415,
+        "total_pretty": "2.14 MB",
+        "avg_bytes_per_row": 12
+      },
+      {
+        "column": "notes_json",
+        "data_type": "jsonb",
+        "total_bytes": 2096868,
+        "total_pretty": "2.00 MB",
+        "avg_bytes_per_row": 11
+      },
+      {
+        "column": "family_as_spouse_json",
+        "data_type": "jsonb",
+        "total_bytes": 2093086,
+        "total_pretty": "2.00 MB",
+        "avg_bytes_per_row": 11
+      },
+      {
+        "column": "media_refs_json",
+        "data_type": "jsonb",
+        "total_bytes": 1929024,
+        "total_pretty": "1.84 MB",
+        "avg_bytes_per_row": 10
+      },
+      {
+        "column": "surname",
+        "data_type": "text",
+        "total_bytes": 1814754,
+        "total_pretty": "1.73 MB",
+        "avg_bytes_per_row": 9
+      },
+      {
+        "column": "created_at",
+        "data_type": "timestamp with time zone",
+        "total_bytes": 1573160,
+        "total_pretty": "1.50 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "birth_date",
+        "data_type": "text",
+        "total_bytes": 1440278,
+        "total_pretty": "1.37 MB",
+        "avg_bytes_per_row": 9
+      },
+      {
+        "column": "death_date",
+        "data_type": "text",
+        "total_bytes": 948759,
+        "total_pretty": "926.52 KB",
+        "avg_bytes_per_row": 10
+      },
+      {
+        "column": "gender",
+        "data_type": "text",
+        "total_bytes": 393290,
+        "total_pretty": "384.07 KB",
+        "avg_bytes_per_row": 2
+      },
+      {
+        "column": "is_current",
+        "data_type": "boolean",
+        "total_bytes": 196645,
+        "total_pretty": "192.04 KB",
+        "avg_bytes_per_row": 1
+      },
+      {
+        "column": "superseded_by",
+        "data_type": "uuid",
+        "total_bytes": 0,
+        "total_pretty": "0 B",
+        "avg_bytes_per_row": 0
+      }
+    ],
+    "public.gedcom_relationships": [
+      {
+        "column": "payload_hash",
+        "data_type": "text",
+        "total_bytes": 47265660,
+        "total_pretty": "45.08 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "edge_key",
+        "data_type": "text",
+        "total_bytes": 34241311,
+        "total_pretty": "32.66 MB",
+        "avg_bytes_per_row": 47
+      },
+      {
+        "column": "relationship_payload",
+        "data_type": "jsonb",
+        "total_bytes": 14682346,
+        "total_pretty": "14.00 MB",
+        "avg_bytes_per_row": 17
+      },
+      {
+        "column": "id",
+        "data_type": "uuid",
+        "total_bytes": 13963808,
+        "total_pretty": "13.32 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "individual_gedcom_id",
+        "data_type": "text",
+        "total_bytes": 13963742,
+        "total_pretty": "13.32 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "related_gedcom_id",
+        "data_type": "text",
+        "total_bytes": 13963742,
+        "total_pretty": "13.32 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "version_id",
+        "data_type": "uuid",
+        "total_bytes": 11634624,
+        "total_pretty": "11.10 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "created_at",
+        "data_type": "timestamp with time zone",
+        "total_bytes": 6981904,
+        "total_pretty": "6.66 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "family_gedcom_id",
+        "data_type": "text",
+        "total_bytes": 6838596,
+        "total_pretty": "6.52 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "relationship_type",
+        "data_type": "text",
+        "total_bytes": 6328495,
+        "total_pretty": "6.04 MB",
+        "avg_bytes_per_row": 7
+      },
+      {
+        "column": "is_current",
+        "data_type": "boolean",
+        "total_bytes": 872738,
+        "total_pretty": "852.28 KB",
+        "avg_bytes_per_row": 1
+      },
+      {
+        "column": "superseded_by",
+        "data_type": "uuid",
+        "total_bytes": 0,
+        "total_pretty": "0 B",
+        "avg_bytes_per_row": 0
+      }
+    ],
+    "public.gedcom_change_log": [
+      {
+        "column": "xref_id",
+        "data_type": "text",
+        "total_bytes": 56633848,
+        "total_pretty": "54.01 MB",
+        "avg_bytes_per_row": 34
+      },
+      {
+        "column": "id",
+        "data_type": "uuid",
+        "total_bytes": 26347008,
+        "total_pretty": "25.13 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "version_id",
+        "data_type": "uuid",
+        "total_bytes": 26347008,
+        "total_pretty": "25.13 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "old_value",
+        "data_type": "text",
+        "total_bytes": 25596747,
+        "total_pretty": "24.41 MB",
+        "avg_bytes_per_row": 67
+      },
+      {
+        "column": "new_value",
+        "data_type": "text",
+        "total_bytes": 23246869,
+        "total_pretty": "22.17 MB",
+        "avg_bytes_per_row": 86
+      },
+      {
+        "column": "entity_type",
+        "data_type": "text",
+        "total_bytes": 18717000,
+        "total_pretty": "17.85 MB",
+        "avg_bytes_per_row": 11
+      },
+      {
+        "column": "changed_at",
+        "data_type": "timestamp with time zone",
+        "total_bytes": 13173504,
+        "total_pretty": "12.56 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "change_type",
+        "data_type": "text",
+        "total_bytes": 12040718,
+        "total_pretty": "11.48 MB",
+        "avg_bytes_per_row": 7
+      },
+      {
+        "column": "field_name",
+        "data_type": "text",
+        "total_bytes": 9265452,
+        "total_pretty": "8.84 MB",
+        "avg_bytes_per_row": 21
+      }
+    ],
+    "public.gedcom_events": [
+      {
+        "column": "raw_node_json",
+        "data_type": "jsonb",
+        "total_bytes": 91173814,
+        "total_pretty": "86.95 MB",
+        "avg_bytes_per_row": 403
+      },
+      {
+        "column": "citations_json",
+        "data_type": "jsonb",
+        "total_bytes": 55480096,
+        "total_pretty": "52.91 MB",
+        "avg_bytes_per_row": 245
+      },
+      {
+        "column": "payload_hash",
+        "data_type": "text",
+        "total_bytes": 12088440,
+        "total_pretty": "11.53 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "place",
+        "data_type": "text",
+        "total_bytes": 5756095,
+        "total_pretty": "5.49 MB",
+        "avg_bytes_per_row": 29
+      },
+      {
+        "column": "event_key",
+        "data_type": "text",
+        "total_bytes": 4406963,
+        "total_pretty": "4.20 MB",
+        "avg_bytes_per_row": 24
+      },
+      {
+        "column": "id",
+        "data_type": "uuid",
+        "total_bytes": 3617856,
+        "total_pretty": "3.45 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "gedcom_individual_id",
+        "data_type": "text",
+        "total_bytes": 3617856,
+        "total_pretty": "3.45 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "version_id",
+        "data_type": "uuid",
+        "total_bytes": 2975616,
+        "total_pretty": "2.84 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "notes_json",
+        "data_type": "jsonb",
+        "total_bytes": 2480426,
+        "total_pretty": "2.37 MB",
+        "avg_bytes_per_row": 11
+      },
+      {
+        "column": "media_refs_json",
+        "data_type": "jsonb",
+        "total_bytes": 1897689,
+        "total_pretty": "1.81 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "raw_date",
+        "data_type": "text",
+        "total_bytes": 1818375,
+        "total_pretty": "1.73 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "created_at",
+        "data_type": "timestamp with time zone",
+        "total_bytes": 1808928,
+        "total_pretty": "1.73 MB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "event_type",
+        "data_type": "text",
+        "total_bytes": 1333381,
+        "total_pretty": "1.27 MB",
+        "avg_bytes_per_row": 6
+      },
+      {
+        "column": "raw_tag",
+        "data_type": "text",
+        "total_bytes": 929880,
+        "total_pretty": "908.09 KB",
+        "avg_bytes_per_row": 5
+      },
+      {
+        "column": "date",
+        "data_type": "text",
+        "total_bytes": 902125,
+        "total_pretty": "880.98 KB",
+        "avg_bytes_per_row": 5
+      },
+      {
+        "column": "type_label",
+        "data_type": "text",
+        "total_bytes": 234396,
+        "total_pretty": "228.90 KB",
+        "avg_bytes_per_row": 15
+      },
+      {
+        "column": "is_current",
+        "data_type": "boolean",
+        "total_bytes": 226116,
+        "total_pretty": "220.82 KB",
+        "avg_bytes_per_row": 1
+      },
+      {
+        "column": "value",
+        "data_type": "text",
+        "total_bytes": 0,
+        "total_pretty": "0 B",
+        "avg_bytes_per_row": 0
+      },
+      {
+        "column": "superseded_by",
+        "data_type": "uuid",
+        "total_bytes": 0,
+        "total_pretty": "0 B",
+        "avg_bytes_per_row": 0
+      }
+    ],
+    "public.gedcom_records": [
+      {
+        "column": "root_json",
+        "data_type": "jsonb",
+        "total_bytes": 111458530,
+        "total_pretty": "106.30 MB",
+        "avg_bytes_per_row": 938
+      },
+      {
+        "column": "raw_text",
+        "data_type": "text",
+        "total_bytes": 40715198,
+        "total_pretty": "38.83 MB",
+        "avg_bytes_per_row": 343
+      },
+      {
+        "column": "record_hash",
+        "data_type": "text",
+        "total_bytes": 7723560,
+        "total_pretty": "7.37 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "payload_hash",
+        "data_type": "text",
+        "total_bytes": 7723560,
+        "total_pretty": "7.37 MB",
+        "avg_bytes_per_row": 65
+      },
+      {
+        "column": "id",
+        "data_type": "uuid",
+        "total_bytes": 1901184,
+        "total_pretty": "1.81 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "version_id",
+        "data_type": "uuid",
+        "total_bytes": 1901184,
+        "total_pretty": "1.81 MB",
+        "avg_bytes_per_row": 16
+      },
+      {
+        "column": "record_key",
+        "data_type": "text",
+        "total_bytes": 1652035,
+        "total_pretty": "1.58 MB",
+        "avg_bytes_per_row": 14
+      },
+      {
+        "column": "xref_id",
+        "data_type": "text",
+        "total_bytes": 1651963,
+        "total_pretty": "1.58 MB",
+        "avg_bytes_per_row": 14
+      },
+      {
+        "column": "created_at",
+        "data_type": "timestamp with time zone",
+        "total_bytes": 950592,
+        "total_pretty": "928.31 KB",
+        "avg_bytes_per_row": 8
+      },
+      {
+        "column": "record_type",
+        "data_type": "text",
+        "total_bytes": 567584,
+        "total_pretty": "554.28 KB",
+        "avg_bytes_per_row": 5
+      },
+      {
+        "column": "is_current",
+        "data_type": "boolean",
+        "total_bytes": 118824,
+        "total_pretty": "116.04 KB",
+        "avg_bytes_per_row": 1
+      },
+      {
+        "column": "superseded_by",
+        "data_type": "uuid",
+        "total_bytes": 0,
+        "total_pretty": "0 B",
+        "avg_bytes_per_row": 0
+      }
+    ]
+  },
+  "notes": "no anomalies"
+}
