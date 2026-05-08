@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "session": 156,
+    "track": "B2",
+    "captured_at": "2026-05-08T04:40:29.295234+00:00",
+    "source_dir": "/Users/nolanfox/Downloads/gedcom_20260508",
+    "bucket": "rhodesli-photos",
+    "prefix": "gedcom-source-snapshots/2026-05-08-session-156",
+    "purpose": "PRD-063 operational guardrail: .ged source archive before v2 schema cutover",
+    "roundtrip_verified": "gedcom-source-snapshots/2026-05-08-session-156/Fox_Capeluto_Fogel_Waldorf_Family_Tree-f7832541.ged"
+  },
+  "files": [
+    {
+      "local_path": "/Users/nolanfox/Downloads/gedcom_20260508/Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+      "size_bytes": 17912544,
+      "sha256": "f7832541543d36de144627001028eec4414691439257d120023103036c5bef3f",
+      "r2_key": "gedcom-source-snapshots/2026-05-08-session-156/Fox_Capeluto_Fogel_Waldorf_Family_Tree-f7832541.ged",
+      "uploaded": true
+    }
+  ]
+}
