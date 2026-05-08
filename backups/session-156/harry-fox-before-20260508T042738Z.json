@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "session": 156,
+    "track": "A2",
+    "purpose": "Pre-repair snapshot of Harry Fox identity for option (c) repair",
+    "captured_at": "2026-05-08T04:27:38.295670+00:00",
+    "harry_identity_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+    "face_ids_to_detach": [
+      "inbox_1fea75ce2caf",
+      "inbox_e507a54f204a"
+    ],
+    "captured_by": "session-156",
+    "schema_version": 1,
+    "payload_sha256": "13e1d7ae798d3b980b9d832dbabcc44328be4772b118c5ea2e841647118345ca",
+    "restore_command": "python scripts/session156_harry_repair_restore.py backups/session-156/harry-fox-before-20260508T042738Z.json"
+  },
+  "harry_identity": {
+    "identity_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+    "name": "Harry Fox",
+    "display_name": null,
+    "state": "CONFIRMED",
+    "anchor_ids": [
+      "inbox_c6abb86ff55b",
+      "inbox_5168f0722ca8",
+      "inbox_16430d6022c1",
+      "inbox_94bbb9408f42",
+      "inbox_c66961c76a6a",
+      "inbox_1fea75ce2caf",
+      "inbox_e507a54f204a"
+    ],
+    "candidate_ids": [],
+    "negative_ids": [
+      "identity:85546ebf-75b9-4971-a9d4-b2ce2271bc19",
+      "identity:b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity:7e6aae2b-2b70-4a8a-9ee5-46e2b2c16c41",
+      "identity:843aaa8e-6212-4a1b-93e7-753dc1262453"
+    ],
+    "metadata": {},
+    "version_id": 13,
+    "merged_into": null,
+    "created_at": "2026-03-17T04:24:45.412961+00:00",
+    "updated_at": "2026-04-18T21:48:38.507667+00:00",
+    "primary_face_id": null
+  },
+  "ml_proposals_referencing_harry": [],
+  "photo_faces_F_G": [
+    {
+      "face_id": "inbox_1fea75ce2caf",
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bbox": null,
+      "det_score": null,
+      "quality": null,
+      "created_at": "2026-03-09T21:07:00.964963+00:00"
+    },
+    {
+      "face_id": "inbox_e507a54f204a",
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bbox": null,
+      "det_score": null,
+      "quality": null,
+      "created_at": "2026-03-09T21:07:01.830084+00:00"
+    }
+  ],
+  "gedcom_face_links_referencing_harry": [
+    {
+      "id": "ce9999e1-1d1a-45df-bc60-b01daf9cfe18",
+      "identity_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+      "gedcom_id": "@I132128502290@",
+      "confidence": 1,
+      "linked_by": "admin-web:0f3a2b04-cd1b-4cee-98a3-cc30b7958a33",
+      "created_at": "2026-03-29T03:18:04.192709+00:00"
+    }
+  ],
+  "audit_log_recent_harry": [
+    {
+      "id": 3719,
+      "action": "merge",
+      "entity_type": "identity",
+      "entity_id": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+      "user_id": null,
+      "user_email": "nolanfox@gmail.com",
+      "old_value": {
+        "face_id": "inbox_1fea75ce2caf",
+        "source_id": "b38fef24-858d-4b5f-95c0-c52c09a111f0"
+      },
+      "new_value": {
+        "merged_into": "d74cb556-6d44-4288-ade3-1cc8fa2b45a6",
+        "faces_merged": 2
+      },
+      "metadata": {
+        "route": "face_tag"
+      },
+      "created_at": "2026-03-18T05:00:54.750363+00:00"
+    }
+  ]
+}
