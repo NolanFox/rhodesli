@@ -200,10 +200,11 @@ list all options as candidates."""
 
 # --- Candidate scaffold = three-round structure. NO pre-seeded city list.
 # This is the permanent-change candidate minus cheat sheet (Codex P1 fix). ---
-CANDIDATE_LOCATION_SECTION = """## Location Identification (structured three-round reasoning)
+CANDIDATE_LOCATION_SECTION = """## Location Identification (structured four-round reasoning, AD-243)
 
-Work through the following THREE ROUNDS in order. Each round must be completed
-before the next. Do not jump ahead to a final answer.
+Work through the following FOUR ROUNDS in order (Round 1, Round 2, Round 2.5,
+Round 3). Each round must be completed before the next. Do not jump ahead to a
+final answer.
 
 **ROUND 1 — Describe the scene architecturally (do NOT name a city yet).**
 List at least 2 concrete, diagnostic visual features that could distinguish this
@@ -225,31 +226,83 @@ EACH candidate, list:
     RESIDENCE at the photo's likely date range supports this candidate. Weight
     each subject's own residence over their relatives' residences.
 
-**ROUND 3 — Pick the primary location and eliminate the runner-up.**
-Choose ONE candidate as primary. Explicitly name at least ONE other candidate
-you are eliminating and cite the specific visual feature that rules it out. If
-you cannot eliminate a runner-up with a specific feature, lower your confidence.
+**ROUND 2.5 — Residence-Distance Scoring (MANDATORY before naming a primary).**
+
+For EACH candidate location proposed in Round 2, fill out a row in the
+`residence_distance_table` with these three columns:
+
+| candidate | subject_residence_match | year_distance |
+|-----------|-------------------------|---------------|
+| <place from Round 2> | <verbatim GEDCOM citations> | <smallest absolute year delta> |
+
+For each row, you MUST:
+- Cite each matching GEDCOM event verbatim in `subject_residence_match`. The
+  expected citation format is: "<subject name>: <event type> <date> in <place>"
+  (e.g., "Albert Fox: Residence 1917 in Detroit, Michigan, USA"). If there are
+  zero matches for a candidate, write the literal string `"0 subjects"`.
+- "RELATED" or "FAMILY" is NOT a match — only the named CONFIRMED subject's
+  OWN RESI / OCCU events, or one of their CHILDREN's BIRTH places.
+- A relative's residence (parent, sibling, in-law, spouse where the spouse is
+  not the photo's confirmed subject) does NOT count.
+- Immigration / port-of-entry / ship-arrival events do NOT count even if they
+  list the candidate city.
+- `year_distance` = the smallest absolute integer year delta between the
+  photo's estimated date (use the lower bound of any range you would estimate)
+  and the matching event's year. If `subject_residence_match = "0 subjects"`,
+  write `"n/a"` for year_distance.
+
+**Tie-breaker rules (apply IN STRICT ORDER, do not skip):**
+1. Highest count of `subject_residence_match` citations wins.
+2. If tied, smallest `year_distance` wins.
+3. If still tied AND no GEDCOM signal in any candidate, fall back to visual
+   evidence ONLY (Round 1 diagnostic features).
+
+If ALL candidates have `subject_residence_match = "0 subjects"`: lower
+confidence to `"low"` and the response MUST explicitly include the literal
+phrase "no biographical anchoring available — visual-only" in the
+`round_2_5_summary` field.
+
+**ROUND 3 — Pick the primary location AS DETERMINED BY the Round 2.5 table.**
+Choose ONE candidate as primary, applying the Round 2.5 tie-breaker rules.
+The chosen primary MUST be the candidate that wins by Round 2.5 — you may
+NOT override the table with visual intuition unless rule 3 (all-zero
+fallback) applies. Then explicitly name at least ONE other candidate you are
+eliminating and cite the specific visual feature OR Round 2.5 row that rules
+it out. If you cannot eliminate a runner-up with a specific feature or row,
+lower your confidence.
 
 **Subject-weighted geography rule.** When GEDCOM context is provided and a
 subject's own residence at the photo's estimated date range conflicts with a
 relative's residence, prefer the subject's own residence. Immigration / port-of-
-entry events are NEVER evidence of where someone lived.
+entry events are NEVER evidence of where someone lived. This is enforced
+mechanically by Round 2.5 — relative-only matches do not count toward
+`subject_residence_match`.
 
 **Output contract.**
-- `place` = the primary location chosen in Round 3
+- `place` = the primary location chosen in Round 3 (== the Round 2.5 winner)
+- `round_2_5_summary` = a short prose explanation of which Round 2.5 rule chose
+  the primary, OR the literal "no biographical anchoring available — visual-only"
+  if all candidates were zero-match.
+- `residence_distance_table[]` = REQUIRED. One row per Round 2 candidate, in
+  the order they appeared in Round 2. Each row: `{candidate, subject_residence_match, year_distance}`.
 - `candidates[]` = ALL considered candidates from Round 2 (minimum 2), each with
-  `feature_supporting`, `feature_refuting`, and `reasoning`
-- `diagnostic_features[]` = at least 2 features from Round 1 that pinned the answer
+  `feature_supporting`, `feature_refuting`, and `reasoning`.
+- `diagnostic_features[]` = at least 2 features from Round 1 that pinned the answer.
 - `eliminated_runner_up` = {"place": ..., "refuting_feature": ...}
 - `confidence` = "high" only if (a) ≥2 diagnostic features support the primary
   AND (b) runner-up was eliminated via a specific feature AND (c) biographical
-  support agrees (when context provided). Otherwise "medium" or "low".
+  support agrees (when context provided) AND (d) the primary won Round 2.5 by
+  rule 1 with `subject_residence_match ≥ 1` AND (e) `year_distance ≤ 5`.
+  Otherwise "medium" or "low". If the all-zero fallback fired, confidence
+  MUST be "low".
 - `source_type` = "visual" | "biographical" | "both"
 
 If the photograph is itself a REPRODUCTION of another photograph (e.g., newspaper
 clipping, magazine page, album page), say so: set `place` to describe the
 reproduction type (e.g., "Newspaper clipping — venue not determinable from
-reproduction") and note it in `diagnostic_features`.
+reproduction") and note it in `diagnostic_features`. In that case
+`residence_distance_table` may be omitted or use a single row with
+`subject_residence_match = "0 subjects"`.
 
 Do NOT collapse the rounds into a single paragraph. Return your work for each
 round in the JSON fields below."""
@@ -257,7 +310,7 @@ round in the JSON fields below."""
 
 # --- Candidate location schema (JSON body hint). ---
 CANDIDATE_LOCATION_SCHEMA = """"location": {
-  "place": "<primary chosen in Round 3>",
+  "place": "<primary chosen in Round 3 == Round 2.5 winner>",
   "confidence": "high|medium|low",
   "round1_description": "<architectural description, no city names>",
   "diagnostic_features": ["feature A", "feature B", ...],
@@ -270,6 +323,14 @@ CANDIDATE_LOCATION_SCHEMA = """"location": {
       "reasoning": "..."
     }
   ],
+  "residence_distance_table": [
+    {
+      "candidate": "<place name, must match a Round 2 candidate>",
+      "subject_residence_match": "<verbatim GEDCOM citation(s) like \"Albert Fox: Residence 1917 in Detroit, Michigan, USA\" — or the literal string \"0 subjects\">",
+      "year_distance": "<smallest absolute integer year delta to the matching event, or \"n/a\" if 0 subjects>"
+    }
+  ],
+  "round_2_5_summary": "<which Round 2.5 rule chose the primary, OR the literal \"no biographical anchoring available — visual-only\" if all candidates were zero-match>",
   "eliminated_runner_up": {"place": "...", "refuting_feature": "..."},
   "source_type": "visual|biographical|both"
 }"""
@@ -278,25 +339,49 @@ CANDIDATE_LOCATION_SCHEMA = """"location": {
 # --- Iterative refinement block (AD-242, Session 154 Phase A2). ---
 # Embedded into the candidate_with_prior variant on the second pass. The
 # refuting-feature requirement guards against sycophantic self-agreement.
-PRIOR_PREDICTION_BLOCK = """## Prior prediction to cross-check
+PRIOR_PREDICTION_BLOCK = """## Prior prediction to cross-check (AD-242 + AD-243 tightened CONFIRM)
 Your first-pass prediction for this photo: place=<PLACE>, confidence=<CONF>.
 First-pass reasoning: <REASONING>
 
-Cross-check this prior prediction against:
-- The subjects' GEDCOM residences at the photo's likely date range (above)
-- The diagnostic visual features from Round 1
+Re-run the FOUR-ROUND analysis (Round 1, Round 2, Round 2.5, Round 3) on
+this photo per the Location Identification spec above. The
+`residence_distance_table` from Round 2.5 is REQUIRED — fill it out before
+deciding whether to confirm the prior.
 
-Decide ONE of the following and state which:
-  - CONFIRM the prior prediction. To do so, name at least ONE specific
-    GEDCOM fact OR ONE specific Round-1 visual feature that POSITIVELY
-    supports it (not just absence of refutation).
-  - REFUTE the prior prediction. To do so, name the specific feature or
-    GEDCOM fact that REFUTES it, and propose an amended `place`.
+Then cross-check this prior prediction against the Round 2.5 table you
+just produced.
+
+Decide ONE of the following and state which in the response:
+
+  - CONFIRM the prior prediction. To do so, you MUST satisfy BOTH of these:
+    1. Cite the EXACT GEDCOM event (subject name + event type + date + place
+       verbatim, e.g. "Albert Fox: Residence 1917 in Detroit, Michigan, USA")
+       that POSITIVELY supports the prior prediction. NOT a visual feature on
+       its own. If no GEDCOM event in the supplied Genealogical Context
+       supports the prior, you MUST refute or lower confidence.
+    2. State the prior prediction's `year_distance` from the Round 2.5
+       table you just produced. If that distance is greater than 5 years
+       OR the prior prediction's row had `subject_residence_match = "0 subjects"`,
+       you MUST refute or lower confidence — you may NOT confirm.
+
+  - REFUTE the prior prediction. To do so, name the specific feature OR
+    Round 2.5 row (with its citation) that REFUTES it, and propose an
+    amended `place` chosen from the Round 2.5 winner per the same
+    tie-breaker rules.
+
   - LOWER CONFIDENCE without changing place. To do so, name the specific
-    feature or GEDCOM fact that introduces doubt.
+    feature OR Round 2.5 row that introduces doubt — typically a candidate
+    with stronger `subject_residence_match` that you couldn't fully eliminate.
 
-Do NOT simply agree with the prior prediction without naming a positive
-supporting feature or fact. "It seems plausible" is not a confirmation."""
+Forbidden agreement patterns (these are NOT confirmations, do NOT use them):
+- "It seems plausible"
+- "The architecture is consistent with"
+- "This could be"
+- Any visual-only confirmation when the prior's Round 2.5 row had 0
+  subject_residence_match.
+- Any confirmation citing a relative's residence rather than the named
+  subject's own RESI / OCCU / child-BIRTH event.
+- Any confirmation where `year_distance > 5`."""
 
 
 def build_prompt(
