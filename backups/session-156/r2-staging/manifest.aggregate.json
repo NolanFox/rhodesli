@@ -1,0 +1,478 @@
+{
+  "session_id": "156",
+  "snapshot_date_utc": "2026-05-08-session-156",
+  "started_utc": "2026-05-08T04:32:21.596967Z",
+  "versions": [
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "f008b3d1-6060-472c-9265-bf599b09132f",
+      "version_number": 1,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T20:43:46.584819+00:00",
+      "snapshot_started_utc": "2026-05-08T04:32:21.597049Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "aa162e556e6a3c035ef297ac5690159f7bbbe99bc703c01c6133f00e89b50464",
+          "size_bytes": 12900504,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v1/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 52.77,
+          "upload_seconds": 2.8
+        },
+        "gedcom_records": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_events": {
+          "row_count": 41526,
+          "sha256": "f40e2cb27d02261443811a0758dca99231093225967d0f5fce47cf8ff8e269b7",
+          "size_bytes": 6083128,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v1/gedcom_events.jsonl.gz",
+          "dump_seconds": 17.12,
+          "upload_seconds": 1.21
+        },
+        "gedcom_relationships": {
+          "row_count": 146592,
+          "sha256": "f2a9b08a8d20e096312a1e38e8d3d79a15f7da4e13b2f3cd9e650717e27d4d55",
+          "size_bytes": 11909233,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v1/gedcom_relationships.jsonl.gz",
+          "dump_seconds": 22.53,
+          "upload_seconds": 2.78
+        },
+        "gedcom_change_log": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_families": {
+          "row_count": 6722,
+          "sha256": "c2afe393f07e18cd788c1444655a1916d085917ceec5cf5232c10b8e40f222f5",
+          "size_bytes": 1635076,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v1/gedcom_families.jsonl.gz",
+          "dump_seconds": 5.69,
+          "upload_seconds": 0.54
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:34:13.362579Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v1/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "443003ab-3fea-4bf7-9471-895b9c832ae9",
+      "version_number": 2,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T21:17:57.453468+00:00",
+      "snapshot_started_utc": "2026-05-08T04:34:13.495606Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "be23b41c46546cacf35215bd604d0d79af3e3c62daa129d6db8c3b3793af2121",
+          "size_bytes": 11132438,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v2/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 46.34,
+          "upload_seconds": 3.7
+        },
+        "gedcom_records": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_events": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_relationships": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_change_log": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_families": {
+          "row_count": 0,
+          "skipped_empty": true
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:35:07.668818Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v2/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+      "version_number": 3,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T21:26:32.576750+00:00",
+      "snapshot_started_utc": "2026-05-08T04:35:07.811352Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "7a0bd7ebc9bd550d628db721dc74c13f933b26b40b3d499b8cd3d4e4d5567e6f",
+          "size_bytes": 11312660,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v3/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 44.31,
+          "upload_seconds": 2.68
+        },
+        "gedcom_records": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_events": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_relationships": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_change_log": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_families": {
+          "row_count": 0,
+          "skipped_empty": true
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:35:59.091765Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v3/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+      "version_number": 4,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T21:34:39.903719+00:00",
+      "snapshot_started_utc": "2026-05-08T04:35:59.219926Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "4a50d45628d26e3f0ca6e4e1e288ef1278fd4a158bb9e5086c51f8fbdb3fa6c3",
+          "size_bytes": 11347869,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 45.53,
+          "upload_seconds": 2.91
+        },
+        "gedcom_records": {
+          "row_count": 30154,
+          "sha256": "d6e08ef8ce691c209365760f680d5e922dede80ae4fcd3350e0dfb43931d6499",
+          "size_bytes": 8571602,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_records.jsonl.gz",
+          "dump_seconds": 27.17,
+          "upload_seconds": 2.79
+        },
+        "gedcom_events": {
+          "row_count": 41526,
+          "sha256": "22445d98bca89444b0961980c3c6688c00cbe8da56d0b92186c54d41b4f9f334",
+          "size_bytes": 5179945,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_events.jsonl.gz",
+          "dump_seconds": 15.53,
+          "upload_seconds": 1.35
+        },
+        "gedcom_relationships": {
+          "row_count": 146592,
+          "sha256": "c57cddecca0e481aefa63412972b717ac13e3c32a00e0802f37ade53746bacae",
+          "size_bytes": 11839142,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_relationships.jsonl.gz",
+          "dump_seconds": 18.18,
+          "upload_seconds": 3.48
+        },
+        "gedcom_change_log": {
+          "row_count": 219000,
+          "sha256": "714ad8881ad49f2a4ea7aad6f423de28fb163018801304c18c64522b0ddecc80",
+          "size_bytes": 6619513,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_change_log.jsonl.gz",
+          "dump_seconds": 17.24,
+          "upload_seconds": 1.63
+        },
+        "gedcom_families": {
+          "row_count": 6722,
+          "sha256": "52ff455926182d69a55ee95d07cff23993312f9c7a9f3b27a48fcbeaac47e006",
+          "size_bytes": 1630979,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_families.jsonl.gz",
+          "dump_seconds": 4.55,
+          "upload_seconds": 0.38
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:38:25.232432Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "d5327cf1-c4d7-47eb-bd41-16fe4d9bf183",
+      "version_number": 5,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T22:22:22.971822+00:00",
+      "snapshot_started_utc": "2026-05-08T04:38:25.406915Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "77b5ec4f6153e7ceb1bd9f0051af9b894293afc0a333fb1acb30fbdb4ec786de",
+          "size_bytes": 11170476,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v5/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 45.93,
+          "upload_seconds": 3.17
+        },
+        "gedcom_records": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_events": {
+          "row_count": 19000,
+          "sha256": "2fe1163cc179abb7e84d75b7aae9f90e5a6c837498a51056da415deb3df33908",
+          "size_bytes": 2370543,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v5/gedcom_events.jsonl.gz",
+          "dump_seconds": 8.84,
+          "upload_seconds": 0.69
+        },
+        "gedcom_relationships": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_change_log": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_families": {
+          "row_count": 0,
+          "skipped_empty": true
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:39:27.282552Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v5/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "96a5fda5-ebcf-40de-8dfa-f4ef5d1cf6a4",
+      "version_number": 6,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-11T22:58:10.945383+00:00",
+      "snapshot_started_utc": "2026-05-08T04:39:27.414192Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "aba3dea3beebe223eaca387b7a01508e707de3ed1901fcbfb7acdcf7f082f936",
+          "size_bytes": 11276482,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 47.76,
+          "upload_seconds": 3.15
+        },
+        "gedcom_records": {
+          "row_count": 30154,
+          "sha256": "ce39a846697cdb6358427bc98aaa1f57c8f097102dc4f58d79facb070d5ae1ab",
+          "size_bytes": 8484865,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_records.jsonl.gz",
+          "dump_seconds": 31.47,
+          "upload_seconds": 3.98
+        },
+        "gedcom_events": {
+          "row_count": 41526,
+          "sha256": "eeaca9c85f9e9c96936b9aec0392f79c039b039a4839a5175fdc8d9d9458b3af",
+          "size_bytes": 5168109,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_events.jsonl.gz",
+          "dump_seconds": 15.34,
+          "upload_seconds": 1.63
+        },
+        "gedcom_relationships": {
+          "row_count": 146592,
+          "sha256": "46cbce924f54ab321473ef0412fec4960a35065210fb52ddfa26fe53c94a6071",
+          "size_bytes": 11650771,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_relationships.jsonl.gz",
+          "dump_seconds": 18.11,
+          "upload_seconds": 3.71
+        },
+        "gedcom_change_log": {
+          "row_count": 370594,
+          "sha256": "f0b847f1f8350b669578a807d83b442b5744166041f66dcd795095fb6f3aa5f5",
+          "size_bytes": 11115159,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_change_log.jsonl.gz",
+          "dump_seconds": 32.79,
+          "upload_seconds": 3.76
+        },
+        "gedcom_families": {
+          "row_count": 6722,
+          "sha256": "ab803df670ffda50da18bb8363364e8ac8bc53403cfd4275d75bbe54a5f7bab0",
+          "size_bytes": 1624428,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/gedcom_families.jsonl.gz",
+          "dump_seconds": 5.1,
+          "upload_seconds": 0.79
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:42:18.538151Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v6/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "05ffeee9-4ae2-4d97-aaaa-fa8a45fb1ca7",
+      "version_number": 7,
+      "version_status": "applied",
+      "version_imported_at": "2026-03-11T23:58:05.220618+00:00",
+      "snapshot_started_utc": "2026-05-08T04:42:18.694604Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21944,
+          "sha256": "3f34cc902efb819400115324e26cf0c28acf23d2c8564730c1085b2e00e6eba5",
+          "size_bytes": 11391061,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 51.94,
+          "upload_seconds": 5.68
+        },
+        "gedcom_records": {
+          "row_count": 30154,
+          "sha256": "f46624b8284236ed0c8333300d35ac21c1bd398720ac17fd1a014a174c862d59",
+          "size_bytes": 8580442,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_records.jsonl.gz",
+          "dump_seconds": 27.56,
+          "upload_seconds": 3.77
+        },
+        "gedcom_events": {
+          "row_count": 41526,
+          "sha256": "138276f1dbcd64a00b8bc9d6c9c0c4d992b22cd1c69c35adc27e2917162a2083",
+          "size_bytes": 5180963,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_events.jsonl.gz",
+          "dump_seconds": 15.48,
+          "upload_seconds": 1.96
+        },
+        "gedcom_relationships": {
+          "row_count": 146592,
+          "sha256": "e692d9d971df62060218aff5a9eed7797aeca0122dea7f989d0c114f9d89d941",
+          "size_bytes": 11653987,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_relationships.jsonl.gz",
+          "dump_seconds": 19.21,
+          "upload_seconds": 6.32
+        },
+        "gedcom_change_log": {
+          "row_count": 370594,
+          "sha256": "4ad989ebfcc7eeb9d490d76766b0b72a817b4cc536d3114f8a578cd680e09599",
+          "size_bytes": 11112091,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_change_log.jsonl.gz",
+          "dump_seconds": 32.6,
+          "upload_seconds": 3.64
+        },
+        "gedcom_families": {
+          "row_count": 6722,
+          "sha256": "d2791044a95d5bf85db78f86bdef2fedf08caf9964e08a0d0abef6cefbb712ab",
+          "size_bytes": 1621553,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/gedcom_families.jsonl.gz",
+          "dump_seconds": 5.3,
+          "upload_seconds": 0.85
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:45:17.275861Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v7/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "ad077b5f-4a97-443e-89e6-863e593c144a",
+      "version_number": 8,
+      "version_status": "failed",
+      "version_imported_at": "2026-03-29T03:30:34.912907+00:00",
+      "snapshot_started_utc": "2026-05-08T04:45:17.403633Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_records": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_events": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_relationships": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_change_log": {
+          "row_count": 0,
+          "skipped_empty": true
+        },
+        "gedcom_families": {
+          "row_count": 0,
+          "skipped_empty": true
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:45:20.997450Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v8/manifest.json"
+    },
+    {
+      "session_id": "156",
+      "snapshot_date_utc": "2026-05-08-session-156",
+      "version_uuid": "5d380adc-bb25-43e0-8950-db883b898f11",
+      "version_number": 9,
+      "version_status": "applied",
+      "version_imported_at": "2026-03-29T03:46:50.796245+00:00",
+      "snapshot_started_utc": "2026-05-08T04:45:21.130067Z",
+      "tables": {
+        "gedcom_individuals": {
+          "row_count": 21228,
+          "sha256": "446ccf195cbd42ed68ab99bbba54153733498b1875fe494afff3dec909a6bd35",
+          "size_bytes": 11101330,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_individuals.jsonl.gz",
+          "dump_seconds": 48.8,
+          "upload_seconds": 3.26
+        },
+        "gedcom_records": {
+          "row_count": 28362,
+          "sha256": "2eb81c08fb375da405dc33e3e960babe2d9d01117c3ca0b7f14ad6ecdde8bc11",
+          "size_bytes": 8223329,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_records.jsonl.gz",
+          "dump_seconds": 22.67,
+          "upload_seconds": 2.67
+        },
+        "gedcom_events": {
+          "row_count": 872,
+          "sha256": "1d6d167c7834c6258dc38b262f94b295d6b95eeb6a0abddaf66922469dee197e",
+          "size_bytes": 158574,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_events.jsonl.gz",
+          "dump_seconds": 2.77,
+          "upload_seconds": 0.17
+        },
+        "gedcom_relationships": {
+          "row_count": 140796,
+          "sha256": "5f1cd67e18714951226d942cb92c811c1bd3b0a1ef13f6693d9ade95782cfb7a",
+          "size_bytes": 11121136,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_relationships.jsonl.gz",
+          "dump_seconds": 17.93,
+          "upload_seconds": 3.49
+        },
+        "gedcom_change_log": {
+          "row_count": 686500,
+          "sha256": "526ff027f0368e034d1c75001633e14b62f797772df4961e69e7221db500f789",
+          "size_bytes": 32288272,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_change_log.jsonl.gz",
+          "dump_seconds": 77.19,
+          "upload_seconds": 9.7
+        },
+        "gedcom_families": {
+          "row_count": 6436,
+          "sha256": "91fda295d8110e179f9e7f1bac0763a3a2b9a5b0aca3d99674c826c23af82101",
+          "size_bytes": 1552152,
+          "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_families.jsonl.gz",
+          "dump_seconds": 5.61,
+          "upload_seconds": 0.69
+        }
+      },
+      "snapshot_completed_utc": "2026-05-08T04:48:40.773399Z",
+      "r2_manifest_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/manifest.json"
+    }
+  ],
+  "completed_utc": "2026-05-08T04:48:40.894077Z",
+  "reversibility_test": {
+    "version_number": 9,
+    "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v9/gedcom_individuals.jsonl.gz",
+    "decompressed_sha256": "446ccf195cbd42ed68ab99bbba54153733498b1875fe494afff3dec909a6bd35",
+    "lines_in_archive": 21228,
+    "rows_inserted_into_test_table": 21228,
+    "live_count_in_v1_table": 21228,
+    "parity": true
+  }
+}

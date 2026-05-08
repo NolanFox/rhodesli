@@ -4,6 +4,9 @@ MagicMock/
 # Production data backups (contain real Supabase data)
 data_backup_session*/
 
+# Session 156+ R2 staging — multi-GB gzipped JSONL dumps; manifests stay tracked
+backups/session-156/r2-staging/**/*.jsonl.gz
+
 # Python
 __pycache__/
 *.py[cod]

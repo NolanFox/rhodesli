@@ -1,0 +1,60 @@
+{
+  "session_id": "156",
+  "snapshot_date_utc": "2026-05-08-session-156",
+  "version_uuid": "9ad4aaad-9ce0-4110-8d77-462fc500090c",
+  "version_number": 4,
+  "version_status": "failed",
+  "version_imported_at": "2026-03-11T21:34:39.903719+00:00",
+  "snapshot_started_utc": "2026-05-08T04:35:59.219926Z",
+  "tables": {
+    "gedcom_individuals": {
+      "row_count": 21944,
+      "sha256": "4a50d45628d26e3f0ca6e4e1e288ef1278fd4a158bb9e5086c51f8fbdb3fa6c3",
+      "size_bytes": 11347869,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_individuals.jsonl.gz",
+      "dump_seconds": 45.53,
+      "upload_seconds": 2.91
+    },
+    "gedcom_records": {
+      "row_count": 30154,
+      "sha256": "d6e08ef8ce691c209365760f680d5e922dede80ae4fcd3350e0dfb43931d6499",
+      "size_bytes": 8571602,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_records.jsonl.gz",
+      "dump_seconds": 27.17,
+      "upload_seconds": 2.79
+    },
+    "gedcom_events": {
+      "row_count": 41526,
+      "sha256": "22445d98bca89444b0961980c3c6688c00cbe8da56d0b92186c54d41b4f9f334",
+      "size_bytes": 5179945,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_events.jsonl.gz",
+      "dump_seconds": 15.53,
+      "upload_seconds": 1.35
+    },
+    "gedcom_relationships": {
+      "row_count": 146592,
+      "sha256": "c57cddecca0e481aefa63412972b717ac13e3c32a00e0802f37ade53746bacae",
+      "size_bytes": 11839142,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_relationships.jsonl.gz",
+      "dump_seconds": 18.18,
+      "upload_seconds": 3.48
+    },
+    "gedcom_change_log": {
+      "row_count": 219000,
+      "sha256": "714ad8881ad49f2a4ea7aad6f423de28fb163018801304c18c64522b0ddecc80",
+      "size_bytes": 6619513,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_change_log.jsonl.gz",
+      "dump_seconds": 17.24,
+      "upload_seconds": 1.63
+    },
+    "gedcom_families": {
+      "row_count": 6722,
+      "sha256": "52ff455926182d69a55ee95d07cff23993312f9c7a9f3b27a48fcbeaac47e006",
+      "size_bytes": 1630979,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v4/gedcom_families.jsonl.gz",
+      "dump_seconds": 4.55,
+      "upload_seconds": 0.38
+    }
+  },
+  "snapshot_completed_utc": "2026-05-08T04:38:25.232432Z"
+}
