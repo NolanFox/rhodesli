@@ -121,25 +121,30 @@ Genealogy session would use its own date+session prefix. R2 keys never collide.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ Track A — Harry Fox repair execution (MAIN thread, gated)            │
-│   Phases A1 (gate verify), A2 (snapshot), A3 (detach + create new),  │
-│   A4 (note + audit_log + GEDCOM link), A5 (verify + commit)          │
-│                                                                      │
-│ Track B — PRD-063 implementation Day 1 (worktree subagent)           │
-│   Phases B1 (canonical path), B2 (R2 backup .ged sources),           │
-│   B3 (R2 backup current Supabase data), B4 (v2 schema build),        │
-│   B5 (initial backfill + verify)                                     │
-│                                                                      │
-│ Track C — CI verification (MAIN thread, gated on user secrets)       │
-│   Phase C1 — once user pastes Supabase secrets in GitHub repo        │
-│   settings, verify next CI run passes                                │
-│                                                                      │
-│ Track D — Closeout (MAIN thread, after A+B finish)                   │
+│ Track A — Harry Fox repair execution (MAIN thread, gated)           │
+│   Phases A1 (gate verify), A2 (snapshot), A3 (detach + create new), │
+│   A4 (note + audit_log + GEDCOM link), A5 (verify + commit)         │
+│                                                                     │
+│ Track B — PRD-063 implementation Day 1 (worktree subagent)          │
+│   Phases B1 (canonical path), B2 (R2 backup .ged sources),          │
+│   B3 (R2 backup current Supabase data), B4 (v2 schema build),       │
+│   B5 (initial backfill + verify)                                    │
+│                                                                     │
+│ Track C — CI verification (MAIN thread, gated on user secrets)      │
+│                                                                     │
+│ Track E — GEDCOM upload UAT (MAIN thread, after Track B5)           │
+│   Phases E1 (file path), E2 (baseline), E3 (upload via v1 path),    │
+│   E4 (4 verification points), E5 (writeup + commit)                 │
+│                                                                     │
+│ Track F — Location-correctness UAT (MAIN thread, after A+E)         │
+│   Phases F1 (identify photos), F2 (read current), F3 (verify),      │
+│   F4 (fix gated on user auth), F5 (verify all surfaces), F6 (commit)│
+│                                                                     │
+│ Track D — Closeout (MAIN thread, after A+B+E+F finish)              │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-Track A and Track B can run in parallel (different files, different mutations).
-Track C blocks on user action — surface clearly when ready.
+Track A and Track B run in parallel. Track E runs sequentially after Track B5 (depends on v2 backfill having a baseline). Track C blocks on user action.
 
 ---
 
@@ -364,6 +369,173 @@ If `.github/workflows/test.yml` was wired in 155 Track 3 recovery (verify in Pha
 3. Wait up to 5 min for completion.
 4. If green: declare 156-C done. Update CI-SUPABASE-ENV BACKLOG entry to CLOSED.
 5. If still red: diagnose via `gh run view <id> --log-failed`.
+
+---
+
+## Track E — GEDCOM upload UAT (MAIN thread, after Track B5)
+
+The user did genealogical research on the Fox family during the 8-day gap and has a NEW Fox-family GEDCOM ready to upload. **This serves as the live UAT for PRD-063 Day 1 work.** Four explicit verification points (per user message during 155 closeout):
+
+### E1 — User points at the new GEDCOM (~5 min)
+
+User shares the path to the latest Fox-family `.ged` file (likely `~/Downloads/gedcom_*` based on past sessions). Verify:
+- File exists, parses cleanly (`python -c "from rhodesli_ml.importers.gedcom_parser import parse_gedcom; p = parse_gedcom('<path>'); print(f'individuals: {len(p.individuals)}, families: {len(p.families)}')"`)
+- Compute SHA256 of the file. Add to R2 backup (Track B2 manifest).
+
+### E2 — Pre-import baseline measurement (~5 min)
+
+BEFORE uploading, capture baseline:
+- Supabase total DB size (via `/api/admin/db-size` admin call).
+- Row counts of `gedcom_individuals_v2`, `gedcom_families_v2` (from Track B5's initial backfill).
+- `make test-fast` green.
+
+### E3 — Upload the new GEDCOM (~30 min)
+
+**Decision point**: which path does the upload take?
+- Path α — **upload via the EXISTING v1 importer** (production code path). v2 tables get backfilled from v1 in Session 157. This is SAFE because v1 is still authoritative through 157.
+- Path β — **upload directly to v2 schema** via the new INSERT-time-dedup path. Requires the v2 importer to be written (not in scope for 156). Defer.
+
+**Choose Path α for 156.** The new GEDCOM goes through the existing v1 importer. v2 catches up in 157.
+
+Steps:
+1. Run the existing GEDCOM import script with the new `.ged` file path. Whatever the canonical command is — likely something like `python scripts/import_gedcom.py --file <path>`.
+2. Watch for errors. If the importer hits the bloat-related issue (Lesson 163: "GEDCOM versioned importer doesn't scale to 175K+ rows"), STOP and surface to user. We may need to fall back to the stopgap E1 prune to make room before the upload completes.
+3. After import succeeds: re-measure Supabase DB size. **EXPECTED**: size grows by some amount (the new version is a full snapshot under v1's design — that's the bug we're fixing). Document the delta.
+
+### E4 — Verify the four UAT points (per user)
+
+After the upload + Track B5 backfill catches up:
+
+1. **"Make it easier to upload a new one"** — verify the Track B's R2-backup-and-archive flow makes upload friction lower. Specifically: was the upload more or less reversible than before? Did we have a clean backup point if it failed mid-import? Document outcome at `docs/feedback/session-156-gedcom-upload-uat.md`.
+
+2. **"Make it easier to understand the changes for a specific family between GEDCOM versions"** — pick one family (the Fox family is the obvious choice). Run a query against `gedcom_change_manifest` (the new v2 per-import summary table) to find what changed for Fox individuals between previous version and the new one. Compare to what `gedcom_change_log` would show under v1 (the per-row noise). Document the UX delta.
+
+3. **"Make sure we've fixed the issue of the size growing rapidly"** — measure: total DB size before upload, after upload (under v1), after v2 backfill catches up. Compute the per-row growth factor. **EXPECTED**: under v1 the new version adds ~250-300 MB (full snapshot). Under v2 the new version should add only the delta rows (orders of magnitude smaller). If v2 adds anywhere near v1's growth: regression — escalate.
+
+4. **"Make sure we haven't broken Supabase"** — comprehensive smoke test:
+   - `/api/admin/db-size` returns expected values (no error)
+   - `/health` returns 200 with `supabase: "ok"` (currently shows `supabase: "skipped"` — investigate why)
+   - Browser-verify (READ-ONLY): person pages with GEDCOM context render correctly, `/tree` page renders, `/tools/search` rule-based parser still works
+   - Run `pytest tests/test_gedcom_*.py -q --no-header` — must be green
+   - Run `pytest tests/test_data_integrity.py -q --no-header` — must be green
+
+### E5 — UAT writeup + commit
+
+`docs/feedback/session-156-gedcom-upload-uat.md` with all 4 verification outcomes. If any FAIL: document, surface to user, and recommend either rollback (snapshot exists) or escalation to Session 157.
+
+Commit: `feat(session-156): GEDCOM upload UAT (Track E)`. Body: 4-line summary of the 4 UAT outcomes.
+
+---
+
+## Track F — Location-correctness UAT (MAIN thread, after Tracks A + B)
+
+**User requirement** (added 2026-05-07 mid-closeout): verify that the Detroit photos AND the Asheville NC photo with Victoria + Victor are returning the correct location AND that location is represented in the app.
+
+### F1 — Identify the photos in scope (~10 min)
+
+**Detroit photos** (known from Session 153/153b/154 work):
+- `inbox_fox-charlie-001_204_02068_p_13akf5twbc3600` — Belle Isle Conservatory, Detroit, c.1917-1918
+- `inbox_fox-charlie-001_3_01659_p_13akf5twbc1045` — same event, second frame
+- Possible third frame: `91b6f6b296e93a60` (referenced in `docs/session_context/session-154-context.md` line 25, "may be a third frame — not in Supabase under that exact string, needs investigation"). Investigate.
+
+**Asheville NC photo** with Victoria + Victor: photo_id NOT yet known. To find it:
+```python
+# Find identities matching Victoria / Victor
+sb = get_supabase_client()
+ids = sb.table("identities").select("identity_id, name").or_("name.ilike.%Victoria%,name.ilike.%Victor%").execute()
+victoria_ids = [r["identity_id"] for r in ids.data if "victoria" in r["name"].lower()]
+victor_ids = [r["identity_id"] for r in ids.data if r["name"].lower().startswith("victor") and "victoria" not in r["name"].lower()]
+
+# Find photos where BOTH a Victoria face AND a Victor face appear
+# Query photo_faces joined to identities; co-occurrence
+# Filter to photos with >0 Victoria face_ids AND >0 Victor face_ids
+# Should return a small set; user can confirm which is the Asheville photo
+```
+
+If the search returns multiple candidates, ask user to confirm the right photo_id. Otherwise pick the single match.
+
+### F2 — Read current stored location for each photo (~10 min)
+
+For each photo in scope:
+1. Query `date_labels` Supabase table for the photo's location data:
+   ```python
+   sb.table("date_labels").select("data").eq("photo_id", "<photo_id>").execute()
+   ```
+   Look at `data.gemini_raw_location.place` and `data.gemini_calibrated_location.place` (or whatever the canonical field is — verify in the schema).
+2. Query `photo_locations` geo table (Session 144b dual-write):
+   ```python
+   sb.table("photo_locations").select("*").eq("photo_id", "<photo_id>").execute()
+   ```
+3. Render the public photo page and read the location displayed:
+   ```bash
+   curl -s https://rhodesli.nolanandrewfox.com/photo/<photo_id> | grep -i "location\|detroit\|asheville\|belle isle"
+   ```
+
+### F3 — Verify expected vs actual
+
+Build a table of expected vs actual:
+
+| Photo ID | Expected location | `date_labels.data.location` | `photo_locations` | Public page | Verdict |
+|---|---|---|---|---|---|
+| inbox_..._02068_... | Detroit, MI (Belle Isle) | ? | ? | ? | ? |
+| inbox_..._01659_... | Detroit, MI (Belle Isle) | ? | ? | ? | ? |
+| 91b6f6b296e93a60 (if found) | Detroit, MI | ? | ? | ? | ? |
+| (Asheville Victoria+Victor) | Asheville, NC | ? | ? | ? | ? |
+
+**Note from Session 153/154 evidence**: Phase A3 of Session 154 (Detroit subset rerun) showed photo 02068 was being predicted as NYC by Gemini across all 3 prompt variants. The CURRENT stored location may also be NYC — that's the bug we need to find + fix.
+
+For Session 153b: photo 02068 was the photo where Session 153 had previously over-claimed identification. Its production `date_labels.gemini_raw_location` was NEVER corrected per Session 153b prompt (user explicitly skipped that fix). So the stored location for 02068 is likely STILL NYC.
+
+### F4 — Fix incorrect locations (gated on user authorization)
+
+For each photo where Verdict = MISMATCH:
+1. Identify the correct location from external evidence:
+   - Detroit photos: GOOD-confirmed via LoC LC-DIG-det-4a17798 + Albert Fox GEDCOM RESI Detroit 1917 (Session 154 Track C1).
+   - Asheville: confirm with user — what's the evidence basis? Family knowledge + GEDCOM if available.
+2. Write a corrective `date_labels` row (or update existing):
+   - Set `data.gemini_raw_location.place` = correct city
+   - Set `data.gemini_raw_location.confidence` = "high" (we have triangulated evidence)
+   - Set `data.gemini_raw_location.source_type` = "human_corrected" (or whatever the existing convention is — verify in `app/photo_routes.py` or admin endpoints)
+   - Bump `version_id` (optimistic concurrency).
+3. Use `save_*_registry()` canonical save function (NEVER `.save()` directly per `.claude/rules/data-sync.md`).
+4. Add `audit_log` row:
+   ```python
+   audit_log(
+       action="location_correction",
+       entity_id=photo_id,
+       metadata={
+           "old_location": <previous>,
+           "new_location": <corrected>,
+           "evidence_source": "Session 154 Track C1 + GEDCOM RESI" (or equivalent),
+           "session_id": "156",
+       },
+   )
+   ```
+5. Browser verify (READ-ONLY): re-render the public photo page; confirm the corrected location appears.
+
+**Authorization protocol**: list ALL photos to be corrected with their old + new locations in a single message to the user. Ask for explicit "fix the locations" authorization before any write.
+
+### F5 — Verify location data flows to all surfaces
+
+For each corrected photo, verify the new location appears on:
+- Public photo page (`/photo/<id>`)
+- `/map` view (if photo has geo coordinates)
+- Person pages where the photo appears in the gallery
+- Search results (`/tools/search` for "Detroit" should find these photos)
+- Photo metadata in admin views
+
+If any surface still shows stale data: it's a cache invalidation issue. Document and fix.
+
+### F6 — Commit + UAT writeup
+
+`docs/feedback/session-156-location-correctness-uat.md` with:
+- The 4 photos checked
+- Before/after table
+- Audit_log row IDs for each correction
+- Browser verification screenshots (or curl excerpts)
+- Note any cache-invalidation issues found
+
+Commit: `fix(session-156): location corrections for Detroit + Asheville photos (Track F)`. Body: per-photo summary.
 
 ---
 

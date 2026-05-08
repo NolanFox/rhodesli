@@ -2,6 +2,58 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.71] — 2026-05-07 (Session 155: User-Decisions Audit + Codex CLI Fix + 156 Handoff)
+
+8-day arc spanning kickoff (2026-04-29) through user-input pause (8 days) through final continuation-prompt handoff (2026-05-07). 5-track session that surfaced two user decisions, audit-corrected the analysis with both Claude + Codex independent passes, and handed off cleanly to a 3-session implementation arc for PRD-063.
+
+### Track 5 — Codex CLI hang FIXED
+After 4 sessions of `codex exec --full-auto` hanging on stdin (152, 153, 153b, 154), Track 5 diagnosed the bug and verified the working invocation: `codex exec "<prompt>" </dev/null`. The `</dev/null` redirect closes stdin and prevents the hang. All 3 working forms documented (positional + heredoc + pipe). `--full-auto` reproduces the hang and is permanently unsafe. Doc: `docs/feedback/session-155-codex-cli-diagnosis.md` (commit `bc69a98f`). **First successful Codex CLI run since Session 152.**
+
+### Track 4 — User decisions surfaced + audit-corrected
+- **Decision 1 — Harry Fox repair**: Surfaced 4 options (a) wait, (b) third Belle Isle frame, (c) ship conservative replacement label, (d) build PRD-062 anchor inspector first. **User chose (c)** with provenance note ("originally misidentified as Harry"). Existing `core/registry.py::add_note()` + `audit_log` mechanisms suffice — no new field needed.
+- **Decision 2 — Supabase compliance**: Surfaced 4 options (execute stopgap, defer to PRD-063, upgrade Pro, defer-and-decide). **User chose: REJECT band-aid, implement PRD-063 fully across Sessions 156-158.** Grace period 2026-05-29 (~22 days from 156 kickoff). 3-session pace at 1 session per week.
+- **Both decisions audited** by independent Claude general-purpose subagent + Codex CLI v0.125.0 (gpt-5.5/xhigh). 7 P0/P1 factual corrections incorporated inline as [CORRECTED] markers. v2 doc at `docs/feedback/session-155-user-decisions-analysis.md` (328 lines, commit `1a85e3df`). Confidence: Decision 1 HIGH → HIGH-MEDIUM (Lesson 142 downstream-state risk); Decision 2 HIGH (unchanged).
+
+### Tracks 1, 2, 3 — Partial work + recovery
+- Track 1 (PRD-063 redesign) timed out at API stream-idle but left a recoverable 373-line draft.
+- Track 2 (02068 prompt iteration) timed out but left a recoverable patches script (Detroit Gemini reruns deferred per user — no API spend).
+- Track 3 (CI Supabase env) timed out; worktree auto-cleaned. Re-launched in recovery.
+- Recovery subagent dispatched 2026-05-07 to land all artifacts.
+
+### Session 156 handoff
+- Continuation prompt at `docs/prompts/session-156-prompt.md` covering Harry repair execution + PRD-063 Day 1 implementation + GEDCOM upload UAT + closeout.
+- Context file at `docs/session_context/session-156-context.md`.
+- **Concurrent-genealogy-session resilience** (R1-R9) added per user request: optimistic concurrency, R2 namespace isolation, additive-only Track B, audit_log namespacing, pre-flight checks at every phase boundary.
+- **GEDCOM upload UAT** (Track E) added per user request: upload latest Fox-family GEDCOM in 156, verify (a) easier upload, (b) clearer change-tracking between versions, (c) size growth fixed, (d) Supabase not broken.
+
+### Bridge conversation contributions (parallel arc 2026-04-29 → 2026-05-07)
+A separate "Session 154 kickoff" Claude conversation in the gap:
+- Updated Codex CLI v0.125 → v0.129
+- Updated Claude Code 2.1.122 → 2.1.133
+- Added 14-day Codex model-pin freshness gate to `harness-check.sh`
+- Added best-model + staying-current protocol to `.claude/rules/ai-tool-audit.md`
+- Verified gpt-5.5/xhigh still latest as of 2026-05-07
+
+See `docs/session_logs/session-154-kickoff-log.md`.
+
+### Tests / verification
+- `make test-fast`: 4205+ passed throughout the session.
+- Production HTTP 200, ML loaded, throughout the 8-day window.
+- Latest CI run still red on `test_identity_suggestions::test_table_exists` (pre-existing, blocked on user pasting Supabase secrets in GitHub repo settings — Track 3 wired the workflow but secrets need user paste).
+
+### Lessons emitted (informally; canonical update in 156)
+- Subagent transcript inheritance triggers 600-line clear-gate hook on turn 0 (3 of 4 subagents had to work around).
+- API stream-idle timeouts at ~30 min for long subagent runs (3 of 5 subagents hit this).
+- Run Codex audits BEFORE first user-facing claim, not after — confidence calibration was off pre-audit.
+
+### Deferred to Session 156
+- Harry repair execution (user authorized option (c)).
+- PRD-063 Day 1 implementation (canonical path move + R2 backups + v2 schema + initial backfill).
+- GEDCOM upload UAT (4 verification points).
+- CI verification post-secrets-paste.
+
+---
+
 ## [v0.99.70] — 2026-04-29 (Session 154: Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s + Supabase Compliance)
 
 ### Pre-session repair (unplanned)
