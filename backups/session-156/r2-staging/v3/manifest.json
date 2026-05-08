@@ -1,0 +1,40 @@
+{
+  "session_id": "156",
+  "snapshot_date_utc": "2026-05-08-session-156",
+  "version_uuid": "a23b6c40-41af-4776-87ee-f5ce90e734b1",
+  "version_number": 3,
+  "version_status": "failed",
+  "version_imported_at": "2026-03-11T21:26:32.576750+00:00",
+  "snapshot_started_utc": "2026-05-08T04:35:07.811352Z",
+  "tables": {
+    "gedcom_individuals": {
+      "row_count": 21944,
+      "sha256": "7a0bd7ebc9bd550d628db721dc74c13f933b26b40b3d499b8cd3d4e4d5567e6f",
+      "size_bytes": 11312660,
+      "r2_key": "gedcom-version-snapshots/2026-05-08-session-156/v3/gedcom_individuals.jsonl.gz",
+      "dump_seconds": 44.31,
+      "upload_seconds": 2.68
+    },
+    "gedcom_records": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_events": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_relationships": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_change_log": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_families": {
+      "row_count": 0,
+      "skipped_empty": true
+    }
+  },
+  "snapshot_completed_utc": "2026-05-08T04:35:59.091765Z"
+}

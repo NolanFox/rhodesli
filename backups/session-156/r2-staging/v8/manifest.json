@@ -1,0 +1,36 @@
+{
+  "session_id": "156",
+  "snapshot_date_utc": "2026-05-08-session-156",
+  "version_uuid": "ad077b5f-4a97-443e-89e6-863e593c144a",
+  "version_number": 8,
+  "version_status": "failed",
+  "version_imported_at": "2026-03-29T03:30:34.912907+00:00",
+  "snapshot_started_utc": "2026-05-08T04:45:17.403633Z",
+  "tables": {
+    "gedcom_individuals": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_records": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_events": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_relationships": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_change_log": {
+      "row_count": 0,
+      "skipped_empty": true
+    },
+    "gedcom_families": {
+      "row_count": 0,
+      "skipped_empty": true
+    }
+  },
+  "snapshot_completed_utc": "2026-05-08T04:45:20.997450Z"
+}
