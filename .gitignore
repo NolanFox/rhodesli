@@ -116,3 +116,6 @@ notebookllm/
 scripts/extract_routes.py
 .claude/projects/
 .playwright-mcp/
+
+# Stop-gate loop-breaker state (ephemeral; never commit)
+.claude/.stop-gate-state

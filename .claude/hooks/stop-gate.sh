@@ -51,6 +51,42 @@ if [ "$MODE" = "interactive" ]; then
     if [ -n "$DIRTY" ]; then
         echo "BLOCKED: Uncommitted files (commit or restore before ending)" >&2
         echo "$DIRTY" >&2
+        # --- STOP_GATE_LOOP_BREAKER_INSTALLED (2026-05-07, fox-genealogy HD-005-derived) ---
+        # Scoped loop-breaker: ONLY short-circuits the dirty-files block, not the whole hook.
+        # Implementation-mode assessment/log/codex-audit requirements above are NOT bypassed.
+        LB_STATE=".claude/.stop-gate-state"
+        LB_HASH=$(echo "$DIRTY" | shasum -a 256 | cut -d' ' -f1)
+        LB_NOW=$(date +%s)
+        if [ -f "$LB_STATE" ]; then
+            LB_LAST=$(tail -1 "$LB_STATE" 2>/dev/null || echo "")
+            LB_LH=$(echo "$LB_LAST" | awk -F'|' '{print $1}')
+            LB_LT=$(echo "$LB_LAST" | awk -F'|' '{print $2}')
+            LB_LC=$(echo "$LB_LAST" | awk -F'|' '{print $3}')
+            # Validate timestamp + count are numeric (defends against state corruption)
+            if [ "$LB_LH" = "$LB_HASH" ] && [[ "$LB_LT" =~ ^[0-9]+$ ]] && [[ "$LB_LC" =~ ^[0-9]+$ ]]; then
+                LB_AGE=$((LB_NOW - LB_LT))
+                # Reject negative ages (clock skew or future-dated state)
+                if [ "$LB_AGE" -ge 0 ] && [ "$LB_AGE" -le 60 ]; then
+                    LB_NEW=$((LB_LC + 1))
+                    echo "${LB_HASH}|${LB_NOW}|${LB_NEW}" > "$LB_STATE"
+                    if [ "$LB_NEW" -ge 3 ]; then
+                        echo "WARNING: stop-gate loop-breaker activated. Same dirty file set blocked $LB_NEW times in 60s." >&2
+                        echo "Likely cause: concurrent Claude Code conversation with dirty files in this repo." >&2
+                        echo "Bypassing dirty-files block ONLY. Other hook checks (assessment, log, codex audit) still enforced." >&2
+                        echo "To re-enable strict checks: clean working tree or remove $LB_STATE." >&2
+                        cleanup_state 2>/dev/null || true
+                        exit 0
+                    fi
+                else
+                    echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+                fi
+            else
+                echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+            fi
+        else
+            echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+        fi
+        # --- END STOP_GATE_LOOP_BREAKER ---
         exit 2
     fi
     cleanup_state
@@ -97,7 +133,43 @@ DIRTY=$(git status --porcelain \
 if [ -n "$DIRTY" ]; then
     echo "BLOCKED: Uncommitted files (commit before ending session)" >&2
     echo "$DIRTY" >&2
-    exit 2
+        # --- STOP_GATE_LOOP_BREAKER_INSTALLED (2026-05-07, fox-genealogy HD-005-derived) ---
+        # Scoped loop-breaker: ONLY short-circuits the dirty-files block, not the whole hook.
+        # Implementation-mode assessment/log/codex-audit requirements above are NOT bypassed.
+        LB_STATE=".claude/.stop-gate-state"
+        LB_HASH=$(echo "$DIRTY" | shasum -a 256 | cut -d' ' -f1)
+        LB_NOW=$(date +%s)
+        if [ -f "$LB_STATE" ]; then
+            LB_LAST=$(tail -1 "$LB_STATE" 2>/dev/null || echo "")
+            LB_LH=$(echo "$LB_LAST" | awk -F'|' '{print $1}')
+            LB_LT=$(echo "$LB_LAST" | awk -F'|' '{print $2}')
+            LB_LC=$(echo "$LB_LAST" | awk -F'|' '{print $3}')
+            # Validate timestamp + count are numeric (defends against state corruption)
+            if [ "$LB_LH" = "$LB_HASH" ] && [[ "$LB_LT" =~ ^[0-9]+$ ]] && [[ "$LB_LC" =~ ^[0-9]+$ ]]; then
+                LB_AGE=$((LB_NOW - LB_LT))
+                # Reject negative ages (clock skew or future-dated state)
+                if [ "$LB_AGE" -ge 0 ] && [ "$LB_AGE" -le 60 ]; then
+                    LB_NEW=$((LB_LC + 1))
+                    echo "${LB_HASH}|${LB_NOW}|${LB_NEW}" > "$LB_STATE"
+                    if [ "$LB_NEW" -ge 3 ]; then
+                        echo "WARNING: stop-gate loop-breaker activated. Same dirty file set blocked $LB_NEW times in 60s." >&2
+                        echo "Likely cause: concurrent Claude Code conversation with dirty files in this repo." >&2
+                        echo "Bypassing dirty-files block ONLY. Other hook checks (assessment, log, codex audit) still enforced." >&2
+                        echo "To re-enable strict checks: clean working tree or remove $LB_STATE." >&2
+                        cleanup_state 2>/dev/null || true
+                        exit 0
+                    fi
+                else
+                    echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+                fi
+            else
+                echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+            fi
+        else
+            echo "${LB_HASH}|${LB_NOW}|1" > "$LB_STATE"
+        fi
+        # --- END STOP_GATE_LOOP_BREAKER ---
+        exit 2
 fi
 
 # Check SESSION_HISTORY.md was updated with this session (advisory, not blocking)
