@@ -1992,6 +1992,12 @@ class IdentityRegistry:
                 metadata = row.get("metadata")
                 if metadata and isinstance(metadata, dict):
                     identity["metadata"] = metadata
+                    # Round-trip notes through metadata.notes (Session 156: notes
+                    # are stored top-level in-memory but only persist via metadata
+                    # JSONB on Supabase since shadow_write doesn't include "notes"
+                    # at the row top-level).
+                    if "notes" in metadata and isinstance(metadata["notes"], list):
+                        identity["notes"] = metadata["notes"]
                 registry._identities[identity_id] = identity
 
             # NOTE: Session 129 removed a legacy override layer here that

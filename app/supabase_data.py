@@ -651,6 +651,14 @@ def shadow_write_identity(identity_data: dict, strict: bool = False) -> None:
             if strict:
                 raise ConnectionError("Supabase client not available for strict shadow write")
             return
+        # Embed top-level notes inside metadata (Session 156)
+        metadata_in = identity_data.get("metadata") or {}
+        if not isinstance(metadata_in, dict):
+            metadata_in = {}
+        top_level_notes = identity_data.get("notes")
+        if isinstance(top_level_notes, list):
+            metadata_in = {**metadata_in, "notes": top_level_notes}
+
         row = {
             "identity_id": identity_data.get("identity_id", ""),
             "name": identity_data.get("name", ""),
@@ -659,7 +667,7 @@ def shadow_write_identity(identity_data: dict, strict: bool = False) -> None:
             "anchor_ids": _ensure_list_for_supabase(identity_data.get("anchor_ids", [])),
             "candidate_ids": _ensure_list_for_supabase(identity_data.get("candidate_ids", [])),
             "negative_ids": _ensure_list_for_supabase(identity_data.get("negative_ids", [])),
-            "metadata": identity_data.get("metadata", {}),
+            "metadata": metadata_in,
             "version_id": identity_data.get("version_id", 1),
             "merged_into": identity_data.get("merged_into"),
             "created_at": identity_data.get("created_at"),
@@ -844,6 +852,15 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
                     },
                 )
 
+            # Embed top-level notes inside metadata so they persist via
+            # the metadata JSONB column (Session 156).
+            metadata_in = ident.get("metadata") or {}
+            if not isinstance(metadata_in, dict):
+                metadata_in = {}
+            top_level_notes = ident.get("notes")
+            if isinstance(top_level_notes, list):
+                metadata_in = {**metadata_in, "notes": top_level_notes}
+
             row = {
                 "identity_id": identity_id,
                 "display_name": ident.get("display_name"),
@@ -851,7 +868,7 @@ def shadow_write_identities_batch(identities_list: list[dict], strict: bool = Fa
                 "anchor_ids": _ensure_list_for_supabase(ident.get("anchor_ids", [])),
                 "candidate_ids": _ensure_list_for_supabase(ident.get("candidate_ids", [])),
                 "negative_ids": _ensure_list_for_supabase(ident.get("negative_ids", [])),
-                "metadata": ident.get("metadata", {}),
+                "metadata": metadata_in,
                 "version_id": incoming_version,
                 "merged_into": ident.get("merged_into"),
                 "created_at": ident.get("created_at"),
