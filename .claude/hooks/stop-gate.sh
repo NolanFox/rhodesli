@@ -83,7 +83,7 @@ fi
 if [ ! -f "docs/session_context/session-${S}-codex-audit.md" ]; then
     echo "BLOCKED: Codex audit file missing for session ${S}" >&2
     echo "Create: docs/session_context/session-${S}-codex-audit.md" >&2
-    echo "Either run: codex exec --full-auto 'Audit [changed files]. P0/P1/P2/P3.'" >&2
+    echo "Either run: codex exec 'Audit [changed files]. P0/P1/P2/P3.'  # NOT --full-auto (stdin hang, see .claude/rules/ai-tool-audit.md)" >&2
     echo "Or document why codex was unavailable (rate limit, outage, etc.)" >&2
     exit 2
 fi
