@@ -1,0 +1,55 @@
+{
+  "cutover_ts": "2026-05-08T04:56:15.123409Z",
+  "v1_baseline": {
+    "gedcom_individuals": {
+      "row_count": 196645,
+      "size": "783 MB"
+    },
+    "gedcom_families": {
+      "row_count": 33324,
+      "size": "75 MB"
+    },
+    "gedcom_change_log": {
+      "row_count": 1646688,
+      "size": "397 MB"
+    },
+    "gedcom_records": {
+      "row_count": 118824,
+      "size": "272 MB"
+    },
+    "gedcom_events": {
+      "row_count": 226116,
+      "size": "273 MB"
+    },
+    "gedcom_relationships": {
+      "row_count": 872738,
+      "size": "406 MB"
+    }
+  },
+  "phases": [
+    {
+      "phase": "individuals",
+      "v1_scanned": 21998,
+      "unique_payload_hashes": 21998,
+      "fallback_hashes_computed": 0,
+      "v2_row_count": 21998,
+      "v2_distinct_gedcom_id": 21998,
+      "v2_size": "43 MB",
+      "insert_seconds": 30.99
+    },
+    {
+      "phase": "families",
+      "v1_scanned": 6741,
+      "unique_payload_hashes": 6741,
+      "fallback_hashes_computed": 0,
+      "v2_row_count": 6741,
+      "v2_size": "5248 kB",
+      "insert_seconds": 3.15
+    },
+    {
+      "phase": "change_manifest",
+      "rows_inserted": 9,
+      "v1_versions": 9
+    }
+  ]
+}
