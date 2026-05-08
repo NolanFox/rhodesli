@@ -1,6 +1,10 @@
 # Session 155 Assessment — PREP STATE STUB
 
-**Status:** Implementation has NOT yet executed. This file is a stub created at the close of the kickoff/bridge conversation that immediately preceded Session 155, to satisfy the stop-gate hook contract. Replace with a full assessment when Session 155 actually runs.
+> **⚠ MERGE GUIDANCE FOR CONCURRENT CONVERSATIONS ⚠**
+>
+> If you are a different Claude conversation closing out an actual Session 155 implementation: **DELETE THIS ENTIRE FILE AND WRITE YOUR REAL ASSESSMENT IN ITS PLACE.** Do NOT attempt to merge with this stub. This stub exists ONLY to satisfy the stop-gate hook for the Session 154 kickoff bridge conversation that did not execute Session 155 work. Your real assessment supersedes it completely. Take the latest commit hash on `main` as the base and force-replace this file.
+
+**Status:** Implementation has NOT yet executed (as of the bridge-conversation close on 2026-05-07). This file is a stub created at the close of the kickoff/bridge conversation that immediately preceded Session 155, to satisfy the stop-gate hook contract. Replace with a full assessment when Session 155 actually runs.
 
 **Predecessor:** Session 154 (`docs/assessments/session-154-assessment.md`, v0.99.70)
 **Bridge conversation log:** `docs/session_logs/session-154-kickoff-log.md`

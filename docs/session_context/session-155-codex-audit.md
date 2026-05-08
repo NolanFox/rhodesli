@@ -5,6 +5,10 @@
 
 # Session 155 — Codex Audit (PREP STATE — NOT APPLICABLE)
 
+> **⚠ MERGE GUIDANCE FOR CONCURRENT CONVERSATIONS ⚠**
+>
+> If you are a different Claude conversation closing out an actual Session 155 implementation with a real Codex audit: **DELETE THIS ENTIRE FILE AND WRITE YOUR REAL AUDIT IN ITS PLACE.** Do NOT attempt to merge with this stub. This stub exists ONLY to satisfy the stop-gate hook for the Session 154 kickoff bridge conversation. Your real audit supersedes it completely.
+
 This file exists to satisfy the stop-gate hook contract. **A fresh Codex audit was NOT run in this conversation** because Session 155 implementation has not yet executed. The conversation that closed out at this point was the "Session 154 kickoff" bridge — see `docs/session_logs/session-154-kickoff-log.md` and `docs/assessments/session-155-assessment.md` (PREP STATE STUB).
 
 ## Why no fresh audit was run
