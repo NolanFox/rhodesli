@@ -119,3 +119,6 @@ scripts/extract_routes.py
 
 # Stop-gate loop-breaker state (ephemeral; never commit)
 .claude/.stop-gate-state
+
+# Hook backups (loop-breaker rollback path; never commit)
+.claude/hooks/*.bak
