@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.72] — 2026-05-08 (Session 156: Harry Fox Repair Shipped + PRD-063 Day 1)
+
+3-track day. Both major irreversible workstreams shipped: Harry Fox identity repair (option c) executed on production with full provenance trail; PRD-063 v2 schema built + initial backfill landed (~98% storage win projected). Detroit location bugs fixed manually pending Gemini prompt iteration. CI now green-eligible (5 secrets pasted via `gh secret set`).
+
+### Track A — Harry Fox repair option (c) SHIPPED
+Detached `inbox_1fea75ce2caf` (F, photo 01659) + `inbox_e507a54f204a` (G, photo 02068) from Harry Fox (`d74cb556-...`). Anchors 7→5; version_id 13→14. Created new identity `ef39908e-283a-4cec-8f72-3ec83bc8d84f` "Belle Isle Conservatory Young Man c.1917-1918" (state=INBOX, 2 anchors). `metadata.notes` carries a ~1500-char provenance note citing Sessions 153/153b/154 evidence across 4 triangulation sources. `metadata.originally_misidentified_as = "Harry Fox"`. GEDCOM Harry Isaackovitz `@I132506612777@` linked as **candidate** (confidence=0.3, NOT confirmed — no reference photo of Harry Isaackovitz exists). audit_log row written with full triangulation metadata, belle_isle_citation (LoC LC-DIG-det-4a17798), snapshot_path. Pre-snapshot of all affected rows committed before mutation. R6 pre-flight verified version_id=13 immediately before A3.
+
+### Notes round-trip fix (pre-existing bug)
+Surfaced while preparing Track A4 provenance note: `registry.add_note()` writes top-level `identity["notes"]` but `shadow_write_identity` only persists `metadata` JSONB — top-level "notes" silently dropped on every Supabase round-trip since Session 105's DATA_SOURCE=postgres rollout. Patched `shadow_write` and `load_from_postgres` to round-trip notes through `metadata.notes`. 4 regression tests in `tests/test_session156_notes_roundtrip.py`. **Backfill follow-up (NOTES-BACKFILL-156)**: any identity created via `add_note` between Session 105 and Session 156 may have notes in JSON that never made it to Supabase — Session 157 should run a delta backfill.
+
+### Track B — PRD-063 Day 1 (worktree subagent + main-thread merge)
+- **B2** (main): R2 backup of new Fox-family GEDCOM source (17.08 MB). Roundtrip verified.
+- **B3** (subagent): All 9 historical Supabase versions archived to R2 (~2.89M rows compressed to ~0.26 GB). Reversibility test on v9 PASSED parity (21,228 rows). Used psycopg2 server-side cursor + Supabase pooler.
+- **B4** (subagent): v2 schema applied via psycopg2 + us-west-2 pooler. 3 tables: `gedcom_individuals_v2`, `gedcom_families_v2`, `gedcom_change_manifest`. `payload_hash UNIQUE` for INSERT-time dedup. Purely ADDITIVE — v1 untouched.
+- **B5** (subagent): Initial backfill. v2 row counts: individuals 21,998 (from 196,645 → 18× smaller), families 6,741 (from 33,324 → 14× smaller), change_manifest 9 (from 1.65M → 1400× smaller). Total v1 ~2.21 GB → v2 ~48.5 MB = ~98% reduction (~45× smaller). Storage win comes from EXCLUDING `is_current=FALSE` rows (PRD-063 §4.2 confirmed). Cutover timestamp 2026-05-08T04:56:15Z documented. **Storage benefit lands in Session 158 when v1 is dropped.**
+
+### Track F — Detroit location corrections (Asheville already correct)
+2 photos manually fixed with audit_log: photo 02068 "New York City" → "Detroit, Michigan" (lat 42.3314), photo 01659 "United States" (generic) → "Detroit, Michigan". Evidence: LoC LC-DIG-det-4a17798, Albert Fox GEDCOM RESI Detroit 1917 + draft induction 7 Jun 1918. Asheville Victor+Victoria photo `3192877a90a174e9` already shows correct "Asheville, North Carolina" with confidence=high. **Follow-up (PRD-LOCATION-001)**: Gemini prompt iteration needed — sycophancy guard (AD-242) didn't fire on 02068 in Session 154 Phase A3 retest. Manual override is a stopgap.
+
+### Track C — CI secrets uploaded (5 of 5)
+After diagnosing `total_count: 0` on the GitHub repo's actions secrets, used `gh secret set` to upload `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_PASSWORD`, `GEMINI_API_KEY` directly from local `.env`. Verified via `gh api repos/.../actions/secrets` → `total_count: 5`.
+
+### Tests
+4246 tests pass under xdist parallel (was 4242 — 4 new round-trip regression tests added). 4 tests fail under sequential pytest (test isolation issue, pre-existing, Track B touches no app code).
+
+### Concurrency resilience (R1-R9 from prompt)
+All applicable rules satisfied. Marker file held only during Track A3-A4 irreversible window. Pre-flight check verified Harry version_id=13 immediately before mutation. R2 namespace included `session-156` to prevent collision.
+
+### AI tool usage
+Track B subagent (Claude Opus 4.7 general-purpose, fresh worktree context) ran B1+B3+B4+B5 in parallel with Track A on main thread. STRONG value: parallel work cut total session time from ~5h sequential to ~3h. Codex audit DEFERRED to Session 157 first commit (BACKLOG CODEX-AUDIT-156).
+
+### Deferred
+- Track E (GEDCOM upload UAT): rolled into Session 157 alongside Day 2 dual-read confidence check. New GEDCOM file IS archived to R2 already.
+- AD-244 (PRD-063 schema design entry): deferred to Session 157 first commit so it can reference merged commit hashes.
+- gedcom_records / gedcom_events / gedcom_relationships v2: not built. Out of Track B scope. v1 still authoritative through 157. Session 158 cutover work needs to handle these.
+
 ## [v0.99.71] — 2026-05-07 (Session 155: User-Decisions Audit + Codex CLI Fix + 156 Handoff)
 
 8-day arc spanning kickoff (2026-04-29) through user-input pause (8 days) through final continuation-prompt handoff (2026-05-07). 5-track session that surfaced two user decisions, audit-corrected the analysis with both Claude + Codex independent passes, and handed off cleanly to a 3-session implementation arc for PRD-063.
