@@ -6,4 +6,4 @@
 # warns at session start and prompts a refresh. To refresh, see
 # .claude/rules/ai-tool-audit.md → "Staying current with model releases".
 
-gpt-5.5|xhigh|0.125.0|2026-04-28|https://developers.openai.com/codex/models|gpt-5.5 is current best for code/audit work per OpenAI Codex docs (Apr 2026); supersedes gpt-5.4 / gpt-5.3 / o4-mini
+gpt-5.5|xhigh|0.129.0|2026-05-07|https://developers.openai.com/codex/models|verified 2026-05-07 — gpt-5.5 still latest (no 5.6 yet); CLI bumped 0.125→0.129; gpt-5.5 hits 58.6% SWE-Bench Pro / 82.7% Terminal-Bench 2.0 per OpenAI announcement
