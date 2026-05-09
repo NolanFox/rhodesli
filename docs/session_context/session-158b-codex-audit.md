@@ -1,7 +1,41 @@
-**Auditor**: Codex CLI v0.130.0 (gpt-5.5, xhigh) — RUN STARTED but TERMINATED without findings phase. Self-audit by Claude Opus 4.7 supplements.
-**Agent type**: Independent (fresh context Codex) + main-thread Claude self-audit
-**Scope**: Session 158b commits `5799700a..33a4abab` (6 commits)
+**Auditor**: Codex CLI v0.130.0 (gpt-5.5, xhigh)
+**Agent type**: Independent (fresh context)
+**Scope**: Session 158b commits `5799700a..f85ada8f` (7 commits) — 2 audit runs (first timed out at exploration phase; second ran with tighter scope and produced findings)
 **Date**: 2026-05-09
+
+---
+
+## Codex findings (Run 2 — focused 3-script scope, COMPLETED)
+
+Run 2 invocation: `codex exec` against scripts `session158b_historical_backfill_chunked.py` + `session158b_cutover_rename.py` + `session158b_drop_and_vacuum.py` ONLY (lower-risk scripts skipped). Wall-clock ~5 min, 27,248 tokens used. ✅
+
+### P0 — must-fix before 158c executes irreversible work
+
+- **P0-1** `scripts/session158b_historical_backfill_chunked.py:117` (`_read_chunk_for_version`) — REST `.range()` pagination has NO deterministic `.order()`. Source rows can be silently skipped/duplicated across pages. **Implication for 158b**: chunks 1-5 + chunk 6 partial may be incomplete or contain duplicates. **Implication for 158c**: cannot trust the partial state; resume backfill must include `.order(...)` and re-process all chunks (idempotent ON CONFLICT means no harm in re-run). **Fix**: add `.order("id")` (or whatever has a unique index) to the SELECT in `_read_chunk_for_version` before `.range()`.
+- **P0-2** `scripts/session158b_historical_backfill_chunked.py:137` (`_aggregate_chunk` fallback hash) — when `payload_hash` is NULL on v1 rows, fallback computes SHA256 only over `key_fields` (gedcom_id, name, given_name, surname, gender, birth/death). Two distinct rows with identical key fields but different events/citations/notes would collide and be incorrectly merged into a single v2 row. **Mitigation**: 0 fallback hashes were observed in chunks 1-5 (all v1 rows have payload_hash), so 158b output is likely uncorrupted. But the code path is still wrong. **Fix**: extend `key_fields` to include the full set of identifying + JSONB fields, OR raise on NULL payload_hash instead of falling back.
+- **P0-3** `scripts/session158b_drop_and_vacuum.py:111` (`drop_renamed_tables`) — script drops whatever `_dropped_*_session158` tables EXIST and silently skips missing ones. There is no in-script all-or-nothing gate that asserts (a) all 3 renamed tables are present AND (b) the original v1 names are absent. **Implication**: if only 2 of 3 RENAMEs succeeded, this script would happily drop those 2 and leave the v1 namespace partially populated. **Fix**: add a pre-DROP assertion that all 3 `_dropped_*_session158` tables exist AND all 3 `gedcom_individuals/gedcom_families/gedcom_change_log` originals do NOT exist. Fail-fast otherwise.
+
+### P1 — should-fix before 158c
+
+- **P1-1** `scripts/session158b_cutover_rename.py:145` — cutover forward only checks `before["v1_alive"]` (any v1 table present) before RENAME. Should require ALL three v1 tables present AND ALL three v2 tables present. **Fix**: assert `len(before["v1_alive"]) == 3` AND `len(before["v2_alive"]) == 3`.
+- **P1-2** `scripts/session158b_cutover_rename.py:139` (rollback path) — only checks any renamed table exists. Partial cutover states fail late inside the BEGIN/COMMIT transaction. **Fix**: pre-rollback assertion that all 3 renamed tables exist; or build per-table rollback that's idempotent.
+- **P1-3** `scripts/session158b_drop_and_vacuum.py:165` (`get_conn`) — uses pooler psycopg2 for IRREVERSIBLE work despite today's known SSL instability. If pooler disconnects mid-DROP-COMMIT, transaction state is ambiguous; if mid-VACUUM (autocommit), partial vacuum on some tables. **Mitigation**: VACUUM partial-state is benign (re-run on remaining tables). DROP transaction is atomic — partial commit is impossible inside BEGIN/COMMIT. So this is a P1 in spirit, P2 in actual blast radius. **Fix**: add explicit pooler health probe before DROP step; consider direct (non-pooler) connection if pooler is degraded.
+
+### P2/P3 — out of scope per prompt
+
+Run 2 prompt explicitly skipped P2/P3. Manual self-audit (below) covers P2/P3 for completeness.
+
+---
+
+## Codex findings (Run 1 — full 7-file scope, TIMED OUT, no findings)
+
+First Codex run was scoped to all 7 158b artifacts with `xhigh` reasoning. Ran ~28 min, 6571 lines of file exploration output, 0 P0/P1/P2/P3 entries reached. Terminated by orchestrator after exhausting session budget.
+
+Lessons: xhigh + multi-file scope produces unbounded exploration. Run 2's tighter scope (3 files only, P0/P1 only, "skip exploration of unrelated code") completed in ~5 min with 27K tokens — ~50x faster.
+
+---
+
+## Original auditor preamble
 
 ## Codex CLI run state
 

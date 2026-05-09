@@ -46,6 +46,51 @@ git status --short
 date -u                                   # confirm date for deadline math
 ```
 
+## ⚠️ CODEX 158B P0 FIXES — REQUIRED BEFORE ANY IRREVERSIBLE WORK
+
+Codex audit (Run 2, focused) on 2026-05-09 found 3 P0s that MUST be fixed in
+158c before re-running backfill or executing cutover. See full findings in
+`docs/session_context/session-158b-codex-audit.md`.
+
+### P0-1: Backfill REST pagination missing deterministic .order()
+File: `scripts/session158b_historical_backfill_chunked.py:117` (`_read_chunk_for_version`).
+Without `.order(...)`, REST may return rows in unstable order across pages →
+silent skips/duplicates. **Fix**: add `.order("id")` (or another unique-indexed
+column) to the SELECT before `.range()`. Then re-run the chunked backfill from
+chunk 1 (idempotent ON CONFLICT means no harm — old chunks just become UPDATEs).
+
+### P0-2: Fallback payload_hash too narrow
+File: `scripts/session158b_historical_backfill_chunked.py:137` (`_aggregate_chunk`).
+When v1 has NULL payload_hash (legacy rows), fallback hashes only over key fields
+(gedcom_id + names + dates). Two distinct rows with identical key fields but
+different events/citations/notes would collide. **Fix**: extend the fallback hash
+to cover the full v2 column set OR raise on NULL payload_hash. (Mitigation: 0
+fallback hashes observed in chunks 1-5; v1 rows all have payload_hash today, but
+the bug remains.)
+
+### P0-3: DROP script missing all-or-nothing gate
+File: `scripts/session158b_drop_and_vacuum.py:111` (`drop_renamed_tables`).
+Currently silently skips missing tables. **Fix**: pre-DROP assertion that all 3
+`_dropped_*_session158` tables exist AND all 3 v1 originals do NOT exist;
+fail-fast otherwise.
+
+### P1-1: Cutover forward all-tables gate
+File: `scripts/session158b_cutover_rename.py:145`. Require
+`len(before["v1_alive"]) == 3 AND len(before["v2_alive"]) == 3`.
+
+### P1-2: Cutover rollback all-tables gate
+File: `scripts/session158b_cutover_rename.py:139`. Pre-rollback assert all 3
+renamed tables exist.
+
+### P1-3: DROP+VACUUM uses pooler psycopg2 despite instability
+File: `scripts/session158b_drop_and_vacuum.py:165`. Add pooler health probe
+before DROP; consider direct (non-pooler) connection if degraded.
+
+**Order in 158c**: fix P0s + P1s in a SINGLE commit BEFORE re-running backfill.
+Then run a fresh Codex audit on the FIXED scripts to confirm no regressions.
+
+---
+
 ## FIRST ACTION — Re-run pooler health probe + carry verify
 
 ```bash
