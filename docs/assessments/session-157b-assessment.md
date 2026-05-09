@@ -144,3 +144,21 @@ Critical re-read of the 158 prompt surfaced 3 high-value safety improvements + 9
 
 ### Final verdict (157b — both passes)
 All 11 user-facing tasks closed cleanly. 158 prompt approved for clean-session execution after the 3 safety edits. Session 157b is done; the rhodesli-157-b harness session can /quit at any point.
+
+## /session-review pass 3 — post-Session-158 retrospective
+
+After Session 158 actually ran (commits `75dc10e0..1fa48c60`, 12 commits, v0.99.75), this conversation was reopened to ask "what's next." Used the opportunity to retroactively grade my own 158 prompt against what Session 158 actually encountered.
+
+### Pass 3 finding: my 158 prompt missed pooler-instability risk
+
+Session 158 made it through Phase 158-0 + 158-1 cleanly but stalled at Phase 158-2 (historical backfill, ~196K rows) when the Supabase pooler dropped the long server-side cursor four different ways. My 158 prompt assumed the psycopg2 server-side cursor pattern that worked for Session 156's 22K-row backfill would scale. It did not. Lesson 183 captures the pattern; Session 158b's redesigned Phase 158b-2 uses chunked-write (≤10K rows, upsert immediately, no full-dataset accumulation).
+
+This was a planning gap, not a 157b execution gap — but it's worth recording in this assessment because the gap was authored in this conversation. Mitigation: future migration-prompt drafts should treat ≥50K-row v1→v2 backfills as REQUIRING chunked-write upfront, not as an optional optimization. Captured as a retrospective addendum in `docs/feedback/session-158-prompt-review.md`.
+
+### Status of next-action artifacts
+
+- `docs/prompts/session-158b-prompt.md` (216 lines) is ready to kick off. Written by Session 158's closeout (commit `770e56f1`); reviewed for completeness this pass (11 sections, full 12-step closeout harness, mandatory Codex final-pass on combined 158+158b commits).
+- No additional 158b drafting work needed in this conversation.
+
+### Pass 3 verdict
+PASS. 157b's own work is unaffected by the 158 outcome. The 158 prompt I drafted is now superseded by 158b (which incorporates Lesson 183). This conversation can /quit.

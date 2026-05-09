@@ -104,3 +104,27 @@ The 158 prompt is well-structured for safety. The 3 applied edits add explicit u
 - Auto-fixed inline (prompt edits): 3
 - Captured in this review for the 158 implementer: 9
 - Auto-fix subagent NOT spawned: the work is small enough to do inline, and a subagent would re-introduce Lesson 180 worktree-isolation risk on prompt files
+
+## Retrospective addendum (post-Session-158 execution)
+
+Session 158 actually ran via this prompt and exposed a gap my review did not catch:
+
+### MISSED-1 — Pooler instability under long server-side cursors (HIGH)
+
+Phase 158-2's pseudocode used psycopg2 server-side cursor (`cur.itersize=5000`) to stream all v1 rows. This pattern worked for Session 156's 22K-row backfill (is_current=TRUE only). Phase 158-2's scope was ~196K rows (the full v1 set), which kept the cursor open for minutes. Supabase's us-west-2 pooler dropped the connection mid-stream four different ways (cursor died mid-stream; NULL chunk failed all retries; version_map query failed under pooler degradation; REST accumulator plateaued at 951 MB).
+
+The 158 prompt should have specified the **chunked-write pattern** — read+aggregate+upsert one ≤10K-row chunk at a time, never accumulate the full dataset in memory, and probe pooler health before each chunk. Session 158 lost the cutover day; Session 158b's job is to redesign Phase 158-2 with this pattern.
+
+This pattern is now codified as Lesson 183 in `tasks/lessons.md` and added to the repeat-offender table (3 occurrences with 163, 165, 183).
+
+NOTE-2's row-count threshold heuristic (in this review) was directionally right but didn't anticipate the pooler limit. Future migration prompts should treat any v1→v2 backfill of ≥50K rows as REQUIRING chunked-write upfront, not as an optional optimization.
+
+### MISSED-2 — Multi-row-per-gedcom_id race (LOW, caught by Session 158 Codex audit)
+
+The 158 prompt's Phase 158-1 baseline query (`SELECT * FROM gedcom_individuals WHERE gedcom_id = 'X' ORDER BY version_id`) and Phase 158-4.1 view (`DISTINCT ON (gedcom_id) ORDER BY ... last_seen_version DESC`) both correctly handle multiple v2 rows per gedcom_id. But the `app/gedcom_dual_read.py::_v2_read_individual` helper from 157b only had `.eq("gedcom_id", X).limit(1)` — once Phase 158-2 lands, that read becomes non-deterministic ("which historical state did we get?"). Session 158 caught this in Codex P1.1 and added `.order("last_seen_version", desc=True).order("first_seen_version", desc=True).order("payload_hash")` (commit `8bdc497a`). My pass-2 review caught the view tiebreaker but missed the read-helper tiebreaker — same conceptual issue, different code path.
+
+Lesson for future prompts: when a schema migration changes row cardinality (1-per-key → many-per-key), audit ALL read paths that filter by the key, not just the new ones.
+
+### Pass-3 verdict
+
+158b prompt (216 lines) is approved for clean-session execution. It explicitly cites Lesson 183 and structures Phase 158b-2 around chunked-write. The prompt also mandates Codex final-pass on the combined 158+158b commits at closeout, which catches the kind of cross-session drift that bit us in MISSED-1.
