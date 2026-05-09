@@ -2826,3 +2826,33 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Implementation**: Batch-computed Supabase table, recomputed on identity mutations. Surface as continuous "Family Affinity" score on person page, not binary flag. Stays out of AD-179 clustering pipeline — orthogonal signal.
 - **Gap/Risk**: Need second family (e.g., Capeluto) to validate cross-family generalization. Consider z-score approach vs absolute threshold.
 - **Affects**: PRD-059 Phase 4, future app/identity_routes.py, future Supabase family_scores table
+
+### AD-244: PRD-063 GEDCOM Mirror Efficient Redesign — v2 Schema with INSERT-Time Dedup (2026-05-08)
+- **Date**: 2026-05-08 | **Sessions**: 156 (Day 1 — schema + initial backfill), 157 (Day 2 — full backfill + dual-read confidence — DEFERRED to 157b due to Track A subagent usage-limit failure), 158 (Day 3 — cutover + drop v1 + VACUUM FULL)
+- **Context**: Supabase free-tier 1.1 GB storage ceiling cutoff is 2026-05-29. Pre-Session 156 GEDCOM tables consumed ~2.21 GB (97.9% of total Supabase storage usage) — `gedcom_individuals` 196,645 rows / 783 MB, `gedcom_change_log` 1.65M rows / 397 MB, `gedcom_records` / `gedcom_events` / `gedcom_relationships` adding more on top. Root cause analysis in Session 154 Track E0.5 / Session 155 Track 4: v1 retains every `is_current=FALSE` row across all 9 historical versions, and 7 of those 9 versions were "failed-and-retained" (the importer left ~1 GB of obsolete rows after each failed/replaced import). The `payload_hash` index is unused, so identical rows repeat 7× across versions. User rejected band-aid prune in Session 155 (decision 2) in favor of full PRD-063 redesign across Sessions 156-158.
+- **Decision**: New v2 schema with three tables — `gedcom_individuals_v2`, `gedcom_families_v2`, `gedcom_change_manifest` — that exclude `is_current=FALSE` rows entirely and deduplicate by `payload_hash UNIQUE`. Other v1 tables (`gedcom_records`, `gedcom_events`, `gedcom_relationships`) deferred to Session 158 cutover work (BACKLOG GEDCOM-V2-OTHER-TABLES). See PRD-063 §4 (`docs/prds/063_gedcom_mirror_efficient_redesign.md`) for the full schema.
+- **v2 row counts (from Session 156 B5 backfill)**:
+  - `gedcom_individuals_v2`: 21,998 rows / 43 MB (from v1's 196,645 rows / 783 MB → **18× smaller**)
+  - `gedcom_families_v2`: 6,741 rows / 5.2 MB (from 33,324 / 75 MB → **14× smaller**)
+  - `gedcom_change_manifest`: 9 rows / 280 KB (replaces 1.65M-row / 397 MB `gedcom_change_log` → **1400× smaller**)
+  - Total v1 (covered slice) ~2.21 GB → v2 ~48.5 MB = **~98% reduction (~45× smaller)** projected when v1 dropped in Session 158.
+- **Mechanism**: Storage win comes from EXCLUDING `is_current=FALSE` rows (PRD-063 §4.2 confirmed) — the `payload_hash UNIQUE` dedup factor is **1.00×** because every `is_current=TRUE` row already has a unique payload. The savings are entirely from removing the 7-version retention of stale rows, not from cross-version deduplication.
+- **Migration plan**:
+  - **Day 1 ✅** (Session 156, 2026-05-08): R2 archive of all 9 historical Supabase versions (~0.26 GB compressed gzip; reversibility verified on v9 with 21,228-row parity check). v2 schema applied via psycopg2 + us-west-2 pooler. Initial backfill of `is_current=TRUE` rows. Cutover timestamp: `2026-05-08T04:56:15Z`. Commits B3 `2d484c99`, B4 `a47344f9`, B5 `562129b6`.
+  - **Day 2** (Session 157 — DEFERRED to 157b): Full backfill catching any new `is_current=TRUE` rows added to v1 since the cutover timestamp. Dual-read helper (`app/gedcom_dual_read.py`) preferring v2 with v1 fallback. Side-by-side query timing on top 5 GEDCOM read paths (`_load_gedcom_face_links`, person page, `/tree`, `/tools/search`, GEDCOM triage). Confidence assessment doc PROCEED-or-HOLD for cutover.
+  - **Day 3** (Session 158): Cutover reads to v2, drop v1 GEDCOM tables (R2 archive provides rollback), VACUUM FULL on Supabase, re-query DB size — confirm ≤ 1.1 GB ceiling met (target 600-700 MB).
+- **Operational guardrails**:
+  - R2 archives at `gedcom-source-snapshots/2026-05-08-session-156/` (.ged file, 17.08 MB) and `gedcom-version-snapshots/2026-05-08-session-156/v<N>/` (Supabase rows). Per-version manifests + aggregate manifest committed alongside.
+  - Reversibility test on v9 (smallest): 21,228 rows reconstituted from R2 → byte-equal parity with Supabase. Confirms rollback path is intact.
+  - Track B was purely additive: B3 READ-ONLY on v1, B4 CREATE TABLE only, B5 INSERT into v2 with `ON CONFLICT (payload_hash) DO NOTHING` for idempotent re-runs. v1 untouched throughout Day 1.
+- **Risks**:
+  - **Dual-read window** (Sessions 157-158) assumes app code can correctly handle v1-or-v2 returns. Mitigated by dual-read helper with explicit fallback semantics + 4 unit tests (Track B2 — DEFERRED to 157b).
+  - **Other v2 tables not built** (`gedcom_records`, `gedcom_events`, `gedcom_relationships` — BACKLOG GEDCOM-V2-OTHER-TABLES). Session 158 cutover work needs to either backfill these to v2 OR refactor read paths to compose v1 events/relationships with v2 individuals. Choose during 157b dual-read evaluation.
+  - **Concurrent genealogy session**: if a parallel orchestrator imports a new GEDCOM version while Sessions 157/158 are in flight, the dual-read window must catch the new v1 rows. R1 marker file (`.claude/parallel_session_active`) protects irreversible writes. R3 additive-only on v2 ensures no conflict.
+- **Acceptance gate for Session 158 cutover**: Day 2 query timing must show v2 reads are ≥ as fast as v1 reads on the top 5 read paths AND dual-read helper unit tests pass AND no schema drift between v1 and v2 for shared fields. If any fail: HOLD for one more session.
+- **Commits**: Session 156 B3 `2d484c99` (R2 archive), B4 `a47344f9` (schema), B5 `562129b6` (initial backfill); merge `5bab77fd`. Session 157 first commit lands AD-244 (this entry).
+- **Affects**:
+  - GEDCOM read paths: `app/relationship_routes.py::_load_gedcom_face_links`, person page GEDCOM context, `/tree` page, `/tools/search` rule-based parser, GEDCOM triage admin page.
+  - Sessions 157, 157b (continuation), 158.
+  - OD-013 (Supabase storage management) — closes when Day 3 lands.
+  - BACKLOG: closes PRD-063-WRITE; opens PRD-063-DAY-2-IMPL (157b) and PRD-063-DAY-3-IMPL (158); GEDCOM-V2-OTHER-TABLES decided in 157b.
