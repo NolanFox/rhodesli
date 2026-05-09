@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.74] — 2026-05-09 (Session 157b: Tier 1 carry-over + PRD-063 Day 2)
+
+Continuation of Session 157 — all 6 deferred items shipped under a pre-flight budget canary that confirmed Anthropic's usage limit was healthy. Track E (GEDCOM upload UAT) deferred to 158 per user decision (avoid adding ~250 MB to v1 right before the 158 DROP releases that disk anyway). 11 commits.
+
+### Shipped
+- **Pre-flight budget canary worked**: Subagent #1 returned 123,791 tokens / 18-min wall-clock. Lesson 182 formalized in `tasks/lessons.md` + `tasks/lessons/harness-lessons.md` (commit `a003fe50`).
+- **Track A — Tier 1 quick wins**:
+  - A1.2 NOTES-BACKFILL-156: NO-OP confirmed (0 deltas, Lesson 179 fix sufficient). Script + report (`f1f674d4`).
+  - A1.3 Codex audit of 156 commits: 0 P0, 2 P1 non-blocking, 2 P2, 1 P3. Saved at `docs/session_context/session-157b-codex-audit.md` (`b55124c2`).
+  - A2.1 CI-COMPARE-FAIL-156: fixed via `monkeypatch.setattr(is_auth_enabled, lambda: False)` — root cause was GitHub secrets enabling auth in CI (`f1a8fe16`).
+  - A2.2 TEST-ISOLATION-156: 4 tests fixed (community helpers fail-close + stale `bg-black/70` assertion). Tests were hidden by the `slow` marker pattern (`ed7949c8`).
+  - Post-merge: 2 sibling tests in test_inline_find_similar.py + 1 stale `opacity-0` assertion in test_design_audit.py (`385e7888`).
+- **Track B — PRD-063 Day 2**:
+  - B1 catch-up backfill: NO-OP (0 post-cutover rows). Script `scripts/session157_full_backfill_gedcom_v2.py` (`8047dbc8`).
+  - B2 dual-read helper: `app/gedcom_dual_read.py` + 13 unit tests, wired into `_load_gedcom_individual` (`52eaed38`).
+  - B3 query timing: 4 paths × 2 backends × 100 iter. All medians within 5%; v2 wins p95 on 3/4 (single_id -32%, is_current -51%, bulk -5%). GREEN verdict (`a8fa858a`).
+  - B4 confidence assessment: PROCEED for 158 cutover. `docs/feedback/session-157b-day-2-confidence.md` (`985f2063`).
+- **Track Z-prelude**:
+  - Retroactive `/session-review` on Session 157 (`ed1081b2`).
+  - SESSION_HISTORY backfill for sessions 154, 155, 156, 157, 157b (`3a53208f`).
+  - Browser verify 6 canonical pages READ-ONLY (all 200 except 404 styled).
+  - Belle Isle Conservatory Young Man identity title confirms Session 156 work intact past 600s cache TTL.
+- **Track E — DEFERRED**: GEDCOM upload UAT carries to Session 158 per user. E1 sha256 freshness check passed (file unchanged since 156). `docs/feedback/session-157b-track-e-deferred.md` (`dc542f42`).
+
+### Tests
+- `make test-fast`: 4259 passed (4246 baseline + 13 new dual-read tests).
+- 0 regressions.
+
+### Risks acknowledged
+- Codex P1-A (Harry preflight non-atomicity): no live risk; templating concern for future repair scripts. Logged.
+- Codex P2-B (UNIQUE(payload_hash) global despite community_id): surfaced for PRD-063 Day 3 schema review in Session 158.
+
+### Next session
+Session 158: PRD-063 Day 3 — cutover reads to v2, DROP v1 individuals + families, VACUUM FULL, re-query DB size (target 600-700 MB from 2.22 GB), re-run query timing, browser-verify canonical pages. Plus Track E (GEDCOM upload UAT) once cutover settles.
+
 ## [v0.99.73] — 2026-05-08 (Session 157: AD-244 captured; remainder deferred to 157b)
 
 Truncated session — both Track A parallel subagents hit Anthropic's user-level usage limit at launch and returned within 5-10s with 0-2 tokens consumed. Recovered the highest-value artifact (AD-244) inline on the main thread; everything else carries to Session 157b.
