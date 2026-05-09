@@ -78,3 +78,7 @@ Options:
 - **B. Keep v1 alive**: only DROP gedcom_change_log; leave individuals + families. ~300 MB savings instead of ~700 MB. History queries hit v1.
 - **C. R2 archive of historical rows**: archive is_current=FALSE to R2; query helper pulls on demand. Full storage win but slow per-id history queries.
 
+## 1.4-decision (recorded retroactively in self-review)
+
+**User chose: Option A** — full historical backfill — via `AskUserQuestion` during Session 158, 2026-05-09. Recorded in `docs/assessments/session-158-assessment.md` and CHANGELOG v0.99.75. Phase 158-2 (the implementation of Option A) was blocked by Supabase pooler instability and rolled to Session 158b. See `HISTORICAL-BACKFILL-REDESIGN-001` in `docs/BACKLOG.md` for the carry-forward.
+

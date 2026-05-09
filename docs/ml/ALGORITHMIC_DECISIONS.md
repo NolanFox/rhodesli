@@ -2856,3 +2856,19 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - Sessions 157, 157b (continuation), 158.
   - OD-013 (Supabase storage management) — closes when Day 3 lands.
   - BACKLOG: closes PRD-063-WRITE; opens PRD-063-DAY-2-IMPL (157b) and PRD-063-DAY-3-IMPL (158); GEDCOM-V2-OTHER-TABLES decided in 157b.
+
+### AD-245: Option A — Full Historical Backfill v1 → v2 (Session 158-1)
+- **Date**: 2026-05-09 | **Session**: 158 (decision); 158b (implementation)
+- **Context**: PRD-063 Day 1 (Session 156) backfilled `is_current=TRUE` rows only into v2. Session 158 Phase 158-1 surfaced that **96.3% of v1 individuals (21,174 of 21,998) and 95.2% of v1 families (6,417 of 6,741) have a 2-state change history** in v1 — v8/v9 introduced a correction wave that changed something in the JSONB columns (events, citations, names, notes) for nearly every record. v2 currently holds only the v9 state. User reaffirmed central requirement during Session 158: *"I want to maintain some sense of GEDCOM change over time. We should be able to understand and query what was updated, corrected, or added for a given person without the giant sprawl."*
+- **Decision**: Option A — backfill ALL `is_current=FALSE` historical rows into v2, deduped by `payload_hash`. v2 grows from 22K to ~64-77K rows total (still **3-4× smaller** than v1's 230K). Native change-history queries via `app/gedcom_dual_read.py::get_individual_history(gedcom_id)` returning all v2 states sorted by `first_seen_version` ASC.
+- **Alternatives rejected**:
+  - **Option B (keep v1 individuals + families alive; only DROP `gedcom_change_log`)**: saves only ~300 MB instead of ~700 MB; barely fits under 1.1 GB ceiling. Defeats the spirit of the redesign.
+  - **Option C (R2 archive of historical rows + per-id query helper)**: full storage win but ~500ms latency per per-id history query (R2 fetch + decompress). Adds new code path. User-facing performance regression for the change-history feature is the WHOLE POINT of the work.
+- **Mechanism**: ON CONFLICT (payload_hash) DO UPDATE SET first_seen_version = LEAST(existing, computed), last_seen_version = GREATEST(existing, computed). Each upsert merges first/last_seen across re-runs (Codex 158 final-pass P3.1 confirmed monotonic but acceptable; pair with post-write integrity checks).
+- **Helper**: `get_individual_history(gedcom_id) -> list[dict]` shipped in Session 158 commit `8bdc497a`; INDIVIDUAL_HISTORY_FIELDS extended in commit (this session) to include the JSONB columns where the actual changes live (Codex P1 fix).
+- **Operational guardrails**:
+  - Phase 158b-2 first action: redesign with chunked-write — write each aggregate batch to v2 immediately; never accumulate full dataset in memory (Session 158 4 attempts hit pooler instability + memory exhaustion).
+  - Pooler health probe before run.
+  - Post-write invariant assertions: `first_seen_version <= last_seen_version`, expected row-count bands (~64K individuals + ~13K families), Albert Fox returns 2 rich states via the helper (Codex 158 final-pass P2.3).
+  - 21,809 NULL-hash legacy rows handled via canonical-hash fallback over thin key fields. Sample before bulk execute (Codex 158 final-pass P2.4).
+- **Affects**: Phases 158b-2 through 158b-9. Closes BACKLOG HISTORICAL-BACKFILL-REDESIGN-001 in 158b. Adds change-history surfacing to person-page UI as a follow-on feature (FUTURE).

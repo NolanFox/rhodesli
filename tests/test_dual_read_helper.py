@@ -263,6 +263,36 @@ class TestV2OrderedRead:
         assert any(c.args and c.args[0] == "last_seen_version" and c.kwargs.get("desc") is True
                    for c in order_calls)
 
+    def test_v2_returns_first_row_from_supabase(self):
+        """Codex 158 final-pass P2.1: simulate the post-historical-backfill
+        scenario where multiple v2 rows exist for the same gedcom_id. The
+        Supabase REST API returns rows in the order specified by .order(),
+        and .limit(1) takes the first. Since our chain orders by
+        last_seen_version DESC, the first row IS the latest state — but
+        we trust Supabase to honor the .order() clause. This test verifies
+        we (a) ask for exactly the right ordering, and (b) take whatever
+        Supabase returns first."""
+        # Mock returns a single row — represents the row Supabase chose
+        # given our .order() clause. The ordering correctness is enforced
+        # by the .order() chain calls (verified above).
+        latest_row = {
+            "gedcom_id": "@I1@", "name": "Albert v9",
+            "given_name": "Albert", "surname": "Fox",
+        }
+        sb, captured = self._build_capturing_sb(
+            v2_rows=[latest_row], table_kind="individual"
+        )
+        result = get_individual("@I1@", sb=sb)
+        assert result == latest_row
+        assert result["name"] == "Albert v9"
+        # Confirm the chain has BOTH order calls (last_seen + first_seen)
+        # so multi-row scenarios will produce a deterministic latest pick.
+        chain = captured["v2"]
+        order_args = [c.args[0] for c in chain.order.call_args_list if c.args]
+        assert "last_seen_version" in order_args
+        assert "first_seen_version" in order_args
+        assert "payload_hash" in order_args  # tiebreaker
+
 
 class TestV2FailClosed:
     """Codex 157b P1.2: only PGRST205 / 'relation does not exist' should
@@ -416,3 +446,21 @@ class TestGetIndividualHistory:
         """Pre-cutover environments don't have v2 — return [] not raise."""
         sb = self._build_sb_history(history_rows=None, raise_pgrst=True)
         assert get_individual_history("@I1@", sb=sb) == []
+
+    def test_history_select_includes_rich_json_fields(self):
+        """Codex 158 final-pass P1: 158-1 proved adjacent v1 versions for
+        ALL test individuals have IDENTICAL visible columns — the actual
+        change is in JSONB columns (events, citations, names, notes). The
+        history helper MUST select these or it returns N rows that look
+        identical to the user.
+        """
+        from app.gedcom_dual_read import INDIVIDUAL_HISTORY_FIELDS
+
+        for required_json_col in [
+            "names_json", "events_json", "family_as_spouse_json",
+            "family_as_child_json", "notes_json", "citations_json",
+        ]:
+            assert required_json_col in INDIVIDUAL_HISTORY_FIELDS, (
+                f"INDIVIDUAL_HISTORY_FIELDS missing {required_json_col}; user "
+                f"will see identical-looking rows for true historical changes"
+            )

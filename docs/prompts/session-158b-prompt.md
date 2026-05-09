@@ -48,7 +48,19 @@ git status --short
 date -u                                   # confirm date for deadline math
 ```
 
-## FIRST ACTION — Pooler health probe
+## FIRST ACTION — Re-run Phase 158-0 carry verification + pooler health probe
+
+### A. Re-run Phase 158-0 carry verification (10 min)
+
+```bash
+PYTHONPATH=. python scripts/session158_phase0_verify.py
+```
+
+This re-validates: v2 row counts unchanged from 158 end (21,998 / 6,741 / 9), v1 still alive (196,645 / 33,324), Harry Fox + Belle Isle anchors intact, R2 archive at `gedcom-version-snapshots/2026-05-08-session-156/` readable. Any drift = a concurrent genealogy session ran between 158 and 158b — investigate before proceeding to writes.
+
+Save output to `docs/feedback/session-158b-carry-verify.md`.
+
+### B. Pooler health probe
 
 Before touching the heavy scripts, verify the pooler is healthy today:
 
@@ -125,6 +137,14 @@ If exactly 2 states show: PASS. If only 1 state: backfill is incomplete or the d
 ## Phases 158b-3 through 158b-9
 
 These all carry forward verbatim from `docs/prompts/session-158-prompt.md` (sections "Phase 158-3" through "Phase 158-9"). The prompt is unchanged for these — re-read it as the spec for each phase.
+
+**ALSO consult** `docs/feedback/session-158-prompt-review.md` NOTE-1 through NOTE-9 — 9 lower-priority implementation refinements that the 158 implementer was supposed to consider at run time but never reached (because Phase 158-2 blocked first). Of particular relevance to 158b:
+- **NOTE-1**: Albert Fox xref placeholder resolution — actual gedcom_id is `@I132123840707@` (resolved during 158 Phase 158-1; no need to re-resolve).
+- **NOTE-2**: Phase 158-2 row count threshold — expected post-backfill v2 individual count is ~64K (per 158 dry-run); if dry-run shows >100K or <22K, STOP and investigate.
+- **NOTE-3**: ON CONFLICT update logic — use `ON CONFLICT (payload_hash) DO UPDATE SET first_seen_version = LEAST(...), last_seen_version = GREATEST(...)`. The 158 `_bulk_upsert_psycopg2()` in `scripts/session158_historical_backfill_rest.py` already implements this correctly; reuse.
+- **NOTE-6**: Codex audit timing — strongly consider running a Codex audit BETWEEN Phase 158b-4 (RENAME) and Phase 158b-6 (DROP) while still in the reversible state, in addition to the mandatory final-pass.
+- **NOTE-7**: Bulk loader cache invalidation post-cutover — call `app.relationship_routes._invalidate_gedcom_cache()` (or equivalent) immediately after Phase 158b-4.1 view rewire.
+- **NOTE-9**: gedcom_change_log signal preservation — OPTIONAL one-shot R2 archive of high-signal change_log rows before DROP. User has explicitly chosen full historical backfill (Option A), so per-cell change history beyond per-row is genuinely OPTIONAL — but cheap.
 
 Specific changes for 158b:
 - **Phase 158b-4.1 view creation**: the SQL view `current_gedcom_individuals_v2` and `current_gedcom_families_v2` definitions are unchanged. Code changes to bulk loaders are unchanged.

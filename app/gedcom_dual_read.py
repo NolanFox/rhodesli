@@ -48,18 +48,24 @@ FAMILY_THIN_FIELDS = "family_gedcom_id,husband_xref,wife_xref"
 
 
 def _is_v2_unavailable(exc: Exception, table_name: str) -> bool:
-    """Narrow check: only "v2 table does not exist" qualifies for fallback.
+    """Narrow check: only "v2 target table does not exist" qualifies for fallback.
 
     Per Codex 157b audit P1.2: catching all exceptions silently masks
     schema drift, RLS failures, and bad column names. Only the explicit
     "v2 not deployed yet" case should fall through to v1.
+
+    Per Codex 158 final-pass P2.2: tightened to require the target table
+    name in the error message (or for PGRST205 errors). Otherwise a
+    PGRST205 error for a DIFFERENT table would silently fall back here,
+    masking the real schema problem.
     """
-    msg = str(exc)
-    if "PGRST205" in msg:
+    msg = str(exc).lower()
+    target = table_name.lower()
+    if "pgrst205" in msg and target in msg:
         return True
-    if f"relation \"{table_name}\" does not exist" in msg.lower():
+    if f'relation "{target}" does not exist' in msg:
         return True
-    if f"relation \"public.{table_name}\" does not exist" in msg.lower():
+    if f'relation "public.{target}" does not exist' in msg:
         return True
     return False
 
@@ -217,6 +223,13 @@ def get_family(family_gedcom_id: str, *, sb=None) -> Optional[dict]:
 INDIVIDUAL_HISTORY_FIELDS = (
     "gedcom_id,name,given_name,surname,gender,"
     "birth_date,birth_place,death_date,death_place,"
+    # Rich JSONB columns — Session 158-1 proved the actual change between
+    # adjacent v1 versions for ALL test people lives in these (events,
+    # citations, names, notes — visible columns are identical). Without
+    # these, the helper returns N rows that look identical and a user
+    # can't see "what changed". Codex 158 final-pass P1.
+    "names_json,events_json,family_as_spouse_json,family_as_child_json,"
+    "notes_json,citations_json,"
     "first_seen_version,last_seen_version,payload_hash"
 )
 

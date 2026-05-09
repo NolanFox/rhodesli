@@ -21,6 +21,7 @@ is what you need to internalize.
 | **Schema drift between code and live Supabase tables** | 3 | 105, 134, 152 | Integration tests against live schema (mock tests insufficient) |
 | **Post-write data verification missing (orphans)** | 3 | 145, 146, 154 | Post-mutation integrity checks; structural tests |
 | **Batch script outputs don't reach production read path** | 3 | 160, 161, 162 | Pre-flight: verify logging, enrichment, write target before bulk run |
+| **Heavy Supabase migrations stall on pooler / OOM** | 3 | 163, 165, 183 | Chunked-write template (≤10K rows per iteration; upsert immediately; never accumulate full dataset). Pre-flight pooler health probe. |
 | **Behavioral rules that must be hooks** | 4 | 89, 102, 103, 140, 143 | Transcript-based detection (HD-032); exit 2 to block |
 | **Worktree agents don't commit before returning** | 2 | 87, 166, 167 | Orchestrator verifies `git status --porcelain` clean post-return |
 
@@ -104,6 +105,7 @@ modes the codebase keeps regenerating.
 | 163 | **GEDCOM versioned importer doesn't scale to 175K+ rows — change_log crashes, unchanged rows lost on finalize (Session 144)** |
 | 164 | **datetime objects from direct DB reads must be serialized before Supabase REST API (Session 144)** |
 | 165 | **Supabase views with IS NULL clause include unversioned legacy rows — broke GEDCOM context for ALL batch photos (Session 144)** |
+| 183 | **Supabase pooler unreliable for long server-side cursor reads — chunked-write (read+aggregate+upsert one chunk at a time, never accumulate full dataset in memory) is the only reliable pattern for ≥50K-row migrations. Session 158 lost the cutover day after 4 different load approaches all failed (cursor died mid-stream, NULL chunk failed all retries, version_map query failed under pooler degradation, REST accumulator plateaued at 951 MB). See also Lesson 173 (REST `.range()` default page).** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
