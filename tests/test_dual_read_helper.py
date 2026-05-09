@@ -20,6 +20,7 @@ from app.gedcom_dual_read import (
     INDIVIDUAL_THIN_FIELDS,
     get_family,
     get_individual,
+    get_individual_history,
 )
 
 
@@ -41,9 +42,10 @@ def _build_sb_individual(*, v2_rows, v1_view_rows=None, v1_table_rows=None):
 
     def table(name):
         chain = MagicMock()
-        # Make the chain self-returning for select/eq/limit
+        # Make the chain self-returning for select/eq/order/limit
         chain.select.return_value = chain
         chain.eq.return_value = chain
+        chain.order.return_value = chain
         chain.limit.return_value = chain
         if name == "gedcom_individuals_v2":
             if v2_rows is None:
@@ -154,6 +156,7 @@ def _build_sb_family(*, v2_rows, v1_rows=None):
         chain = MagicMock()
         chain.select.return_value = chain
         chain.eq.return_value = chain
+        chain.order.return_value = chain
         chain.limit.return_value = chain
         if name == "gedcom_families_v2":
             if v2_rows is None:
@@ -205,3 +208,211 @@ def test_field_constants_match_v2_schema():
     expected_family_thin = {"family_gedcom_id", "husband_xref", "wife_xref"}
     actual_family_thin = set(FAMILY_THIN_FIELDS.split(","))
     assert expected_family_thin == actual_family_thin
+
+
+# --- Codex 157b P1.1 + P1.2 fixes (Session 158) ---
+
+
+class TestV2OrderedRead:
+    """Codex 157b P1.1: post-historical-backfill, multiple v2 rows can exist
+    per gedcom_id. The helper must order by last_seen_version DESC to
+    guarantee returning the most-recent state."""
+
+    def _build_capturing_sb(self, *, v2_rows, v1_view_rows=None, table_kind="individual"):
+        """Build sb where the v2 chain is captured for inspection."""
+        sb = MagicMock()
+        captured = {}
+
+        def table(name):
+            chain = MagicMock()
+            chain.select.return_value = chain
+            chain.eq.return_value = chain
+            chain.order.return_value = chain
+            chain.limit.return_value = chain
+            v2_table = "gedcom_individuals_v2" if table_kind == "individual" else "gedcom_families_v2"
+            v1_view = "current_gedcom_individuals" if table_kind == "individual" else "gedcom_families"
+            if name == v2_table:
+                chain.execute.return_value = _make_resp(v2_rows)
+                captured["v2"] = chain
+            elif name == v1_view:
+                chain.execute.return_value = _make_resp(v1_view_rows or [])
+            return chain
+
+        sb.table.side_effect = table
+        return sb, captured
+
+    def test_v2_order_called_with_last_seen_version_desc(self):
+        """Verify .order('last_seen_version', desc=True) is in the v2 query chain."""
+        v2_row = {"gedcom_id": "@I1@", "name": "Albert"}
+        sb, captured = self._build_capturing_sb(v2_rows=[v2_row], table_kind="individual")
+        get_individual("@I1@", sb=sb)
+        chain = captured["v2"]
+        order_calls = chain.order.call_args_list
+        last_seen_calls = [c for c in order_calls if c.args and c.args[0] == "last_seen_version"]
+        assert last_seen_calls, f"Expected order(last_seen_version, ...) call, got: {order_calls}"
+        assert any(c.kwargs.get("desc") is True for c in last_seen_calls), \
+            "Expected at least one last_seen_version order with desc=True"
+
+    def test_v2_family_ordered_read(self):
+        """Same protection on families."""
+        v2_row = {"family_gedcom_id": "@F1@", "husband_xref": "@I1@", "wife_xref": "@I2@"}
+        sb, captured = self._build_capturing_sb(v2_rows=[v2_row], table_kind="family")
+        get_family("@F1@", sb=sb)
+        chain = captured["v2"]
+        order_calls = chain.order.call_args_list
+        assert any(c.args and c.args[0] == "last_seen_version" and c.kwargs.get("desc") is True
+                   for c in order_calls)
+
+
+class TestV2FailClosed:
+    """Codex 157b P1.2: only PGRST205 / 'relation does not exist' should
+    fall back to v1. Schema drift, RLS errors, and server errors must
+    surface — not silently serve stale v1 data."""
+
+    def test_non_pgrst_v2_error_propagates(self):
+        """A v2 query that raises a non-PGRST exception (e.g. RLS, server) must raise."""
+        sb = MagicMock()
+
+        def table(name):
+            chain = MagicMock()
+            chain.select.return_value = chain
+            chain.eq.return_value = chain
+            chain.order.return_value = chain
+            chain.limit.return_value = chain
+            if name == "gedcom_individuals_v2":
+                # Simulate an RLS error or a server 500 — NOT a PGRST205
+                chain.execute.side_effect = RuntimeError(
+                    "permission denied for table gedcom_individuals_v2"
+                )
+            else:
+                chain.execute.return_value = _make_resp([])
+            return chain
+
+        sb.table.side_effect = table
+        with pytest.raises(RuntimeError, match="permission denied"):
+            get_individual("@I1@", sb=sb)
+
+    def test_pgrst205_does_fall_back(self):
+        """Sanity: PGRST205 still falls back (the legitimate dual-read path)."""
+        v1_row = {"gedcom_id": "@I1@", "name": "Albert"}
+        sb = _build_sb_individual(v2_rows=None, v1_view_rows=[v1_row])
+        result = get_individual("@I1@", sb=sb)
+        assert result == v1_row
+
+    def test_relation_does_not_exist_falls_back(self):
+        """Sanity: 'relation X does not exist' also falls back."""
+        sb = MagicMock()
+
+        def table(name):
+            chain = MagicMock()
+            chain.select.return_value = chain
+            chain.eq.return_value = chain
+            chain.order.return_value = chain
+            chain.limit.return_value = chain
+            if name == "gedcom_individuals_v2":
+                chain.execute.side_effect = Exception(
+                    'relation "gedcom_individuals_v2" does not exist'
+                )
+            elif name == "current_gedcom_individuals":
+                chain.execute.return_value = _make_resp([
+                    {"gedcom_id": "@I1@", "name": "Albert"}
+                ])
+            else:
+                chain.execute.return_value = _make_resp([])
+            return chain
+
+        sb.table.side_effect = table
+        result = get_individual("@I1@", sb=sb)
+        assert result == {"gedcom_id": "@I1@", "name": "Albert"}
+
+
+class TestGetIndividualHistory:
+    """Session 158 Phase 158-2: get_individual_history returns all v2
+    rows for a gedcom_id sorted by first_seen_version ASC."""
+
+    def _build_sb_history(self, *, history_rows, raise_pgrst=False):
+        sb = MagicMock()
+
+        def table(name):
+            chain = MagicMock()
+            chain.select.return_value = chain
+            chain.eq.return_value = chain
+            chain.order.return_value = chain
+            if name == "gedcom_individuals_v2":
+                if raise_pgrst:
+                    chain.execute.side_effect = Exception(
+                        "PGRST205: relation 'gedcom_individuals_v2' does not exist"
+                    )
+                else:
+                    chain.execute.return_value = _make_resp(history_rows)
+            return chain
+
+        sb.table.side_effect = table
+        return sb
+
+    def test_single_state_returns_one_row(self):
+        """A person whose data never changed → 1-element list."""
+        rows = [
+            {
+                "gedcom_id": "@I1@", "name": "Albert", "first_seen_version": 1,
+                "last_seen_version": 9, "payload_hash": "fd1f05bd",
+            }
+        ]
+        sb = self._build_sb_history(history_rows=rows)
+        result = get_individual_history("@I1@", sb=sb)
+        assert len(result) == 1
+        assert result[0]["payload_hash"] == "fd1f05bd"
+
+    def _build_capturing_history_sb(self, history_rows):
+        sb = MagicMock()
+        captured = {}
+
+        def table(name):
+            chain = MagicMock()
+            chain.select.return_value = chain
+            chain.eq.return_value = chain
+            chain.order.return_value = chain
+            if name == "gedcom_individuals_v2":
+                chain.execute.return_value = _make_resp(history_rows)
+                captured["v2"] = chain
+            return chain
+
+        sb.table.side_effect = table
+        return sb, captured
+
+    def test_multi_state_returns_all_rows_in_version_order(self):
+        """A person with N distinct states → N-element list, sorted by first_seen_version."""
+        rows = [
+            {
+                "gedcom_id": "@I1@", "name": "Albert", "first_seen_version": 1,
+                "last_seen_version": 7, "payload_hash": "fd1f05bd",
+            },
+            {
+                "gedcom_id": "@I1@", "name": "Albert", "first_seen_version": 9,
+                "last_seen_version": 9, "payload_hash": "1d77bf67",
+            },
+        ]
+        sb, captured = self._build_capturing_history_sb(rows)
+        result = get_individual_history("@I1@", sb=sb)
+        assert len(result) == 2
+        # Verify the helper called .order(first_seen_version, desc=False) — i.e.
+        # ascending so the oldest state comes first.
+        chain = captured["v2"]
+        order_calls = chain.order.call_args_list
+        first_seen_calls = [c for c in order_calls if c.args and c.args[0] == "first_seen_version"]
+        assert first_seen_calls
+        assert all(c.kwargs.get("desc") is False for c in first_seen_calls)
+
+    def test_unknown_id_returns_empty_list(self):
+        sb = self._build_sb_history(history_rows=[])
+        assert get_individual_history("@INOPE@", sb=sb) == []
+
+    def test_empty_id_short_circuits(self):
+        sb = MagicMock()
+        assert get_individual_history("", sb=sb) == []
+        sb.table.assert_not_called()
+
+    def test_pgrst205_returns_empty_not_raise(self):
+        """Pre-cutover environments don't have v2 — return [] not raise."""
+        sb = self._build_sb_history(history_rows=None, raise_pgrst=True)
+        assert get_individual_history("@I1@", sb=sb) == []

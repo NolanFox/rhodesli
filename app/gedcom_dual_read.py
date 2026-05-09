@@ -47,22 +47,47 @@ INDIVIDUAL_RICH_FIELDS = (
 FAMILY_THIN_FIELDS = "family_gedcom_id,husband_xref,wife_xref"
 
 
+def _is_v2_unavailable(exc: Exception, table_name: str) -> bool:
+    """Narrow check: only "v2 table does not exist" qualifies for fallback.
+
+    Per Codex 157b audit P1.2: catching all exceptions silently masks
+    schema drift, RLS failures, and bad column names. Only the explicit
+    "v2 not deployed yet" case should fall through to v1.
+    """
+    msg = str(exc)
+    if "PGRST205" in msg:
+        return True
+    if f"relation \"{table_name}\" does not exist" in msg.lower():
+        return True
+    if f"relation \"public.{table_name}\" does not exist" in msg.lower():
+        return True
+    return False
+
+
 def _v2_read_individual(sb, gedcom_id: str, select_fields: str) -> Optional[dict]:
-    """Try gedcom_individuals_v2 first. Returns row dict or None."""
+    """Try gedcom_individuals_v2 first. Returns row dict or None.
+
+    Per Codex 157b audit P1.1: post-Phase-158-2 there will be MULTIPLE v2
+    rows per gedcom_id (one per distinct payload_hash). We must order by
+    last_seen_version DESC to guarantee returning the most recent state.
+    payload_hash is included as a deterministic tiebreaker.
+    """
     try:
         resp = (
             sb.table("gedcom_individuals_v2")
             .select(select_fields)
             .eq("gedcom_id", gedcom_id)
+            .order("last_seen_version", desc=True)
+            .order("first_seen_version", desc=True)
+            .order("payload_hash", desc=False)
             .limit(1)
             .execute()
         )
     except Exception as exc:
-        msg = str(exc)
-        # PGRST205 / "relation does not exist" → v2 not deployed yet → fall through
-        if "PGRST205" in msg or "gedcom_individuals_v2" in msg or "relation" in msg:
+        if _is_v2_unavailable(exc, "gedcom_individuals_v2"):
             logging.debug(f"v2 individual read unavailable: {exc}")
             return None
+        # Schema drift / RLS / bad column / server error — surface, don't mask
         raise
     rows = resp.data if resp and resp.data else []
     return rows[0] if rows else None
@@ -112,11 +137,10 @@ def get_individual(gedcom_id: str, *, include_rich: bool = False, sb=None) -> Op
         sb = get_supabase_client()
         if not sb:
             return None
-    try:
-        v2_row = _v2_read_individual(sb, gedcom_id, select_fields)
-    except Exception as exc:
-        logging.warning(f"v2 individual read failed for {gedcom_id}: {exc}")
-        v2_row = None
+    # _v2_read_individual now only swallows "v2 unavailable" — other errors
+    # (schema drift, RLS, server error) raise here so we don't silently
+    # serve stale v1 data when v2 is broken (Codex 157b P1.2).
+    v2_row = _v2_read_individual(sb, gedcom_id, select_fields)
     if v2_row is not None:
         return v2_row
     try:
@@ -127,17 +151,20 @@ def get_individual(gedcom_id: str, *, include_rich: bool = False, sb=None) -> Op
 
 
 def _v2_read_family(sb, family_gedcom_id: str, select_fields: str) -> Optional[dict]:
+    """Per Codex 157b P1.1 + P1.2: ordered read + narrow exception catching."""
     try:
         resp = (
             sb.table("gedcom_families_v2")
             .select(select_fields)
             .eq("family_gedcom_id", family_gedcom_id)
+            .order("last_seen_version", desc=True)
+            .order("first_seen_version", desc=True)
+            .order("payload_hash", desc=False)
             .limit(1)
             .execute()
         )
     except Exception as exc:
-        msg = str(exc)
-        if "PGRST205" in msg or "gedcom_families_v2" in msg or "relation" in msg:
+        if _is_v2_unavailable(exc, "gedcom_families_v2"):
             logging.debug(f"v2 family read unavailable: {exc}")
             return None
         raise
@@ -174,11 +201,8 @@ def get_family(family_gedcom_id: str, *, sb=None) -> Optional[dict]:
         sb = get_supabase_client()
         if not sb:
             return None
-    try:
-        v2_row = _v2_read_family(sb, family_gedcom_id, FAMILY_THIN_FIELDS)
-    except Exception as exc:
-        logging.warning(f"v2 family read failed for {family_gedcom_id}: {exc}")
-        v2_row = None
+    # Narrow exception handling per Codex 157b P1.2.
+    v2_row = _v2_read_family(sb, family_gedcom_id, FAMILY_THIN_FIELDS)
     if v2_row is not None:
         return v2_row
     try:
@@ -186,3 +210,50 @@ def get_family(family_gedcom_id: str, *, sb=None) -> Optional[dict]:
     except Exception as exc:
         logging.warning(f"v1 family fallback failed for {family_gedcom_id}: {exc}")
         return None
+
+
+# --- History reader (added Session 158 Phase 158-2) ---
+
+INDIVIDUAL_HISTORY_FIELDS = (
+    "gedcom_id,name,given_name,surname,gender,"
+    "birth_date,birth_place,death_date,death_place,"
+    "first_seen_version,last_seen_version,payload_hash"
+)
+
+
+def get_individual_history(gedcom_id: str, *, sb=None) -> list[dict]:
+    """Return all v2 historical states for a gedcom_id, sorted by version.
+
+    Each dict is a distinct payload_hash row representing a frozen state.
+    Returned in chronological order (first_seen_version ASC). For a person
+    whose data never changed, returns a single-element list. For a person
+    with no v2 rows at all (or unknown gedcom_id), returns [].
+
+    This is the canonical query for "show me how this person's GEDCOM record
+    evolved over time" — added in Session 158 to satisfy the user's explicit
+    requirement that v2 must preserve change-history (vs v2 storing only the
+    current state, which was the Session 156 backfill behavior).
+    """
+    if not gedcom_id:
+        return []
+    if sb is None:
+        from app.supabase_data import get_supabase_client
+
+        sb = get_supabase_client()
+        if not sb:
+            return []
+    try:
+        resp = (
+            sb.table("gedcom_individuals_v2")
+            .select(INDIVIDUAL_HISTORY_FIELDS)
+            .eq("gedcom_id", gedcom_id)
+            .order("first_seen_version", desc=False)
+            .order("payload_hash", desc=False)
+            .execute()
+        )
+    except Exception as exc:
+        if _is_v2_unavailable(exc, "gedcom_individuals_v2"):
+            logging.debug(f"v2 individual history unavailable: {exc}")
+            return []
+        raise
+    return resp.data if resp and resp.data else []
