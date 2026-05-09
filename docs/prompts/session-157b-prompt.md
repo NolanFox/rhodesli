@@ -19,6 +19,80 @@ git pull origin main                       # safety
 git status --short                         # nothing meaningful
 ```
 
+## FIRST ACTION (MANDATORY, before any other work) — Retroactive `/session-review` on Session 157
+
+Session 157 was truncated by Anthropic usage-limit failures and did NOT run the
+`/session-review` skill at its own close. Before any Tier 1, Track B, or Track E
+work begins, launch a **background subagent** whose entire job is to invoke the
+`/session-review` skill against Session 157 retroactively. This captures every
+concern, gap, superficial-work flag, and red flag in 157 BEFORE 157b layers more
+work on top — and it runs in parallel with Phase 157b-0 carry verification and
+the Track A canary so it costs zero wall-clock.
+
+**Subagent prompt** (paste into the `Agent` tool with `subagent_type: "general-purpose"`,
+`run_in_background: true`):
+
+```
+You are the retroactive-/session-review subagent for Session 157b. Your one job:
+invoke the /session-review skill against Session 157 (which closed truncated).
+
+Read first:
+- docs/assessments/session-157-assessment.md
+- docs/session_logs/session-157-log.md
+- docs/prompts/session-157-prompt.md (the original session 157 prompt)
+- docs/session_context/session-157-codex-audit.md (deferral record)
+- The 4 commits: fb4b200f, 18e4acea, e3a91ede, 49d3af9e
+
+Then invoke the /session-review skill (via the Skill tool) with explicit args
+pointing at session 157. The skill will spawn its own auto-fix subagent
+internally — that's fine, let it run.
+
+Save the skill's output to docs/feedback/session-157-retroactive-review.md.
+Include a provenance header:
+
+  **Reviewer**: /session-review skill (Claude Opus 4.7)
+  **Subject**: Session 157 (retroactive — original session was truncated)
+  **Date**: <ISO date when this runs>
+  **Commits in scope**: fb4b200f, 18e4acea, e3a91ede, 49d3af9e
+
+Specifically capture:
+1. Concerns the assessment missed
+2. Red flags graded by severity (P0/P1/P2/P3)
+3. Gaps between the original Session 157 prompt and what shipped (the assessment
+   already lists deferrals — confirm them, but also surface anything the
+   assessment itself missed)
+4. Superficial work flags (e.g., closeout docs that look thorough but lack
+   evidence; carry-over claims that aren't actually verified)
+5. Whether the 3 closeout gaps rolled to 157b (Z-pre.1/2/3) are appropriately
+   prioritized OR if any should escalate
+
+If /session-review's auto-fix subagent makes any commits during the retroactive
+pass, surface them in your return value with a recommendation: keep / squash /
+revert. The orchestrator will decide.
+
+Return value (REQUIRED):
+- Path to the saved review file
+- Top 3 concerns by severity (one line each)
+- Whether auto-fix subagent ran and what it changed (commits or no-ops)
+- Whether you recommend any 157b track be re-prioritized based on findings
+- Final commit hash if you committed the review file (commit message:
+  "docs(session-157b): retroactive /session-review on session 157 (Z-pre.3)")
+
+If /session-review fails (e.g., usage-limit at launch — same failure mode that
+killed Session 157's Track A): document the failure mode in the review file
+WITH the same provenance header, mark the file as "skill-failure deferral",
+commit, return. The skill is best-effort — closeout proceeds even if it fails.
+```
+
+This subagent runs **in parallel** with Phase 157b-0 carry verification and the
+Track A canary check below. Confirm it returned successfully (or with a
+documented skill-failure) before declaring Track Z-pre.3 complete.
+
+**This satisfies the user's directive that "all of the context from this one is
+fully saved as per my original directions."** The retroactive review file is
+permanent on main and joins the assessment as the canonical record of what
+Session 157 was, did, and missed.
+
 ## NEW — Pre-flight budget check (before launching parallel work)
 
 Before spawning ANY parallel subagent in this session:
@@ -248,10 +322,17 @@ Take screenshots, log results to `docs/feedback/session-157b-browser-verify.md`.
 
 This was skipped in Session 157 (only `curl -I /` and `curl -I /health` ran). Catching the visual state of all 6 pages on entry to 157b is a fresh sanity check before the riskier dual-read + GEDCOM upload work begins.
 
-### Z-pre.3 — Run `/session-review` skill (for Session 157 retroactively)
-Per session-defaults.md step 9, every session ends with the `/session-review` skill. Session 157 didn't run it. 157b should run it twice: once retroactively for 157 (point it at `docs/assessments/session-157-assessment.md` + the 3 commits `fb4b200f`, `18e4acea`, `e3a91ede`), then again at 157b's own end.
+### Z-pre.3 — `/session-review` retroactive on Session 157 — VERIFY FIRST-ACTION SUBAGENT COMPLETED
+The retroactive `/session-review` is run by the FIRST ACTION subagent at session start (see "FIRST ACTION" section above). Z-pre.3 here is just the verification step:
 
-If `/session-review` hits the same usage-limit that killed Track A in 157: document and skip — the assessment file already exists and stop-gate.sh accepts the deferral pattern.
+1. Confirm `docs/feedback/session-157-retroactive-review.md` exists.
+2. Read its top concerns + grade.
+3. If P0/P1 concerns surfaced: integrate into 157b's plan — re-prioritize tracks if needed.
+4. If skill-failure deferral: log to BACKLOG as `SESSION-REVIEW-SKIP-157` (already exists from 157 closeout — update with the 157b retry attempt outcome).
+
+Then run `/session-review` a second time at 157b's own end (Track Z step 11), this time on 157b itself. That's the standard step-9 closeout for 157b.
+
+Commit (if FIRST-ACTION subagent didn't already commit): `docs(session-157b): /session-review verification + integration of findings (Z-pre.3)`.
 
 ---
 
