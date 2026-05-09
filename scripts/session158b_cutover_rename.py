@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""
+Session 158b Phase 158-4.2 — Reversible cutover via RENAME.
+
+RENAMEs v1 GEDCOM tables to _dropped_*_session158 prefix. Reversible — to
+roll back, rerun with --rollback. Tables stay on disk; storage doesn't drop
+until Phase 158-6 (DROP + VACUUM FULL).
+
+Also drops the legacy `current_gedcom_individuals` view (sourced from v1's
+is_current=TRUE rows). Must be dropped BEFORE the rename so the rename
+doesn't break dependent objects.
+
+Usage:
+    python scripts/session158b_cutover_rename.py --dry-run     # default
+    python scripts/session158b_cutover_rename.py --execute
+    python scripts/session158b_cutover_rename.py --rollback    # reverse the rename
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import os
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except Exception:
+    pass
+
+POOLER_HOST = "aws-0-us-west-2.pooler.supabase.com"
+POOLER_PORT = 6543
+
+
+def get_conn():
+    import psycopg2
+    pw = os.environ.get("SUPABASE_DB_PASSWORD")
+    if not pw:
+        sys.exit("ERROR: SUPABASE_DB_PASSWORD not set")
+    url = os.environ["SUPABASE_URL"]
+    project_ref = url.replace("https://", "").split(".")[0]
+    return psycopg2.connect(
+        host=POOLER_HOST,
+        port=POOLER_PORT,
+        user=f"postgres.{project_ref}",
+        password=pw,
+        database="postgres",
+        connect_timeout=30,
+    )
+
+
+RENAME_PAIRS = [
+    ("gedcom_individuals", "_dropped_gedcom_individuals_session158"),
+    ("gedcom_families", "_dropped_gedcom_families_session158"),
+    ("gedcom_change_log", "_dropped_gedcom_change_log_session158"),
+]
+
+
+def cutover_forward(conn) -> None:
+    cur = conn.cursor()
+    cur.execute("BEGIN")
+    cur.execute("DROP VIEW IF EXISTS current_gedcom_individuals")
+    for src, dst in RENAME_PAIRS:
+        cur.execute(f"ALTER TABLE {src} RENAME TO {dst}")
+    cur.execute("COMMIT")
+    cur.close()
+
+
+def cutover_rollback(conn) -> None:
+    cur = conn.cursor()
+    cur.execute("BEGIN")
+    for src, dst in RENAME_PAIRS:
+        # Reverse: rename _dropped_* back to original
+        cur.execute(f"ALTER TABLE {dst} RENAME TO {src}")
+    # Recreate current_gedcom_individuals view (matches pre-cutover form)
+    cur.execute(
+        """
+        CREATE OR REPLACE VIEW current_gedcom_individuals AS
+        SELECT * FROM gedcom_individuals WHERE is_current = TRUE
+        """
+    )
+    cur.execute("COMMIT")
+    cur.close()
+
+
+def verify_state(conn, expected_renamed: bool) -> dict:
+    """Return current state of the relevant tables."""
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND (table_name LIKE 'gedcom_%' OR table_name LIKE '_dropped_gedcom_%')
+        ORDER BY table_name
+        """
+    )
+    tables = [r[0] for r in cur.fetchall()]
+    cur.close()
+    return {
+        "tables": tables,
+        "v1_alive": [t for t in ["gedcom_individuals", "gedcom_families", "gedcom_change_log"] if t in tables],
+        "renamed_alive": [t for t in [d for _, d in RENAME_PAIRS] if t in tables],
+        "v2_alive": [t for t in ["gedcom_individuals_v2", "gedcom_families_v2", "gedcom_change_manifest"] if t in tables],
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--rollback", action="store_true")
+    args = parser.parse_args()
+    dry_run = not (args.execute or args.rollback)
+
+    print(f"Session 158b Phase 158-4.2 — Cutover RENAME (Mode: {'DRY-RUN' if dry_run else ('ROLLBACK' if args.rollback else 'EXECUTE')})")
+    print(f"  Time: {dt.datetime.utcnow().isoformat()}Z")
+
+    conn = get_conn()
+    try:
+        before = verify_state(conn, expected_renamed=False)
+        print(f"\nBefore state:")
+        print(f"  v1 alive: {before['v1_alive']}")
+        print(f"  _dropped_*_session158 alive: {before['renamed_alive']}")
+        print(f"  v2 alive: {before['v2_alive']}")
+
+        if dry_run:
+            print("\nWould execute (forward):")
+            print("  DROP VIEW IF EXISTS current_gedcom_individuals;")
+            for src, dst in RENAME_PAIRS:
+                print(f"  ALTER TABLE {src} RENAME TO {dst};")
+            print("\nNo changes made.")
+            return
+
+        if args.rollback:
+            if not before["renamed_alive"]:
+                sys.exit("ERROR: nothing to roll back — _dropped_*_session158 tables not present.")
+            cutover_rollback(conn)
+            print("\nROLLBACK complete.")
+        else:
+            if not before["v1_alive"]:
+                sys.exit("ERROR: v1 tables not present — nothing to rename.")
+            if before["renamed_alive"]:
+                sys.exit(f"ERROR: _dropped_*_session158 already exist: {before['renamed_alive']}. Investigate before re-running.")
+            cutover_forward(conn)
+            print("\nFORWARD cutover complete.")
+
+        after = verify_state(conn, expected_renamed=True)
+        print(f"\nAfter state:")
+        print(f"  v1 alive: {after['v1_alive']}")
+        print(f"  _dropped_*_session158 alive: {after['renamed_alive']}")
+        print(f"  v2 alive: {after['v2_alive']}")
+    finally:
+        conn.close()
+
+
+if __name__ == "__main__":
+    main()
