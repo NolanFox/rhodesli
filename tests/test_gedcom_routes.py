@@ -955,7 +955,8 @@ class TestGedcomLoaderResilience:
                 result = main._load_gedcom_individuals()
 
             assert result == [SAMPLE_GEDCOM_INDIVIDUALS[0]]
-            mock_sb.table.assert_called_with("current_gedcom_individuals")
+            # PRD-063 Day 3 (Session 158b): bulk loader prefers v2 view.
+            mock_sb.table.assert_called_with("current_gedcom_individuals_v2")
             mock_table.select.assert_called_with(rel_mod._GEDCOM_THIN_FIELDS)
         finally:
             main._gedcom_individuals_cache = None
@@ -973,7 +974,21 @@ class TestGedcomLoaderResilience:
             "events_json": [{"event_type": "birth", "raw_date": "1903", "place": "Rhodes"}],
             "citations_json": [{"source": "test"}],
         }
+        # PRD-063 Day 3 (Session 158b): dual-read prefers gedcom_individuals_v2 with
+        # an ordered query (.order(last_seen_version DESC).order(first_seen_version
+        # DESC).order(payload_hash ASC).limit(1)). Mock that exact chain.
         mock_query = MagicMock()
+        mock_v2_chain = (
+            mock_query
+            .eq.return_value
+            .order.return_value
+            .order.return_value
+            .order.return_value
+            .limit.return_value
+        )
+        mock_v2_chain.execute.return_value = MagicMock(data=[rich_row])
+        # v1 fallback chain (eq().limit().execute()) for completeness — used only if
+        # v2 raises or returns None. Same data either way so the test is order-stable.
         mock_query.eq.return_value.limit.return_value.execute.return_value = MagicMock(data=[rich_row])
         mock_table = MagicMock()
         mock_table.select.return_value = mock_query
@@ -984,8 +999,11 @@ class TestGedcomLoaderResilience:
             result = main._load_gedcom_individual("@I1@", include_rich=True)
 
         assert result == rich_row
-        mock_sb.table.assert_called_with("current_gedcom_individuals")
-        mock_table.select.assert_called_with(rel_mod._GEDCOM_RICH_FIELDS)
+        # Dual-read v2 read should win — last .table() call is "gedcom_individuals_v2".
+        mock_sb.table.assert_called_with("gedcom_individuals_v2")
+        # The v2 dual-read uses INDIVIDUAL_RICH_FIELDS from gedcom_dual_read.py.
+        from app.gedcom_dual_read import INDIVIDUAL_RICH_FIELDS as _DUAL_RICH
+        mock_table.select.assert_called_with(_DUAL_RICH)
 
     def test_link_route_uses_single_individual_lookup_not_bulk_loader(self, admin_client):
         mock_sb = MagicMock()

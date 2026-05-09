@@ -322,7 +322,15 @@ def _load_gedcom_individuals():
                 return []
 
             try:
-                # AD-163: prefer the current-only view when it exists.
+                # PRD-063 Day 3 (Session 158b): prefer the v2 view first.
+                return _load_gedcom_rows(sb, "current_gedcom_individuals_v2", _GEDCOM_THIN_FIELDS)
+            except Exception as exc_v2:
+                msg_v2 = str(exc_v2)
+                if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
+                    raise
+                logging.info("current_gedcom_individuals_v2 unavailable; falling back to v1 view")
+            try:
+                # AD-163: legacy v1 view fallback (pre-Phase 158b-4 deploys).
                 return _load_gedcom_rows(sb, "current_gedcom_individuals", _GEDCOM_THIN_FIELDS)
             except Exception as exc:
                 msg = str(exc)
@@ -661,15 +669,26 @@ def _load_gedcom_individuals_by_ids(
             rows = []
             for i in range(0, len(ids), 100):
                 chunk = ids[i : i + 100]
+                # PRD-063 Day 3 (Session 158b): prefer v2 view, then v1 view, then v1 table
+                resp = None
                 try:
                     resp = (
-                        sb.table("current_gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
+                        sb.table("current_gedcom_individuals_v2").select(select_fields).in_("gedcom_id", chunk).execute()
                     )
-                except Exception as exc:
-                    msg = str(exc)
-                    if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                except Exception as exc_v2:
+                    msg_v2 = str(exc_v2)
+                    if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
                         raise
-                    resp = sb.table("gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
+                if resp is None:
+                    try:
+                        resp = (
+                            sb.table("current_gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
+                        )
+                    except Exception as exc:
+                        msg = str(exc)
+                        if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                            raise
+                        resp = sb.table("gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
                 if resp and resp.data:
                     rows.extend(resp.data)
             return rows
@@ -947,27 +966,43 @@ def _query_gedcom_search_candidates(query: str, candidate_limit: int = 500) -> l
             if not sb:
                 return []
             filter_expr = ",".join(dict.fromkeys(filters))
+            # PRD-063 Day 3 (Session 158b): prefer v2 view, then v1 view, then v1 table
+            resp = None
             try:
                 resp = (
-                    sb.table("current_gedcom_individuals")
+                    sb.table("current_gedcom_individuals_v2")
                     .select(_GEDCOM_THIN_FIELDS)
                     .or_(filter_expr)
                     .order("gedcom_id")
                     .range(0, candidate_limit - 1)
                     .execute()
                 )
-            except Exception as exc:
-                msg = str(exc)
-                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+            except Exception as exc_v2:
+                msg_v2 = str(exc_v2)
+                if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
                     raise
-                resp = (
-                    sb.table("gedcom_individuals")
-                    .select(_GEDCOM_THIN_FIELDS)
-                    .or_(filter_expr)
-                    .order("gedcom_id")
-                    .range(0, candidate_limit - 1)
-                    .execute()
-                )
+            if resp is None:
+                try:
+                    resp = (
+                        sb.table("current_gedcom_individuals")
+                        .select(_GEDCOM_THIN_FIELDS)
+                        .or_(filter_expr)
+                        .order("gedcom_id")
+                        .range(0, candidate_limit - 1)
+                        .execute()
+                    )
+                except Exception as exc:
+                    msg = str(exc)
+                    if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                        raise
+                    resp = (
+                        sb.table("gedcom_individuals")
+                        .select(_GEDCOM_THIN_FIELDS)
+                        .or_(filter_expr)
+                        .order("gedcom_id")
+                        .range(0, candidate_limit - 1)
+                        .execute()
+                    )
             return resp.data if resp and resp.data else []
 
         return _run_gedcom_query(_query, "GEDCOM search prefilter")
