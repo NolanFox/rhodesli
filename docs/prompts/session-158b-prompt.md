@@ -60,6 +60,29 @@ This re-validates: v2 row counts unchanged from 158 end (21,998 / 6,741 / 9), v1
 
 Save output to `docs/feedback/session-158b-carry-verify.md`.
 
+### A.5 Review uncommitted Codex hardening on dual-read helper (CRITICAL)
+
+Per Session 158 self-review C-0 / `HISTORY-HELPER-MISSING-JSONB-FIELDS` BACKLOG:
+
+```bash
+git status --short app/gedcom_dual_read.py tests/test_dual_read_helper.py
+git diff app/gedcom_dual_read.py tests/test_dual_read_helper.py
+```
+
+**Expected**: uncommitted modifications dated ~2026-05-09 05:44/05:45 UTC, attributed in code comments to "Codex 158 final-pass P1/P2.1/P2.2" — these add `names_json`/`events_json`/etc. to `INDIVIDUAL_HISTORY_FIELDS` and tighten `_is_v2_unavailable()`. Without this fix, `get_individual_history()` returns rows that look identical to a UI consumer (the change between distinct payload_hash states lives in JSONB columns per Phase 158-1 evidence).
+
+**Decision**: either (a) commit the uncommitted changes as `feat(session-158b): commit Codex 158 final-pass hardening on dual-read helper` after running the tests, OR (b) revert and re-do the Codex final-pass cleanly — but DO NOT execute Phase 158b-2 backfill until INDIVIDUAL_HISTORY_FIELDS includes the 6 JSONB columns. Verify via:
+
+```bash
+PYTHONPATH=. python -c "
+from app.gedcom_dual_read import INDIVIDUAL_HISTORY_FIELDS
+for f in ['names_json', 'events_json', 'family_as_spouse_json', 'family_as_child_json', 'notes_json', 'citations_json']:
+    assert f in INDIVIDUAL_HISTORY_FIELDS, f
+print('OK — all 6 JSONB fields present')
+"
+make test-fast    # 4259+ pass; new test test_history_select_includes_rich_json_fields PASSES
+```
+
 ### B. Pooler health probe
 
 Before touching the heavy scripts, verify the pooler is healthy today:
