@@ -318,11 +318,15 @@ class TestBrowseMediaFilter:
             pytest.skip("No embeddings available")
 
         # Patch _photo_cache to add back_image to first photo
-        from app.main import _build_caches, _photo_cache
+        # NOTE: must reference module attribute directly, not a `from .. import _photo_cache`
+        # local. The conftest's reset_registry_cache fixture rebinds main.
+        # _photo_cache to None at end of each test — a name imported into this
+        # module's namespace becomes stale (TEST-ISOLATION-156).
+        import app.main as main_mod
 
-        _build_caches()
+        main_mod._build_caches()
 
-        original_cache = dict(_photo_cache)
+        original_cache = dict(main_mod._photo_cache or {})
         patched_cache = dict(original_cache)
         if real_photo_id in patched_cache:
             patched_cache[real_photo_id] = dict(patched_cache[real_photo_id])
@@ -331,6 +335,10 @@ class TestBrowseMediaFilter:
         with (
             patch("app.main.is_auth_enabled", return_value=False),
             patch("app.main._photo_cache", patched_cache),
+            # Disable community scoping — without Supabase the helper fail-closes
+            # to set() and filters out all photos (TEST-ISOLATION-156).
+            patch("app.main._get_community_photo_ids", return_value=None),
+            patch("app.main._get_community_identity_ids", return_value=None),
         ):
             response = client.get("/?section=photos")
         html = response.text

@@ -1569,6 +1569,9 @@ class TestDiscoveriesThreeSections:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=[]),
             patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            # Disable community scoping — without Supabase the helper fail-closes
+            # to set() and filters out all test identities (TEST-ISOLATION-156).
+            patch("app.main._get_community_identity_ids", return_value=None),
             patch("app.main.get_crop_files", return_value={"face_unid1.jpg"}),
             patch("app.main.resolve_face_image_url", return_value="/crop/face_unid1.jpg"),
             patch("app.main.get_best_face_id", return_value="face_unid1"),

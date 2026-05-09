@@ -245,6 +245,11 @@ def test_compare_upload_stages_file(tmp_path, monkeypatch):
 
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     monkeypatch.setattr(compare_mod, "PROCESSING_ENABLED", False)
+    # Force the admin-disabled-processing branch (CI sets SUPABASE_URL +
+    # SUPABASE_ANON_KEY, which flips is_auth_enabled() to True and routes the
+    # session-less request to the non-admin "submitted" branch — see
+    # CI-COMPARE-FAIL-156). Test asserts the "staged" branch by design.
+    monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: False)
     (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
     from starlette.testclient import TestClient
 
