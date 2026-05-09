@@ -60,18 +60,11 @@ This re-validates: v2 row counts unchanged from 158 end (21,998 / 6,741 / 9), v1
 
 Save output to `docs/feedback/session-158b-carry-verify.md`.
 
-### A.5 Review uncommitted Codex hardening on dual-read helper (CRITICAL)
+### A.5 Verify Codex 158 final-pass hardening landed cleanly (CRITICAL)
 
-Per Session 158 self-review C-0 / `HISTORY-HELPER-MISSING-JSONB-FIELDS` BACKLOG:
+Session 158 closeout shipped commit `6aa87fc7` ("Codex final-pass P1 + P2 + AD-245 + /session-review auto-fixes") which addressed the central change-history-helper bug surfaced in self-review C-0: `INDIVIDUAL_HISTORY_FIELDS` now includes the 6 JSONB columns (`names_json`, `events_json`, `family_as_spouse_json`, `family_as_child_json`, `notes_json`, `citations_json`). This fix MUST be in place before Phase 158b-2 executes, otherwise `get_individual_history()` returns N rows that look identical (since per Phase 158-1 the actual change between distinct payload_hash states lives in JSONB).
 
-```bash
-git status --short app/gedcom_dual_read.py tests/test_dual_read_helper.py
-git diff app/gedcom_dual_read.py tests/test_dual_read_helper.py
-```
-
-**Expected**: uncommitted modifications dated ~2026-05-09 05:44/05:45 UTC, attributed in code comments to "Codex 158 final-pass P1/P2.1/P2.2" — these add `names_json`/`events_json`/etc. to `INDIVIDUAL_HISTORY_FIELDS` and tighten `_is_v2_unavailable()`. Without this fix, `get_individual_history()` returns rows that look identical to a UI consumer (the change between distinct payload_hash states lives in JSONB columns per Phase 158-1 evidence).
-
-**Decision**: either (a) commit the uncommitted changes as `feat(session-158b): commit Codex 158 final-pass hardening on dual-read helper` after running the tests, OR (b) revert and re-do the Codex final-pass cleanly — but DO NOT execute Phase 158b-2 backfill until INDIVIDUAL_HISTORY_FIELDS includes the 6 JSONB columns. Verify via:
+Verify the fix is on `main`:
 
 ```bash
 PYTHONPATH=. python -c "
@@ -80,8 +73,10 @@ for f in ['names_json', 'events_json', 'family_as_spouse_json', 'family_as_child
     assert f in INDIVIDUAL_HISTORY_FIELDS, f
 print('OK — all 6 JSONB fields present')
 "
-make test-fast    # 4259+ pass; new test test_history_select_includes_rich_json_fields PASSES
+make test-fast    # 25 dual-read tests pass (was 23, +2 new from final-pass)
 ```
+
+If either check fails, STOP — the fix was lost in a merge somewhere; re-apply from `git show 6aa87fc7` before continuing.
 
 ### B. Pooler health probe
 

@@ -38,11 +38,11 @@ The Phase 158-1 Albert Fox deep-dive proved the visible columns (name, birth_dat
 
 The uncommitted changes also tighten `_is_v2_unavailable()` to require the table name in PGRST205 messages (Codex 158 P2.2) — a defensible improvement.
 
-**Per my instructions ("Do NOT modify code — those wait for 158b"), I have NOT committed these code changes.** They remain on disk, uncommitted, for the user/orchestrator to either:
-1. Commit them as the final substantive work of 158 (recommended — these address a real P1 in the user's requirement), OR
-2. Revert them and re-do the Codex final-pass cleanly in 158b first action.
+**Update during this review**: the orchestrator independently committed these changes as `6aa87fc7` ("Codex final-pass P1 + P2 + AD-245 + /session-review auto-fixes") in parallel with this self-review running. The fix is now on main: `INDIVIDUAL_HISTORY_FIELDS` includes all 6 JSONB columns; the test `test_history_select_includes_rich_json_fields` enforces this; 25 dual-read tests pass (was 23). AD-245 captures the Option A historical-backfill decision with full provenance.
 
-**Severity P1, not P0**: the helper has not yet been used in production (returns 1-row placeholder values today). The bug surfaces only post-158b backfill. But fixing this in 158b is mandatory before the helper is exposed to any UI surface.
+**Per my instructions ("Do NOT modify code — those wait for 158b"), I did NOT commit these code changes myself.** I left them in place; the orchestrator's commit took them. My 158b prompt edit (A.5) was updated to reflect the now-committed state — it now verifies the fix landed cleanly on main rather than treating it as uncommitted work.
+
+**Severity P1 (downgrade-to-fixed)**: the helper has not yet been used in production (returns 1-row placeholder values today). The bug would have surfaced post-158b backfill. Now committed and tested; 158b just verifies it's on main before backfill execute.
 
 ### C-1 (P2): Code shipped but not exercised — same risk pattern as 157b's Track B2 wiring
 The assessment Red Flag #1 acknowledges the dual-read P1.1 ORDER BY is "a no-op against current single-row v2" — but downplays this. Three specific risks:
