@@ -25,10 +25,10 @@ Session 158 deferred Phase 158-2 (historical backfill) to 158b due to pooler ins
 - **Diagnostic**: Same pooler degradation as 158 saw, persisting across days. REST API on `https://fvynibivlphxwfowzkjl.supabase.co` works but throughput is degraded under load (read timeouts + RemoteProtocolError mid-stream).
 - **Commit**: `5799700a` (probe + assessment)
 
-### Phase 158b-2: Chunked-write historical backfill ⏳ in progress
+### Phase 158b-2: Chunked-write historical backfill ⏳ PARTIAL — died on chunk 6
 - **Script**: `scripts/session158b_historical_backfill_chunked.py` (313 lines).
 - **Design**: read 1 version_id at a time → aggregate by payload_hash → read existing v2 hits → merge first/last_seen_version → REST upsert in batches of 500. 10 chunks (9 versions + NULL). Each chunk peak ~50 MB memory.
-- **EXECUTE state at session close**: chunks 1-5 complete (~110K rows upserted into individuals_v2, growing v2 from 21,998 → ~43,172 individuals). Chunks 6-10 + all of families pending.
+- **EXECUTE state at session close**: chunks 1-5 complete + chunk 6 partial (some batches upserted before death). Process DIED on chunk 6 with `httpx.ReadTimeout` after exhausting 3 retries on a single upsert batch. v2 individuals state: ~110K total writes (some redundant from updates). Chunks 7-10 + all families NOT processed. Idempotent re-run safe (ON CONFLICT DO UPDATE).
 - **Per-chunk timing observed** (individuals):
   - Chunk 1 (v1): 220s (51s read + 167s upsert) — NEW=21,174, UPDATE=770
   - Chunk 2 (v2): 240s (49s read + 189s upsert) — NEW=0, UPDATE=21,944 (all hashes match v1)

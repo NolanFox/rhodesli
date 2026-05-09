@@ -14,7 +14,7 @@ Session 158b shipped Phase 158b-2 (historical backfill) but DEFERRED Phases 158b
 
 - **Phase 158b-0** ✅: carry verification re-passed, A.5 hardening verified
 - **Phase 158b-0B** ✅: pooler probe (FAILED 0/3 — diagnostic data captured)
-- **Phase 158b-2** ✅: chunked-write historical backfill via REST. v2 row count grew from 21,998 to ~43-65K (TBD on completion). Albert Fox 2-state history verified.
+- **Phase 158b-2** ⏳ PARTIAL: chunked-write historical backfill via REST. EXECUTE died on chunk 6 with `httpx.ReadTimeout` exhausting 3 retries. v2 individuals state: chunks 1-5 fully upserted + chunk 6 partial. Chunks 7-10 + all families NOT processed. **158c first action after pooler probe**: re-launch chunked-write (idempotent, safe to re-run from chunk 1). Recommended tuning: bump `_upsert_v2` retry count 3→6, sleep 3s→10s with backoff in `scripts/session158b_historical_backfill_chunked.py`.
 - **Phase 158b-4.1 code only** ✅: bulk-loader rewired to prefer `current_gedcom_individuals_v2` view. View itself NOT yet created (psycopg2 unavailable).
 - All cutover scripts written (RENAME / DROP-VACUUM / R2 preflight) — ready to run.
 
