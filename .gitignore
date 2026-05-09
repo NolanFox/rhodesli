@@ -125,3 +125,6 @@ scripts/extract_routes.py
 
 # Hook backups (loop-breaker rollback path; never commit)
 .claude/hooks/*.bak
+
+# Scheduled task lock (per-session, ephemeral)
+.claude/scheduled_tasks.lock

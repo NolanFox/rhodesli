@@ -71,6 +71,10 @@ def get_conn():
     pw = os.environ.get("SUPABASE_DB_PASSWORD")
     if not pw:
         sys.exit("ERROR: SUPABASE_DB_PASSWORD not set")
+    # keepalives prevent the pooler from dropping idle connections during
+    # long server-side cursor reads (Session 158 hit this on the 196K-row
+    # historical backfill — first attempt failed with "server closed the
+    # connection unexpectedly")
     return psycopg2.connect(
         host=POOLER_HOST,
         port=POOLER_PORT,
@@ -78,6 +82,10 @@ def get_conn():
         password=pw,
         database="postgres",
         connect_timeout=30,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
     )
 
 
@@ -106,12 +114,20 @@ def backfill_table(
     insert_sql: str,
     update_sql: str,
     binder,
+    get_conn_fn=None,
 ):
     """Generic backfill — handles individuals or families.
 
+    Chunks reads by version_id to avoid pooler-killing long server-side
+    cursors (Session 158 first-execute attempt failed with "SSL SYSCALL
+    error: EOF detected" on a 196K-row stream).
+
     record_builder(obj, payload_hash, v_num) -> dict (the v2 row)
     binder(record_dict) -> tuple (positional args for insert)
+    get_conn_fn: callable that returns a fresh psycopg2 connection (used
+                 to reconnect between chunks if the pooler drops us).
     """
+    import psycopg2
     import psycopg2.extras
 
     print(f"\n=== Backfilling {dst_table} from ALL rows of {src_table} ===")
@@ -124,20 +140,74 @@ def backfill_table(
     cols = [d[0] for d in col_cur.description]
     col_cur.close()
 
-    cur_name = f"backfill_{dst_table}_{uuid.uuid4().hex[:8]}"
-    cur = conn.cursor(name=cur_name)
-    cur.itersize = 5000
-    cur.execute(f"SELECT * FROM {src_table}")  # ALL rows, no is_current filter
+    # Build chunk plan: one chunk per version_id + one for NULL
+    version_ids = list(version_map.keys())
+    chunks = [(v, "id") for v in version_ids] + [(None, "null")]
+    print(f"  chunks: {len(chunks)} ({len(version_ids)} versions + 1 NULL chunk)")
 
     aggregated: dict[str, dict] = {}
     seen_count = 0
     fallback_hash_count = 0
     null_version_count = 0
 
-    while True:
-        batch = cur.fetchmany(5000)
-        if not batch:
-            break
+    def _read_with_retry(query_sql, query_args, label):
+        """Open fresh connection, execute, fetchall, close. Retry up to 5×."""
+        nonlocal conn
+        last_exc = None
+        for retry in range(5):
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn = get_conn_fn() if get_conn_fn else get_conn()
+            cur = conn.cursor()
+            try:
+                cur.execute(query_sql, query_args)
+                batch = cur.fetchall()
+                cur.close()
+                return batch, conn
+            except (psycopg2.OperationalError, psycopg2.InterfaceError) as exc:
+                last_exc = exc
+                print(f"  [{label}] retry {retry+1}/5: {exc.__class__.__name__}")
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                if retry < 4:
+                    import time as _t
+                    _t.sleep(2 + retry)
+        raise last_exc
+
+    for ci, (v_id, kind) in enumerate(chunks):
+        if kind == "id":
+            batch, conn = _read_with_retry(
+                f"SELECT * FROM {src_table} WHERE version_id = %s",
+                (v_id,),
+                f"chunk {ci+1}/{len(chunks)}",
+            )
+        else:
+            # NULL chunk — paginate by primary key id to avoid "WHERE IS NULL"
+            # being expensive. PRIMARY KEY 'id' is indexed.
+            batch = []
+            page = 0
+            page_size = 2000
+            while True:
+                page_batch, conn = _read_with_retry(
+                    f"SELECT * FROM {src_table} WHERE version_id IS NULL "
+                    f"ORDER BY id LIMIT {page_size} OFFSET {page * page_size}",
+                    None,
+                    f"chunk {ci+1}/{len(chunks)} NULL page {page+1}",
+                )
+                if not page_batch:
+                    break
+                batch.extend(page_batch)
+                if len(page_batch) < page_size:
+                    break
+                page += 1
+
+        chunk_count = len(batch)
+        print(f"  [chunk {ci+1}/{len(chunks)}] v_id={v_id or 'NULL'}: {chunk_count:,} rows")
+
         for r in batch:
             obj = dict(zip(cols, r))
             seen_count += 1
@@ -150,8 +220,6 @@ def backfill_table(
             v_uuid = str(obj.get("version_id")) if obj.get("version_id") else None
             v_num = version_map.get(v_uuid)
             if v_num is None:
-                # Legacy unversioned row (Capeluto Rhodes pre-Migration-002)
-                # OR NULL version_id (pre-versioning legacy)
                 v_num = 0
                 null_version_count += 1
 
@@ -164,13 +232,16 @@ def backfill_table(
                 if v_num > existing["last_seen_version"]:
                     existing["last_seen_version"] = v_num
 
-    cur.close()
-
     print(f"  v1 ALL rows scanned: {seen_count:,}")
     print(f"  unique payload_hashes: {len(aggregated):,}")
     print(f"  fallback hashes computed (NULL v1 payload_hash): {fallback_hash_count:,}")
     print(f"  NULL/unmapped version_id rows: {null_version_count:,}")
     print(f"  dedup factor: {seen_count / max(len(aggregated), 1):.2f}×")
+
+    # Reconnect if previous connection died during chunked reads
+    if conn.closed:
+        print("  reconnecting for write phase...")
+        conn = get_conn_fn() if get_conn_fn else get_conn()
 
     # Pre-count: how many will be NEW vs UPDATE on existing v2 row?
     write_cur = conn.cursor()
@@ -337,7 +408,8 @@ def main():
     print(f"  Time: {dt.datetime.utcnow().isoformat()}Z")
 
     summary = {}
-    with get_conn() as conn:
+    conn = get_conn()
+    try:
         summary["individuals"] = backfill_table(
             conn,
             src_table="gedcom_individuals",
@@ -348,7 +420,17 @@ def main():
             insert_sql=INDIV_INSERT_SQL,
             update_sql=None,
             binder=_indiv_bind,
+            get_conn_fn=get_conn,
         )
+    finally:
+        if conn and not conn.closed:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    conn = get_conn()
+    try:
         summary["families"] = backfill_table(
             conn,
             src_table="gedcom_families",
@@ -359,7 +441,14 @@ def main():
             insert_sql=FAM_INSERT_SQL,
             update_sql=None,
             binder=_fam_bind,
+            get_conn_fn=get_conn,
         )
+    finally:
+        if conn and not conn.closed:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     # Write report
     report_path = PROJECT_ROOT / "docs" / "feedback" / "session-158-historical-backfill-report.md"
