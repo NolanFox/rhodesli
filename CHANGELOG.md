@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.73] — 2026-05-08 (Session 157: AD-244 captured; remainder deferred to 157b)
+
+Truncated session — both Track A parallel subagents hit Anthropic's user-level usage limit at launch and returned within 5-10s with 0-2 tokens consumed. Recovered the highest-value artifact (AD-244) inline on the main thread; everything else carries to Session 157b.
+
+### Shipped
+- **AD-244** (`docs/ml/ALGORITHMIC_DECISIONS.md`): PRD-063 GEDCOM Mirror Efficient Redesign — v2 Schema with INSERT-Time Dedup. Captures the full design lineage (context, decision, v2 row counts 21,998/6,741/9, mechanism, migration plan Day 1✅/2/3, operational guardrails, risks, acceptance gate for Session 158 cutover, B3/B4/B5 commit hashes pinned). Commit `fb4b200f`.
+- **Phase 157-0 carry verification PASS** — direct Supabase queries confirmed v2 tables intact (21,998 / 6,741 / 9), Harry Fox 5 anchors v=14, Belle Isle Conservatory identity INBOX with 1 note. No drift since 156.
+
+### Deferred to Session 157b (full prompt at `docs/prompts/session-157b-prompt.md`)
+- A1.2: NOTES-BACKFILL-156 — script + dry-run + execute if delta
+- A1.3: Codex audit of Session 156 commits (notes round-trip, Harry repair, R2 backups, v2 schema, Detroit fix)
+- A2.1: CI-COMPARE-FAIL-156 fix (test passes locally, fails in CI)
+- A2.2: TEST-ISOLATION-156 fix (4 tests fail under sequential pytest)
+- B1: PRD-063 Day 2 full backfill catching post-cutover rows
+- B2: dual-read helper `app/gedcom_dual_read.py` + 4 unit tests
+- B3: side-by-side query timing on top 5 GEDCOM read paths
+- B4: confidence assessment doc PROCEED-or-HOLD for Session 158 cutover
+- E1-E5: GEDCOM upload UAT (gated on user E1 authorization)
+
+### Tests
+4246 tests pass under xdist parallel — same as Session 156 baseline. No regression.
+
+### Lesson candidate (182)
+"Verify subagent budget consumption before assuming parallel work is in flight." Pre-flight budget canary: launch ONE subagent first, confirm it consumes >100 tokens / runs >30s, only THEN launch the second. Once usage limit fires, parallel subagents return immediately with 0-2 tokens and no work — orchestrator must recover by either inline single-thread work or a continuation prompt.
+
+### Recovery path
+Session 157b prompt is the carry-over: Tier 1 sweep + Day 2 dual-read + Track E (everything 157 deferred). PRD-063 implementation arc remains on schedule for the 2026-05-29 deadline if 157b lands within 5 days.
+
+---
+
 ## [v0.99.72] — 2026-05-08 (Session 156: Harry Fox Repair Shipped + PRD-063 Day 1)
 
 3-track day. Both major irreversible workstreams shipped: Harry Fox identity repair (option c) executed on production with full provenance trail; PRD-063 v2 schema built + initial backfill landed (~98% storage win projected). Detroit location bugs fixed manually pending Gemini prompt iteration. CI now green-eligible (5 secrets pasted via `gh secret set`).

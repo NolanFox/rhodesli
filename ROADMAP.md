@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.71 · ~4930 tests (4207 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed
+Current: v0.99.73 · ~4969 tests (4246 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -135,9 +135,9 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Planned Sessions
 
-- **Session 157** — PRD-063 Day 2 (full backfill + dual-read confidence check) + carried-forward 156 items. Prompt: TBD. Carried-forward: Track E (GEDCOM upload UAT — new Fox-family GEDCOM already in R2 from 156 B2), AD-244 (PRD-063 schema design — first commit so commits B3/B4/B5 can be referenced), NOTES-BACKFILL-156 (any identity created via add_note between Session 105 and 156 may have local-only notes), CODEX-AUDIT-156 (independent audit of Track A + Track B + Track F commits), TEST-ISOLATION-156 (4 tests fail under sequential pytest, pass under xdist), gedcom_records/events/relationships v2 backfill (out of 156 scope). Day 2 work itself: any remaining current-version rows + dual-read in app code (read v2 if exists, fall back to v1) for one session of observation + side-by-side query timing on 5 most-frequent GEDCOM read paths.
+- **Session 157b** — Continuation of 157 (Tier 1 sweep + PRD-063 Day 2 + Track E). Prompt: `docs/prompts/session-157b-prompt.md`. Session 157 fired two parallel Track A subagents that both hit Anthropic's usage limit at launch and returned with zero work; only AD-244 was salvaged inline (commit `fb4b200f`). 157b carries everything 157 deferred: NOTES-BACKFILL-156, CODEX-AUDIT-156, CI-COMPARE-FAIL-156, TEST-ISOLATION-156, PRD-063 Day 2 (B1 full backfill + B2 dual-read helper + B3 query timing + B4 confidence assessment), and Track E GEDCOM upload UAT (gated on user E1 authorization). New addition vs 157: pre-flight budget canary — launch ONE subagent first, verify it does real work, only then launch the second.
 
-- **Session 158** — PRD-063 Day 3 (cutover + drop v1 + VACUUM FULL). Cutover reads to v2; DROP v1 GEDCOM tables (snapshots + R2 archive provide rollback path); VACUUM FULL on Supabase; re-query DB size — confirm ≤ 1.1 GB ceiling met (target 600-700 MB). Browser verify all canonical pages + GEDCOM-aware pages.
+- **Session 158** — PRD-063 Day 3 (cutover + drop v1 + VACUUM FULL). Cutover reads to v2; DROP v1 GEDCOM tables (snapshots + R2 archive provide rollback path); VACUUM FULL on Supabase; re-query DB size — confirm ≤ 1.1 GB ceiling met (target 600-700 MB). Browser verify all canonical pages + GEDCOM-aware pages. **Gated on**: 157b dual-read confidence assessment (B4) recommending PROCEED.
 
 - **Session 154** — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s. Prompt: `docs/prompts/session-154-prompt.md`. Context: `docs/session_context/session-154-context.md`. Planned ADs: AD-241 (GEDCOM injection), AD-242 (iterative refinement). Parallel tracks: Gemini prompt fix (main), Harry face-ID + Bessie strengthening (worktree agent), Belle Isle citation + Irving verification (worktree agent).
 
@@ -146,6 +146,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-05-08: **v0.99.73 — Session 157**: AD-244 captured inline; Tier 1 + Day 2 + Track E DEFERRED to 157b. Truncated session — both Track A parallel subagents returned `You've hit your limit` within 5-10s with 0-2 tokens consumed each, no commits. Recovered by writing AD-244 (PRD-063 v2 schema design entry, full lineage with B3/B4/B5 commit hashes pinned) inline on main thread (commit `fb4b200f`). Phase 157-0 carry verification PASS (v2 21,998/6,741/9; Harry 5/v14; Belle Isle INBOX/1 note). Continuation prompt at `docs/prompts/session-157b-prompt.md`. Lesson 182 candidate: pre-flight budget canary before parallel subagents. 4246 tests pass (no regression).
 
 - [x] 2026-05-08: **v0.99.72 — Session 156**: Harry Fox Repair Shipped + PRD-063 Day 1. Track A: detached `inbox_1fea75ce2caf` + `inbox_e507a54f204a` from Harry Fox (anchors 7→5; v_id 13→14); created new identity `ef39908e-...` "Belle Isle Conservatory Young Man c.1917-1918" (INBOX, 2 anchors, metadata.notes provenance, GEDCOM Harry Isaackovitz `@I132506612777@` linked as candidate confidence=0.3, audit_log written). Pre-snapshot committed; R6 pre-flight verified version_id=13 before mutation. **Notes round-trip fix** (pre-existing bug since Session 105): patched `shadow_write` and `load_from_postgres` to round-trip notes through `metadata.notes`. 4 regression tests. Backfill follow-up logged (NOTES-BACKFILL-156). Track B: PRD-063 v2 schema built + initial backfill (parallel worktree subagent). 9 versions archived to R2 (~0.26 GB compressed); reversibility verified on v9. v2 row counts: individuals 21,998 (from 196,645 → 18× smaller), families 6,741 (from 33,324 → 14× smaller), change_manifest 9 (from 1.65M → 1400× smaller). **~98% storage reduction projected** when v1 dropped in Session 158. Track F: Detroit location bugs fixed manually (02068 NYC→Detroit, 01659 generic-US→Detroit) with audit_log; Asheville Victor+Victoria photo already correct. Gemini prompt iteration follow-up (PRD-LOCATION-001). Track C: 5 secrets uploaded to GitHub via `gh secret set`. 4246 tests pass under xdist parallel (4 new round-trip tests). Track E (GEDCOM upload UAT) deferred to Session 157. AD-244 deferred to Session 157 first commit. 9 commits this session.
 
