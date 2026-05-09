@@ -94,6 +94,8 @@ FAM_DICT_JSON_COLS = ["marriage_event_json"]
 
 UPSERT_BATCH = 500
 READ_PAGE = 1000
+RETRY_COUNT = 6           # 158c P0 fix: bumped from 3 (chunk 6 timeout in 158b)
+RETRY_SLEEP_BASE_S = 10   # 158c P0 fix: bumped from 3, with backoff
 
 
 def _canonical_payload_hash(rec: dict, key_fields: list[str]) -> str:
@@ -103,24 +105,32 @@ def _canonical_payload_hash(rec: dict, key_fields: list[str]) -> str:
 
 
 def _read_chunk_for_version(sb, table: str, fields: str, version_id: str | None) -> list[dict]:
-    """Read all rows for a single version_id via REST pagination. version_id=None → IS NULL."""
+    """Read all rows for a single version_id via REST pagination. version_id=None → IS NULL.
+
+    158c P0-1 fix: ORDER BY id ASC ensures deterministic pagination across REST calls.
+    Without this, PostgREST may return rows in unstable order across pages → silent
+    skips/duplicates between offset boundaries.
+    """
     rows = []
     offset = 0
     while True:
-        for retry in range(3):
+        for retry in range(RETRY_COUNT):
             try:
                 q = sb.table(table).select(fields)
                 if version_id is None:
                     q = q.is_("version_id", "null")
                 else:
                     q = q.eq("version_id", version_id)
+                # 158c P0-1: deterministic order by primary key id
+                q = q.order("id", desc=False)
                 resp = q.range(offset, offset + READ_PAGE - 1).execute()
                 break
             except Exception as exc:
-                if retry == 2:
+                if retry == RETRY_COUNT - 1:
                     raise
-                print(f"    [{table}] retry {retry+1}: {exc.__class__.__name__}")
-                time.sleep(2)
+                sleep_s = RETRY_SLEEP_BASE_S * (retry + 1)  # 10s, 20s, 30s, 40s, 50s
+                print(f"    [{table}] retry {retry+1}/{RETRY_COUNT}: {exc.__class__.__name__} — sleep {sleep_s}s")
+                time.sleep(sleep_s)
         page = resp.data or []
         rows.extend(page)
         if len(page) < READ_PAGE:
@@ -130,14 +140,24 @@ def _read_chunk_for_version(sb, table: str, fields: str, version_id: str | None)
 
 
 def _aggregate_chunk(rows: list[dict], key_fields: list[str], v_num: int) -> tuple[dict, int]:
-    """Aggregate rows by payload_hash. All rows in this chunk get first/last_seen=v_num."""
+    """Aggregate rows by payload_hash. All rows in this chunk get first/last_seen=v_num.
+
+    158c P0-2 fix: payload_hash is REQUIRED. v1 has 100% payload_hash population today
+    (Session 158b carry observed 0 fallback hashes across chunks 1-5). The original
+    fallback hashed only key_fields, which would silently collide for two rows with
+    identical key fields but different events/citations/notes. Refuse to write rather
+    than risk hash collision.
+    """
     aggregated: dict[str, dict] = {}
     fallback_count = 0
     for r in rows:
         phash = r.get("payload_hash")
         if not phash:
-            phash = _canonical_payload_hash(r, key_fields)
-            fallback_count += 1
+            # 158c P0-2: refuse to fall back; v1 invariant is payload_hash IS NOT NULL
+            raise RuntimeError(
+                f"row missing payload_hash — refusing to fallback to narrow hash. "
+                f"row keys={list(r.keys())[:5]}, version=v{v_num}"
+            )
         if phash in aggregated:
             continue  # within same chunk, dedup by payload_hash
         rec = {**r, "payload_hash": phash, "first_seen_version": v_num, "last_seen_version": v_num}
@@ -151,15 +171,16 @@ def _read_existing_v2(sb, table: str, payload_hashes: list[str]) -> dict:
     existing = {}
     for i in range(0, len(payload_hashes), 100):  # in_() supports many but keep URL short
         batch = payload_hashes[i:i+100]
-        for retry in range(3):
+        for retry in range(RETRY_COUNT):
             try:
                 resp = sb.table(table).select("payload_hash,first_seen_version,last_seen_version").in_("payload_hash", batch).execute()
                 break
             except Exception as exc:
-                if retry == 2:
+                if retry == RETRY_COUNT - 1:
                     raise
-                print(f"      [v2 read] retry {retry+1}: {exc.__class__.__name__}")
-                time.sleep(2)
+                sleep_s = RETRY_SLEEP_BASE_S * (retry + 1)
+                print(f"      [v2 read] retry {retry+1}/{RETRY_COUNT}: {exc.__class__.__name__} — sleep {sleep_s}s")
+                time.sleep(sleep_s)
         for r in resp.data or []:
             existing[r["payload_hash"]] = (r["first_seen_version"], r["last_seen_version"])
     return existing
@@ -180,15 +201,16 @@ def _upsert_v2(sb, table: str, rows: list[dict]) -> None:
     """REST upsert with on_conflict=payload_hash. Batched for stability."""
     for i in range(0, len(rows), UPSERT_BATCH):
         batch = rows[i:i+UPSERT_BATCH]
-        for retry in range(3):
+        for retry in range(RETRY_COUNT):
             try:
                 sb.table(table).upsert(batch, on_conflict="payload_hash").execute()
                 break
             except Exception as exc:
-                if retry == 2:
+                if retry == RETRY_COUNT - 1:
                     raise
-                print(f"      [{table} upsert] batch {i//UPSERT_BATCH+1} retry {retry+1}: {exc.__class__.__name__}: {exc}")
-                time.sleep(3)
+                sleep_s = RETRY_SLEEP_BASE_S * (retry + 1)
+                print(f"      [{table} upsert] batch {i//UPSERT_BATCH+1} retry {retry+1}/{RETRY_COUNT}: {exc.__class__.__name__}: {exc} — sleep {sleep_s}s")
+                time.sleep(sleep_s)
 
 
 def _process_table(sb, dry_run: bool, table_v1: str, table_v2: str, fields: str, key_fields: list[str], v2_cols: list[str], list_json_cols: list[str], dict_json_cols: list[str] | None, version_map: dict, total_chunks: int, label: str) -> dict:

@@ -34,7 +34,9 @@ except Exception:
     pass
 
 POOLER_HOST = "aws-0-us-west-2.pooler.supabase.com"
-POOLER_PORT = 6543
+# 158c port change: 6543 (transaction-mode) is dead from 158b through 158c.
+# Session-mode 5432 verified 5/5 PASS on 2026-05-09 22:50 UTC. AD-245.
+POOLER_PORT = 5432
 
 
 def get_conn():
@@ -50,7 +52,7 @@ def get_conn():
         user=f"postgres.{project_ref}",
         password=pw,
         database="postgres",
-        connect_timeout=30,
+        connect_timeout=60,  # 158c bumped 30→60 to absorb cold-start latency (25s observed)
     )
 
 
@@ -137,13 +139,34 @@ def main():
             return
 
         if args.rollback:
-            if not before["renamed_alive"]:
-                sys.exit("ERROR: nothing to roll back — _dropped_*_session158 tables not present.")
+            # 158c P1-2 fix: assert ALL 3 _dropped_*_session158 tables exist before rollback.
+            # Partial rollback would leave orphaned dual-state (some renamed, some not).
+            if len(before["renamed_alive"]) != 3:
+                sys.exit(
+                    f"ERROR: rollback requires all 3 _dropped_*_session158 tables present. "
+                    f"Found: {before['renamed_alive']}. Manual investigation required."
+                )
+            if before["v1_alive"]:
+                sys.exit(
+                    f"ERROR: v1 tables {before['v1_alive']} are alive — rollback would conflict. "
+                    f"Manual investigation required."
+                )
             cutover_rollback(conn)
             print("\nROLLBACK complete.")
         else:
-            if not before["v1_alive"]:
-                sys.exit("ERROR: v1 tables not present — nothing to rename.")
+            # 158c P1-1 fix: assert ALL 3 v1 originals AND all 3 v2 alive before forward cutover.
+            # Forward cutover requires complete v1 set (3 tables to rename) AND complete v2 set
+            # (3 tables to read from after rename). Partial state is unsafe.
+            if len(before["v1_alive"]) != 3:
+                sys.exit(
+                    f"ERROR: forward cutover requires all 3 v1 GEDCOM tables. "
+                    f"Found: {before['v1_alive']}. Expected: gedcom_individuals, gedcom_families, gedcom_change_log."
+                )
+            if len(before["v2_alive"]) != 3:
+                sys.exit(
+                    f"ERROR: forward cutover requires all 3 v2 GEDCOM tables. "
+                    f"Found: {before['v2_alive']}. Expected: gedcom_individuals_v2, gedcom_families_v2, gedcom_change_manifest."
+                )
             if before["renamed_alive"]:
                 sys.exit(f"ERROR: _dropped_*_session158 already exist: {before['renamed_alive']}. Investigate before re-running.")
             cutover_forward(conn)

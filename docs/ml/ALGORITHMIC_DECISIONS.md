@@ -2872,3 +2872,20 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - Post-write invariant assertions: `first_seen_version <= last_seen_version`, expected row-count bands (~64K individuals + ~13K families), Albert Fox returns 2 rich states via the helper (Codex 158 final-pass P2.3).
   - 21,809 NULL-hash legacy rows handled via canonical-hash fallback over thin key fields. Sample before bulk execute (Codex 158 final-pass P2.4).
 - **Affects**: Phases 158b-2 through 158b-9. Closes BACKLOG HISTORICAL-BACKFILL-REDESIGN-001 in 158b. Adds change-history surfacing to person-page UI as a follow-on feature (FUTURE).
+
+### AD-246: Supabase Pooler Session-Mode Workaround (Port 5432) for Multi-Day Transaction-Mode Outage (Session 158c)
+- **Date**: 2026-05-09 | **Session**: 158c (discovery + implementation)
+- **Context**: Supabase pooler transaction-mode (`aws-0-us-west-2.pooler.supabase.com:6543`) has been non-functional throughout Sessions 158 (2026-05-08), 158b (2026-05-09 morning), and 158c (2026-05-09 evening). All three sessions logged 0/3 PASS on the same probe with `OperationalError: SSL connection has been closed unexpectedly`. Root cause unclear (no Supabase status incident posted; user-account level rate limit not triggered). The same outage blocked all DDL phases in 158 and 158b (RENAME, DROP, VACUUM FULL require psycopg2 — REST API can't issue these statements).
+- **Decision**: Connect to the same pooler hostname using **session-mode port 5432** (instead of transaction-mode 6543). PgBouncer session mode holds a dedicated PG connection per client session for the lifetime of the connection — appropriate for our DDL workload (single client, single transaction per script, low concurrency). Verified 5/5 PASS during 158c-0 probe; cold-start latency 25s, warm latency <1s. Cutover scripts updated:
+  - `scripts/session158b_cutover_rename.py`: `POOLER_PORT = 5432`, `connect_timeout=60`
+  - `scripts/session158b_drop_and_vacuum.py`: same; added pre-DROP `pooler_health_probe()` (P1-3)
+- **Alternatives rejected**:
+  - **Direct connection** (`db.<project_ref>.supabase.co:5432`): DNS doesn't resolve from current network (per Lesson 175, this hostname is IPv6-only).
+  - **Supabase Studio web UI**: manually pasting SQL works but breaks reproducibility and audit trail. Last resort only.
+  - **Wait for transaction-mode pooler to recover**: indeterminate timeline; we have a 1.1 GB free-tier deadline of 2026-05-29 (20 days).
+  - **Open Supabase support ticket**: still appropriate (Lesson 184 candidate from 158b), but doesn't unblock 158c.
+- **Operational notes**:
+  - Session-mode connections hold a server-side PG backend for the connection lifetime — caller MUST close connections promptly (already true in our scripts).
+  - Cold-start observed: trial 1 took 25s, trial 2 took 14s, then warm (<1s). `connect_timeout=60` accommodates.
+  - For long-running batch reads (chunked-write backfill), REST API is still preferred over session-mode psycopg2 — REST has built-in retry/timeout semantics tuned for PostgREST. Session-mode is for short DDL-only sessions (RENAME, DROP, VACUUM FULL, view CREATE).
+- **Affects**: Sessions 158c phases 158c-4 (views + RENAME), 158c-6 (DROP + VACUUM), 158c-7 (query timing). Removes the blocking gate from 158b's deferred queue.
