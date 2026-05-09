@@ -345,7 +345,7 @@ python scripts/session158_r2_preflight_snapshot.py --execute
 ```
 
 Targets:
-- `gedcom_individuals` → `gedcom-pre-drop-snapshots/2026-05-DD-session-158/gedcom_individuals.csv.gz`
+- `gedcom_individuals` → `gedcom-pre-drop-snapshots/$(date -u +%Y-%m-%d)-session-158/gedcom_individuals.csv.gz`
 - `gedcom_families` → same prefix
 - `gedcom_change_log` → same prefix
 - `gedcom_versions` → same prefix (small but useful for replay context)
@@ -357,7 +357,7 @@ Verify each upload via head_object + size check. Compute SHA256 of each gz file 
 ```python
 # 156 archive AND 158 fresh snapshot
 for prefix in ['gedcom-version-snapshots/2026-05-08-session-156/v9/',
-               'gedcom-pre-drop-snapshots/2026-05-DD-session-158/']:
+               'gedcom-pre-drop-snapshots/$(date -u +%Y-%m-%d)-session-158/']:
     resp = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
     for obj in resp['Contents']:
         head = s3.head_object(Bucket=bucket, Key=obj['Key'])
@@ -420,16 +420,22 @@ This is non-trivial. Either:
 **Recommended: (a)**. Create the view in migration `scripts/migrations/session158_current_v2_view.sql`:
 
 ```sql
+-- Tiebreaker order matters: when two rows share last_seen_version (e.g., both
+-- last seen at v9), prefer the row with the LATER first_seen_version — i.e.,
+-- the more recently introduced state. payload_hash is a final deterministic
+-- fallback so the view is stable across runs.
 CREATE OR REPLACE VIEW current_gedcom_individuals_v2 AS
 SELECT DISTINCT ON (gedcom_id) *
 FROM gedcom_individuals_v2
-ORDER BY gedcom_id, last_seen_version DESC, payload_hash;
+ORDER BY gedcom_id, last_seen_version DESC, first_seen_version DESC, payload_hash;
 
 CREATE OR REPLACE VIEW current_gedcom_families_v2 AS
 SELECT DISTINCT ON (family_gedcom_id) *
 FROM gedcom_families_v2
-ORDER BY family_gedcom_id, last_seen_version DESC, payload_hash;
+ORDER BY family_gedcom_id, last_seen_version DESC, first_seen_version DESC, payload_hash;
 ```
+
+Sanity check after creating each view: `SELECT COUNT(*) FROM current_gedcom_individuals_v2` should equal `COUNT(DISTINCT gedcom_id) FROM gedcom_individuals_v2`.
 
 Apply via `psycopg2`. Verify row counts: `SELECT COUNT(*) FROM current_gedcom_individuals_v2` should equal distinct gedcom_id count.
 
@@ -505,6 +511,17 @@ If issues surface: rollback (RENAME back) and end session. If clean: proceed to 
 
 If ANY gate failed: do NOT enter Phase 158-6.
 
+### 6.0 — User authorization gate (MANDATORY)
+
+Before any DROP, present the irreversibility decision to the user via `AskUserQuestion`:
+
+> "All 5 pre-DROP gates passed (carry / change-history / backfill / backups / rename+wait). The next step DROPs `_dropped_gedcom_individuals_session158`, `_dropped_gedcom_families_session158`, `_dropped_gedcom_change_log_session158` and runs VACUUM FULL on Supabase. After this point, recovery is via R2 archive (~1h) or local pg_dump (~30min). Options:
+> - PROCEED with DROP + VACUUM FULL now
+> - HOLD — stay in renamed state for a longer wait period (24h+); resume via 158b
+> - ROLLBACK — RENAME back to v1 names; abandon cutover; investigate"
+
+If user picks PROCEED: continue to 6.1. If HOLD: write a continuation note to `docs/feedback/session-158-hold-decision.md` and stop the session at this phase. If ROLLBACK: run `scripts/session158_cutover_rename.py --rollback`, document the decision, end session.
+
 ```sql
 BEGIN;
 DROP TABLE _dropped_gedcom_individuals_session158;
@@ -564,7 +581,7 @@ ls -la ~/Downloads/ | grep -i gedcom
 
 **ASK THE USER** via `AskUserQuestion`: "Confirm GEDCOM file path + sha256 + that no newer file exists in ~/Downloads/. The file from Session 156 is `Fox_Capeluto_Fogel_Waldorf Family Tree.ged` (sha256 f7832541..., 17.08 MB). Has anything newer been downloaded?"
 
-If newer: re-archive to R2 under new prefix `gedcom-source-snapshots/2026-05-DD-session-158/`. If not: re-use 156's archive.
+If newer: re-archive to R2 under new prefix `gedcom-source-snapshots/$(date -u +%Y-%m-%d)-session-158/`. If not: re-use 156's archive.
 
 ### 8.2 — Pre-import baseline
 

@@ -123,3 +123,24 @@
 - Issues found: 0 blocking; 7 minor items reviewed above
 - Auto-fixed: 0 (none needed)
 - Deferred: Step 12 Codex final-pass audit (recommended-not-mandatory; budget headroom reserved for Session 158)
+
+## /session-review pass 2 — extended scope (post-158-prompt drafting)
+
+After commits `57ba1603` (session log added per stop-gate) and `ded637a2` (session 158 prompt drafted at user request), re-ran /session-review covering all 19 commits and especially the new 158 prompt.
+
+### Pass 2 result: PASS with 3 inline safety edits applied to the 158 prompt
+
+Critical re-read of the 158 prompt surfaced 3 high-value safety improvements + 9 lower-priority implementation notes. Applied the 3 inline; captured the 9 in `docs/feedback/session-158-prompt-review.md` for the 158 implementer. Specifically:
+
+1. **EDIT-1**: Phase 158-6 DROP now requires explicit user `AskUserQuestion` authorization (PROCEED / HOLD / ROLLBACK) — preserves an extra reversibility layer beyond the existing wait period.
+2. **EDIT-2**: `current_gedcom_individuals_v2` view tiebreaker order corrected to `last_seen_version DESC, first_seen_version DESC, payload_hash` — ensures deterministic "latest state" selection when two rows share `last_seen_version`.
+3. **EDIT-3**: R2 prefix date placeholder `2026-05-DD` replaced with `$(date -u +%Y-%m-%d)` so the script computes it at run time.
+
+### Pass 2 auto-fix summary
+- Issues found in 158 prompt: 12 (3 high-value, 9 lower-priority)
+- Auto-fixed inline (prompt edits): 3
+- Captured for 158 implementer (review file): 9
+- Auto-fix subagent NOT spawned — small inline edits don't warrant the worktree-isolation overhead
+
+### Final verdict (157b — both passes)
+All 11 user-facing tasks closed cleanly. 158 prompt approved for clean-session execution after the 3 safety edits. Session 157b is done; the rhodesli-157-b harness session can /quit at any point.
