@@ -243,7 +243,12 @@ class TestUnifiedCardsInBrowse:
 
     def test_browse_cards_have_photos_button(self, client):
         """Browse cards include Photos button from identity_card."""
-        response = client.get("/?section=to_review&view=browse")
+        # Disable community scoping (TEST-ISOLATION-156, sibling of test_browse_cards_use_unified_card).
+        with (
+            patch("app.main._get_community_identity_ids", return_value=None),
+            patch("app.main._get_community_photo_ids", return_value=None),
+        ):
+            response = client.get("/?section=to_review&view=browse")
         if response.status_code == 200:
             html = response.text
             if "identity-card" in html:
@@ -251,7 +256,12 @@ class TestUnifiedCardsInBrowse:
 
     def test_browse_cards_have_profile_link(self, client):
         """Browse cards include Profile link from identity_card."""
-        response = client.get("/?section=to_review&view=browse")
+        # Disable community scoping (TEST-ISOLATION-156, sibling of test_browse_cards_use_unified_card).
+        with (
+            patch("app.main._get_community_identity_ids", return_value=None),
+            patch("app.main._get_community_photo_ids", return_value=None),
+        ):
+            response = client.get("/?section=to_review&view=browse")
         if response.status_code == 200:
             html = response.text
             if "identity-card" in html:

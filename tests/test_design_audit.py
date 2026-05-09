@@ -275,8 +275,13 @@ class TestDetachButtonVisibility:
         ))
         # Detach button should be present
         assert "Detach" in html
-        # Should NOT have opacity-0 (hover-only) class when show_detach=True
-        assert "opacity-0" not in html
+        # Actions wrapper should not be hover-only when show_detach=True. The
+        # Session 141 Primary star button has its own opacity-0 hover behavior,
+        # so we cannot assert "opacity-0" globally absent — count instead.
+        assert html.count("opacity-0") <= 1, (
+            "actions wrapper should not be hover-only with show_detach=True; "
+            "expected at most 1 opacity-0 (the Primary star button)"
+        )
 
     def test_detach_button_hover_only_when_not_detachable(self):
         """When show_detach is False, secondary actions are still hover-only."""
