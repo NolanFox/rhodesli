@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.76] — 2026-05-09 (Session 158b: chunked-write historical backfill + cutover scripts; cutover phases deferred to 158c)
+
+PARTIAL session — Phase 158b-2 chunked-write backfill EXECUTE in progress at session close (chunks 1-5 of 10 individuals complete; chunks 6-10 + all families pending). Phases 158b-3 through 158b-9 DEFERRED to Session 158c because pooler psycopg2 access remained unavailable today (3/3 trials FAIL with SSL connection closed unexpectedly). Cutover phases require psycopg2 for DDL — REST API can't execute RENAME/DROP/VACUUM FULL.
+
+### Shipped
+- **Phase 158b-0 carry verification re-passed** (commit `5799700a`): v2 21,998/6,741/9, R2 archive 42 files / 277 MB, Harry Fox v_id=14, Belle Isle INBOX with notes — all unchanged from 158 close.
+- **A.5 Codex 158-final-pass hardening verified**: `INDIVIDUAL_HISTORY_FIELDS` includes all 6 JSONB columns; 25 dual-read tests pass (was 23 + 2 from final-pass).
+- **Phase 158b-0B pooler probe** — diagnostic data: 3/3 trials fail. Same outage as 158, persisting >24h.
+- **Phase 158b-2 chunked-write script** (commit `5799700a`): `scripts/session158b_historical_backfill_chunked.py` — read-aggregate-upsert per version_id chunk. Replaces 158's REST script which OOMed at 951 MB. Per-chunk peak memory ~50 MB. Lesson 183 chunked-write template applied.
+- **Phase 158b-4.1 bulk-loader rewire** (commit `f2a857b8`): 3 locations in `app/relationship_routes.py` now prefer `current_gedcom_individuals_v2` view first, fall back to v1 view, then v1 table. Test coverage updated (4271 pass).
+- **Phase 158b cutover scripts staged** (commit `5799700a`):
+  - `scripts/migrations/session158b_current_v2_views.sql` — DISTINCT ON views
+  - `scripts/session158b_cutover_rename.py` — reversible RENAME with --rollback
+  - `scripts/session158b_drop_and_vacuum.py` — IRREVERSIBLE DROP + VACUUM FULL with size delta report
+  - `scripts/session158b_r2_preflight_snapshot.py` — REST-based v1 snapshot to R2
+- **158c continuation prompt** (commit `7d438807`): `docs/prompts/session-158c-prompt.md`
+
+### Phase 158b-2 backfill timing observed (chunks 1-5)
+| Chunk | Read | Upsert | Total | Notes |
+|---|---|---|---|---|
+| 1 (v1) | 51s | 167s | 220s | NEW=21,174, UPDATE=770 |
+| 2 (v2) | 49s | 189s | 240s | NEW=0, UPDATE=21,944 |
+| 3 (v3) | 62s | **1875s** | 1937s | RemoteProtocolError mid-chunk |
+| 4 (v4) | 121s | 376s | 500s | 3 batch retries |
+| 5 (v5) | 154s | 4230s | 4384s | Many retries — pooler/REST very unstable |
+
+Sanity check passed: 196,645 v1 rows → 43,172 unique payload_hashes (within NOTE-2's 22K-100K STOP gate; expected post-backfill v2 ~43-65K).
+
+### Tests
+- `make test-fast`: 4271 passed (no regression).
+- 25 dual-read tests pass (Codex 158 final-pass +2 new tests).
+
+### Pooler outage extending across sessions
+- Probe 0/3 PASS today (matches 158's experience yesterday)
+- Persistence >24h is concerning — Lesson 184 candidate: open Supabase support ticket; consider direct (non-pooler) connection workaround per Lesson 175.
+
+### Decision: defer cutover phases to 158c
+Backfill EXECUTE continues running in background. Cutover requires psycopg2 (RENAME, DROP, VACUUM FULL) — pooler outage prevents this in 158b. 158c continues from completed-backfill state.
+
+### Next session
+Session 158c: re-probe pooler, verify backfill completion, run 158b-3 → 158b-9. Continuation prompt at `docs/prompts/session-158c-prompt.md`.
+
 ## [v0.99.75] — 2026-05-09 (Session 158: change-history reality check + Codex 157b audit + dual-read hardening; cutover deferred)
 
 PARTIAL session — Phase 158-2 (historical backfill) blocked by Supabase pooler instability today; all downstream cutover phases (158-3 through 158-9) gated on 158-2 → all DEFERRED to Session 158b. The work that did ship is the foundation Phase 158b can build on. 8 commits.
