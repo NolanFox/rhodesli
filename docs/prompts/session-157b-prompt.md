@@ -223,6 +223,38 @@ rm .claude/parallel_session_active
 
 ---
 
+## Track Z-prelude — 157 closeout backfill (~15 min, MANDATORY before Track Z)
+
+Three closeout gaps from Session 157 must be resolved here before 157b's own closeout begins:
+
+### Z-pre.1 — SESSION_HISTORY.md backfill
+`docs/roadmap/SESSION_HISTORY.md` ends at Session 153b. Sessions 154, 155, 156, 157 are all missing. Append entries for at minimum 156 + 157 (157b can leave 154/155 as a separate BACKLOG-tracked drift cleanup if budget is tight). Format follows the existing pattern — one `## Session N: Title (date) — vX.Y.Z` heading per session with bullet summary of what shipped.
+
+If you choose to backfill 154/155 too: read `docs/assessments/session-15{4,5}-assessment.md` and `CHANGELOG.md` for source material. Otherwise log a `SESSION-HISTORY-DRIFT-001` BACKLOG entry capturing the gap.
+
+Commit: `docs(session-157b): SESSION_HISTORY.md backfill for sessions 156+157 (Track Z-pre.1)`.
+
+### Z-pre.2 — Browser verify 6 canonical pages (READ-ONLY)
+Per `.claude/rules/session-defaults.md` step 6, every session must browser-verify these 6 pages on production via claude-in-chrome MCP (READ-ONLY per `.claude/rules/browser-read-only.md`):
+
+1. Landing (`/`)
+2. People grid (`/people` or `/c/<community>/people`)
+3. Person page (any `/person/<id>` — Belle Isle `ef39908e-...` is a good Session 156 verify target since it should now render past the 600s cache TTL)
+4. Compare (`/tools/compare` or `/facecompare`)
+5. Estimate (`/tools/estimate`)
+6. 404 (any garbage URL — confirm it returns the styled 404 page, not a stack trace)
+
+Take screenshots, log results to `docs/feedback/session-157b-browser-verify.md`. If any page errors: STOP, surface to user, decide hot-fix vs BACKLOG.
+
+This was skipped in Session 157 (only `curl -I /` and `curl -I /health` ran). Catching the visual state of all 6 pages on entry to 157b is a fresh sanity check before the riskier dual-read + GEDCOM upload work begins.
+
+### Z-pre.3 — Run `/session-review` skill (for Session 157 retroactively)
+Per session-defaults.md step 9, every session ends with the `/session-review` skill. Session 157 didn't run it. 157b should run it twice: once retroactively for 157 (point it at `docs/assessments/session-157-assessment.md` + the 3 commits `fb4b200f`, `18e4acea`, `e3a91ede`), then again at 157b's own end.
+
+If `/session-review` hits the same usage-limit that killed Track A in 157: document and skip — the assessment file already exists and stop-gate.sh accepts the deferral pattern.
+
+---
+
 ## Track Z — Closeout (~30 min, mandatory 12-step harness)
 
 Per `.claude/rules/session-defaults.md`:

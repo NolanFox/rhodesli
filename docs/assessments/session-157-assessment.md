@@ -80,6 +80,20 @@ Was already gated on user E1 authorization (the new Fox-family GEDCOM upload is 
 
 ---
 
+## Closeout gaps (rolled to 157b Track Z-prelude)
+
+Three of the 12 mandatory session-end steps from `.claude/rules/session-defaults.md` were not completed this session. All three are explicitly carried to 157b:
+
+| Step | Status this session | 157b carry |
+|---|---|---|
+| 3. SESSION_HISTORY.md update | ❌ Not done. Pre-existing harness drift — file ends at Session 153b; 154/155/156 also missing. | Z-pre.1: backfill at minimum 156+157 (154/155 optional, else log SESSION-HISTORY-DRIFT-001). |
+| 6. Browser verify 6 canonical pages | ❌ Only `curl /` and `curl /health` ran (200/200). Did NOT visually verify landing, people grid, person page, compare, estimate, 404. | Z-pre.2: claude-in-chrome MCP verify, screenshot each, log to `docs/feedback/session-157b-browser-verify.md`. |
+| 9. Run `/session-review` skill | ❌ Not run. | Z-pre.3: run twice — retroactively for 157, then at 157b's own end. |
+
+Step 10 (Codex audit) is documented as DEFERRED at `docs/session_context/session-157-codex-audit.md`, which satisfies `stop-gate.sh`. Step 3 was done partially (ROADMAP updated, SESSION_HISTORY not). Steps 1, 2, 4, 5, 7, 8 all completed.
+
+The decision to roll these three to 157b (vs run them inline) was made by the user after honest audit: the truncated session budget is better spent on writing a thorough continuation prompt than on stretching to complete every step here at the cost of a less-prepared 157b.
+
 ## Verification gate
 
 | Gate | How verified | Result |
