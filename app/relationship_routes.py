@@ -350,38 +350,21 @@ def _load_gedcom_individual(gedcom_id: str, include_rich: bool = False) -> dict 
 
     Broad search/list routes should use the thin bulk loader. Exact-link routes
     should fetch one row to avoid reloading the full GEDCOM mirror.
+
+    Session 157b PRD-063 dual-read: prefer gedcom_individuals_v2 over v1.
+    Falls back to v1 (current_gedcom_individuals view, then gedcom_individuals
+    table) when the row isn't yet in v2 or v2 isn't deployed.
     """
     if not gedcom_id:
         return None
 
-    select_fields = _GEDCOM_RICH_FIELDS if include_rich else _GEDCOM_THIN_FIELDS
-
     try:
-        from app.supabase_data import get_supabase_client
+        from app.gedcom_dual_read import get_individual as _dual_get_individual
 
         def _query():
-            sb = get_supabase_client()
-            if not sb:
-                return None
-            try:
-                resp = (
-                    sb.table("current_gedcom_individuals")
-                    .select(select_fields)
-                    .eq("gedcom_id", gedcom_id)
-                    .limit(1)
-                    .execute()
-                )
-            except Exception as exc:
-                msg = str(exc)
-                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                    raise
-                resp = (
-                    sb.table("gedcom_individuals").select(select_fields).eq("gedcom_id", gedcom_id).limit(1).execute()
-                )
-            rows = resp.data if resp and resp.data else []
-            return rows[0] if rows else None
+            return _dual_get_individual(gedcom_id, include_rich=include_rich)
 
-        row = _run_gedcom_query(_query, "GEDCOM individual load")
+        row = _run_gedcom_query(_query, "GEDCOM individual load (dual-read)")
         if row is not None:
             return row
     except Exception as e:
