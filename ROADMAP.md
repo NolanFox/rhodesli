@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.74 · ~4982 tests (4259 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed
+Current: v0.99.75 · ~4982 tests (4259 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -135,6 +135,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 
 ## Planned Sessions
 
+- **Session 158b** — Continuation of 158. Phase 158-2 historical backfill v1 → v2 (Option A) DEFERRED from 158 due to Supabase pooler instability — REST + chunked-write redesign needed. Then proceed through 158-3 (backups), 158-4 (cutover RENAME + view + bulk-loader rewire), 158-5 (wait), 158-6 (DROP v1 + VACUUM FULL), 158-7 (post-cutover query timing + Chrome MCP browser verify), 158-8 (Track E GEDCOM upload UAT via v2-aware importer), 158-9 (final verification). Prompt: `docs/prompts/session-158b-prompt.md`. **First action MUST be**: redesign `scripts/session158_historical_backfill_rest.py` with chunked-write (write each aggregate batch to v2 immediately; never accumulate full dataset in memory).
+
 - **Session 158** — PRD-063 Day 3 (cutover + drop v1 + VACUUM FULL). Cutover reads to v2; DROP v1 GEDCOM tables (snapshots + R2 archive provide rollback path); VACUUM FULL on Supabase; re-query DB size — confirm ≤ 1.1 GB ceiling met (target 600-700 MB). Browser verify all canonical pages + GEDCOM-aware pages. **Gate clear**: 157b Track B4 confidence assessment recommends PROCEED (`docs/feedback/session-157b-day-2-confidence.md`). Plus **Track E (GEDCOM upload UAT)** carried from 157b per user decision (avoid adding ~250 MB to v1 just before DROP).
 
 - **Session 154** — Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s. Prompt: `docs/prompts/session-154-prompt.md`. Context: `docs/session_context/session-154-context.md`. Planned ADs: AD-241 (GEDCOM injection), AD-242 (iterative refinement). Parallel tracks: Gemini prompt fix (main), Harry face-ID + Bessie strengthening (worktree agent), Belle Isle citation + Irving verification (worktree agent).
@@ -144,6 +146,8 @@ All planned sessions through 114 are COMPLETE. See Recently Completed below and 
 All planned sessions through 105b are COMPLETE. See Recently Completed above and [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md) for details. Prompts in `docs/prompts/`.
 
 ## Recently Completed
+
+- [x] 2026-05-09: **v0.99.75 — Session 158**: PARTIAL — change-history reality check + Codex 157b audit + dual-read hardening; cutover DEFERRED. Phases shipped: 158-0 (carry verification), 158-1 (change-history reality check — 96.3% of v1 individuals have a 2-state history; user chose Option A backfill via AskUserQuestion), Codex audit on 157b's 17 commits (0 P0, 2 P1, 3 P2, 2 P3 — first independent audit since 157b's A1.3 only covered 156), dual-read helper P1.1 + P1.2 fixes (ordered v2 reads via `last_seen_version DESC`; narrow exception handling — schema/RLS/server errors no longer silently fall back). New `get_individual_history()` helper + 10 new unit tests (23 total dual-read tests). Phase 158-2 (historical backfill) blocked: psycopg2+pooler died mid-stream (1st), 9/10 chunks succeeded then NULL chunk failed all retries (2nd), version_map query failed (3rd), REST script plateaued at 951 MB and stuck (4th). All downstream cutover phases (158-3 through 158-9 + Track E) gated on 158-2 → DEFERRED to 158b. 4259 app tests pass. 8 commits.
 
 - [x] 2026-05-09: **v0.99.74 — Session 157b**: Tier 1 carry-over + PRD-063 Day 2. Pre-flight budget canary PASSED (Subagent #1 returned 123,791 tokens / 18-min wall-clock — Anthropic budget healthy; Subagent #2 launched in parallel without throttling). Track A (4 items): NOTES-BACKFILL-156 NO-OP confirmed (0 deltas, Lesson 179 fix sufficient); Codex audit of 156 commits (0 P0, 2 P1 non-blocking, 2 P2, 1 P3); CI-COMPARE-FAIL-156 fixed via `monkeypatch.setattr(is_auth_enabled, lambda: False)` (root cause: GitHub secrets enabling auth in CI); TEST-ISOLATION-156 root cause was NOT cache leakage but pre-existing failures hidden by `slow` markers (community helpers fail-close + stale `bg-black/70` assertion); 2 sibling tests fixed post-merge. Track B (PRD-063 Day 2): B1 catch-up backfill NO-OP (0 post-cutover rows); B2 dual-read helper `app/gedcom_dual_read.py` shipped + 13 unit tests + wired into `_load_gedcom_individual`; B3 query timing GREEN (4/4 paths statistical ties on median, v2 wins p95 on 3/4 — single_id -32%, is_current -51%, bulk -5%); B4 confidence assessment recommends PROCEED for 158 cutover. Track E (GEDCOM upload UAT) deferred to 158 per user (avoid adding ~250 MB to v1 right before 158 DROP). Z-pre: retroactive `/session-review` on 157 (`ed1081b2`); SESSION_HISTORY backfill for 154-157b (4 sessions of drift closed); browser verify 6 canonical pages READ-ONLY (all 200, 404 styled). Lesson 182 written (budget canary). 4259 app tests pass. 11 commits.
 

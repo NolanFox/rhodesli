@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.75] — 2026-05-09 (Session 158: change-history reality check + Codex 157b audit + dual-read hardening; cutover deferred)
+
+PARTIAL session — Phase 158-2 (historical backfill) blocked by Supabase pooler instability today; all downstream cutover phases (158-3 through 158-9) gated on 158-2 → all DEFERRED to Session 158b. The work that did ship is the foundation Phase 158b can build on. 8 commits.
+
+### Shipped
+- **Phase 158-0 carry verification** (commit `75dc10e0`): v2 row counts intact (21,998 / 6,741 / 9), v1 still alive (196,645 individuals, 174,647 historical), Harry Fox + Belle Isle unchanged, R2 archive at `gedcom-version-snapshots/2026-05-08-session-156/` verified (42 files, 277 MB, v9 readable).
+- **Phase 158-1 change-history reality check** (commit `35c9dad6`) — answers the user's central question: **96.3% of v1 individuals (21,174 of 21,998) have a 2-state change history**, 95.2% of families likewise. Zero individuals have ≥3 states. Albert Fox deep-dive shows visible columns identical across the 2 states — the change is in JSONB columns. Post-Option-A backfill estimate: ~77K v2 rows (vs v1's 230K). User chose **Option A** (full historical backfill) via AskUserQuestion; chose Codex audit on 157b commits + Chrome MCP for browser verify.
+- **Codex 157b audit** (commit `ddfbdf35`) — first independent audit of 157b's 17 commits (157b's A1.3 only audited Session 156). Codex CLI v0.130 / gpt-5.5 / xhigh. Findings: 0 P0, **2 P1**, 3 P2, 2 P3.
+- **Dual-read helper hardening** (commit `8bdc497a`) — Codex P1.1 + P1.2 fixes shipped BEFORE the historical backfill would have made the helper bug observable:
+  - **P1.1**: v2 reads now `.order(last_seen_version, desc=True).order(first_seen_version, desc=True).order(payload_hash, desc=False)` — guarantees latest state when multiple v2 rows exist per gedcom_id (post-historical-backfill).
+  - **P1.2**: narrow `_is_v2_unavailable()` check — only PGRST205 / "relation X does not exist" falls back to v1; schema drift, RLS errors, bad columns now surface (don't silently serve v1).
+  - **NEW**: `get_individual_history(gedcom_id) -> list[dict]` returns all v2 historical states sorted by `first_seen_version` ASC. Satisfies user's "maintain change over time" requirement once 158b's backfill lands.
+  - 23 dual-read tests pass (was 13, +10 new for ordering, fail-closed, history).
+- **Phase 158-2 WIP scripts** (commit `dd1f7f59`): two backfill variants captured (psycopg2 chunked, REST-based). Both have known issues; 158b will redesign with chunked-write to avoid pooler timeouts and bound memory.
+- **Retroactive /session-review on 157b** (commit `fda505a9`): fresh-context subagent flagged 3 P1 concerns (curl-vs-Chrome-MCP, B2 wiring divergence, change-history punt). Independent corroboration of Codex P1.1 from a higher-abstraction lens.
+
+### Tests
+- `make test-fast`: 4259 passed (no regression). +10 new dual-read tests.
+
+### Pooler instability today (root cause for Phase 158-2 deferral)
+- 1st attempt: psycopg2 server-side cursor mid-stream "server closed the connection unexpectedly" after ~10K rows.
+- 2nd attempt: chunked-by-version with per-chunk fresh connections + 5-retry. 9/10 chunks succeeded; NULL chunk (21,809 legacy rows) failed all retries.
+- 3rd attempt: paginated NULL + 5 retries. Failed even on the `SELECT id, version_number FROM gedcom_versions` query — pooler in degraded state.
+- 4th attempt: REST API. Reads work but loading 196K full-payload rows into memory plateaued at 951 MB; killed after 45min stuck. Needs chunked-write redesign.
+
+### Decision: end session, do NOT proceed to cutover
+Cutover gates exist for a reason. Phase 158-2 must complete before any DROP. Ending honestly with deferred work over fudging gates.
+
+### Next session
+Session 158b: Redesign Phase 158-2 with chunked-write (write each aggregate batch to v2 immediately; never accumulate full dataset in memory). Then proceed through 158-3 to 158-9 + Track E. Continuation prompt at `docs/prompts/session-158b-prompt.md`.
+
 ## [v0.99.74] — 2026-05-09 (Session 157b: Tier 1 carry-over + PRD-063 Day 2)
 
 Continuation of Session 157 — all 6 deferred items shipped under a pre-flight budget canary that confirmed Anthropic's usage limit was healthy. Track E (GEDCOM upload UAT) deferred to 158 per user decision (avoid adding ~250 MB to v1 right before the 158 DROP releases that disk anyway). 11 commits.
