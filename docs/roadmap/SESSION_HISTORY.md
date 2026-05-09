@@ -1474,3 +1474,50 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Shadow eval** ran 12-photo / 24-call with Detroit regression gate (02068 + 01659).
 - **Backfilled** CHANGELOG entries + ROADMAP Recently Completed for Sessions 152, 153, 153b (harness drift closeout). Retroactive assessment for Session 153.
 - Blockers: Gemini-via-Chrome blocked by MCP (3 retries), Codex CLI `--full-auto` hangs on stdin (same as 152), `gemini_api_calls` missing `experiment_id` column.
+
+## Session 154: Gemini Prompt Fix + Harry Repair Unblock + 153 Codex P0s + Supabase Compliance (2026-04-29) — v0.99.70
+- **Pre-session**: repaired 10 stale `test_hooks_clear_gate.py` failures blocking GitHub Actions for 10 days (root cause of CI/Railway email storm).
+- **Track A (Gemini prompt)**: `gemini_api_calls.experiment_id` migration applied via us-west-2 pooler, retry-with-backoff added, **AD-241** (`gedcom_context` injection) + **AD-242** (`candidate_with_prior` iterative refinement) implemented.
+- **Phase A3 Detroit subset rerun** (6 calls, $0.17): Detroit gate FAILED on 02068 (predicts NYC across all 3 variants WITH GEDCOM context; AD-242 sycophancy guard did not fire). Photo 01659 correctly identifies Detroit. Phase A4 correctly skipped.
+- **Track B (Harry repair)**: face-ID typo resolved (`inbox_1fea75ce2caf` + `inbox_e507a54f204a` are the real F+G; the breakthrough doc's `inbox_2bc31a40c34a` doesn't exist). Bessie hypothesis strengthened POSSIBLE-WEAK ~40% → POSSIBLE-GOOD ~55% via kinship-proximity (granddaughter at #11 of 2,020 candidates = top 0.5%).
+- **Track C (citations)**: Belle Isle citation GOOD (LoC LC-DIG-det-4a17798); Irving anchor verification STRONG (min distance 0.0000).
+- **Track E (Supabase prune)** PARTIAL: E0.5 root cause (97.9% of 2.22 GB in `gedcom_*`; 7 of 9 versions failed-and-retained; payload_hash index unused so duplicate rows repeat 7×); E1 prune plan to ~840 MB (gated on user); E3 retention script + admin endpoint + **OD-013**; E4 PRD-063 redesign NOT WRITTEN (subagent hit usage limit). Harry repair NOT executed (3 of 6 gates unmet).
+- 4205 app tests pass. Lessons 173-177.
+
+## Session 155: User-Decisions Audit + Codex CLI Fix + 156 Handoff (2026-05-07) — v0.99.71
+- 5-track session (8-day arc 2026-04-29 → 2026-05-07) surfacing two user decisions, audit-corrected via Claude + Codex independent passes, recovered timed-out work, handed off cleanly to a 3-session implementation arc for PRD-063.
+- **Track 5 BREAKTHROUGH**: Codex CLI `--full-auto` stdin hang DIAGNOSED — working invocation is `codex exec "<prompt>" </dev/null`. First successful Codex CLI run since Session 152. Diagnosis at `docs/feedback/session-155-codex-cli-diagnosis.md`.
+- **Track 4**: 2 user decisions surfaced + audit-corrected with 7 P0/P1 corrections from independent Codex (gpt-5.5/xhigh) + Claude general-purpose subagent passes.
+- **User decisions** (after 8-day pause):
+  - (1) ship option (c) "Belle Isle Conservatory Young Man c.1917-1918" replacement identity for Harry repair WITH provenance note
+  - (2) REJECT band-aid Supabase prune, implement **PRD-063** fully across Sessions 156-158.
+- Tracks 1+2+3 timed out at API stream-idle (~30 min); recoverable artifacts (PRD-063 373-line draft, Track 2 patches script).
+- Bridge gap: Codex CLI v0.125→v0.129, Claude Code 2.1.122→2.1.133, 14-day model-pin freshness gate.
+- Session 156 prompt + context written with concurrent-genealogy-session resilience (R1-R9), GEDCOM upload UAT, location-correctness UAT for Detroit + Asheville Victoria/Victor.
+- Lessons 178 (subagent token-budget hazard for multi-phase tasks).
+
+## Session 156: Harry Fox Repair Shipped + PRD-063 Day 1 (2026-05-08) — v0.99.72
+- **Track A (Harry repair)**: detached `inbox_1fea75ce2caf` + `inbox_e507a54f204a` from Harry Fox (anchors 7→5; v_id 13→14); created `ef39908e-...` "Belle Isle Conservatory Young Man c.1917-1918" (INBOX, 2 anchors, metadata.notes provenance, GEDCOM Harry Isaackovitz `@I132506612777@` linked as candidate confidence=0.3, audit_log written). Pre-snapshot committed; R6 pre-flight verified version_id=13 before mutation.
+- **Notes round-trip fix** (pre-existing bug since Session 105): patched `shadow_write` and `load_from_postgres` to round-trip notes through `metadata.notes`. 4 regression tests. Backfill follow-up logged (NOTES-BACKFILL-156).
+- **Track B (PRD-063 Day 1)**: v2 schema built + initial backfill (parallel worktree subagent). 9 versions archived to R2 (~0.26 GB compressed); reversibility verified on v9. v2 row counts: individuals 21,998 (from 196,645 → 18× smaller), families 6,741 (from 33,324 → 14× smaller), change_manifest 9 (from 1.65M → 1400× smaller). **~98% storage reduction projected** when v1 dropped in Session 158.
+- **Track F (location bugs)**: Detroit fixes manually applied (02068 NYC→Detroit, 01659 generic-US→Detroit) with audit_log; Asheville Victor+Victoria photo already correct. Gemini prompt iteration follow-up (PRD-LOCATION-001).
+- **Track C**: 5 secrets uploaded to GitHub via `gh secret set`.
+- 4246 tests pass under xdist parallel (4 new round-trip tests). Track E (GEDCOM upload UAT) deferred to 157. AD-244 deferred to 157 first commit.
+- Lessons 179 (notes silent drop), 180 (Agent worktree isolation), 181 (GitHub secrets separate from .env). 9 commits.
+
+## Session 157: AD-244 Captured Inline; Tier 1 + Day 2 + Track E DEFERRED to 157b (2026-05-08) — v0.99.73
+- **Truncated session** — both Track A parallel subagents returned `You've hit your limit` within 5-10s with 0-2 tokens consumed each, no commits. Anthropic user-level usage limit throttled both at launch.
+- **Recovered** by writing AD-244 (PRD-063 v2 schema design entry, full lineage with B3/B4/B5 commit hashes pinned) inline on main thread (commit `fb4b200f`).
+- Phase 157-0 carry verification PASS (v2 21,998/6,741/9; Harry 5/v14; Belle Isle INBOX/1 note).
+- **Continuation prompt** at `docs/prompts/session-157b-prompt.md` rolling all deferred work: NOTES-BACKFILL-156, CODEX-AUDIT-156, CI-COMPARE-FAIL-156, TEST-ISOLATION-156, PRD-063 Day 2 (B1+B2+B3+B4), Track E GEDCOM upload UAT.
+- New addition vs 157: pre-flight budget canary — launch ONE subagent first, verify it does real work, only then launch the second.
+- 4246 tests pass (no regression). Lesson 182 candidate (budget canary), formalized in 157b.
+
+## Session 157b: Tier 1 Carry-Over + PRD-063 Day 2 (2026-05-09) — v0.99.74
+- **Pre-flight canary PASSED**: Subagent #1 (notes backfill + Codex audit) returned 123,791 tokens / 18-min wall-clock — Anthropic budget healthy. Subagent #2 launched in parallel.
+- **Retroactive `/session-review` on 157**: documented at `docs/feedback/session-157-retroactive-review.md` (commit `ed1081b2`). Top concerns: Lesson 182 named but not written, SESSION_HISTORY drift (4 sessions), Track E sha256 freshness check needed.
+- **Track A**: NOTES-BACKFILL-156 NO-OP confirmed (0 deltas, Lesson 179 round-trip fix sufficient); Codex audit of 156 commits (0 P0, 2 P1 non-blocking, 2 P2, 1 P3); CI-COMPARE-FAIL-156 fixed via `monkeypatch.setattr(is_auth_enabled, lambda: False)` — root cause was secrets enabling auth in CI; TEST-ISOLATION-156 root cause NOT cache leakage but pre-existing failures hidden by `slow` markers (community helpers fail-close + stale `bg-black/70` assertion); 2 sibling tests in same file needed same patch (post-merge fixup).
+- **Track B (PRD-063 Day 2)**: B1 catch-up backfill NO-OP (0 post-cutover rows); B2 dual-read helper `app/gedcom_dual_read.py` shipped + 13 unit tests + wired into `_load_gedcom_individual`; B3 query timing GREEN (4/4 paths statistical ties on median, v2 wins p95 on 3/4 — single_id -32%, is_current -51%, bulk -5%); B4 confidence assessment recommends PROCEED for 158 cutover.
+- **Track E**: GEDCOM upload UAT deferred to 158 per user decision (avoid adding ~250 MB to v1 right before 158 DROP).
+- 4259 app tests pass (4246 + 13 new dual-read tests). 11 commits.
+- Lesson 182 (budget canary before parallel subagents).
