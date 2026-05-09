@@ -228,7 +228,13 @@ class TestUnifiedCardsInBrowse:
 
     def test_browse_cards_use_unified_card(self, client):
         """Browse mode uses identity_card with DD-005 photo-dominant design."""
-        response = client.get("/?section=to_review&view=browse")
+        # Disable community scoping — without Supabase the helper fail-closes
+        # to set() and filters out all identities (TEST-ISOLATION-156).
+        with (
+            patch("app.main._get_community_identity_ids", return_value=None),
+            patch("app.main._get_community_photo_ids", return_value=None),
+        ):
+            response = client.get("/?section=to_review&view=browse")
         if response.status_code == 200:
             html = response.text
             # Unified card has aspect-square hero

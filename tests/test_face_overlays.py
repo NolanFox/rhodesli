@@ -150,12 +150,21 @@ class TestOverlayTooltips:
         if not photos:
             pytest.skip("No embeddings available for testing")
         photo_id = next(iter(photos.keys()))
-        response = client.get(f"/photo/{photo_id}/partial")
+        # Disable community scoping — without Supabase the helper fail-closes
+        # to set() and filters out the test photo (TEST-ISOLATION-156).
+        with (
+            patch("app.main._get_community_identity_ids", return_value=None),
+            patch("app.main._get_community_photo_ids", return_value=None),
+        ):
+            response = client.get(f"/photo/{photo_id}/partial")
         assert response.status_code == 200
         text = response.text
-        # Confirmed faces have always-visible labels, others have hover tooltips
+        # Confirmed faces have always-visible labels (bg-black/80), others have
+        # hover tooltips (bg-stone-800 + group-hover:opacity-100). The partial
+        # route uses bg-black/80 for CONFIRMED name labels. Updated from the
+        # legacy bg-black/70 (TEST-ISOLATION-156).
         has_hover = "group-hover:opacity-100" in text
-        has_label = "bg-black/70" in text  # Always-visible name label
+        has_label = "bg-black/80" in text or "face-overlay-label" in text
         assert has_hover or has_label, "Overlay should have name display (hover or always-visible)"
         assert "pointer-events-none" in text, "Name display should not intercept clicks"
 
