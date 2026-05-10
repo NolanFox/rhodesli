@@ -9,10 +9,14 @@
 ## Why this session exists
 
 Session 158d landed RENAME successfully but the production app went 502 for
-≥ 10 minutes after `pg_terminate_backend` cascaded into the live worker
+≥ 50+ minutes after `pg_terminate_backend` cascaded into the live worker
 connection pool. Per the prompt's hard 5xx rule, 158d rolled back. DB state
-is clean (verified) but the app may still be recovering from the cascade
-when 158e begins.
+is clean (verified) but **the production app did NOT self-heal** by 158d
+session close — Railway dashboard showed the 158c deploy as ACTIVE/successful
+yet `/health` continued returning 502 with `x-railway-fallback: true`.
+Two subsequent automatic redeploys (cutover RENAME commit `b2a5583e` and
+closeout commit `b15ae233`) BOTH failed network healthchecks. The Railway
+"Online" badge in the UI reflects deploy build state, NOT edge reachability.
 
 Lesson 185 (NEW): `pg_terminate_backend` on a hot pool crashes the app. Cutover
 must NOT terminate connections while the production app is hot. Either redeploy
@@ -30,18 +34,74 @@ git pull origin main
 date -u
 ```
 
-## FIRST ACTION — Verify production has recovered
+## FIRST ACTION — RECOVER PRODUCTION (do NOT trust the Railway "ACTIVE" badge)
+
+The 158d session ended with the app in a degraded state: Railway shows 158c
+deploy as "ACTIVE" but `/health` returns 502. The Railway dashboard's "Online"
+badge means the deploy artifact succeeded; it does NOT mean the public URL
+serves traffic. Trust ONLY the HTTP probe.
+
+### 1A. Probe — does the live URL actually work?
 
 ```bash
-curl -s -o /dev/null -w "code=%{http_code} time=%{time_total}\n" \
+curl -s -o /dev/null --max-time 25 -w "code=%{http_code} time=%{time_total}\n" \
     https://rhodesli.nolanandrewfox.com/health
 ```
 
-If `code != 200`:
-1. Check Railway dashboard. If a deploy is in progress, wait.
-2. If no deploy and app is in crash loop, restart via Railway dashboard.
-3. Do NOT proceed with cutover until /health returns 200 and you have
-   confirmed via 3 sequential 200 responses over 1 minute.
+If `code == 200`: skip to 1D.
+If `code != 200` OR response shows `x-railway-fallback: true`: continue to 1B.
+
+### 1B. Force a clean container restart via Railway dashboard
+
+Manual user action required (the Railway CLI token is expired per 158d):
+1. Open Railway dashboard → rhodesli project → rhodesli service
+2. Click the most recent ACTIVE deploy (likely the 158c docs commit)
+3. Use "Redeploy" to force a fresh container, OR
+4. Stop the service, wait 30s, Start the service
+
+### 1C. Wait for healthy edge response
+
+```bash
+# Poll every 15s until HTTP 200 (max 5 min)
+for i in $(seq 1 20); do
+    code=$(curl -s -o /dev/null --max-time 25 -w "%{http_code}" \
+        https://rhodesli.nolanandrewfox.com/health)
+    echo "$(date -u +%H:%M:%S) attempt=$i code=$code"
+    [ "$code" = "200" ] && break
+    sleep 15
+done
+```
+
+If still 502 after 5 minutes: STOP. Escalate to user — do not attempt cutover.
+
+### 1D. Verify a FRESH deploy from `main` can build and run
+
+This is critical. The 158d closeout deploy FAILED healthchecks. Before any
+cutover work, confirm a fresh container can start cleanly:
+
+```bash
+git commit --allow-empty -m "chore(session-158e): trigger fresh deploy verify"
+git push origin main
+```
+
+Then watch Railway dashboard for the new deploy to either:
+- **Succeed** (Deployment successful) → proceed
+- **Fail healthchecks** → STOP. The app has a startup issue independent of
+  cutover. Diagnose via Railway logs (`railway logs --service rhodesli`)
+  before attempting any further DB work.
+
+Verify post-deploy:
+```bash
+curl -s --max-time 25 https://rhodesli.nolanandrewfox.com/health  # must return 200
+# Confirm 3 sequential 200s over 1 minute
+for i in 1 2 3; do
+    curl -s -o /dev/null --max-time 20 -w "%{http_code}\n" \
+        https://rhodesli.nolanandrewfox.com/health
+    sleep 20
+done
+```
+
+All 3 must be 200. If any 502/error: STOP, escalate.
 
 ## Phase 158e-0 — Verify DB state
 
@@ -86,36 +146,69 @@ Document zombie count BEFORE any action.
 
 ## Phase 158e-2 — Choose path (USER GATE)
 
+**Recommended: MAINTENANCE WINDOW.** Session 158d's experience showed that
+fresh deploys can fail healthchecks while the underlying connection pool is
+disturbed, AND that the FRESH-DEPLOY path doesn't reliably shed zombies
+when there's any contention. A maintenance window gives a clean slate.
+
 Use `AskUserQuestion`:
 
 > "Cutover retry needs to clear zombie backends without crashing the production
 > app. Two paths:
-> A) MAINTENANCE WINDOW: Stop Railway service ~2 min, terminate zombies + RENAME,
->    restart Railway service. ~5 min downtime.
-> B) FRESH-DEPLOY APPROACH: Trigger Railway redeploy (pushes a no-op commit),
->    wait for fresh workers, terminate zombies, then RENAME. App stays available
->    but a small window of disruption is possible.
+> A) MAINTENANCE WINDOW (Recommended): Stop Railway service ~2 min, terminate
+>    zombies + RENAME, restart Railway service. ~5 min downtime, but proven
+>    safe because no live workers can hold zombie aliases.
+> B) FRESH-DEPLOY APPROACH: Push empty commit to trigger Railway redeploy,
+>    wait for fresh workers, terminate zombies, then RENAME. App stays
+>    available but Session 158d showed fresh deploys can also fail when pool
+>    is disturbed — higher risk of cascading 502.
 > Options: MAINTENANCE / FRESH-DEPLOY / HOLD."
 
 ## Phase 158e-3 — Execute chosen path
 
-### If MAINTENANCE:
+### If MAINTENANCE (recommended):
 
-1. User stops Railway service (manually via dashboard, or `railway down`)
-2. Confirm /health returns connection refused / 503
-3. Run zombie cleanup (Session 158d code in `docs/feedback/session-158d-cutover-rename.md`)
-4. Run `python scripts/session158b_cutover_rename.py --execute` (max 3 retries
-   on lock_timeout — if zombies are clear, RENAME should land in <1s)
-5. User restarts Railway service
-6. Verify /health = 200 over 1 minute
+1. **User action**: Stop the rhodesli Railway service (Railway dashboard →
+   rhodesli service → Settings → "Stop service" or scale to 0 replicas).
+   Wait until `/health` returns connection-refused / no response.
+2. **Verify production is offline**: `curl --max-time 10 https://rhodesli.nolanandrewfox.com/health`
+   should fail to connect or return Railway's "service unavailable" page
+   (NOT `x-railway-fallback`). If it still serves traffic from the old
+   container, wait longer.
+3. **Pooler health**: 3 sequential `SELECT 1` connections via session-mode
+   port 5432 (use the pooler probe pattern from
+   `docs/feedback/session-158d-cutover-rename.md`). Must be 3/3 PASS.
+4. **Re-scan zombies**: production is offline now, any zombies in
+   `pg_stat_activity` are pure stragglers. Document count.
+5. **Terminate zombies** with the filter pattern from 158d:
+   ```python
+   query = """
+       SELECT pid FROM pg_stat_activity
+       WHERE datname = 'postgres'
+         AND state = 'idle in transaction'
+         AND state_change < NOW() - INTERVAL '1 hour'
+         AND (query LIKE '%gedcom_individuals%' OR query LIKE '%backfill_gedcom%')
+   """
+   # for each pid: SELECT pg_terminate_backend(pid)
+   ```
+6. **Run RENAME**: `PYTHONPATH=. python scripts/session158b_cutover_rename.py --execute`
+   With zombies clear AND production offline, this should land in < 1s.
+7. **User action**: Restart the rhodesli Railway service.
+8. **Verify health**: 3 sequential 200s over 1 minute. If any 5xx:
+   ROLLBACK via `--rollback`, escalate to user.
+9. **Total downtime budget**: target ≤ 8 minutes from stop to verified-200.
 
-### If FRESH-DEPLOY:
+### If FRESH-DEPLOY (higher risk per Session 158d learnings):
 
-1. `git commit --allow-empty -m "chore: trigger redeploy for 158e cutover" && git push`
-2. Wait for Railway deploy completion (poll /health for 200 with new release)
-3. Run zombie cleanup (their references should now be gone from the new pool)
-4. Run RENAME with retries
-5. Verify /health stays 200 throughout
+1. `git commit --allow-empty -m "chore: trigger fresh deploy for 158e cutover" && git push`
+2. Wait for Railway deploy completion AND verify /health = 200 over 1 min.
+   If the deploy fails healthchecks (as 158d's deploys did), STOP and switch
+   to MAINTENANCE.
+3. After fresh workers are confirmed healthy, run zombie cleanup carefully:
+   filter MUST exclude any session created after the fresh-deploy timestamp.
+4. Run RENAME with retries (max 3 on lock_timeout).
+5. Verify /health stays 200 throughout — poll every 15s during RENAME.
+6. If app goes 502 at any point: ROLLBACK immediately.
 
 ## Phase 158e-4 — Wait period (5 min, monitor /health)
 
@@ -159,8 +252,17 @@ BACKLOG, SESSION_HISTORY (entries for 158d and 158e), git push.
 - Patches in main: cutover_rename SET LOCAL lock/statement_timeout, drop_and_vacuum
   SET LOCAL + re-raise on VACUUM error, apply_v2_views commit-after-sanity
 - 16 zombies from 158b were terminated in 158d at 02:23Z; if production has
-  redeployed since then, the new worker pool should be clean
-- Production app may need manual restart if it didn't self-heal post-rollback
+  redeployed AND been verified-healthy since then, the new worker pool should
+  be clean. If NOT verified, assume zombies may still exist (158d ended with
+  production 502 — never confirmed clean).
+- **Production app at 158d session close**: 502 with `x-railway-fallback: true`
+  for ≥ 50+ minutes. Railway dashboard showed 158c deploy as "ACTIVE" but edge
+  could not reach upstream. Two automatic redeploys (cutover RENAME commit and
+  closeout commit) BOTH failed network healthchecks. **Manual Railway service
+  restart is the most likely required first step in 158e.**
+- Pooler at 158d session close: HEALTHY (3/3 PASS, latency 642ms-16s).
+  Supabase side is stable; the issue is entirely Railway/app-side container
+  startup.
 
 ## Lesson 185 (NEW from 158d)
 
