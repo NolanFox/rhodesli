@@ -31,24 +31,31 @@ git status --short
 date -u                                   # confirm date for deadline math
 ```
 
-## FIRST ACTION — Apply the cutover_rename.py patch
+## FIRST ACTION — Apply the cutover_rename.py patch (Codex 158c P1 + lock fix)
 
-The exact patch needed (Edit tool — both `cutover_forward` and `cutover_rollback` need the same `SET lock_timeout`/`SET statement_timeout` treatment):
+**Codex 158c audit** found 2 things to fix in 158d FIRST ACTION (`docs/session_context/session-158c-codex-audit.md`):
+1. The lock_timeout/statement_timeout fix should use `SET LOCAL` *inside* BEGIN, not session-level `SET` before BEGIN. Cleaner for connection pooling, auto-reverts on COMMIT/ROLLBACK.
+2. `scripts/session158c_apply_v2_views.py` has a P1: `conn.commit()` runs BEFORE the sanity checks. If a check fails, replaced views are already committed. Move commit AFTER sanity checks (or rollback on failure).
+3. Pre-existing P2 in `session158b_drop_and_vacuum.py::vacuum_full`: per-table errors swallowed silently. Re-raise on first failure OR exit non-zero if any timing has status ERROR.
+
+The exact patch needed (Edit tool — both `cutover_forward` and `cutover_rollback` need the same SET LOCAL treatment):
 
 ```python
 # In scripts/session158b_cutover_rename.py, replace cutover_forward() body:
 def cutover_forward(conn) -> None:
     cur = conn.cursor()
-    # 158d: production app holds AccessShareLock on gedcom_individuals via TTL
-    # cache refresh queries (every ~120s). Default statement_timeout (2min) was
-    # too tight for RENAME's required AccessExclusiveLock to acquire (158c
-    # observed timeout). Two-step fix:
+    # 158d (Codex 158c P1 form): production app holds AccessShareLock on
+    # gedcom_individuals via TTL cache refresh queries (every ~120s). Default
+    # statement_timeout (2min) was too tight for RENAME's required
+    # AccessExclusiveLock to acquire (158c observed timeout). Two-step fix:
     #   1. lock_timeout=30s — fail FAST if lock is held; retry the script.
     #   2. statement_timeout=0 — once we have the lock, RENAME is metadata-only
     #      and instantaneous; allow unlimited time inside the transaction.
-    cur.execute("SET lock_timeout = '30s'")
-    cur.execute("SET statement_timeout = '0'")
+    # SET LOCAL scopes the override to this transaction only (auto-revert on
+    # COMMIT/ROLLBACK — cleaner for connection pooling).
     cur.execute("BEGIN")
+    cur.execute("SET LOCAL lock_timeout = '30s'")
+    cur.execute("SET LOCAL statement_timeout = '0'")
     cur.execute("DROP VIEW IF EXISTS current_gedcom_individuals")
     for src, dst in RENAME_PAIRS:
         cur.execute(f"ALTER TABLE {src} RENAME TO {dst}")
@@ -56,11 +63,13 @@ def cutover_forward(conn) -> None:
     cur.close()
 ```
 
-Same `SET lock_timeout` + `SET statement_timeout` should be added to `cutover_rollback`.
+Same `SET LOCAL` block (after BEGIN) needed in `cutover_rollback`.
 
-Same treatment is also needed in `scripts/session158b_drop_and_vacuum.py::drop_renamed_tables()` BEFORE the BEGIN.
+Same treatment also needed in `scripts/session158b_drop_and_vacuum.py::drop_renamed_tables()` AFTER BEGIN.
 
-Commit: `fix(session-158d): cutover RENAME lock_timeout/statement_timeout handling`
+`scripts/session158c_apply_v2_views.py` P1 fix: restructure to commit AFTER sanity checks pass (or use `conn.autocommit = True` AFTER the migration block).
+
+Commit: `fix(session-158d): cutover lock_timeout + Codex 158c P1/P2 fixes`
 
 ## Phase 158d-2 — RENAME retry
 
