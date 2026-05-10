@@ -41,6 +41,65 @@ deploy as "ACTIVE" but `/health` returns 502. The Railway dashboard's "Online"
 badge means the deploy artifact succeeded; it does NOT mean the public URL
 serves traffic. Trust ONLY the HTTP probe.
 
+### ROOT CAUSE (diagnosed via `railway logs` at 03:39Z, post-158d):
+
+```
+WARNING:core.registry:IdentityRegistry.load_from_postgres failed:
+{'message': 'Could not query the database for the schema cache. Retrying.',
+ 'code': 'PGRST002', 'hint': None, 'details': None}
+[data] Registry load failed (attempt 1/3): Supabase identity load unavailable
+[data] Retrying in 10s...  (then 20s)  ... RuntimeError: app crashes
+```
+
+Direct REST API probe (Supabase service-role) returned PGRST002 on 3/3 trials
+across `identities`, `date_labels` tables. PostgREST's schema cache is stuck
+in a broken state after 158d's RENAME + ROLLBACK churn.
+
+`NOTIFY pgrst, 'reload schema'` from psycopg2 was issued at 03:39Z and did NOT
+recover the cache. **The Supabase PostgREST service likely needs a manual
+restart from the Supabase dashboard.** Path: Supabase Project → Settings →
+API → "Restart project" (or Database → Replication → Reload schema cache).
+
+### 1A-PRE. Fix PostgREST schema cache (REQUIRED first)
+
+```bash
+# Probe REST API directly — must return 200 / count for `identities`:
+source venv/bin/activate && PYTHONPATH=. python -c "
+import os, sys, time
+sys.path.insert(0, '.')
+from dotenv import load_dotenv
+load_dotenv('.env')
+from supabase import create_client
+sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY'])
+for trial in range(3):
+    t0 = time.time()
+    try:
+        r = sb.table('identities').select('identity_id', count='exact').limit(1).execute()
+        ms = (time.time()-t0)*1000
+        print(f'  Trial {trial+1}: PASS in {ms:.0f}ms (count={r.count})')
+    except Exception as e:
+        ms = (time.time()-t0)*1000
+        print(f'  Trial {trial+1}: FAIL in {ms:.0f}ms: {str(e)[:120]}')
+    time.sleep(2)
+"
+```
+
+If 3/3 PASS → schema cache OK, proceed to 1A.
+If any FAIL with `PGRST002` → user must restart Supabase PostgREST:
+1. **User action** (Supabase dashboard): Project → Settings → API → "Restart"
+   OR Database → Extensions → toggle `pg_cron` off+on (forces config reload).
+   Easiest: Settings → "Pause" then "Resume" the project.
+2. After Supabase restart, re-run the REST probe. Must be 3/3 PASS before
+   proceeding.
+3. If `NOTIFY pgrst, 'reload schema'` is preferred, run from psycopg2:
+   ```python
+   conn.autocommit = True
+   cur.execute("NOTIFY pgrst, 'reload schema'")
+   cur.execute("NOTIFY pgrst, 'reload config'")
+   ```
+   Note: Session 158d tried this and it did NOT recover. Dashboard restart
+   is more reliable.
+
 ### 1A. Probe — does the live URL actually work?
 
 ```bash
