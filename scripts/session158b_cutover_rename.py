@@ -77,7 +77,14 @@ def cutover_forward(conn) -> None:
     cur.execute("BEGIN")
     cur.execute("SET LOCAL lock_timeout = '30s'")
     cur.execute("SET LOCAL statement_timeout = '0'")
+    # 158e: PostgreSQL views auto-follow base-table renames (oid-tracked, not
+    # text-tracked). After RENAME, the view points at the renamed table and
+    # blocks DROP TABLE later. Drop both legacy v1 views in the cutover BEGIN.
+    # Original 158d only dropped current_gedcom_individuals; current_gedcom_families
+    # was missed and blocked Phase 158e-5 DROP. Keep the IF EXISTS guard so this
+    # works idempotently for any v1 view we missed in earlier sessions.
     cur.execute("DROP VIEW IF EXISTS current_gedcom_individuals")
+    cur.execute("DROP VIEW IF EXISTS current_gedcom_families")
     for src, dst in RENAME_PAIRS:
         cur.execute(f"ALTER TABLE {src} RENAME TO {dst}")
     cur.execute("COMMIT")
@@ -101,6 +108,12 @@ def cutover_rollback(conn) -> None:
         SELECT * FROM gedcom_individuals WHERE is_current = TRUE
         """
     )
+    # NOTE (158e): cutover_forward now also drops current_gedcom_families,
+    # but we deliberately do NOT recreate it here — the original v1 families
+    # view's WHERE clause is unverified after the v1 schema was retired.
+    # If a rollback is ever needed AND a caller depends on current_gedcom_families,
+    # recreate it manually with the appropriate WHERE clause for the live
+    # gedcom_families schema at that time.
     cur.execute("COMMIT")
     cur.close()
 
