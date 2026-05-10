@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.78] — 2026-05-10 (Session 158d: cutover RENAME landed once + ROLLBACK + Lesson 185)
+
+PARTIAL session — RENAME landed at 02:23Z (after 4 lock_timeout failures and `pg_terminate_backend` of 16 zombie idle-in-transaction backends from 158b's failed cursor backfill). Production smoke test returned 502 across all 11 routes with `x-railway-fallback: true` — per the prompt's hard 5xx rule, executed `--rollback`. DB restored cleanly (verified at 02:37Z). DROP+VACUUM NOT executed. Continuation prompt: `docs/prompts/session-158e-prompt.md`. Lesson 185 NEW: `pg_terminate_backend` on a hot production pool cascades into worker crashes — never terminate connections aliased by a live app.
+
+### Shipped
+- **Phase 158d-1 patches** (`1cabf2d5`):
+  - `cutover_forward` + `cutover_rollback` (Codex 158c P1 form): `SET LOCAL lock_timeout='30s'` + `statement_timeout='0'` inside `BEGIN` (auto-revert on COMMIT/ROLLBACK)
+  - `drop_renamed_tables`: same SET LOCAL treatment
+  - `vacuum_full`: re-raise on first failure (Codex 158c P2). Caller writes `PARTIAL FAILURE` banner to forensic report and exits non-zero.
+  - `apply_v2_views.py`: commit AFTER sanity checks pass (Codex 158c P1)
+- **Phase 158d-2 RENAME** (`b2a5583e`, `docs/feedback/session-158d-cutover-rename.md`):
+  - Path to success: 16 zombie `idle in transaction` Supavisor backends discovered via `pg_stat_activity` (idle 17–22h, all from 158b's cursor backfill). `pg_terminate_backend` cleared all 16 → next RENAME succeeded instantly.
+  - State: v1 alive 0/3 → `_dropped_*_session158` 3/3 → v2 unchanged 3/3.
+
+### Rolled back
+- **Phase 158d-3 ROLLBACK** (`docs/feedback/session-158d-rollback.md`):
+  - Production smoke test 11/11 routes 502 with `x-railway-fallback: true` — Railway edge can't reach upstream container.
+  - Hypothesis: `pg_terminate_backend` cascaded into the production app's connection pool (workers held dead aliases → query failures → worker crashes → Railway restart loop).
+  - `--rollback` succeeded on 3rd attempt (first two hit pooler `ECHECKOUTTIMEOUT` from pool thrashing).
+  - DB state verified at 02:37Z: v1 alive 3/3, no `_dropped_*_session158`, v2 alive 3/3.
+  - DROP+VACUUM correctly NOT executed.
+
+### Deferred to 158e
+- Phase 158d-3 smoke + browser verify (post-cutover, retry)
+- Phase 158d-4 wait period
+- Phase 158d-5 DROP + VACUUM FULL (IRREVERSIBLE)
+- Phase 158d-6 post-cutover verification
+
+### Lessons
+- **Lesson 184 candidate** (carried from 158d cutover doc): chunked-cursor scripts that die mid-stream leave zombie `idle in transaction` Supavisor backends that survive client disconnects indefinitely. Pre-DDL gate must scan `pg_stat_activity` for sessions older than 1h.
+- **Lesson 185 NEW**: `pg_terminate_backend` on a connection-pool aliased by a hot production app cascades into worker crashes. Mitigation: redeploy the app first to shed worker generations, OR take a maintenance window. Never terminate connections during live traffic.
+
+### Production state at session end
+Railway returning 502 with `x-railway-fallback: true` since ~02:30Z; both 158d commits pushed at 02:32Z should have triggered a Railway redeploy. As of 02:43Z (13 min after rollback) the app had not recovered. **DB is safe.** If Railway redeploy completes successfully, app should self-heal; if not, manual restart required.
+
+### Tests
+- `make test-fast`: 4269/4269 pass (one transient REST-timeout test passed on retry, same flake pattern from 158c)
+
 ## [v0.99.77] — 2026-05-10 (Session 158c: AD-246 pooler workaround, Codex P0/P1 fixes, families backfill, v2 views; RENAME deferred to 158d)
 
 PARTIAL session — Phases 158c-0 through 158c-4.1 SHIPPED. Phase 158c-4.2 RENAME blocked at the cutover step on `psycopg2.errors.QueryCanceled` (statement_timeout=2min vs production app cache lock contention). Transaction rolled back cleanly — all v1 tables intact. 1-line fix (`SET lock_timeout = '30s'; SET statement_timeout = '0';`) ready to apply in 158d. Continuation prompt: `docs/prompts/session-158d-prompt.md`. Session ended at 709-line transcript clear gate after 3 hours.

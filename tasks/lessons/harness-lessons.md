@@ -146,3 +146,23 @@
   4. If the user-level usage limit is the constraint: schedule heavy parallel sessions ≥4 hours apart (Anthropic resets daily but tight back-to-back sessions can drain it).
   5. Document the failure pattern in the assessment so future sessions calibrate. Session 157b confirmed the canary pattern works: Subagent #1 returned 123,791 tokens / 18-min wall-clock — clear PASS — and Subagent #2 launched without issue.
 - **See also:** Lesson 178 (subagent token-budget hazard for multi-phase tasks).
+
+## Lesson 184: Zombie idle-in-transaction backends survive client disconnects
+- **Mistake (Session 158d):** A chunked-cursor backfill in Session 158b died mid-stream when the pooler dropped the client connection. The PostgreSQL backends remained `idle in transaction` for 22 hours, holding `AccessShareLock` on `gedcom_individuals`. Session 158c's RENAME hit `statement_timeout=2min` because the locks were stable holders (each held continuously, never releasing). Session 158d's `lock_timeout=30s` patch was NOT sufficient — 4 EXECUTE attempts all timed out before discovery via `pg_stat_activity`.
+- **Rule:** Any DDL that needs `AccessExclusiveLock` (RENAME, DROP, VACUUM FULL, ALTER TABLE) MUST run a pre-flight scan of `pg_stat_activity` for sessions with `state = 'idle in transaction' AND state_change < NOW() - INTERVAL '1 hour'` AND queries touching the target table or related cursor names. If found, document and address them BEFORE attempting the DDL. Termination has its own hazards — see Lesson 185.
+- **Prevention:**
+  1. Long-running scripts with cursor patterns MUST set `SET idle_in_transaction_session_timeout = '5min'` at session start so server-side cleanup happens automatically when the client dies.
+  2. Pre-DDL checklist: query `pg_stat_activity` for old idle-in-transaction sessions; if non-zero, escalate (don't auto-terminate on hot pool — Lesson 185).
+  3. Cutover scripts should fail FAST with an actionable error message if zombie backends are detected ("zombies found, see Lesson 184/185 before proceeding").
+  4. Assume any cursor-based migration WILL leave zombies somewhere along its execution path — design for cleanup, not for never-failing.
+- **See also:** Lesson 183 (chunked-write avoids cursor patterns), Lesson 185 (terminate cascade).
+
+## Lesson 185: pg_terminate_backend on a hot production pool cascades into worker crashes
+- **Mistake (Session 158d):** After discovering 16 zombie backends (Lesson 184), the orchestrator ran `pg_terminate_backend(pid)` on all 16. The next RENAME succeeded immediately, BUT production went 502 across all 11 routes within minutes with `x-railway-fallback: true`. Hypothesis: the production app's connection pool held aliases to those terminated backends. Workers tried to use stale pool entries, got `connection has been terminated` errors, crashed, were restarted by Railway, and re-failed the same way until Railway gave up and showed `x-railway-fallback`. Per the prompt's hard 5xx rule, the cutover was rolled back. DB returned to pre-cutover state cleanly, but production stayed 502 for ≥ 13 minutes (Railway redeploy in flight).
+- **Rule:** NEVER `pg_terminate_backend` connections that a hot production app's pool may hold aliases to. The terminated backend's pool slot in the app becomes invalid; the next request that draws that slot fails; the worker crashes; Railway restarts; loop. On a public-facing app this means complete outage within 1-2 minutes.
+- **Prevention:**
+  1. **Redeploy first**: trigger a Railway redeploy (push a commit, even an empty one) BEFORE terminating zombies. Once new workers are healthy, the old worker generations holding zombie aliases are gone, and `pg_terminate_backend` becomes safe.
+  2. **Or maintenance window**: take the Railway service offline (~2 min), terminate zombies + run DDL, restart service. ~5 min total downtime is much shorter than the 502 cascade window.
+  3. **Or feature-flag**: add a temporary route disable / cache TTL bypass so the live app stops querying the locked tables during cutover.
+  4. NEVER call `pg_terminate_backend` on connections from `usename = 'postgres'` while a production app is actively reading. The app's own healthy connections look identical to zombies in `pg_stat_activity` — make sure your filter is tight (`state_change < NOW() - INTERVAL '1 hour'` AND specific known-zombie query patterns).
+- **See also:** Lesson 184 (the source of the zombies in the first place).

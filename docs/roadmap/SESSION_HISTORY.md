@@ -1521,3 +1521,33 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Track E**: GEDCOM upload UAT deferred to 158 per user decision (avoid adding ~250 MB to v1 right before 158 DROP).
 - 4259 app tests pass (4246 + 13 new dual-read tests). 11 commits.
 - Lesson 182 (budget canary before parallel subagents).
+
+## Session 158: PRD-063 Day 3 cutover DEFERRED (2026-05-09) — v0.99.75
+- **Phases shipped**: 158-0 (carry verification), 158-1 (change-history reality check — 96.3% of v1 individuals have a 2-state history; user chose Option A backfill via AskUserQuestion).
+- **Codex audit on 157b's 17 commits**: 0 P0, 2 P1, 3 P2, 2 P3 — first independent audit since 157b's A1.3 only covered 156. Dual-read helper P1.1 + P1.2 fixes (ordered v2 reads via `last_seen_version DESC`; narrow exception handling — schema/RLS/server errors no longer silently fall back). New `get_individual_history()` helper + 10 new unit tests (23 total dual-read tests).
+- **Phase 158-2 BLOCKED**: psycopg2+pooler died mid-stream (1st), 9/10 chunks succeeded then NULL chunk failed all retries (2nd), version_map query failed (3rd), REST script plateaued at 951 MB and stuck (4th). All downstream cutover phases (158-3 through 158-9 + Track E) DEFERRED to 158b.
+- 4259 app tests pass. 8 commits.
+
+## Session 158b: Chunked-write historical backfill EXECUTE in progress + cutover scripts staged (2026-05-09) — v0.99.76
+- **Phases shipped**: 158b-0 (carry re-verify + A.5 hardening verify — `INDIVIDUAL_HISTORY_FIELDS` + 25 dual-read tests), 158b-0B (pooler probe FAIL 0/3 — outage extends from 158), 158b-2 chunked-write script (`scripts/session158b_historical_backfill_chunked.py` per Lesson 183 template), 158b-4.1 code-only bulk-loader rewire (3 locations in `app/relationship_routes.py` prefer `current_gedcom_individuals_v2` view).
+- **Cutover scripts staged**: `session158b_cutover_rename.py` (RENAME + --rollback), `session158b_drop_and_vacuum.py` (irreversible DROP + VACUUM FULL + size delta), `session158b_r2_preflight_snapshot.py` (REST-based v1 snapshot to R2), `migrations/session158b_current_v2_views.sql`.
+- **Phase 158b-2 EXECUTE state at close**: chunks 1-5/10 individuals upserted (~110K rows; v2 individuals growing 21,998 → ~43,172). Per-chunk wall-clock varied wildly (220s-4230s).
+- **Phases 158b-3 through 158b-9 deferred**: pooler outage blocks psycopg2 DDL.
+- 4271 app tests pass. 4 commits. Lesson 184 candidate (pooler outage >24h escalation).
+
+## Session 158c: AD-246 pooler workaround + Codex P0/P1 fixes + families backfill + v2 views (2026-05-10) — v0.99.77
+- **AD-246 — Pooler session-mode workaround**: Discovered transaction-mode (port 6543) is dead from 158 through 158c (3 sessions, 0/3 PASS each); session-mode (port 5432) works (5/5 PASS). Cutover scripts updated to port 5432 + connect_timeout 60s.
+- **Codex 158b P0/P1 audit fixes** all committed (`8a1db1f8`): P0-1 deterministic ORDER BY via `order_by` parameter (gedcom_id|family_gedcom_id, 105ms direct vs 1.5s + REST timeout for `id`); P0-2 NULL payload_hash refusal; P0-3 DROP all-or-nothing gate; P1-1 cutover_forward requires all-3 v1 + all-3 v2; P1-2 cutover_rollback requires all-3 renamed; P1-3 pooler health probe before DROP.
+- **Phase 158c-2 families backfill** (`304c0964`): 6,741 → 13,158 rows (+6,417 historical states). 33,322 v1 rows scanned in 3.2 min. Albert Fox 2-state acceptance check PASSED (`@I132123840707@` v9-v9 hash 1d77bf67 + v1-v6 hash fd1f05bd).
+- **Phase 158c-4.1 v2 views applied**: `current_gedcom_individuals_v2` (21,998 rows) + `current_gedcom_families_v2` (6,741 rows). Both pass 1:1 distinct sanity check.
+- **Phase 158c-4.2 RENAME blocked at first ALTER TABLE on `psycopg2.errors.QueryCanceled: canceling statement due to statement timeout`**. Production app cache refresh held AccessShareLock past 2-min default. Transaction rolled back cleanly. 1-line fix ready for 158d.
+- **Phase 158c-3 R2 preflight DEFERRED**: Session 156 R2 archive (264 MB / 42 files) is canonical rollback source — fresh preflight redundant.
+- 4271 app tests pass. 2 commits + assessment.
+
+## Session 158d: Cutover RENAME landed once + ROLLBACK + Lesson 185 (2026-05-10) — v0.99.78
+- **Phase 158d-1 patches** (`1cabf2d5`): cutover_forward + cutover_rollback get `SET LOCAL lock_timeout='30s' / statement_timeout='0'` inside BEGIN (Codex 158c P1 form). drop_renamed_tables: same SET LOCAL treatment. vacuum_full: re-raise on first failure with PARTIAL FAILURE banner + non-zero exit (Codex 158c P2). apply_v2_views.py: commit AFTER sanity checks pass (Codex 158c P1).
+- **Phase 158d-2 RENAME** (`b2a5583e`): 4 lock_timeout failures led to discovery of 16 zombie `idle in transaction` Supavisor backends from 158b's failed cursor backfill (idle 17–22h). `pg_terminate_backend` cleared all 16 → next RENAME succeeded instantly. State: v1 alive 0/3, _dropped_*_session158 3/3, v2 3/3.
+- **Phase 158d-3 ROLLBACK**: production smoke test 11/11 routes returned 502 with `x-railway-fallback: true`. Per prompt's hard 5xx rule, executed `--rollback`. DB restored cleanly (verified at 02:37Z): v1 alive 3/3, no _dropped_*_session158, v2 3/3. DROP+VACUUM correctly NOT executed.
+- **Hypothesis**: `pg_terminate_backend` cascaded into the production app's connection pool (workers held aliases to terminated backends → query failures → worker crashes → Railway restart loop → eventually 502 with x-railway-fallback). Production remained 502 ≥ 13 min post-rollback (Railway redeploy in flight).
+- **Lesson 185 NEW**: `pg_terminate_backend` on a hot production pool cascades into worker crashes — never terminate connections aliased by a live app. Mitigation: redeploy the app first to shed worker generations, OR take a maintenance window. Documented in `docs/feedback/session-158d-rollback.md`.
+- 4269 app tests pass. 3 commits + assessment.

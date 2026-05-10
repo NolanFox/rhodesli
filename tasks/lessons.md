@@ -106,6 +106,8 @@ modes the codebase keeps regenerating.
 | 164 | **datetime objects from direct DB reads must be serialized before Supabase REST API (Session 144)** |
 | 165 | **Supabase views with IS NULL clause include unversioned legacy rows — broke GEDCOM context for ALL batch photos (Session 144)** |
 | 183 | **Supabase pooler unreliable for long server-side cursor reads — chunked-write (read+aggregate+upsert one chunk at a time, never accumulate full dataset in memory) is the only reliable pattern for ≥50K-row migrations. Session 158 lost the cutover day after 4 different load approaches all failed (cursor died mid-stream, NULL chunk failed all retries, version_map query failed under pooler degradation, REST accumulator plateaued at 951 MB). See also Lesson 173 (REST `.range()` default page).** |
+| 184 | **Zombie idle-in-transaction backends survive client disconnects — Session 158d found 16 backends from 158b's failed cursor backfill idle for 22h holding AccessShareLock. Pre-DDL gate must scan `pg_stat_activity` for old idle-in-transaction sessions; long cursor scripts must set `idle_in_transaction_session_timeout='5min'`.** |
+| 185 | **`pg_terminate_backend` on a hot production pool cascades into worker crashes — Session 158d killed 16 zombies, RENAME succeeded, then production went 502 with `x-railway-fallback: true`. Workers held aliases to terminated backends → query failures → crashes → Railway restart loop. Mitigation: redeploy first OR maintenance window; never terminate connections during live traffic.** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
