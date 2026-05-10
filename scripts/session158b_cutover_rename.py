@@ -65,7 +65,18 @@ RENAME_PAIRS = [
 
 def cutover_forward(conn) -> None:
     cur = conn.cursor()
+    # 158d (Codex 158c P1 form): production app holds AccessShareLock on
+    # gedcom_individuals via TTL cache refresh queries (every ~120s). Default
+    # statement_timeout (2min) was too tight for RENAME's required
+    # AccessExclusiveLock to acquire (158c observed timeout). Two-step fix:
+    #   1. lock_timeout=30s — fail FAST if lock is held; retry the script.
+    #   2. statement_timeout=0 — once we have the lock, RENAME is metadata-only
+    #      and instantaneous; allow unlimited time inside the transaction.
+    # SET LOCAL scopes the override to this transaction only (auto-revert on
+    # COMMIT/ROLLBACK — cleaner for connection pooling).
     cur.execute("BEGIN")
+    cur.execute("SET LOCAL lock_timeout = '30s'")
+    cur.execute("SET LOCAL statement_timeout = '0'")
     cur.execute("DROP VIEW IF EXISTS current_gedcom_individuals")
     for src, dst in RENAME_PAIRS:
         cur.execute(f"ALTER TABLE {src} RENAME TO {dst}")
@@ -75,7 +86,11 @@ def cutover_forward(conn) -> None:
 
 def cutover_rollback(conn) -> None:
     cur = conn.cursor()
+    # 158d: same lock_timeout/statement_timeout treatment as cutover_forward.
+    # Rollback also takes AccessExclusiveLock and faces the same contention.
     cur.execute("BEGIN")
+    cur.execute("SET LOCAL lock_timeout = '30s'")
+    cur.execute("SET LOCAL statement_timeout = '0'")
     for src, dst in RENAME_PAIRS:
         # Reverse: rename _dropped_* back to original
         cur.execute(f"ALTER TABLE {dst} RENAME TO {src}")

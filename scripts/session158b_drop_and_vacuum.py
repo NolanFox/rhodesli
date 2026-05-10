@@ -188,7 +188,12 @@ def drop_renamed_tables(conn) -> None:
     here, something has gone wrong and we should NOT DROP only the others.
     """
     cur = conn.cursor()
+    # 158d (Codex 158c P1 form): same lock_timeout/statement_timeout treatment
+    # as cutover_rename.py. DROP TABLE takes AccessExclusiveLock and faces the
+    # same production-app contention. SET LOCAL scopes overrides to this txn.
     cur.execute("BEGIN")
+    cur.execute("SET LOCAL lock_timeout = '30s'")
+    cur.execute("SET LOCAL statement_timeout = '0'")
     for tbl in DROP_TABLES:
         # Defensive double-check (gate already passed — this is belt-and-suspenders)
         cur.execute("SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = %s)", (tbl,))
@@ -207,25 +212,37 @@ def drop_renamed_tables(conn) -> None:
 
 
 def vacuum_full(conn, tables: list[str]) -> dict:
-    """VACUUM FULL each table; capture timing per table."""
+    """VACUUM FULL each table; capture timing per table.
+
+    158d (Codex 158c P2 fix): re-raise on first failure rather than swallowing
+    silently. A VACUUM FULL failure is a real signal — likely lock contention
+    or out-of-disk — and the orchestrator must exit non-zero so the report
+    isn't written with a misleading green status.
+    """
     timings = {}
     cur = conn.cursor()
-    for tbl in tables:
-        cur.execute("SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = %s)", (tbl,))
-        if not cur.fetchone()[0]:
-            timings[tbl] = {"status": "skipped — does not exist"}
-            print(f"  [skip] {tbl} does not exist")
-            continue
-        t0 = time.time()
-        try:
-            cur.execute(f"VACUUM FULL {tbl}")
-            elapsed = time.time() - t0
-            timings[tbl] = {"status": "ok", "elapsed_s": round(elapsed, 1)}
-            print(f"  VACUUM FULL {tbl}: {elapsed:.1f}s")
-        except Exception as exc:
-            timings[tbl] = {"status": f"ERROR: {exc}", "elapsed_s": round(time.time() - t0, 1)}
-            print(f"  VACUUM FULL {tbl} FAILED: {exc}")
-    cur.close()
+    try:
+        for tbl in tables:
+            cur.execute("SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = %s)", (tbl,))
+            if not cur.fetchone()[0]:
+                timings[tbl] = {"status": "skipped — does not exist"}
+                print(f"  [skip] {tbl} does not exist")
+                continue
+            t0 = time.time()
+            try:
+                cur.execute(f"VACUUM FULL {tbl}")
+                elapsed = time.time() - t0
+                timings[tbl] = {"status": "ok", "elapsed_s": round(elapsed, 1)}
+                print(f"  VACUUM FULL {tbl}: {elapsed:.1f}s")
+            except Exception as exc:
+                timings[tbl] = {"status": f"ERROR: {exc}", "elapsed_s": round(time.time() - t0, 1)}
+                print(f"  VACUUM FULL {tbl} FAILED: {exc}")
+                # P2 fix: re-raise so caller halts. timings[] up to this point are still
+                # captured by the caller via the raised exception (the dict is mutated
+                # in-place on `conn`'s scope — caller can inspect via except handler).
+                raise
+    finally:
+        cur.close()
     return timings
 
 
@@ -267,9 +284,16 @@ def main():
 
     # VACUUM FULL needs autocommit (cannot run in a transaction block)
     conn2 = get_conn(autocommit=True)
+    timings = {}
+    vacuum_failed = False
     try:
         print(f"\n=== VACUUM FULL step ===")
         timings = vacuum_full(conn2, VACUUM_TABLES)
+    except Exception as exc:
+        # 158d (Codex 158c P2): re-raise from vacuum_full now exits non-zero.
+        # Write forensic report before propagating so we don't lose evidence.
+        vacuum_failed = True
+        print(f"\nVACUUM FULL halted: {exc}")
     finally:
         conn2.close()
 
@@ -285,10 +309,12 @@ def main():
     # Report
     report_path = PROJECT_ROOT / "docs" / "feedback" / "session-158b-drop-vacuum-report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    status_banner = "PARTIAL FAILURE — VACUUM FULL halted on error" if vacuum_failed else "SUCCESS"
     report_path.write_text(
         f"# Session 158b Phase 158-6 — DROP + VACUUM FULL Report\n\n"
         f"**Date**: {dt.datetime.utcnow().isoformat()}Z\n"
-        f"**Mode**: EXECUTE (irreversible)\n\n"
+        f"**Mode**: EXECUTE (irreversible)\n"
+        f"**Status**: {status_banner}\n\n"
         f"## Pre-DROP DB size\n```\n{pre['db_size_pretty']} ({pre['db_size_bytes']:,} bytes)\n```\n\n"
         f"## Post-VACUUM DB size\n```\n{post['db_size_pretty']} ({post['db_size_bytes']:,} bytes)\n```\n\n"
         f"## Delta\n```\n{delta:,} bytes ({delta / pre['db_size_bytes']:.1%})\n```\n\n"
@@ -298,6 +324,8 @@ def main():
         f"## Post-VACUUM top 25 tables\n```json\n{json.dumps(post['top_25_tables'][:25], indent=2)}\n```\n"
     )
     print(f"\nReport: {report_path}")
+    if vacuum_failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

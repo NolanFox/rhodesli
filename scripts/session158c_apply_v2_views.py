@@ -78,10 +78,12 @@ def main():
     conn = get_conn()
     try:
         cur = conn.cursor()
-        print("\n=== Applying views ===")
+        print("\n=== Applying views (uncommitted) ===")
+        # 158d (Codex 158c P1): keep the migration uncommitted until sanity checks pass.
+        # Prior code committed FIRST, then sanity-checked — if a check failed, replaced
+        # views were already live. Now: execute, validate, COMMIT only on success.
         cur.execute(sql)
-        conn.commit()
-        print("  Views applied (CREATE OR REPLACE).")
+        print("  Views CREATE OR REPLACE executed (not yet committed).")
 
         print("\n=== Sanity checks ===")
         cur.execute("SELECT COUNT(*) FROM current_gedcom_individuals_v2")
@@ -91,9 +93,10 @@ def main():
         print(f"  current_gedcom_individuals_v2 rows: {view_indiv:,}")
         print(f"  distinct gedcom_id in v2 individuals: {distinct_indiv:,}")
         if view_indiv != distinct_indiv:
+            conn.rollback()
             sys.exit(
                 f"FAIL: view rows ({view_indiv:,}) != distinct gedcom_id ({distinct_indiv:,}). "
-                f"Tiebreaker not deterministic — investigate."
+                f"Tiebreaker not deterministic — investigate. Migration ROLLED BACK."
             )
         print(f"  [OK] individuals view passes 1:1 distinct check")
 
@@ -104,11 +107,16 @@ def main():
         print(f"  current_gedcom_families_v2 rows: {view_fam:,}")
         print(f"  distinct family_gedcom_id in v2 families: {distinct_fam:,}")
         if view_fam != distinct_fam:
+            conn.rollback()
             sys.exit(
                 f"FAIL: view rows ({view_fam:,}) != distinct family_gedcom_id ({distinct_fam:,}). "
-                f"Tiebreaker not deterministic — investigate."
+                f"Tiebreaker not deterministic — investigate. Migration ROLLED BACK."
             )
         print(f"  [OK] families view passes 1:1 distinct check")
+
+        # All checks passed — now commit.
+        conn.commit()
+        print("\n  Views COMMITTED (sanity checks passed).")
 
         cur.close()
     finally:
