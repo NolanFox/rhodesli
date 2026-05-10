@@ -31,10 +31,16 @@ Supabase dashboard banner: "Project is depleting its Disk IO Budget · grace per
 - **L189**: `SUPABASE_ACCESS_TOKEN` (sbp_..., Management API) needed in .env at project setup, not when broken.
 - **L190**: When production is already 5xx pre-cutover, the cutover IS the fix. Don't apply "any 5xx → rollback" to pre-existing failures the cutover is designed to address.
 
-### Pending (next session continuation)
-- Production /health was 502 at session close while Railway deploy completed (CLI deploy in progress).
-- Browser verify 6 canonical pages once /health = 200.
-- Optional: VACUUM FULL retry on remaining tables with longer `statement_timeout` (current DB 1,309 MB; could reach ~1,000 MB after full VACUUM).
+### Final state (verified at session close)
+- Production /health returned 200 at 04:40:42Z; 3 sequential 200s confirmed.
+- Browser verified 6 canonical pages all 200; invalid UUID returns 404.
+- 4271/4271 app tests pass.
+- DB: 1,309 MB.
+
+### Carry-forward to next session (non-blocking)
+- VACUUM FULL retry on remaining 6 tables with longer `statement_timeout` could reduce DB further (~1,000 MB). Current 1,309 MB is comfortably within the 1.1 GB ceiling limits' guidance once Disk IO budget normalizes.
+- L188 prevention (pg_depend scan in cutover scripts) — not yet implemented as a generic helper. See BACKLOG.
+- Codex 158e P3: rollback path silently degrades `scripts/run_combined_pipeline.py` if used before manual `current_gedcom_families` recreation. See BACKLOG.
 
 ## [v0.99.78] — 2026-05-10 (Session 158d: cutover RENAME landed once + ROLLBACK + Lesson 185)
 

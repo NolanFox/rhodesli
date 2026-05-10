@@ -160,7 +160,9 @@ def main():
 
         if dry_run:
             print("\nWould execute (forward):")
+            # 158e Codex P3: keep this list in sync with cutover_forward() above.
             print("  DROP VIEW IF EXISTS current_gedcom_individuals;")
+            print("  DROP VIEW IF EXISTS current_gedcom_families;")
             for src, dst in RENAME_PAIRS:
                 print(f"  ALTER TABLE {src} RENAME TO {dst};")
             print("\nNo changes made.")
