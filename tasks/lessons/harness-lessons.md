@@ -166,3 +166,17 @@
   3. **Or feature-flag**: add a temporary route disable / cache TTL bypass so the live app stops querying the locked tables during cutover.
   4. NEVER call `pg_terminate_backend` on connections from `usename = 'postgres'` while a production app is actively reading. The app's own healthy connections look identical to zombies in `pg_stat_activity` — make sure your filter is tight (`state_change < NOW() - INTERVAL '1 hour'` AND specific known-zombie query patterns).
 - **See also:** Lesson 184 (the source of the zombies in the first place).
+
+## Lesson 186: Supabase PostgREST schema cache can get stuck after RENAME + ROLLBACK
+- **Mistake (Session 158d):** Post-rollback investigation via `railway logs` revealed the production app could NOT start because `IdentityRegistry.load_from_postgres` was failing with `PGRST002: Could not query the database for the schema cache. Retrying.` Direct REST API probe (Supabase service-role) returned PGRST002 on 3/3 trials across `identities` and `date_labels`. App startup retries 3× then crashes; Railway restarts; loop. Deploy healthchecks fail because `/health` exercises the data path. Cutover scripts can't run because they call REST. Everything is gated on REST.
+- **Rule:** RENAME + ROLLBACK DDL churn (and probably any rapid back-to-back DDL on tables exposed via PostgREST) can leave PostgREST's schema cache in a stuck state. The cache is Supabase-managed and not always self-healing. `NOTIFY pgrst, 'reload schema'` and `NOTIFY pgrst, 'reload config'` from a privileged psycopg2 connection do NOT reliably recover it (Session 158d tested this: failed). The reliable fix is to restart PostgREST via Supabase dashboard.
+- **Prevention:**
+  1. Pre-DDL checklist for any cutover that involves RENAME / ROLLBACK / DROP on tables PostgREST exposes: have the Supabase dashboard open in another tab so you can restart PostgREST immediately if PGRST002 appears.
+  2. Restart paths (in order of preference):
+     - Supabase Project → Settings → API → "Restart project"
+     - Supabase Project → Pause then Resume
+     - As a last resort: contact Supabase support
+  3. After restart, probe REST with a 3-trial loop on a real table (`identities` or similar) — must return 200 / count for 3/3 before declaring recovered.
+  4. Cutover scripts should detect PGRST002 in their pre-flight and HALT with an actionable error (don't keep retrying; the cache won't recover on its own).
+  5. Consider building a `scripts/supabase_pgrst_health.py` that does the probe-and-report pattern, callable as a step-0 gate in any DDL-running script.
+- **See also:** Lesson 184 (zombies that triggered the cascade), Lesson 185 (the cascade that broke the cache).
