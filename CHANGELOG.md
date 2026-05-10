@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.77] — 2026-05-10 (Session 158c: AD-246 pooler workaround, Codex P0/P1 fixes, families backfill, v2 views; RENAME deferred to 158d)
+
+PARTIAL session — Phases 158c-0 through 158c-4.1 SHIPPED. Phase 158c-4.2 RENAME blocked at the cutover step on `psycopg2.errors.QueryCanceled` (statement_timeout=2min vs production app cache lock contention). Transaction rolled back cleanly — all v1 tables intact. 1-line fix (`SET lock_timeout = '30s'; SET statement_timeout = '0';`) ready to apply in 158d. Continuation prompt: `docs/prompts/session-158d-prompt.md`. Session ended at 709-line transcript clear gate after 3 hours.
+
+### Shipped
+- **AD-246 — Pooler session-mode workaround** (`8a1db1f8`): Discovered transaction-mode (port 6543) is dead from 158 through 158c (3 sessions, 0/3 PASS each); session-mode (port 5432) works (5/5 PASS, cold-start 25s → warm <1s). Cutover scripts updated to port 5432 + connect_timeout 60s. Unblocks all psycopg2-requiring DDL (was the root cause of 158/158b cutover deferrals).
+- **Codex 158b P0/P1 audit fixes** (`8a1db1f8`):
+  - P0-1: `_read_chunk_for_version` deterministic ORDER BY via `order_by` parameter. Benchmark drove `id` (UUID, 1.5s direct + PostgREST timeout) → `gedcom_id|family_gedcom_id` (TEXT, 105ms direct + works via REST).
+  - P0-2: NULL payload_hash now raises (was silently using narrow key-fields fallback hash). 0 fallbacks observed in execute confirms invariant.
+  - P0-3: `assert_drop_gate_safe()` — DROP refuses unless all 3 `_dropped_*_session158` exist AND all 3 v1 originals absent.
+  - P1-1: cutover_forward requires `len(v1_alive)==3 AND len(v2_alive)==3`.
+  - P1-2: cutover_rollback requires `len(renamed_alive)==3 AND not v1_alive`.
+  - P1-3: `pooler_health_probe()` before DROP step (3/3 trials must PASS).
+  - Retry tuning: chunked-write `3 → 6` retries with linear backoff `10/20/30/40/50s` (vs 158b's `3 × 3s flat`).
+- **Phase 158c-2 historical backfill (families)** (`304c0964`): families_v2 6,741 → **13,158 rows** (+6,417 historical states). 33,322 v1 rows scanned in 3.2 min. Zero fallback hashes (P0-2 invariant held). Albert Fox 2-state acceptance check PASSED (`@I132123840707@` v9-v9 hash 1d77bf67 + v1-v6 hash fd1f05bd).
+- **Phase 158c-3 R2 preflight DEFERRED**: Session 156 R2 archive (264 MB / 42 files) is canonical rollback source — fresh preflight redundant since no GEDCOM imports since 156. R2 preflight DRY-RUN failed at gedcom_change_log row 1,020,000 with PostgREST timeout. Decision documented in `docs/feedback/session-158c-backfill-report.md`.
+- **Phase 158c-4.1 v2 views applied** (`304c0964`): `current_gedcom_individuals_v2` (21,998 rows) + `current_gedcom_families_v2` (6,741 rows). Both pass 1:1 distinct sanity check. Wrapper script `scripts/session158c_apply_v2_views.py`.
+
+### Deferred to 158d
+- Phase 158c-4.2 RENAME (1-line patch ready; production lock contention)
+- Phase 158c-5 wait period + sustained validation
+- Phase 158c-6 DROP + VACUUM FULL (IRREVERSIBLE — USER GATE)
+- Phase 158c-7 post-cutover verification
+- Phase 158c-8 Track E GEDCOM upload UAT (per 158 prompt §8.3, deferred to 159)
+
+### Verified at session close
+- Pooler session-mode (port 5432): 5/5 PASS
+- v2 row counts: 43,172 individuals / 13,158 families / 9 manifest
+- DB size: 2,564 MB (target post-cutover: 600-700 MB)
+- v2 views applied + 1:1 distinct checks pass
+- All v1 tables intact (RENAME rolled back cleanly)
+- 4271 tests pass
+
+### Known issues / followups
+- 158d FIRST ACTION: apply `SET lock_timeout='30s'; SET statement_timeout='0';` patch to `cutover_forward()` and `cutover_rollback()` in `scripts/session158b_cutover_rename.py`, AND to `drop_renamed_tables()` in `scripts/session158b_drop_and_vacuum.py`.
+- Codex re-audit on 158c fixes pending — recommended scope: 3 scripts max, P0/P1 only, "skip exploration of unrelated code" (158b Run 2 pattern).
+
 ## [v0.99.76] — 2026-05-09 (Session 158b: chunked-write historical backfill + cutover scripts; cutover phases deferred to 158c)
 
 PARTIAL session — Phase 158b-2 chunked-write backfill EXECUTE in progress at session close (chunks 1-5 of 10 individuals complete; chunks 6-10 + all families pending). Phases 158b-3 through 158b-9 DEFERRED to Session 158c because pooler psycopg2 access remained unavailable today (3/3 trials FAIL with SSL connection closed unexpectedly). Cutover phases require psycopg2 for DDL — REST API can't execute RENAME/DROP/VACUUM FULL.

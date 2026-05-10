@@ -104,12 +104,19 @@ def _canonical_payload_hash(rec: dict, key_fields: list[str]) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
-def _read_chunk_for_version(sb, table: str, fields: str, version_id: str | None) -> list[dict]:
+def _read_chunk_for_version(sb, table: str, fields: str, version_id: str | None, order_by: str) -> list[dict]:
     """Read all rows for a single version_id via REST pagination. version_id=None → IS NULL.
 
-    158c P0-1 fix: ORDER BY id ASC ensures deterministic pagination across REST calls.
-    Without this, PostgREST may return rows in unstable order across pages → silent
-    skips/duplicates between offset boundaries.
+    158c P0-1 fix: ORDER BY <unique-stable-column> ensures deterministic pagination
+    across REST calls. Without this, PostgREST may return rows in unstable order across
+    pages → silent skips/duplicates between offset boundaries.
+
+    Order column choice (158c benchmarks):
+      - id (UUID): 1.5s direct, often timeouts via PostgREST 8s default
+      - payload_hash: 10.8s direct (despite the index, sort cost dominates)
+      - **gedcom_id / family_gedcom_id (TEXT)**: 105ms — winner
+    Within a single version_id chunk these TEXT columns are unique (one row per
+    individual/family per version), so ordering is deterministic.
     """
     rows = []
     offset = 0
@@ -121,8 +128,8 @@ def _read_chunk_for_version(sb, table: str, fields: str, version_id: str | None)
                     q = q.is_("version_id", "null")
                 else:
                     q = q.eq("version_id", version_id)
-                # 158c P0-1: deterministic order by primary key id
-                q = q.order("id", desc=False)
+                # 158c P0-1: deterministic order, fast PostgREST execution
+                q = q.order(order_by, desc=False)
                 resp = q.range(offset, offset + READ_PAGE - 1).execute()
                 break
             except Exception as exc:
@@ -213,7 +220,7 @@ def _upsert_v2(sb, table: str, rows: list[dict]) -> None:
                 time.sleep(sleep_s)
 
 
-def _process_table(sb, dry_run: bool, table_v1: str, table_v2: str, fields: str, key_fields: list[str], v2_cols: list[str], list_json_cols: list[str], dict_json_cols: list[str] | None, version_map: dict, total_chunks: int, label: str) -> dict:
+def _process_table(sb, dry_run: bool, table_v1: str, table_v2: str, fields: str, key_fields: list[str], v2_cols: list[str], list_json_cols: list[str], dict_json_cols: list[str] | None, version_map: dict, total_chunks: int, label: str, order_by: str) -> dict:
     """Process one table (individuals or families) chunk by chunk."""
     print(f"\n=== {label} — {total_chunks} chunks ===")
     summary = {
@@ -236,7 +243,7 @@ def _process_table(sb, dry_run: bool, table_v1: str, table_v2: str, fields: str,
         print(f"\n  [chunk {chunk_id}/{total_chunks}] {v_label} (version_id={v_id}, v_num={v_num})")
 
         # Read
-        rows = _read_chunk_for_version(sb, table_v1, fields, v_id)
+        rows = _read_chunk_for_version(sb, table_v1, fields, v_id, order_by)
         print(f"    read: {len(rows):,} v1 rows in {time.time()-t0:.1f}s")
         summary["v1_scanned_total"] += len(rows)
 
@@ -323,6 +330,7 @@ def main():
             INDIV_REST_FIELDS, INDIVIDUAL_KEY_FIELDS, INDIV_V2_COLS,
             INDIV_JSON_COLS, None,
             version_map, total_chunks, "INDIVIDUALS",
+            order_by="gedcom_id",  # 158c P0-1 fix: TEXT col, fast PostgREST exec
         )
 
     if not args.skip_families:
@@ -332,6 +340,7 @@ def main():
             FAM_REST_FIELDS, FAMILY_KEY_FIELDS, FAM_V2_COLS,
             FAM_LIST_JSON_COLS, FAM_DICT_JSON_COLS,
             version_map, total_chunks, "FAMILIES",
+            order_by="family_gedcom_id",  # 158c P0-1 fix: TEXT col, fast PostgREST exec
         )
 
     # Final v2 row counts
