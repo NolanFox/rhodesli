@@ -1551,3 +1551,23 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Hypothesis**: `pg_terminate_backend` cascaded into the production app's connection pool (workers held aliases to terminated backends → query failures → worker crashes → Railway restart loop → eventually 502 with x-railway-fallback). Production remained 502 ≥ 13 min post-rollback (Railway redeploy in flight).
 - **Lesson 185 NEW**: `pg_terminate_backend` on a hot production pool cascades into worker crashes — never terminate connections aliased by a live app. Mitigation: redeploy the app first to shed worker generations, OR take a maintenance window. Documented in `docs/feedback/session-158d-rollback.md`.
 - 4269 app tests pass. 3 commits + assessment.
+
+## Session 158e: PRD-063 Day 3 cutover COMPLETE — DB 2,564 → 1,309 MB; PostgREST self-recovered (2026-05-10) — v0.99.79
+- **Root cause refinement**: User dashboard screenshot revealed "Project is depleting its Disk IO Budget · grace period until 28 May 2026". The 158d hypothesis (PGRST002 = PostgREST internally stuck from RENAME+ROLLBACK churn) was incomplete. Actual root cause: disk-IO throttling on `pg_catalog` schema introspection queries. New Lesson 187 refines L186.
+- **Management API token** (`3c7409cf`): `SUPABASE_ACCESS_TOKEN=sbp_...` added to local `.env` (gitignored). Placeholder in `.env.example`. Verified via `GET /v1/projects` (project status `ACTIVE_HEALTHY`). Service-role key cannot perform Management API operations — Lesson 189.
+- **Phase 158e-0 verify DB state**: v1 alive 3/3, `_dropped_*_session158` 0/3, v2 dedicated 2/2 + shared `gedcom_change_manifest`. DB 2,564 MB.
+- **Phase 158e-1 zombie scan**: 0 idle-in-transaction (any age), 0 long-running activity. 158d's termination cleared the slate.
+- **Phase 158e-2 USER GATE**: PROCEED chosen — production already 502 from PGRST002 = forced maintenance window.
+- **Phase 158e-3 RENAME**: landed cleanly via psycopg2 (lock_timeout patches from 158d held). v1 → 0/3, `_dropped_*_session158` → 3/3.
+- **Phase 158e-4 stability**: 90s post-RENAME. Pooler 3/3 PASS. Albert Fox 2-state acceptance check PASSED (v9 hash=1d77bf67 + v1-v6 hash=fd1f05bd, identical to 158c). v2 views 1:1 sanity (21,998 distinct gedcom_id = view rows). Query latency erratic (9.5s/2.2s/35.3s) confirmed disk-IO throttling — strongly motivated DROP.
+- **Phase 158e-5 DROP+VACUUM** (`2dda5063`):
+  - 1st attempt blocked at table 2/3: `current_gedcom_families` view dependency. Script's transactional gate held (Codex 158c P0-3 fix) — all-or-nothing rolled back.
+  - Manual unblock: `DROP VIEW IF EXISTS current_gedcom_families` (Postgres views auto-follow base-table renames — Lesson 188). Re-run succeeded all 3 tables.
+  - **DB: 2,564 MB → 1,309 MB (48.9% reduction, 1.3 GB freed)**.
+  - VACUUM FULL halted at table 1/7 on `statement_timeout` per 158c P2 re-raise (DROP already reclaimed the bulk).
+  - Bug fix: `cutover_forward()` now drops both views inside the cutover transaction.
+- **PostgREST recovery**: REST API self-recovered post-DROP — 5/5 PASS, 140-1237ms latency (vs 3/3 PGRST002 fail pre-DROP). No manual restart needed. Confirmed evidence for L187.
+- **Production redeploy**: triggered via `git push origin main` + `railway up --detach` (CLI fallback per OD-010 — Railway GitHub auto-deploy reverted to RAILPACK metadata; build log shows Dockerfile was actually used). Production /health returned 200 at 04:40:42Z, 3 sequential 200s confirmed.
+- **Phase 158e-6 browser verify**: 6 canonical pages all 200 (root, community page, people grid, person page, /tools/compare, /tools/estimate). Invalid UUID returns 404 styled correctly.
+- **New Lessons 187-190**: PGRST002 ⇒ disk-IO budget (L187), pg_depend scan before DROP (L188), Management API token at setup (L189), pre-existing 5xx ≠ rollback trigger (L190).
+- 4271 app tests pass. 3 commits + assessment + auto-generated DROP+VACUUM report.

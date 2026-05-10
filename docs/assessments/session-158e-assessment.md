@@ -17,14 +17,19 @@
 - [x] **Phase 158e-5 first attempt**: DROP failed at table 2/3 — `current_gedcom_families` view depended on `_dropped_gedcom_families_session158`. Script's transactional gate held: all-or-nothing (1st DROP rolled back). State preserved. Diagnosis: cutover_forward dropped `current_gedcom_individuals` but missed the paired `current_gedcom_families` view.
 - [x] **Bug fix**: Patched `scripts/session158b_cutover_rename.py` `cutover_forward()` to drop both views (`DROP VIEW IF EXISTS current_gedcom_individuals` + `... current_gedcom_families`). Rollback path documented but not auto-recreating families view (v1 schema retired, exact WHERE clause unverified — operator can recreate manually if rollback needed).
 - [x] **Manual unblock**: Dropped `current_gedcom_families` directly (DROP VIEW IF EXISTS), confirmed zero remaining dependents.
-- [-] **Phase 158e-5 retry**: DROP+VACUUM running (in progress at time of writing). Expected: 2,564 MB → 600-700 MB.
+- [x] **Phase 158e-5 retry — DROP succeeded**: 2,564 MB → 1,309 MB (48.9% reduction, 1.3 GB freed). VACUUM FULL halted at table 1/7 on statement_timeout (DROP already reclaimed bulk). Auto-generated report at `docs/feedback/session-158b-drop-vacuum-report.md`.
+- [x] **PostgREST recovery (UNEXPECTED — self-recovered)**: REST API self-recovered post-DROP without manual restart. 5/5 PASS, 140-1237ms latency. Strongest possible confirming evidence for L187 (root cause was disk-IO throttling on pg_catalog, not internal PostgREST stuck state).
+- [x] **Production /health = 200**: triggered redeploy via `git push origin main` + `railway up --detach`. /health returned 200 at 04:40:42Z. 3 sequential 200s confirmed.
+- [x] **Phase 158e-6 — Browser verify**: 6 canonical pages all 200 (root, /c/fox-family, /c/fox-family/people, /c/fox-family/person/{uuid}, /tools/compare, /tools/estimate). Invalid UUID returns 404. READ-ONLY per Lesson 149.
+- [x] **Phase 158e-7 — Closeout**: CHANGELOG (v0.99.79), ROADMAP version + Recently Completed entry, SESSION_HISTORY entry, Lessons 187-190 added to harness-lessons.md + lessons.md index.
 
-## Pending
-- [ ] **Phase 158e-5 completion**: VACUUM FULL on v2 + 4 carry-over v1 tables.
-- [ ] **PostgREST recovery**: After disk freed by VACUUM, restart via Management API (`POST /v1/projects/{ref}/restart-services` or equivalent). Expect schema cache rebuild within ~30-60s.
-- [ ] **Phase 158e-2 production /health = 200**: Trigger Railway redeploy if needed (workers may still hold zombie pool refs).
-- [ ] **Phase 158e-6 — Browser verify**: 6 canonical pages READ-ONLY.
-- [ ] **Phase 158e-7 — Closeout**: CHANGELOG, ROADMAP, BACKLOG, SESSION_HISTORY, lessons learned.
+## Final state
+- **DB size**: 1,309 MB (target was 600-700 MB; we hit 1,309 because VACUUM FULL halted on first table after DROP. Remaining bloat reclaim is deferred — not blocking.)
+- **PostgREST schema cache**: HEALTHY (5/5 PASS post-DROP).
+- **Production**: HEALTHY (3/3 200s, browser verify all canonical pages PASS).
+- **v2 schema**: live as sole source of truth for individuals + families. v1 retired permanently.
+- **Tests**: 4271/4271 app tests pass (was 4268 with 1 fail during PGRST002 outage).
+- **Disk IO Budget**: should now be substantially relieved given 49% size reduction. Banner status to be re-checked next session.
 
 ## Lessons learned (drafts — finalize at closeout)
 - **L186 NEW**: Disk-IO budget exhaustion presents as PGRST002 (schema cache failure). Misdiagnosable as PostgREST-stuck-in-retry-loop. Diagnosis: check Supabase dashboard for "depleting its Disk IO Budget" banner BEFORE attempting `NOTIFY pgrst`. NOTIFY won't help if the root cause is upstream throttling on `pg_catalog`.

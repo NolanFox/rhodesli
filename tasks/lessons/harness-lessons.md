@@ -179,4 +179,52 @@
   3. After restart, probe REST with a 3-trial loop on a real table (`identities` or similar) — must return 200 / count for 3/3 before declaring recovered.
   4. Cutover scripts should detect PGRST002 in their pre-flight and HALT with an actionable error (don't keep retrying; the cache won't recover on its own).
   5. Consider building a `scripts/supabase_pgrst_health.py` that does the probe-and-report pattern, callable as a step-0 gate in any DDL-running script.
-- **See also:** Lesson 184 (zombies that triggered the cascade), Lesson 185 (the cascade that broke the cache).
+- **See also:** Lesson 184 (zombies that triggered the cascade), Lesson 185 (the cascade that broke the cache), **Lesson 187 (the actual root cause — disk-IO budget — discovered in 158e).**
+
+## Lesson 187: PGRST002 schema-cache failure can also be Disk-IO budget exhaustion (refines L186)
+- **Mistake (Session 158e):** After 158d-style mitigations (NOTIFY pgrst, fresh autocommit psycopg2 connection, multiple variants of the reload command) failed to recover PostgREST, the user shared a Supabase dashboard screenshot showing `Project is depleting its Disk IO Budget · grace period until 28 May 2026`. PGRST002 was a *symptom* of disk-IO throttling on `pg_catalog` schema-introspection queries — not just PostgREST being internally stuck. Without seeing that banner, 158d incorrectly concluded the cache was "wedged from DDL churn." The actual fix required relieving disk pressure via the cutover DROP+VACUUM, not a PostgREST restart.
+- **Rule:** When PGRST002 appears, the diagnostic order is:
+  1. **FIRST**: check Supabase dashboard for any quota / budget banner (Disk IO, egress, database size). A banner explains the symptom AND tells you the fix is upstream.
+  2. THEN: check pg_stat_activity for connection saturation, blocking queries, or zombies.
+  3. THEN: try `NOTIFY pgrst, 'reload schema'` (note: ineffective if root cause is disk-IO).
+  4. THEN: full PostgREST/project restart (may not help if disk-IO continues to throttle introspection).
+- **Prevention:**
+  1. Add a check to `scripts/supabase_pgrst_health.py` that hits the Supabase Management API `GET /v1/projects/{ref}` and warns if the project status is anything other than `ACTIVE_HEALTHY`, OR if the project metadata exposes a quota field that's near limit.
+  2. When designing cutover scripts that anticipate disk-pressure relief: call them out as the *primary* fix path for PGRST002 in a disk-near-full project, not "after PostgREST restart fails."
+  3. PRD-063 (this cutover) was conceived as a size-reduction strategy. Future PRDs that anticipate hitting Supabase quotas should be tagged so we know cutover-style operations can resolve symptoms beyond just "size."
+- **Confirming evidence (Session 158e)**: After Phase 158e-5 DROP freed 1.3 GB (2,564→1,309 MB), PostgREST schema cache self-recovered without any restart — REST API went from 3/3 PGRST002 fail to 5/5 PASS within seconds. This is the smoking-gun proof that disk-IO throttling, not PostgREST internal state, was the cause.
+- **See also:** Lesson 186 (the 158d hypothesis this refines), Lesson 188 (cutover view-dependency bug), Lesson 189 (Management API token).
+
+## Lesson 188: Cutover scripts must scan pg_depend for view dependents BEFORE DROP
+- **Mistake (Session 158e):** `scripts/session158b_cutover_rename.py cutover_forward()` dropped `current_gedcom_individuals` view but missed the paired `current_gedcom_families` view. PostgreSQL views auto-follow base-table renames (oid-tracked, not text-tracked), so after RENAME the families view still pointed at `_dropped_gedcom_families_session158`. Phase 158e-5 DROP failed at table 2/3 with `cannot drop table because other objects depend on it`. The script's transactional gate held (Codex 158c P0-3 fix) — all-or-nothing rolled back the first DROP. Manual unblock: `DROP VIEW IF EXISTS current_gedcom_families` then re-run. Fixed in same-session commit (cutover_rename.py now drops both views).
+- **Rule:** Any cutover script that DROPs tables AFTER a RENAME must enumerate all dependents via `pg_depend` and drop them inside the cutover transaction. Postgres views silently follow renames — the WHERE clause sees the new name even though the view was created against the old name. DROP CASCADE is NOT the right fix because it can drop unrelated objects you didn't intend to.
+- **Prevention:**
+  1. Add a `pre_drop_dependency_scan()` helper that, given a list of `_dropped_*` tables, queries `pg_depend JOIN pg_rewrite JOIN pg_class` and returns dependent views/matviews. Fail loudly if any dependent isn't already in the cutover's drop list.
+  2. The cutover_rename.py forward path should include `DROP VIEW IF EXISTS` for every view that the live app reads. Use `IF EXISTS` so the cutover is idempotent and doesn't fail if the view was already dropped.
+  3. Rollback paths are trickier: if a view's WHERE clause depends on schema columns that may not exist post-cutover, the rollback CREATE VIEW can fail. Either: (a) capture the original view DDL via `pg_views.definition` BEFORE drop and store it as a string for rollback to recreate, OR (b) document that rollback does not auto-recreate views and operators must do so manually for the schema that's live at rollback time. The 158e fix took option (b) for `current_gedcom_families` because the v1 schema was retired by then.
+- **See also:** Lesson 187 (root cause this fix unblocked).
+
+## Lesson 189: SUPABASE_ACCESS_TOKEN (Management API personal access token) needed in .env at project setup
+- **Mistake (Session 158e):** When PGRST002 wedged production, Claude tried to programmatically restart PostgREST via Supabase Management API but discovered no `sbp_...` token in `.env` — only `SUPABASE_SERVICE_ROLE_KEY` (which grants REST + DB admin but NOT project-level operations like restart, pause, or schema reload). User had to generate a token mid-incident, and the previously generated token was orphaned (Supabase shows the token's value only once at creation; revoke + regenerate is the recovery). This added 5-10 min of incident time at the worst possible moment.
+- **Rule:** Every Supabase-backed project should have `SUPABASE_ACCESS_TOKEN=sbp_...` in `.env` at setup time, not when broken. The Management API enables programmatic recovery for incidents that the service-role key cannot fix:
+  - `POST /v1/projects/{ref}/restart-services` — restart PostgREST/database services
+  - `POST /v1/projects/{ref}/pause` + `/resume` — full project recycle (clears most stuck state)
+  - `GET /v1/projects/{ref}` — read project status (ACTIVE_HEALTHY vs degraded)
+  - `PATCH /v1/projects/{ref}/postgrest` — update PostgREST config (forces reload)
+- **Prevention:**
+  1. `.env.example` documents the variable with a generation URL (added in 158e).
+  2. Onboarding checklist / setup script should prompt for the token alongside service-role key.
+  3. Tokens are shown only once at creation. Store securely (1Password, etc.) AND in `.env`. If the value is lost, REVOKE the orphaned token (security hygiene — it's still active but unrecoverable) and generate a fresh one.
+  4. Token grants account-level access to ALL projects under that account. Treat as password-equivalent. Never commit to git (`.env` is gitignored on this project). Verify via `git check-ignore -v .env` before adding.
+- **See also:** Session 158e commit `3c7409cf` for the .env.example placeholder pattern.
+
+## Lesson 190: When production is already 5xx pre-cutover, the cutover IS the fix — don't rollback because of the same 5xx
+- **Mistake (Session 158d):** The cutover prompt's wait-and-monitor phase had a hard rule: "must stay 200 throughout. If any 5xx: ROLLBACK." This was written assuming production was healthy *before* the cutover. In 158d, production went 502 mid-cutover from a connection-pool cascade (Lesson 185) — applying the rule was correct, and rolling back was the right call. But the resulting state (DB rolled back, but PostgREST schema cache stuck from disk-IO) left production *still* 502 due to a *different* failure mode (Lesson 187 root cause) that the rollback did NOT address. 158e then had to weigh: production is already 502 → the cutover is the fix → applying the literal "any 5xx → rollback" rule would lock in the failure.
+- **Rule:** When evaluating a "rollback on 5xx" gate, distinguish:
+  - **5xx caused BY the cutover** (e.g., Lesson 185 cascade) — rollback is correct.
+  - **5xx existing BEFORE the cutover** (caused by a separate root cause that the cutover is designed to fix) — rolling back locks in the failure. Proceed and verify the cutover relieves the underlying cause.
+- **Prevention:**
+  1. Before starting any cutover, capture the BASELINE production /health status. The "rollback on 5xx" rule applies only if the cutover *changes* the status from 200 → 5xx.
+  2. Cutover prompts should distinguish "downstream of cutover" failures vs "pre-existing failures the cutover addresses" in their abort criteria.
+  3. The 158e prompt did this correctly: "production already 502" was used as the *reason to PROCEED*, and the wait-period 5xx rule was implicitly relaxed because the baseline was 502, not 200.
+- **See also:** Lesson 185 (the original 158d cascade that *was* worth rolling back), Lesson 187 (the pre-existing failure 158e was designed to fix).

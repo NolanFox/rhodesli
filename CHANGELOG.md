@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.79] — 2026-05-10 (Session 158e: PRD-063 cutover landed — DB 2,564 → 1,309 MB, PostgREST recovered)
+
+PRD-063 Day 3 cutover **completed**. After 158d's cutover landed and was rolled back, 158e diagnosed the underlying root cause (Supabase Disk IO budget exhaustion, not just PostgREST internal stuck state per L186), executed the cutover RENAME + DROP + VACUUM, and reclaimed 1.3 GB from the database. PostgREST schema cache self-recovered without manual restart once disk pressure was relieved.
+
+### Shipped
+- **Management API token** (`3c7409cf`): `SUPABASE_ACCESS_TOKEN=sbp_...` added to local `.env` (gitignored, line 39). Placeholder in `.env.example` with generation URL. Token verified against `GET /v1/projects` (project status `ACTIVE_HEALTHY`). Enables programmatic recovery for future PGRST002 incidents.
+- **Phase 158e-0**: DB state verify — v1 alive 3/3, `_dropped_*_session158` 0/3, v2 dedicated 2/2 + shared `gedcom_change_manifest`. DB at 2,564 MB.
+- **Phase 158e-1**: Zombie scan — 0 idle-in-transaction (any age), 0 long-running activity. 158d's termination cleared the slate.
+- **Phase 158e-2**: USER GATE — chose PROCEED (production already 502 = forced maintenance window).
+- **Phase 158e-3**: Cutover RENAME landed cleanly via psycopg2 (bypassed wedged PostgREST entirely). v1 → 0/3, `_dropped_*_session158` → 3/3, v2 unchanged. Lock_timeout patches from 158d held.
+- **Phase 158e-4**: 90s post-RENAME stability. Pooler 3/3 PASS. Albert Fox 2-state acceptance check PASSED (v9 hash=1d77bf67 + v1-v6 hash=fd1f05bd). v2 views 1:1 sanity (21,998 distinct gedcom_id = view rows). Query latency erratic (9.5s/2.2s/35.3s) confirmed disk-IO throttling.
+- **Phase 158e-5 DROP+VACUUM** (`2dda5063`):
+  - First attempt blocked at table 2/3: `current_gedcom_families` view dependency. Script's transactional gate held (Codex 158c P0-3 fix) — all-or-nothing rolled back.
+  - Manual unblock: `DROP VIEW IF EXISTS current_gedcom_families`. Re-run succeeded on all 3 tables.
+  - **DB: 2,564 MB → 1,309 MB (48.9% reduction, 1.3 GB freed)**.
+  - VACUUM FULL halted at table 1/7 on `statement_timeout` per 158c P2 re-raise (DROP already reclaimed bulk; remaining bloat reduction deferred).
+  - Bug fix: `scripts/session158b_cutover_rename.py` `cutover_forward()` now drops both `current_gedcom_individuals` AND `current_gedcom_families` views inside the cutover transaction.
+- **PostgREST recovery**: REST API self-recovered post-DROP. 5/5 PASS, 140-1237ms latency (vs 3/3 PGRST002 fail pre-DROP). No manual restart needed.
+- **Production redeploy** triggered via `git push origin main` + `railway up --detach` (CLI fallback per OD-010).
+
+### Diagnosis (root-cause refinement of L186)
+Supabase dashboard banner: "Project is depleting its Disk IO Budget · grace period until 28 May 2026". The 158d hypothesis (PGRST002 = PostgREST internally stuck from RENAME+ROLLBACK churn) was incomplete. Actual root cause: disk-IO throttling on `pg_catalog` schema introspection queries. Confirming evidence: PostgREST self-recovered seconds after DROP freed disk pressure — without any restart.
+
+### New Lessons (187–190)
+- **L187**: PGRST002 can also be Disk-IO budget exhaustion — check Supabase dashboard banner FIRST when PGRST002 appears.
+- **L188**: Cutover scripts must scan `pg_depend` for view dependents BEFORE DROP. Postgres views auto-follow renames (oid-tracked).
+- **L189**: `SUPABASE_ACCESS_TOKEN` (sbp_..., Management API) needed in .env at project setup, not when broken.
+- **L190**: When production is already 5xx pre-cutover, the cutover IS the fix. Don't apply "any 5xx → rollback" to pre-existing failures the cutover is designed to address.
+
+### Pending (next session continuation)
+- Production /health was 502 at session close while Railway deploy completed (CLI deploy in progress).
+- Browser verify 6 canonical pages once /health = 200.
+- Optional: VACUUM FULL retry on remaining tables with longer `statement_timeout` (current DB 1,309 MB; could reach ~1,000 MB after full VACUUM).
+
 ## [v0.99.78] — 2026-05-10 (Session 158d: cutover RENAME landed once + ROLLBACK + Lesson 185)
 
 PARTIAL session — RENAME landed at 02:23Z (after 4 lock_timeout failures and `pg_terminate_backend` of 16 zombie idle-in-transaction backends from 158b's failed cursor backfill). Production smoke test returned 502 across all 11 routes with `x-railway-fallback: true` — per the prompt's hard 5xx rule, executed `--rollback`. DB restored cleanly (verified at 02:37Z). DROP+VACUUM NOT executed. Continuation prompt: `docs/prompts/session-158e-prompt.md`. Lesson 185 NEW: `pg_terminate_backend` on a hot production pool cascades into worker crashes — never terminate connections aliased by a live app.
