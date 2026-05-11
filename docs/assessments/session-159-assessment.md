@@ -11,6 +11,34 @@
 
 ---
 
+## Per-Act Status (from /session-review)
+
+| Phase | Status | Evidence | Concerns |
+|---|---|---|---|
+| 0 — Orient | PASS | `make test-fast` green; `harness-check.sh` 1 pre-existing failure (89 docs over cap, not from this session); commit `56953168` | none |
+| 1 — Research (3 parallel subagents) | PASS | Canary PASS (241s/157,834 tokens); 3 briefs at `docs/session_context/session-159-research/`; commit `42b8bdd8` | none |
+| 2 — ARCHITECTURE.md | PASS | `/Users/nolanfox/rhodes-wiki/docs/ARCHITECTURE.md` (658 lines, anchor exception ≤700); inbox JSON contract v0.1.0 defined | doc is ~94% of the 700-line cap — split candidate next time it grows |
+| 3 — Scaffold rhodes-wiki | PASS | New repo at `/Users/nolanfox/rhodes-wiki/`; 35 files; first commit `ad9ea32`; CLAUDE.md 63 lines (≤80) | rhodes-wiki has no GitHub remote — intentional for v0.1.0 |
+| 4 — Parser stubs (parallel worktrees) | PASS | 118 tests passing post-merge; 8 commits in rhodes-wiki; small conflict in `tests/conftest.py` resolved by concatenation | none |
+| 5 — Codex audit + fixes | PASS_WITH_FIXES | Codex FAIL→ all 6 P1 + 2 P2 + 2 P3 fixed; 173 tests; 7 atomic fix commits; audit at `session-159-codex-audit.md` | 2 P2 deferred (RELIABILITY-001, TOS-HOOK-001); 1 P3 superseded — all logged in rhodes-wiki BACKLOG |
+| 6 — Closeout | PASS (after auto-fix) | rhodesli ROADMAP, CHANGELOG, SESSION_HISTORY, memory entries, push, health 200, /session-review run, Session 160 prompt skeleton | session-160-prompt.md was initially missed; auto-fixed (commit `ef951c10`) |
+
+## Concerns and Red Flags (from /session-review critical re-read)
+
+- **[low] session-160-prompt.md missing on first pass** — Original session-159-prompt.md Phase 6 said "Write docs/prompts/session-160-prompt.md skeleton at end of Phase 6". I included a "Continuation prompt for Session 160" section in this assessment file but did not create the actual prompt file. **AUTO-FIXED** in commit `ef951c10`.
+- **[informational] ARCHITECTURE.md at 658/700 lines** — close to the architecture-anchor cap. When Session 161 adds the rhodesli `/admin/rhodes-inbox` integration spec, the doc will likely exceed 700 and need splitting per Lesson 106 (split, don't trim).
+- **[informational] rhodes-wiki is local-only** — no GitHub remote. Intentional for v0.1.0 to defer publish decisions until the first real-post test (Session 160). User can `gh repo create` when ready.
+- **[informational] Pre-existing harness-check failure (89 docs over 300-line cap)** — not from this session; aged debt in rhodesli docs/. Out of scope; should be addressed separately.
+
+## Superficial Work
+- None identified. Every claimed deliverable has concrete evidence (file paths, commit hashes, test counts, smoke-test outputs).
+
+## Deferred Items (intentional, with BACKLOG entries)
+
+- **RELIABILITY-001** (rhodes-wiki BACKLOG): atomic writes for inbox artifacts (Codex P2-1). Reason: not blocking first real-post test. Source: `docs/session_context/session-159-codex-audit.md` P2-1.
+- **TOS-HOOK-001** (rhodes-wiki BACKLOG): mechanical hook enforcing FB TOS rule (Codex P2-4). Reason: hook design non-trivial; needs transcript pattern matching. Source: P2-4 + Lessons 102/103/140/143.
+- **P3-1 person-hint regex polish** (Codex audit): superseded by Session 160's PERSON-MATCH-001 (real NER replaces stub).
+
 ## Shipped
 
 | Phase | Status | Evidence |
@@ -21,7 +49,12 @@
 | 3 — Scaffold rhodes-wiki | ✓ | New repo at `/Users/nolanfox/rhodes-wiki/`; 35 files; first commit `ad9ea32`; CLAUDE.md 63 lines (≤80) |
 | 4 — Parser stubs (parallel worktrees) | ✓ | 118 tests passing post-merge; 8 commits in rhodes-wiki; small conflict in `tests/conftest.py` resolved by concatenation |
 | 5 — Codex audit + fixes | ✓ | Codex FAIL→ all 6 P1 + 2 P2 + 2 P3 fixed; 173 tests; 7 atomic fix commits; audit at `session-159-codex-audit.md` |
-| 6 — Closeout | ✓ (this file) | rhodesli ROADMAP, CHANGELOG, SESSION_HISTORY, memory entries, push |
+| 6 — Closeout | ✓ (this file) | rhodesli ROADMAP, CHANGELOG, SESSION_HISTORY, memory entries, push, Session 160 prompt skeleton (auto-fix) |
+
+## Auto-Fix Summary
+- Issues found by /session-review: 1 fixable, 3 informational
+- Auto-fixed: 1 (session-160-prompt.md created in commit `ef951c10`, pushed)
+- Deferred: 0 fixable (the 2 P2 + 1 P3 from Codex are pre-existing BACKLOG entries, not new findings)
 
 ### Concrete deliverables
 
