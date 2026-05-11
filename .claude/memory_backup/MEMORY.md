@@ -52,6 +52,10 @@
 - [feedback_complete_ml_pipeline.md](feedback_complete_ml_pipeline.md) — Don't stop at dry-run. Execute full pipeline end-to-end.
 - [feedback_identification_methodology.md](feedback_identification_methodology.md) — Event context > embedding distance for identification. Full-collection clustering, not filtered. Verify genealogical data.
 
+## Sibling Repos
+- [project_rhodes_wiki_repo.md](project_rhodes_wiki_repo.md) — /Users/nolanfox/rhodes-wiki/ (Session 159+, FB post → Rhodes vault → rhodesli inbox)
+- [reference_rhodes_wiki_paths.md](reference_rhodes_wiki_paths.md) — Quick reference for rhodes-wiki paths + commands
+
 ## Project State
 - [project_supabase_egress.md](project_supabase_egress.md) — Upgraded to Pro for 1 month; TTL reductions should allow downgrade back to free
 - [project_fox_sibling_resemblance.md](project_fox_sibling_resemblance.md) — Albert/Harry indistinguishable by ML. Need temporal + co-occurrence.
