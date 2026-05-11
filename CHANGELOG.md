@@ -2,6 +2,72 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.80] — 2026-05-11 (Session 159: rhodes-wiki scaffold + FB post ingestion pipeline)
+
+NEW sibling repo `/Users/nolanfox/rhodes-wiki/` scaffolded as private research workspace for the Rhodes Jewish community. Sister to rhodesli (photo platform) + fox-genealogy (Fox-family genealogy). Multi-session arc 159–162.
+
+### Architecture decisions (AskUserQuestion-locked 2026-05-11)
+- **Separate repo** at `/Users/nolanfox/rhodes-wiki/` — keeps rhodesli a generalized photo platform
+- **Local markdown only** (no Notion sync this session)
+- **Approval queue first** — extends rhodesli's PROPOSED→CONFIRMED gatekeeper pattern
+- **Manual FB nav** — user opens posts; Claude reads DOM via Chrome MCP after manual comment expansion; narrow exception for inline "View N more replies" clicks
+
+### rhodes-wiki shipped (v0.1.0)
+- `CLAUDE.md` (63 lines, ≤80 cap) — CRAIGen 5 invariants ported from fox-genealogy, cross-repo rules, doc-size caps
+- `docs/ARCHITECTURE.md` (658 lines, architecture-anchor exception ≤700) — repo layout, frontmatter schemas (5 types), **inbox JSON contract v0.1.0** (the rhodes-wiki↔rhodesli boundary), FB DOM strategy (8-tier selector priority), person matching algorithm, anti-goals
+- `docs/reference/confidence-tiers.md` — strong/good/possible/weak rubric + Rhodes source hierarchy
+- 5 `.claude/rules/`: `fb-tos-rule.md` (new — manual nav, narrow comment-expand exception), `browser-read-only.md` (inherited from rhodesli, Lesson 149), `session-defaults.md`, `verification-gate.md`, `doc-size-enforcement.md`
+- `.claude/settings.json` — read-only cross-repo bridge to rhodesli (post-audit tightened deny list, P1-1)
+- 5 markdown templates (person, post, family, place, source)
+- `places/rhodes.md` seed — Juderia, La Bashilica, 1944 deportation, post-war diaspora geography
+- `pyproject.toml` — Python ≥3.11, beautifulsoup4, pyyaml, python-slugify, pytest, ruff
+- `scripts/`: `parse_fb_dom.py`, `classify_images.py`, `extract_fb_post.py`, `write_inbox_entry.py`, `extract_person_hints.py`, `validate_inbox_contract.py`
+- `tests/`: 173 tests passing (synthetic fixtures with SYNTHETIC FIXTURE marker rule, e2e integration test)
+
+### Session 159 process
+- **Phase 0 Orient**: baseline `make test-fast` green; `harness-check.sh` 1 pre-existing failure (89 docs over cap; not from this session)
+- **Phase 1 Research** (3 parallel subagents with Lesson 182 canary): 1340-line research output across `01-fox-genealogy-patterns.md`, `02-rhodesli-ingest-contract.md`, `03-fb-dom-strategy.md`
+- **Phase 2 Architecture decisions doc**
+- **Phase 3 Scaffold** (35 files, first commit `ad9ea32`)
+- **Phase 4 Parser stubs** (2 parallel worktree subagents D + E, merged with 1 small conflict in `tests/conftest.py` — concatenation resolution)
+- **Phase 5 Codex audit** + 10 fixes (1 worktree subagent, 7 atomic commits)
+- **Phase 6 Closeout** — this entry
+
+### Codex audit (`docs/session_context/session-159-codex-audit.md`)
+- **Verdict pre-fix**: FAIL (6 P1, 4 P2, 3 P3)
+- **All 6 P1 fixed**: cross-repo deny tightening (P1-1), output-path containment (P1-2), image-download security incl. fbcdn allowlist + 50MB cap + path containment (P1-3), validator covers all §3.1 keys (P1-4), parser/writer field alignment incl. e2e integration test (P1-5), download_status enum aligned (P1-6)
+- **P2 fixed**: empty-capture refusal (P2-2), raw_html_sha256 canonical bare hex (P2-3)
+- **P2/P3 deferred to BACKLOG**: atomic writes (RELIABILITY-001), mechanical FB TOS hook (TOS-HOOK-001); person-hint regex polish (P3-1) superseded by Session 160's PERSON-MATCH-001
+- **Value assessment**: STRONG — would have cost ~1-2 hours of Session 160 debug to find these manually
+- **Notable**: subagent end-to-end smoke surfaced the parser/writer drift independently; Codex catalog completed the picture
+
+### Cross-repo invariants honored
+- rhodes-wiki NEVER writes to rhodesli (`.claude/settings.json` deny rules + behavioral rule in CLAUDE.md)
+- Single contract = `inbox/pending/<slug>/post.json` per ARCHITECTURE.md §3
+- Future Session 161 builds rhodesli `/admin/rhodes-inbox` route + new `rhodes_inbox_entries` Supabase table
+
+### Multi-session arc roadmap
+- **Session 160**: First real FB post test — user provides 1 Rhodes group post, expands comments manually, Claude captures DOM, iterates parser; builds person-hint v1 (real NER replacing regex stub)
+- **Session 161**: rhodesli-side `/admin/rhodes-inbox` route + approval UI + `rhodes_inbox_entries` Supabase table
+- **Session 162**: Dossier auto-update from approved posts; first wiki/ narrative pages
+
+### Test counts
+- rhodesli: 4271 app tests (no change; rhodes-wiki work doesn't touch rhodesli code)
+- rhodes-wiki: 173 tests (118 from Phase 4 + 55 added in Phase 5)
+
+### Files in rhodesli touched this session
+- `docs/prompts/session-159-prompt.md` (new)
+- `docs/session_context/session-159-context.md` (new)
+- `docs/session_context/session-159-research/{01,02,03}-*.md` (new — 1340 lines total)
+- `docs/session_context/session-159-codex-audit.md` (new — provenance + 13 findings + AI tool usage)
+- `docs/assessments/session-159-assessment.md` (new)
+- `ROADMAP.md` (this entry + Session 160/161/162 planned)
+- `CHANGELOG.md` (this entry)
+- `docs/roadmap/SESSION_HISTORY.md` (Session 159 entry)
+- Memory: `project_rhodes_wiki_repo.md`, `reference_rhodes_wiki_paths.md`, `MEMORY.md` updated
+
+---
+
 ## [v0.99.79] — 2026-05-10 (Session 158e: PRD-063 cutover landed — DB 2,564 → 1,309 MB, PostgREST recovered)
 
 PRD-063 Day 3 cutover **completed**. After 158d's cutover landed and was rolled back, 158e diagnosed the underlying root cause (Supabase Disk IO budget exhaustion, not just PostgREST internal stuck state per L186), executed the cutover RENAME + DROP + VACUUM, and reclaimed 1.3 GB from the database. PostgREST schema cache self-recovered without manual restart once disk pressure was relieved.

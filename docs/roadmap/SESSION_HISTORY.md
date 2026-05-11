@@ -1571,3 +1571,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Phase 158e-6 browser verify**: 6 canonical pages all 200 (root, community page, people grid, person page, /tools/compare, /tools/estimate). Invalid UUID returns 404 styled correctly.
 - **New Lessons 187-190**: PGRST002 ⇒ disk-IO budget (L187), pg_depend scan before DROP (L188), Management API token at setup (L189), pre-existing 5xx ≠ rollback trigger (L190).
 - 4271 app tests pass. 3 commits + assessment + auto-generated DROP+VACUUM report.
+
+## Session 159: rhodes-wiki Scaffold + FB Post Ingestion Pipeline (2026-05-11) — v0.99.80
+- **NEW SIBLING REPO**: `/Users/nolanfox/rhodes-wiki/` scaffolded — private research workspace for the Rhodes Jewish community. Sister to rhodesli (photo platform) and fox-genealogy (Fox-family genealogy). Multi-session arc Sessions 159–162.
+- **Locked architecture** (via AskUserQuestion): separate repo (not in rhodesli), local markdown only (no Notion), approval-queue first (extends PROPOSED→CONFIRMED gatekeeper), manual FB nav with Claude reads-only DOM after user expands comments.
+- **Phase 0 Orient**: harness-check green; baseline `make test-fast` green; Codex pin 4d fresh (gpt-5.5/xhigh).
+- **Phase 1 Research** (3 parallel subagents with Lesson 182 canary): 1340-line research output across 3 briefs — fox-genealogy patterns, rhodesli ingest contract (POST /upload, 10 Supabase tables), FB DOM strategy (`div[role=article]` anchor, 8-tier selector priority, fbcdn TTL ~30d).
+- **Phase 2 ARCHITECTURE.md** (658 lines, architecture anchor exception ≤700): repo layout, frontmatter schemas (5 types), inbox JSON contract v0.1.0 (the rhodes-wiki↔rhodesli boundary), FB DOM extraction strategy, person matching algorithm, anti-goals.
+- **Phase 3 Scaffold**: 35 files, first commit. CLAUDE.md (63 lines ≤80), 5 harness rules including new `fb-tos-rule.md`, cross-repo bridge (`.claude/settings.json` read-only to rhodesli), `places/rhodes.md` seed, 5 markdown templates, ROADMAP/CHANGELOG/BACKLOG, pyproject.toml.
+- **Phase 4 Parser stubs** (2 parallel worktree subagents): `parse_fb_dom.py`, `classify_images.py`, `extract_fb_post.py` (Subagent D); `write_inbox_entry.py`, `extract_person_hints.py`, `validate_inbox_contract.py` (Subagent E). 118 tests passing post-merge.
+- **Phase 5 Codex audit** (codex-cli 0.130 / gpt-5-codex / xhigh): FAIL verdict pre-fix — 6 P1, 4 P2, 3 P3. All 6 P1 + 2 P2 + 2 P3 fixed via worktree subagent (7 atomic commits, +55 new tests). 173 tests passing post-fix. RELIABILITY-001 (atomic writes) + TOS-HOOK-001 (mechanical FB hook) deferred to BACKLOG; P3-1 person-hint stub edge cases superseded by Session 160's PERSON-MATCH-001.
+- **Notable Codex catches** (would have cost ~1-2h in Session 160): images[].src vs original_url drift, nested vs flat post_date, image download SSRF + path traversal, validator missing 11 §3.1 keys, raw_html_sha256 format inconsistency (`sha256:hex` vs bare hex).
+- **Cross-repo boundary**: rhodes-wiki NEVER writes to rhodesli. Single contract = `inbox/pending/<slug>/post.json` per ARCHITECTURE.md §3. Future Session 161 builds rhodesli `/admin/rhodes-inbox` route + new `rhodes_inbox_entries` Supabase table.
+- 4271 rhodesli tests still green. 173 rhodes-wiki tests green. rhodes-wiki at v0.1.0 with 12 commits (local-only, no GitHub remote yet).
