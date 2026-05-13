@@ -4,7 +4,7 @@ description: Quick reference for navigating the rhodes-wiki sibling repo. Where 
 type: reference
 originSessionId: 53efd8a1-2589-4d9c-9291-7f0b5a60eaa8
 ---
-`/Users/nolanfox/rhodes-wiki/` is the rhodes-wiki sibling repo (Session 159+). Common paths:
+`/Users/nolanfox/rhodes-wiki/` is the rhodes-wiki sibling repo (Session 159+). **PRIVATE GitHub remote since 2026-05-13 / Session 160**: `github.com/NolanFox/rhodes-wiki`. Common paths:
 
 ## Architecture / contract
 - `docs/ARCHITECTURE.md` — full design (~660 lines, architecture anchor)
@@ -19,11 +19,13 @@ originSessionId: 53efd8a1-2589-4d9c-9291-7f0b5a60eaa8
 - `.claude/rules/browser-read-only.md` — inherited from rhodesli
 
 ## Scripts (all under `scripts/`)
-- `parse_fb_dom.py` — pure parser module (BeautifulSoup → structured dict). `parse_post(html) → dict`. `PARSER_VERSION = "0.1.0"`.
+- `parse_fb_dom.py` — HTML parser (BeautifulSoup → dict). `parse_post(html) → dict`. `PARSER_VERSION = "0.1.0"`.
 - `classify_images.py` — post-image vs avatar/icon classifier
-- `extract_fb_post.py` — CLI: HTML dump → `inbox/pending/<slug>/{post.json, post.html, meta.json}`
+- `extract_fb_post.py` — CLI for HTML-driven path: HTML dump → `inbox/pending/<slug>/{post.json, post.html, meta.json}`
 - `write_inbox_entry.py` — pure builder + image downloader (fbcdn allowlist + 50MB cap + path containment from Codex P1-3)
-- `extract_person_hints.py` — regex stub (Session 159); real NER replaces in Session 160
+- **`build_inbox_from_js_extraction.py`** (Session 160 NEW) — CLI for JS-structured path: `extracted.json` (from Chrome MCP `javascript_tool`) → `inbox/pending/<slug>/{post.json, extracted.json, meta.json}`. Used because Chrome MCP `read_page` returns accessibility tree, NOT HTML (Lesson 191).
+- **`extract_kinship.py`** (Session 160 NEW) — regex-based kinship NER w/ 6 patterns + `RHODES_SEPHARDI_SURNAMES` corpus. PERSON-MATCH-001 v1.
+- `extract_person_hints.py` — regex stub (Session 159); superseded by `extract_kinship.py` for relationships but still active for name extraction
 - `validate_inbox_contract.py` — schema validator against ARCHITECTURE.md §3.1; exit 0 valid, 1 invalid, 2 file error
 
 ## Wiki vault
@@ -49,15 +51,24 @@ originSessionId: 53efd8a1-2589-4d9c-9291-7f0b5a60eaa8
 ## Common commands
 ```bash
 # Run tests
-cd /Users/nolanfox/rhodes-wiki && python3 -m pytest -q
+cd /Users/nolanfox/rhodes-wiki && python3 -m pytest -q       # 209 tests as of S160
 
-# Extract a captured FB post
-python -m scripts.extract_fb_post --input <html-file> --output inbox/pending/<slug> --unsafe-output-dir
-# (--unsafe-output-dir is required if output isn't under <repo>/inbox/{pending|approved|rejected}/<slug>/; real captures should write to the canonical inbox path)
+# JS-STRUCTURED PATH (use this for Chrome MCP captures — Session 160+ default)
+python3 -m scripts.build_inbox_from_js_extraction \
+    --input <extracted.json> \
+    --output inbox/pending/<YYYY-MM-DD>_<fb-post-id>/
 
-# Validate an inbox entry
-python -m scripts.validate_inbox_contract --input inbox/pending/<slug>/post.json
+# HTML-DRIVEN PATH (use for stored HTML dumps — Session 159 path)
+python3 -m scripts.extract_fb_post --input <html-file> --output inbox/pending/<slug>/
 
-# Build the inbox JSON envelope from parser output
-python -m scripts.write_inbox_entry --parsed-json <parsed.json> --output-dir inbox/pending/<slug>
+# Validate an inbox entry (works for either path)
+python3 -m scripts.validate_inbox_contract --input inbox/pending/<slug>/post.json
+
+# Kinship NER on a captured post.json (Session 160 NEW)
+python3 -c "import json; from scripts.extract_kinship import extract_kinship_from_post; \
+  post = json.loads(open('inbox/pending/<slug>/post.json').read()); \
+  [print(t.to_dict()) for t in extract_kinship_from_post(post)]"
+
+# Push to GitHub (PRIVATE remote, set Session 160)
+cd /Users/nolanfox/rhodes-wiki && git push origin main
 ```

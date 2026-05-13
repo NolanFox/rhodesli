@@ -20,17 +20,18 @@ Captures Facebook group posts from "Jews of Rhodes" (~2,000 members) into a stru
 - Approval queue first (extends PROPOSED→CONFIRMED gatekeeper)
 - Manual FB nav by user; Claude reads DOM + may expand inline comments via Chrome MCP (narrow exception to browser-read-only)
 
-## Status as of 2026-05-11
-- v0.1.0, 12 commits, local-only (no GitHub remote)
-- 173 pytest tests passing
-- Codex audited (gpt-5-codex/xhigh): all 6 P1 + 2 P2 + 2 P3 findings fixed
-- Scripts: parse_fb_dom, classify_images, extract_fb_post, write_inbox_entry, extract_person_hints, validate_inbox_contract
-- End-to-end smoke verified against synthetic fixture
+## Status as of 2026-05-13 (Session 160 close)
+- **v0.2.0**, 17 commits, **PRIVATE GitHub** remote: `github.com/NolanFox/rhodes-wiki` (since 2026-05-13)
+- **209 pytest tests** passing (was 173 → +36 from Session 160 JS builder + kinship)
+- Codex audited twice: Session 159 (gpt-5-codex/xhigh, all P1/P2/P3 addressed); Session 160 (gpt-5.5/xhigh, 0 P0 / 2 P1 fixed / 6 P2 mostly fixed / 4 P3)
+- Scripts: parse_fb_dom, classify_images, extract_fb_post, write_inbox_entry, extract_person_hints, validate_inbox_contract, **build_inbox_from_js_extraction** (NEW S160), **extract_kinship** (NEW S160 — regex-based kinship NER w/ Rhodes-Sephardi corpus)
+- First real inbox entry: `inbox/pending/2026-04-28_2360240064471306/` (Martha Girgenti / 1971 Menasche family Rhodesia, 14/14 comments)
+- First 6 dossiers: Edward / Renee (née Surmany) / Zeni (LIVING) / Simon / Lionel Menasche + Sarah Surmany. 2 places: rhodesia, bath-road-rhodesia.
 
 ## Multi-session arc
-- Session 159 (DONE): scaffold + parser stubs + contract
-- Session 160: first real FB DOM + real NER (PERSON-MATCH-001) + first 5 Rhodes dossiers
-- Session 161: rhodesli `/admin/rhodes-inbox` route + `rhodes_inbox_entries` Supabase table
+- Session 159 (DONE 2026-05-11): scaffold + parser stubs + contract
+- Session 160 (DONE 2026-05-13): first real FB DOM via Chrome MCP javascript_tool (NOT HTML — Lesson 191), kinship NER v1, first 6 dossiers, JS-structured capture path documented, private GitHub remote
+- Session 161 (NEXT): rhodesli `/admin/rhodes-inbox` route + `rhodes_inbox_entries` Supabase table + FB image binary download (FB-DOWNLOAD-001) + nested-reply parser fix (FB-NESTED-001) + Chrome MCP site-permission docs (FB-PERMISSIONS-001)
 - Session 162: dossier auto-update + first wiki/ narrative pages
 
 ## Critical rules in rhodes-wiki/.claude/rules/
