@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.80 · ~4994 tests (4271 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed · DB 1,309 MB · NEW sibling repo /Users/nolanfox/rhodes-wiki/ scaffolded (Session 159, 173 tests, v0.1.0)
+Current: v0.99.80 · ~4994 tests (4271 app + 723 ML) · 1121 photos · 1824 identities · 167 confirmed · DB 1,309 MB · Sibling repo /Users/nolanfox/rhodes-wiki/ at v0.2.0 (Session 160, 209 tests, first real FB capture end-to-end)
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -138,8 +138,8 @@ See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite
 New sibling repo `/Users/nolanfox/rhodes-wiki/` extracts Facebook group posts into a markdown vault and feeds rhodesli's identity-ingestion pipeline via an inbox JSON contract. See `/Users/nolanfox/rhodes-wiki/docs/ARCHITECTURE.md` for the full design.
 
 - [x] 2026-05-11: RHODES-WIKI-001: Scaffold rhodes-wiki repo (Session 159) — 12 commits, v0.1.0, 173 tests
-- [ ] RHODES-WIKI-002: Session 160 — First real FB DOM end-to-end + person-hint v1 (NER, slug match, rhodesli cross-ref) + first 5 Rhodes dossiers
-- [ ] RHODES-WIKI-003: Session 161 — rhodesli `/admin/rhodes-inbox` route + approval UI + new `rhodes_inbox_entries` Supabase table
+- [x] 2026-05-13: RHODES-WIKI-002: Session 160 — First real FB DOM end-to-end + kinship NER v1 + first 6 Rhodes dossiers (Menasche family + Surmany). rhodes-wiki v0.2.0, 209 tests. NEW Chrome MCP JS-structured capture path documented (Lesson 191: read_page returns accessibility tree, NOT HTML).
+- [ ] RHODES-WIKI-003: Session 161 — rhodesli `/admin/rhodes-inbox` route + approval UI + new `rhodes_inbox_entries` Supabase table + FB image binary download (FB-DOWNLOAD-001) + FB-NESTED-001 nested-reply parser fix
 - [ ] RHODES-WIKI-004: Session 162 — Dossier auto-update from approved posts + first wiki/ narrative pages
 - [ ] RHODES-WIKI-LATER: Translation pipeline (Ladino/Greek/Italian/French/Hebrew captions); Notion publish workflow with privacy redactor; mechanical FB TOS hook (TOS-HOOK-001)
 

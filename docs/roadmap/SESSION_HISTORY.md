@@ -1572,6 +1572,47 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **New Lessons 187-190**: PGRST002 ⇒ disk-IO budget (L187), pg_depend scan before DROP (L188), Management API token at setup (L189), pre-existing 5xx ≠ rollback trigger (L190).
 - 4271 app tests pass. 3 commits + assessment + auto-generated DROP+VACUUM report.
 
+## Session 160: rhodes-wiki First Real FB Capture + Kinship NER (2026-05-11 to 2026-05-13) — rhodes-wiki v0.2.0 (rhodesli unchanged, docs-only)
+
+**Repo of record**: `/Users/nolanfox/rhodes-wiki/`. No rhodesli code changes; only docs (Lessons 191-197, this entry, assessment, audit log).
+
+**Source captured**: Martha Girgenti's 2026-04-28 FB post about Edward & Renee Menasche (1971 Rhodesia) in *Jews of Rhodes: Family Memories & Heritage* private group. 14 comments total (12 top-level via JS extraction + 2 nested replies via user-screenshot verification).
+
+**Key architectural finding**: Chrome MCP `read_page` returns accessibility tree, NOT raw HTML — Session 159's HTML-driven pipeline cannot consume Chrome MCP output directly. Solution: new `scripts/build_inbox_from_js_extraction.py` reads structured JSON from `javascript_tool` and produces the same contract-valid `post.json` per ARCHITECTURE.md §3.1. Both capture paths now documented in §4.1.
+
+**Shipped (rhodes-wiki v0.2.0, 4 commits)**:
+- `scripts/build_inbox_from_js_extraction.py` — JS-structured capture path (288 lines).
+- `scripts/extract_kinship.py` — regex-based kinship NER with 6 patterns + Rhodes-Sephardi surname corpus (PERSON-MATCH-001 v1).
+- `scripts/extract_fb_post.py` — schema-drift fix (4 contract fields silently missing since Session 159).
+- First real inbox entry: `inbox/pending/2026-04-28_2360240064471306/` (post.json + extracted.json audit + meta.json).
+- 6 person dossiers: Edward, Renee (née Surmany), Zeni (LIVING + privacy gated), Simon, Lionel Menasche, Sarah Surmany.
+- 2 places: `places/rhodesia.md` (with Northern→Zambia / Southern→Zimbabwe disambiguation), `places/bath-road-rhodesia.md`.
+- 1 source citation, 1 wiki post entry.
+
+**Codex audit** (gpt-5.5/xhigh, 201k tokens, ~3min): 0 P0 / 2 P1 / 6 P2 / 4 P3. ALL P1 fixed inline (path-traversal regression; byte-hash divergence between claim and on-disk reality). 4 P2 fixed inline (contract pre-write validation, tagged_people schema, expansion_complete heuristic, dossier wording). 2 P2 partial (kinship "Aunt to us" downgraded; surname propagation across paired names). P3-C/D fixed; P3-A/B backlogged. Value: STRONG — caught the byte-hash bug we'd never have found without explicit hash-equivalence testing.
+
+**Tests**: rhodes-wiki 209/209 passing (up from 173 — added 17 e2e for JS builder, 16 kinship tests, 3 HTML-CLI regression). rhodesli baseline (4271 app tests) intact (no code touched).
+
+**Genealogical signal surfaced** (from comments, all citable to specific comment_ids):
+- Renee's maiden name = Surmany (April Merdjan, comment 2360919741070005)
+- Renee's mother = "Madam Sarah Surmany" (same comment)
+- Edward's siblings include Simon + Lionel Menasche (Henry Tarica, neighbor recollection, 2360285967800049)
+- Family lived on Bath Road in Rhodesia
+- Renee served as Secretary at Sephardi Shul with assistant Camillo
+- Rachel + Nathanel Menashe (paired spouse) were aunt/uncle to April Merdjan's husband's family
+- Rachel is sister of Diana Amato Merdjan (April's mother-in-law)
+- David Zen Amoils is Martha Girgenti's cousin
+- Zeni (the child in the photo) is alive in 2026 per Esther Salzman's "Love to Zeni"
+
+**Lessons added (rhodesli `tasks/lessons.md`)**: 191 (Chrome MCP `read_page` ≠ HTML), 192 (FB dual-renders DOM), 193 (MCP "Sensitive key" gate over-blocks names), 194 (per-action permission popups; batch JS extraction), 195 (comments are primary genealogical sources), 196 (JS extraction misses nested replies), 197 (living-person dossiers need `living: true` flag).
+
+**Followups (rhodes-wiki BACKLOG + rhodesli session 161 candidates)**:
+- FB-DOWNLOAD-001: image binary download for the 1971 photo
+- FB-NESTED-001: parser fix for nested replies (depth>0)
+- FB-PERMISSIONS-001: Chrome MCP site-permission setup documentation
+- JS-BUILDER-001/002/003/004: kinship-via field, inbox-JSON privacy markers, kinship name regex extension, HTML-CLI validator parity
+- rhodesli `/admin/rhodes-inbox` route (Session 161 main work)
+
 ## Session 159: rhodes-wiki Scaffold + FB Post Ingestion Pipeline (2026-05-11) — v0.99.80
 - **NEW SIBLING REPO**: `/Users/nolanfox/rhodes-wiki/` scaffolded — private research workspace for the Rhodes Jewish community. Sister to rhodesli (photo platform) and fox-genealogy (Fox-family genealogy). Multi-session arc Sessions 159–162.
 - **Locked architecture** (via AskUserQuestion): separate repo (not in rhodesli), local markdown only (no Notion), approval-queue first (extends PROPOSED→CONFIRMED gatekeeper), manual FB nav with Claude reads-only DOM after user expands comments.
