@@ -18,13 +18,25 @@ Session 160 produced the first real FB inbox entry (`~/rhodes-wiki/inbox/pending
 
 ## Architecture decisions (lock these before coding)
 
-### AD-S161-1: `/admin/rhodes-inbox` is a LOCAL-DEV-ONLY route
+### AD-S161-1: `/admin/rhodes-inbox` is a LOCAL-DEV-ONLY route — defense in depth
 
 **Question**: How does rhodesli (which runs on Railway in prod) read `~/rhodes-wiki/inbox/pending/`? Railway has no filesystem access to the user's laptop.
 
-**Decision**: The admin route is gated on local filesystem availability — `os.path.exists("/Users/nolanfox/rhodes-wiki/inbox/pending")` OR the `RHODES_WIKI_ROOT` env var. Production Railway has neither → route returns 404 cleanly. Local dev → fully functional. This avoids any need to sync inbox JSON to Supabase / R2.
+**Decision** (revised post-audit P1-2): The admin route is gated by `is_rhodes_wiki_available()` which requires **BOTH** of:
+1. Path existence: `Path(RHODES_WIKI_ROOT or ~/rhodes-wiki) / "inbox" / "pending"` is a directory
+2. Production marker absence: `not os.environ.get("RAILWAY_ENVIRONMENT")` (and any other production markers we add)
 
-**Why this works**: the admin user is Nolan, who develops rhodesli locally and has rhodes-wiki on the same machine. Approval is a discretionary admin action, not something users do. Local-only is fine.
+Both must be true. Production Railway has `RAILWAY_ENVIRONMENT=production` → gate is False even if a stray path exists. A misconfigured `RHODES_WIKI_ROOT` on Railway is harmless. Local dev → no env var → gate is True if the path exists. This avoids any need to sync inbox JSON to Supabase / R2.
+
+```python
+def is_rhodes_wiki_available() -> bool:
+    if os.environ.get("RAILWAY_ENVIRONMENT"):  # hard production block
+        return False
+    root = os.environ.get("RHODES_WIKI_ROOT", str(Path.home() / "rhodes-wiki"))
+    return (Path(root) / "inbox" / "pending").is_dir()
+```
+
+**Why this works**: the admin user is Nolan, who develops rhodesli locally and has rhodes-wiki on the same machine. Approval is a discretionary admin action, not something users do. Local-only + production-marker gate is fine.
 
 **Future**: if a second admin needs remote approval, OD-013 (TBD) will document the sync-to-Supabase migration.
 
@@ -48,7 +60,7 @@ Session 160 produced the first real FB inbox entry (`~/rhodes-wiki/inbox/pending
 
 ### AD-S161-4: Supabase `rhodes_inbox_entries` schema
 
-**Decision** — minimal provenance table:
+**Decision** (revised post-audit P1-3, P1-7, P3-B) — provenance + cached kinship triples + length-capped rejection reason:
 
 ```sql
 CREATE TABLE rhodes_inbox_entries (
@@ -63,12 +75,13 @@ CREATE TABLE rhodes_inbox_entries (
   contract_version text DEFAULT '0.1.0',
   parser_version text,
   comments_count int,
-  status text NOT NULL DEFAULT 'pending'    -- pending | approved | rejected
+  status text NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'approved', 'rejected')),
   approved_by text,
   approved_at timestamptz,
-  rejection_reason text,
+  rejection_reason text CHECK (length(rejection_reason) <= 4096),
   rhodesli_photo_id text REFERENCES photos(photo_id),
+  kinship_triples_json jsonb,               -- cached: computed once at first detail-view load
   notes text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -78,7 +91,11 @@ CREATE INDEX idx_rhodes_inbox_status ON rhodes_inbox_entries(status);
 CREATE INDEX idx_rhodes_inbox_fb_post ON rhodes_inbox_entries(fb_post_id);
 ```
 
-This table tracks: which inbox entries have been processed, by whom, and the resulting rhodesli photo (if approved). The local filesystem (`inbox/pending/` vs `inbox/approved/`) is the source of truth for entry CONTENT; this table is the **rhodesli-side status mirror**.
+This table tracks: which inbox entries have been processed, by whom, the resulting rhodesli photo (if approved), and the cached kinship triples (computed once via `app/extract_kinship.py` — COPIED from rhodes-wiki at Phase 0 to decouple). Supabase is **authoritative for status** (AD-S161-6); the local filesystem mirrors it.
+
+**Verified vs `photos` table**: `photos.photo_id` is `TEXT PRIMARY KEY` per `scripts/sql/001_photos_table.sql:6` — `rhodesli_photo_id text REFERENCES photos(photo_id)` is correct.
+
+**rhodes-wiki ARCHITECTURE.md §3.3 will be updated** in Phase 7 to match this canonical schema (Phase 1 schema drift fix).
 
 ### AD-S161-5: Cross-repo bridge for rhodesli → rhodes-wiki
 
@@ -86,11 +103,21 @@ This table tracks: which inbox entries have been processed, by whom, and the res
 
 **Decision**: Add `/Users/nolanfox/rhodes-wiki` to rhodesli's `additionalDirectories` with **Read-only allow** rules. This is a HARNESS change (HD-NNN), not application code — Claude Code sessions in the rhodesli repo will be able to read the inbox JSON. The PRODUCTION app reads via Python `Path("/Users/nolanfox/rhodes-wiki/inbox/...")` which works at runtime regardless of Claude harness settings.
 
-### AD-S161-6: Status transitions are file-system-mirrored
+### AD-S161-6: Supabase is authoritative for status; filesystem mirrors it
 
-**Decision**: When approved, the inbox entry directory moves from `inbox/pending/<slug>/` to `inbox/approved/<slug>/` on the rhodes-wiki filesystem. When rejected, → `inbox/rejected/<slug>/`. This is a filesystem move; the Supabase row records the same status. Two sources of truth, kept in sync by the admin route.
+**Decision** (revised post-audit P2-G): **Supabase is authoritative for status. Filesystem mirrors it for offline-readable provenance.**
 
-**Why filesystem-mirrored**: rhodes-wiki's local vault is authoritative for content. The status field needs to be visible to a future researcher browsing the vault offline (without Supabase access).
+When approved:
+1. Supabase upsert: `UPDATE rhodes_inbox_entries SET status='approved', approved_by=..., approved_at=now() WHERE slug=$1 AND status='pending' RETURNING *`
+2. If empty result → someone else already approved → raise `AlreadyApprovedError`
+3. If RETURNING populated → filesystem `os.replace(pending/<slug>, approved/<slug>)` — POSIX atomic rename
+4. If step 3 fails (e.g., disk full, EACCES) → leave Supabase row at approved + log error + raise; reconciliation script will detect drift
+
+**Atomicity ordering** (revised post-audit P0-1): Supabase first because the upsert is idempotent (retry = no-op). Filesystem second because `os.replace()` is atomic per POSIX. Same filesystem required (always true: both states are under `~/rhodes-wiki/inbox/`).
+
+**Why this ordering**: a crash between Supabase-write and filesystem-move leaves status=approved in Supabase but entry still in `pending/`. The reconciliation script detects this and either re-attempts the move (admin opt-in) or reports drift. This is recoverable. The reverse ordering (filesystem-first) would leave entry in `approved/` with no Supabase row — INVISIBLE to admin UI until a manual SQL query.
+
+**Reconciliation**: `scripts/rhodes_inbox_reconcile.py --dry-run` walks both Supabase and the filesystem, reports drift, optionally `--apply` to reconcile. Phase 2 ships this script.
 
 ---
 
@@ -217,18 +244,18 @@ None blocking — Architecture Decisions 1-6 are the answers. But two clarificat
 
 ## Estimated total time
 
-| Phase | Time |
-|---|---|
-| 0 — Pre-flight | 10 min |
-| 1 — Supabase table | 15 min |
-| 2 — Inbox reader | 25 min |
-| 3 — Admin routes | 30 min |
-| 4 — UI templates | 25 min |
-| 5 — Prefill integration | 15 min |
-| 6 — Tests | 25 min |
-| 7 — rhodes-wiki carry | 20 min |
-| 8 — Codex audit + fixes | 15 min |
-| 9 — Closeout | 15 min |
-| **TOTAL** | **~3 hours** |
+| Phase | Time | Notes |
+|---|---|---|
+| 0 — Pre-flight + harness + extract_kinship copy | 15 min | +5 (Phase 0 expanded with audit P0/P1 helpers) |
+| 1 — Supabase table | 15 min | |
+| 2 — Inbox reader + reconcile script | 35 min | +10 (audit P0-1 atomic ordering + reconcile script) |
+| 3 — Admin routes | 40 min | +10 (audit P1-5 sidebar wiring) |
+| 4 — UI templates | 25 min | |
+| 5 — Prefill integration | 20 min | +5 (audit P1-6 reads approved/, slug validation) |
+| 6 — Tests | 30 min | +5 (audit-driven tests: path traversal, race, gate) |
+| 7 — rhodes-wiki carryovers + ARCH §3.3 sync | 25 min | +5 (audit P1-3 schema doc sync) |
+| 8 — Audit + fixes | 45 min | +30 (audit P2-E budget overrun) |
+| 9 — Closeout + RHODES_INBOX.md doc | 25 min | +10 (audit P2-I AD persistence) |
+| **TOTAL** | **~4h 15min** | Revised from 3h pre-audit |
 
-Fits in a single focused session. No /clear needed between phases if context budget holds (~150k expected for this scope).
+Single focused session OR split if context budget pressure (~200k expected post-audit). /clear after Phase 4 if context > 120k.

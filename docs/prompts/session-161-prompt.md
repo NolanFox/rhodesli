@@ -5,7 +5,8 @@
 **Mode**: implementation
 **Primary repo**: rhodesli (code changes here)
 **Secondary repo**: rhodes-wiki (read-only; Session 160 carry-overs in Phase 7)
-**Estimated time**: ~3 hours, single session, no /clear between phases
+**Estimated time**: ~4h 15min (revised post-Codex-audit). /clear after Phase 4 if context > 120k.
+**Pre-execution audit**: see `docs/session_context/session-161-codex-audit.md` — Verdict PROCEED-WITH-FIXES; 2 P0 + 7 P1 + 9 P2 + 5 P3; all P0/P1 fixes applied to this prompt + context BEFORE you start.
 
 ---
 
@@ -48,22 +49,43 @@ If any of these fail → STOP and diagnose. The pre-flight failures of Session 1
 
 ---
 
-## Phase 0 — Harness setup (10 min)
+## Phase 0 — Harness setup + extract_kinship copy + P0 helpers (15 min)
 
-**Goal**: rhodesli Claude Code sessions can read rhodes-wiki inbox via the bridge.
+**Goal**: rhodesli ready to consume rhodes-wiki inbox; audit P0-2 helpers in place; kinship NER decoupled.
 
-1. Add to `/Users/nolanfox/rhodesli/.claude/settings.json` `additionalDirectories: ["/Users/nolanfox/rhodes-wiki"]` with **Read-only** allow rules:
+1. Add to `/Users/nolanfox/rhodesli/.claude/settings.json` `additionalDirectories: ["/Users/nolanfox/rhodes-wiki"]`:
    ```json
+   "additionalDirectories": ["/Users/nolanfox/rhodes-wiki"],
    "allow": [
      "Read(/Users/nolanfox/rhodes-wiki/**)",
      "Bash(ls /Users/nolanfox/rhodes-wiki/inbox/**:*)"
+   ],
+   "deny": [
+     "Edit(/Users/nolanfox/rhodes-wiki/**)",
+     "Write(/Users/nolanfox/rhodes-wiki/**)",
+     "Bash(python:* /Users/nolanfox/rhodes-wiki/*)",
+     "Bash(python3:* /Users/nolanfox/rhodes-wiki/*)",
+     "Bash(rm:* /Users/nolanfox/rhodes-wiki/*)",
+     "Bash(mv:* /Users/nolanfox/rhodes-wiki/*)"
    ]
    ```
-   AND a deny rule that blocks Write/Edit on the rhodes-wiki path (defense in depth — rhodesli MUST NOT write into rhodes-wiki except through `rhodes_inbox.mark_approved/mark_rejected` which uses Python shutil with explicit allow).
+   (Codex audit P2-H: deny rules cover runtime Python invocations from Claude Code sessions; the actual web app at runtime is exempt by design — admin routes call `rhodes_inbox.mark_approved/mark_rejected` which use `os.replace()` with explicit slug validation).
 
-2. Commit: `chore(harness): add rhodes-wiki read bridge to rhodesli settings`
+2. **Audit P0-2: Copy `extract_kinship.py` from rhodes-wiki to rhodesli** (decouples cross-repo Python import per Audit P1-7):
+   ```bash
+   cp /Users/nolanfox/rhodes-wiki/scripts/extract_kinship.py /Users/nolanfox/rhodesli/app/extract_kinship.py
+   # Update import paths in the copy — search for "from scripts." and update to "from app."
+   ```
+   Update top-of-file comment to note "Copied from rhodes-wiki Session 160 to decouple cross-repo Python (Audit P1-7)."
 
-**Acceptance**: `Read("/Users/nolanfox/rhodes-wiki/inbox/pending/2026-04-28_2360240064471306/post.json")` succeeds in this session.
+3. Run baseline `make test-fast` and verify 4271+ tests pass after the copy.
+
+4. Commit: `chore(harness): add rhodes-wiki read bridge + copy extract_kinship for decoupling`
+
+**Acceptance**:
+- `Read("/Users/nolanfox/rhodes-wiki/inbox/pending/2026-04-28_2360240064471306/post.json")` succeeds.
+- `from app.extract_kinship import extract_kinship_from_post` works in rhodesli.
+- `make test-fast` still passes.
 
 ---
 
@@ -91,14 +113,33 @@ If any of these fail → STOP and diagnose. The pre-flight failures of Session 1
 
 ---
 
-## Phase 2 — Inbox reader module (25 min)
+## Phase 2 — Inbox reader module + reconcile script (35 min)
 
-**Goal**: `app/rhodes_inbox.py` — pure functions for reading + status-mutating inbox entries.
+**Goal**: `app/rhodes_inbox.py` (pure functions) + `scripts/rhodes_inbox_reconcile.py` (drift detection).
 
-API:
+**API** (revised per Audit P0-1, P0-2, P1-7, P2-A, P2-B, P2-G):
+
 ```python
+# Audit P0-2: slug validation BEFORE any filesystem op
+import re
+_SLUG_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}_[a-zA-Z0-9_-]+$")
+
+def _validate_slug(slug: str) -> None:
+    if not _SLUG_PATTERN.fullmatch(slug):
+        raise ValueError(f"invalid slug: {slug!r}")
+    # Defense in depth: resolve and verify it stays within inbox root
+    inbox_root = _rhodes_wiki_inbox_root().resolve()
+    for state in ("pending", "approved", "rejected"):
+        candidate = (inbox_root / state / slug).resolve()
+        if os.path.commonpath([str(candidate), str(inbox_root)]) != str(inbox_root):
+            raise ValueError(f"slug resolves outside inbox root: {slug!r}")
+
+# Audit P1-2: BOTH path AND not-production gate
 def is_rhodes_wiki_available() -> bool:
-    """True iff $RHODES_WIKI_ROOT (or default ~/rhodes-wiki/) has inbox/pending."""
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
+        return False
+    root = os.environ.get("RHODES_WIKI_ROOT", str(Path.home() / "rhodes-wiki"))
+    return (Path(root) / "inbox" / "pending").is_dir()
 
 @dataclass
 class InboxSummary:
@@ -112,59 +153,125 @@ class InboxSummary:
 def list_pending_entries() -> list[InboxSummary]: ...
 def list_approved_entries() -> list[InboxSummary]: ...
 def list_rejected_entries() -> list[InboxSummary]: ...
-def load_entry(slug: str) -> dict:
-    """Returns post.json content + extracted.json + meta.json merged."""
+
+# Audit P1-6: state param so prefill can load from approved/
+def load_entry(slug: str, *, state: Literal["pending", "approved", "rejected"] = "pending") -> dict:
+    """Returns post.json content + extracted.json + meta.json merged.
+    state determines which subdirectory to read from."""
+
+# Audit P0-1 + P2-A: Supabase-first, atomic CAS, idempotent retries
+class AlreadyApprovedError(RuntimeError): ...
 
 def mark_approved(slug: str, *, approved_by: str, rhodesli_photo_id: str | None = None) -> None:
-    """Move inbox/pending/<slug>/ → inbox/approved/<slug>/ + upsert Supabase row.
-    Atomic-or-rollback: if filesystem move succeeds but Supabase write fails,
-    move back. If Supabase succeeds but filesystem fails, mark Supabase row
-    with status=approved_pending_filesystem and log error."""
+    """Atomic CAS via Supabase + os.replace() for filesystem.
+
+    Order:
+    1. _validate_slug(slug)  — path-traversal guard
+    2. Supabase: UPDATE rhodes_inbox_entries SET status='approved', approved_by=...,
+       approved_at=now() WHERE slug=$1 AND status='pending' RETURNING *
+    3. If RETURNING empty → raise AlreadyApprovedError (someone else won the race)
+    4. os.replace(inbox/pending/<slug>, inbox/approved/<slug>)  — POSIX atomic
+    5. If step 4 fails → log error + leave Supabase row at approved (reconciliation
+       script detects + reports). Re-raise the OSError.
+
+    Retries are idempotent: a re-run hits AlreadyApprovedError at step 3 (no harm)
+    or finds the filesystem already moved at step 4 (no-op via if-exists check).
+    """
 
 def mark_rejected(slug: str, *, rejected_by: str, reason: str) -> None: ...
+
+def kinship_triples_for(slug: str) -> list[dict]:
+    """Audit P1-7: returns cached kinship triples from rhodes_inbox_entries.kinship_triples_json.
+    If null, computes via app.extract_kinship.extract_kinship_from_post, caches, returns."""
 ```
 
-**Tests** (`tests/test_rhodes_inbox.py`, ≥10 tests):
+**Reconcile script** (`scripts/rhodes_inbox_reconcile.py` — Audit P2-G):
+- `--dry-run` walks both Supabase rhodes_inbox_entries and the filesystem
+- Reports drift cases: (a) FS in approved/ but Supabase status=pending, (b) Supabase status=approved but FS in pending/, (c) FS in pending/ but no Supabase row at all
+- `--apply` reconciles by trusting Supabase (the authoritative source per AD-S161-6)
+
+**Tests** (`tests/test_rhodes_inbox.py`, ≥15 tests — Audit P0-2, P1-2, P2-A):
 - list with no entries → empty
 - list with the Session 160 entry → 1 entry, correct fields
 - load_entry with valid slug → returns full dict
 - load_entry with invalid slug → raises FileNotFoundError
-- mark_approved moves directory + writes row
-- mark_approved rollback when Supabase write fails (mock the failure)
-- is_rhodes_wiki_available True when path exists, False when env says don't look
+- **`test_mark_approved_rejects_path_traversal_slug`** — `slug="../../../etc"` raises ValueError before any filesystem op (Audit P0-2)
+- **`test_mark_approved_atomic_cas_race`** — two threading.Thread approvals dispatched simultaneously; exactly one succeeds, the other raises AlreadyApprovedError (Audit P2-A)
+- **`test_is_rhodes_wiki_available_blocked_by_RAILWAY_ENVIRONMENT`** — even with valid path, RAILWAY_ENVIRONMENT=production → False (Audit P1-2)
+- mark_approved happy path: Supabase row updated + filesystem moved
+- mark_approved Supabase failure → no filesystem move attempted; clear error surfaced
+- mark_approved filesystem failure → Supabase row already at approved; OSError raised; drift detectable by reconcile
 - Edge: malformed post.json in pending → list_pending logs warning + skips, doesn't crash
+- Reconcile dry-run detects forged drift correctly (set up FS in approved/ + Supabase pending; assert detection)
+- Audit P2-D: `_log_audit(action='rhodes_inbox.approve', actor=..., entity_id=slug)` called on success
 
-**Commit**: `feat(rhodes-inbox): inbox reader module + Supabase status sync`
+**Commit**: `feat(rhodes-inbox): inbox reader + Supabase atomic-CAS + reconcile script`
 
-**Acceptance**: tests pass; running `python -c "from app.rhodes_inbox import list_pending_entries; print(list_pending_entries())"` returns 1 entry (the Session 160 capture).
+**Acceptance**: tests pass; `python -c "from app.rhodes_inbox import list_pending_entries; print(list_pending_entries())"` returns 1 entry; `python scripts/rhodes_inbox_reconcile.py --dry-run` reports "no drift" when state is consistent.
 
 ---
 
-## Phase 3 — Admin routes (30 min)
+## Phase 3 — Admin routes (40 min, +10 per Audit P1-5)
 
-**Goal**: 4 routes wired into `app/main.py` (or new `app/admin_rhodes_inbox_routes.py` imported into main).
+**Goal**: 4 routes in new `app/admin_rhodes_inbox_routes.py` imported by main.py; sidebar wired.
 
 ```python
-@app.get("/admin/rhodes-inbox")
-def admin_rhodes_inbox_list(sess): ...   # list view
+# All POST handlers MUST follow this exact gate order (Audit P1-1: CSRF first):
 
-@app.get("/admin/rhodes-inbox/{slug}")
-def admin_rhodes_inbox_detail(slug, sess): ...   # detail view
+@rt("/admin/rhodes-inbox")
+def get(sess=None, request=None):
+    if not is_rhodes_wiki_available(): return Response("", status_code=404)
+    guard = _check_admin(sess)
+    if guard: return guard
+    # render list view
+    ...
 
-@app.post("/admin/rhodes-inbox/{slug}/approve")
-def admin_rhodes_inbox_approve(slug, sess, request): ...   # approves + redirects to upload form prefill
+@rt("/admin/rhodes-inbox/{slug}")
+def get(slug: str, sess=None, request=None):
+    if not is_rhodes_wiki_available(): return Response("", status_code=404)
+    guard = _check_admin(sess)
+    if guard: return guard
+    _validate_slug(slug)  # Audit P0-2: raises ValueError → 400
+    # render detail view (use kinship_triples_for(slug) for cached triples)
+    ...
 
-@app.post("/admin/rhodes-inbox/{slug}/reject")
-def admin_rhodes_inbox_reject(slug, sess, request): ...   # rejects with reason
+@rt("/admin/rhodes-inbox/{slug}/approve")  # POST
+def post(slug: str, sess=None, request=None, notes: str = ""):
+    if not is_rhodes_wiki_available(): return Response("", status_code=404)
+    origin_err = _check_origin(request)  # Audit P1-1: CSRF check FIRST
+    if origin_err: return origin_err
+    guard = _check_admin(sess)
+    if guard: return guard
+    _validate_slug(slug)  # Audit P0-2
+    user = User.from_session(sess)
+    try:
+        mark_approved(slug, approved_by=user.email)
+    except AlreadyApprovedError:
+        return RedirectResponse(f"/admin/rhodes-inbox/{slug}?msg=already_approved", status_code=303)
+    _log_audit(action='rhodes_inbox.approve', actor=user.email, entity_type='rhodes_inbox', entity_id=slug)  # Audit P2-D
+    return RedirectResponse(f"/upload?prefill={slug}", status_code=303)
+
+@rt("/admin/rhodes-inbox/{slug}/reject")  # POST
+def post(slug: str, sess=None, request=None, reason: str = ""):
+    if not is_rhodes_wiki_available(): return Response("", status_code=404)
+    origin_err = _check_origin(request)
+    if origin_err: return origin_err
+    guard = _check_admin(sess)
+    if guard: return guard
+    _validate_slug(slug)
+    user = User.from_session(sess)
+    mark_rejected(slug, rejected_by=user.email, reason=reason[:4096])  # Audit P3-B: length cap
+    _log_audit(action='rhodes_inbox.reject', actor=user.email, entity_type='rhodes_inbox', entity_id=slug, details={'reason': reason[:200]})
+    return RedirectResponse(f"/admin/rhodes-inbox", status_code=303)
 ```
 
-All gated by `_check_admin(sess)` + `is_rhodes_wiki_available()` (returns 404 if not available).
+**Wire into admin sidebar** (Audit P1-5 pre-research): nav is in `app/components/nav.py` (extracted in REFACTOR-001 Phase 2). Existing pattern at `app/main.py:4640-4700` (`nav_item(f"{prefix}/admin/X", icon, label, count, key, color)`). Add a new entry between `/admin/pending` and `/admin/approvals` for visibility — title "Rhodes Inbox", icon "📥", count = `count_pending_rhodes_inbox()`, color "indigo".
 
-**Wire into admin sidebar** — find the existing admin nav in main.py and add a "Rhodes Inbox" link with pending count badge (Lesson 138: features not in nav are invisible).
+The count function: gate on `is_rhodes_wiki_available()`; return 0 in production.
 
-**Commit**: `feat(rhodes-inbox): admin routes for inbox approval workflow`
+**Commit**: `feat(rhodes-inbox): 4 admin routes + sidebar wiring + CSRF + slug validation`
 
-**Acceptance**: `curl http://localhost:5001/admin/rhodes-inbox` (with admin auth cookie) returns the list view HTML; `curl -X POST .../approve` (mocked / no real action) returns expected redirect; `_check_admin` rejection returns 401.
+**Acceptance**: `curl -H "Cookie: <admin_cookie>" http://localhost:5001/admin/rhodes-inbox` returns the list view; `curl -X POST` without Origin header returns 403; `curl -X POST` with malformed slug returns 400; unauthenticated → 401; production (RAILWAY_ENVIRONMENT set) → 404.
 
 ---
 
@@ -197,26 +304,41 @@ All gated by `_check_admin(sess)` + `is_rhodes_wiki_available()` (returns 404 if
 
 ---
 
-## Phase 5 — Upload form prefill (15 min)
+## Phase 5 — Upload form prefill (20 min, +5 per Audit P1-6)
 
 **Goal**: existing rhodesli upload endpoint accepts `?prefill=<slug>` and prefills the form.
 
-Find the existing upload route in `app/upload_routes.py` (the GET handler at `@rt("/upload")` line ~348, POST handler at ~526). Add `?prefill=<slug>` handling to the GET handler:
-- Look up `rhodes_inbox_entries` row for slug
-- Look up inbox entry post.json content
-- Prefill form fields:
-  - community → "rhodes"
-  - source → "Facebook — Jews of Rhodes group"
-  - collection → "FB Group Posts"
-  - source_url → post.fb_post_url
-  - description / caption → post.caption.text
-  - admin_notes → `Inbox entry: <slug>\nFB post: <fb_post_id>\nCaptured: <captured_at>`
+Find the existing upload route in `app/upload_routes.py` (GET handler at `@rt("/upload")` line ~348, POST handler at ~526). Add `?prefill=<slug>` handling to the GET handler:
 
-On upload success, server-side callback updates `rhodes_inbox_entries.rhodesli_photo_id = <new_photo_id>`. Wire via `_background_ingest` or wherever post-upload-success hooks live.
+```python
+# Audit P1-6: prefill GET reads from APPROVED state (post-approval is the right
+# time to prefill — the approve route already moved the entry to inbox/approved/)
+prefill_slug = request.query_params.get("prefill")
+if prefill_slug:
+    from app.rhodes_inbox import _validate_slug, load_entry, is_rhodes_wiki_available
+    if not is_rhodes_wiki_available():
+        return Response("", status_code=404)
+    try:
+        _validate_slug(prefill_slug)  # Audit P0-2: re-validate on prefill GET too
+        entry = load_entry(prefill_slug, state="approved")  # Audit P1-6: approved/
+        prefill = {
+            "community": "rhodes",
+            "source": "Facebook — Jews of Rhodes group",
+            "collection": "FB Group Posts",
+            "source_url": entry["fb_post_url"],
+            "description": entry["caption"]["text"],
+            "admin_notes": f"Inbox entry: {prefill_slug}\nFB post: {entry['fb_post_id']}\nCaptured: {entry['captured_at']}",
+        }
+    except (ValueError, FileNotFoundError) as exc:
+        logger.warning("Prefill failed for slug %r: %s", prefill_slug, exc)
+        prefill = {}
+```
+
+On upload success, server-side callback updates `rhodes_inbox_entries.rhodesli_photo_id = <new_photo_id>`. Wire via `_background_ingest` or wherever post-upload-success hooks live — pass `prefill_slug` through the upload form as a hidden field so the POST handler can perform the linkback.
 
 **Commit**: `feat(rhodes-inbox): upload form prefill + photo_id linkback`
 
-**Acceptance**: clicking "Approve & Open Upload Form" in the detail page lands on the upload form with all 5 fields populated. Uploading a test photo binary sets `rhodes_inbox_entries.rhodesli_photo_id` correctly.
+**Acceptance**: clicking "Approve & Open Upload Form" in the detail page → /upload?prefill=<slug> → form has community=rhodes + source + collection + source_url + description prefilled. Uploading a test photo binary sets `rhodes_inbox_entries.rhodesli_photo_id` correctly. Reload of the same prefill URL works (idempotent reads from approved/). Malformed slug → form renders blank, no crash.
 
 ---
 
@@ -242,13 +364,15 @@ Coverage targets:
 
 ---
 
-## Phase 7 — rhodes-wiki carry-overs (20 min)
+## Phase 7 — rhodes-wiki carry-overs + ARCH §3.3 sync (25 min, +5 per Audit P1-3)
 
-These are Session 160 leftovers. Bundle here while context is fresh.
+These are Session 160 leftovers + the schema-drift sync from Audit P1-3. Bundle here while context is fresh.
 
-**FB-NESTED-001**: Fix `~/rhodes-wiki/scripts/build_inbox_from_js_extraction.py` (or `parse_fb_dom.py` if the issue is upstream) to capture nested replies. Current bug: depth>0 replies are missed because the `[role=article][aria-label^="Comment by"]` selector + parent-walk depth calc returns 0 for replies. Fix: detect `aria-label^="Reply by"` AND structurally walk into indented containers.
+**Audit P1-3: rhodes-wiki ARCHITECTURE.md §3.3 schema sync**: Update `~/rhodes-wiki/docs/ARCHITECTURE.md §3.3` (the inbox JSON contract section) to reflect the canonical `rhodes_inbox_entries` schema this session shipped. Specifically: drop the `id uuid` PK + `inbox_entry_slug` indirection (rhodesli uses `slug text PRIMARY KEY` directly); change `photo_ids uuid[]` → `rhodesli_photo_id text REFERENCES photos(photo_id)`; add `kinship_triples_json jsonb`; align field naming (`rejection_reason` not `rejected_reason`). Add a note: "Schema canonicalized in rhodesli Session 161 — rhodes-wiki implements per this canonical form."
+
+**FB-NESTED-001** (Audit P2-F: downgraded to synthetic-only): Fix `~/rhodes-wiki/scripts/build_inbox_from_js_extraction.py` (or `parse_fb_dom.py` if the issue is upstream) to capture nested replies. Current bug: depth>0 replies are missed because the `[role=article][aria-label^="Comment by"]` selector + parent-walk depth calc returns 0 for replies. Fix: detect `aria-label^="Reply by"` AND structurally walk into indented containers.
 - Add 2 tests: a synthetic fixture with 1 top-level + 1 nested reply, assert both captured with correct depth values.
-- Regenerate the Session 160 inbox entry post.json against the new parser — verify Martha's reply + Isaac's reply now show with `depth=1` and `parent_comment_id` set correctly.
+- **Do NOT regenerate the Session 160 inbox entry** — its 2 nested replies were manually filled in from screenshots; regenerating would lose that audit trail. Real-world validation deferred to a future capture session.
 
 **FB-PERMISSIONS-001**: New `~/rhodes-wiki/docs/reference/chrome-mcp-fb-permissions.md`:
 - Document Claude in Chrome v1.0.70 per-action permission gate behavior
@@ -257,64 +381,74 @@ These are Session 160 leftovers. Bundle here while context is fresh.
 - Cross-link from `.claude/rules/fb-tos-rule.md`
 
 **Commits** (in rhodes-wiki):
-- `fix(rhodes-wiki): FB-NESTED-001 capture nested replies in JS extraction`
+- `docs(rhodes-wiki): Audit P1-3 sync ARCHITECTURE.md §3.3 with rhodesli canonical schema`
+- `fix(rhodes-wiki): FB-NESTED-001 capture nested replies (synthetic fixture only)`
 - `docs(rhodes-wiki): FB-PERMISSIONS-001 Chrome MCP per-site permission behavior`
 
-**Acceptance**: rhodes-wiki tests pass (target: 209 → ~212); regenerated post.json shows 12 + 2 = 14 comments with 2 having depth=1.
+**Acceptance**: rhodes-wiki tests pass (target: 209 → ~211, +2 nested-reply tests). ARCHITECTURE.md §3.3 schema matches rhodesli's `rhodes_inbox_entries` exactly.
 
 ---
 
-## Phase 8 — Codex audit + fixes (15 min)
+## Phase 8 — Codex audit + fixes (45 min, +30 per Audit P2-E)
+
+**Note**: Pre-execution audit already caught 2 P0 + 7 P1 + 9 P2 + 5 P3 (see `docs/session_context/session-161-codex-audit.md`). This phase audits the **executed code** against the corrected plan. Use the documented fallback path: try Codex first; if it hangs >5 min with no output, kill it and dispatch a Claude general-purpose subagent.
 
 ```bash
 cd /Users/nolanfox/rhodesli && codex exec "Audit the rhodesli + rhodes-wiki changes from this session.
 
 rhodesli files:
 - app/rhodes_inbox.py — new module reading rhodes-wiki inbox JSONs + Supabase status table
-- app/admin_rhodes_inbox_routes.py (or main.py integration) — 4 admin routes
-- migrations/session-161-rhodes-inbox-entries.sql
+- app/admin_rhodes_inbox_routes.py — 4 admin routes + sidebar wiring
+- app/extract_kinship.py — COPIED from rhodes-wiki Session 160 (Audit P1-7 decoupling)
+- scripts/migrations/session-161-rhodes-inbox-entries.sql
+- scripts/rhodes_inbox_reconcile.py — drift detection
 - tests/test_rhodes_inbox.py + tests/test_admin_rhodes_inbox_routes.py
 
 rhodes-wiki files:
-- scripts/build_inbox_from_js_extraction.py — FB-NESTED-001 fix
+- docs/ARCHITECTURE.md §3.3 schema sync
+- scripts/build_inbox_from_js_extraction.py — FB-NESTED-001 synthetic fixture fix
 - docs/reference/chrome-mcp-fb-permissions.md — FB-PERMISSIONS-001
 
 Focus on:
-1. Security — admin route auth gating, path traversal in slug param, Supabase injection risk in upsert
-2. Cross-repo boundary — rhodesli must NEVER write to rhodes-wiki except via the explicit mark_approved/mark_rejected paths
-3. Atomicity — filesystem move + Supabase write rollback semantics
-4. Production safety — admin route MUST return 404 when rhodes-wiki path unavailable
-5. Test coverage gaps
-6. Schema correctness — rhodes_inbox_entries indexes + foreign key safety
+1. Security — admin route auth gating, path traversal in slug param (P0-2 from pre-audit), CSRF (P1-1), prefill query param sanitization (P1-6)
+2. Cross-repo boundary — rhodesli must NEVER write to rhodes-wiki except via the explicit mark_approved/mark_rejected paths; settings.json deny rules cover Bash(python) invocations (P2-H)
+3. Atomicity — Supabase-first, filesystem-second ordering (P0-1 from pre-audit); os.replace not shutil.move; atomic CAS via WHERE status='pending' RETURNING *; reconcile script catches drift
+4. Production safety — admin route 404 when RAILWAY_ENVIRONMENT set OR path absent (P1-2)
+5. Test coverage — path-traversal test, concurrent-CAS race test, production-gate test, drift detection test
+6. Schema correctness — rhodes_inbox_entries.rhodesli_photo_id text REFERENCES photos(photo_id) verified against scripts/sql/001_photos_table.sql; kinship_triples_json jsonb; rejection_reason length cap
 
 P0/P1/P2/P3 report. Be specific with file:line." </dev/null
 ```
 
-Save audit to `docs/session_context/session-161-codex-audit.md`. Fix P0/P1 inline. P2/P3 → BACKLOG.
+If Codex hangs >5 min with 0-byte output: kill it, dispatch Claude subagent with same prompt + access to all referenced files.
 
-**Commit**: `fix(rhodes-inbox): Session 161 Phase 8 — Codex audit P1 fixes`
+Save audit to `docs/session_context/session-161-post-execution-audit.md`. Fix P0/P1 inline. P2/P3 → BACKLOG.
+
+**Commit**: `fix(rhodes-inbox): Session 161 Phase 8 — post-execution audit fixes`
 
 ---
 
-## Phase 9 — Closeout (15 min)
+## Phase 9 — Closeout (25 min, +10 per Audit P2-I)
 
 **rhodesli**:
 1. CHANGELOG: new version entry (e.g., v0.99.81)
 2. ROADMAP: mark RHODES-WIKI-003 as DONE; mark Session 161 in Recently Completed
 3. SESSION_HISTORY: full Session 161 entry
-4. docs/assessments/session-161-assessment.md
-5. `git push origin main`
-6. Verify production health 200 (no production code changed but verify nothing broken)
+4. `docs/assessments/session-161-assessment.md`
+5. **NEW** `docs/architecture/RHODES_INBOX.md` (Audit P2-I): full AD log for all Session 161 architecture decisions — AD-RID-1 through AD-RID-6 (renumbered from AD-S161-N). Cross-link from CLAUDE.md key docs.
+6. `docs/HARNESS_DECISIONS.md`: add HD-035 entry for cross-repo bridge (was AD-S161-5).
+7. `git push origin main`
+8. Verify production health 200 (no production code changed but verify nothing broken)
 
 **rhodes-wiki**:
-1. CHANGELOG: v0.3.0 entry (FB-NESTED-001 + FB-PERMISSIONS-001)
-2. ROADMAP: status header bumped
+1. CHANGELOG: v0.3.0 entry (FB-NESTED-001 + FB-PERMISSIONS-001 + ARCH §3.3 sync)
+2. ROADMAP: status header bumped to v0.3.0
 3. wiki/log.md: 2026-MM-DD entry
 4. `git push origin main` (private repo)
 
-**Memory**: update `~/.claude/projects/-Users-nolanfox-rhodesli/memory/project_rhodes_wiki_repo.md` with Session 161 status + new commit count.
+**Memory**: update `~/.claude/projects/-Users-nolanfox-rhodesli/memory/project_rhodes_wiki_repo.md` with Session 161 status + new commit count + new docs reference.
 
-**Browser verification**: navigate to `http://localhost:5001/admin/rhodes-inbox`; click into the Session 160 entry; click Approve → upload form opens with prefilled fields → upload a placeholder image (or skip upload and just verify the prefill); verify the Session 160 inbox entry is now under `inbox/approved/`.
+**Browser verification (MANDATORY per Audit P3-D)**: navigate to `http://localhost:5001/admin/rhodes-inbox`; click into the Session 160 entry; click Approve → upload form opens with prefilled fields → **upload a real placeholder image** (verify the Session 160 inbox entry photo or any test image works end-to-end) → verify `rhodes_inbox_entries.rhodesli_photo_id` is set → verify the Session 160 inbox entry is now under `inbox/approved/` on the filesystem. The full chain must work, not just prefill.
 
 **Run `/session-review` skill at session end.**
 
@@ -323,11 +457,15 @@ Save audit to `docs/session_context/session-161-codex-audit.md`. Fix P0/P1 inlin
 ## Anti-goals (out of scope this session)
 
 - ❌ Programmatic FB image binary download (FB-DOWNLOAD-001 — future session with Chrome MCP site permissions)
+- ❌ FB image proxying via rhodesli backend (would require FB cookies/login in production — out of scope)
 - ❌ Auto-bind person hints to rhodesli identities (RHODESLI-INBOX-005 — future)
+- ❌ Identity-hint persistence into rhodesli's identity-merge workflow (post-approval hints stay informational)
 - ❌ Sync inbox JSON to Supabase / remote (only if a second admin needs remote approval — future)
+- ❌ Duplicate-detection beyond rhodesli's existing photo SHA256 dedup
 - ❌ Production deploy of the admin route (gated 404 on prod is correct)
 - ❌ rhodes-wiki narrative `wiki/` pages (Session 162)
 - ❌ Notion publish workflow
+- ❌ Soft-delete path for rhodes_inbox_entries (admin can DELETE via Supabase SQL editor; future route in RHODESLI-INBOX-006)
 
 ---
 
