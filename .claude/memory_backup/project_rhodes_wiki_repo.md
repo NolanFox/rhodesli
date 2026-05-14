@@ -20,10 +20,10 @@ Captures Facebook group posts from "Jews of Rhodes" (~2,000 members) into a stru
 - Approval queue first (extends PROPOSED→CONFIRMED gatekeeper)
 - Manual FB nav by user; Claude reads DOM + may expand inline comments via Chrome MCP (narrow exception to browser-read-only)
 
-## Status as of 2026-05-13 (Session 160 close)
-- **v0.2.0**, 17 commits, **PRIVATE GitHub** remote: `github.com/NolanFox/rhodes-wiki` (since 2026-05-13)
-- **209 pytest tests** passing (was 173 → +36 from Session 160 JS builder + kinship)
-- Codex audited twice: Session 159 (gpt-5-codex/xhigh, all P1/P2/P3 addressed); Session 160 (gpt-5.5/xhigh, 0 P0 / 2 P1 fixed / 6 P2 mostly fixed / 4 P3)
+## Status as of 2026-05-13 (Session 161 close)
+- **v0.2.0** in CHANGELOG; Session 161 added 3 carry-over commits (ARCH §3.3 schema sync, FB-NESTED-001 synthetic fix, FB-PERMISSIONS-001 doc) — 20 commits total, **PRIVATE GitHub** remote: `github.com/NolanFox/rhodes-wiki`
+- **211 pytest tests** passing (was 209 → +2 from Session 161 _infer_depth synthetic tests)
+- Codex audited THREE times: Session 159 (gpt-5-codex/xhigh, all addressed); Session 160 (gpt-5.5/xhigh, 0 P0/2 P1/6 P2/4 P3); Session 161 (gpt-5.5/xhigh pre-execution audit of prompt — 2 P0/7 P1/9 P2/5 P3, all P0/P1 applied to prompt BEFORE Phase 0)
 - Scripts: parse_fb_dom, classify_images, extract_fb_post, write_inbox_entry, extract_person_hints, validate_inbox_contract, **build_inbox_from_js_extraction** (NEW S160), **extract_kinship** (NEW S160 — regex-based kinship NER w/ Rhodes-Sephardi corpus)
 - First real inbox entry: `inbox/pending/2026-04-28_2360240064471306/` (Martha Girgenti / 1971 Menasche family Rhodesia, 14/14 comments)
 - First 6 dossiers: Edward / Renee (née Surmany) / Zeni (LIVING) / Simon / Lionel Menasche + Sarah Surmany. 2 places: rhodesia, bath-road-rhodesia.
@@ -31,8 +31,8 @@ Captures Facebook group posts from "Jews of Rhodes" (~2,000 members) into a stru
 ## Multi-session arc
 - Session 159 (DONE 2026-05-11): scaffold + parser stubs + contract
 - Session 160 (DONE 2026-05-13): first real FB DOM via Chrome MCP javascript_tool (NOT HTML — Lesson 191), kinship NER v1, first 6 dossiers, JS-structured capture path documented, private GitHub remote
-- Session 161 (NEXT): rhodesli `/admin/rhodes-inbox` route + `rhodes_inbox_entries` Supabase table + FB image binary download (FB-DOWNLOAD-001) + nested-reply parser fix (FB-NESTED-001) + Chrome MCP site-permission docs (FB-PERMISSIONS-001)
-- Session 162: dossier auto-update + first wiki/ narrative pages
+- Session 161 (DONE 2026-05-13): rhodesli `/admin/rhodes-inbox` route + 4 admin routes + `rhodes_inbox_entries` Supabase table (slug PK, atomic CAS via Supabase RETURNING + os.replace) + upload prefill + reconcile script. 6 architecture decisions (AD-RID-1 through AD-RID-6 in `docs/architecture/RHODES_INBOX.md`). Cross-repo bridge HD-035. FB-NESTED-001 synthetic fix + FB-PERMISSIONS-001 doc shipped in rhodes-wiki. 4313 rhodesli + 211 rhodes-wiki tests pass. FB-DOWNLOAD-001 deferred per AD-RID-2 (admin manual download is MVP).
+- Session 162 (NEXT): dossier auto-update + first wiki/ narrative pages
 
 ## Critical rules in rhodes-wiki/.claude/rules/
 - `fb-tos-rule.md` — manual nav, narrow comment-expand exception, no cross-post navigation
