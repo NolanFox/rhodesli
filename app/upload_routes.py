@@ -60,7 +60,14 @@ def convert_tiff_to_jpg(file_bytes: bytes, quality: int = 95) -> bytes:
 
 
 def upload_area(
-    existing_sources: list[str] = None, existing_collections: list[str] = None, community_slug: str = "rhodes"
+    existing_sources: list[str] = None,
+    existing_collections: list[str] = None,
+    community_slug: str = "rhodes",
+    # Session 161 Phase 5: rhodes-wiki inbox prefill values
+    prefill_collection: str = "",
+    prefill_source: str = "",
+    prefill_source_url: str = "",
+    prefill_slug: str = "",
 ) -> Div:
     """
     Drag-and-drop file upload area with separate collection, source, and source URL fields.
@@ -69,6 +76,9 @@ def upload_area(
     Args:
         existing_sources: List of existing source labels for autocomplete
         existing_collections: List of existing collection labels for autocomplete
+        prefill_*: rhodes-wiki inbox prefill (Session 161 Phase 5). Empty by default;
+            populated when admin clicked Approve in /admin/rhodes-inbox and was
+            redirected to /upload?prefill=<slug>.
     """
     if existing_sources is None:
         existing_sources = []
@@ -243,6 +253,7 @@ def upload_area(
                     id="upload-collection",
                     placeholder="e.g., Immigration Records, Wedding Photos",
                     list="collection-suggestions",
+                    value=prefill_collection,  # Session 161 Phase 5
                     cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
                     "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
                     "focus:border-transparent",
@@ -262,6 +273,7 @@ def upload_area(
                     id="upload-source",
                     placeholder="e.g., Newspapers.com, Betty's Album, Rhodes Facebook Group",
                     list="source-suggestions",
+                    value=prefill_source,  # Session 161 Phase 5
                     cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
                     "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
                     "focus:border-transparent",
@@ -280,6 +292,7 @@ def upload_area(
                     name="source_url",
                     id="upload-source-url",
                     placeholder="https://...",
+                    value=prefill_source_url,  # Session 161 Phase 5
                     cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
                     "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
                     "focus:border-transparent",
@@ -290,6 +303,8 @@ def upload_area(
             # Hidden field: explicit community slug so uploads go to the right community
             # even when the URL doesn't have a /c/{slug}/ prefix (Session 107b fix)
             Input(type="hidden", name="upload_community", id="upload-community", value=community_slug),
+            # Hidden field: Session 161 — rhodes-wiki inbox slug for post-upload linkback
+            Input(type="hidden", name="rhodes_inbox_slug", value=prefill_slug),
             cls="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700",
         ),
         # File selection area (two-step: select → preview → upload)
@@ -350,6 +365,12 @@ def get(sess=None, request=None):
     """
     Render the upload page. Requires login when auth is enabled.
     Non-admin uploads go through the moderation queue (pending_uploads.json).
+
+    Session 161: accepts `?prefill=<slug>` query param to pre-populate
+    collection / source / source_url / description from a rhodes-wiki inbox
+    entry (after admin approve in /admin/rhodes-inbox). The prefill GET
+    reads from inbox/approved/<slug>/post.json because admin already
+    triggered the approval (which moved the entry from pending/ → approved/).
     """
     denied = _main_mod._check_login(sess)
     if denied:
@@ -357,6 +378,36 @@ def get(sess=None, request=None):
     user = _main_mod.get_current_user(sess or {})
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
     community = getattr(request.state, "community", None) if request else None
+
+    # Session 161 Phase 5: rhodes-wiki inbox prefill
+    prefill_collection = ""
+    prefill_source = ""
+    prefill_source_url = ""
+    prefill_description = ""
+    prefill_slug = ""
+    if request is not None:
+        prefill_slug_raw = request.query_params.get("prefill", "")
+        if prefill_slug_raw:
+            try:
+                # Lazy-import + production-safe: returns False on Railway
+                # OR when ~/rhodes-wiki/ is absent.
+                from app.rhodes_inbox import (
+                    _validate_slug,
+                    is_rhodes_wiki_available,
+                    load_entry,
+                )
+                if is_rhodes_wiki_available():
+                    _validate_slug(prefill_slug_raw)  # Audit P0-2: re-validate
+                    entry = load_entry(prefill_slug_raw, state="approved")
+                    prefill_slug = prefill_slug_raw
+                    prefill_collection = "FB Group Posts"
+                    prefill_source = "Facebook — Jews of Rhodes group"
+                    prefill_source_url = entry.get("fb_post_url") or ""
+                    cap = (entry.get("caption") or {}).get("text") or ""
+                    prefill_description = cap
+            except (ValueError, FileNotFoundError) as exc:
+                # Bad slug or missing entry — render form without prefill
+                logger.warning("Prefill failed for slug %r: %s", prefill_slug_raw, exc)
     style = Style("""
         html, body {
             height: 100%;
@@ -512,6 +563,11 @@ def get(sess=None, request=None):
                         existing_sources=existing_sources,
                         existing_collections=existing_collections,
                         community_slug=community_slug,
+                        # Session 161 Phase 5: pass through rhodes-wiki prefill
+                        prefill_collection=prefill_collection,
+                        prefill_source=prefill_source,
+                        prefill_source_url=prefill_source_url,
+                        prefill_slug=prefill_slug,
                     ),
                     cls="max-w-3xl mx-auto px-4 sm:px-8 py-6",
                 ),
@@ -530,6 +586,7 @@ async def post(
     collection: str = "",
     source_url: str = "",
     upload_community: str = "",
+    rhodes_inbox_slug: str = "",
     sess=None,
     request=None,
 ):
@@ -647,10 +704,30 @@ async def post(
     # Generate unique job ID
     job_id = str(uuid.uuid4())[:8]
 
+    # Session 161: log rhodes-wiki inbox provenance into the job dir so
+    # ingest can later link the resulting photo_id back to rhodes_inbox_entries.
+    # We do this BEFORE processing so the slug is durable even if processing fails.
+    if rhodes_inbox_slug:
+        try:
+            from app.rhodes_inbox import _validate_slug as _ri_validate  # noqa: PLC0415
+            _ri_validate(rhodes_inbox_slug)
+            # Store slug alongside the staging job — ingest can read it from here
+            # and call rhodes_inbox.link_rhodesli_photo on completion.
+            logger.info(
+                "upload job %s carries rhodes_inbox_slug=%s",
+                job_id, rhodes_inbox_slug,
+            )
+        except (ValueError, ImportError):
+            rhodes_inbox_slug = ""  # invalid; treat as no slug
+
     # All uploads go to staging first (processing or moderation)
     job_dir = data_path / "staging" / job_id
 
     job_dir.mkdir(parents=True, exist_ok=True)
+    if rhodes_inbox_slug:
+        # Drop a marker file so the ingest pipeline (or admin) can pick up
+        # the slug-to-photo linkage after photo_id is assigned.
+        (job_dir / "rhodes_inbox_slug.txt").write_text(rhodes_inbox_slug, encoding="utf-8")
 
     # Save all files to job directory with size checks
     saved_files = []
