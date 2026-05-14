@@ -21,8 +21,14 @@ def _log_audit(
     old_value: dict | None = None,
     new_value: dict | None = None,
     metadata: dict | None = None,
+    entity_type: str = "identity",
 ) -> None:
-    """Write an audit_log entry to Supabase. Fire-and-forget."""
+    """Write an audit_log entry to Supabase. Fire-and-forget.
+
+    `entity_type` defaults to "identity" for back-compat with existing
+    callers; pass "rhodes_inbox" (or another type) for non-identity rows
+    (Session 161 P2-2 fix).
+    """
     try:
         from app.supabase_data import get_supabase_client
 
@@ -32,7 +38,7 @@ def _log_audit(
 
         row = {
             "action": action,
-            "entity_type": "identity",
+            "entity_type": entity_type,
             "entity_id": str(entity_id),
             "user_email": user_email or "",
             "old_value": _safe_jsonb(old_value),

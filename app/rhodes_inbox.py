@@ -392,6 +392,7 @@ def mark_approved(
         _log_audit(
             action="rhodes_inbox.approve",
             entity_id=slug,
+            entity_type="rhodes_inbox",
             user_email=approved_by,
             new_value={"status": "approved", "rhodesli_photo_id": rhodesli_photo_id},
         )
@@ -476,6 +477,7 @@ def mark_rejected(slug: str, *, rejected_by: str, reason: str) -> None:
         _log_audit(
             action="rhodes_inbox.reject",
             entity_id=slug,
+            entity_type="rhodes_inbox",
             user_email=rejected_by,
             new_value={"status": "rejected", "reason": reason[:200]},
         )

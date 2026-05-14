@@ -292,7 +292,9 @@ def _render_detail_view(slug: str, entry: dict) -> Any:
     actions_block = Div(
         H2("Actions", cls="text-lg font-semibold mb-3"),
         Form(
-            Input(type="hidden", name="csrf_token", value=""),  # FastHTML includes session origin check
+            # CSRF protection: server-side `_check_origin(request)` in the
+            # admin_rhodes_inbox_approve handler validates the Origin header
+            # against the canonical site host. No hidden token field needed.
             Textarea(name="notes", placeholder="Optional notes (caption corrections, identity hints, etc.)",
                      rows="2", cls="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm mb-2"),
             Button("Approve → Open Upload Form", type="submit", cls=_BTN_PRIMARY),
