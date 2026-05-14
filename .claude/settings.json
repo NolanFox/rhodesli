@@ -1,6 +1,19 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": ["/Users/nolanfox/rhodes-wiki"],
+    "allow": [
+      "Read(/Users/nolanfox/rhodes-wiki/**)",
+      "Bash(ls /Users/nolanfox/rhodes-wiki/inbox/**)"
+    ],
+    "deny": [
+      "Edit(/Users/nolanfox/rhodes-wiki/**)",
+      "Write(/Users/nolanfox/rhodes-wiki/**)",
+      "Bash(python /Users/nolanfox/rhodes-wiki/*)",
+      "Bash(python3 /Users/nolanfox/rhodes-wiki/*)",
+      "Bash(rm /Users/nolanfox/rhodes-wiki/*)",
+      "Bash(mv /Users/nolanfox/rhodes-wiki/*)"
+    ]
   },
   "hooks": {
     "Stop": [
