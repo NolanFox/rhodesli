@@ -8,7 +8,7 @@ behaviour (e.g. when new kinship patterns are added). rhodesli depends on
 the JSON contract output, NOT on the rhodes-wiki Python module.
 
 Comments in Rhodes-Sephardi FB posts encode dense genealogical signal. Example
-from session-160 capture (Martha Girgenti's post about Edward & Renee Menasche):
+(Session 160 capture — Martha Girgenti's post about Edward & Renee Menasche):
 
     "Rachel and Nathanel Menashe who were Aunt and Uncle to us.
      Rachel being the sister of my Mother-in-law Diana Amato Merdjan."

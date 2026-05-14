@@ -4663,6 +4663,18 @@ def sidebar(
                 href=f"{prefix}/admin/event-groups",
                 cls="flex items-center px-5 py-4 sm:px-3 sm:py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors",
             ),
+            # Session 161: Rhodes Inbox — local-dev-only; nav_item with the
+            # pending-count badge. count_pending_rhodes_inbox() returns 0
+            # in production (RAILWAY_ENVIRONMENT set), so the badge is
+            # silently 0 there. The route itself returns 404 in production.
+            nav_item(
+                f"{prefix}/admin/rhodes-inbox",
+                "📥",
+                "Rhodes Inbox",
+                _count_pending_rhodes_inbox_safe(),
+                "rhodes_inbox",
+                "indigo",
+            ),
             cls="mb-3",
         )
         if (user and user.is_admin)
@@ -8058,6 +8070,24 @@ from app import event_routes  # noqa: E402, F401
 from app.admin_db_routes import register_admin_db_routes  # noqa: E402
 
 register_admin_db_routes(app)
+
+# Session 161: /admin/rhodes-inbox local-dev-only admin route for the
+# rhodes-wiki ↔ rhodesli inbox approval workflow. Production-safe (the
+# routes 404 cleanly when RAILWAY_ENVIRONMENT is set OR the local
+# rhodes-wiki path is absent — see app.rhodes_inbox.is_rhodes_wiki_available).
+from app.admin_rhodes_inbox_routes import register_admin_rhodes_inbox_routes  # noqa: E402
+
+register_admin_rhodes_inbox_routes(app)
+
+
+def _count_pending_rhodes_inbox_safe() -> int:
+    """Wrapper for app.rhodes_inbox.count_pending_rhodes_inbox that never
+    raises. Used by the admin sidebar; failures must NOT break navigation."""
+    try:
+        from app.rhodes_inbox import count_pending_rhodes_inbox  # noqa: PLC0415
+        return count_pending_rhodes_inbox()
+    except Exception:  # noqa: BLE001
+        return 0
 
 # Backward-compat: tests that import person helpers from app.main still work
 public_person_page = person_routes.public_person_page

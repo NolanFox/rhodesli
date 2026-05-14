@@ -82,6 +82,12 @@ def _is_exception(filepath: Path, line: str) -> bool:
     # GEDCOM apply success response (POST handler without request, links to /admin/gedcom)
     if filepath.name == "admin_routes.py" and 'href="/admin/gedcom"' in stripped:
         return True
+    # Session 161: /admin/rhodes-inbox is local-dev-only + admin-only
+    # (gated by is_rhodes_wiki_available which returns False on Railway).
+    # Community-agnostic by design — admin reviews rhodes-wiki inbox JSONs
+    # regardless of community prefix. Hardcoded paths are correct here.
+    if filepath.name == "admin_rhodes_inbox_routes.py" and "/admin/rhodes-inbox" in stripped:
+        return True
     # Known exceptions list
     for filename_stem, content_substr in KNOWN_EXCEPTIONS:
         if filename_stem and filename_stem in filepath.stem and content_substr in stripped:
