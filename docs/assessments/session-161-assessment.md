@@ -8,21 +8,20 @@
 
 ---
 
-## Shipped
+## Per-Act Status
 
-| Phase | Status | Evidence |
-|---|---|---|
-| Phase 0: Harness + extract_kinship copy | DONE | commit `576fe524` |
-| Phase 1: Supabase `rhodes_inbox_entries` table | DONE | commit `0f3f1467` — migration applied via pooler |
-| Phase 2: Inbox reader + reconcile + 21 tests | DONE | commit `0d03c742` — `app/rhodes_inbox.py` 553 lines |
-| Phase 3: 4 admin routes + sidebar + UI templates | DONE | commit `35b35b74` — `app/admin_rhodes_inbox_routes.py` 429 lines (UI bundled here) |
-| Phase 4: UI templates | DONE (bundled in Phase 3 commit) | `_render_list_view` + `_render_detail_view` in admin routes file |
-| Phase 5: Upload form prefill | DONE | commit `dbb8b231` — `?prefill=<slug>` honored in `app/upload_routes.py` |
-| Phase 6: 13 admin route integration tests | DONE | commit `1fed041d` — `tests/test_admin_rhodes_inbox_routes.py` |
-| Phase 7: rhodes-wiki carry-overs | DONE | 3 commits in rhodes-wiki — ARCH §3.3 sync, FB-NESTED-001 fix, FB-PERMISSIONS-001 doc |
-| Phase 8: Post-execution Codex audit | DONE | `docs/session_context/session-161-post-execution-audit.md` — fallback to Claude subagent after Codex hung on `find` scan; PASS-WITH-FIXES verdict (0 P0, 1 P1, 3 P2, 5 P3) |
-| Phase 8: P1 + quick P2/P3 fixes | DONE | commit `ec4da00c` — 5 reconcile tests + `entity_type` parameter on `_log_audit` + dead csrf_token field removed |
-| Phase 9: Closeout | IN PROGRESS | This assessment + CHANGELOG + ROADMAP + SESSION_HISTORY + RHODES_INBOX.md + HD-035 + push + browser verify |
+| Phase | Status | Evidence | Concerns |
+|-------|--------|----------|----------|
+| 0 — Harness + extract_kinship copy | PASS | commit `576fe524`; .claude/settings.json has additionalDirectories + deny rules | none |
+| 1 — Supabase `rhodes_inbox_entries` migration | PASS | commit `0f3f1467`; live Supabase table verified empty (`select` returns 0 rows) | none |
+| 2 — Inbox reader + reconcile + 21 unit tests | PASS | commit `0d03c742`; `app/rhodes_inbox.py` 553 lines; `tests/test_rhodes_inbox.py` 21/21 pass | reconcile script's `detect_drift`/`reconcile` were not covered until Phase 8 (caught by post-exec audit P1-1, fixed) |
+| 3 — 4 admin routes + UI + sidebar | PASS | commit `35b35b74`; `app/admin_rhodes_inbox_routes.py` 429 lines containing routes + `_render_list_view` + `_render_detail_view` | UI not verified in a live browser (see Red Flag MEDIUM) |
+| 4 — UI templates | PASS (bundled into Phase 3 commit) | UI render fns inline in `app/admin_rhodes_inbox_routes.py` | same as Phase 3 |
+| 5 — Upload form prefill | PASS | commit `dbb8b231`; `?prefill=<slug>` handler in `app/upload_routes.py:386-407` | `prefill_description` dead variable (P3-4, BACKLOG RHODESLI-INBOX-011) |
+| 6 — 13 admin route integration tests | PASS | commit `1fed041d`; `tests/test_admin_rhodes_inbox_routes.py` 13/13 pass | none |
+| 7 — rhodes-wiki carry-overs | PASS | 3 commits in rhodes-wiki (`7bab2cc`, `d38e4c8`, `05f62fa`); rhodes-wiki tests 209 → 211 | FB-NESTED-001 is synthetic-fixture only — real-world capture deferred |
+| 8 — Post-execution audit + fixes | PASS | `docs/session_context/session-161-post-execution-audit.md` PASS-WITH-FIXES; commit `ec4da00c` fixed P1 + 1 P2 + 2 P3; 4 deferred to BACKLOG | Codex CLI hung; fell back to Claude subagent per harness rule |
+| 9 — Closeout | PASS | CHANGELOG v0.99.81; ROADMAP RHODES-WIKI-003 DONE; SESSION_HISTORY entry; new RHODES_INBOX.md; HD-035; both repos pushed; production /health 200 | live browser verify deferred (see Red Flag MEDIUM) |
 
 **Tests**:
 - rhodesli: 4271 baseline → **4313 passed, 8 skipped, 11 xfailed, 1 xpassed** (+42 new tests: 21 inbox + 13 admin routes + 8 reconcile)
@@ -40,7 +39,11 @@
 
 ## Red Flags
 
-None at session close. All Phase 1-7 work passed integration tests; Phase 8 Codex audit produced no blockers (see post-execution audit file).
+- **[MEDIUM] BROWSER-VERIFY-LIVE-FLOW** — The Audit P3-D end-to-end browser verification (navigate to `/admin/rhodes-inbox` in a live dev server → click Approve → upload form → submit a real test image → verify `rhodes_inbox_entries.rhodesli_photo_id` set → verify entry moved to `inbox/approved/`) was NOT executed in this session. The 13 integration tests cover the route layer with mocks; the reconcile tests cover the drift case. But the FULL chain — including face-detection callback writing `rhodesli_photo_id` back to Supabase — has zero E2E coverage. This is a known limitation: the Approve flow mutates real Supabase + real filesystem, so running it via a subagent is out of scope for a programmatic session. Mitigation: user must run `make run` and verify manually before declaring the feature production-ready. Fix scope: ~10 minutes (start server, click through one entry, verify Supabase row). Tracked as: assessment "Next Session Should Verify" item #2.
+
+- **[LOW] CODEX-CLI-HUNG** — Codex CLI v0.130.0 hung on `find` scan of `$HOME` during the post-execution audit. Per prompt's documented fallback, retried with Claude subagent. The audit completed correctly via fallback. The underlying Codex CLI hang is not a Session 161 concern — it's a pre-existing harness issue (`stdin is closed for this session; rerun exec_command with tty=true`) seen across multiple recent sessions. Mitigation: harness rule `.claude/rules/ai-tool-audit.md` already documents the fallback path. Tracked as: pre-existing tooling pattern, not a Session 161 deferral.
+
+All Phase 1-7 work passed integration tests; Phase 8 Codex audit produced 0 P0 / 1 P1 (fixed) / 3 P2 (1 fixed, 2 deferred) / 5 P3 (2 fixed, 2 deferred, 1 won't-fix). Production /health = 200 post-push.
 
 ## Browser verification
 
@@ -67,3 +70,13 @@ Per Audit P3-D — verified at session close (Phase 9):
 1. **Real-world FB-NESTED-001 validation** — re-capture a thread with depth>1 replies via Chrome MCP and verify `_infer_depth` correctly classifies depth=1 replies from a live extractor (synthetic-only is the current state).
 2. **End-to-end approve → upload → face detection** for the Session 160 Martha Girgenti entry. Phase 9 browser-verify the prefill but the actual upload+face-detection chain through `/upload` is the production-equivalent gold path.
 3. **`rhodes_inbox_entries.kinship_triples_json` cache hit** — confirm the second detail-view load uses the cached value (no recomputation).
+
+## Auto-Fix Summary
+
+- **Issues surfaced by /session-review**: 2 (BROWSER-VERIFY-LIVE-FLOW, CODEX-CLI-HUNG)
+- **Auto-fixed inline before /session-review (via Codex post-execution audit)**: 4 (P1-1 reconcile tests, P2-2 audit `entity_type` parameter, P3-1 dead csrf_token field removed, P3-2 form inconsistency resolved by P3-1)
+- **Deferred to BACKLOG**: 4 (RHODESLI-INBOX-008/009/010/011)
+- **Marked won't-fix**: 1 (P3-5 — vault initialization always creates pending/ first)
+- **Cannot auto-fix (require user action)**: 2
+  - BROWSER-VERIFY-LIVE-FLOW: requires real Approve click that mutates Supabase + filesystem; user runs `make run` and verifies manually
+  - CODEX-CLI-HUNG: pre-existing harness pattern with documented fallback; nothing to fix at session scope
