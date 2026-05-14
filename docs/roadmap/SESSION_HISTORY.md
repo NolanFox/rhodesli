@@ -1572,6 +1572,46 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **New Lessons 187-190**: PGRST002 ⇒ disk-IO budget (L187), pg_depend scan before DROP (L188), Management API token at setup (L189), pre-existing 5xx ≠ rollback trigger (L190).
 - 4271 app tests pass. 3 commits + assessment + auto-generated DROP+VACUUM report.
 
+## Session 161: `/admin/rhodes-inbox` Route + Image Handoff (2026-05-13) — v0.99.81
+
+**Closes**: RHODES-WIKI-003. NEW admin pipeline lands rhodes-wiki Session 160 captures into rhodesli via 4 routes + new Supabase `rhodes_inbox_entries` provenance table. Local-dev only by design (AD-RID-1) — production returns 404.
+
+**Phases shipped**:
+- Phase 0: harness + cross-repo bridge to rhodes-wiki + extract_kinship.py copy for decoupling (`576fe524`)
+- Phase 1: Supabase `rhodes_inbox_entries` migration applied via pooler (`0f3f1467`)
+- Phase 2: `app/rhodes_inbox.py` (553L) + reconcile script + 21 unit tests (`0d03c742`)
+- Phase 3: `app/admin_rhodes_inbox_routes.py` (429L) — 4 routes + UI templates bundled + sidebar wiring (`35b35b74`)
+- Phase 5: `?prefill=<slug>` handler in upload_routes (`dbb8b231`)
+- Phase 6: 13 admin route integration tests (`1fed041d`)
+- Phase 7: rhodes-wiki carry-overs (3 commits in sibling repo: ARCH §3.3 schema sync, FB-NESTED-001 synthetic fix, FB-PERMISSIONS-001 doc)
+- Phase 8: Post-execution audit + P1 fix + 2 quick P2/P3 fixes (`ec4da00c`) — 8 reconcile tests + `entity_type` parameter on `_log_audit` + dead csrf_token field removed
+- Phase 9: closeout + browser verify
+
+**Architecture decisions** (AD-RID-1 through AD-RID-6, durable reference in `docs/architecture/RHODES_INBOX.md`):
+- **AD-RID-1**: `/admin/rhodes-inbox` is LOCAL-DEV-ONLY via `RAILWAY_ENVIRONMENT` AND filesystem-path check (defense in depth)
+- **AD-RID-2**: Image binary via admin-manual-download (MVP); programmatic FB fetch deferred
+- **AD-RID-3**: Person-hints surfacing is informational, not auto-bound
+- **AD-RID-4**: `rhodes_inbox_entries` schema with slug PK, FK to `photos(photo_id)`, 4096-char rejection_reason CHECK, kinship_triples_json cache
+- **AD-RID-5**: Cross-repo bridge harness (also HD-035)
+- **AD-RID-6**: Supabase authoritative for status; filesystem mirrors it via POSIX `os.replace`
+
+**Atomic CAS approve flow**: Supabase `UPDATE rhodes_inbox_entries SET status='approved' WHERE slug=$1 AND status='pending' RETURNING *` then `os.replace(pending/<slug>, approved/<slug>)`. `AlreadyApprovedError` on race-loss. Drift detection via `scripts/rhodes_inbox_reconcile.py` (`--dry-run` reports, `--apply` reconciles by trusting Supabase).
+
+**Pre-execution Codex audit**: Codex CLI v0.130.0 / gpt-5.5 / xhigh pre-audited the prompt itself. Verdict: PROCEED-WITH-FIXES; 2 P0 + 7 P1 + 9 P2 + 5 P3 caught and applied to prompt + context BEFORE Phase 0 (`docs/session_context/session-161-codex-audit.md`).
+
+**Post-execution audit**: Codex CLI hung on `find` scan of $HOME (>10 min, sandbox couldn't `pkill`); per prompt's documented fallback, retried via Claude general-purpose subagent (independent, fresh context). Verdict: PASS-WITH-FIXES (0 P0, 1 P1, 3 P2, 5 P3). P1 + 1 P2 + 2 P3 fixed inline this session; 2 P2 + 2 P3 deferred to BACKLOG as RHODESLI-INBOX-008/009/010/011 (`docs/session_context/session-161-post-execution-audit.md`).
+
+**Tests**: rhodesli 4271 → **4313 passed** (+42: 21 inbox + 13 admin routes + 8 reconcile). rhodes-wiki 209 → **211 passed** (+2 synthetic FB-NESTED-001 depth-inference tests).
+
+**Commits**: 6 rhodesli code commits + 1 Phase 8 audit-fix commit + closeout commits + 3 rhodes-wiki commits.
+
+**Carry-overs / deferred**:
+- FB-DOWNLOAD-001 (programmatic FB binary download) — separate future session
+- RHODESLI-INBOX-005 (auto-bind person hints to identities) — future
+- RHODESLI-INBOX-006 (soft-delete path) — future
+- RHODESLI-INBOX-007 (sync inbox JSON to Supabase for multi-admin) — future
+- Real-world FB-NESTED-001 validation — synthetic-fixture only; defer to a future capture session
+
 ## Session 160: rhodes-wiki First Real FB Capture + Kinship NER (2026-05-11 to 2026-05-13) — rhodes-wiki v0.2.0 (rhodesli unchanged, docs-only)
 
 **Repo of record**: `/Users/nolanfox/rhodes-wiki/`. No rhodesli code changes; only docs (Lessons 191-197, this entry, assessment, audit log).

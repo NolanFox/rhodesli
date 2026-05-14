@@ -2,6 +2,59 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.81] — 2026-05-13 (Session 161: `/admin/rhodes-inbox` + image handoff)
+
+NEW admin route + provenance pipeline: the rhodes-wiki Session 160 capture (Martha Girgenti / 1971 Menasche post / 14 comments) is now fully ingestable into rhodesli via `/admin/rhodes-inbox`. Local-dev only by design (AD-RID-1) — production returns 404. Session 161 arc completes RHODES-WIKI-003.
+
+### Added — Session 161
+- `app/rhodes_inbox.py` (553 lines, 21 tests) — pure module: `is_rhodes_wiki_available()`, slug validation, `list_pending_entries`, `load_entry`, `mark_approved` (atomic CAS via Supabase + POSIX `os.replace`), `mark_rejected`, `kinship_triples_for` (cached). `AlreadyApprovedError` for the race-loss path.
+- `app/admin_rhodes_inbox_routes.py` (429 lines, 13 integration tests) — 4 routes (`GET /admin/rhodes-inbox`, `GET /admin/rhodes-inbox/{slug}`, `POST .../approve`, `POST .../reject`) + bundled UI templates (`_render_list_view`, `_render_detail_view`) + sidebar wiring (`📥 Rhodes Inbox`, indigo accent).
+- `app/upload_routes.py` `?prefill=<slug>` handler — clicking Approve opens the existing upload form with community=rhodes + source URL + caption pre-populated; post-upload writes `rhodes_inbox_entries.rhodesli_photo_id`.
+- `app/extract_kinship.py` — copied from rhodes-wiki Session 160 to decouple cross-repo Python imports (Pre-audit P1-7).
+- `scripts/migrations/session-161-rhodes-inbox-entries.sql` — Supabase table with slug PK, status enum CHECK, rejection_reason 4096-char CHECK, FK to `photos(photo_id)`, two indexes.
+- `scripts/rhodes_inbox_reconcile.py` — drift detection: `--dry-run` walks both Supabase and filesystem; `--apply` reconciles by trusting Supabase (AD-RID-6).
+- `docs/architecture/RHODES_INBOX.md` — durable reference for the 6 architecture decisions (AD-RID-1 through AD-RID-6).
+- `docs/HARNESS_DECISIONS.md` HD-035 — cross-repo bridge rationale.
+
+### Tests (Session 161)
+- 42 new tests across `tests/test_rhodes_inbox.py` (21), `tests/test_admin_rhodes_inbox_routes.py` (13), `tests/test_rhodes_inbox_reconcile.py` (8 — Phase 8 audit P1-1 fix)
+- Coverage: path-traversal rejection, RAILWAY_ENVIRONMENT gating, atomic-CAS race, drift detection (detect_drift + reconcile), malformed-post.json skip, all 4 routes with auth gating + production-404 paths
+- Baseline 4271 → **4313 passed, 8 skipped, 11 xfailed, 1 xpassed**
+
+### Pre-execution audit (caught BEFORE code)
+- Codex CLI v0.130.0 (gpt-5.5, xhigh) pre-audited the prompt itself
+- Verdict: PROCEED-WITH-FIXES; 2 P0 + 7 P1 + 9 P2 + 5 P3 caught
+- ALL P0 + ALL P1 + selected P2/P3 applied to prompt + context BEFORE Phase 0
+- Audit artifact: `docs/session_context/session-161-codex-audit.md`
+
+### Post-execution audit
+- Codex CLI v0.130.0 attempted first; hung on `find` scan of `$HOME` (>10 min, sandbox couldn't `pkill`). Per prompt's documented fallback path, audit retried via Claude general-purpose subagent (independent, fresh context)
+- Verdict: PASS-WITH-FIXES (0 P0, 1 P1, 3 P2, 5 P3)
+- P1 + 1 P2 + 2 P3 fixed inline this session; 2 P2 + 2 P3 deferred to BACKLOG (RHODESLI-INBOX-008/009/010/011)
+- Audit artifact: `docs/session_context/session-161-post-execution-audit.md`
+
+### rhodes-wiki carry-overs (Session 161 Phase 7, 3 commits in sibling repo)
+- ARCHITECTURE.md §3.3 schema sync to canonical `rhodes_inbox_entries` form
+- FB-NESTED-001: `_infer_depth()` normalization in `build_inbox_from_js_extraction.py` — handles JS extractor missing nested-reply depth (synthetic-fixture only; 2 new tests; 209 → 211)
+- FB-PERMISSIONS-001: new `docs/reference/chrome-mcp-fb-permissions.md` documenting Claude in Chrome v1.0.70 per-action permission gate + workaround
+
+### Architecture decisions
+- **AD-RID-1**: `/admin/rhodes-inbox` LOCAL-DEV-ONLY via `RAILWAY_ENVIRONMENT` env marker AND path existence (defense in depth)
+- **AD-RID-2**: Image binary handoff via admin-manual-download (MVP); programmatic fetch deferred
+- **AD-RID-3**: Person-hint surfacing is informational, not auto-bound
+- **AD-RID-4**: `rhodes_inbox_entries` schema with slug PK + FK to photos(photo_id) + kinship cache
+- **AD-RID-5**: Cross-repo bridge harness (also tracked as HD-035)
+- **AD-RID-6**: Supabase authoritative for status; filesystem mirrors it via POSIX `os.replace`
+
+### Anti-goals (deferred)
+- Programmatic FB binary download (FB-DOWNLOAD-001)
+- Auto-bind person hints to identities (RHODESLI-INBOX-005)
+- Soft-delete path (RHODESLI-INBOX-006)
+- Sync inbox JSON to Supabase for multi-admin (RHODESLI-INBOX-007)
+
+### Commits
+6 rhodesli commits (`576fe524` Phase 0 → `1fed041d` Phase 6) pre-resumption + 3 closeout commits (`docs/architecture/RHODES_INBOX.md`, CHANGELOG+ROADMAP+SESSION_HISTORY, assessment). 3 rhodes-wiki commits (Phase 7).
+
 ## [v0.99.80] — 2026-05-11 (Session 159: rhodes-wiki scaffold + FB post ingestion pipeline)
 
 NEW sibling repo `/Users/nolanfox/rhodes-wiki/` scaffolded as private research workspace for the Rhodes Jewish community. Sister to rhodesli (photo platform) + fox-genealogy (Fox-family genealogy). Multi-session arc 159–162.

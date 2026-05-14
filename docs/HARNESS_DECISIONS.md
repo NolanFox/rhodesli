@@ -658,3 +658,49 @@ This means:
 **Rationale:** Codex's value is as a "second pair of eyes" specifically for security boundaries. It caught a real cross-community write issue that human + Claude review missed. But for general code quality, the overhead (5 min + triage time) exceeds the benefit. Scope to security-sensitive changes where the cost of a miss is high.
 
 **Breadcrumbs:** Session 118 log, `.claude/rules/` (no new rule file — trigger is manual per decision)
+
+
+## HD-035: Cross-Repo Bridge to rhodes-wiki (Session 161)
+
+**Date:** 2026-05-13
+**Session:** 161
+
+**Context:** rhodes-wiki Session 160 produced the first end-to-end FB capture (Martha Girgenti 1971 Menasche post, 14 comments) at `~/rhodes-wiki/inbox/pending/2026-04-28_2360240064471306/`. rhodesli Session 161 needs to read that JSON contract from a separate sibling repo without breaking Claude Code's default sandboxing.
+
+**Decision:** Add `/Users/nolanfox/rhodes-wiki` to rhodesli's `.claude/settings.json` `additionalDirectories` with **Read-only** allow rules. Explicit deny on `Edit(/Users/nolanfox/rhodes-wiki/**)`, `Write(/Users/nolanfox/rhodes-wiki/**)`, and Bash commands that would mutate (`python`, `python3`, `rm`, `mv`).
+
+```json
+"additionalDirectories": ["/Users/nolanfox/rhodes-wiki"],
+"allow": [
+  "Read(/Users/nolanfox/rhodes-wiki/**)",
+  "Bash(ls /Users/nolanfox/rhodes-wiki/inbox/**)"
+],
+"deny": [
+  "Edit(/Users/nolanfox/rhodes-wiki/**)",
+  "Write(/Users/nolanfox/rhodes-wiki/**)",
+  "Bash(python /Users/nolanfox/rhodes-wiki/*)",
+  "Bash(python3 /Users/nolanfox/rhodes-wiki/*)",
+  "Bash(rm /Users/nolanfox/rhodes-wiki/*)",
+  "Bash(mv /Users/nolanfox/rhodes-wiki/*)"
+]
+```
+
+**Phase 7 exception:** Session 161 explicitly opens this restriction to ship 3 carry-over commits (ARCHITECTURE.md §3.3 schema sync, FB-NESTED-001 synthetic fix, FB-PERMISSIONS-001 doc). After Phase 7, the deny rules remain in place for all subsequent Claude Code sessions in rhodesli.
+
+**Runtime exception:** The PRODUCTION app (rhodesli on Railway) is exempt from these harness rules — `app/rhodes_inbox.py` calls `os.replace` on `~/rhodes-wiki/inbox/{pending,approved}/` at runtime. Defense-in-depth: those paths cannot exist on Railway because:
+1. `is_rhodes_wiki_available()` returns False when `RAILWAY_ENVIRONMENT` is set
+2. The filesystem path itself doesn't exist on Railway
+3. Two-of-three test coverage: `test_*_route_404_on_railway`, `test_routes_404_when_path_absent`
+
+**Alternatives considered:**
+- **No bridge, copy JSON files manually**: Adds friction on every Session 160-style FB capture. Doesn't scale.
+- **Symlink ~/rhodes-wiki into rhodesli/**: Would tangle git status, break harness's `additionalDirectories` separation. Worse blast radius if mistakes happen.
+- **Sync inbox JSON to Supabase**: Removes filesystem dependency but creates a new write path with all the bidirectional-sync failure modes. Saved for a future session (RHODESLI-INBOX-007) only if a second admin needs remote approval.
+
+**Rationale:** Read-only is the minimum-blast-radius bridge. The harness change is one-time setup; production-runtime safety is enforced by orthogonal checks (env marker + path existence). The deny rules are belt-and-suspenders for Claude Code sessions, not the production app.
+
+**Breadcrumbs:**
+- `docs/architecture/RHODES_INBOX.md` AD-RID-5 (cross-references this HD)
+- `docs/session_context/session-161-context.md` AD-S161-5 (historical record)
+- `docs/session_context/session-161-codex-audit.md` (pre-execution audit caught the production-safety gap, fixed in AD-RID-1)
+- Session 161 commit `576fe524` (Phase 0 — bridge applied)
