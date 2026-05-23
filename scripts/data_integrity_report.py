@@ -165,7 +165,7 @@ def cross_check_identities():
         from app.supabase_data import get_supabase_client
         client = get_supabase_client()
         if client:
-            sb_ids = set()  # was: client.table("identity_overrides").select("identity_id").execute()
+            sb_ids = set()  # Session 162: stale Supabase cross-check disabled (table dropped)
             result["supabase_override_count"] = 0
             result["supabase_override_note"] = "table dropped in Session 162 (OD-014)"
 
