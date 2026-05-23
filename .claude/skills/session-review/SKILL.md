@@ -46,7 +46,25 @@ Create `docs/assessments/session-NN-assessment.md`:
 
 ## Deferred Items
 - [item] — Reason: [why] — BACKLOG: [entry reference]
-```
+
+## Novel-Discovery Audit (REQUIRED for genealogy sessions per Lesson 50 / Discipline §10)
+For each fact framed as "new" or "discovery" this session, classify as ONE of:
+- **vault-catch-up** — already in user's tree (post-most-recent-GEDCOM-export), or already in vault dossiers / research docs, or already in JewishGen / Ancestry / public sources the user has consulted
+- **withdrawn-error** — claimed as discovery but later refuted; preserved for audit trail
+- **methodology lesson** — useful but NOT a genealogical novel discovery (count separately)
+- **genuine novel discovery** — cross-source signal (e.g., name X appears on document Y where X's presence wasn't expected), OR resolution of a previously-open question, OR new entity link creating further investigation chain
+
+Tally: `# genuine novel : # vault-catch-up : # withdrawn : # methodology`. 0 genuine novel + honest classification = WIN per Lesson 50 spirit. Gold-standard example: "finding Sam Lebow on a Fox wedding certificate as a witness."
+
+## User-Feedback Absorb (REQUIRED if user feedback was received this session per Lesson 49 / Discipline §9)
+For each user feedback received between session start + close, produce all 5 outputs:
+- (a) **acknowledged correction** — explicit acknowledgement of what was wrong
+- (b) **vault-doc propagation** — list of ALL affected docs patched
+- (c) **methodology lesson** — what general-purpose failure mode this catches
+- (d) **CLAUDE.md Discipline rule update** — if a new general-purpose check emerges
+- (e) **Codex audit prompt template update** — if the audit should now check for this pattern
+
+Apply ON EVERY USER FEEDBACK between sessions (per Lesson 49 expansion of Lesson 28 metanalysis-mandatory). This is an expansion of session-close metanalysis to all in-session feedback events.
 
 ### 4. Auto-Fix Phase
 Spawn subagent in worktree `session-NN/auto-fix`:
