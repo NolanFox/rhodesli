@@ -14,6 +14,45 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 162: Supabase Disk IO Budget Remediation (2026-05-22) — v0.99.82
+
+**Trigger**: Supabase email 2026-05-21 "Your project rhodesli is running out of Disk IO Budget" (per-IOPS metric, distinct from storage / egress).
+
+**Root cause**: `current_gedcom_relationships` view's `WHERE is_current = true OR is_current IS NULL` clause defeated the partial index `idx_gedcom_relationships_current WHERE (is_current = true)`. Postgres' planner cannot use a partial index when WHERE includes a predicate the index excludes. Every one of 347,914 cumulative calls full-scanned 872,738 rows even though only 140,796 are current. **73.9% of all DB disk reads** came from this single view. Column had 0 NULL values; defensive `OR IS NULL` clause was over-engineering.
+
+**Headline results** (3.7-min interim sample + a longer T0+60min final-sample appended at session close):
+- `current_gedcom_relationships` mean exec time: **754.84 ms → 40.66 ms (18.6× speedup)**
+- Window cache hit ratio: **73.72% → 99.93%**
+- Sustained disk-read rate: **114/sec → 2.7/sec (~42× reduction)**
+- DB size unchanged (1,309 MB; storage was already fixed in 158e)
+
+**Phases shipped**:
+- 0: Baseline + preflight — `pg_stat_activity` lock check, partial-index predicate verify, T0 counter snapshot (`bfcaa63f`)
+- 1a: `CREATE OR REPLACE VIEW current_gedcom_relationships AS ... WHERE is_current = true;` + ANALYZE + raw-table fallback fix in `app/relationship_routes.py` lines 518 + 637 (`2d0050da`)
+- 1b: `ALTER TABLE gedcom_relationships ALTER COLUMN is_current SET NOT NULL` — structural prevention (`0dcae723`)
+- 2: `identity_overrides` investigation — `pg_depend` preflight, R2 snapshot, archive `migrate_to_supabase.py` → `scripts/_archive/migrate_to_supabase_session59C.py` (`69a1f08a`)
+- 3: DROP `identity_overrides` (user PROCEED gate approved) + regression guards (`26866af5`)
+- 4: VACUUM (ANALYZE) 5 bloat tables — ~186,915 dead tuples reclaimed in <8s, NO VACUUM FULL (`a7c3e8e2`)
+- 5: TTL audit — all GEDCOM readers wrap in 300s caches with 30s failure backoff, no code changes (`c701767a`)
+- 6: Measure (T1 - T0) — acceptance gate PASS on cache_hit% ≥90% and mean_exec_time <100ms (`1e67b7b9`)
+- 7: Codex post-exec audit + P1 fixes — caught a REAL BUG in `data_integrity_report.py` that I introduced in Phase 2 + a missed raw-table fallback in `scripts/run_combined_pipeline.py` (`d2a045ca`, `a6b78157`)
+
+**Dual-audit pattern** continued to pay off:
+- Pre-exec audit (Codex CLI v0.133.0 / gpt-5.5 / xhigh on the PROMPT) caught 1 P0 + 7 P1 + 6 P2 + 2 P3 = 16 findings. All P0/P1 + selected P2 applied to prompt before any code. Notable: Phase 6 measurement was invalid (60-min sample vs 165-day counters); raw-table fallbacks bypassed `is_current` filter; `migrate_to_supabase.py` would have errored post-DROP.
+- Post-exec audit (same model on the IMPLEMENTATION) caught 1 P0 + 4 P1 + 1 P2 = 6 findings. Notable: my Phase 2 cleanup of `data_integrity_report.py` LEFT BEHIND `missing_in_supabase = user_modified_json - set()` = the full user_modified set, falsely reporting all CONFIRMED identities as missing. Codex reproduced the bug with a mocked client autonomously.
+
+**Decisions**:
+- New `OD-014` in `docs/ops/OPS_DECISIONS.md` — full session decision record + alternatives rejected
+- New `L198` in `tasks/lessons.md` — partial indexes silently defeated by `OR <pred> IS NULL` clauses
+- NO Pro plan upgrade (user-decided structural-only at session start; empirical 42× IO reduction makes this clearly the right call)
+- Planned Session 162 (rhodes-wiki dossier auto-update + first wiki/ narrative pages) → pushed to Session 163
+
+**Tests**: 4313 → **4318** (+5 new regression guards in `tests/test_session162_view_and_fallback.py` + `tests/test_session162_identity_overrides_dropped.py`).
+
+**Rollback inventory**: each destructive phase has a companion rollback SQL — `session162a_rollback_view.sql`, `session162b_rollback_not_null.sql`, `session162_rollback_identity_overrides.sql` (with `DEFAULT 'admin'` on `updated_by` per Codex P1-1) + R2 snapshot at `r2://rhodesli-photos/backups/session162/`.
+
+---
+
 ## Session 142: Interactive Feedback + Batch Gemini (2026-03-27) — v0.99.53
 - **12 feedback fixes**: FB-001 (neighbor links→person page), FB-002 (Compare View Photo prefix), FB-003 (multi-merge Focus mode), FB-004 (confirm+merge), FB-006 (bulk merge toast), FB-007 (filter merged neighbors), FB-008 (fetch limit 20→100), FB-010 (face overlay→person page), FB-011 (Confirm Only button), FB-012 (expansion panel cleanup).
 - **3 Codex P1 security fixes**: CSRF on inbox confirm, merge side effects (annotations+recalibration), rematch target ID.
