@@ -280,12 +280,21 @@ def _run_gedcom_query(query_fn, label: str):
     raise last_error
 
 
-def _load_gedcom_rows(sb, table_name: str, select_fields: str, order_by: str | None = None) -> list[dict]:
+def _load_gedcom_rows(
+    sb,
+    table_name: str,
+    select_fields: str,
+    order_by: str | None = None,
+    filters: dict | None = None,
+) -> list[dict]:
     rows = []
     page_size = 1000
     offset = 0
     while True:
         query = sb.table(table_name).select(select_fields)
+        if filters:
+            for col, val in filters.items():
+                query = query.eq(col, val)
         if order_by:
             query = query.order(order_by)
         resp = query.range(offset, offset + page_size - 1).execute()
@@ -515,7 +524,11 @@ def _load_current_gedcom_relationship_edges():
                 msg = str(exc)
                 if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
                     raise
-                rows = _load_gedcom_rows(sb, "gedcom_relationships", select_fields)
+                # Session 162 (Codex P1.4): fallback to raw table MUST filter is_current
+                # to avoid scanning 700k+ historical rows during the PostgREST flake window.
+                rows = _load_gedcom_rows(
+                    sb, "gedcom_relationships", select_fields, filters={"is_current": True}
+                )
             edges = []
             seen_spouses = set()
             for row in rows:
@@ -634,7 +647,16 @@ def _load_gedcom_relationship_edges_for_ids(gedcom_ids: list[str] | set[str] | t
                     msg = str(exc)
                     if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
                         raise
-                    resp = sb.table("gedcom_relationships").select(select_fields).or_(filter_expr).execute()
+                    # Session 162 (Codex P1.4): same is_current filter requirement on the
+                    # targeted-edges path. Without this filter we pull historical rows
+                    # too and burn the IO we just stopped burning on the main path.
+                    resp = (
+                        sb.table("gedcom_relationships")
+                        .select(select_fields)
+                        .eq("is_current", True)
+                        .or_(filter_expr)
+                        .execute()
+                    )
                 if resp and resp.data:
                     rows.extend(resp.data)
             return _normalize_gedcom_tree_edges(rows)
