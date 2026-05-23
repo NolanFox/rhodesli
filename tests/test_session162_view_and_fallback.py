@@ -78,6 +78,22 @@ def test_relationship_routes_fallback_filters_is_current():
         )
 
 
+def test_session162b_sql_does_not_drop_not_null():
+    """The Phase 1b migration SQL must SET NOT NULL — never DROP NOT NULL.
+
+    Cheap structural guard to prevent a future contributor "fixing" a perceived
+    NULL bug by reverting the constraint and re-defeating the partial index.
+    """
+    sql_path = REPO_ROOT / "scripts" / "session162b_set_not_null.sql"
+    assert sql_path.exists(), f"missing Phase 1b migration: {sql_path}"
+    sql = sql_path.read_text()
+    assert "SET NOT NULL" in sql, "Phase 1b SQL must add NOT NULL constraint"
+    assert "DROP NOT NULL" not in sql, (
+        "Phase 1b SQL must NOT contain DROP NOT NULL — that's a rollback, "
+        "which belongs in a separate companion script if needed."
+    )
+
+
 @pytest.mark.skipif(
     os.environ.get("RUN_LIVE_DB_TESTS") != "1",
     reason="Live-DB introspection skipped unless RUN_LIVE_DB_TESTS=1",
