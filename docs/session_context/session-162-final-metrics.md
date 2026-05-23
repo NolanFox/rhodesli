@@ -71,3 +71,53 @@ We will **not** need a Pro plan upgrade. The structural fix is sufficient.
   "current_gedcom_relationships_view": {"queryid": -610194146392825963, "calls": 348196, "total_exec_time_ms": 262731849}
 }
 ```
+
+---
+
+## ADDENDUM — T+60min Final-Window Recapture (Codex P0-1 resolved)
+
+**Captured**: 2026-05-23T04:12:03Z
+**Window**: **60.8 minutes** of organic post-fix traffic (target ≥ 60)
+
+### Acceptance gate — PASS (gates 1 + 2 met on the proper-window sample)
+
+| Gate | Target | Actual (60-min) | Result |
+|------|--------|-----------------|--------|
+| 1. Cache hit ratio on (T1_60 - T0) window ≥ 90% | ≥ 90% | **99.95%** | ✅ PASS |
+| 2. `current_gedcom_relationships` mean exec time < 100 ms | < 100 ms | **37.57 ms** | ✅ PASS |
+| 3. `gedcom_relationships` heap_blks_read rate ≥ 80% lower | ≥ -80% | n/a (still no per-table T0 snapshot) | skipped |
+| 4. View OUT of top-3 in `temp_blks_written` | yes | view never had temp spill anyway | n/a |
+
+### 60-min delta breakdown
+
+`current_gedcom_relationships` view:
+| Metric | At T0 | At T1_60 | (T1_60 - T0) window |
+|--------|------:|---------:|--------------------:|
+| Calls | 348,055 | 348,478 | +423 |
+| total_exec_time | 262,726,116 ms | 262,742,007 ms | +15,891 ms |
+| Mean exec time | 754.84 ms | 753.97 ms | **37.57 ms** |
+
+**20.1× speedup** on the 60-min window (vs 18.6× on the 3.7-min interim sample — the longer sample is slightly faster as the buffer cache warms further).
+
+`pg_stat_database` deltas (60-min):
+| Metric | Delta over 60.8 min |
+|--------|-------------------:|
+| `blks_read` | +1,273 |
+| `blks_hit` | +2,608,896 |
+| Cache hit % | **99.95%** |
+| `temp_files` | +87 |
+| `temp_bytes` | +471,070,590 (~449 MB) |
+
+### Sustained disk-read rate
+
+- 60-min window: **0.35 reads/sec**
+- Pre-fix 165-day average: 113.83 reads/sec
+- **Reduction: 326×** (vs ~42× on the 3.7-min sample)
+
+The free-tier sustained-IOPS budget for Nano is ~30/sec. We were at 113/sec pre-fix (3.8× over budget). Now at 0.35/sec = 1.2% of budget. The Disk IO Budget banner should clear on the next Supabase billing-cycle rollover.
+
+### Codex P0-1 — RESOLVED
+
+The Phase 6 measurement methodology is now sound: the post-Phase-4 T0 was a fresh counter snapshot; T1_60 sampled organic traffic for 60.8 minutes (≥ 60 min minimum); deltas were computed as (T1_60 - T0); two gates met with overwhelming margins. The original 3.7-min interim sample's PASS verdict is corroborated and refined by the proper-window numbers.
+
+T1_60 snapshot: `docs/session_context/session-162-t1-60min-snapshot.json`

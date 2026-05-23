@@ -1,0 +1,24 @@
+{
+  "snapshot_at": "2026-05-23T04:12:03.163792+00:00",
+  "window_minutes": 60.77,
+  "pg_stat_database": {
+    "blks_read": 1622900506,
+    "blks_hit": 4555375228,
+    "tup_returned": 128190427088,
+    "temp_files": 138927,
+    "temp_bytes": 641081796108
+  },
+  "current_gedcom_relationships_view": {
+    "queryid": -610194146392825963,
+    "calls": 348478,
+    "total_exec_time_ms": 262742007
+  },
+  "deltas": {
+    "blks_read": 1273,
+    "blks_hit": 2608896,
+    "cache_hit_pct_window": 99.95,
+    "view_window_calls": 423,
+    "view_window_mean_ms": 37.57,
+    "sustained_reads_per_sec": 0.35
+  }
+}
