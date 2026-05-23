@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS identity_overrides (
     name TEXT,
     merged_into TEXT,
     data JSONB NOT NULL,
-    updated_by TEXT,
+    -- Codex post-exec P1-1: original supabase_migration_001.sql had DEFAULT 'admin' on updated_by
+    updated_by TEXT DEFAULT 'admin',
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

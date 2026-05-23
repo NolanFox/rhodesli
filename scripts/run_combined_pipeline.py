@@ -192,6 +192,17 @@ def load_gedcom_data() -> dict | None:
         if not sb:
             return None
 
+        # Session 162 (Codex post-exec P1-4): tables that have an `is_current` column
+        # MUST be filtered on the raw-table fallback path, else we re-introduce the
+        # IO scan that the view fix closed. This list is the small set of raw tables
+        # for which the v2/v1 views filter by is_current.
+        _RAW_TABLES_NEED_IS_CURRENT = {
+            "gedcom_relationships",
+            "gedcom_individuals",
+            "gedcom_families",
+            "gedcom_events",
+        }
+
         def _load_all_rows(preferred_table: str, fallback_table: str | None = None) -> list[dict]:
             rows = []
             table_name = preferred_table
@@ -199,7 +210,10 @@ def load_gedcom_data() -> dict | None:
             offset = 0
             while True:
                 try:
-                    resp = sb.table(table_name).select("*").range(offset, offset + page_size - 1).execute()
+                    query = sb.table(table_name).select("*")
+                    if table_name in _RAW_TABLES_NEED_IS_CURRENT:
+                        query = query.eq("is_current", True)
+                    resp = query.range(offset, offset + page_size - 1).execute()
                 except Exception:
                     if not fallback_table or table_name == fallback_table:
                         raise

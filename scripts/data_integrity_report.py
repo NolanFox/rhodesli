@@ -158,32 +158,18 @@ def cross_check_identities():
         "json_user_modified_count": len(user_modified_json),
     }
 
-    # Session 162: identity_overrides DROPped — was 0 live rows since Session 130;
-    # the Supabase cross-check below is a no-op now. Kept as a stub so the existing
-    # JSON-side counts still appear in the report.
-    try:
-        from app.supabase_data import get_supabase_client
-        client = get_supabase_client()
-        if client:
-            sb_ids = set()  # Session 162: stale Supabase cross-check disabled (table dropped)
-            result["supabase_override_count"] = 0
-            result["supabase_override_note"] = "table dropped in Session 162 (OD-014)"
-
-            missing_in_sb = user_modified_json - sb_ids
-            extra_in_sb = sb_ids - user_modified_json
-            result["missing_in_supabase"] = len(missing_in_sb)
-            result["extra_in_supabase"] = len(extra_in_sb)
-
-            if missing_in_sb:
-                result["missing_ids_sample"] = sorted(missing_in_sb)[:5]
-            if extra_in_sb:
-                result["extra_ids_sample"] = sorted(extra_in_sb)[:5]
-
-            result["in_sync"] = len(missing_in_sb) == 0
-        else:
-            result["supabase"] = "not configured"
-    except Exception as e:
-        result["supabase_error"] = str(e)
+    # Session 162: identity_overrides DROPped (OD-014). The Supabase cross-check
+    # is no longer meaningful — identities live in the `identities` table now,
+    # not `identity_overrides`. Reporting `in_sync = True` here is the only
+    # correct value: the missing-in-supabase computation against `set()` would
+    # spuriously claim every CONFIRMED identity was missing (Codex P1-3 caught).
+    # If a future cross-check between JSON and live `identities` is needed,
+    # write a fresh implementation against that table.
+    result["supabase_override_count"] = 0
+    result["supabase_override_note"] = "identity_overrides dropped in Session 162 (OD-014)"
+    result["missing_in_supabase"] = 0
+    result["extra_in_supabase"] = 0
+    result["in_sync"] = True
 
     return result
 

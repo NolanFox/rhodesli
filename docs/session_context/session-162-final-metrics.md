@@ -40,9 +40,11 @@
 
 Disk I/O rate during window: 592 disk-reads / 222 sec = ~2.7 reads/sec. Compare with the 165-day cumulative rate of 1,622,899,233 / (165 days × 86400 sec) = **114 reads/sec**. That's a **~42× reduction in sustained disk-read rate** since Phase 1a.
 
-### Cumulative `gedcom_relationships` heap reads
+### Cumulative `gedcom_relationships` heap reads (Codex post-exec P1-2 — caveat)
 
-Cumulative `heap_blks_read` stayed at 1,223,453,233 (vs Phase 0 baseline of 1,223,372,844 — only +80,389 in the window). On the 75.93% cumulative cache hit, the post-Phase-1a rate is essentially zero new heap reads. The cumulative percentage doesn't move much because it's dominated by 165 days of accumulated reads, but the marginal rate is way down.
+T0 did NOT snapshot per-table `pg_statio_user_tables`, so gate 3 (heap_blks_read rate -80%) is uncomputable on a clean basis. The numbers below are interpreted as "post-fix marginal rate" only and should NOT be conflated with a per-window measurement.
+
+Cumulative `heap_blks_read` at T1: 1,223,453,233 vs Phase 0 baseline: 1,223,372,844 — only +80,389 reads cumulative since Phase 0 (across roughly the same window that includes Phases 1-4 mutations). With the 75.93% cumulative cache-hit ratio (dominated by 165 days of historical accumulation), the marginal post-Phase-1a rate is bounded above by 80,389 / (T1 - Phase0_capture in seconds), which divided across the window is ~30 reads/sec — well below the 114/sec 165-day average. This is a qualitative signal, not a gate result.
 
 ## What this means
 
