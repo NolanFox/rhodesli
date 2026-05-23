@@ -79,10 +79,42 @@ Production `/health = 200` verified at every phase boundary throughout the sessi
 3. **Supabase dashboard** — confirm the "depleting Disk IO Budget" banner clears within the next billing cycle (should self-recover as the daily IOPS rate falls below the threshold).
 4. **Data integrity report sanity check** — run `python scripts/data_integrity_report.py` and confirm `in_sync = True` (was the bug Codex caught).
 
+## Novel-Discovery Audit
+
+**NA — infrastructure remediation session, not genealogy work.** No new genealogical facts were produced. The Codex audits surfaced previously-unknown structural issues in the codebase (one bug introduced this session in `data_integrity_report.py`, one pre-existing fallback miss in `scripts/run_combined_pipeline.py`), but those are software-engineering findings, not novel genealogical discoveries.
+
+Tally per the skill's framing: `0 genuine novel : 0 vault-catch-up : 0 withdrawn : 2 methodology` (the methodology lessons being: (a) partial indexes + OR IS NULL anti-pattern → L198; (b) Phase 2 cleanup must remove the SUBTRACTION not just the QUERY — Codex P1-3 catch).
+
+## User-Feedback Absorb
+
+Three user-feedback events during the session:
+
+1. **AskUserQuestion #1 (session start)** — "How aggressive should Session 162 be on Supabase plan vs. structural fixes?" User answered: "Structural-only, no Pro upgrade." Plus "How should I handle `identity_overrides`?" → "Investigate first, drop only if safe."
+   - (a) Acknowledged: not a correction; user directional input.
+   - (b) Vault-doc propagation: applied to prompt + context (anti-goals section now explicitly forbids automatic Pro plan upgrade; Phase 2/3 split into investigate-then-drop with a PROCEED gate).
+   - (c) Methodology lesson: user financial / destructive-action decisions belong in upfront AskUserQuestion gates, not mid-execution prompts.
+   - (d) CLAUDE.md update: NA — this is already in `.claude/rules/session-defaults.md` (Executing Actions With Care section).
+   - (e) Codex audit prompt template: NA — already covered by ai-tool-audit.md.
+
+2. **Mid-session interjection**: "have codex audit all your work."
+   - (a) Acknowledged: applied as the Phase 7 post-execution audit (was already in the plan, but the user's interjection escalated it to a higher priority and broader scope — Codex was instructed to audit ALL commits from Phase 0-6).
+   - (b) Vault-doc propagation: `docs/session_context/session-162-post-execution-audit.md` records the full Codex output + dispositions; `docs/session_context/session-162-codex-audit.md` is the matching pre-execution audit doc.
+   - (c) Methodology lesson: post-execution audits are valuable EVEN when pre-execution audits have already happened — Codex's P1-3 catch (false-divergence bug introduced by Phase 2 cleanup) was a NEW finding, not visible at prompt-design time.
+   - (d) CLAUDE.md update: NA — already covered by harness `session-defaults.md` "Dual-Audit Protocol (MANDATORY after every phase)".
+   - (e) Codex audit prompt template: this session validated that focusing the post-execution audit on `(a) rollback completeness; (b) any missed fallback paths; (c) test coverage; (d) side effects; (e) measurement methodology` is a high-value template. Worth keeping for future sessions of this shape.
+
+3. **PROCEED Gate response (mid-session)**: "Yes, DROP it now" for `identity_overrides`.
+   - (a) Acknowledged: applied as Phase 3 DROP execution.
+   - (b) Vault-doc propagation: assessment + investigation doc + post-exec audit all reference the user-approval.
+   - (c) Methodology lesson: PROCEED gates work — destructive operations on production should always have a user-decision checkpoint with the investigation report in front of the user.
+   - (d) CLAUDE.md update: NA — already established in 158d/158e prompt patterns.
+   - (e) Codex audit prompt template: NA.
+
 ## Auto-Fix Summary
 
-- **Issues surfaced during /session-review**: pending (will run at very end of closeout)
+- **Issues surfaced during /session-review**: 0 new (all P0/P1 from both Codex audits already applied inline before this skill ran)
 - **Auto-fixed inline (via Codex pre-exec audit)**: 13 (1 P0 + 7 P1 + 5 P2)
 - **Auto-fixed inline (via Codex post-exec audit)**: 5 (4 P1 + 1 P2-doc)
 - **Deferred to Session 163+ BACKLOG**: 3 (dead-code cleanup, test improvement for divergence case, optional 60-min sample stays-on)
 - **Cannot auto-fix (require user action)**: 0 — Phase 3 DROP gate was the only user-action point and it was approved via AskUserQuestion at the time
+- **Auto-fix subagent worktree spawn**: SKIPPED — there are no outstanding fixable concerns. All Codex P0/P1/P2 findings were applied inline during execution. Spawning a fresh subagent now would have nothing to do.
