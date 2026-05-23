@@ -1,0 +1,19 @@
+{
+  "phase": "Phase 4 — captured after VACUUM completes, before Phase 6 wait period",
+  "snapshot_at": "2026-05-23T03:11:16.802976+00:00",
+  "pg_stat_database": {
+    "blks_read": 1622899233,
+    "blks_hit": 4552766332,
+    "cache_hit_pct": 73.72,
+    "tup_returned": 128158325590,
+    "temp_files": 138840,
+    "temp_bytes": 640610725518
+  },
+  "pg_stat_statements_top_gedcom_relationships": [
+    {"queryid": -610194146392825963, "calls": 348055, "total_ms": 262726116, "mean_ms": 754.84, "note": "current_gedcom_relationships view (THE big burner)"},
+    {"queryid": 5738523609556035994, "calls": 1460, "total_ms": 241412, "mean_ms": 165.35},
+    {"queryid": -7931113200032351033, "calls": 14163, "total_ms": 205677, "mean_ms": 14.52},
+    {"queryid": 8250717159976600475, "calls": 494, "total_ms": 126453, "mean_ms": 255.98},
+    {"queryid": 1001108973225978963, "calls": 1752, "total_ms": 98689, "mean_ms": 56.33}
+  ]
+}
