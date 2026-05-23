@@ -1,4 +1,18 @@
-"""One-time migration: JSON data → Supabase tables.
+"""ARCHIVED 2026-05-22 — Session 59C one-shot migration tool.
+
+This script wrote to the `identity_overrides` table which was DROPped in
+Session 162 (Phase 3) per OD-014. Do NOT run this script again — it will
+error on the `sb.table('identity_overrides').upsert(...)` call. The script
+is preserved under `scripts/_archive/` for historical reference only.
+
+If a similar JSON→Supabase migration is ever needed again, write a fresh
+script targeting the current schema (no identity_overrides).
+
+---
+
+Original docstring:
+
+One-time migration: JSON data → Supabase tables.
 
 AD-135: Migrate user-entered data to Supabase.
 Run once to populate tables, then verify counts.

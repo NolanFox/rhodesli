@@ -19,7 +19,7 @@ Audit checks:
     2. Ghost identities — identities with faces not in any photo
     3. Missing identity face refs — identity anchors/candidates not in photo_index
     4. State consistency — CONFIRMED with no name or "Unidentified" name
-    5. Supabase divergence — identity_overrides vs identities.json state mismatch
+    5. Supabase divergence — DEPRECATED (identity_overrides dropped in Session 162)
     6. Duplicate face assignments — same face_id in multiple identities
     7. Merged identity chains — merged_into pointing to another merged identity
     8. Upload date completeness — photos missing upload_date
@@ -364,84 +364,14 @@ def check_supabase_divergence(identities: dict, result: AuditResult) -> dict:
 
     divergence["checked"] = True
 
-    try:
-        # Load identity_overrides from Supabase
-        all_overrides = []
-        page_size = 1000
-        offset = 0
-        while True:
-            resp = (
-                client.table("identity_overrides")
-                .select("identity_id, state, name, merged_into")
-                .range(offset, offset + page_size - 1)
-                .execute()
-            )
-            if not resp.data:
-                break
-            all_overrides.extend(resp.data)
-            if len(resp.data) < page_size:
-                break
-            offset += page_size
-
-        sb_map = {r["identity_id"]: r for r in all_overrides}
-        mismatches = []
-
-        for iid, sb_data in sb_map.items():
-            json_data = identities.get(iid)
-            if not json_data:
-                mismatches.append(
-                    {
-                        "identity_id": iid,
-                        "type": "missing_in_json",
-                        "supabase_state": sb_data.get("state"),
-                    }
-                )
-                continue
-
-            # State mismatch
-            json_state = json_data.get("state", "")
-            sb_state = sb_data.get("state", "")
-            if json_state != sb_state:
-                mismatches.append(
-                    {
-                        "identity_id": iid,
-                        "type": "state_mismatch",
-                        "json_state": json_state,
-                        "supabase_state": sb_state,
-                    }
-                )
-
-            # Merge status mismatch
-            json_merged = json_data.get("merged_into")
-            sb_merged = sb_data.get("merged_into")
-            if json_merged != sb_merged:
-                mismatches.append(
-                    {
-                        "identity_id": iid,
-                        "type": "merge_mismatch",
-                        "json_merged_into": json_merged,
-                        "supabase_merged_into": sb_merged,
-                    }
-                )
-
-        divergence["mismatches"] = mismatches
-        divergence["override_count"] = len(sb_map)
-
-        if mismatches:
-            result.add(
-                check="supabase_divergence",
-                severity="critical",
-                message=f"{len(mismatches)} state mismatches between JSON and Supabase",
-                ids=[m["identity_id"] for m in mismatches[:20]],
-            )
-        result.summary["supabase_mismatches"] = len(mismatches)
-
-    except Exception as e:
-        result.add(
-            check="supabase_divergence",
-            severity="warning",
-            message=f"Supabase query failed: {e}",
-        )
+    # Session 162: identity_overrides table DROPped (OD-014). The divergence check
+    # is now a no-op — Supabase `identities` table is the single source of truth.
+    # If a future divergence audit between JSON identities.json and Supabase
+    # `identities` is needed, write a fresh check against the live table.
+    divergence["mismatches"] = []
+    divergence["override_count"] = 0
+    divergence["note"] = "identity_overrides removed in Session 162 (OD-014); no-op"
+    result.summary["supabase_mismatches"] = 0
 
     return divergence
 

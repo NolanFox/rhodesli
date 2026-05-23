@@ -119,7 +119,8 @@ def count_supabase_tables():
         return {"error": "Supabase not configured (no SUPABASE_URL or key)"}
 
     results = {}
-    tables = ["identity_overrides", "annotations", "relationships", "gedcom_matches"]
+    # Session 162: identity_overrides removed (was 0-row dead table polled in tight loop)
+    tables = ["annotations", "relationships", "gedcom_matches"]
 
     for table in tables:
         try:
@@ -157,14 +158,16 @@ def cross_check_identities():
         "json_user_modified_count": len(user_modified_json),
     }
 
-    # Try Supabase cross-check
+    # Session 162: identity_overrides DROPped — was 0 live rows since Session 130;
+    # the Supabase cross-check below is a no-op now. Kept as a stub so the existing
+    # JSON-side counts still appear in the report.
     try:
         from app.supabase_data import get_supabase_client
         client = get_supabase_client()
         if client:
-            resp = client.table("identity_overrides").select("identity_id").execute()
-            sb_ids = {r["identity_id"] for r in (resp.data or [])}
-            result["supabase_override_count"] = len(sb_ids)
+            sb_ids = set()  # was: client.table("identity_overrides").select("identity_id").execute()
+            result["supabase_override_count"] = 0
+            result["supabase_override_note"] = "table dropped in Session 162 (OD-014)"
 
             missing_in_sb = user_modified_json - sb_ids
             extra_in_sb = sb_ids - user_modified_json
