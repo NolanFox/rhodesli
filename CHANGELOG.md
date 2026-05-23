@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.82] — 2026-05-22 (Session 162: Supabase Disk IO Budget remediation)
+
+Unplanned remediation triggered by Supabase email 2026-05-21 ("Your project rhodesli is running out of Disk IO Budget"). Root cause: the `current_gedcom_relationships` view filtered `WHERE is_current = true OR is_current IS NULL`, defeating the partial index `idx_gedcom_relationships_current WHERE (is_current = true)`. 347,914 historical calls seq-scanned 872,738 rows each — 73.9% of all DB disk reads.
+
+### Headline numbers (empirical, 3.7 min post-fix sample)
+- `current_gedcom_relationships` mean exec time: **754.84 ms → 40.66 ms** (18.6× speedup)
+- Window cache hit ratio: **73.72% → 99.93%**
+- Sustained disk-read rate: **114 reads/sec → 2.7 reads/sec** (42× reduction)
+- DB size unchanged (1,309 MB — that's the OD-013 outcome and not what this session targeted)
+
+### Fixed — Session 162
+- `scripts/session162a_replace_view.sql` — drops the `OR is_current IS NULL` clause from `current_gedcom_relationships` view definition. The defensive clause was over-engineering; column has 0 NULL values.
+- `scripts/session162b_set_not_null.sql` — `ALTER TABLE gedcom_relationships ALTER COLUMN is_current SET NOT NULL`. Structural prevention against future NULL writes that would re-defeat the partial index.
+- `app/relationship_routes.py` — both raw-table fallback paths (Codex pre-exec P1.4) now apply `.eq("is_current", True)` so a PostgREST flake can't silently re-introduce the IO leak. Added optional `filters=` param to `_load_gedcom_rows`.
+- `scripts/session162_drop_identity_overrides.sql` — DROP the dead `identity_overrides` table (0 live rows since Session 130; 18k+ idx_scans / 165 days). R2 snapshot at `r2://rhodesli-photos/backups/session162/`. `pg_depend` preflight confirmed no external dependents.
+- `scripts/data_integrity_audit.py` + `scripts/data_integrity_report.py` — removed live queries to `identity_overrides`. Codex pre-exec P1.6 also caught `scripts/migrate_to_supabase.py` (a one-shot Session 59C tool that would error post-DROP); archived to `scripts/_archive/migrate_to_supabase_session59C.py`.
+- `scripts/session162b_rollback_not_null.sql` + `scripts/session162_rollback_identity_overrides.sql` + `scripts/session162a_rollback_view.sql` — companion rollbacks for each destructive phase. Codex pre-exec P1.5 caught the missing RLS line in the `identity_overrides` rollback (added).
+- `VACUUM (ANALYZE)` on 5 bloat tables — `gedcom_relationships` (140k→0 dead), `gedcom_events` (44k→0), `photo_faces` (568→0), `photos` (265→0), `date_labels` (107→1). Total ~186,915 dead tuples reclaimed in <8s. NO `VACUUM FULL` (Session 158e proved AccessExclusiveLock causes statement_timeout).
+
+### Pre-execution audit (caught BEFORE code)
+- Codex CLI v0.133.0 (gpt-5.5, xhigh) audited the prompt + context itself: 1 P0 + 7 P1 + 6 P2 + 2 P3. All P0/P1 + selected P2 applied to prompt before execution. See `docs/session_context/session-162-codex-audit.md`.
+- Notable P0: original Phase 6 measurement plan was invalid (comparing 60-min sample against 165-day cumulative counters). Fixed by capturing fresh T0 snapshot after Phase 4 and computing (T1 - T0) deltas.
+- Notable P1.6 (would have been a footgun): `scripts/migrate_to_supabase.py` still wrote to `identity_overrides` despite being a Session 59C one-shot — would have errored on next run after DROP. Archived.
+
+### Tests (Session 162)
+- 5 new tests (`tests/test_session162_view_and_fallback.py`, `tests/test_session162_identity_overrides_dropped.py`)
+- Static guards: view SQL must NOT contain `is_current IS NULL`; relationship_routes raw-table fallbacks MUST filter `is_current = true`; migrate_to_supabase.py must be archived
+- Live-DB guard (opt-in `RUN_LIVE_DB_TESTS=1`): asserts view definition + table absence
+- Baseline 4313 → **4318 passed** (+5 new tests, no regressions)
+
+### Decisions
+- New `OD-014` in `docs/ops/OPS_DECISIONS.md` — full remediation rationale + tradeoffs + alternatives rejected (incl. Pro plan upgrade declined by user).
+- New `L198` in `tasks/lessons.md` — partial indexes silently defeated by `OR <pred> IS NULL` clauses; audit views against index predicates whenever you add a partial index.
+- No Pro plan upgrade. Empirical 42× IO reduction makes structural-only the correct call.
+
+### Roadmap shuffle
+- Planned Session 162 (rhodes-wiki dossier auto-update + first wiki/ narrative pages) → pushed to Session 163.
+
+---
+
 ## [v0.99.81] — 2026-05-13 (Session 161: `/admin/rhodes-inbox` + image handoff)
 
 NEW admin route + provenance pipeline: the rhodes-wiki Session 160 capture (Martha Girgenti / 1971 Menasche post / 14 comments) is now fully ingestable into rhodesli via `/admin/rhodes-inbox`. Local-dev only by design (AD-RID-1) — production returns 404. Session 161 arc completes RHODES-WIKI-003.

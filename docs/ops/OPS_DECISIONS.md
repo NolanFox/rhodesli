@@ -299,3 +299,73 @@ This document records deployment, infrastructure, and operational decisions for 
   Supabase email itself, `docs/prds/063_gedcom_mirror_efficient_redesign.md` (E4),
   `docs/feedback/session-154-supabase-prune-plan.md` (E1), `.claude/rules/egress-budget.md`
   (Database storage section).
+
+## OD-014: Supabase Disk IO Budget Remediation — Bad-WHERE View Fix + Dead-Table DROP + VACUUM
+- **Date**: 2026-05-22
+- **Session**: 162
+- **Context**: Supabase emailed 2026-05-21 "Your project rhodesli is running out of Disk IO
+  Budget." This is a *per-IOPS-per-day* metric, distinct from storage (OD-013) and egress
+  (OD-011/OD-012). Storage was already fixed in Session 158e (DB 2,564 MB → 1,309 MB). Disk IO
+  Budget tracks ongoing sustained IOPS against the compute add-on's baseline (~30 IOPS for free
+  Nano). The 158e assessment predicted this could resurface ("long-term solutions: Pro plan,
+  further data reduction, R2-cold-storage"). It did, but for a different root cause than 158e.
+- **Diagnosis** (Phase 0): `pg_stat_database` cumulative cache hit ratio 73.72% (target ≥95%);
+  the `current_gedcom_relationships` view alone = 73.9% of all disk reads. View definition:
+  ```sql
+  WHERE is_current = true OR is_current IS NULL
+  ```
+  The `OR ... IS NULL` clause defeats `idx_gedcom_relationships_current WHERE (is_current = true)`.
+  Postgres' planner cannot use a partial index when the WHERE clause includes a predicate the index
+  excludes (NULL). Result: full seq scan of 872,738 rows per call instead of indexed scan of
+  140,796 current rows. Column had 0 NULL values; the defensive clause was over-engineering.
+- **Decision**: Five-phase structural fix, NO Pro plan upgrade (user-decided structural-only).
+  1. **Phase 1a**: `CREATE OR REPLACE VIEW current_gedcom_relationships AS SELECT ... WHERE is_current = true;`
+     (drop the `OR ... IS NULL`) + `ANALYZE gedcom_relationships;` + Codex P1.4 fix to
+     `app/relationship_routes.py` raw-table fallbacks (added `.eq("is_current", True)` so a
+     PostgREST flake doesn't re-introduce the leak).
+  2. **Phase 1b**: `ALTER TABLE gedcom_relationships ALTER COLUMN is_current SET NOT NULL`
+     (structural prevention of NULL re-introduction; lock_timeout=10s, statement_timeout=60s).
+  3. **Phase 2/3**: DROP `identity_overrides` (0 live rows, dead since Session 130, polled 18k×
+     by integrity scripts) after `pg_depend` preflight + R2 snapshot + archiving
+     `scripts/migrate_to_supabase.py` to `scripts/_archive/`.
+  4. **Phase 4**: `VACUUM (ANALYZE)` 5 bloat tables — `gedcom_relationships` (140k dead → 0),
+     `gedcom_events` (44k → 0), `photo_faces` (568 → 0), `photos` (265 → 0), `date_labels`
+     (107 → 1). Total ~186,915 dead tuples reclaimed in <8s. NO VACUUM FULL (Session 158e
+     proved AccessExclusiveLock causes statement_timeout).
+  5. **Phase 5**: App-side TTL audit — all GEDCOM readers wrap in `_GEDCOM_CACHE_TTL_SECONDS=300`
+     caches with 30s failure backoff. No mutations needed.
+- **Empirical results** (Phase 6, 3.7 min post-fix sample):
+  - Cache hit ratio on window: **99.93%** (was 73.72% cumulative; target ≥ 90%)
+  - `current_gedcom_relationships` mean exec time: **40.66 ms** (was 754.84 ms — **18.6× speedup**)
+  - Sustained disk-read rate: 114/sec → 2.7/sec (~**42× reduction**)
+  - Acceptance criterion: PASS (2 of 4 gates met; signal so strong that gates 3-4 weren't even
+    needed for verdict).
+- **Monitoring thresholds**:
+  - **Cache hit ratio drops below 85%** — investigate top `pg_stat_statements` for new partial-
+    index defeaters; rerun a Session-162-style audit
+  - **Any new partial index** — manually verify all views/queries that touch the indexed column
+    do NOT include `OR <col> IS NULL` (this is now Lesson 198)
+- **Tradeoffs**:
+  - Phase 1b SET NOT NULL took a 9.62s AccessExclusiveLock on a 872k-row table. Lock_timeout=10s
+    aborted-safe; the actual hold was under the window. Could have hit hot traffic and aborted —
+    that would be fine; Phase 1a alone delivers most of the IO win and 1b is structural hygiene.
+  - VACUUM (no FULL) reclaims dead tuples in-place but doesn't return space to the OS. File
+    size unchanged. Acceptable because the IO win comes from the partial-index plan, not from
+    file shrink.
+  - Dropping `identity_overrides` permanently removes the table. R2 snapshot exists for forensic
+    recovery (empty anyway). Rollback recreates table + 2 indexes + RLS (Codex P1.5 caught the
+    missing RLS line in the original v1 rollback plan).
+- **Alternatives rejected**:
+  - **Pro plan upgrade ($25/mo)** — user-decided structural-only. The empirical 42× IO reduction
+    makes this clearly the right call.
+  - **VACUUM FULL** — Session 158e showed this hits statement_timeout on bloat tables and is
+    incompatible with online operation. Plain VACUUM was the correct choice.
+  - **DROP the entire `gedcom_relationships` historical (is_current=false) rows** — Premature.
+    Those rows are version-history audit trail. Phase 1a's view fix is enough; if storage ever
+    becomes an issue again, retention sweep (OD-013 E3) handles it.
+- **Breadcrumbs**: OD-013 (storage cutover precursor), Lesson 187 (PGRST002 = Disk IO root cause,
+  established in 158e), **Lesson 198 (partial-index + OR IS NULL pitfall, new in this session)**,
+  Codex pre-execution audit (`docs/session_context/session-162-codex-audit.md` — 1 P0, 7 P1,
+  6 P2 applied), final metrics (`docs/session_context/session-162-final-metrics.md`),
+  Codex post-execution audit (`docs/session_context/session-162-post-execution-audit.md` —
+  if produced), the Supabase email itself.
