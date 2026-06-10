@@ -6,7 +6,7 @@ Replaces the old non-atomic, per-batch-commit, multi-state versioned importer
 a SINGLE Postgres transaction: a failed import leaves ZERO rows (no partial
 state, no `failed` version row).
 
-Flow (plan R3, Codex P0-1/P0-2/P1-1):
+Flow (plan R3, Codex P0-1/P0-2/P0-A/P1-1):
 
     raw_bytes = read(file); source_hash = sha256(raw_bytes)
     parsed    = parse_gedcom(file); bundle = build_snapshot_bundle(parsed)
@@ -15,8 +15,10 @@ Flow (plan R3, Codex P0-1/P0-2/P1-1):
       pg_advisory_xact_lock(hashtext('gedcom_import:'||community))   # serialize
       if applied version with source_hash exists: ROLLBACK -> idempotent no-op
       version_number = MAX(version_number)+1  for community
-      old = load_current_maps(conn, community)        # id -> payload-ish (+payload_hash)
-      diffs = diff_entity_maps(et, old[et], new[et])  # canonical payloads only
+      old = load_diff_base_maps(...)   # PREVIOUS applied version's R2 snapshot
+                                       # (full LOSSLESS payloads, ALL diff types
+                                       #  incl. sources/media/relationships)
+      diffs = diff_entity_maps(et, old[et], new[et])  # full-payload diff
       artifacts = build raw.ged.gz / snapshot.jsonl.gz / diff.json.gz
       upload_and_verify(artifacts)                    # re-download + hash check; fail -> raise
       apply diffs: upsert added/modified, delete removed (individuals/families);
@@ -27,6 +29,17 @@ Flow (plan R3, Codex P0-1/P0-2/P1-1):
 
 The DB stores only typed columns + payload_hash (current-state, one row per
 entity); the lossless full payload lives in R2 (gedcom_history).
+
+Codex P0-A — the diff base (the "old" / "before" state) is the PREVIOUS applied
+version's R2 snapshot, NOT the lossy typed DB columns. R2 snapshots carry the
+full lossless payload for ALL bundle entity types (individuals, families,
+relationships, sources, media_objects), so:
+  * `before` payloads in the diff artifact are complete (unwind-safe);
+  * sources/media diff CORRECTLY (the DB schema doesn't store them, so a DB
+    base would always re-add them every import).
+The DB current-state == the previous snapshot (they are written atomically in
+the same txn), so diffing against R2 is equivalent to diffing against the DB but
+lossless. `load_current_maps` is retained as a DB-consistency cross-check.
 
 This script DOES NOT run against the live DB on import. `run_import` accepts
 injectable `conn_factory` and `r2_factory` so tests exercise the full code path
@@ -222,6 +235,51 @@ def _row_to_payload(columns: list[str], row: tuple) -> dict[str, Any]:
 
 
 # --------------------------------------------------------------------------- #
+# Diff base from R2 (Codex P0-A — lossless)
+# --------------------------------------------------------------------------- #
+def _empty_old_maps() -> dict[str, dict[str, dict[str, Any]]]:
+    return {et: {} for et in DIFF_TYPES}
+
+
+def _latest_applied_artifact_prefix(cur, community: str) -> str | None:
+    """Return the artifact_prefix of the latest applied version with artifacts.
+
+    The diff base must come from the PREVIOUS applied version's R2 snapshot
+    (full lossless payloads), not the current bundle's version (not yet written).
+    """
+    cur.execute(
+        "SELECT artifact_prefix FROM gedcom_versions "
+        "WHERE community_id = %s AND status = 'applied' AND artifact_prefix IS NOT NULL "
+        "ORDER BY version_number DESC LIMIT 1",
+        (community,),
+    )
+    row = cur.fetchone()
+    return row[0] if row and row[0] else None
+
+
+def load_diff_base_maps(
+    cur, community: str, r2_client, bucket: str
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Load the diff base ("old" state) from the latest applied R2 snapshot.
+
+    Codex P0-A: the diff base is the previous applied version's lossless
+    ``snapshot.jsonl.gz`` reconstructed into ``{entity_type -> {id -> payload}}``.
+    This carries the FULL payload for every diff entity type (incl. sources /
+    media_objects, which the DB schema doesn't persist). If there's no prior
+    applied version (first import), returns empty maps for all types.
+    """
+    prefix = _latest_applied_artifact_prefix(cur, community)
+    if not prefix:
+        return _empty_old_maps()
+    snapshot_bytes = gh.download_snapshot(r2_client, bucket, prefix)
+    reconstructed = gh.reconstruct_version_from_snapshot(snapshot_bytes)
+    maps = _empty_old_maps()
+    for et in DIFF_TYPES:
+        maps[et] = dict(reconstructed.get(et, {}))
+    return maps
+
+
+# --------------------------------------------------------------------------- #
 # Bundle payload -> canonical table column row
 # --------------------------------------------------------------------------- #
 def individual_row_values(community: str, payload: dict[str, Any], version_number: int):
@@ -401,9 +459,23 @@ def run_import(
     }
 
     if not execute:
-        # Dry-run: diff against EMPTY current state (no DB connection) and report
-        # the full bundle as the change set. This is a "what would import" view.
-        diffs = {et: diff_entity_maps(et, {}, new_maps[et]) for et in DIFF_TYPES}
+        # Dry-run / admin preview (Codex P2): diff against the ACTUAL current
+        # state read read-only from the latest applied R2 snapshot, so the
+        # preview shows the REAL change set. If no conn/r2 factory is provided
+        # (or there's no prior applied version), fall back to an empty base —
+        # for a first import the empty base IS the real change set.
+        old_maps = _empty_old_maps()
+        if conn_factory is not None and r2_factory is not None:
+            conn = conn_factory()
+            try:
+                cur = conn.cursor()
+                r2_client = r2_factory()
+                old_maps = load_diff_base_maps(cur, community, r2_client, _r2_bucket())
+                cur.close()
+                conn.rollback()  # read-only — never mutate during a dry-run
+            finally:
+                conn.close()
+        diffs = {et: diff_entity_maps(et, old_maps[et], new_maps[et]) for et in DIFF_TYPES}
         summary = gh.build_diff_summary(diffs)
         result = {
             "execute": False,
@@ -447,8 +519,13 @@ def run_import(
         base_version = cur.fetchone()[0]
         version_number = base_version + 1
 
-        # Load current state + diff against the new bundle.
-        old_maps = load_current_maps(conn, community)
+        # Codex P0-A: the diff base is the PREVIOUS applied version's lossless
+        # R2 snapshot (full payloads, all diff types incl. sources/media),
+        # NOT the lossy typed DB columns. The R2 client is created here because
+        # it's needed both to read the base snapshot and to upload artifacts.
+        r2_client = r2_factory()
+        bucket = _r2_bucket()
+        old_maps = load_diff_base_maps(cur, community, r2_client, bucket)
         diffs = {et: diff_entity_maps(et, old_maps[et], new_maps[et]) for et in DIFF_TYPES}
         diff_summary = gh.build_diff_summary(diffs)
 
@@ -469,8 +546,7 @@ def run_import(
             "snapshot.jsonl.gz": snapshot_gz,
             "diff.json.gz": diff_gz,
         }
-        r2_client = r2_factory()
-        shas = gh.upload_and_verify_artifacts(r2_client, _r2_bucket(), prefix, artifacts)
+        shas = gh.upload_and_verify_artifacts(r2_client, bucket, prefix, artifacts)
 
         # Apply mutations to canonical tables (still inside the txn).
         apply_entity_diffs(conn, community, diffs, version_number)

@@ -28,6 +28,10 @@ Ordering (headroom-safe, R6):
 Connection: pooler SESSION port 5432 (reuse import_gedcom_version.default_conn_factory).
 R2 via boto3.
 
+ASSUMPTION (Codex P1-A): this migration is SINGLE-COMMUNITY (rhodesli). cmd_snapshot
+asserts every v2/relationships row is community_id NULL or 'rhodesli' and aborts
+otherwise. Multi-community would need per-community extracts + version numbering.
+
 Run:
   source venv/bin/activate
   python scripts/session164_migrate_to_current_state.py snapshot
@@ -77,6 +81,10 @@ V9_VERSION_NUMBER = 9
 EXPECTED_INDIVIDUALS = 21998
 EXPECTED_FAMILIES = 6741
 EXPECTED_RELATIONSHIPS = 140796
+
+# Codex P0-C / P1-C: DB-size gates. Post-migration target is ~129 MB.
+DB_SIZE_HARD_LIMIT_BYTES = 300 * 1024 * 1024   # verify FAILs above this
+DB_SIZE_POPULATE_GUARD_BYTES = 350 * 1024 * 1024  # populate ABORTs if already above this
 
 # v2 column extracts (current-state) — the typed columns the canonical schema
 # keeps, mirroring INDIVIDUAL_COLUMNS / FAMILY_COLUMNS from the importer.
@@ -162,6 +170,67 @@ def _column_exists(cur, table: str, column: str) -> bool:
     return cur.fetchone() is not None
 
 
+def _column_type_sql(data_type: str, char_max_len, num_precision, num_scale) -> str:
+    """Best-effort SQL type from information_schema metadata (Codex P0-E)."""
+    dt = (data_type or "text").lower()
+    if dt == "character varying":
+        return f"varchar({char_max_len})" if char_max_len else "varchar"
+    if dt == "character":
+        return f"char({char_max_len})" if char_max_len else "char"
+    if dt == "numeric" and num_precision:
+        return f"numeric({num_precision},{num_scale or 0})"
+    if dt == "timestamp without time zone":
+        return "timestamp"
+    if dt == "timestamp with time zone":
+        return "timestamptz"
+    if dt == "double precision":
+        return "double precision"
+    # text, integer, bigint, boolean, jsonb, uuid, etc. map 1:1
+    return dt
+
+
+def _build_restorable_ddl(cur, tables: tuple[str, ...]) -> str:
+    """Build real CREATE TABLE DDL from information_schema (Codex P0-E).
+
+    Good enough to recreate the tables (column name, type, nullability, default).
+    Indexes / constraints are NOT reproduced — this is a restorability backstop,
+    not a pg_dump replacement. A header documents the limitation.
+    """
+    lines: list[str] = [
+        "-- Session 164 snapshot — restorable CREATE TABLE DDL (Codex P0-E).",
+        "-- NOTE: indexes, PKs, FKs and triggers are NOT reproduced here; the",
+        "--       canonical schema SQL (session164_canonical_schema.sql) and the",
+        "--       v2 originals carry those. This is a column-level restore backstop.",
+        "",
+    ]
+    for tbl in tables:
+        cur.execute(
+            "SELECT column_name, data_type, is_nullable, column_default, "
+            "character_maximum_length, numeric_precision, numeric_scale "
+            "FROM information_schema.columns WHERE table_schema='public' AND table_name=%s "
+            "ORDER BY ordinal_position",
+            (tbl,),
+        )
+        col_defs: list[str] = []
+        for col, dtype, nullable, default, char_len, num_prec, num_scale in cur.fetchall():
+            type_sql = _column_type_sql(dtype, char_len, num_prec, num_scale)
+            piece = f"    {col} {type_sql}"
+            if default is not None:
+                piece += f" DEFAULT {default}"
+            if (nullable or "YES").upper() == "NO":
+                piece += " NOT NULL"
+            col_defs.append(piece)
+        if not col_defs:
+            lines.append(f"-- (table {tbl} not found / no columns)")
+            lines.append("")
+            continue
+        lines.append(f"CREATE TABLE IF NOT EXISTS {tbl} (")
+        lines.append(",\n".join(col_defs))
+        lines.append(");")
+        lines.append("")
+    return "\n".join(lines)
+
+
 # ----------------------------------------------------------------------------- #
 # 1. snapshot
 # ----------------------------------------------------------------------------- #
@@ -177,11 +246,14 @@ def _stream_table_to_jsonl_gz(conn, sql: str, params=None):
         cur = conn.cursor(name="s164_snap")  # server-side (named) cursor
         cur.itersize = CHUNK
         cur.execute(sql, params or ())
-        colnames = [d[0] for d in cur.description]
+        colnames = None
         while True:
             rows = cur.fetchmany(CHUNK)
             if not rows:
                 break
+            if colnames is None:
+                # Named cursors only populate .description after the first fetch.
+                colnames = [d[0] for d in cur.description]
             for row in rows:
                 rec = {c: v for c, v in zip(colnames, row)}
                 gz.write((json.dumps(rec, sort_keys=True, default=str) + "\n").encode("utf-8"))
@@ -190,11 +262,34 @@ def _stream_table_to_jsonl_gz(conn, sql: str, params=None):
     return buf.getvalue(), n
 
 
+def _assert_single_community(cur, table: str):
+    """Codex P1-A: the migration assumes ONE community (rhodesli). Abort if the
+    table carries rows for more than one community_id (or any non-rhodesli)."""
+    if not _column_exists(cur, table, "community_id"):
+        return  # v2 tables may predate community_id; treated as single-community
+    cur.execute(f"SELECT DISTINCT community_id FROM {table}")
+    distinct = [r[0] for r in cur.fetchall()]
+    non_null = [c for c in distinct if c is not None]
+    if len(non_null) > 1 or (non_null and non_null != [COMMUNITY]):
+        print(
+            f"ABORT: {table} has community_id values {distinct} — the Session 164 "
+            f"migration assumes a single community ({COMMUNITY!r}). Aborting."
+        )
+        sys.exit(1)
+
+
 def cmd_snapshot(args):
     conn = _conn(autocommit=False)
     conn.set_session(isolation_level="REPEATABLE READ", readonly=True)
     r2 = _r2()
     manifest: dict[str, Any] = {"session": "164", "prefix": SNAP_PREFIX, "community": COMMUNITY, "files": {}}
+
+    # Codex P1-A: single-community assumption guard (documented in module header).
+    guard_cur = conn.cursor()
+    for tbl in ("gedcom_individuals_v2", "gedcom_families_v2", "gedcom_relationships"):
+        if _table_exists(guard_cur, tbl):
+            _assert_single_community(guard_cur, tbl)
+    guard_cur.close()
 
     def emit(name: str, sql: str, params=None):
         print(f"[snapshot] dumping {name} ...")
@@ -226,22 +321,20 @@ def cmd_snapshot(args):
     emit("gedcom_relationships.jsonl.gz", "SELECT * FROM gedcom_relationships")
     emit("gedcom_versions.jsonl.gz", "SELECT * FROM gedcom_versions")
 
-    # Schema DDL text dump (column listing) for the v2 + relationships tables.
+    # Codex P0-E: REAL CREATE TABLE DDL (not just column comments) so the snapshot
+    # is restorable. Built from information_schema columns; indexes are NOT
+    # reproduced (noted in the header) — the canonical schema SQL recreates those.
     schema_cur = conn.cursor()
-    schema_lines = []
-    for tbl in ("gedcom_individuals_v2", "gedcom_families_v2", "gedcom_relationships", "gedcom_versions"):
-        schema_cur.execute(
-            "SELECT column_name, data_type, is_nullable, column_default "
-            "FROM information_schema.columns WHERE table_schema='public' AND table_name=%s "
-            "ORDER BY ordinal_position",
-            (tbl,),
-        )
-        schema_lines.append(f"-- {tbl}")
-        for col, dtype, nullable, default in schema_cur.fetchall():
-            schema_lines.append(f"--   {col} {dtype} nullable={nullable} default={default}")
-        schema_lines.append("")
+    schema_text = _build_restorable_ddl(
+        schema_cur,
+        (
+            "gedcom_individuals_v2",
+            "gedcom_families_v2",
+            "gedcom_relationships",
+            "gedcom_versions",
+        ),
+    ).encode("utf-8")
     schema_cur.close()
-    schema_text = "\n".join(schema_lines).encode("utf-8")
     schema_sha = _put(r2, f"{SNAP_PREFIX}/schema.sql", schema_text)
     manifest["files"]["schema.sql"] = {"size_bytes": len(schema_text), "sha256": schema_sha}
 
@@ -265,8 +358,37 @@ def cmd_snapshot(args):
 # ----------------------------------------------------------------------------- #
 # 2. drop-v2
 # ----------------------------------------------------------------------------- #
-def _snapshot_manifest_exists(r2) -> bool:
-    return _head_exists(r2, f"{SNAP_PREFIX}/manifest.json")
+def _verify_snapshot_manifest_complete(r2) -> dict[str, Any]:
+    """Codex P0-E: every file the manifest records must actually exist in R2
+    (head_object each), AND the current individuals extract must have the
+    expected row count, BEFORE any irreversible DROP. Returns the manifest.
+    Aborts (sys.exit(1)) on any missing file or count mismatch.
+    """
+    manifest_key = f"{SNAP_PREFIX}/manifest.json"
+    if not _head_exists(r2, manifest_key):
+        print(f"ABORT: snapshot manifest not found at {manifest_key}. Run `snapshot` first.")
+        sys.exit(1)
+    manifest = json.loads(_get(r2, manifest_key).decode("utf-8"))
+    files = manifest.get("files", {})
+    missing = []
+    for name, meta in files.items():
+        key = meta.get("r2_key") or f"{SNAP_PREFIX}/{name}"
+        if not _head_exists(r2, key):
+            missing.append(key)
+    if missing:
+        print(f"ABORT: snapshot manifest references {len(missing)} missing R2 file(s): {missing}")
+        sys.exit(1)
+    # Sanity: current individuals extract row count == expected (21998).
+    cur_ind = files.get("gedcom_individuals_v2.current.jsonl.gz", {})
+    rows = cur_ind.get("rows")
+    if rows != EXPECTED_INDIVIDUALS:
+        print(
+            f"ABORT: snapshot current-individuals row count {rows} != expected "
+            f"{EXPECTED_INDIVIDUALS}. Refusing to DROP."
+        )
+        sys.exit(1)
+    print(f"[drop-v2] manifest verified: {len(files)} files present in R2; current individuals={rows}")
+    return manifest
 
 
 def cmd_drop_v2(args):
@@ -274,9 +396,7 @@ def cmd_drop_v2(args):
         print("ABORT: drop-v2 requires --yes")
         sys.exit(1)
     r2 = _r2()
-    if not _snapshot_manifest_exists(r2):
-        print(f"ABORT: snapshot manifest not found at {SNAP_PREFIX}/manifest.json. Run `snapshot` first.")
-        sys.exit(1)
+    _verify_snapshot_manifest_complete(r2)
     conn = _conn(autocommit=True)
     cur = conn.cursor()
     before = _db_size(cur)
@@ -289,7 +409,11 @@ def cmd_drop_v2(args):
         print(f"[drop-v2] DROP TABLE IF EXISTS {tbl}")
         cur.execute(f"DROP TABLE IF EXISTS {tbl}")
     after = _db_size(cur)
-    print(f"[drop-v2] AFTER:  {after[0]} ({after[1]} bytes)  freed={before[1]-after[1]} bytes")
+    freed = before[1] - after[1]
+    print(f"[drop-v2] AFTER:  {after[0]} ({after[1]} bytes)  freed={freed} bytes")
+    # Codex P1-C: idempotent re-run is OK (tables already gone -> freed <= 0).
+    if freed <= 0:
+        print("[drop-v2] WARNING: freed <= 0 bytes — tables may already be dropped (idempotent re-run).")
     conn.close()
 
 
@@ -388,6 +512,18 @@ def cmd_populate(args):
     conn = _conn(autocommit=False)
     cur = conn.cursor()
     try:
+        # Codex P1-C: headroom guard — the drop-v2 step should have brought the
+        # DB to ~129 MB. If it's still bloated, refuse to insert more.
+        size = _db_size(cur)
+        if size[1] > DB_SIZE_POPULATE_GUARD_BYTES:
+            print(
+                f"[populate] ABORT: DB size {size[0]} ({size[1]} bytes) exceeds "
+                f"{DB_SIZE_POPULATE_GUARD_BYTES} bytes — run drop-v2 first."
+            )
+            conn.rollback()
+            conn.close()
+            sys.exit(1)
+
         if args.truncate:
             print("[populate] TRUNCATE gedcom_individuals, gedcom_families (--truncate)")
             cur.execute("TRUNCATE gedcom_individuals")
@@ -415,6 +551,29 @@ def cmd_populate(args):
                 print(f"[populate]   DROP COLUMN gedcom_relationships.{col}")
                 cur.execute(f"ALTER TABLE gedcom_relationships DROP COLUMN IF EXISTS {col}")
 
+        # Codex P1-B: enforce NOT NULL on the relationship key columns so the
+        # composite unique index (community_id, edge_key) can't be bypassed by
+        # NULLs. Verify no NULLs remain before SET NOT NULL (fail-loud otherwise).
+        cur.execute(
+            "SELECT count(*) FROM gedcom_relationships "
+            "WHERE community_id IS NULL OR version_number IS NULL "
+            "OR edge_key IS NULL OR payload_hash IS NULL"
+        )
+        n_null = cur.fetchone()[0]
+        if n_null:
+            raise RuntimeError(
+                f"{n_null} gedcom_relationships rows have NULL key columns — "
+                "cannot SET NOT NULL. Aborting (rollback)."
+            )
+        print("[populate]   SET NOT NULL on community_id, version_number, edge_key, payload_hash")
+        cur.execute(
+            "ALTER TABLE gedcom_relationships "
+            "ALTER COLUMN community_id SET NOT NULL, "
+            "ALTER COLUMN version_number SET NOT NULL, "
+            "ALTER COLUMN edge_key SET NOT NULL, "
+            "ALTER COLUMN payload_hash SET NOT NULL"
+        )
+
         conn.commit()
         print("[populate] COMMIT")
     except Exception:
@@ -428,41 +587,83 @@ def cmd_populate(args):
 # ----------------------------------------------------------------------------- #
 # 5. backfill-artifacts
 # ----------------------------------------------------------------------------- #
+# Relationship columns persisted to the canonical table (for snapshot/baseline).
+RELATIONSHIP_COLUMNS = [
+    "edge_key",
+    "individual_gedcom_id",
+    "related_gedcom_id",
+    "relationship_type",
+    "family_gedcom_id",
+    "relationship_payload",
+    "payload_hash",
+]
+
+# Codex P0-B: the canonical DB holds individuals + families + relationships, so
+# the v9 baseline snapshot/diff covers ALL THREE. sources/media are NOT in the
+# canonical DB and are intentionally omitted from the baseline (see the note
+# written into gedcom_versions.notes — they remain preserved in the f783
+# raw.ged.gz + the Session-156 archives + the Session-164 v2 full backup).
+BASELINE_ENTITY_TYPES = ("individuals", "families", "relationships")
+
+
+def _baseline_entity_iter(cur):
+    """Yield (entity_type, entity_id, payload) for individuals, families,
+    relationships streamed from the canonical tables in chunks (P0-B, P0-stream)."""
+    # individuals
+    cur.execute(
+        f"SELECT {', '.join(imp.INDIVIDUAL_COLUMNS)} FROM gedcom_individuals "
+        "WHERE community_id = %s ORDER BY gedcom_id",
+        (COMMUNITY,),
+    )
+    while True:
+        rows = cur.fetchmany(CHUNK)
+        if not rows:
+            break
+        for row in rows:
+            payload = {c: v for c, v in zip(imp.INDIVIDUAL_COLUMNS, row)}
+            yield "individuals", payload["gedcom_id"], payload
+    # families
+    cur.execute(
+        f"SELECT {', '.join(imp.FAMILY_COLUMNS)} FROM gedcom_families "
+        "WHERE community_id = %s ORDER BY family_gedcom_id",
+        (COMMUNITY,),
+    )
+    while True:
+        rows = cur.fetchmany(CHUNK)
+        if not rows:
+            break
+        for row in rows:
+            payload = {c: v for c, v in zip(imp.FAMILY_COLUMNS, row)}
+            yield "families", payload["family_gedcom_id"], payload
+    # relationships (140,796 rows — chunked, never loaded all at once)
+    cur.execute(
+        f"SELECT {', '.join(RELATIONSHIP_COLUMNS)} FROM gedcom_relationships "
+        "WHERE community_id = %s ORDER BY edge_key",
+        (COMMUNITY,),
+    )
+    while True:
+        rows = cur.fetchmany(CHUNK)
+        if not rows:
+            break
+        for row in rows:
+            payload = {c: v for c, v in zip(RELATIONSHIP_COLUMNS, row)}
+            yield "relationships", payload["edge_key"], payload
+
+
 def _build_v9_snapshot_jsonl_gz(cur) -> bytes:
     """Build snapshot.jsonl.gz from the freshly-populated canonical tables.
 
-    One line per entity {entity_type, entity_id, payload, payload_hash}. payload
-    here is the typed-column projection (lossless full payload predates this
-    schema; the R2 v2 full backup retains it). Streamed in chunks.
+    One line per entity {entity_type, entity_id, payload, payload_hash} for
+    individuals + families + relationships (Codex P0-B). payload here is the
+    typed-column projection (the lossless full pre-Session-164 payload is
+    retained in the R2 v2 full backup). Streamed in chunks (never all in memory).
     """
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb", mtime=0) as gz:
-        # individuals
-        cur.execute(
-            f"SELECT {', '.join(imp.INDIVIDUAL_COLUMNS)} FROM gedcom_individuals "
-            "WHERE community_id = %s ORDER BY gedcom_id",
-            (COMMUNITY,),
-        )
-        for row in cur.fetchall():
-            payload = {c: v for c, v in zip(imp.INDIVIDUAL_COLUMNS, row)}
+        for entity_type, entity_id, payload in _baseline_entity_iter(cur):
             rec = {
-                "entity_type": "individuals",
-                "entity_id": payload["gedcom_id"],
-                "payload": payload,
-                "payload_hash": payload.get("payload_hash"),
-            }
-            gz.write((json.dumps(rec, sort_keys=True, default=str) + "\n").encode("utf-8"))
-        # families
-        cur.execute(
-            f"SELECT {', '.join(imp.FAMILY_COLUMNS)} FROM gedcom_families "
-            "WHERE community_id = %s ORDER BY family_gedcom_id",
-            (COMMUNITY,),
-        )
-        for row in cur.fetchall():
-            payload = {c: v for c, v in zip(imp.FAMILY_COLUMNS, row)}
-            rec = {
-                "entity_type": "families",
-                "entity_id": payload["family_gedcom_id"],
+                "entity_type": entity_type,
+                "entity_id": entity_id,
                 "payload": payload,
                 "payload_hash": payload.get("payload_hash"),
             }
@@ -471,38 +672,20 @@ def _build_v9_snapshot_jsonl_gz(cur) -> bytes:
 
 
 def _build_v9_diff_baseline_gz(cur, generated_at: str, source_hash: str | None) -> bytes:
-    """Baseline diff: every entity as change_type='baseline' with after=payload."""
-    entities: dict[str, dict[str, list]] = {"individuals": {"added": [], "modified": [], "removed": []},
-                                            "families": {"added": [], "modified": [], "removed": []}}
-    cur.execute(
-        f"SELECT {', '.join(imp.INDIVIDUAL_COLUMNS)} FROM gedcom_individuals "
-        "WHERE community_id = %s ORDER BY gedcom_id",
-        (COMMUNITY,),
-    )
-    for row in cur.fetchall():
-        payload = {c: v for c, v in zip(imp.INDIVIDUAL_COLUMNS, row)}
-        entities["individuals"]["added"].append(
+    """Baseline diff: every entity as an `added` baseline with after=payload.
+
+    Codex P0-B: covers individuals + families + relationships. Streamed (the
+    `entities` dict accumulates IDs, but each baseline item is small). Codex P2:
+    the diff_summary built from this is the 5-type IDs-inclusive shape.
+    """
+    entities: dict[str, dict[str, list]] = {
+        et: {"added": [], "modified": [], "removed": []} for et in BASELINE_ENTITY_TYPES
+    }
+    for entity_type, entity_id, payload in _baseline_entity_iter(cur):
+        entities[entity_type]["added"].append(
             {
-                "entity_type": "individuals",
-                "entity_id": payload["gedcom_id"],
-                "change_type": "baseline",
-                "before": None,
-                "after": payload,
-                "before_hash": None,
-                "after_hash": payload.get("payload_hash"),
-            }
-        )
-    cur.execute(
-        f"SELECT {', '.join(imp.FAMILY_COLUMNS)} FROM gedcom_families "
-        "WHERE community_id = %s ORDER BY family_gedcom_id",
-        (COMMUNITY,),
-    )
-    for row in cur.fetchall():
-        payload = {c: v for c, v in zip(imp.FAMILY_COLUMNS, row)}
-        entities["families"]["added"].append(
-            {
-                "entity_type": "families",
-                "entity_id": payload["family_gedcom_id"],
+                "entity_type": entity_type,
+                "entity_id": entity_id,
                 "change_type": "baseline",
                 "before": None,
                 "after": payload,
@@ -519,6 +702,37 @@ def _build_v9_diff_baseline_gz(cur, generated_at: str, source_hash: str | None) 
         "entities": entities,
     }
     return gzip.compress(json.dumps(doc, sort_keys=True, default=str).encode("utf-8"), mtime=0)
+
+
+def build_baseline_diff_summary(
+    counts: dict[str, int], ids: dict[str, list[str]] | None = None
+) -> dict[str, Any]:
+    """Pure builder for the baseline diff_summary (Codex P2).
+
+    Produces the 5-type IDs-inclusive shape that the importer's
+    ``gedcom_history.build_diff_summary`` emits:
+    ``{<type>: {added, modified, removed, ids: {added, modified, removed}}}`` for
+    each of the 5 DIFF_ENTITY_TYPES. The baseline only has `added` entities;
+    modified/removed are always empty/zero. ``counts`` maps type -> added count;
+    ``ids`` (optional) maps type -> list of added entity ids.
+    """
+    ids = ids or {}
+    summary: dict[str, Any] = {}
+    for et in gh.DIFF_ENTITY_TYPES:
+        added_ids = list(ids.get(et, []))
+        added_count = counts.get(et, len(added_ids))
+        summary[et] = {
+            "added": added_count,
+            "modified": 0,
+            "removed": 0,
+            "ids": {"added": added_ids, "modified": [], "removed": []},
+        }
+    summary["note"] = (
+        "baseline (Session 164 migration); covers individuals/families/"
+        "relationships only — sources/media preserved in raw.ged.gz + "
+        "Session-156 archives + Session-164 v2 full backup"
+    )
+    return summary
 
 
 def cmd_backfill_artifacts(args):
@@ -571,16 +785,17 @@ def cmd_backfill_artifacts(args):
         }
         print(f"[backfill-artifacts] uploaded + verified: { {k: v[:12] for k, v in shas.items()} }")
 
-        # diff_summary (counts + ids) for the version row.
+        # diff_summary (counts + ids) for the version row — Codex P0-B/P2:
+        # 5-type IDs-inclusive shape covering individuals/families/relationships.
         cur.execute("SELECT count(*) FROM gedcom_individuals WHERE community_id = %s", (COMMUNITY,))
         n_ind = cur.fetchone()[0]
         cur.execute("SELECT count(*) FROM gedcom_families WHERE community_id = %s", (COMMUNITY,))
         n_fam = cur.fetchone()[0]
-        diff_summary = {
-            "individuals": {"added": n_ind, "modified": 0, "removed": 0},
-            "families": {"added": n_fam, "modified": 0, "removed": 0},
-            "note": "baseline (Session 164 migration)",
-        }
+        cur.execute("SELECT count(*) FROM gedcom_relationships WHERE community_id = %s", (COMMUNITY,))
+        n_rel = cur.fetchone()[0]
+        diff_summary = build_baseline_diff_summary(
+            {"individuals": n_ind, "families": n_fam, "relationships": n_rel}
+        )
 
         cur.execute(
             "UPDATE gedcom_versions SET raw_artifact_sha256 = %s, snapshot_artifact_sha256 = %s, "
@@ -594,7 +809,9 @@ def cmd_backfill_artifacts(args):
                 shas["diff.json.gz"],
                 prefix,
                 json.dumps(diff_summary),
-                " [S164: raw.ged.gz is archived f783, closest-available; exact f778 bytes not archived]",
+                " [S164: raw.ged.gz is archived f783, closest-available; exact f778 bytes not archived. "
+                "Baseline snapshot covers individuals/families/relationships only; "
+                "sources/media preserved in f783 raw.ged.gz + Session-156 archives + Session-164 v2 full backup]",
                 V9_VERSION_NUMBER,
             ),
         )
@@ -658,6 +875,13 @@ def cmd_verify(args):
     for col in ("is_current", "version_id", "superseded_by"):
         check(f"relationships column {col} dropped", not _column_exists(cur, "gedcom_relationships", col))
 
+    # Codex P0-C: relationships count > 0 AND near expected; edge-set non-empty.
+    cur.execute("SELECT count(*), count(DISTINCT edge_key) FROM gedcom_relationships WHERE community_id = %s", (COMMUNITY,))
+    rel_n, rel_d = cur.fetchone()
+    check("relationships count > 0", rel_n > 0, f"(count={rel_n})")
+    check("relationships count near expected", abs(rel_n - EXPECTED_RELATIONSHIPS) <= 100, f"(count={rel_n} expected~{EXPECTED_RELATIONSHIPS})")
+    check("relationships edge-set non-empty (count==distinct edge_key)", rel_n == rel_d and rel_d > 0, f"(count={rel_n} distinct_edge={rel_d})")
+
     # COMPLETE id->hash map equality vs the R2 current extract (Codex P2-4).
     print("[verify] comparing complete id->hash map (canonical vs R2 extract) ...")
     extract = _read_jsonl_gz(_get(r2, f"{SNAP_PREFIX}/gedcom_individuals_v2.current.jsonl.gz"))
@@ -677,7 +901,13 @@ def cmd_verify(args):
     check("families id->hash map equals R2 extract", fam_db_map == fam_extract_map,
           f"(db={len(fam_db_map)} extract={len(fam_extract_map)})")
 
+    # Codex P0-C: HARD DB-size gate — FAIL if the database exceeds 300 MB.
     size = _db_size(cur)
+    check(
+        "DB size under 300 MB",
+        size[1] <= DB_SIZE_HARD_LIMIT_BYTES,
+        f"({size[0]} = {size[1]} bytes; limit {DB_SIZE_HARD_LIMIT_BYTES})",
+    )
     print(f"[verify] DB size: {size[0]} ({size[1]} bytes)")
     conn.close()
     print(f"\n[verify] OVERALL: {'PASS' if ok else 'FAIL'}")

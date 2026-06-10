@@ -310,20 +310,58 @@ def _get_object_bytes(r2_client, bucket: str, key: str) -> bytes:
     return bytes(body)
 
 
-def download_snapshot(r2_client, bucket: str, prefix: str) -> bytes:
-    """Download the raw ``snapshot.jsonl.gz`` bytes for a version."""
-    return _get_object_bytes(r2_client, bucket, prefix + "snapshot.jsonl.gz")
+def _verify_sha256(key: str, data: bytes, expected_sha256: str | None) -> bytes:
+    """Codex P2: raise if ``data``'s sha256 doesn't match ``expected_sha256``.
+
+    A ``None`` expectation is a no-op (the caller doesn't know the sha). When the
+    sha IS known (recorded in ``gedcom_versions``), callers pass it so a
+    corrupted / wrong-version artifact is caught at read time.
+    """
+    if expected_sha256 is None:
+        return data
+    actual = sha256_bytes(data)
+    if actual != expected_sha256:
+        raise ValueError(
+            f"R2 artifact sha256 mismatch for {key}: "
+            f"expected {expected_sha256} but got {actual}"
+        )
+    return data
 
 
-def download_diff(r2_client, bucket: str, prefix: str) -> dict[str, Any]:
-    """Download + parse the ``diff.json.gz`` doc for a version."""
-    data = _get_object_bytes(r2_client, bucket, prefix + "diff.json.gz")
+def download_snapshot(
+    r2_client, bucket: str, prefix: str, expected_sha256: str | None = None
+) -> bytes:
+    """Download the raw ``snapshot.jsonl.gz`` bytes for a version.
+
+    If ``expected_sha256`` is given (from ``gedcom_versions.snapshot_artifact_sha256``),
+    verify the downloaded compressed bytes against it (Codex P2).
+    """
+    key = prefix + "snapshot.jsonl.gz"
+    data = _get_object_bytes(r2_client, bucket, key)
+    return _verify_sha256(key, data, expected_sha256)
+
+
+def download_diff(
+    r2_client, bucket: str, prefix: str, expected_sha256: str | None = None
+) -> dict[str, Any]:
+    """Download + parse the ``diff.json.gz`` doc for a version.
+
+    If ``expected_sha256`` is given (from ``gedcom_versions.diff_artifact_sha256``),
+    verify the downloaded compressed bytes against it before parsing (Codex P2).
+    """
+    key = prefix + "diff.json.gz"
+    data = _get_object_bytes(r2_client, bucket, key)
+    _verify_sha256(key, data, expected_sha256)
     return parse_diff_json_gz(data)
 
 
-def download_raw(r2_client, bucket: str, prefix: str) -> bytes:
+def download_raw(
+    r2_client, bucket: str, prefix: str, expected_sha256: str | None = None
+) -> bytes:
     """Download the raw uncompressed GEDCOM bytes (gunzipped) for a version."""
-    data = _get_object_bytes(r2_client, bucket, prefix + "raw.ged.gz")
+    key = prefix + "raw.ged.gz"
+    data = _get_object_bytes(r2_client, bucket, key)
+    _verify_sha256(key, data, expected_sha256)
     return gzip.decompress(data)
 
 

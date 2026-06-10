@@ -15,6 +15,8 @@ import pytest
 
 import scripts.import_gedcom_version as imp
 from rhodesli_ml.importers import gedcom_history as gh
+from rhodesli_ml.importers.gedcom_parser import parse_gedcom
+from rhodesli_ml.importers.gedcom_snapshot import build_snapshot_bundle
 
 
 # --------------------------------------------------------------------------- #
@@ -224,12 +226,15 @@ def test_advisory_lock_acquired_before_state_read(gedcom_file):
     # First executed statement must be the advisory lock.
     first_sql = re.sub(r"\s+", " ", conn.executed[0][0]).lower()
     assert "pg_advisory_xact_lock" in first_sql
-    # The current-state SELECTs must come AFTER the lock.
+    # The state reads (idempotency check, version allocation, diff-base lookup)
+    # must all come AFTER the lock.
     lock_index = next(i for i, (s, _) in enumerate(conn.executed) if "pg_advisory_xact_lock" in s.lower())
-    select_index = next(
-        i for i, (s, _) in enumerate(conn.executed) if "from gedcom_individuals" in s.lower()
+    # version allocation (MAX) must follow the lock
+    max_index = next(
+        i for i, (s, _) in enumerate(conn.executed) if "coalesce(max(version_number)" in re.sub(r"\s+", " ", s.lower())
     )
-    assert lock_index < select_index
+    assert lock_index == 0
+    assert lock_index < max_index
 
 
 # --------------------------------------------------------------------------- #
@@ -312,3 +317,71 @@ def test_individual_row_values_maps_columns():
     # payload_hash carried verbatim
     ph_idx = 1 + imp.INDIVIDUAL_COLUMNS.index("payload_hash")
     assert values[ph_idx] == "abc123"
+
+
+# --------------------------------------------------------------------------- #
+# Codex P0-A: diff base loaded from the PREVIOUS applied R2 snapshot
+# --------------------------------------------------------------------------- #
+class _PriorBaseCursor(FakeCursor):
+    """FakeCursor that also answers the latest-applied artifact_prefix lookup."""
+
+    def execute(self, sql, params=None):
+        normalized = re.sub(r"\s+", " ", sql).strip().lower()
+        # The diff-base lookup: SELECT artifact_prefix ... ORDER BY version_number DESC
+        if (
+            normalized.startswith("select artifact_prefix from gedcom_versions")
+            and "status = 'applied'" in normalized
+            and "source_hash" not in normalized
+        ):
+            self.conn.executed.append((sql, params))
+            self._result = [(self.conn.prior_prefix,)] if self.conn.prior_prefix else []
+            return
+        super().execute(sql, params)
+
+
+class _PriorBaseConn(FakeConn):
+    def __init__(self, prior_prefix=None, **kw):
+        super().__init__(**kw)
+        self.prior_prefix = prior_prefix
+
+    def cursor(self):
+        return _PriorBaseCursor(self)
+
+
+def test_importer_diff_base_comes_from_prior_r2_snapshot(gedcom_file):
+    """A re-import of the SAME bundle (different source bytes so not idempotent)
+    must diff against the prior version's R2 snapshot — an unchanged entity is
+    NOT re-added (proving the base is the lossless snapshot, not empty/DB)."""
+    # Build the prior snapshot from the same GEDCOM the importer will parse.
+    bundle = build_snapshot_bundle(parse_gedcom(gedcom_file), source_file="sample.ged")
+    prior_prefix = "gedcom-history/rhodesli/v0008-prior000000/"
+    snapshot_gz = gh.build_snapshot_jsonl_gz(bundle)
+
+    r2 = FakeR2()
+    r2.store[(imp._r2_bucket(), prior_prefix + "snapshot.jsonl.gz")] = snapshot_gz
+
+    conn = _PriorBaseConn(prior_prefix=prior_prefix, max_version=8)
+    result = imp.run_import(
+        gedcom_file, execute=True, conn_factory=lambda: conn, r2_factory=lambda: r2
+    )
+    assert result["idempotent"] is False
+    # The new bundle == the prior snapshot, so the diff is all-unchanged:
+    summary = result["diff_summary"]
+    assert summary["individuals"]["added"] == 0
+    assert summary["individuals"]["modified"] == 0
+    assert summary["families"]["added"] == 0
+    # The diff-base prefix lookup actually ran (against gedcom_versions).
+    assert any(
+        "select artifact_prefix from gedcom_versions" in re.sub(r"\s+", " ", s.lower())
+        for s, _ in conn.executed
+    )
+
+
+def test_importer_first_import_diffs_against_empty(gedcom_file):
+    """With no prior applied prefix, the base is empty — everything is added."""
+    r2 = FakeR2()
+    conn = _PriorBaseConn(prior_prefix=None, max_version=0)
+    result = imp.run_import(
+        gedcom_file, execute=True, conn_factory=lambda: conn, r2_factory=lambda: r2
+    )
+    assert result["diff_summary"]["individuals"]["added"] == 2

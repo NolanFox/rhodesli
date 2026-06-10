@@ -137,6 +137,11 @@ def get_individual_history(
     The canonical current-state DB tables hold ONLY the latest state, so DB
     history is impossible — R2 is the lossless source of truth (Codex P2-6).
     If R2 is unavailable (or no artifacts exist yet), returns ``[]``.
+
+    Codex P1-E: only this ``community_id``'s applied versions are scanned.
+    Codex P3: if a version's diff artifact is missing/corrupt, the returned list
+    ends with a trailing ``{"incomplete": True, "reason": ...}`` marker rather
+    than silently returning a truncated timeline.
     """
     if not gedcom_id:
         return []
@@ -147,12 +152,17 @@ def get_individual_history(
         if not sb:
             return []
 
-    # Load applied versions (newest first is fine; we re-sort at the end).
+    # Load applied versions for THIS community only (Codex P1-E: never combine
+    # versions across communities). newest-first is fine; we re-sort at the end.
     try:
         resp = (
             sb.table("gedcom_versions")
-            .select("version_number,artifact_prefix,artifact_format,status")
+            .select(
+                "version_number,artifact_prefix,artifact_format,status,"
+                "snapshot_artifact_sha256,diff_artifact_sha256,community_id"
+            )
             .eq("status", "applied")
+            .eq("community_id", community_id)
             .order("version_number", desc=False)
             .execute()
         )
@@ -182,12 +192,21 @@ def get_individual_history(
 
     bucket = os.environ.get("R2_BUCKET_NAME", "rhodesli-photos")
     timeline: list[dict] = []
+    incomplete = False
+    incomplete_reason = None
     for v in versions:
         prefix = v["artifact_prefix"]
         try:
-            diff_doc = gh.download_diff(r2_client, bucket, prefix)
+            # Codex P2: verify the diff artifact sha when it's recorded.
+            diff_doc = gh.download_diff(
+                r2_client, bucket, prefix, expected_sha256=v.get("diff_artifact_sha256")
+            )
         except Exception as exc:
-            logging.debug(f"diff download failed for {prefix}: {exc}")
+            # Codex P3: a missing/corrupt diff means the timeline is partial —
+            # signal incompleteness rather than silently dropping a version.
+            logging.warning(f"diff download/verify failed for {prefix}: {exc}")
+            incomplete = True
+            incomplete_reason = f"diff unavailable for version {v.get('version_number')} ({prefix})"
             continue
         ind_diff = (diff_doc.get("entities") or {}).get("individuals") or {}
         for bucket_name in ("added", "modified", "removed"):
@@ -205,4 +224,8 @@ def get_individual_history(
                     )
 
     timeline.sort(key=lambda r: r["version_number"])
+    if incomplete:
+        # Tag the result so callers can render a "history may be incomplete"
+        # notice instead of trusting a silently-truncated timeline.
+        timeline.append({"incomplete": True, "reason": incomplete_reason})
     return timeline

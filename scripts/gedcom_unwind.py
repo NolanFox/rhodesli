@@ -68,6 +68,7 @@ def compute_unwind_plan(
     target_diff: dict[str, Any],
     current_state_hashes: dict[str, dict[str, str]],
     current_refs: dict[str, set[str]],
+    removal_set: dict[str, set[str]] | None = None,
 ) -> dict[str, Any]:
     """Compute the conservative inverse of a version's diff.
 
@@ -79,6 +80,11 @@ def compute_unwind_plan(
       current_refs: ``{entity_type -> set(entity_id)}`` — ids of `individuals` /
         `families` still referenced by any current family/relationship. Used for
         the deletion referential-integrity check.
+      removal_set: ``{entity_type -> set(entity_id)}`` — ids that THIS unwind will
+        itself remove. A reference originating from such an entity must NOT block
+        another entity's deletion in the same unwind (Codex P1-D). When omitted,
+        it is derived from ``target_diff`` (the original-add ids per type), which
+        is exactly the set the conservative plan may delete.
 
     Returns ``{"safe": {<type>:{added:[],modified:[],removed:[]}}, "conflicts":
     [...], "noops": [...]}``. The `safe` structure is shaped for
@@ -87,6 +93,9 @@ def compute_unwind_plan(
     safe: dict[str, dict[str, list[dict[str, Any]]]] = {}
     conflicts: list[dict[str, Any]] = []
     noops: list[dict[str, Any]] = []
+
+    if removal_set is None:
+        removal_set = _removal_set(target_diff)
 
     entities = target_diff.get("entities", {})
     for entity_type, type_diff in entities.items():
@@ -119,16 +128,22 @@ def compute_unwind_plan(
                     }
                 )
             else:
-                # safe to delete -> inverse op = "removed"
-                _add_inverse(safe, entity_type, "removed", entity_id, item.get("after"))
+                # safe to delete -> inverse op = "removed". The "old" state being
+                # removed is the original add's `after` payload (Codex P0-D: the
+                # diff serializer reads old_payload for removed entries).
+                _add_inverse(
+                    safe, entity_type, "removed", entity_id,
+                    old_payload=item.get("after"),
+                )
 
         for item in type_diff.get("removed", []):
             entity_id = item["entity_id"]
             before = item.get("before")
             current_hash = type_hashes.get(entity_id)
             if current_hash is None:
-                # currently absent -> safe to re-add `before`
-                _add_inverse(safe, entity_type, "added", entity_id, before, before_payload=before)
+                # currently absent -> safe to re-add `before`. Inverse op="added"
+                # carries new_payload=before (the state to insert).
+                _add_inverse(safe, entity_type, "added", entity_id, new_payload=before)
             elif current_hash == item.get("before_hash"):
                 noops.append({"entity_type": entity_type, "entity_id": entity_id, "reason": "removed-but-present-as-before"})
             else:
@@ -146,6 +161,7 @@ def compute_unwind_plan(
             after_hash = item.get("after_hash")
             before_hash = item.get("before_hash")
             before = item.get("before")
+            after = item.get("after")
             current_hash = type_hashes.get(entity_id)
             if current_hash is None:
                 conflicts.append(
@@ -159,8 +175,13 @@ def compute_unwind_plan(
             elif current_hash == before_hash:
                 noops.append({"entity_type": entity_type, "entity_id": entity_id, "reason": "modified-already-restored"})
             elif current_hash == after_hash:
-                # safe to restore `before` -> inverse op = "modified" back to before
-                _add_inverse(safe, entity_type, "modified", entity_id, before, before_payload=before)
+                # safe to restore `before` -> inverse op = "modified" back to before.
+                # Inverse old_payload = the current (original `after`) state;
+                # new_payload = the `before` state we're restoring (Codex P0-D).
+                _add_inverse(
+                    safe, entity_type, "modified", entity_id,
+                    new_payload=before, old_payload=after,
+                )
             else:
                 conflicts.append(
                     {
@@ -179,16 +200,28 @@ def _add_inverse(
     entity_type: str,
     inverse_change: str,
     entity_id: str,
-    payload: Any,
-    before_payload: Any = None,
+    new_payload: Any = None,
+    old_payload: Any = None,
 ):
+    """Append a compensating-diff entry carrying the payload keys BOTH consumers need.
+
+    Codex P0-D: ``apply_entity_diffs`` reads ``new_payload`` (added/modified) and
+    ``entity_id`` (removed); ``gedcom_history._diff_items_from_entity_diff`` reads
+    ``new_payload`` (added/modified) and ``old_payload`` (removed/modified). So
+    each entry must carry the keys consistent with its change_type:
+      * added   -> {entity_id, new_payload}
+      * removed -> {entity_id, old_payload}
+      * modified-> {entity_id, old_payload, new_payload}
+    """
     bucket = safe.setdefault(entity_type, {"added": [], "modified": [], "removed": []})
     if inverse_change == "removed":
-        bucket["removed"].append({"entity_id": entity_id})
+        bucket["removed"].append({"entity_id": entity_id, "old_payload": old_payload})
     elif inverse_change == "added":
-        bucket["added"].append({"entity_id": entity_id, "new_payload": payload})
+        bucket["added"].append({"entity_id": entity_id, "new_payload": new_payload})
     elif inverse_change == "modified":
-        bucket["modified"].append({"entity_id": entity_id, "new_payload": payload})
+        bucket["modified"].append(
+            {"entity_id": entity_id, "old_payload": old_payload, "new_payload": new_payload}
+        )
 
 
 def safe_plan_to_diffs(safe: dict[str, dict[str, list[dict[str, Any]]]]) -> dict[str, dict[str, Any]]:
@@ -263,6 +296,135 @@ def _load_current_hashes_and_refs(conn, community: str):
     return hashes, refs
 
 
+# --------------------------------------------------------------------------- #
+# Current state from the latest applied R2 snapshot (Codex P1-D)
+# --------------------------------------------------------------------------- #
+def _latest_applied_version_row(cur, community: str) -> dict[str, Any] | None:
+    cur.execute(
+        "SELECT version_number, source_hash, artifact_prefix FROM gedcom_versions "
+        "WHERE community_id = %s AND status = 'applied' AND artifact_prefix IS NOT NULL "
+        "ORDER BY version_number DESC LIMIT 1",
+        (community,),
+    )
+    row = cur.fetchone()
+    if not row:
+        return None
+    return {"version_number": row[0], "source_hash": row[1], "artifact_prefix": row[2]}
+
+
+def _hashes_and_refs_from_state(
+    state: dict[str, dict[str, dict[str, Any]]],
+    removal_set: dict[str, set[str]] | None = None,
+) -> tuple[dict[str, dict[str, str]], dict[str, set[str]]]:
+    """Derive current payload-hash maps + referenced-id sets from a reconstructed
+    current-state map ``{entity_type -> {entity_id -> payload}}`` (Codex P1-D).
+
+    Unlike the DB-only path, this includes sources/media so they aren't treated
+    as absent during the deletion ref-integrity check. References that ORIGINATE
+    from a relationship/family that is itself scheduled for removal in this same
+    unwind are skipped, so a self-contained added subgraph can be rolled back.
+    """
+    removal_set = removal_set or {}
+    rel_removed = removal_set.get("relationships", set())
+    fam_removed = removal_set.get("families", set())
+
+    hashes: dict[str, dict[str, str]] = {}
+    for entity_type, entity_map in state.items():
+        hashes[entity_type] = {eid: (p or {}).get("payload_hash") for eid, p in entity_map.items()}
+
+    referenced_individuals: set[str] = set()
+    referenced_families: set[str] = set()
+    for edge_key, rel in (state.get("relationships") or {}).items():
+        if edge_key in rel_removed:
+            continue  # this relationship is being removed in the same unwind
+        if rel.get("individual_gedcom_id"):
+            referenced_individuals.add(rel["individual_gedcom_id"])
+        if rel.get("related_gedcom_id"):
+            referenced_individuals.add(rel["related_gedcom_id"])
+        if rel.get("family_gedcom_id"):
+            referenced_families.add(rel["family_gedcom_id"])
+    for fam_id, fam in (state.get("families") or {}).items():
+        if fam_id in fam_removed:
+            continue  # this family is being removed in the same unwind
+        for key in ("husband_xref", "wife_xref"):
+            if fam.get(key):
+                referenced_individuals.add(fam[key])
+        for child in fam.get("children_xrefs_json") or fam.get("children_xrefs") or []:
+            referenced_individuals.add(child)
+
+    refs = {"individuals": referenced_individuals, "families": referenced_families}
+    return hashes, refs
+
+
+def _removal_set(target_diff: dict[str, Any]) -> dict[str, set[str]]:
+    """Entity ids that the unwind will REMOVE (inverse of original `added`).
+
+    Codex P1-D: a reference coming from one of these entities must NOT block the
+    deletion of another entity in the same unwind, because that referencing
+    entity is itself being removed. We compute the original-add ids per type;
+    those are exactly the ids the conservative plan may delete.
+    """
+    removals: dict[str, set[str]] = {}
+    for entity_type, type_diff in (target_diff.get("entities") or {}).items():
+        ids = {item["entity_id"] for item in type_diff.get("added", [])}
+        if ids:
+            removals[entity_type] = ids
+    return removals
+
+
+def _build_snapshot_from_state(
+    state: dict[str, dict[str, dict[str, Any]]],
+) -> bytes:
+    """Serialize a reconstructed current-state map into ``snapshot.jsonl.gz``.
+
+    Mirrors ``gedcom_history.build_snapshot_jsonl_gz`` but takes a plain state
+    map (not a bundle), so the compensating version gets a real resulting-state
+    snapshot (Codex P0-D — never mark artifact_format='v1' without a snapshot).
+    """
+    import gzip as _gzip
+
+    from rhodesli_ml.importers.gedcom_snapshot import canonical_json_dumps
+
+    lines: list[str] = []
+    for entity_type in gh.SNAPSHOT_ENTITY_TYPES:
+        entity_map = state.get(entity_type) or {}
+        for entity_id in sorted(entity_map):
+            payload = entity_map[entity_id]
+            lines.append(
+                canonical_json_dumps(
+                    {
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                        "payload": payload,
+                        "payload_hash": (payload or {}).get("payload_hash"),
+                    }
+                )
+            )
+    text = "\n".join(lines)
+    if text:
+        text += "\n"
+    return _gzip.compress(text.encode("utf-8"), mtime=0)
+
+
+def _apply_safe_plan_to_state(
+    state: dict[str, dict[str, dict[str, Any]]],
+    safe: dict[str, dict[str, list[dict[str, Any]]]],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Produce the post-unwind current-state map by applying the compensating
+    diff to a (copied) reconstructed state map. Used to build the resulting
+    snapshot artifact (Codex P0-D)."""
+    result = {et: dict(emap) for et, emap in state.items()}
+    for entity_type, ops in safe.items():
+        bucket = result.setdefault(entity_type, {})
+        for entry in ops.get("removed", []):
+            bucket.pop(entry["entity_id"], None)
+        for entry in ops.get("added", []):
+            bucket[entry["entity_id"]] = entry["new_payload"]
+        for entry in ops.get("modified", []):
+            bucket[entry["entity_id"]] = entry["new_payload"]
+    return result
+
+
 def unwind(
     version_number: int | None = None,
     community: str = imp.DEFAULT_COMMUNITY,
@@ -301,8 +463,23 @@ def unwind(
             }
 
         target_diff = gh.download_diff(r2_client, bucket, version_row["artifact_prefix"])
-        current_hashes, current_refs = _load_current_hashes_and_refs(conn, community)
-        plan = compute_unwind_plan(target_diff, current_hashes, current_refs)
+
+        # Codex P1-D: current-state hashes + refs come from the latest applied
+        # R2 snapshot (reconstructed), NOT only the DB tables — so sources/media
+        # aren't treated as absent and references from same-unwind removals don't
+        # block rollback. The latest applied snapshot IS the live current state
+        # (current-state DB == latest snapshot, written atomically).
+        latest_row = _latest_applied_version_row(cur, community)
+        removal_set = _removal_set(target_diff)
+        if latest_row:
+            snapshot_bytes = gh.download_snapshot(r2_client, bucket, latest_row["artifact_prefix"])
+            current_state = gh.reconstruct_version_from_snapshot(snapshot_bytes)
+            current_hashes, current_refs = _hashes_and_refs_from_state(current_state, removal_set)
+        else:
+            # No R2 snapshot available — fall back to DB-derived hashes/refs.
+            current_state = {}
+            current_hashes, current_refs = _load_current_hashes_and_refs(conn, community)
+        plan = compute_unwind_plan(target_diff, current_hashes, current_refs, removal_set)
 
         if plan["conflicts"]:
             conn.rollback()
@@ -352,20 +529,26 @@ def unwind(
             source_hash=None,
             generated_at=generated_at,
         )
-        # snapshot of the resulting state is rebuilt from the reconstructed
-        # target-before state is non-trivial here; we persist the compensating
-        # diff (raw=NULL). A full resulting-state snapshot is produced by the
-        # next import; the diff artifact + manifest fully describe the change.
+        # Codex P0-D: build a REAL resulting-state snapshot for the compensating
+        # version (apply the inverse diff to the reconstructed current state),
+        # so the next import has a lossless diff base and we never mark
+        # artifact_format='v1' without a snapshot.
+        resulting_state = _apply_safe_plan_to_state(current_state, plan["safe"])
+        snapshot_gz = _build_snapshot_from_state(resulting_state)
         shas = gh.upload_and_verify_artifacts(
-            r2_client, bucket, prefix, {"raw.ged.gz": None, "diff.json.gz": diff_gz}
+            r2_client,
+            bucket,
+            prefix,
+            {"raw.ged.gz": None, "snapshot.jsonl.gz": snapshot_gz, "diff.json.gz": diff_gz},
         )
 
         cur.execute(
             "INSERT INTO gedcom_versions (version_number, community_id, imported_at, "
             "imported_by, source_file, source_hash, summary, notes, status, "
-            "raw_artifact_sha256, diff_artifact_sha256, artifact_prefix, diff_summary, "
-            "artifact_format) VALUES (%s, %s, now(), %s, %s, %s, %s::jsonb, %s, 'applied', "
-            "NULL, %s, %s, %s::jsonb, 'v1')",
+            "raw_artifact_sha256, snapshot_artifact_sha256, diff_artifact_sha256, "
+            "artifact_prefix, diff_summary, artifact_format) "
+            "VALUES (%s, %s, now(), %s, %s, %s, %s::jsonb, %s, 'applied', "
+            "NULL, %s, %s, %s, %s::jsonb, 'v1')",
             (
                 new_version,
                 community,
@@ -374,6 +557,7 @@ def unwind(
                 None,
                 json.dumps(diff_summary),
                 f"Conservative unwind of v{version_row['version_number']}",
+                shas.get("snapshot.jsonl.gz"),
                 shas.get("diff.json.gz"),
                 prefix,
                 json.dumps(diff_summary),
