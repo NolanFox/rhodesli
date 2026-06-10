@@ -31,11 +31,17 @@ logger = logging.getLogger(__name__)
 _gedcom_matches_cache = None
 _gedcom_tree_relationships_cache = None
 
+# Session 164 (PRD-064): canonical current-state tables are community-scoped.
+# Only one community today; default 'rhodesli'.
+_GEDCOM_COMMUNITY_ID = "rhodesli"
+
 _GEDCOM_THIN_FIELDS = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
+# Rich fields = exactly the canonical gedcom_individuals columns (the old
+# birth_event_json/death_event_json/media_refs_json/custom_tags_json/source_file
+# columns do not exist on the canonical table — they live only in R2 payloads).
 _GEDCOM_RICH_FIELDS = (
     "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place,"
-    "birth_event_json,death_event_json,events_json,names_json,notes_json,citations_json,"
-    "media_refs_json,custom_tags_json,source_file"
+    "names_json,events_json,family_as_spouse_json,family_as_child_json,notes_json,citations_json"
 )
 
 
@@ -330,23 +336,13 @@ def _load_gedcom_individuals():
             if not sb:
                 return []
 
-            try:
-                # PRD-063 Day 3 (Session 158b): prefer the v2 view first.
-                return _load_gedcom_rows(sb, "current_gedcom_individuals_v2", _GEDCOM_THIN_FIELDS)
-            except Exception as exc_v2:
-                msg_v2 = str(exc_v2)
-                if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
-                    raise
-                logging.info("current_gedcom_individuals_v2 unavailable; falling back to v1 view")
-            try:
-                # AD-163: legacy v1 view fallback (pre-Phase 158b-4 deploys).
-                return _load_gedcom_rows(sb, "current_gedcom_individuals", _GEDCOM_THIN_FIELDS)
-            except Exception as exc:
-                msg = str(exc)
-                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                    raise
-                logging.info("current_gedcom_individuals unavailable; falling back to gedcom_individuals")
-                return _load_gedcom_rows(sb, "gedcom_individuals", _GEDCOM_THIN_FIELDS)
+            # Session 164 (PRD-064): canonical current-state table, community-scoped.
+            return _load_gedcom_rows(
+                sb,
+                "gedcom_individuals",
+                _GEDCOM_THIN_FIELDS,
+                filters={"community_id": _GEDCOM_COMMUNITY_ID},
+            )
 
         all_rows = _run_gedcom_query(_query, "GEDCOM individuals load")
 
@@ -368,9 +364,9 @@ def _load_gedcom_individual(gedcom_id: str, include_rich: bool = False) -> dict 
     Broad search/list routes should use the thin bulk loader. Exact-link routes
     should fetch one row to avoid reloading the full GEDCOM mirror.
 
-    Session 157b PRD-063 dual-read: prefer gedcom_individuals_v2 over v1.
-    Falls back to v1 (current_gedcom_individuals view, then gedcom_individuals
-    table) when the row isn't yet in v2 or v2 isn't deployed.
+    Session 164 (PRD-064): reads the canonical current-state gedcom_individuals
+    table via app.gedcom_dual_read.get_individual (community-scoped, one row per
+    entity). Falls back to the in-memory bulk cache if the single-row read fails.
     """
     if not gedcom_id:
         return None
@@ -518,17 +514,12 @@ def _load_current_gedcom_relationship_edges():
             if not sb:
                 return []
             select_fields = "individual_gedcom_id,related_gedcom_id,relationship_type,family_gedcom_id"
-            try:
-                rows = _load_gedcom_rows(sb, "current_gedcom_relationships", select_fields)
-            except Exception as exc:
-                msg = str(exc)
-                if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                    raise
-                # Session 162 (Codex P1.4): fallback to raw table MUST filter is_current
-                # to avoid scanning 700k+ historical rows during the PostgREST flake window.
-                rows = _load_gedcom_rows(
-                    sb, "gedcom_relationships", select_fields, filters={"is_current": True}
-                )
+            # Session 164 (PRD-064): gedcom_relationships is current-only (is_current
+            # column dropped, current_gedcom_relationships view removed). Read the
+            # base table community-scoped.
+            rows = _load_gedcom_rows(
+                sb, "gedcom_relationships", select_fields, filters={"community_id": _GEDCOM_COMMUNITY_ID}
+            )
             edges = []
             seen_spouses = set()
             for row in rows:
@@ -641,22 +632,15 @@ def _load_gedcom_relationship_edges_for_ids(gedcom_ids: list[str] | set[str] | t
                 filter_expr = ",".join(
                     f"{column}.eq.{gid}" for gid in chunk for column in ("individual_gedcom_id", "related_gedcom_id")
                 )
-                try:
-                    resp = sb.table("current_gedcom_relationships").select(select_fields).or_(filter_expr).execute()
-                except Exception as exc:
-                    msg = str(exc)
-                    if "current_gedcom_relationships" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                        raise
-                    # Session 162 (Codex P1.4): same is_current filter requirement on the
-                    # targeted-edges path. Without this filter we pull historical rows
-                    # too and burn the IO we just stopped burning on the main path.
-                    resp = (
-                        sb.table("gedcom_relationships")
-                        .select(select_fields)
-                        .eq("is_current", True)
-                        .or_(filter_expr)
-                        .execute()
-                    )
+                # Session 164 (PRD-064): gedcom_relationships is current-only; read
+                # the base table community-scoped (no is_current filter needed).
+                resp = (
+                    sb.table("gedcom_relationships")
+                    .select(select_fields)
+                    .eq("community_id", _GEDCOM_COMMUNITY_ID)
+                    .or_(filter_expr)
+                    .execute()
+                )
                 if resp and resp.data:
                     rows.extend(resp.data)
             return _normalize_gedcom_tree_edges(rows)
@@ -691,26 +675,14 @@ def _load_gedcom_individuals_by_ids(
             rows = []
             for i in range(0, len(ids), 100):
                 chunk = ids[i : i + 100]
-                # PRD-063 Day 3 (Session 158b): prefer v2 view, then v1 view, then v1 table
-                resp = None
-                try:
-                    resp = (
-                        sb.table("current_gedcom_individuals_v2").select(select_fields).in_("gedcom_id", chunk).execute()
-                    )
-                except Exception as exc_v2:
-                    msg_v2 = str(exc_v2)
-                    if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
-                        raise
-                if resp is None:
-                    try:
-                        resp = (
-                            sb.table("current_gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
-                        )
-                    except Exception as exc:
-                        msg = str(exc)
-                        if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                            raise
-                        resp = sb.table("gedcom_individuals").select(select_fields).in_("gedcom_id", chunk).execute()
+                # Session 164 (PRD-064): canonical current-state table, community-scoped.
+                resp = (
+                    sb.table("gedcom_individuals")
+                    .select(select_fields)
+                    .eq("community_id", _GEDCOM_COMMUNITY_ID)
+                    .in_("gedcom_id", chunk)
+                    .execute()
+                )
                 if resp and resp.data:
                     rows.extend(resp.data)
             return rows
@@ -988,43 +960,16 @@ def _query_gedcom_search_candidates(query: str, candidate_limit: int = 500) -> l
             if not sb:
                 return []
             filter_expr = ",".join(dict.fromkeys(filters))
-            # PRD-063 Day 3 (Session 158b): prefer v2 view, then v1 view, then v1 table
-            resp = None
-            try:
-                resp = (
-                    sb.table("current_gedcom_individuals_v2")
-                    .select(_GEDCOM_THIN_FIELDS)
-                    .or_(filter_expr)
-                    .order("gedcom_id")
-                    .range(0, candidate_limit - 1)
-                    .execute()
-                )
-            except Exception as exc_v2:
-                msg_v2 = str(exc_v2)
-                if "current_gedcom_individuals_v2" not in msg_v2 and "PGRST205" not in msg_v2 and "relation" not in msg_v2:
-                    raise
-            if resp is None:
-                try:
-                    resp = (
-                        sb.table("current_gedcom_individuals")
-                        .select(_GEDCOM_THIN_FIELDS)
-                        .or_(filter_expr)
-                        .order("gedcom_id")
-                        .range(0, candidate_limit - 1)
-                        .execute()
-                    )
-                except Exception as exc:
-                    msg = str(exc)
-                    if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
-                        raise
-                    resp = (
-                        sb.table("gedcom_individuals")
-                        .select(_GEDCOM_THIN_FIELDS)
-                        .or_(filter_expr)
-                        .order("gedcom_id")
-                        .range(0, candidate_limit - 1)
-                        .execute()
-                    )
+            # Session 164 (PRD-064): canonical current-state table, community-scoped.
+            resp = (
+                sb.table("gedcom_individuals")
+                .select(_GEDCOM_THIN_FIELDS)
+                .eq("community_id", _GEDCOM_COMMUNITY_ID)
+                .or_(filter_expr)
+                .order("gedcom_id")
+                .range(0, candidate_limit - 1)
+                .execute()
+            )
             return resp.data if resp and resp.data else []
 
         return _run_gedcom_query(_query, "GEDCOM search prefilter")

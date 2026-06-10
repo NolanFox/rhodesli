@@ -3764,44 +3764,28 @@ async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
     try:
         from rhodesli_ml.importers.gedcom_parser import parse_gedcom
 
-        # Parse GEDCOM
+        # Parse GEDCOM (still used for the parsed_counts UI below)
         parsed = parse_gedcom(tmp_path)
 
         # Compute file hash for dedup
         file_hash = _hashlib.sha256(content).hexdigest()
 
-        # Try versioned diff against Supabase (AD-163/164)
+        # Session 164 (PRD-064): atomic importer dry-run for the diff preview.
+        # run_import(execute=False) parses + diffs against current state and
+        # returns {counts, source_hash, diff_summary}; no R2 or DB writes.
         diff_result = None
         try:
-            from app.supabase_data import get_supabase_client
-            from scripts.import_gedcom_version import import_versioned, check_duplicate_hash
+            from scripts.import_gedcom_version import run_import
+            from app.gedcom_admin_preview import build_diff_preview_result
 
-            sb = get_supabase_client()
-            if sb:
-                # Check for duplicate
-                existing = check_duplicate_hash(sb, file_hash)
-                if existing:
-                    return Div(
-                        P(
-                            f"This exact file was already imported as version {existing['version_number']}.",
-                            cls="text-amber-400 font-medium",
-                        ),
-                        P(
-                            "Upload a different GEDCOM file or modify this one first.",
-                            cls="text-sm text-slate-400 mt-1",
-                        ),
-                        cls="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 mt-4",
-                    )
-
-                # Dry-run to get diff
-                diff_result = import_versioned(
-                    sb,
-                    parsed,
-                    gedcom_file.filename,
-                    file_hash,
-                    notes=notes.strip() if notes else None,
-                    dry_run=True,
-                )
+            preview = run_import(
+                file=tmp_path,
+                community="rhodesli",
+                notes=notes.strip() if notes else None,
+                imported_by="admin",
+                execute=False,
+            )
+            diff_result = build_diff_preview_result(preview)
         except Exception as e:
             logging.warning(f"Versioned diff failed (falling back to legacy): {e}")
 
@@ -4055,25 +4039,23 @@ def post(sess=None):
     try:
         from rhodesli_ml.importers.gedcom_parser import parse_gedcom
 
-        # Re-parse the file (still on disk)
+        # Re-parse the file (still on disk) — used by the legacy matching pipeline.
         parsed = parse_gedcom(tmp_path)
 
-        # Try versioned import to Supabase
+        # Session 164 (PRD-064): atomic import (one transaction; failure => ZERO
+        # rows). run_import handles parse + diff + R2 artifacts + canonical-table
+        # writes + the gedcom_versions manifest row.
         version_result = None
         try:
-            from app.supabase_data import get_supabase_client
-            from scripts.import_gedcom_version import import_versioned
+            from scripts.import_gedcom_version import run_import
 
-            sb = get_supabase_client()
-            if sb:
-                version_result = import_versioned(
-                    sb,
-                    parsed,
-                    filename,
-                    file_hash,
-                    notes=notes,
-                    dry_run=False,
-                )
+            version_result = run_import(
+                file=tmp_path,
+                community="rhodesli",
+                notes=notes,
+                imported_by="admin",
+                execute=True,
+            )
         except Exception as e:
             logging.warning(f"Versioned import failed: {e}")
 
@@ -4118,9 +4100,15 @@ def post(sess=None):
 
         # Build success UI
         version_badge = None
-        if version_result and not version_result.get("skipped"):
+        if version_result and version_result.get("version_number"):
             vn = version_result.get("version_number", "?")
-            version_badge = P(f"Created version {vn} in database.", cls="text-indigo-400 mt-1")
+            if version_result.get("idempotent"):
+                version_badge = P(
+                    f"This GEDCOM was already imported as version {vn} (no changes applied).",
+                    cls="text-amber-400 mt-1",
+                )
+            else:
+                version_badge = P(f"Created version {vn} in database.", cls="text-indigo-400 mt-1")
 
         _gedcom_upload_preview = None  # Clear preview
 

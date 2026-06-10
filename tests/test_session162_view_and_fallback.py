@@ -42,39 +42,38 @@ def test_session162_forward_sql_drops_or_is_null():
     )
 
 
-def test_relationship_routes_fallback_filters_is_current():
-    """Both raw-table fallbacks in app/relationship_routes.py MUST filter is_current = true.
+def test_relationship_routes_no_stale_is_current_filter():
+    """Session 164 (PRD-064): the is_current column was DROPPED from
+    gedcom_relationships and the current_gedcom_relationships view removed.
 
-    Without the filter, a PostgREST schema-cache flake silently re-introduces
-    the same IO regression we're closing in Session 162.
+    The Session 162 raw-table fallbacks (which filtered .eq("is_current", True))
+    no longer apply — the canonical table is current-only. This test guards the
+    inverse: relationship reads must NOT reference is_current (a stale reference
+    would error now that the column is gone) and must be community-scoped.
     """
     src = (REPO_ROOT / "app" / "relationship_routes.py").read_text()
 
-    # Match multi-line chained Supabase calls — each fluent call may span
-    # several lines via Python implicit continuation inside parens.
-    raw_table_fallbacks = re.findall(
-        r'sb\.table\("gedcom_relationships"\)(?:\s*\.\w+\([^)]*\))+\s*\.execute\(\)',
-        src,
-        flags=re.DOTALL,
+    # Guard against the actual stale column reference in code (string literal),
+    # not the word appearing in explanatory comments.
+    assert '"is_current"' not in src, (
+        "app/relationship_routes.py must not reference the is_current column after "
+        "Session 164 (it was dropped from gedcom_relationships)."
     )
-    fallback_via_helper = re.findall(
+    assert 'table("current_gedcom_relationships")' not in src, (
+        "app/relationship_routes.py must not read the dropped "
+        "current_gedcom_relationships view after Session 164."
+    )
+
+    # Every gedcom_relationships read must be community-scoped.
+    rel_reads = re.findall(
+        r'(?:sb\.table\("gedcom_relationships"\)|_load_gedcom_rows\(\s*sb\s*,\s*"gedcom_relationships")[\s\S]*?\.execute\(\)|'
         r'_load_gedcom_rows\(\s*sb\s*,\s*"gedcom_relationships"[\s\S]*?\)',
         src,
     )
-
-    assert raw_table_fallbacks or fallback_via_helper, (
-        "Expected at least one raw-table fallback in relationship_routes.py; "
-        "if you removed them entirely that's also fine — delete this assertion."
-    )
-
-    for call in raw_table_fallbacks:
-        assert '.eq("is_current", True)' in call, (
-            f"Raw-table fallback missing .eq('is_current', True):\n  {call.strip()}"
-        )
-
-    for call in fallback_via_helper:
-        assert 'filters={"is_current": True}' in call, (
-            f"Raw-table helper fallback missing filters=is_current=True:\n  {call.strip()}"
+    assert rel_reads, "Expected at least one gedcom_relationships read in relationship_routes.py"
+    for call in rel_reads:
+        assert "_GEDCOM_COMMUNITY_ID" in call or "community_id" in call, (
+            f"gedcom_relationships read not community-scoped:\n  {call.strip()}"
         )
 
 
