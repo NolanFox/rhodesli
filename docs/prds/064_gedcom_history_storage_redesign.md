@@ -106,6 +106,17 @@ lossless and free of DB bloat.
 leave partial rows on failure (THE bloat cause; a test even asserts this); (2) change-log
 adds/removes lose payloads; (3) `--skip-change-log` makes audit optional. See audit doc.
 
+## 4b. Use-case fit — "what's new version-over-version" (user, Session 163)
+We don't need fast in-DB recall of old versions, but we WILL want to surface *what
+changed* between GEDCOM versions (e.g. "added 54 people, changed 12 — list") — for
+rhodesli and for fox-genealogy / rhodes-wiki. B-plus serves this natively:
+- The R2 `diff.json.gz` artifact (typed `{added, modified, removed}` before/after) IS
+  the change record → a "what's new" view reads one artifact.
+- `gedcom_versions` caches a tiny diff summary (counts + changed entity-IDs only) for an
+  instant overview without reading R2.
+- Document the artifact schema as a cross-repo standard (`GEDCOM_HISTORY.md`). The diff
+  artifact is therefore a first-class deliverable, not just a backup.
+
 ## 5. Sequencing
 1. **Immediate, safe, reversible:** snapshot-first purge of older-version state-rows in
    `individuals_v2` (keep latest per `gedcom_id`; prior version already in R2) →

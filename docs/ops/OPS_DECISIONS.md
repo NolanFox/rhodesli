@@ -369,3 +369,33 @@ This document records deployment, infrastructure, and operational decisions for 
   6 P2 applied), final metrics (`docs/session_context/session-162-final-metrics.md`),
   Codex post-execution audit (`docs/session_context/session-162-post-execution-audit.md` —
   if produced), the Supabase email itself.
+
+## OD-015: Supabase Tier Strategy + DB-Size Recovery + Monitoring (Session 163)
+- **Date**: 2026-06-09 · **Session**: 163
+- **Context**: Production went down. Root cause: the Supabase plan had reverted **Pro → Free**
+  (lapsed), and the DB (1,309 MB) far exceeded Free's **500 MB DB-size** limit → project
+  auto-paused (NXDOMAIN) then `402 exceed_db_size_quota` on REST/Auth. This is a DIFFERENT
+  limit from egress (OD-012) and Disk-IO (OD-014). See Lesson 200.
+- **Decisions**:
+  1. **Recovered the DB to 423 MB without paying** — dropped vestigial `gedcom_events` +
+     `gedcom_records` (0 app serving refs; events live in `individuals_v2.events_json`) and
+     deleted 731,942 superseded `gedcom_relationships` rows. **All three tables fully
+     snapshotted to R2 first** (`gedcom-cleanup-snapshots/2026-06-08-session-163/`, sha256 in
+     manifest) → no data loss, reversible. This REVISES OD-014's "DROP superseded rows is
+     premature" — the Pro→Free reversion + site-down changed the calculus, and the R2
+     snapshot made it safe.
+  2. **Fair-Use restriction does not lift on mid-cycle size reduction** — only plan upgrade
+     (immediate) or next billing-cycle reset (~25 Jun 2026). Pause→resume does NOT clear it.
+     So restoring service before the reset requires a Pro upgrade. **User will upgrade once
+     the data layer is solid (PRD-064 / Session 164)** — pays for a full month, so do it when
+     everything's good; may downgrade to Free next cycle (DB now fits).
+  3. **Full redesign over band-aid** — PRD-064 Option B-plus (current-state-only tables +
+     history in R2 + atomic single-transaction importer). The bloat root cause was a
+     **non-atomic importer** (Lesson 199), not just unfinished PRD-063.
+- **Prevention (monitoring) — BACKLOG OPS-002**: scheduled check of `/health` `supabase`
+  field + Management-API project status; alert on `!= ok` / `!= ACTIVE_HEALTHY`; optional
+  keep-alive query to prevent inactivity auto-pause; keep DB comfortably < 500 MB (target
+  ≤ 300 MB after Session 164), not at 92%.
+- **Breadcrumbs**: PRD-064, `session-163-context.md`, `session-163-codex-audit.md`,
+  `session-164-prompt.md`, Lessons 199/200/201, OD-012 (egress), OD-013 (storage), OD-014
+  (disk-IO). Memory `project_supabase_egress` corrected.
