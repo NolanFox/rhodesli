@@ -1,8 +1,26 @@
 ---
-name: Supabase egress crisis and fix
-description: Free plan exceeded 13.79GB/5.5GB March 2026. Service restricted until April 5. TTLs bumped 120s→600s, selective columns, SWR bot guard. Estimated post-fix 3GB/mo.
-type: project
+name: supabase-egress-crisis-and-fix
+description: "Free plan has THREE separate limits (egress 5GB, disk-IO budget, DB-size 500MB). Egress fixed via TTLs/selective cols (Session 136). DB-SIZE is a DIFFERENT limit — see Session 163 / Lesson 200."
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: faf91da9-a91d-4602-bf27-137ec810da8e
 ---
+
+## CORRECTION (Session 163, 2026-06-09) — READ THIS FIRST
+Supabase Free tier has THREE INDEPENDENT limits that fail differently. Do NOT conflate them:
+- **Egress (5 GB/mo)** — bandwidth. Fixed below (Session 136).
+- **Disk-IO budget** — read throughput. Fixed Session 162 (Lesson 198).
+- **DB SIZE (500 MB)** — storage. Tripped in Session 163 (the project had reverted Pro→Free
+  and the DB was 1.3 GB). The site went down with `402 exceed_db_size_quota`.
+The earlier assumption that egress/TTL reductions made it safe to "downgrade to Free" was
+WRONG — it ignored DB SIZE. A 1.3 GB DB can never fit Free's 500 MB regardless of egress.
+Session 163 cleaned the DB to 423 MB (dropped vestigial gedcom_events/records + 731,942
+superseded relationship rows; all archived to R2). PRD-064 / Session 164 finishes the
+redesign (Option B-plus: current-state-only tables + history in R2). See Lesson 200 +
+Lesson 199 (non-atomic imports were the bloat root cause). [[feedback_platform_reliability]]
+
+## Original (egress) note — Session 136, still valid for the egress limit
 
 Supabase restricted project on 2026-03-23 — 13.79 GB of 5.5 GB quota consumed.
 Service unavailable until quota resets April 5, 2026 (not April 13 grace period as previously thought).
