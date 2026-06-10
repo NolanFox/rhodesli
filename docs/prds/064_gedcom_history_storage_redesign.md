@@ -77,25 +77,43 @@ sure we can always unwind any change / track when changes are made."*
 - **Pros:** least code churn. **Cons:** still stores full JSON rows per state (far less
   compact than a delta log); doesn't realize the user's delta idea; R4 headroom weaker.
 
-## 4. Recommendation
+## 4. Recommendation (REVISED after Codex audit — `session-163-codex-audit.md`)
 
-**Adopt Option A.** It is the user's "log only the changes, reconstruct as needed"
-instinct done correctly, satisfies every requirement, stays compact, and builds on the
-diff machinery that already exists. R2 raw archive is the belt-and-suspenders coarse
-unwind. Failed-import atomicity (R5) is the critical correctness fix that prevents the
-whole bloat class from recurring.
+**Adopt Option "B-plus"** (Codex-recommended; rejects Option A's field-level log).
+This is the user's own "save history in R2, keep only current in the table" instinct —
+and the audit confirms it's the *best* design, not a compromise.
 
-**Sequencing:**
-1. (Quick, safe, independent) Snapshot-first purge of the older-version state-rows from
-   `individuals_v2` → ~290 MB total DB, comfortable Free headroom. Keeps current state;
-   prior version stays in R2. *Does NOT lift the current billing restriction* (separate
-   billing decision).
-2. (Deliberate engineering, own session) Build Option A: current-state tables +
-   `gedcom_change_log` deltas + atomic staged imports + reconstruction utility +
-   structural tests (incl. a "failed import leaves zero rows" test).
+**Design:**
+- **Postgres (current state only):** `gedcom_individuals` / `families` / `relationships`
+  = one row per entity (latest state). No `is_current`, no multi-state rows. Fast (R2),
+  smallest footprint (R4) — drops individuals from 267 MB toward ~135 MB.
+- **Postgres (tiny per-version manifest):** `gedcom_versions` keeps when/who/counts/
+  source-hash + **SHA-256 of each R2 artifact**. Satisfies "track when changes made."
+- **R2 (immutable per successful version):** raw GEDCOM + canonical snapshot +
+  **entity-level `{before, after, hashes}` diff artifact** (compressed). Satisfies R1
+  (every change recorded, typed/lossless) + R3 (exact audit + unwind).
+- **Atomic import = ONE Postgres transaction** (port 5432, `pg_advisory_xact_lock`):
+  R2 upload+verify first, then a single txn applies all current-table mutations +
+  manifest; any exception → full rollback. Fixes R5 (the real bloat root cause).
+- **Unwind = conflict-checked compensating version** (NOT reverse-replay): safe only if
+  current hash == original `after_hash`, else flag conflict for explicit resolution.
 
-## 5. Open questions for Codex / review
-- Is a field-level change-log the right granularity, or entity-level snapshot-on-change?
-- Reverse-replay correctness for unwinding a single mid-history change.
-- Do we need point-in-time reconstruction in-DB at all, or is R2 re-import enough (→ B)?
-- Atomic-swap mechanism on Supabase (staging table + rename vs transaction).
+**Why not Option A:** field-level rows recreate the 1.65M-row problem; and adds/removes
+stored NULL→NULL can't actually reconstruct (fails R3). Entity-level diffs in R2 are
+lossless and free of DB bloat.
+
+**Codex P0s to fix (current importer):** (1) import is NOT atomic — per-batch commits
+leave partial rows on failure (THE bloat cause; a test even asserts this); (2) change-log
+adds/removes lose payloads; (3) `--skip-change-log` makes audit optional. See audit doc.
+
+## 5. Sequencing
+1. **Immediate, safe, reversible:** snapshot-first purge of older-version state-rows in
+   `individuals_v2` (keep latest per `gedcom_id`; prior version already in R2) →
+   ~290 MB DB, comfortable Free headroom. *Does NOT lift the current billing
+   restriction* (separate decision). Also a stepping-stone to current-state tables.
+2. **Deliberate engineering (own session):** implement B-plus — current-state tables,
+   manifest + R2 artifact hashes, single-transaction atomic importer, entity-diff R2
+   artifacts, conflict-checked compensating-unwind utility, and structural tests
+   (mandatory: "failed import leaves ZERO rows", "import without R2 archive is refused").
+3. **Then** upgrade to Pro when ready (user pays for a full month → do it when the data
+   layer is solid), or let it auto-restore Free on ~25 Jun if downtime is acceptable.
