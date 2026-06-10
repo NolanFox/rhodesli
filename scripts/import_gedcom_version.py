@@ -151,7 +151,7 @@ def default_r2_factory():
 
 
 def _r2_bucket() -> str:
-    return os.environ.get("R2_BUCKET_NAME", "rhodesli-archive")
+    return os.environ.get("R2_BUCKET_NAME", "rhodesli-photos")
 
 
 # --------------------------------------------------------------------------- #
