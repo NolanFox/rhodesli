@@ -245,3 +245,118 @@ P10 docs + closeout.
   the lossless source; typed columns are derived projections for indexing.
 - Relationships have NO per-entity version history need (regenerated from families) →
   treat as derived; the diff still records them for completeness/unwind.
+
+---
+
+## REVISION after Codex audit (AUTHORITATIVE — supersedes conflicts above)
+
+Codex (gpt-5.5/xhigh) returned 6 P0 + 8 P1; all accepted. Resolutions in
+`session-164-codex-audit-plan.md`. The implementation follows THIS section where it
+differs from the original plan.
+
+### R1. Canonical schema (community-scoped, no payload duplication)
+```
+gedcom_individuals(
+  community_id text NOT NULL DEFAULT 'rhodesli',
+  gedcom_id    text NOT NULL,
+  name,given_name,surname,gender,birth_date,birth_place,death_date,death_place text,
+  names_json,events_json,family_as_spouse_json,family_as_child_json,
+  notes_json,citations_json jsonb,
+  payload_hash text NOT NULL,            -- bundle canonical_payload_hash (THE hash)
+  version_number integer NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (community_id, gedcom_id)   -- one row per entity, community-scoped
+)
+gedcom_families(community_id, family_gedcom_id, husband_xref, wife_xref,
+  children_xrefs_json, marriage_event_json, events_json, notes_json, citations_json,
+  payload_hash, version_number, updated_at, PRIMARY KEY(community_id, family_gedcom_id))
+-- relationships: ALTER existing table — add community_id default 'rhodesli', version_number;
+--   DROP is_current, version_id, superseded_by; keep UNIQUE(community_id, edge_key).
+gedcom_versions: ADD raw_artifact_sha256, snapshot_artifact_sha256, diff_artifact_sha256,
+  artifact_prefix text, diff_summary jsonb, artifact_format text DEFAULT 'v1';
+  + partial UNIQUE (community_id, source_hash) WHERE status='applied'.
+```
+- **NO separate `payload` JSONB column** — lossless full payload lives only in R2. DB
+  columns = exactly what the app reads today (matches v2 minus first/last_seen). `payload_hash`
+  ties each DB row to its full R2 payload. This keeps DB ≈ one v2 state (~135 MB), no doubling.
+
+### R2. THE hash (single contract)
+`payload_hash` = `gedcom_snapshot.canonical_payload_hash(payload)` where the bundle already
+computes it over the payload **excluding `raw_record_json` and the `payload_hash` key**.
+Reuse verbatim everywhere (DB, diff before/after_hash, snapshot). Never re-hash. Artifact
+SHA-256s are over the **compressed bytes** of each `.gz`.
+
+### R3. Atomic importer — exact order (single psycopg2 txn, port 5432)
+```
+raw_bytes=read(file); source_hash=sha256(raw_bytes); parsed=parse; bundle=build_snapshot_bundle
+conn (5432, autocommit=False)
+BEGIN
+  pg_advisory_xact_lock(hashtext('gedcom_import:'||community))
+  if applied version with source_hash exists: ROLLBACK; return "already applied (idempotent)"
+  version_number = MAX(version_number)+1 for community
+  old = load_current_maps(conn, community)         # individuals/families/relationships(/sources/media)
+  diffs = diff_entity_maps(et, old[et], new[et])   # canonical payloads only
+  artifacts = build(raw.ged.gz, snapshot.jsonl.gz[ALL bundle types], diff.json.gz[typed])
+  upload_and_verify(artifacts)                     # re-download + hash-check; FAIL → raise → ROLLBACK
+  apply diffs: upsert added/modified (ON CONFLICT (community_id,id) DO UPDATE), delete removed;
+               relationships delete removed edges + upsert added/modified edges; all batched
+               via execute_values but ONE commit
+  INSERT gedcom_versions(status='applied', artifact shas, artifact_prefix, diff_summary,
+                         imported_at=now(), imported_by)
+COMMIT                                              # any exception anywhere → conn.rollback() → ZERO rows
+```
+- Removed: `--skip-change-log`, change_log writes, swap-plan/redirect machinery, per-batch
+  commits, enrichment-queue writes (out of import scope).
+- `diff_summary` jsonb = `{individuals:{added:N,modified:N,removed:N,ids:{added:[…],modified:[…],removed:[…]}}, families:{…}, relationships:{…}, sources:{…}, media_objects:{…}}` (IDs only; payloads in R2).
+
+### R4. R2 artifact (content-addressed, all entity types)
+Key prefix `gedcom-history/<community>/v<NNNN>-<source_hash12>/`.
+- `raw.ged.gz` — original bytes (NULL for compensating/unwind versions).
+- `snapshot.jsonl.gz` — one line per entity for **ALL bundle types** (individuals, families,
+  relationships, sources, media_objects, events, records): `{entity_type, entity_id, payload, payload_hash}`. Lossless.
+- `diff.json.gz` — `{schema_version:1, version_number, base_version, source_hash, generated_at,
+  entities:{<type>:{added:[…], modified:[…], removed:[…]}}}`; each item
+  `{entity_type, entity_id, change_type, before|null, after|null, before_hash|null, after_hash|null}`
+  typed JSON. Covers individuals/families/relationships/sources/media_objects.
+- Each artifact's SHA-256 (compressed bytes) stored in `gedcom_versions`; verified by re-download before COMMIT.
+
+### R5. Unwind (safe, conservative)
+- Default target = **latest applied version** (true rollback; no later version to break).
+- For each entity in target's diff compute the inverse; apply only if SAFE:
+  added→delete iff current_hash==after_hash AND no current family/rel references it (ref-integrity);
+  removed→re-add iff currently absent; modified→restore before iff current_hash==after_hash.
+  Already-satisfied = **no-op**. Any other state = **CONFLICT** → abort + report (NO `--force`).
+- Safe set applied as a NEW compensating `applied` version via the same atomic txn (its own
+  R2 artifacts; raw=NULL). Never reverse-replay; never destroy a later change.
+- Mid-history selective unwind may report conflicts requiring manual resolution (documented).
+
+### R6. Migration (headroom-safe, production-faithful, authoritative)
+The site is DOWN (402) → no live readers → drop-first is safe + reversible (everything in R2).
+1. **Snapshot-first**: dump v2 individuals/families + relationships + gedcom_versions to R2
+   `gedcom-cleanup-snapshots/2026-06-09-session-164/` under one `REPEATABLE READ` conn; include
+   schema DDL + sha256 manifest; verify a restore round-trip on a sample.
+2. **DROP** `gedcom_individuals_v2`, `gedcom_families_v2` + their `current_*_v2` views
+   (explicit view drops, no CASCADE) → frees ~294 MB → DB ~129 MB.
+3. **CREATE** canonical tables (R1 schema) + constraints/indexes.
+4. **Populate from production current-state** = latest-row-per-`gedcom_id` (MAX `last_seen_version`,
+   tiebreak first_seen DESC, payload_hash) read from the R2 v2 snapshot (since v2 dropped) →
+   21,998 individuals / 6,741 families, version_number = that row's last_seen. This is exactly
+   what `dual_read` served (production-faithful). Relationships already current → migrate the
+   140,796 rows, set version_number=9, drop versioning cols.
+5. **Backfill v9 manifest artifacts**: raw.ged.gz = archived f783 file (marked closest-available;
+   exact f778 bytes not archived); snapshot.jsonl.gz = built from migrated current state (prefer
+   the session-156 v9 JSONL where it carries fuller payloads); diff.json.gz = baseline (all added,
+   change_type='baseline'). Fresh compressed-byte hashes. v7/failed versions: artifacts NULL,
+   `artifact_format='legacy'`.
+6. **Verify**: canonical row count == distinct count == expected; COMPLETE id→hash map equals the
+   migrated source; relationship edge set matches. DB size ≤ 300 MB (re-measure).
+7. **Collapse** `app/gedcom_dual_read.py` → single current-state reader (canonical tables, no
+   version filter; `get_individual_history` → reads R2 diffs or removed). Update
+   `app/relationship_routes.py`, `app/page_routes.py`, `app/main.py`, scripts.
+
+### R7. Tests — atomicity proven on REAL Postgres
+- Atomicity (failed import → ZERO rows) + concurrency (2 imports serialize via advisory lock)
+  run against real Postgres in a disposable temp schema (executed live this session + recorded).
+  CI-safe fake-cursor test covers rollback logic. One-row-per-entity proven by PK/UNIQUE
+  constraints + a natural-key duplicate check. Plus: refuse-without-R2, unwind conflict +
+  no-op cases, reconstruct round-trip, diff losslessness, idempotent re-import.
