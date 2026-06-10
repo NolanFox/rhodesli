@@ -1,14 +1,37 @@
 #!/usr/bin/env python3
-"""Import a new GEDCOM version with rich, non-destructive tracking.
+"""Atomic GEDCOM importer (PRD-064 Option B-plus, Session 164).
 
-The importer mirrors top-level GEDCOM entities instead of flattening only the
-basic individual fields. It supports:
+Replaces the old non-atomic, per-batch-commit, multi-state versioned importer
+(root cause of the Session 163 1.3 GB bloat — Lesson 199). The new importer is
+a SINGLE Postgres transaction: a failed import leaves ZERO rows (no partial
+state, no `failed` version row).
 
-- legacy-baseline diffing against the current thin tables
-- richer entity snapshots for individuals, events, families, sources, media,
-  relationships, and raw records
-- versioned Supabase writes with `is_current` / `superseded_by`
-- field-level change logging for Claude-auditable review
+Flow (plan R3, Codex P0-1/P0-2/P1-1):
+
+    raw_bytes = read(file); source_hash = sha256(raw_bytes)
+    parsed    = parse_gedcom(file); bundle = build_snapshot_bundle(parsed)
+    conn (pooler 5432, autocommit=False)
+    BEGIN
+      pg_advisory_xact_lock(hashtext('gedcom_import:'||community))   # serialize
+      if applied version with source_hash exists: ROLLBACK -> idempotent no-op
+      version_number = MAX(version_number)+1  for community
+      old = load_current_maps(conn, community)        # id -> payload-ish (+payload_hash)
+      diffs = diff_entity_maps(et, old[et], new[et])  # canonical payloads only
+      artifacts = build raw.ged.gz / snapshot.jsonl.gz / diff.json.gz
+      upload_and_verify(artifacts)                    # re-download + hash check; fail -> raise
+      apply diffs: upsert added/modified, delete removed (individuals/families);
+                   relationships: delete removed edges + upsert added/modified
+      INSERT gedcom_versions(status='applied', artifact shas, prefix, diff_summary)
+    COMMIT
+    # any exception anywhere -> conn.rollback() -> ZERO rows changed
+
+The DB stores only typed columns + payload_hash (current-state, one row per
+entity); the lossless full payload lives in R2 (gedcom_history).
+
+This script DOES NOT run against the live DB on import. `run_import` accepts
+injectable `conn_factory` and `r2_factory` so tests exercise the full code path
+with fakes. Dry-run (`--execute` absent) stops after the diff + prints a
+summary (no R2, no DB writes).
 """
 
 from __future__ import annotations
@@ -19,1147 +42,515 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
+from rhodesli_ml.importers.gedcom_parser import parse_gedcom  # noqa: E402
 from rhodesli_ml.importers.gedcom_snapshot import (  # noqa: E402
-    LEGACY_COMPARE_FIELDS,
-    GedcomSnapshotBundle,
-    canonical_json_dumps,
     build_snapshot_bundle,
     diff_entity_maps,
 )
-from rhodesli_ml.importers.gedcom_matching import (  # noqa: E402
-    detect_individual_redirects,
-)
+from rhodesli_ml.importers import gedcom_history as gh  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-INDIVIDUAL_COMPARE_FIELDS = LEGACY_COMPARE_FIELDS["individuals"]
+DEFAULT_COMMUNITY = "rhodesli"
 
-ENTITY_CONFIG = {
-    "individuals": {
-        "table": "gedcom_individuals",
-        "key_field": "gedcom_id",
-    },
-    "events": {
-        "table": "gedcom_events",
-        "key_field": "event_key",
-    },
-    "families": {
-        "table": "gedcom_families",
-        "key_field": "family_gedcom_id",
-    },
-    "sources": {
-        "table": "gedcom_sources",
-        "key_field": "source_xref",
-    },
-    "media_objects": {
-        "table": "gedcom_media_objects",
-        "key_field": "media_xref",
-    },
-    "relationships": {
-        "table": "gedcom_relationships",
-        "key_field": "edge_key",
-    },
-    "records": {
-        "table": "gedcom_records",
-        "key_field": "record_key",
-    },
+# Entity types that map to their own canonical tables (diffed + applied).
+DIFF_TYPES = ("individuals", "families", "relationships", "sources", "media_objects")
+
+# Bundle payload fields persisted to each canonical table, in column order.
+INDIVIDUAL_COLUMNS = [
+    "gedcom_id",
+    "name",
+    "given_name",
+    "surname",
+    "gender",
+    "birth_date",
+    "birth_place",
+    "death_date",
+    "death_place",
+    "names_json",
+    "events_json",
+    "family_as_spouse_json",
+    "family_as_child_json",
+    "notes_json",
+    "citations_json",
+    "payload_hash",
+]
+INDIVIDUAL_JSON_COLUMNS = {
+    "names_json",
+    "events_json",
+    "family_as_spouse_json",
+    "family_as_child_json",
+    "notes_json",
+    "citations_json",
 }
 
-RICH_ENTITY_TYPES = {"families", "sources", "media_objects", "records"}
-REDIRECT_TABLE = "gedcom_entity_redirects"
+FAMILY_COLUMNS = [
+    "family_gedcom_id",
+    "husband_xref",
+    "wife_xref",
+    "children_xrefs_json",
+    "marriage_event_json",
+    "events_json",
+    "notes_json",
+    "citations_json",
+    "payload_hash",
+]
+FAMILY_JSON_COLUMNS = {
+    "children_xrefs_json",
+    "marriage_event_json",
+    "events_json",
+    "notes_json",
+    "citations_json",
+}
 
 
-def get_supabase_client():
-    """Get Supabase client with service role key."""
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if not url or not key:
-        raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-    from supabase import create_client
+# --------------------------------------------------------------------------- #
+# Connection
+# --------------------------------------------------------------------------- #
+def default_conn_factory():
+    """Open a psycopg2 connection on the Supabase pooler session port (5432).
 
-    return create_client(url, key)
-
-
-def hash_file(filepath: Path) -> str:
-    """SHA256 hash of a file."""
-    h = hashlib.sha256()
-    with open(filepath, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def get_next_version_number(sb, community_id: str = "rhodesli") -> int:
-    """Get the next version number for a community."""
-    result = (
-        sb.table("gedcom_versions")
-        .select("version_number")
-        .eq("community_id", community_id)
-        .order("version_number", desc=True)
-        .limit(1)
-        .execute()
-    )
-    if result.data:
-        return result.data[0]["version_number"] + 1
-    return 1
-
-
-def check_duplicate_hash(sb, source_hash: str, community_id: str = "rhodesli") -> dict | None:
-    """Check if this exact file was already imported successfully.
-
-    Failed or rolled-back attempts stay in lineage but must not block a retry.
+    Uses SUPABASE_DB_PASSWORD from the environment. autocommit=False so the
+    whole import is one transaction.
     """
-    result = (
-        sb.table("gedcom_versions")
-        .select("*")
-        .eq("source_hash", source_hash)
-        .eq("community_id", community_id)
-        .execute()
+    import psycopg2
+
+    project_ref = os.environ.get("SUPABASE_PROJECT_REF", "fvynibivlphxwfowzkjl")
+    region = os.environ.get("SUPABASE_POOLER_REGION", "us-west-2")
+    conn = psycopg2.connect(
+        host=os.environ.get(
+            "SUPABASE_POOLER_HOST", f"aws-0-{region}.pooler.supabase.com"
+        ),
+        port=int(os.environ.get("SUPABASE_POOLER_PORT", "5432")),
+        user=os.environ.get("SUPABASE_POOLER_USER", f"postgres.{project_ref}"),
+        password=os.environ["SUPABASE_DB_PASSWORD"],
+        dbname=os.environ.get("SUPABASE_DB_NAME", "postgres"),
     )
-    for row in result.data or []:
-        status = row.get("status") or "applied"
-        if status not in {"failed", "rolled_back"}:
-            return row
-    return None
+    conn.autocommit = False
+    return conn
 
 
-def load_current_individuals(sb) -> dict[str, dict[str, Any]]:
-    """Backward-compatible helper kept for tests and thin legacy callers."""
-    return _load_current_entity_map(sb, "individuals", baseline_mode=True)["rows"]
+def default_r2_factory():
+    import boto3
 
-
-def diff_individual(old: dict, new_data: dict) -> list[dict]:
-    """Compare an old individual row to new parsed data. Returns field-level changes."""
-    changes = []
-    for field in INDIVIDUAL_COMPARE_FIELDS:
-        old_val = old.get(field) or ""
-        new_val = new_data.get(field) or ""
-        if str(old_val).strip() != str(new_val).strip():
-            changes.append(
-                {
-                    "field_name": field,
-                    "old_value": str(old_val) if old_val else None,
-                    "new_value": str(new_val) if new_val else None,
-                }
-            )
-    return changes
-
-
-def build_individual_row(xref_id: str, indi, source_file: str) -> dict:
-    """Build a thin legacy row dict from a parsed GEDCOM individual."""
-    return {
-        "gedcom_id": xref_id,
-        "name": indi.full_name or "Unknown",
-        "given_name": indi.given_name or None,
-        "surname": indi.surname or None,
-        "gender": indi.gender or "U",
-        "birth_date": indi.birth.raw_date if indi.birth else None,
-        "birth_place": indi.birth_place,
-        "death_date": indi.death.raw_date if indi.death else None,
-        "death_place": indi.death_place,
-        "source_file": source_file,
-    }
-
-
-def _relation_missing_error(exc: Exception) -> bool:
-    msg = str(exc)
-    return "relation" in msg or "PGRST205" in msg or "Could not find the table" in msg
-
-
-def _fetch_current_rows(sb, table_name: str) -> tuple[list[dict[str, Any]], bool]:
-    conn = _get_direct_db_swap_connection()
-    if conn is not None:
-        try:
-            try:
-                from psycopg2.extras import RealDictCursor
-            except Exception:
-                RealDictCursor = None
-
-            with conn:
-                cursor_factory = RealDictCursor if RealDictCursor is not None else None
-                with conn.cursor(cursor_factory=cursor_factory) as cur:
-                    cur.execute(f"select * from {table_name} where is_current = true")
-                    rows = cur.fetchall()
-            return [dict(row) for row in rows], False
-        except Exception as exc:
-            if _relation_missing_error(exc):
-                return [], True
-            raise
-        finally:
-            conn.close()
-
-    rows: list[dict[str, Any]] = []
-    offset = 0
-    page_size = 1000
-    try:
-        while True:
-            result = (
-                sb.table(table_name)
-                .select("*")
-                .or_("is_current.eq.true,is_current.is.null")
-                .order("id")
-                .range(offset, offset + page_size - 1)
-                .execute()
-            )
-            page = result.data or []
-            rows.extend(page)
-            if len(page) < page_size:
-                break
-            offset += page_size
-        return rows, False
-    except Exception as exc:
-        if _relation_missing_error(exc):
-            return [], True
-        raise
-
-
-def _table_exists(sb, table_name: str) -> bool:
-    try:
-        sb.table(table_name).select("id").limit(1).execute()
-        return True
-    except Exception as exc:
-        if _relation_missing_error(exc):
-            return False
-        raise
-
-
-def _build_event_key_from_row(row: dict[str, Any], ordinal: int) -> str:
-    return f"{row.get('gedcom_individual_id', '')}|{row.get('event_type', '')}|{ordinal}"
-
-
-def _build_relationship_key_from_row(row: dict[str, Any]) -> str:
-    return (
-        f"{row.get('relationship_type', '')}|{row.get('family_gedcom_id', '')}|"
-        f"{row.get('individual_gedcom_id', '')}|{row.get('related_gedcom_id', '')}"
+    account_id = os.environ["R2_ACCOUNT_ID"]
+    return boto3.client(
+        "s3",
+        endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+        aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
     )
 
 
-def _normalize_current_rows(entity_type: str, rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    config = ENTITY_CONFIG[entity_type]
-    key_field = config["key_field"]
-
-    if entity_type == "events":
-        grouped: dict[tuple[str, str], int] = {}
-        normalized = {}
-        for row in rows:
-            if row.get("event_key"):
-                normalized[row["event_key"]] = row
-                continue
-            group_key = (row.get("gedcom_individual_id", ""), row.get("event_type", ""))
-            ordinal = grouped.get(group_key, 0)
-            grouped[group_key] = ordinal + 1
-            normalized[_build_event_key_from_row(row, ordinal)] = row
-        return normalized
-
-    if entity_type == "relationships":
-        normalized = {}
-        for row in rows:
-            edge_key = row.get("edge_key") or _build_relationship_key_from_row(row)
-            normalized[edge_key] = row
-        return normalized
-
-    normalized = {}
-    for row in rows:
-        key = row.get(key_field)
-        if key:
-            normalized[key] = row
-    return normalized
+def _r2_bucket() -> str:
+    return os.environ.get("R2_BUCKET_NAME", "rhodesli-archive")
 
 
-def _load_current_entity_map(sb, entity_type: str, baseline_mode: bool) -> dict[str, Any]:
-    if baseline_mode and entity_type in {"families", "sources", "media_objects", "records"}:
-        table_name = ENTITY_CONFIG[entity_type]["table"]
-        return {"rows": {}, "missing_table": not _table_exists(sb, table_name)}
+# --------------------------------------------------------------------------- #
+# Current-state readers (inside the open txn)
+# --------------------------------------------------------------------------- #
+def load_current_maps(conn, community: str) -> dict[str, dict[str, dict[str, Any]]]:
+    """Read canonical current-state maps for diffing.
 
-    if baseline_mode and entity_type == "events":
-        return {"rows": {}, "missing_table": False}
+    Returns ``{entity_type -> {entity_id -> {..., 'payload_hash': ...}}}``.
+    Only ``payload_hash`` and the natural id matter for diffing (diff_entity_maps
+    short-circuits on equal hashes); the typed columns are included so the diff's
+    ``before`` payloads are usable for unwind reconstruction context.
+    """
+    cur = conn.cursor()
+    maps: dict[str, dict[str, dict[str, Any]]] = {et: {} for et in DIFF_TYPES}
 
-    table_name = ENTITY_CONFIG[entity_type]["table"]
-    rows, missing_table = _fetch_current_rows(sb, table_name)
-    return {
-        "rows": _normalize_current_rows(entity_type, rows),
-        "missing_table": missing_table,
-    }
+    # individuals
+    cur.execute(
+        f"SELECT {', '.join(INDIVIDUAL_COLUMNS)} FROM gedcom_individuals "
+        "WHERE community_id = %s",
+        (community,),
+    )
+    for row in cur.fetchall():
+        payload = _row_to_payload(INDIVIDUAL_COLUMNS, row)
+        maps["individuals"][payload["gedcom_id"]] = payload
 
+    # families
+    cur.execute(
+        f"SELECT {', '.join(FAMILY_COLUMNS)} FROM gedcom_families "
+        "WHERE community_id = %s",
+        (community,),
+    )
+    for row in cur.fetchall():
+        payload = _row_to_payload(FAMILY_COLUMNS, row)
+        maps["families"][payload["family_gedcom_id"]] = payload
 
-def _load_bootstrap_supersede_rows(sb, entity_type: str) -> list[dict[str, Any]]:
-    if entity_type not in {"individuals", "events", "relationships"}:
-        return []
-    table_name = ENTITY_CONFIG[entity_type]["table"]
-    rows, missing_table = _fetch_current_rows(sb, table_name)
-    if missing_table:
-        return []
-    return rows
-
-
-def _bundle_entity_map(bundle: GedcomSnapshotBundle, entity_type: str) -> dict[str, dict[str, Any]]:
-    return getattr(bundle, entity_type)
-
-
-def _versions_exist(sb, community_id: str) -> bool:
-    result = sb.table("gedcom_versions").select("id,status").eq("community_id", community_id).execute()
-    for row in result.data or []:
-        status = row.get("status") or "applied"
-        if status not in {"failed", "rolled_back"}:
-            return True
-    return False
-
-
-def _stringify_change_value(value: Any) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, (dict, list)):
-        return canonical_json_dumps(value)
-    return str(value)
-
-
-def _flatten_change_log_entries(version_id: str, entity_type: str, diff_result: dict[str, Any]) -> list[dict[str, Any]]:
-    return list(_iter_change_log_entries(version_id, entity_type, diff_result))
-
-
-def _iter_change_log_entries(version_id: str, entity_type: str, diff_result: dict[str, Any]):
-    for item in diff_result["added"]:
-        yield {
-            "version_id": version_id,
-            "change_type": "added",
-            "entity_type": entity_type.rstrip("s"),
-            "xref_id": item["entity_id"],
-            "field_name": None,
-            "old_value": None,
-            "new_value": None,
-        }
-    for item in diff_result["removed"]:
-        yield {
-            "version_id": version_id,
-            "change_type": "removed",
-            "entity_type": entity_type.rstrip("s"),
-            "xref_id": item["entity_id"],
-            "field_name": None,
-            "old_value": None,
-            "new_value": None,
-        }
-    for item in diff_result["modified"]:
-        for change in item["changes"]:
-            yield {
-                "version_id": version_id,
-                "change_type": "modified",
-                "entity_type": entity_type.rstrip("s"),
-                "xref_id": item["entity_id"],
-                "field_name": change["path"],
-                "old_value": _stringify_change_value(change["old_value"]),
-                "new_value": _stringify_change_value(change["new_value"]),
-            }
-
-
-def _iter_redirect_change_log_entries(version_id: str, redirects: list[dict[str, Any]]):
-    for row in redirects:
-        yield {
-            "version_id": version_id,
-            "change_type": "redirected",
-            "entity_type": row["entity_type"],
-            "xref_id": row["old_key"],
-            "field_name": "redirected_to",
-            "old_value": row["old_key"],
-            "new_value": row["new_key"],
+    # relationships
+    cur.execute(
+        "SELECT edge_key, individual_gedcom_id, related_gedcom_id, "
+        "relationship_type, family_gedcom_id, relationship_payload, payload_hash "
+        "FROM gedcom_relationships WHERE community_id = %s",
+        (community,),
+    )
+    for row in cur.fetchall():
+        edge_key, ind, rel, rtype, fam, payload, payload_hash = row
+        maps["relationships"][edge_key] = {
+            "edge_key": edge_key,
+            "individual_gedcom_id": ind,
+            "related_gedcom_id": rel,
+            "relationship_type": rtype,
+            "family_gedcom_id": fam,
+            "relationship_payload": payload,
+            "payload_hash": payload_hash,
         }
 
-
-def _write_change_log(
-    sb,
-    version_id: str,
-    diff_by_entity: dict[str, dict[str, Any]],
-    redirects: list[dict[str, Any]],
-    *,
-    batch_size: int = 500,
-) -> None:
-    buffer: list[dict[str, Any]] = []
-
-    def flush() -> None:
-        if buffer:
-            _write_rows(sb, "gedcom_change_log", list(buffer), batch_size=batch_size)
-            buffer.clear()
-
-    for entity_type, diff_result in diff_by_entity.items():
-        for entry in _iter_change_log_entries(version_id, entity_type, diff_result):
-            buffer.append(entry)
-            if len(buffer) >= batch_size:
-                flush()
-    for entry in _iter_redirect_change_log_entries(version_id, redirects):
-        buffer.append(entry)
-        if len(buffer) >= batch_size:
-            flush()
-    flush()
+    # sources / media_objects: canonical tables not part of the current
+    # current-state DB schema (Session 164 stores them only in R2 snapshot).
+    # They still get diffed (against empty), so the R2 diff records them.
+    cur.close()
+    return maps
 
 
-def _sample_changes(diff_by_entity: dict[str, dict[str, Any]], limit: int = 25) -> list[dict[str, Any]]:
-    sample: list[dict[str, Any]] = []
-    for entity_type, diff_result in diff_by_entity.items():
-        for item in diff_result["modified"][:5]:
-            sample.append(
-                {
-                    "entity_type": entity_type,
-                    "entity_id": item["entity_id"],
-                    "changes": item["changes"][:5],
-                }
-            )
-            if len(sample) >= limit:
-                return sample
-    return sample
+def _row_to_payload(columns: list[str], row: tuple) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for col, value in zip(columns, row):
+        payload[col] = value
+    return payload
 
 
-def _build_redirect_summary(redirects: list[dict[str, Any]]) -> dict[str, Any]:
-    return {
-        "detected": len(redirects),
-        "sample": [
-            {
-                "entity_type": row["entity_type"],
-                "old_key": row["old_key"],
-                "new_key": row["new_key"],
-                "redirect_type": row["redirect_type"],
-                "match_score": row["match_score"],
-                "reasons": row["match_basis"].get("reasons", [])[:5],
-            }
-            for row in redirects[:10]
-        ],
-    }
-
-
-def _build_summary(
-    bundle: GedcomSnapshotBundle,
-    diff_by_entity: dict[str, dict[str, Any]],
-    baseline_mode: bool,
-    redirects: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    entity_summaries = {entity_type: diff_result["summary"] for entity_type, diff_result in diff_by_entity.items()}
-    individual_summary = entity_summaries["individuals"]
-    total_changes = sum(
-        summary["added"] + summary["modified"] + summary["removed"] for summary in entity_summaries.values()
-    )
-    return {
-        "added": individual_summary["added"],
-        "modified": individual_summary["modified"],
-        "removed": individual_summary["removed"],
-        "unchanged": individual_summary["unchanged"],
-        "total_changes": total_changes,
-        "entity_summaries": entity_summaries,
-        "counts": bundle.counts,
-        "baseline_mode": "legacy_bootstrap" if baseline_mode else "versioned",
-        "sample_changes": _sample_changes(diff_by_entity),
-        "redirects": _build_redirect_summary(redirects or []),
-    }
-
-
-def _insert_rows(sb, table_name: str, rows: list[dict[str, Any]], batch_size: int = 250) -> dict[str, dict[str, Any]]:
-    inserted_by_key: dict[str, dict[str, Any]] = {}
-    if not rows:
-        return inserted_by_key
-
-    direct_rows = _insert_rows_direct_db(table_name, rows, batch_size=batch_size)
-    if direct_rows is not None:
-        for row in direct_rows:
-            for key_field in (
-                "gedcom_id",
-                "event_key",
-                "family_gedcom_id",
-                "source_xref",
-                "media_xref",
-                "edge_key",
-                "record_key",
-            ):
-                if row.get(key_field):
-                    inserted_by_key[row[key_field]] = row
-                    break
-        return inserted_by_key
-
-    for index in range(0, len(rows), batch_size):
-        chunk = rows[index : index + batch_size]
-        result = sb.table(table_name).insert(chunk).execute()
-        for row in result.data or []:
-            for key_field in (
-                "gedcom_id",
-                "event_key",
-                "family_gedcom_id",
-                "source_xref",
-                "media_xref",
-                "edge_key",
-                "record_key",
-            ):
-                if row.get(key_field):
-                    inserted_by_key[row[key_field]] = row
-                    break
-    return inserted_by_key
-
-
-def _batched_ids(rows: list[dict[str, Any]], batch_size: int = 500) -> list[list[str]]:
-    ids = [row.get("id") for row in rows if row.get("id")]
-    return [ids[index : index + batch_size] for index in range(0, len(ids), batch_size)]
-
-
-def _batched_values(values: list[str], batch_size: int = 1000) -> list[list[str]]:
-    return [values[index : index + batch_size] for index in range(0, len(values), batch_size)]
-
-
-def _adapt_db_value(value: Any) -> Any:
-    if isinstance(value, (dict, list)):
-        from psycopg2.extras import Json
-
-        return Json(value)
-    return value
-
-
-def _insert_rows_direct_db(
-    table_name: str,
-    rows: list[dict[str, Any]],
-    *,
-    batch_size: int = 250,
-    returning: bool = True,
-) -> list[dict[str, Any]] | None:
-    conn = _get_direct_db_swap_connection()
-    if conn is None:
-        return None
-
-    if not rows:
-        return []
-
-    from psycopg2 import sql
-    from psycopg2.extras import RealDictCursor, execute_values
-
-    inserted_rows: list[dict[str, Any]] = []
-    columns = sorted({key for row in rows for key in row.keys()})
-
-    try:
-        with conn:
-            cursor_factory = RealDictCursor if returning else None
-            with conn.cursor(cursor_factory=cursor_factory) as cur:
-                base_query = sql.SQL("insert into {} ({}) values %s").format(
-                    sql.Identifier(table_name),
-                    sql.SQL(", ").join(sql.Identifier(column) for column in columns),
-                )
-                if returning:
-                    base_query += sql.SQL(" returning *")
-                query = base_query.as_string(cur)
-
-                for index in range(0, len(rows), batch_size):
-                    chunk = rows[index : index + batch_size]
-                    values = [[_adapt_db_value(row.get(column)) for column in columns] for row in chunk]
-                    result = execute_values(
-                        cur,
-                        query,
-                        values,
-                        page_size=len(chunk),
-                        fetch=returning,
-                    )
-                    if returning and result:
-                        inserted_rows.extend(dict(row) for row in result)
-        return inserted_rows
-    finally:
-        conn.close()
-
-
-def _write_rows(sb, table_name: str, rows: list[dict[str, Any]], batch_size: int = 500) -> None:
-    if not rows:
-        return
-
-    direct_rows = _insert_rows_direct_db(
-        table_name,
-        rows,
-        batch_size=batch_size,
-        returning=False,
-    )
-    if direct_rows is not None:
-        return
-
-    for index in range(0, len(rows), batch_size):
-        sb.table(table_name).insert(rows[index : index + batch_size]).execute()
-
-
-def _get_direct_db_swap_connection():
-    pooler_host = os.environ.get("SUPABASE_DB_POOLER_HOST")
-    db_password = os.environ.get("SUPABASE_DB_PASSWORD")
-    supabase_url = os.environ.get("SUPABASE_URL", "")
-    if not pooler_host or not db_password or not supabase_url:
-        return None
-
-    project_ref = supabase_url.split("//", 1)[-1].split(".", 1)[0]
-    db_user = os.environ.get("SUPABASE_DB_USER") or f"postgres.{project_ref}"
-    db_port = int(os.environ.get("SUPABASE_DB_POOLER_PORT", "6543"))
-    db_name = os.environ.get("SUPABASE_DB_NAME", "postgres")
-
-    try:
-        import psycopg2
-    except Exception:
-        return None
-
-    return psycopg2.connect(
-        host=pooler_host,
-        port=db_port,
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        sslmode="require",
+# --------------------------------------------------------------------------- #
+# Bundle payload -> canonical table column row
+# --------------------------------------------------------------------------- #
+def individual_row_values(community: str, payload: dict[str, Any], version_number: int):
+    """Map a bundle individual payload to the canonical column tuple."""
+    return _typed_row_values(
+        community, INDIVIDUAL_COLUMNS, INDIVIDUAL_JSON_COLUMNS, payload, version_number
     )
 
 
-def _swap_current_rows_with_cursor(
-    cur,
-    table_name: str,
-    supersede_rows: list[dict[str, Any]],
-    inserted_rows: list[dict[str, Any]],
-    *,
-    baseline_mode: bool = False,
-    version_id: str | None = None,
-) -> None:
-    if baseline_mode and version_id:
-        cur.execute(f"update {table_name} set is_current = false where is_current = true")
-        cur.execute(
-            f"update {table_name} set is_current = true where version_id = %s",
-            (version_id,),
-        )
-        return
-
-    supersede_ids = [str(row["id"]) for row in supersede_rows if row.get("id")]
-    inserted_ids = [str(row["id"]) for row in inserted_rows if row.get("id")]
-
-    for chunk in _batched_values(supersede_ids):
-        cur.execute(
-            f"update {table_name} set is_current = false where id = any(%s::uuid[])",
-            (chunk,),
-        )
-    for chunk in _batched_values(inserted_ids):
-        cur.execute(
-            f"update {table_name} set is_current = true where id = any(%s::uuid[])",
-            (chunk,),
-        )
+def family_row_values(community: str, payload: dict[str, Any], version_number: int):
+    return _typed_row_values(
+        community, FAMILY_COLUMNS, FAMILY_JSON_COLUMNS, payload, version_number
+    )
 
 
-def _swap_current_rows_direct_db(
-    table_name: str,
-    supersede_rows: list[dict[str, Any]],
-    inserted_rows: list[dict[str, Any]],
-    *,
-    baseline_mode: bool = False,
-    version_id: str | None = None,
-) -> bool:
-    conn = _get_direct_db_swap_connection()
-    if conn is None:
-        return False
-
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                _swap_current_rows_with_cursor(
-                    cur,
-                    table_name,
-                    supersede_rows,
-                    inserted_rows,
-                    baseline_mode=baseline_mode,
-                    version_id=version_id,
-                )
-        return True
-    finally:
-        conn.close()
+def _typed_row_values(
+    community: str,
+    columns: list[str],
+    json_columns: set[str],
+    payload: dict[str, Any],
+    version_number: int,
+):
+    values: list[Any] = [community]
+    for col in columns:
+        value = payload.get(col)
+        if col in json_columns:
+            value = json.dumps(value if value is not None else None)
+        values.append(value)
+    values.append(version_number)
+    return tuple(values)
 
 
-def _activate_rows(sb, table_name: str, rows: list[dict[str, Any]]) -> None:
-    for chunk in _batched_ids(rows):
-        sb.table(table_name).update({"is_current": True}).in_("id", chunk).execute()
+# --------------------------------------------------------------------------- #
+# Mutation helpers (shared with gedcom_unwind via apply_entity_diffs)
+# --------------------------------------------------------------------------- #
+def apply_entity_diffs(conn, community: str, diffs: dict[str, dict[str, Any]], version_number: int):
+    """Apply per-type diffs to canonical tables inside the open txn.
 
+    individuals/families: upsert added+modified (ON CONFLICT DO UPDATE), delete
+    removed. relationships: delete removed edges, upsert added+modified edges.
+    """
+    from psycopg2.extras import execute_values
 
-def _supersede_rows(
-    sb, table_name: str, rows: list[dict[str, Any]], inserted_by_key: dict[str, dict[str, Any]], key_field: str
-) -> None:
-    del inserted_by_key, key_field
-    if not rows:
-        return
-    for chunk in _batched_ids(rows):
-        sb.table(table_name).update({"is_current": False}).in_("id", chunk).execute()
+    cur = conn.cursor()
 
-
-def _apply_entity_diff(
-    sb,
-    entity_type: str,
-    diff_result: dict[str, Any],
-    baseline_mode: bool,
-    version_id: str,
-    new_map: dict[str, dict[str, Any]],
-    bootstrap_supersede_rows: list[dict[str, Any]] | None = None,
-) -> dict[str, dict[str, Any]]:
-    config = ENTITY_CONFIG[entity_type]
-    table_name = config["table"]
-
-    insert_rows: list[dict[str, Any]]
-
-    if baseline_mode:
-        insert_rows = [{**row, "version_id": version_id, "is_current": False} for row in new_map.values()]
-    else:
-        insert_rows = []
-        for item in diff_result["added"]:
-            insert_rows.append({**item["new_payload"], "version_id": version_id, "is_current": False})
-        for item in diff_result["modified"]:
-            insert_rows.append({**item["new_payload"], "version_id": version_id, "is_current": False})
-
-    return _insert_rows(sb, table_name, insert_rows)
-
-
-def _build_current_swap_plan(
-    entity_type: str,
-    diff_result: dict[str, Any],
-    *,
-    baseline_mode: bool,
-    bootstrap_supersede_rows: list[dict[str, Any]] | None,
-    inserted_by_key: dict[str, dict[str, Any]],
-    version_id: str,
-) -> dict[str, Any]:
-    config = ENTITY_CONFIG[entity_type]
-    if baseline_mode:
-        supersede_rows = list(bootstrap_supersede_rows or [])
-    else:
-        supersede_rows = [item["old_payload"] for item in diff_result["modified"]] + [
-            item["old_payload"] for item in diff_result["removed"]
+    # ----- individuals -----
+    ind_diff = diffs.get("individuals")
+    if ind_diff:
+        upserts = [
+            individual_row_values(community, e["new_payload"], version_number)
+            for e in ind_diff["added"] + ind_diff["modified"]
         ]
+        if upserts:
+            cols = ["community_id"] + INDIVIDUAL_COLUMNS + ["version_number"]
+            update_cols = [c for c in INDIVIDUAL_COLUMNS if c != "gedcom_id"] + ["version_number"]
+            set_clause = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
+            execute_values(
+                cur,
+                f"INSERT INTO gedcom_individuals ({', '.join(cols)}) VALUES %s "
+                f"ON CONFLICT (community_id, gedcom_id) DO UPDATE SET {set_clause}, updated_at = now()",
+                upserts,
+            )
+        removed_ids = [e["entity_id"] for e in ind_diff["removed"]]
+        if removed_ids:
+            cur.execute(
+                "DELETE FROM gedcom_individuals WHERE community_id = %s AND gedcom_id = ANY(%s)",
+                (community, removed_ids),
+            )
 
-    return {
-        "table_name": config["table"],
-        "key_field": config["key_field"],
-        "supersede_rows": supersede_rows,
-        "inserted_rows": list(inserted_by_key.values()),
-        "inserted_by_key": inserted_by_key,
-        "baseline_mode": baseline_mode,
-        "version_id": version_id,
+    # ----- families -----
+    fam_diff = diffs.get("families")
+    if fam_diff:
+        upserts = [
+            family_row_values(community, e["new_payload"], version_number)
+            for e in fam_diff["added"] + fam_diff["modified"]
+        ]
+        if upserts:
+            cols = ["community_id"] + FAMILY_COLUMNS + ["version_number"]
+            update_cols = [c for c in FAMILY_COLUMNS if c != "family_gedcom_id"] + ["version_number"]
+            set_clause = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
+            execute_values(
+                cur,
+                f"INSERT INTO gedcom_families ({', '.join(cols)}) VALUES %s "
+                f"ON CONFLICT (community_id, family_gedcom_id) DO UPDATE SET {set_clause}, updated_at = now()",
+                upserts,
+            )
+        removed_ids = [e["entity_id"] for e in fam_diff["removed"]]
+        if removed_ids:
+            cur.execute(
+                "DELETE FROM gedcom_families WHERE community_id = %s AND family_gedcom_id = ANY(%s)",
+                (community, removed_ids),
+            )
+
+    # ----- relationships -----
+    rel_diff = diffs.get("relationships")
+    if rel_diff:
+        removed_edges = [e["entity_id"] for e in rel_diff["removed"]]
+        if removed_edges:
+            cur.execute(
+                "DELETE FROM gedcom_relationships WHERE community_id = %s AND edge_key = ANY(%s)",
+                (community, removed_edges),
+            )
+        rel_upserts = []
+        for e in rel_diff["added"] + rel_diff["modified"]:
+            p = e["new_payload"]
+            rel_upserts.append(
+                (
+                    community,
+                    p["edge_key"],
+                    p["individual_gedcom_id"],
+                    p["related_gedcom_id"],
+                    p["relationship_type"],
+                    p["family_gedcom_id"],
+                    json.dumps(p.get("relationship_payload") or {}),
+                    p["payload_hash"],
+                    version_number,
+                )
+            )
+        if rel_upserts:
+            execute_values(
+                cur,
+                "INSERT INTO gedcom_relationships (community_id, edge_key, "
+                "individual_gedcom_id, related_gedcom_id, relationship_type, "
+                "family_gedcom_id, relationship_payload, payload_hash, version_number) "
+                "VALUES %s ON CONFLICT (community_id, edge_key) DO UPDATE SET "
+                "individual_gedcom_id = EXCLUDED.individual_gedcom_id, "
+                "related_gedcom_id = EXCLUDED.related_gedcom_id, "
+                "relationship_type = EXCLUDED.relationship_type, "
+                "family_gedcom_id = EXCLUDED.family_gedcom_id, "
+                "relationship_payload = EXCLUDED.relationship_payload, "
+                "payload_hash = EXCLUDED.payload_hash, "
+                "version_number = EXCLUDED.version_number",
+                rel_upserts,
+            )
+
+    cur.close()
+
+
+# --------------------------------------------------------------------------- #
+# The atomic import
+# --------------------------------------------------------------------------- #
+def _community_lock_key(community: str) -> str:
+    return f"gedcom_import:{community}"
+
+
+def run_import(
+    file: str,
+    community: str = DEFAULT_COMMUNITY,
+    notes: str | None = None,
+    imported_by: str = "admin",
+    execute: bool = False,
+    conn_factory: Callable[[], Any] | None = None,
+    r2_factory: Callable[[], Any] | None = None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Import a GEDCOM file as one atomic version.
+
+    Dry-run (execute=False): parse + diff against current state + print summary;
+    no R2 or DB writes. Returns the diff summary.
+
+    execute=True: the full atomic transaction described in the module docstring.
+    Any exception rolls back -> ZERO rows changed.
+    """
+    file = str(file)
+    raw_bytes = Path(file).read_bytes()
+    source_hash = hashlib.sha256(raw_bytes).hexdigest()
+    generated_at = generated_at or datetime.now(timezone.utc).isoformat()
+
+    parsed = parse_gedcom(file)
+    bundle = build_snapshot_bundle(parsed, source_file=Path(file).name)
+    new_maps = {
+        "individuals": bundle.individuals,
+        "families": bundle.families,
+        "relationships": bundle.relationships,
+        "sources": bundle.sources,
+        "media_objects": bundle.media_objects,
     }
 
+    if not execute:
+        # Dry-run: diff against EMPTY current state (no DB connection) and report
+        # the full bundle as the change set. This is a "what would import" view.
+        diffs = {et: diff_entity_maps(et, {}, new_maps[et]) for et in DIFF_TYPES}
+        summary = gh.build_diff_summary(diffs)
+        result = {
+            "execute": False,
+            "source_hash": source_hash,
+            "counts": bundle.counts,
+            "diff_summary": summary,
+        }
+        logger.info("DRY-RUN import of %s (source_hash=%s): %s", file, source_hash[:12], bundle.counts)
+        return result
 
-def _finalize_current_state_direct_db(current_swap_plans: list[dict[str, Any]]) -> bool:
-    conn = _get_direct_db_swap_connection()
-    if conn is None:
-        return False
-
+    conn_factory = conn_factory or default_conn_factory
+    r2_factory = r2_factory or default_r2_factory
+    conn = conn_factory()
     try:
-        with conn:
-            with conn.cursor() as cur:
-                for plan in current_swap_plans:
-                    _swap_current_rows_with_cursor(
-                        cur,
-                        plan["table_name"],
-                        plan["supersede_rows"],
-                        plan["inserted_rows"],
-                        baseline_mode=plan["baseline_mode"],
-                        version_id=plan["version_id"],
-                    )
-        return True
+        cur = conn.cursor()
+        # Serialize concurrent imports for this community BEFORE any state read.
+        cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (_community_lock_key(community),))
+
+        # Idempotency guard UNDER the lock, BEFORE any R2/DB mutation.
+        cur.execute(
+            "SELECT version_number FROM gedcom_versions "
+            "WHERE community_id = %s AND source_hash = %s AND status = 'applied' LIMIT 1",
+            (community, source_hash),
+        )
+        existing = cur.fetchone()
+        if existing:
+            conn.rollback()
+            logger.info("Idempotent no-op: source_hash %s already applied as v%s", source_hash[:12], existing[0])
+            return {
+                "execute": True,
+                "idempotent": True,
+                "version_number": existing[0],
+                "source_hash": source_hash,
+            }
+
+        # Allocate the next version number for this community.
+        cur.execute(
+            "SELECT COALESCE(MAX(version_number), 0) FROM gedcom_versions WHERE community_id = %s",
+            (community,),
+        )
+        base_version = cur.fetchone()[0]
+        version_number = base_version + 1
+
+        # Load current state + diff against the new bundle.
+        old_maps = load_current_maps(conn, community)
+        diffs = {et: diff_entity_maps(et, old_maps[et], new_maps[et]) for et in DIFF_TYPES}
+        diff_summary = gh.build_diff_summary(diffs)
+
+        # Build + upload + verify R2 artifacts (version is now known).
+        prefix = gh.artifact_prefix(community, version_number, source_hash)
+        snapshot_gz = gh.build_snapshot_jsonl_gz(bundle)
+        diff_gz = gh.build_diff_json_gz(
+            diffs,
+            version_number=version_number,
+            base_version=base_version or None,
+            source_hash=source_hash,
+            generated_at=generated_at,
+        )
+        import gzip as _gzip
+
+        artifacts = {
+            "raw.ged.gz": _gzip.compress(raw_bytes, mtime=0),
+            "snapshot.jsonl.gz": snapshot_gz,
+            "diff.json.gz": diff_gz,
+        }
+        r2_client = r2_factory()
+        shas = gh.upload_and_verify_artifacts(r2_client, _r2_bucket(), prefix, artifacts)
+
+        # Apply mutations to canonical tables (still inside the txn).
+        apply_entity_diffs(conn, community, diffs, version_number)
+
+        # Insert the manifest row.
+        cur.execute(
+            "INSERT INTO gedcom_versions (version_number, community_id, imported_at, "
+            "imported_by, source_file, source_hash, individual_count, family_count, "
+            "summary, notes, status, raw_artifact_sha256, snapshot_artifact_sha256, "
+            "diff_artifact_sha256, artifact_prefix, diff_summary, artifact_format) "
+            "VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s::jsonb, %s, 'applied', "
+            "%s, %s, %s, %s, %s::jsonb, 'v1')",
+            (
+                version_number,
+                community,
+                imported_by,
+                Path(file).name,
+                source_hash,
+                len(bundle.individuals),
+                len(bundle.families),
+                json.dumps(diff_summary),
+                notes,
+                shas.get("raw.ged.gz"),
+                shas.get("snapshot.jsonl.gz"),
+                shas.get("diff.json.gz"),
+                prefix,
+                json.dumps(diff_summary),
+            ),
+        )
+
+        conn.commit()
+        cur.close()
+        logger.info("Applied GEDCOM v%s (source_hash=%s) to %s", version_number, source_hash[:12], community)
+        return {
+            "execute": True,
+            "idempotent": False,
+            "version_number": version_number,
+            "source_hash": source_hash,
+            "artifact_prefix": prefix,
+            "artifact_sha256": shas,
+            "diff_summary": diff_summary,
+        }
+    except Exception:
+        conn.rollback()
+        logger.exception("GEDCOM import failed — rolled back (ZERO rows changed)")
+        raise
     finally:
         conn.close()
 
 
-def _finalize_current_state_via_api(sb, current_swap_plans: list[dict[str, Any]]) -> None:
-    for plan in current_swap_plans:
-        _supersede_rows(
-            sb,
-            plan["table_name"],
-            plan["supersede_rows"],
-            plan["inserted_by_key"],
-            plan["key_field"],
-        )
-        _activate_rows(sb, plan["table_name"], plan["inserted_rows"])
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def main(argv: list[str] | None = None) -> int:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    parser = argparse.ArgumentParser(description="Atomic GEDCOM importer (PRD-064)")
+    parser.add_argument("--file", required=True, help="Path to the .ged file")
+    parser.add_argument("--execute", action="store_true", help="Apply (default: dry-run)")
+    parser.add_argument("--community", default=DEFAULT_COMMUNITY)
+    parser.add_argument("--notes", default=None)
+    parser.add_argument("--imported-by", default="admin")
+    args = parser.parse_args(argv)
 
-
-def _finalize_current_state(sb, current_swap_plans: list[dict[str, Any]]) -> None:
-    if _finalize_current_state_direct_db(current_swap_plans):
-        return
-    _finalize_current_state_via_api(sb, current_swap_plans)
-
-
-def _queue_enrichments(sb, version_id: str, individual_diff: dict[str, Any]) -> None:
-    """Queue photos for re-enrichment when linked GEDCOM individuals changed."""
-    affected_xrefs = {item["entity_id"] for item in individual_diff["modified"]} | {
-        item["entity_id"] for item in individual_diff["removed"]
-    }
-    if not affected_xrefs:
-        return
-
-    links_result = sb.table("gedcom_face_links").select("*").execute()
-    face_links = {row["gedcom_id"]: row for row in links_result.data or [] if row.get("gedcom_id")}
-
-    queue_rows = []
-    modified_xrefs = {item["entity_id"] for item in individual_diff["modified"]}
-    for xref_id in sorted(affected_xrefs):
-        link = face_links.get(xref_id)
-        if not link or not link.get("identity_id"):
-            continue
-        change_type = "modified" if xref_id in modified_xrefs else "removed"
-        queue_rows.append(
-            {
-                "photo_id": f"lookup:{link['identity_id']}",
-                "identity_id": link["identity_id"],
-                "gedcom_id": xref_id,
-                "trigger": "gedcom_update",
-                "reason": f"GEDCOM {change_type}: {xref_id}",
-                "version_id": version_id,
-                "status": "pending",
-            }
-        )
-
-    if queue_rows:
-        _write_rows(sb, "gedcom_enrichment_queue", queue_rows, batch_size=500)
-        logger.info("Queued %s re-enrichment items", len(queue_rows))
-
-
-def _redirect_table_exists(sb, community_id: str) -> bool:
     try:
-        (sb.table(REDIRECT_TABLE).select("id").eq("community_id", community_id).limit(1).execute())
-        return True
-    except Exception as exc:
-        if _relation_missing_error(exc):
-            return False
-        raise
+        from dotenv import load_dotenv
 
+        load_dotenv()
+    except Exception:  # pragma: no cover - dotenv optional
+        pass
 
-def _required_schema_tables(diff_by_entity: dict[str, dict[str, Any]], missing_tables: list[str]) -> list[str]:
-    del diff_by_entity  # rich-table requirement is now driven by actual table visibility checks
-    return sorted(set(missing_tables))
-
-
-def _redirect_change_log_entries(version_id: str, redirects: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return list(_iter_redirect_change_log_entries(version_id, redirects))
-
-
-def _set_version_status(
-    sb,
-    version_id: str,
-    *,
-    status: str,
-    summary: dict[str, Any] | None = None,
-    error_message: str | None = None,
-) -> None:
-    payload: dict[str, Any] = {"status": status}
-    if summary is not None:
-        # Round-trip through JSON to convert datetime objects to strings
-        payload["summary"] = json.loads(json.dumps(summary, default=str))
-    if error_message:
-        payload["notes"] = error_message
-    sb.table("gedcom_versions").update(payload).eq("id", version_id).execute()
-
-
-def _write_redirect_rows(
-    sb,
-    version_id: str,
-    community_id: str,
-    redirects: list[dict[str, Any]],
-    inserted_maps: dict[str, dict[str, dict[str, Any]]],
-    current_maps: dict[str, dict[str, dict[str, Any]]],
-) -> None:
-    if not redirects:
-        return
-
-    redirect_rows = []
-    target_updates: list[tuple[str, str]] = []
-    individual_current = current_maps.get("individuals", {})
-    individual_inserted = inserted_maps.get("individuals", {})
-
-    for row in redirects:
-        target_row = individual_inserted.get(row["new_key"]) or individual_current.get(row["new_key"])
-        if row.get("old_row_id") and target_row and target_row.get("id"):
-            target_updates.append((row["old_row_id"], target_row["id"]))
-
-        redirect_rows.append(
-            {
-                "community_id": community_id,
-                "entity_type": row["entity_type"],
-                "old_key": row["old_key"],
-                "new_key": row["new_key"],
-                "version_id": version_id,
-                "redirect_type": row["redirect_type"],
-                "match_score": row["match_score"],
-                "match_basis_json": row["match_basis"],
-            }
-        )
-
-    _write_rows(sb, REDIRECT_TABLE, redirect_rows, batch_size=500)
-
-    for old_row_id, target_row_id in target_updates:
-        sb.table("gedcom_individuals").update({"superseded_by": target_row_id}).eq("id", old_row_id).execute()
-
-
-def _prune_old_versions(sb) -> dict[str, int]:
-    """Delete non-current rows from all entity tables to reclaim space.
-
-    Returns a dict mapping table name to number of rows pruned.
-    """
-    pruned: dict[str, int] = {}
-    for entity_type, cfg in ENTITY_CONFIG.items():
-        table = cfg["table"]
-        try:
-            resp = sb.table(table).delete().eq("is_current", False).execute()
-            count = len(resp.data) if resp.data else 0
-            pruned[table] = count
-            if count:
-                logger.info("Pruned %d old rows from %s", count, table)
-            else:
-                logger.info("No old rows to prune in %s", table)
-        except Exception as exc:
-            logger.warning("Failed to prune %s: %s", table, exc)
-            pruned[table] = 0
-    total = sum(pruned.values())
-    logger.info("Total pruned: %d rows across %d tables", total, len(pruned))
-    return pruned
-
-
-def import_versioned(
-    sb,
-    parsed,
-    source_file: str,
-    source_hash: str,
-    community_id: str = "rhodesli",
-    notes: str | None = None,
-    dry_run: bool = False,
-    skip_change_log: bool = False,
-    prune_old_versions: bool = False,
-) -> dict[str, Any]:
-    """Import a new GEDCOM version with full change tracking."""
-    existing = check_duplicate_hash(sb, source_hash, community_id) if sb else None
-    if existing:
-        logger.warning(
-            "This exact file was already imported as version %s on %s. Skipping.",
-            existing["version_number"],
-            existing["imported_at"],
-        )
-        return {
-            "skipped": True,
-            "reason": "duplicate_hash",
-            "existing_version": existing["version_number"],
-        }
-
-    version_number = get_next_version_number(sb, community_id) if sb else 1
-    baseline_mode = not _versions_exist(sb, community_id) if sb else True
-    bundle = build_snapshot_bundle(parsed, source_file=source_file)
-
-    current_maps = {}
-    missing_tables = []
-    bootstrap_supersede_rows = {}
-    for entity_type in ENTITY_CONFIG:
-        current_result = (
-            _load_current_entity_map(sb, entity_type, baseline_mode=baseline_mode)
-            if sb
-            else {"rows": {}, "missing_table": False}
-        )
-        current_maps[entity_type] = current_result["rows"]
-        if current_result["missing_table"]:
-            missing_tables.append(ENTITY_CONFIG[entity_type]["table"])
-        if sb and baseline_mode:
-            bootstrap_supersede_rows[entity_type] = _load_bootstrap_supersede_rows(sb, entity_type)
-        else:
-            bootstrap_supersede_rows[entity_type] = []
-
-    diff_by_entity = {}
-    for entity_type in ENTITY_CONFIG:
-        diff_by_entity[entity_type] = diff_entity_maps(
-            entity_type,
-            current_maps[entity_type],
-            _bundle_entity_map(bundle, entity_type),
-        )
-
-    redirects: list[dict[str, Any]] = []
-    redirect_table_exists = _redirect_table_exists(sb, community_id) if sb else False
-    if current_maps["individuals"]:
-        redirects = detect_individual_redirects(
-            diff_by_entity["individuals"]["removed"],
-            bundle.individuals,
-            old_map=current_maps["individuals"],
-        )
-
-    summary = _build_summary(bundle, diff_by_entity, baseline_mode=baseline_mode, redirects=redirects)
-    required_tables = _required_schema_tables(diff_by_entity, missing_tables)
-    if redirects and not redirect_table_exists:
-        required_tables = sorted(set(required_tables) | {REDIRECT_TABLE})
-    summary["schema_ready"] = not required_tables
-    summary["missing_tables"] = required_tables
-    summary["version_number"] = version_number
-
-    if dry_run:
-        return {"dry_run": True, **summary}
-
-    if required_tables:
-        raise RuntimeError(
-            "GEDCOM rich-schema tables are missing; apply the migration before import: " + ", ".join(required_tables)
-        )
-
-    # Round-trip through JSON to convert datetime objects to strings
-    summary_json = json.loads(json.dumps(summary, default=str))
-    version_result = (
-        sb.table("gedcom_versions")
-        .insert(
-            {
-                "version_number": version_number,
-                "community_id": community_id,
-                "source_file": source_file,
-                "source_hash": source_hash,
-                "individual_count": bundle.counts["individuals"],
-                "family_count": bundle.counts["families"],
-                "source_count": bundle.counts["sources"],
-                "media_count": bundle.counts["media_objects"],
-                "record_count": bundle.counts["records"],
-                "summary": summary_json,
-                "notes": notes,
-                "status": "applying",
-            }
-        )
-        .execute()
-    )
-    version_id = version_result.data[0]["id"]
-    logger.info("Created version %s (id: %s)", version_number, version_id)
-    try:
-        inserted_maps: dict[str, dict[str, dict[str, Any]]] = {}
-        current_swap_plans: list[dict[str, Any]] = []
-        for entity_type in ENTITY_CONFIG:
-            inserted_by_key = _apply_entity_diff(
-                sb,
-                entity_type,
-                diff_by_entity[entity_type],
-                baseline_mode=baseline_mode,
-                version_id=version_id,
-                new_map=_bundle_entity_map(bundle, entity_type),
-                bootstrap_supersede_rows=bootstrap_supersede_rows.get(entity_type, []),
-            )
-            inserted_maps[entity_type] = inserted_by_key
-            current_swap_plans.append(
-                _build_current_swap_plan(
-                    entity_type,
-                    diff_by_entity[entity_type],
-                    baseline_mode=baseline_mode,
-                    bootstrap_supersede_rows=bootstrap_supersede_rows.get(entity_type, []),
-                    inserted_by_key=inserted_by_key,
-                    version_id=version_id,
-                )
-            )
-
-        _write_redirect_rows(
-            sb,
-            version_id=version_id,
-            community_id=community_id,
-            redirects=redirects,
-            inserted_maps=inserted_maps,
-            current_maps=current_maps,
-        )
-
-        # Change log is non-critical — don't let it block import
-        if skip_change_log:
-            logger.info("Skipping change log (--skip-change-log)")
-        else:
-            try:
-                _write_change_log(
-                    sb,
-                    version_id,
-                    diff_by_entity,
-                    redirects,
-                    batch_size=500,
-                )
-            except Exception as cl_exc:
-                logger.warning("Change log write failed (non-fatal): %s", cl_exc)
-
-        _queue_enrichments(sb, version_id, diff_by_entity["individuals"])
-        _finalize_current_state(sb, current_swap_plans)
-    except Exception as exc:
-        failed_summary = {**summary, "status": "failed", "error": str(exc)}
-        try:
-            _set_version_status(
-                sb,
-                version_id,
-                status="failed",
-                summary=failed_summary,
-                error_message=f"FAILED: {exc}",
-            )
-        except Exception as status_exc:
-            logger.error("Failed to set version status: %s", status_exc)
-        raise
-
-    applied_summary = {**summary, "status": "applied"}
-    _set_version_status(sb, version_id, status="applied", summary=applied_summary)
-
-    if prune_old_versions:
-        _prune_old_versions(sb)
-
-    return {
-        "version_id": version_id,
-        "version_number": version_number,
-        **applied_summary,
-    }
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Import versioned GEDCOM into Supabase")
-    parser.add_argument("--file", required=True, help="Path to GEDCOM file")
-    parser.add_argument("--execute", action="store_true", help="Actually import (default: dry-run)")
-    parser.add_argument("--community", default="rhodesli", help="Community ID")
-    parser.add_argument("--notes", default=None, help="Notes for this version")
-    parser.add_argument(
-        "--skip-change-log",
-        action="store_true",
-        help="Skip writing change_log rows (saves 700K+ rows on large imports)",
-    )
-    parser.add_argument(
-        "--prune-old-versions",
-        action="store_true",
-        help="Delete non-current rows from entity tables after import",
-    )
-    parser.add_argument("--verbose", action="store_true")
-    args = parser.parse_args()
-
-    dry_run = not args.execute
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(levelname)s: %(message)s",
-    )
-
-    filepath = Path(args.file).expanduser()
-    if not filepath.exists():
-        logger.error("GEDCOM file not found: %s", filepath)
-        sys.exit(1)
-
-    source_hash = hash_file(filepath)
-    logger.info("File: %s (SHA256: %s...)", filepath.name, source_hash[:16])
-
-    logger.info("Parsing GEDCOM: %s", filepath.name)
-    from rhodesli_ml.importers.gedcom_parser import parse_gedcom
-
-    parsed = parse_gedcom(str(filepath))
-    logger.info(
-        "Parsed: %s individuals, %s families, %s sources, %s media",
-        parsed.individual_count,
-        parsed.family_count,
-        parsed.source_count,
-        parsed.media_count,
-    )
-
-    from dotenv import load_dotenv
-
-    load_dotenv()
-    sb = get_supabase_client()
-    logger.info("Connected to Supabase")
-
-    result = import_versioned(
-        sb,
-        parsed,
-        filepath.name,
-        source_hash,
-        community_id=args.community,
+    result = run_import(
+        file=args.file,
+        community=args.community,
         notes=args.notes,
-        dry_run=dry_run,
-        skip_change_log=args.skip_change_log,
-        prune_old_versions=args.prune_old_versions,
+        imported_by=args.imported_by,
+        execute=args.execute,
     )
-
-    if result.get("skipped"):
-        logger.info("Import skipped: %s", result["reason"])
-        return
-
-    logger.info("\n%s", json.dumps(result, indent=2, sort_keys=True, default=str))
+    print(json.dumps(result, indent=2, default=str))
+    return 0
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())
