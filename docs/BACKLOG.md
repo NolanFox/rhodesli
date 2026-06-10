@@ -12,6 +12,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ---
 
+## Session 164 Follow-ups (PRD-064 GEDCOM redesign)
+- **SESSION-164-VERIFY** (P1, user-gated): after the Pro upgrade lifts the 402 restriction, confirm REST 200 + `/health supabase: ok`, then browser-verify landing, People, a person page, the **relationships/family page** (GEDCOM-backed), GEDCOM admin version list, 404. Re-run a real GEDCOM upload via the admin route to exercise the v10 atomic import + "what's new" diff_summary end-to-end. Screenshots → docs/screenshots/session-164/.
+- **TEST-DEBT-130** (P3): `tests/test_supabase_data.py::TestMigrationIdempotency::test_upsert_is_idempotent` + `TestSaveRegistryDualWrite::test_save_registry_calls_supabase_sync` assert behavior of `identity_overrides`, removed in Session 130. Pre-existing stale tests (last edited Session 114). Update or remove.
+- **GEDCOM-SOURCES-MEDIA** (P3): sources/media_objects have no canonical current-state DB table (preserved losslessly in R2 snapshot + raw.ged.gz). If in-DB current-state is later wanted, add additive tables + importer upserts.
+- **R2-HISTORY-GC** (P3): a rolled-back atomic import leaves content-addressed orphan artifacts in R2 (harmless, dedup-reusable). Add a periodic GC that deletes artifact prefixes with no matching `applied` `gedcom_versions` row.
+
 ## Active Bugs
 
 ### Session 163 follow-ups (Supabase recovery)

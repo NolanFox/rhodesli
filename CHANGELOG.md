@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.84] — 2026-06-10 (Session 164: GEDCOM Storage Redesign SHIPPED — PRD-064 Option B-plus)
+
+Implemented PRD-064 end-to-end: replaced the bloat-prone multi-state GEDCOM mirror with current-state-only Postgres tables + lossless content-addressed R2 history + a single-transaction atomic importer. **DB 423 MB → 244 MB** (down from 1,309 MB pre-163), no data loss, production current-state preserved exactly.
+
+### Shipped
+- **Atomic single-transaction importer** (`scripts/import_gedcom_version.py` rewrite) — fixes the Session-163 bloat root cause (Lesson 199). Order: `pg_advisory_xact_lock` → idempotent dup-check → allocate version → load diff base from prior version's R2 snapshot (lossless) → diff → build+upload+**verify** R2 artifacts → apply current-table mutations → manifest → COMMIT. Any exception → full ROLLBACK. **Proven on real Postgres**: a forced mid-apply failure left ZERO rows (gate 2). `--skip-change-log` removed; idempotent re-import via partial unique `(community_id, source_hash) WHERE status='applied'`.
+- **R2 history artifact layer** (`rhodesli_ml/importers/gedcom_history.py`) — per applied version: `raw.ged.gz` + `snapshot.jsonl.gz` (ALL bundle types, lossless) + typed `diff.json.gz` (`{added,modified,removed}` with full before/after + hashes). Content-addressed; SHA-256 of compressed bytes stored in `gedcom_versions` and verified by re-download before COMMIT. Spec: `docs/architecture/GEDCOM_HISTORY.md` (cross-repo standard).
+- **Canonical current-state schema** — `gedcom_individuals`/`gedcom_families` (composite community-scoped PKs, one row per entity, NO duplicated payload blob) + `gedcom_relationships` slimmed (dropped `is_current`/`version_id`/`superseded_by`). Latest reads need no version filter.
+- **Reconstruct + conservative unwind** (`scripts/gedcom_unwind.py`) — compensating-version model (latest applied by default; three-way hash + referential-integrity check; no reverse-replay, no `--force`).
+- **"What's new" capability** — `gedcom_versions.diff_summary` caches counts + changed entity IDs (payloads stay in R2) for an instant version-over-version overview (rhodesli + fox-genealogy / rhodes-wiki).
+- **Migration** (`scripts/session164_migrate_to_current_state.py`) — snapshot-first to R2 (verified) → drop v2 → create canonical → populate from production current-state (latest-row-per-`gedcom_id` = exactly what the old dual-read served: 21,998 indiv + 6,741 fam + 140,796 rels) → backfill v9 R2 artifacts → **verify OVERALL PASS** (complete id→hash map == R2 extract; DB ≤ 300 MB). Collapsed `app/gedcom_dual_read.py` + repointed all readers + the admin upload route to the canonical tables.
+
+### Audits (two independent Codex passes, gpt-5.5/xhigh)
+- **Plan audit**: 6 P0 + 8 P1 (STRONG) — caught lock-ordering, migration source-of-truth (live data confirmed v2 `last_seen_version` polluted by failed imports; archived GEDCOM f783 ≠ production v9 f778), storage headroom, cross-entity unwind. All folded into the plan.
+- **Impl audit**: verdict **BLOCK** — 5 P0 + 5 P1 incl. an executable unwind `KeyError` and a non-lossless diff base. **ALL fixed**, focused **re-audit → SAFE TO RUN**. Auditing the migration BEFORE running it prevented shipping a broken history layer.
+
+### Harness
+- AD-247–250 (storage model, atomic importer, artifact format + hash contract, unwind). Lessons 202 (audit migrations before running them), 203 (archived GEDCOM ≠ imported bytes), 204 (psycopg2 named-cursor `.description` None until first fetch). `docs/architecture/GEDCOM_HISTORY.md` (252 lines).
+
+### Status
+- **Site remains DOWN pending the user's Pro upgrade** (Phase 9 — the 402 Fair-Use restriction lifts only on upgrade or ~25 Jun cycle reset). Code is deployed-ready (readers on canonical tables). After upgrade: confirm REST 200 + `/health supabase: ok` + browser-verify. Tests: 1014 targeted pass + 61 new GEDCOM tests; 2 pre-existing stale `identity_overrides` failures (removed Session 130, unrelated).
+
 ## [v0.99.83] — 2026-06-09 (Session 163: Supabase Free-tier recovery + GEDCOM storage redesign DESIGN)
 
 Unplanned emergency recovery. Production was down (0 people/matches). Root cause: the Supabase plan had reverted **Pro → Free**, and the DB (1,309 MB) far exceeded Free's **500 MB DB-size limit** — a DIFFERENT limit from egress (OD-012) and Disk-IO (OD-014). The project auto-paused (NXDOMAIN) then restricted with `402 exceed_db_size_quota`.
