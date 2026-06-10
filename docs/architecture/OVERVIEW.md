@@ -109,3 +109,9 @@ Railway hobby plan includes 512 MB RAM. Well within limits at current and projec
 | `data/embeddings.npy` | Face embeddings (NumPy array of dicts) |
 | `Dockerfile` | Production container build |
 | `scripts/init_railway_volume.py` | First-run data seeding for Railway |
+
+## Related Architecture Docs
+
+- [GEDCOM_HISTORY.md](GEDCOM_HISTORY.md) — GEDCOM storage model: current-state in
+  Postgres + lossless history artifacts in R2 + atomic single-transaction importer
+  (PRD-064 Option B-plus, shipped Session 164).

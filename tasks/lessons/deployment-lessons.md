@@ -185,3 +185,12 @@ See also: `docs/DEPLOYMENT_GUIDE.md`, `docs/ops/OPS_DECISIONS.md`
   3. **Memory ceiling sanity check**: a chunk should fit in <100 MB. For ~22K rows of GEDCOM individuals (~5KB/row including JSONB), one chunk ≈ 110 MB — borderline but acceptable. Anything that would aggregate the full table (e.g., ~196K × 5KB ≈ 1 GB) is the failure mode this lesson exists to prevent.
   4. **Time-bound the run**: any single chunk that takes >5 min is a smell — abort, investigate (often: pooler degraded, or accidental full-table scan).
   5. **Related lessons**: 173 (REST `.range()` default page is 1000), 175 (use pooler not direct host), 178 (subagent token-budget hazard for multi-phase migrations).
+
+### Lesson 203: Archived GEDCOM/source files may not byte-match the version that was actually imported
+- **Mistake (Session 164):** The migration intended to backfill v9's `raw.ged.gz` from the closest-available archived export, but the archived export (`f783`) did NOT byte-match the production v9 source (`f778`) — the archived file had 41 extra individuals. The exact bytes that were actually imported as v9 were never archived. Migrating history from a re-parsed archive (instead of from the live current-state) would have written a *different* tree as "v9's history."
+- **Rule:** Migrate history from the PRODUCTION current-state, not from a re-parsed archive — unless the archive's source hash matches the recorded import hash exactly. Always record `source_hash` at import time AND archive the EXACT imported bytes (`raw.ged.gz`) in the same atomic import transaction.
+- **Prevention:**
+  1. At import, persist the source GEDCOM bytes verbatim to R2 and store its `source_hash` in `gedcom_versions` — never reconstruct "the source" later from a separate export.
+  2. Before using any archived file as a stand-in, compare its hash to the recorded `source_hash`; if they differ, do NOT treat it as that version. Record the substitution explicitly in `gedcom_versions.notes` (Session 164 noted the f783≠f778 substitution there).
+  3. Backfilling current-state from the live DB is lossless for the serving path; backfilling from a re-parsed archive is not.
+- **See also:** Lesson 199 (atomic importer), AD-247/AD-249 (storage model + raw artifact), `docs/architecture/GEDCOM_HISTORY.md` §2.1.

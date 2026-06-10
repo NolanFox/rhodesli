@@ -228,3 +228,18 @@
   2. Cutover prompts should distinguish "downstream of cutover" failures vs "pre-existing failures the cutover addresses" in their abort criteria.
   3. The 158e prompt did this correctly: "production already 502" was used as the *reason to PROCEED*, and the wait-period 5xx rule was implicitly relaxed because the baseline was 502, not 200.
 - **See also:** Lesson 185 (the original 158d cascade that *was* worth rolling back), Lesson 187 (the pre-existing failure 158e was designed to fix).
+
+## Lesson 202: Audit the migration/import script with an independent model BEFORE running it against production
+- **Mistake:** Session 164 — the GEDCOM storage-redesign importer + migration was about to be run live against the production Supabase DB. An independent Codex audit (gpt-5.5/xhigh) on the implementation returned verdict **BLOCK** with 5 P0s, including (a) the diff base was loaded non-losslessly (would have silently dropped fields from the recorded history) and (b) an executable `KeyError` in the unwind path. Running first would have shipped a broken, lossy history layer to production — exactly the data-integrity category these audits exist to catch.
+- **Rule:** For any script that mutates production data (migrations, importers, cutovers, repairs), run an independent-model audit of the actual implementation BEFORE the first production run — not after. Treat a BLOCK verdict as a hard gate: fix all P0/P1, then re-audit until SAFE TO RUN.
+- **Prevention:**
+  1. Two-audit pattern: a PLAN audit (catches design flaws early) AND an IMPL audit (catches runtime/behavioral bugs in the real code). Session 164 ran both; the impl audit is the one that caught the lossy diff base + the KeyError.
+  2. Save both audits with provenance (`docs/session_context/session-164-codex-audit-plan.md`, `...-impl.md`) per `.claude/rules/ai-tool-audit.md`.
+  3. Never run a production migration on a BLOCK or un-re-audited script.
+- **See also:** `.claude/rules/session-defaults.md` Dual-Audit Protocol; AD-248; Lesson 199.
+
+## Lesson 204: psycopg2 named (server-side) cursors have `.description = None` until the first fetch
+- **Mistake:** Session 164 — reading column names from a named/server-side psycopg2 cursor immediately after `execute()` returned `None` for `cursor.description`, because a server-side cursor doesn't populate its row description until rows are actually pulled from the server.
+- **Rule:** For named (server-side) cursors, read `cursor.description` (column names) AFTER the first `fetchmany()`/`fetchone()`, not after `execute()`. (Client-side cursors populate `.description` right after `execute()`; named cursors do not.)
+- **Prevention:** When building column-name maps for chunked server-side reads, fetch the first batch, then derive names from `cursor.description`, then process that batch and continue. Add a guard/assert that `description is not None` before indexing into it.
+- **See also:** Lesson 183 (chunked-write pattern for large Supabase reads).

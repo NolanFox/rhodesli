@@ -1,10 +1,41 @@
 # PRD-064 — GEDCOM History Storage Redesign
 
-**Session:** 163 · **Date:** 2026-06-09 · **Status:** DESIGN (pre-implementation)
+**Session:** 163 (design) / 164 (implementation) · **Status:** SHIPPED (Session 164, 2026-06-10)
 **Predecessor:** PRD-063 (efficient mirror redesign — only half-completed)
 **Driver:** Session 163 Supabase Free-tier recovery. User requirement: *"always record
 the changes, structured so the most recent version is easy to retrieve, but also make
 sure we can always unwind any change / track when changes are made."*
+
+---
+
+## Outcome (Session 164, 2026-06-10) — SHIPPED
+
+Option B-plus implemented end-to-end and the live migration succeeded:
+
+- **DB 423 MB → 244 MB** — canonical current-state tables (`gedcom_individuals`,
+  `gedcom_families`, `gedcom_relationships`), one row per entity, no version
+  filtering on read. Migration preserved production current-state exactly
+  (latest-row-per-gedcom_id = what the old dual_read served).
+- **Atomic single-transaction importer** (`scripts/import_gedcom_version.py`):
+  advisory lock → dup-check → allocate version → diff vs previous R2 snapshot →
+  build+upload+verify R2 artifacts → apply current-table mutations → manifest →
+  COMMIT; any failure → full ROLLBACK (ZERO rows; proven on real Postgres).
+  Fixes the Lesson 199 bloat root cause.
+- **Lossless R2 history** (`rhodesli_ml/importers/gedcom_history.py`): per applied
+  version — `raw.ged.gz` + `snapshot.jsonl.gz` + typed `diff.json.gz`; THE hash =
+  `canonical_payload_hash`; artifact SHA-256 verified before COMMIT.
+- **Reconstruct + conservative compensating-version unwind**
+  (`scripts/gedcom_unwind.py`): three-way hash + ref-integrity checks, no
+  `--force`, no reverse-replay.
+- **`diff_summary`** cached in `gedcom_versions` powers a future "what's new in
+  this version" view.
+- **Two independent Codex audits** (gpt-5.5/xhigh): plan audit (6 P0 + 8 P1) and
+  impl audit (5 P0 + 5 P1, verdict BLOCK → all fixed → re-audit SAFE TO RUN).
+- v9 backfilled with R2 artifacts; v1–v8 marked `artifact_format='legacy'`.
+- **Spec:** `docs/architecture/GEDCOM_HISTORY.md`. **ADs:** AD-247 through AD-250.
+
+**Only remaining (gated, user action):** Phase 9 — Supabase Pro upgrade +
+production browser verify. The data layer is solid; this is the user-paid step.
 
 ---
 
