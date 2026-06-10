@@ -14,6 +14,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ## Active Bugs
 
+### Session 163 follow-ups (Supabase recovery)
+- **OPS-002** (P1, OPEN): **Supabase health/size monitor + keep-alive.** A silent free-tier pause/over-quota took the site down with no alert. Add a scheduled check (cron/routine) of `/health` `supabase` field + Management-API project status (`status != ACTIVE_HEALTHY` or `supabase != ok` → alert), plus an optional lightweight keep-alive query to prevent inactivity auto-pause. Keep DB comfortably < 500 MB (target ≤ 300 MB post-Session-164), not at 92%. Source: OD-015, Lesson 200.
+- **GEDCOM-TEST-FIX** (P1, OPEN → Session 164): `tests/test_gedcom_versioning.py:649` asserts inserted rows SURVIVE a failed import — this institutionalized the bloat bug. Invert it to assert a failed import leaves ZERO rows. Source: Lesson 199, Codex audit.
+
 ### Session 161 post-execution audit follow-ups
 - **RHODESLI-INBOX-008** (P2, OPEN): `mark_approved` race-loser leaves filesystem in `pending/` while Supabase is at `approved` (`app/rhodes_inbox.py:344-347`). Single-admin local-dev MVP — drift is documented design (AD-RID-6) and the reconcile script handles it. Fix when a 2nd admin scenario lands. Source: `docs/session_context/session-161-post-execution-audit.md` P2-1.
 - **RHODESLI-INBOX-009** (P2, OPEN, low priority): `mark_approved` retry-after-upsert path silently skips filesystem move if `src.exists()` is False. Edge case requires manual filesystem mutation between Supabase write and filesystem move; drift detector covers the operational failure mode. Fix: add an `assertion` in `test_mark_approved_creates_row_when_missing` that the filesystem was moved, OR raise if both src and dst missing. Source: `docs/session_context/session-161-post-execution-audit.md` P2-3.

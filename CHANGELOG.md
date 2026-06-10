@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.83] — 2026-06-09 (Session 163: Supabase Free-tier recovery + GEDCOM storage redesign DESIGN)
+
+Unplanned emergency recovery. Production was down (0 people/matches). Root cause: the Supabase plan had reverted **Pro → Free**, and the DB (1,309 MB) far exceeded Free's **500 MB DB-size limit** — a DIFFERENT limit from egress (OD-012) and Disk-IO (OD-014). The project auto-paused (NXDOMAIN) then restricted with `402 exceed_db_size_quota`.
+
+### Recovered (no data loss)
+- Restored the paused project via Supabase Management API.
+- **DB 1,309 MB → 423 MB** (`scripts/session163_gedcom_cleanup.py`): dropped vestigial `gedcom_events` + `gedcom_records` (545 MB, 0 app serving refs — events live in `individuals_v2.events_json`) and deleted 731,942 superseded `gedcom_relationships` rows; VACUUM FULL. **Fresh R2 snapshot of all 3 full tables first** (`gedcom-cleanup-snapshots/2026-06-08-session-163/`, sha256 manifest) → reversible. App-facing tables verified intact (identities 4112, photos 1127, photo_faces 3338).
+- Root-caused the bloat: the GEDCOM importer is **non-atomic** (per-batch commits); 7 of 9 "versions" were failed retries leaving duplicate rows (Lesson 199).
+
+### Designed (PRD-064 — implementation is Session 164)
+- PRD-064 GEDCOM storage redesign + **Codex audit** (gpt-5.5/xhigh) → **Option B-plus**: current-state-only Postgres tables + tiny per-version manifest + immutable lossless history artifacts in R2 (raw + canonical snapshot + entity-level typed `{before,after,hashes}` diff) + single-transaction atomic importer + conflict-checked compensating unwind + a "what's new version-over-version" capability (cross-repo reusable). Codex caught 3 P0s (non-atomic import; field-log can't reconstruct adds/removes; optional audit).
+- Session 164 end-to-end implementation prompt + context written.
+
+### Harness
+- Lessons 199 (non-atomic imports = bloat factory), 200 (Supabase 3 separate limits; Fair-Use lifts only on upgrade or cycle reset), 201 (version rows can be failed-import noise). OD-015 (tier strategy + recovery + monitoring; revises OD-014). Codex model pin refreshed (gpt-5.5 still latest, 2026-06-09). Memory `project_supabase_egress` corrected (it had conflated egress with DB size).
+
+### Status
+- **Site remains down pending a Pro upgrade** — the Fair-Use restriction lifts only via plan upgrade (immediate) or the ~25 Jun billing-cycle reset. User will upgrade after Session 164 (data layer solid). No production code shipped this session (data cleanup + docs only).
+
 ## [v0.99.82] — 2026-05-22 (Session 162: Supabase Disk IO Budget remediation)
 
 Unplanned remediation triggered by Supabase email 2026-05-21 ("Your project rhodesli is running out of Disk IO Budget"). Root cause: the `current_gedcom_relationships` view filtered `WHERE is_current = true OR is_current IS NULL`, defeating the partial index `idx_gedcom_relationships_current WHERE (is_current = true)`. 347,914 historical calls seq-scanned 872,738 rows each — 73.9% of all DB disk reads.
