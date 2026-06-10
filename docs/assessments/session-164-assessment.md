@@ -67,6 +67,16 @@
 2. Re-run the atomic importer end-to-end with a real GEDCOM upload (admin route) once site is live —
    confirms v10 import path + "what's new" diff_summary on a real change set.
 
+## Session-Review Auto-Fix Summary (independent verification)
+Independent review agent verified 21 claims against the LIVE DB + R2 + code:
+- gedcom_individuals 21,998 (count==distinct), families 6,741, relationships 140,796 (NOT NULL;
+  versioning cols gone); v2 tables `to_regclass`=NULL; **DB 243 MB** (≤300); v9 artifact metadata set.
+- R2 v9 artifacts + session-164 snapshot manifest present. Importer R2 diff-base + unwind KeyError-fixed.
+- No remaining `_v2`/`current_gedcom_individuals` refs anywhere in `app/` (0 matches) → app won't 500 on restart.
+- 61 PRD-064 tests pass; fast gate 179 pass. GEDCOM_HISTORY.md 252 lines; AD-247–250; PRD SHIPPED; lessons 202–204.
+- **Issues found: 0 / Auto-fixed: 0 / Deferred: 0.** No overclaims or superficial work detected.
+- Novel-Discovery Audit: N/A (infrastructure session, no genealogy facts). User-Feedback Absorb: N/A.
+
 ## AI Tool Usage
 - **Tool**: Codex CLI v0.139.0 (gpt-5.5, xhigh) — `codex exec "<prompt>" </dev/null`.
 - **Agent type**: Independent (fresh context) ×3 runs (plan audit, impl audit, migration re-audit).
