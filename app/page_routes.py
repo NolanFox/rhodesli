@@ -12300,7 +12300,7 @@ def public_photo_page(
                             "text-sm sm:text-xs rounded-lg px-3 py-2 inline-flex items-center justify-center transition-colors "
                             + (
                                 "bg-rose-500/15 text-rose-100 hover:bg-rose-500/25 border border-rose-500/25"
-                                if context_identity_conflict
+                                if banner_alarm
                                 else "bg-amber-500/15 text-amber-100 hover:bg-amber-500/25 border border-amber-500/25"
                             )
                         ),
@@ -12312,7 +12312,7 @@ def public_photo_page(
                         "max-w-[900px] mx-auto flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl px-4 py-3 "
                         + (
                             "bg-rose-950/40 border border-rose-500/20"
-                            if (context_identity_conflict or context_identity_missing)
+                            if banner_alarm
                             else "bg-amber-950/30 border border-amber-500/20"
                         )
                     ),

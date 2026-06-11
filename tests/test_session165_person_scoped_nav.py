@@ -337,3 +337,68 @@ class TestPublicPhotoPageIdentityScoping:
         html = to_xml(public_photo_page("pB", community_slug="fox-family"))
         # Collection nav active (4 photos in the Charlie Fox collection).
         assert re.search(r"Photo \d+ of 4", html)
+
+
+# --------------------------------------------------------------------------
+# Phase 3 — public-appropriate banner: admin alarm vs anonymous gentle copy.
+# A raw deep link to an off-person photo (pZ — not in Harry's set) lands in the
+# context_identity_missing state. Admins see the rose "Needs review" alarm;
+# anonymous viewers get amber styling + gentle wording, never admin language.
+# --------------------------------------------------------------------------
+class TestPublicPhotoPageBannerMessaging:
+    _BANNER_PATCHES = (
+        patch("app.main.get_photo_id_for_face"),
+        patch("app.main.get_photo_metadata"),
+        patch("app.main.get_photo_dimensions", return_value=(800, 600)),
+        patch("app.main.load_registry"),
+        patch("app.main._photo_cache", _PCACHE),
+        patch("app.main._public_nav_links", return_value=[]),
+        patch("app.main._public_page_nav", return_value=()),
+        patch("app.main._admin_bar", return_value=()),
+        patch("app.main._build_upload_provenance_line", return_value=None),
+        patch("app.main._get_date_badge", return_value=("", "low", "")),
+        patch("app.main._build_ai_analysis_section", return_value=None),
+        patch("app.main._build_face_alignment_section", return_value=None),
+        patch("app.main._build_photo_date_badge", return_value=None),
+    )
+
+    def _render(self, is_admin):
+        """Render an off-person deep link (pZ) under the given admin flag."""
+        from contextlib import ExitStack
+        from app.main import public_photo_page, to_xml
+
+        with ExitStack() as stack:
+            mocks = [stack.enter_context(p) for p in self._BANNER_PATCHES]
+            mock_face_photo = mocks[0]
+            mock_meta = mocks[1]
+            mock_reg = mocks[3]
+            mock_face_photo.side_effect = lambda fid: {"f1": "pA", "f2": "pB", "f3": "pC"}.get(fid)
+            mock_meta.side_effect = lambda pid: _PCACHE.get(pid)
+            inst = MagicMock()
+            inst.get_identity.return_value = {
+                "identity_id": "id1", "name": "Harry Fox", "state": "CONFIRMED",
+                "anchor_ids": ["f1", "f2", "f3"], "candidate_ids": [],
+            }
+            mock_reg.return_value = inst
+            return to_xml(
+                public_photo_page(
+                    "pZ", identity_id="id1", sort_by="date_asc",
+                    is_admin=is_admin, community_slug="fox-family",
+                )
+            )
+
+    def test_admin_sees_review_alarm(self):
+        html = self._render(is_admin=True)
+        assert "Needs review" in html
+        assert "Review before trusting this link." in html
+        assert "bg-rose-950/40" in html  # alarm container
+
+    def test_anonymous_sees_gentle_amber(self):
+        html = self._render(is_admin=False)
+        # No admin review language for the public.
+        assert "Needs review" not in html
+        assert "Review before trusting this link." not in html
+        # Gentle public wording + amber (not rose) styling.
+        assert "haven't tagged Harry Fox" in html
+        assert "bg-amber-950/30" in html
+        assert "bg-rose-950/40" not in html
