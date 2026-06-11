@@ -21,30 +21,47 @@ navigation paths).
 3. Click right → currently lands on `/c/fox-family/photo/24c06d3f876d34a5?identity_id=…` where Harry is
    NOT tagged ("NEEDS REVIEW" banner). **After the fix:** right/left cycle ONLY Harry's tagged photos.
 
-## Phase 0 — Orient
-- Read the context file + this prompt. `echo 165 > .claude/current_session.txt`; `make test-fast` baseline.
-- Read `app/page_routes.py` `_ordered_identity_photo_ids` (~3513), `photo_view_content` scoped-nav block
-  (~3611-3620) and the SECOND prev/next block (~11390); the wrappers `app/photo_routes.py:356` (`/photo/{id}`)
-  and `:393` (`/photo/{id}/partial`); and `_main_mod.public_photo_page` / `photo_view_content` in `app/main.py`.
-- Confirm the root cause: the scoped block is guarded by `not prev_id and not next_id`, so collection-based
-  prev/next passed by the entry point / arrows bypass it (context §"Root cause"). Verify by reading, not assuming.
+## ⚠️ Codex prompt-audit corrections (MUST honor — see session-165-codex-audit.md)
+The naive "make identity_id authoritative, override incoming prev/next" approach is WRONG — it breaks:
+- the regression test **`test_explicit_nav_overrides_identity`** (explicit prev/next are SUPPOSED to win);
+- the **compare modal** flow (`from_compare=1` passes explicit prev/next);
+- **seq-mode**; and **three direct callers of `photo_view_content` in `app/identity_routes.py`**.
+Also: **FB-004 was partially fixed before** in commit **`c2d7f787`** ("Lightbox: prioritize data-nav-url
+(identity-scoped) over photoNavTo (global grid) in click delegation") — so the real fix surface includes
+**client-side JS click delegation**, not just server prev/next. PRESERVE "explicit nav wins" generally; FIX
+the identity-context flow so it EMITS identity-scoped neighbors (server `data-nav-url` + arrow hrefs) and the
+client picks them — rather than overriding the explicit-nav contract.
 
-## Phase 1 — Fix person-scoped prev/next (the core bug) — write tests FIRST
-- When `identity_id` is present, `_ordered_identity_photo_ids(registry, identity_id, sort_by)` is
-  **authoritative**: ALWAYS recompute prev/next from it and OVERRIDE any incoming collection
-  prev_id/next_id. Remove/restructure the `not prev_id and not next_id` bypass for the identity case.
-- "X of Y" = position within the person's set. **Clamp at ends** (disable arrow at first/last; do NOT
-  wrap into the collection). When NO `identity_id`, keep existing collection navigation unchanged (regression).
-- Every prev/next href (full page + HTMX partial) must carry `identity_id` + `sort_by` + the freshly
-  identity-scoped neighbor IDs, so repeated arrow clicks stay scoped.
-- Unify the two prev/next computations (the ~3613 block and the ~11390 block) onto `_ordered_identity_photo_ids`
-  so full-page and partial agree. Confirm `_ordered_identity_photo_ids` returns exactly the person-gallery
-  set (the photos the person "Photos" tab shows — confirm a58504ab + Harry's other photos are all present;
-  decide + document confirmed/anchor-only vs including candidates).
-- Tests (`tests/`): (a) with identity_id, prev/next come only from the identity's ordered set; (b) incoming
-  collection prev/next are overridden when identity_id present; (c) ends clamp (no wrap); (d) href carries
-  identity_id+sort_by; (e) partial route scopes identically to full page; (f) regression: no identity_id →
-  collection nav unchanged. Mock registry/photo data; no live Supabase. `make test-fast` green.
+## Phase 0 — Orient (read, don't assume)
+- Read the context + this prompt. `echo 165 > .claude/current_session.txt`; `make test-fast` baseline.
+- Read: `app/page_routes.py` `_ordered_identity_photo_ids` (~3513), `photo_view_content` scoped-nav block
+  (~3611-3620) + the SECOND prev/next block (~11390); wrappers `app/photo_routes.py:356,393`;
+  `_main_mod.public_photo_page`/`photo_view_content` in `app/main.py`; the **3 `app/identity_routes.py`
+  callers** of `photo_view_content`; the **client-side lightbox click delegation** (`data-nav-url` vs
+  `photoNavTo` — grep both) and `c2d7f787`; and `tests/…test_explicit_nav_overrides_identity`.
+- Confirm the real defect: in the shared-person flow, the arrows resolve to the GLOBAL grid nav
+  (`photoNavTo`) / collection neighbors instead of the identity-scoped `data-nav-url`. Pin exactly WHERE the
+  collection neighbors are seeded into the identity flow (entry "Photos" link, grid, or client delegation).
+
+## Phase 1 — Fix person-scoped prev/next (surgical) — write tests FIRST
+- In the **identity-context flow** (page URL carries `identity_id`): the entry point + every arrow href
+  (full page + HTMX partial) MUST emit prev/next from `_ordered_identity_photo_ids(registry, identity_id,
+  sort_by)` and carry `identity_id`+`sort_by`. Repair the **client-side click delegation** so identity-scoped
+  `data-nav-url` wins over the global `photoNavTo` for these arrows (per `c2d7f787`'s approach).
+- **Do NOT globally override explicit prev/next.** Keep `test_explicit_nav_overrides_identity` GREEN and keep
+  compare-modal (`from_compare`), seq-mode, and the 3 identity_routes callers working unchanged. The
+  distinction: collection neighbors must not LEAK into the identity flow — but legitimate explicit nav
+  (compare/seq) still wins where it's intended.
+- "X of Y" = position within the person's set. **Clamp at ends** (disable at first/last; no wrap into the
+  collection). NO `identity_id` → collection navigation unchanged.
+- Reconcile the ~3613 and ~11390 blocks onto `_ordered_identity_photo_ids` without regressing their callers.
+  Verify `_ordered_identity_photo_ids` membership includes the repro photos (a58504ab + Harry's others);
+  document confirmed/anchor-only vs candidates.
+- Tests (`tests/`): (a) identity flow → prev/next only from the identity set (server emits identity-scoped
+  data-nav-url/hrefs); (b) ends clamp; (c) hrefs carry identity_id+sort_by; (d) partial == full-page scoping;
+  (e) **`test_explicit_nav_overrides_identity` still passes**; (f) compare-modal + seq nav unaffected;
+  (g) regression: no identity_id → collection nav unchanged. Mock registry/photo data; no live Supabase.
+  If the delegation is JS, add a DOM/string-level assertion that the identity arrows reference the scoped URL.
 
 ## Phase 2 — Dedicated shareable person-photo gallery (mini-PRD first)
 - Write a short PRD `docs/prds/065_person_photo_gallery.md` (problem, user flow, acceptance criteria,
@@ -77,6 +94,8 @@ navigation paths).
 - [ ] With `identity_id`, photo prev/next cycle ONLY that person's photos (full page + HTMX partial); ends clamp.
 - [ ] Incoming collection prev/next are overridden when identity_id is present; hrefs carry identity_id+sort_by.
 - [ ] No `identity_id` → collection navigation unchanged (regression test passes).
+- [ ] `test_explicit_nav_overrides_identity` still GREEN; compare-modal (`from_compare`), seq-mode, and the
+      3 `identity_routes.py` callers of `photo_view_content` all still work (explicit-nav contract preserved).
 - [ ] Dedicated shareable `/c/<community>/person/{id}/photos` gallery exists; Share button points to it.
 - [ ] Anonymous viewers never see admin "NEEDS REVIEW" language; admins still do.
 - [ ] Exact Harry Fox repro verified in production browser (READ-ONLY) + screenshots.
