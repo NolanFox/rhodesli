@@ -489,12 +489,14 @@ def public_person_page(
                             cls="w-full aspect-square object-cover face-crop-enter",
                             onerror="this.style.display='none'",
                         ),
+                        # Admin-only review language — never shown to the public on
+                        # the shareable /person/{id}/photos gallery (Codex P2, Session 165).
                         Span(
                             "Needs review",
                             cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
                             data_testid="person-gallery-conflict",
                         )
-                        if context_conflict
+                        if (context_conflict and is_admin)
                         else None,
                         Div(
                             P(source_label, cls="text-[10px] text-white/90 text-center truncate w-full leading-snug")
@@ -538,12 +540,14 @@ def public_person_page(
                             cls="w-full h-auto rounded-lg shadow-sm",
                             loading="lazy",
                         ),
+                        # Admin-only review language — suppressed for the public on
+                        # the shareable /person/{id}/photos gallery (Codex P2, Session 165).
                         Span(
                             "Needs review",
                             cls="absolute top-2 left-2 bg-rose-500/85 text-white text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm",
                             data_testid="person-gallery-conflict",
                         )
-                        if context_conflict
+                        if (context_conflict and is_admin)
                         else None,
                         cls="relative overflow-hidden rounded-lg",
                     ),
@@ -551,7 +555,7 @@ def public_person_page(
                         "Conflicting face assignment",
                         cls="text-[10px] text-rose-300 mt-2 text-center leading-snug",
                     )
-                    if context_conflict
+                    if (context_conflict and is_admin)
                     else None,
                     P(collection_label, cls="text-sm italic text-slate-400 mt-2 text-center leading-snug")
                     if collection_label

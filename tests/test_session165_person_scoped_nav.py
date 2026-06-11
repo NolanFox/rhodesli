@@ -402,3 +402,92 @@ class TestPublicPhotoPageBannerMessaging:
         assert "haven't tagged Harry Fox" in html
         assert "bg-amber-950/30" in html
         assert "bg-rose-950/40" not in html
+
+    def test_off_person_deep_link_does_not_leak_collection_nav(self):
+        """Codex P1 regression: a raw/stale deep link to an off-person photo
+        (pZ) with identity_id present must NOT fall back to whole-collection
+        navigation. The collection has 4 photos — the off-person page must not
+        render a 'Photo N of 4' counter, and pZ must have no arrow neighbors."""
+        import re
+
+        html = self._render(is_admin=False)
+        assert "Photo 4 of 4" not in html  # no collection counter
+        assert not re.search(r"Photo \d+ of 4", html)
+        # No identity-scoped arrow targets either (pZ is not in Harry's set).
+        assert not re.findall(r"/photo/p[ABC]\?identity_id=id1", html)
+
+
+# --------------------------------------------------------------------------
+# Phase 1 boundary — full-page first/last clamp + XSS hardening of the inline
+# keyboard/touch nav scripts (Codex P1/P3, Session 165).
+# --------------------------------------------------------------------------
+class TestPublicPhotoPageClampAndXss:
+    _PATCHES = (
+        patch("app.main.get_photo_id_for_face"),
+        patch("app.main.get_photo_metadata"),
+        patch("app.main.get_photo_dimensions", return_value=(800, 600)),
+        patch("app.main.load_registry"),
+        patch("app.main._photo_cache", _PCACHE),
+        patch("app.main._public_nav_links", return_value=[]),
+        patch("app.main._public_page_nav", return_value=()),
+        patch("app.main._admin_bar", return_value=()),
+        patch("app.main._build_upload_provenance_line", return_value=None),
+        patch("app.main._get_date_badge", return_value=("", "low", "")),
+        patch("app.main._build_ai_analysis_section", return_value=None),
+        patch("app.main._build_face_alignment_section", return_value=None),
+        patch("app.main._build_photo_date_badge", return_value=None),
+    )
+
+    def _render(self, photo_id, identity_id="id1"):
+        from contextlib import ExitStack
+        from app.main import public_photo_page, to_xml
+
+        with ExitStack() as stack:
+            mocks = [stack.enter_context(p) for p in self._PATCHES]
+            mocks[0].side_effect = lambda fid: {"f1": "pA", "f2": "pB", "f3": "pC"}.get(fid)
+            mocks[1].side_effect = lambda pid: _PCACHE.get(pid)
+            inst = MagicMock()
+            inst.get_identity.return_value = {
+                "identity_id": identity_id, "name": "Harry Fox", "state": "CONFIRMED",
+                "anchor_ids": ["f1", "f2", "f3"], "candidate_ids": [],
+            }
+            mocks[3].return_value = inst
+            return to_xml(
+                public_photo_page(photo_id, identity_id=identity_id, sort_by="date_asc",
+                                  community_slug="fox-family")
+            )
+
+    def test_first_photo_clamps_no_prev(self):
+        import re
+        html = self._render("pA")
+        assert "Photo 1 of 3" in html
+        # pA is first → next is pB, but there is no prev (no pC/pB-as-prev wrap).
+        targets = re.findall(r"/photo/(p[ABC])\?identity_id=id1", html)
+        assert "pB" in targets  # next exists
+        # No wrap: the last photo (pC) must never be reachable as a neighbor of pA.
+        assert "pC" not in targets
+
+    def test_last_photo_clamps_no_next(self):
+        import re
+        html = self._render("pC")
+        assert "Photo 3 of 3" in html
+        targets = re.findall(r"/photo/(p[ABC])\?identity_id=id1", html)
+        assert "pB" in targets  # prev exists
+        assert "pA" not in targets  # no wrap to first
+
+    def test_keyboard_nav_script_escapes_identity_id(self):
+        """Codex P1: identity_id must be url/JSON-escaped inside the inline nav
+        <script> blocks — never break out of the JS string. A quote-bearing
+        identity that still resolves in-set must not yield an executable breakout
+        in any <script> tag (href attributes are single-quoted and inert)."""
+        import re
+        html = self._render("pB", identity_id="id1\");alert(1)//")
+        scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, re.DOTALL)
+        joined = "\n".join(scripts)
+        # The breakout sequence must not appear executable in any script block.
+        assert ");alert(1)//" not in joined
+        assert "alert(1)" not in joined
+        # The nav scripts serialize URLs via JSON string vars (not raw interpolation).
+        assert "var prevUrl =" in joined and "nextUrl =" in joined
+        # identity_id is url-encoded in the emitted nav URLs (quote/paren escaped).
+        assert "%22" in joined and "%29" in joined

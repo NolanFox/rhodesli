@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path as _Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fasthtml.common import *
 from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
@@ -3535,10 +3535,17 @@ def _ordered_identity_photo_ids(registry, identity_id: str, sort_by: str = "date
     # is the authoritative resolver; get_photos_for_faces returns durable
     # PhotoRegistry (inbox_*) IDs which do NOT match the viewer's ID space and
     # silently broke person-scoped navigation (FB-004, Session 165, Lesson 25).
+    # Canonicalize EVERY resolved pid (not just the fallback path): the
+    # _face_to_photo_cache backing get_photo_id_for_face can hold raw registry
+    # (inbox_*) IDs, so a mixed mapping would otherwise leak non-canonical IDs
+    # into the set and break the membership check (Codex P2, Session 165).
     ordered_photo_ids = []
     seen_photo_ids = set()
     for fid in face_id_strings:
         pid = _main_mod.get_photo_id_for_face(fid)
+        if not pid:
+            continue
+        pid = _main_mod.canonical_photo_id(pid)
         if pid and pid not in seen_photo_ids:
             seen_photo_ids.add(pid)
             ordered_photo_ids.append(pid)
@@ -11421,7 +11428,11 @@ def public_photo_page(
             if idx < len(identity_photo_ids) - 1:
                 next_photo_id = identity_photo_ids[idx + 1]
 
-    if nav_total == 0 and collection_name and _main_mod._photo_cache:
+    # Collection fallback ONLY when there is NO person context. With an
+    # identity_id present (even a raw/stale deep link to an off-person photo),
+    # navigation must stay person-scoped — never leak into the whole collection
+    # (FB-004 / Codex P1, Session 165). Off-person → no arrows (nav_total stays 0).
+    if nav_total == 0 and not identity_id and collection_name and _main_mod._photo_cache:
         collection_photos = sorted(
             [pid for pid, pdata in _main_mod._photo_cache.items() if pdata.get("collection", "") == collection_name],
             key=lambda pid: _main_mod._photo_cache[pid].get("filename", ""),
@@ -12188,14 +12199,21 @@ def public_photo_page(
     keyboard_nav_script = None
     touch_nav_script = None
     if prev_photo_id or next_photo_id:
-        identity_qs = f"?identity_id={identity_id}&sort_by={sort_by}" if identity_id else ""
-        prev_url = f"{nav_prefix}/photo/{prev_photo_id}{identity_qs}" if prev_photo_id else ""
-        next_url = f"{nav_prefix}/photo/{next_photo_id}{identity_qs}" if next_photo_id else ""
+        # Build the query with urlencode (never raw f-string interpolation) and
+        # serialize the URLs into the inline JS via json.dumps so untrusted
+        # identity_id/sort_by can never break out of the JS string literal
+        # (reflected-XSS hardening — Codex P1, Session 165).
+        identity_qs = "?" + urlencode({"identity_id": identity_id, "sort_by": sort_by}) if identity_id else ""
+        prev_url = f"{nav_prefix}/photo/{quote(str(prev_photo_id))}{identity_qs}" if prev_photo_id else ""
+        next_url = f"{nav_prefix}/photo/{quote(str(next_photo_id))}{identity_qs}" if next_photo_id else ""
+        prev_url_js = json.dumps(prev_url)
+        next_url_js = json.dumps(next_url)
         keyboard_nav_script = Script(f"""
             document.addEventListener('keydown', function(e) {{
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                if (e.key === 'ArrowLeft' && '{prev_url}') window.location.href = '{prev_url}';
-                if (e.key === 'ArrowRight' && '{next_url}') window.location.href = '{next_url}';
+                var prevUrl = {prev_url_js}, nextUrl = {next_url_js};
+                if (e.key === 'ArrowLeft' && prevUrl) window.location.href = prevUrl;
+                if (e.key === 'ArrowRight' && nextUrl) window.location.href = nextUrl;
             }});
         """)
         touch_nav_script = Script(f"""
@@ -12214,8 +12232,9 @@ def public_photo_page(
                     var dx = e.changedTouches[0].clientX - sx;
                     var dy = e.changedTouches[0].clientY - sy;
                     if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return;
-                    if (dx > 0 && '{prev_url}') window.location.href = '{prev_url}';
-                    if (dx < 0 && '{next_url}') window.location.href = '{next_url}';
+                    var prevUrl = {prev_url_js}, nextUrl = {next_url_js};
+                    if (dx > 0 && prevUrl) window.location.href = prevUrl;
+                    if (dx < 0 && nextUrl) window.location.href = nextUrl;
                 }}, {{ passive: true }});
             }})();
         """)

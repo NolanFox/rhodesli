@@ -432,6 +432,41 @@ class TestPersonPhotoGalleryShareRoute:
         response = client.get("/person/nonexistent-person-xyz/photos")
         assert response.status_code == 404
 
+    def test_anonymous_gallery_hides_review_language(
+        self, client, confirmed_identity, monkeypatch, auth_enabled, no_user
+    ):
+        """Codex P2 (Session 165): the public shareable gallery must NEVER show
+        admin review language ('Needs review' / 'Conflicting face assignment'),
+        even when a photo's face context conflicts. Force every card conflicted."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        import app.person_routes as pr
+
+        monkeypatch.setattr(pr, "_photo_context_conflict", lambda *a, **k: True)
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}/photos")
+        assert response.status_code == 200
+        assert "Needs review" not in response.text
+        assert "Conflicting face assignment" not in response.text
+
+    def test_admin_gallery_shows_review_language_when_conflicted(
+        self, client, confirmed_identity, monkeypatch, auth_disabled
+    ):
+        """Admin counterpart: with auth disabled (admin) and a forced conflict on
+        a person who has gallery items, the review badge IS rendered."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        import app.person_routes as pr
+
+        monkeypatch.setattr(pr, "_photo_context_conflict", lambda *a, **k: True)
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}/photos")
+        assert response.status_code == 200
+        # If the person has any gallery cards, the admin badge appears. If the
+        # person has no photos/faces, neither branch renders — that's acceptable.
+        if 'data-testid="person-gallery-item' in response.text:
+            assert "Needs review" in response.text
+
 
 class TestPersonPageAppearsWithSection:
     """The 'Appears with' section for co-appearing people."""
