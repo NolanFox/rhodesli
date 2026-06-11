@@ -11,9 +11,13 @@ Fixed FB-004 (Session 135, P1): a shared person link's photo viewer cycled the *
 - **Shareable person-photo gallery** (`42d18f99`, PRD-065) — new public `GET /c/<community>/person/{id}/photos` route with "Photos of <Name>" OG/title framing; the person-page Share button retargets to it; merged-identity redirect preserves `/photos`.
 - **Public-appropriate banner** (`42d18f99` text + `ea104a89` color) — an off-person deep link no longer shows admin "NEEDS REVIEW" language to anonymous viewers. Admins keep the rose alarm banner + "Needs review" badge; the public gets amber styling + gentle "we haven't tagged X yet — help us identify" copy. Container + jump-link color now follow `banner_alarm` (= review-state AND is_admin).
 
+### Audits (Codex gpt-5.5/xhigh)
+- **Pre-session prompt audit** (STRONG) — the P2 pointed straight at the true ID-space root cause; the P0/P1 preserved the explicit-nav-wins contract.
+- **Post-execution impl audit** — no P0; **2 P1** (off-person deep link leaked whole-collection nav via the `public_photo_page` collection fallback; reflected XSS via `identity_id` raw-interpolated into the inline keyboard/touch nav scripts) + **2 actionable P2** (`_ordered_identity_photo_ids` canonicalized only the fallback path, not the primary loop; public `/person/{id}/photos` gallery cards still showed admin "Needs review"/"Conflicting face assignment" to anonymous viewers). **All P1/P2 fixed before push** (`916ae237`): collection fallback guarded with `not identity_id`; nav URLs built with `urlencode` + `quote` + `json.dumps`; every resolved pid canonicalized; gallery review language gated on `is_admin`. Logged in `docs/session_context/session-165-codex-audit.md`.
+
 ### Tests
-- 17 nav tests (`tests/test_session165_person_scoped_nav.py`) — canonical-ID normalization, identity-scoped prev/next, end-clamping (first + last), `inbox_*` entry-ID normalization, explicit-nav contract, full-page + partial parity, admin-vs-anonymous banner messaging.
-- 5 gallery-route tests (`tests/test_public_person_page.py::TestPersonPhotoGalleryShareRoute`). `make test-fast` 4333 passed, 0 regressions.
+- 23 nav tests (`tests/test_session165_person_scoped_nav.py`) — canonical-ID normalization, identity-scoped prev/next, end-clamping (first + last, no wrap), `inbox_*` entry-ID normalization, explicit-nav contract, full-page + partial parity, admin-vs-anonymous banner, off-person collection-leak guard, inline-script XSS escaping.
+- 7 gallery-route tests (`tests/test_public_person_page.py::TestPersonPhotoGalleryShareRoute`) incl. anonymous-vs-admin review-language matrix. `make test-fast` 4339 passed, 0 regressions.
 
 Implemented PRD-064 end-to-end: replaced the bloat-prone multi-state GEDCOM mirror with current-state-only Postgres tables + lossless content-addressed R2 history + a single-transaction atomic importer. **DB 423 MB → 244 MB** (down from 1,309 MB pre-163), no data loss, production current-state preserved exactly.
 

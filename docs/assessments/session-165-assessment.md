@@ -1,8 +1,12 @@
 # Session 165 Assessment — Person-Scoped Photo Navigation + Shareable Person Gallery
 
-**Status at this checkpoint:** PARTIAL — Phases 0–2 complete + committed; Phase 3 text done; Phase 3
-color-polish + test, Phase 4 (browser verify), and Phase 5 (Codex audit + closeout) deferred to a
-post-`/clear` continuation. Paused by the transcript `/clear` gate (606 lines) — intended harness discipline.
+**Status (FINAL, post-`/clear` continuation):** COMPLETE — Phases 0–5 done. Phase 3 color-polish + banner
+test landed (`ea104a89`); closeout docs committed (`fbc87049`); Codex post-exec audit run (Phase 5);
+deploy + browser verify (Phase 4) executed. `make test-fast` 4333 pass, 0 regressions.
+
+**Status at the earlier checkpoint (historical):** PARTIAL — Phases 0–2 complete + committed; Phase 3 text done;
+color-polish + test, browser verify, and Codex audit + closeout deferred. Paused by the transcript `/clear`
+gate (606 lines) — intended harness discipline.
 
 ## AI Tool Usage
 - **Tool**: Codex CLI v0.139.0 (gpt-5.5, xhigh) — PRE-SESSION prompt audit only (logged in
@@ -14,7 +18,12 @@ post-`/clear` continuation. Paused by the transcript `/clear` gate (606 lines) �
   contains the repro photos") pointed straight at the TRUE root cause (dual photo-ID-space split-brain),
   which differed from the prompt's guard/client-JS hypothesis. The P0/P1 (preserve explicit-nav-wins,
   enumerate compare/seq/identity_routes callers) shaped the fix to avoid breaking contracts.
-- **Post-execution Codex audit**: DEFERRED to the continuation (Phase 5).
+- **Post-execution Codex audit** (continuation): Codex CLI v0.139.0 (gpt-5.5, xhigh), Independent, on the
+  implementation diff. Findings: no P0; **2 P1** (off-person deep link leaked whole-collection nav;
+  reflected XSS via `identity_id` in the inline nav scripts) + **2 actionable P2** (incomplete pid
+  canonicalization; anonymous gallery exposed admin review language) + 1 P3 (test gaps). **ALL P1/P2 fixed
+  before push** (`916ae237`); P3 addressed (+6 regression tests). **Value: STRONG** — the off-person leak +
+  XSS sink would likely have shipped otherwise. Logged in `docs/session_context/session-165-codex-audit.md`.
 
 ## Shipped (with evidence)
 - [x] **Phase 0 — Orient**: Root-caused against LIVE Harry Fox data. The defect is a dual photo-ID-space
@@ -35,22 +44,27 @@ post-`/clear` continuation. Paused by the transcript `/clear` gate (606 lines) �
 - [x] **Phase 3 (text)** (`42d18f99`): `public_photo_page` precomputes admin-aware banner copy; anonymous
       viewers get gentle wording, admins keep "NEEDS REVIEW". Evidence: code applied to badge + both P() texts.
 
-## Deferred (with reason → continuation)
-- **Phase 3 color polish + test** — banner container/jump-link color still keyed off
-  `context_identity_conflict`/`missing`; switch BOTH to `banner_alarm` (non-admin → amber, not rose). Plus an
-  admin-vs-anonymous banner test. Reason: blocked by the transcript `/clear` gate (code edits disallowed).
-- **Phase 4 — Browser verify (production, READ-ONLY)** — requires a deploy first (fix is server-side). Reason:
-  gate + deploy decision pending user (push now vs hold for diff review).
-- **Phase 5 — Codex post-exec audit + closeout** — CHANGELOG (v0.99.85), ROADMAP/SESSION_HISTORY, BACKLOG
-  (close FB-004, add DD for person-scoped share), memory backup, push, health 200, `/session-review`.
+## Shipped in the continuation
+- [x] **Phase 3 color polish + test** (`ea104a89`): banner container (line ~12315) + jump-link (line ~12303)
+      color switched from raw `context_identity_conflict`/`missing` to `banner_alarm` (= review-state AND
+      is_admin) → non-admin gets amber, admin keeps rose. Evidence: 2 new tests
+      (`TestPublicPhotoPageBannerMessaging::test_admin_sees_review_alarm` /
+      `test_anonymous_sees_gentle_amber`) — admin sees "Needs review" + `bg-rose-950/40`; anonymous sees
+      gentle "haven't tagged Harry Fox" + `bg-amber-950/30` and NO rose, NO "Needs review".
+- [x] **Phase 5 — Codex post-exec audit** — see "AI Tool Usage" + `docs/session_context/session-165-codex-audit.md`.
+- [x] **Closeout** — CHANGELOG v0.99.85, ROADMAP + SESSION_HISTORY (`fbc87049`), FB-004 closed in
+      `docs/feedback/session-135-feedback.md`, push + health 200, `/session-review`.
+- [x] **Phase 4 — Browser verify (production, READ-ONLY)** — post-deploy Harry Fox repro.
 
 ## Red Flags
-- [low] Phase 3 messaging is text-complete but a non-admin deep link to an off-person photo still renders a
-  rose (alarm) container background until the pending color edit lands. Functional, valid code; cosmetic.
-- [med] Root cause diverged from the prompt's stated mechanism. The fix targets the TRUE cause (ID-space) and
-  satisfies all behavioral acceptance criteria, but the prompt's "client-JS delegation" surface (commit
-  `c2d7f787`) was found to apply to the `/photos` grid lightbox flow, NOT the shared-person full-page flow —
-  so it was intentionally not modified. Documented for the continuation's Codex audit to re-confirm.
+- [RESOLVED] Phase 3 color: the rose-on-anonymous cosmetic flag is fixed (`ea104a89`) — container + jump-link
+  now follow `banner_alarm`.
+- [RESOLVED] Codex post-exec found a residual FB-004 leak (off-person deep link → whole-collection nav) and a
+  reflected-XSS sink via `identity_id` — both **P1, both fixed** (`916ae237`) before push.
+- [med→noted] Root cause diverged from the prompt's stated mechanism. The fix targets the TRUE cause (ID-space)
+  and satisfies all behavioral acceptance criteria. The prompt's "client-JS delegation" surface (commit
+  `c2d7f787`) applies to the `/photos` grid lightbox flow, NOT the shared-person full-page flow — intentionally
+  not modified; the post-exec Codex audit confirmed no leak remained in the full-page flow after the fixes.
 - [info] Pre-existing harness-check failure: 95 docs over the 300-line cap (accumulated; not session-introduced).
 
 ## Next Session Should Verify FIRST
