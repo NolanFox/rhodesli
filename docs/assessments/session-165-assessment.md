@@ -2,7 +2,7 @@
 
 **Status (FINAL, post-`/clear` continuation):** COMPLETE — Phases 0–5 done. Phase 3 color-polish + banner
 test landed (`ea104a89`); closeout docs committed (`fbc87049`); Codex post-exec audit run (Phase 5);
-deploy + browser verify (Phase 4) executed. `make test-fast` 4333 pass, 0 regressions.
+deploy + browser verify (Phase 4) executed. `make test-fast` 4339 pass (+6 audit-fix regression tests), 0 regressions.
 
 **Status at the earlier checkpoint (historical):** PARTIAL — Phases 0–2 complete + committed; Phase 3 text done;
 color-polish + test, browser verify, and Codex audit + closeout deferred. Paused by the transcript `/clear`
