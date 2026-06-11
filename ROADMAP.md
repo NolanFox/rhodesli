@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.99.84 · ~5041 tests (4318 app + 723 ML) · 1127 photos · 1824 identities · DB **244 MB** (down from 423 MB Session 164 GEDCOM canonical migration; 1,309 MB pre-163; no data loss, R2-archived). ⚠️ **SITE DOWN** pending Pro upgrade: the DB-size Fair-Use restriction (402) lifts only on upgrade or ~25 Jun cycle reset (OD-015). **PRD-064 (GEDCOM storage redesign, Option B-plus) SHIPPED Session 164** — current-state Postgres + lossless R2 history + atomic importer; only Phase 9 (Pro upgrade + browser verify) remains, a user action. Sibling repo /Users/nolanfox/rhodes-wiki/ at v0.2.0 (211 tests)
+Current: v0.99.84 · ~5041 tests (4318 app + 723 ML) · 1127 photos · 1824 identities · DB **244 MB** (down from 423 MB Session 164 GEDCOM canonical migration; 1,309 MB pre-163; no data loss, R2-archived). ✅ **SITE LIVE** — Pro upgrade lifted the 402; redeploy verified (health 200, GEDCOM family pages render from the canonical schema). DB 244 MB < 500 so a downgrade to Free is safe. **PRD-064 (GEDCOM storage redesign, Option B-plus) SHIPPED + verified live Session 164.** Sibling repo /Users/nolanfox/rhodes-wiki/ at v0.2.0 (211 tests)
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)

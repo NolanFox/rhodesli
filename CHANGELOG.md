@@ -21,8 +21,8 @@ Implemented PRD-064 end-to-end: replaced the bloat-prone multi-state GEDCOM mirr
 ### Harness
 - AD-247–250 (storage model, atomic importer, artifact format + hash contract, unwind). Lessons 202 (audit migrations before running them), 203 (archived GEDCOM ≠ imported bytes), 204 (psycopg2 named-cursor `.description` None until first fetch). `docs/architecture/GEDCOM_HISTORY.md` (252 lines).
 
-### Status
-- **Site remains DOWN pending the user's Pro upgrade** (Phase 9 — the 402 Fair-Use restriction lifts only on upgrade or ~25 Jun cycle reset). Code is deployed-ready (readers on canonical tables). After upgrade: confirm REST 200 + `/health supabase: ok` + browser-verify. Tests: 1014 targeted pass + 61 new GEDCOM tests; 2 pre-existing stale `identity_overrides` failures (removed Session 130, unrelated).
+### Status — RESTORED + verified live (2026-06-10)
+- User upgraded to Pro → 402 lifted → redeploy (`63e2b7c0`) → **site live**. `/health` 200 (1824 identities, ML ready); landing/People/Photos/Map/Estimate/Compare 200; 404 works. Canonical `gedcom_individuals` serves via REST; the GEDCOM-backed family page (Abraham Capuano) renders Parent/Child/Spouse from the canonical schema with zero errors. The lingering 502 was the stale outage container (not a code crash — reproduced clean startup locally against prod DB). DB 244 MB < 500 → downgrade to Free is safe. Tests: 1014 targeted pass + 61 new GEDCOM tests; 2 pre-existing stale `identity_overrides` failures (removed Session 130, unrelated).
 
 ## [v0.99.83] — 2026-06-09 (Session 163: Supabase Free-tier recovery + GEDCOM storage redesign DESIGN)
 

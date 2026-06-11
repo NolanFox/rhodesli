@@ -32,11 +32,23 @@
 - [x] **Phase 10** — Docs: `docs/architecture/GEDCOM_HISTORY.md` (252 lines, cross-repo spec),
   AD-247–250, PRD-064→SHIPPED, lessons 202–204, CHANGELOG/ROADMAP/BACKLOG. Commit `55ba071f` + closeout.
 
+## Phase 9 — Restore service + verify (COMPLETE, 2026-06-10)
+User upgraded to Pro → 402 restriction lifted (REST 200). Empty-commit redeploy (`63e2b7c0`) rebuilt the
+app (~7-min build + cold start; the lingering 502 was the stale outage container, NOT a code crash —
+confirmed by reproducing startup LOCALLY against prod Supabase: clean `Application startup complete`,
+local `/health` 200). **Live production verification:**
+- `/health` 200 — 1824 identities, 980 photos, ml_pipeline ready.
+- Landing, People, Photos, Map, Estimate, Compare all 200; invalid person 404.
+- Canonical `gedcom_individuals` serves via REST 200 (new schema live).
+- **GEDCOM-backed family surface verified**: `/c/fox-family/person/016e9fba…` (Abraham Capuano,
+  `@I132127360989@`) renders the full family tree (Parent/Child/Spouse) from canonical
+  `gedcom_individuals`/`gedcom_families`/`gedcom_relationships` — zero errors.
+- `/api/gedcom/search` 401 (admin-guard intact, not a 500).
+Site fully restored on the new schema. User can downgrade to Free anytime (DB 244 MB < 500).
+
 ## Deferred (with reason)
-- **Phase 9 — Restore service + browser verify: USER GATE.** The 402 Fair-Use restriction lifts ONLY
-  on a Pro upgrade (or ~25 Jun cycle reset) — a user billing action I cannot perform. Code is deployed-
-  ready (readers on canonical tables). After the user upgrades, verify REST 200 + `/health supabase: ok`
-  + browser-verify pages. BACKLOG: SESSION-164-VERIFY.
+- Optional deeper Chrome-screenshot capture of the admin GEDCOM version list + a real admin GEDCOM
+  upload (v10 "what's new" exercise) — offered; not required for restoration. BACKLOG: SESSION-164-VERIFY (now optional).
 - **sources/media current-state DB tables** — not in canonical schema (per prompt scope: 3 tables).
   Fully preserved in R2 snapshot (lossless) + raw.ged.gz. If in-DB current-state for sources/media is
   later wanted, additive. BACKLOG.
