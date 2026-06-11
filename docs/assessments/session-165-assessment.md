@@ -73,3 +73,35 @@ gate (606 lines) — intended harness discipline.
    "X of Y" correct, ends clamp, no "NEEDS REVIEW" shown to anonymous viewers.
 3. The `/c/fox-family/person/{id}/photos` share link + Share button on production.
 4. `git log origin/main..HEAD` empty after closeout push.
+
+---
+
+## Session-Review (per-act verification + auto-fix)
+
+### Per-Act Status
+| Phase | Status | Evidence | Concerns |
+|-------|--------|----------|----------|
+| 0 Orient | PASS | root-caused to dual ID-space split-brain (session log) | none |
+| 1 Person-scoped prev/next | PASS | `canonical_photo_id` (app/main.py); `not identity_id` collection guard + canonicalized resolver (page_routes.py); prod "Photo 4 of 5", leak target absent | none |
+| 2 Shareable gallery | PASS | `rt("/person/{id}/photos")`; prod "Photos of Harry Fox" OG; Share button retargeted | none |
+| 3 Public-appropriate banner | PASS | `banner_alarm` color + copy (page_routes.py); gallery cards gated on `context_conflict and is_admin` (person_routes.py ×3); anonymous curl shows 0 review language | none |
+| 4 Browser verify (prod, READ-ONLY) | PASS | `docs/screenshots/session-165/VERIFICATION.md`; 2 Chrome screenshots; curl HTML checks (Lesson 53) | none |
+| 5 Codex audit + closeout | PASS | `session-165-codex-audit.md` (pre + post); 2 P1 + 2 P2 fixed (`916ae237`); CHANGELOG/ROADMAP/SESSION_HISTORY/FB-004 closed | none |
+
+### Concerns and Red Flags
+- All Codex P1/P2 resolved before push. No outstanding correctness/security concerns.
+- [info, pre-existing, out of scope] harness-check reports 95 docs over the 300-line cap — accumulated across prior sessions, not introduced here.
+
+### Superficial Work
+- None. Every code path has happy + failure + regression tests (23 nav + 7 gallery); the fix is verified in production rendered HTML, not just unit mocks.
+
+### Novel-Discovery Audit
+- N/A — this is a code/UX bug-fix session, not a genealogy research session. 0 genealogical claims.
+
+### User-Feedback Absorb
+- N/A — no new user feedback received this session (continuation of a pre-specified implementation prompt). FB-004 (the item being fixed) is from Session 135 and is now CLOSED.
+
+### Auto-Fix Summary
+- Issues found: 5 (Codex: 2 P1 + 2 P2 + 1 P3) + 1 cosmetic (Phase 3 color)
+- Auto-fixed: 6 (all P1/P2 fixed `916ae237`; P3 test gaps addressed; Phase 3 color `ea104a89`)
+- Deferred: 0 (no auto-fix worktree needed — all fixes landed inline during the continuation, each with tests + green `make test-fast` 4339)
