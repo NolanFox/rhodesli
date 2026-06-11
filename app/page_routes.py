@@ -3528,20 +3528,33 @@ def _ordered_identity_photo_ids(registry, identity_id: str, sort_by: str = "date
         if fid:
             face_id_strings.append(fid)
 
+    # Build the photo set in the CANONICAL photo-view ID space so that the
+    # membership check (photo_id in this set) matches the IDs the photo page,
+    # face overlays, and entry links use. Resolving per-face via
+    # get_photo_id_for_face (which reads _face_to_photo_cache, canonical space)
+    # is the authoritative resolver; get_photos_for_faces returns durable
+    # PhotoRegistry (inbox_*) IDs which do NOT match the viewer's ID space and
+    # silently broke person-scoped navigation (FB-004, Session 165, Lesson 25).
     ordered_photo_ids = []
-    try:
-        photo_registry = _main_mod.load_photo_registry()
-        ordered_photo_ids = list(photo_registry.get_photos_for_faces(face_id_strings))
-    except Exception:
-        ordered_photo_ids = []
+    seen_photo_ids = set()
+    for fid in face_id_strings:
+        pid = _main_mod.get_photo_id_for_face(fid)
+        if pid and pid not in seen_photo_ids:
+            seen_photo_ids.add(pid)
+            ordered_photo_ids.append(pid)
 
+    # Fallback: if the face→photo cache yielded nothing (e.g. cold cache),
+    # use the PhotoRegistry resolver and normalize each ID to canonical space.
     if not ordered_photo_ids:
-        seen_photo_ids = []
-        for fid in face_id_strings:
-            pid = _main_mod.get_photo_id_for_face(fid)
-            if pid and pid not in seen_photo_ids:
-                seen_photo_ids.append(pid)
-        ordered_photo_ids = seen_photo_ids
+        try:
+            photo_registry = _main_mod.load_photo_registry()
+            for pid in photo_registry.get_photos_for_faces(face_id_strings):
+                canonical = _main_mod.canonical_photo_id(pid)
+                if canonical and canonical not in seen_photo_ids:
+                    seen_photo_ids.add(canonical)
+                    ordered_photo_ids.append(canonical)
+        except Exception:
+            ordered_photo_ids = []
 
     if not ordered_photo_ids:
         return [], display_name
@@ -3607,11 +3620,24 @@ def photo_view_content(
     sort_by = _normalize_gallery_sort(sort_by)
     context_identity_id = identity_id
     context_photo_ids, context_person_name = _ordered_identity_photo_ids(registry, context_identity_id, sort_by)
+    # Normalize the incoming photo_id to canonical space so the membership check
+    # below matches regardless of which entry link (faces gallery → canonical,
+    # photos gallery → inbox_*) the viewer arrived from (Session 165, Lesson 25).
+    canonical_pid = _main_mod.canonical_photo_id(photo_id)
 
     # Identity-based navigation: when identity_id is provided and no explicit
     # prev/next, compute navigation from the identity's unique photo list.
-    if context_identity_id and context_photo_ids and not prev_id and not next_id and photo_id in context_photo_ids:
-        idx = context_photo_ids.index(photo_id)
+    # The `not prev_id and not next_id` guard preserves explicit-nav-wins
+    # (compare modal, seq-mode, direct callers) — only collection-leak via the
+    # identity entry point is corrected here.
+    if (
+        context_identity_id
+        and context_photo_ids
+        and not prev_id
+        and not next_id
+        and canonical_pid in context_photo_ids
+    ):
+        idx = context_photo_ids.index(canonical_pid)
         if idx > 0:
             prev_id = context_photo_ids[idx - 1]
         if idx < len(context_photo_ids) - 1:
@@ -3695,7 +3721,7 @@ def photo_view_content(
     next_seq_photo_id = None
     next_seq_unidentified_count = 0
     seq_queue_summary = None
-    if seq_mode and context_photo_ids and photo_id in context_photo_ids:
+    if seq_mode and context_photo_ids and canonical_pid in context_photo_ids:
         unresolved_counts = {}
         for queued_photo_id in context_photo_ids:
             queue_photo = _main_mod.get_photo_metadata(queued_photo_id) or {}
@@ -3708,7 +3734,7 @@ def photo_view_content(
                     unresolved += 1
             unresolved_counts[queued_photo_id] = unresolved
 
-        current_queue_index = context_photo_ids.index(photo_id)
+        current_queue_index = context_photo_ids.index(canonical_pid)
         unresolved_photo_count = sum(1 for count in unresolved_counts.values() if count > 0)
         seq_queue_summary = (
             f"{context_person_name}: photo {current_queue_index + 1} of {len(context_photo_ids)}"
@@ -11373,32 +11399,27 @@ def public_photo_page(
             )
         return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
 
+    # Normalize the incoming photo_id to canonical space so membership checks
+    # below match regardless of which entry link the viewer arrived from
+    # (faces gallery → canonical ID, photos gallery → inbox_* ID). Session 165.
+    canonical_pid = _main_mod.canonical_photo_id(photo_id)
+
     if identity_id:
-        try:
-            identity_nav = registry.get_identity(identity_id)
-        except KeyError:
-            identity_nav = None
-        if identity_nav:
-            context_person_name = ensure_utf8_display(identity_nav.get("name", "")) or "Person"
-            all_faces = identity_nav.get("anchor_ids", []) + identity_nav.get("candidate_ids", [])
-            face_id_strings = []
-            for face_entry in all_faces:
-                fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
-                if fid:
-                    face_id_strings.append(fid)
-            photo_registry = _main_mod.load_photo_registry()
-            identity_photo_ids = sorted(
-                photo_registry.get_photos_for_faces(face_id_strings),
-                key=lambda pid: _gallery_sort_key(_build_sort_meta(pid, _main_mod.get_photo_metadata(pid)), pid),
-            )
-            if photo_id in identity_photo_ids:
-                idx = identity_photo_ids.index(photo_id)
-                nav_position = idx + 1
-                nav_total = len(identity_photo_ids)
-                if idx > 0:
-                    prev_photo_id = identity_photo_ids[idx - 1]
-                if idx < len(identity_photo_ids) - 1:
-                    next_photo_id = identity_photo_ids[idx + 1]
+        # Unified with photo_view_content via _ordered_identity_photo_ids — both
+        # paths now build the person photo set in the SAME canonical ID space so
+        # person-scoped navigation no longer leaks into the whole collection
+        # (FB-004, Session 165, Lesson 25 / Lesson 63).
+        identity_photo_ids, person_nav_name = _ordered_identity_photo_ids(registry, identity_id, sort_by)
+        if person_nav_name:
+            context_person_name = person_nav_name
+        if canonical_pid in identity_photo_ids:
+            idx = identity_photo_ids.index(canonical_pid)
+            nav_position = idx + 1
+            nav_total = len(identity_photo_ids)
+            if idx > 0:
+                prev_photo_id = identity_photo_ids[idx - 1]
+            if idx < len(identity_photo_ids) - 1:
+                next_photo_id = identity_photo_ids[idx + 1]
 
     if nav_total == 0 and collection_name and _main_mod._photo_cache:
         collection_photos = sorted(
@@ -11406,8 +11427,8 @@ def public_photo_page(
             key=lambda pid: _main_mod._photo_cache[pid].get("filename", ""),
         )
         nav_total = len(collection_photos)
-        if photo_id in collection_photos:
-            idx = collection_photos.index(photo_id)
+        if canonical_pid in collection_photos:
+            idx = collection_photos.index(canonical_pid)
             nav_position = idx + 1
             if idx > 0:
                 prev_photo_id = collection_photos[idx - 1]

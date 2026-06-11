@@ -4033,6 +4033,32 @@ def get_photo_id_for_face(face_id: str) -> str:
     return _face_to_photo_cache.get(face_id)
 
 
+def canonical_photo_id(photo_id: str) -> str:
+    """Normalize any photo_id to the canonical photo-view (``_photo_cache``) ID space.
+
+    The archive carries two coexisting photo-ID schemes for the same underlying
+    image: the canonical SHA256-style cache ID (keys of ``_photo_cache``, what the
+    photo view / face overlays / ``get_photo_id_for_face`` use) and the durable
+    PhotoRegistry / ``inbox_*`` ID (what ``get_photos_for_faces`` returns). Identity
+    photo-set membership checks (``photo_id in identity_photo_ids``) silently fail
+    when the two sides are in different spaces, which collapses person-scoped photo
+    navigation into whole-collection navigation (FB-004, Session 165, Lesson 25).
+
+    Returns the canonical cache ID when one is known; otherwise returns the input
+    unchanged so callers degrade gracefully.
+    """
+    if not photo_id:
+        return photo_id
+    _build_caches()
+    if _photo_cache and photo_id in _photo_cache:
+        return photo_id
+    if _photo_id_aliases:
+        resolved = _photo_id_aliases.get(photo_id)
+        if resolved:
+            return resolved
+    return photo_id
+
+
 def get_face_quality(face_id: str) -> float:
     """Look up face quality score from embeddings cache.
 
