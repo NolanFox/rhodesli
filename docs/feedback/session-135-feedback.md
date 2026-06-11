@@ -41,8 +41,8 @@ Started: 2026-03-22
 ### FB-004: Photo lightbox arrows cycle through all photos, not cluster photos
 - **Severity:** P1
 - **Context:** When viewing a photo in the lightbox overlay from a cluster (e.g., 8 Esther Burd photos), clicking left/right arrows cycles through ALL 630+ Fox Family photos instead of just the ~8 photos in the current cluster. Major time sink — user has to click out and click back in for each photo.
-- **Root cause:** Lightbox navigation scope not limited to current context
-- **Fix:** BACKLOG
+- **Root cause:** Dual photo-ID-space split-brain (Session 165) — the identity nav set was built in PhotoRegistry/`inbox_*` ID space while the photo viewer used canonical `_photo_cache` SHA256 IDs, so the `photo_id in identity_photo_ids` membership check silently failed and navigation fell back to the whole collection (Lesson 25 / Lesson 63).
+- **Fix:** FIXED in Session 165. `app.main.canonical_photo_id()` normalizes the incoming photo_id; `_ordered_identity_photo_ids` builds the set in canonical space; both `photo_view_content` (HTMX partial) and `public_photo_page` (full page) scope prev/next to the person's set with end-clamping (no wrap into the collection). Plus a dedicated shareable `/c/<community>/person/{id}/photos` gallery (PRD-065). Commits `4b31e6f8`, `42d18f99`, `ea104a89`. 17 nav tests + 5 gallery-route tests.
 
 ### FB-006: Compare modal left arrow jumps from 2/8 to 7/8
 - **Severity:** P1

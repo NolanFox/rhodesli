@@ -14,6 +14,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 165: Person-Scoped Photo Navigation + Shareable Person Gallery (2026-06-10) — v0.99.85
+
+**Mission**: Fix FB-004 (Session 135, P1) — a shared person link's photo viewer cycled the whole collection instead of just that person's photos — and add a dedicated shareable person-photo gallery (PRD-065).
+
+**Root cause** (diverged from prompt hypothesis): a dual photo-ID-space split-brain (Lesson 25 / Lesson 63). The identity nav set was built in PhotoRegistry / `inbox_*` ID space while the photo viewer used canonical `_photo_cache` SHA256-style IDs; `photo_id in identity_photo_ids` silently failed across the two spaces and navigation collapsed into the whole collection. The pre-session Codex prompt audit's P2 ("verify membership actually contains the repro photos") pointed straight at this.
+
+**Shipped**:
+- `app.main.canonical_photo_id()` — normalizes any incoming photo_id (faces-gallery canonical vs photos-gallery `inbox_*`) into one space.
+- `_ordered_identity_photo_ids` builds the person's photo set in canonical space; `photo_view_content` (HTMX partial) + `public_photo_page` (full page) normalize the incoming photo_id before the membership check and emit identity-scoped prev/next. Arrows clamp at ends (no wrap into the collection); "X of Y" = position within the person's set. Explicit-nav-wins contract preserved (compare `from_compare`, seq-mode, 3 `identity_routes.py` callers — `test_explicit_nav_overrides_identity` GREEN).
+- New public `GET /c/<community>/person/{id}/photos` shareable gallery (PRD-065): "Photos of <Name>" OG/title; person-page Share button retargeted; merged-identity redirect preserves `/photos`.
+- Public-appropriate banner: an off-person deep link no longer shows admin "NEEDS REVIEW" to anonymous viewers (amber gentle "help us identify" copy); admins keep the rose alarm. Container + jump-link color follow `banner_alarm` (= review-state AND is_admin).
+
+**Tests**: 17 nav (`tests/test_session165_person_scoped_nav.py`) + 5 gallery-route (`tests/test_public_person_page.py`). `make test-fast` 4333 pass, 0 regressions.
+
+**Audits**: pre-session Codex prompt audit (gpt-5.5/xhigh, STRONG) + post-exec Codex audit. Commits: `2ec0721e` (prompt+context), `a34bcc06` (prompt audit), `4b31e6f8` (nav fix), `42d18f99` (gallery + banner text), `ea104a89` (banner color + tests) + closeout.
+
+---
+
 ## Session 162: Supabase Disk IO Budget Remediation (2026-05-22) — v0.99.82
 
 **Trigger**: Supabase email 2026-05-21 "Your project rhodesli is running out of Disk IO Budget" (per-IOPS metric, distinct from storage / egress).

@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.99.84] — 2026-06-10 (Session 164: GEDCOM Storage Redesign SHIPPED — PRD-064 Option B-plus)
+## [v0.99.85] — 2026-06-10 (Session 165: Person-Scoped Photo Navigation + Shareable Person Gallery — FB-004 / PRD-065)
+
+Fixed FB-004 (Session 135, P1): a shared person link's photo viewer cycled the **whole collection** instead of just that person's photos. Root cause was a dual photo-ID-space split-brain (Lesson 25 / Lesson 63), not the originally hypothesized client-JS guard.
+
+### Shipped
+- **Person-scoped prev/next** (`4b31e6f8`) — new `app.main.canonical_photo_id()` normalizes any incoming photo_id (faces-gallery canonical SHA256 vs photos-gallery `inbox_*`) into one space; `_ordered_identity_photo_ids` builds the person's photo set in canonical space; both `photo_view_content` (HTMX partial) and `public_photo_page` (full page) normalize before the membership check and emit identity-scoped neighbors. Arrows clamp at ends (no wrap into the collection); "X of Y" is position within the person's set. The explicit-nav-wins contract (compare modal `from_compare`, seq-mode, the 3 `identity_routes.py` callers) is preserved — `test_explicit_nav_overrides_identity` stays GREEN.
+- **Shareable person-photo gallery** (`42d18f99`, PRD-065) — new public `GET /c/<community>/person/{id}/photos` route with "Photos of <Name>" OG/title framing; the person-page Share button retargets to it; merged-identity redirect preserves `/photos`.
+- **Public-appropriate banner** (`42d18f99` text + `ea104a89` color) — an off-person deep link no longer shows admin "NEEDS REVIEW" language to anonymous viewers. Admins keep the rose alarm banner + "Needs review" badge; the public gets amber styling + gentle "we haven't tagged X yet — help us identify" copy. Container + jump-link color now follow `banner_alarm` (= review-state AND is_admin).
+
+### Tests
+- 17 nav tests (`tests/test_session165_person_scoped_nav.py`) — canonical-ID normalization, identity-scoped prev/next, end-clamping (first + last), `inbox_*` entry-ID normalization, explicit-nav contract, full-page + partial parity, admin-vs-anonymous banner messaging.
+- 5 gallery-route tests (`tests/test_public_person_page.py::TestPersonPhotoGalleryShareRoute`). `make test-fast` 4333 passed, 0 regressions.
 
 Implemented PRD-064 end-to-end: replaced the bloat-prone multi-state GEDCOM mirror with current-state-only Postgres tables + lossless content-addressed R2 history + a single-transaction atomic importer. **DB 423 MB → 244 MB** (down from 1,309 MB pre-163), no data loss, production current-state preserved exactly.
 
