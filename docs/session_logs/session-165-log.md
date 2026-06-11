@@ -68,3 +68,38 @@ Making `get_photo_id_for_face` the PRIMARY resolver aligns with the tests and fi
 - Live-data proof (READ-ONLY): full page at a58504ab20bbb741?identity_id=Harry now "Photo 4 of 5" with both
   arrows in Harry's set (was collection neighbors). test_explicit_nav_overrides_identity GREEN.
 - make test-fast: 4326 passed (+15), 0 regressions.
+
+## Phase 2 — COMPLETE (committed with Phase 3-text)
+- PRD-065 written (docs/prds/065_person_photo_gallery.md).
+- `public_person_page(..., photos_share=False)`: when True → OG/title "Photos of <Name>", og:url = /photos path.
+- Person-page Share button now targets `/person/<id>/photos` (unambiguous share). Title uses og_title.
+- Merged-identity redirect preserves /photos suffix.
+- New route `GET /person/{person_id}/photos` (community-detect redirect mirrors /person/{id}); delegates to
+  public_person_page(view="photos", photos_share=True).
+- Tests: tests/test_public_person_page.py::TestPersonPhotoGalleryShareRoute (5, real-data) — all PASS.
+
+## Phase 3 — TEXT DONE; color-polish + test PENDING /clear
+- DONE: public_photo_page precomputes admin-aware banner copy (banner_alarm/badge/headline/subline).
+  Anonymous/non-admin viewers get gentle wording (no "NEEDS REVIEW"/"review before trusting"); admins keep
+  review framing. Applied to badge label + both P() texts + their text colors.
+- PENDING (blocked by transcript /clear gate at 606 lines):
+  1. One color edit: banner container bg (~line 12315) + "Jump to current face" link color (~12303) still use
+     `context_identity_conflict`/`(conflict or missing)`; change BOTH to `banner_alarm` so non-admin
+     missing/conflict gets amber (neutral) not rose (alarm). Code is valid as-is (vars exist) — purely polish.
+  2. Add Phase 3 test (admin sees "Needs review"/rose; anonymous sees gentle copy/amber) — likely in
+     tests/test_public_photo_viewer.py via public_photo_page direct call with is_admin True/False, identity_id
+     set + a photo where the identity is NOT a face (missing state).
+
+## RESUME AFTER /clear — remaining work
+1. Apply the Phase 3 color edit (banner_alarm for container + jump-link).
+2. Add Phase 3 admin/anonymous banner test. Run make test-fast.
+3. Commit Phase 3.
+4. Phase 4: browser verify on production (READ-ONLY) the exact Harry Fox repro
+   (/c/fox-family/person/d74cb556-6d44-4288-ade3-1cc8fa2b45a6 → Photos → arrows stay in-set; "X of Y";
+   ends clamp; no NEEDS REVIEW to public) + the /person/<id>/photos share link + Share button.
+   Screenshots → docs/screenshots/session-165/. NOTE: requires deploy first (git push) since fix is server-side.
+5. Phase 5: Codex audit (`codex exec "<prompt>" </dev/null`, gpt-5.5/xhigh) of nav fix + new route + messaging;
+   save docs/session_context/session-165-codex-audit-postexec.md; fix P0/P1.
+6. Closeout: assessment, CHANGELOG (version bump v0.99.85), ROADMAP + SESSION_HISTORY, BACKLOG (close FB-004,
+   add DD for person-scoped share), memory backup, git push, health 200, git log origin/main..HEAD empty,
+   /session-review.

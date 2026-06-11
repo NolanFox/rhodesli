@@ -393,6 +393,46 @@ class TestPersonPageOGTags:
         assert f"/person/{pid}" in response.text
 
 
+class TestPersonPhotoGalleryShareRoute:
+    """PRD-065 / FB-004 — dedicated shareable person-photo gallery."""
+
+    def test_photos_route_returns_200(self, client, confirmed_identity):
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}/photos")
+        assert response.status_code == 200
+
+    def test_photos_route_og_title_is_photos_of(self, client, confirmed_identity):
+        """The dedicated gallery reframes OG/title as 'Photos of <Name>'."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}/photos")
+        assert "Photos of" in response.text
+        assert "og:title" in response.text
+
+    def test_photos_route_og_url_points_to_photos_path(self, client, confirmed_identity):
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}/photos")
+        assert f"/person/{pid}/photos" in response.text
+
+    def test_person_page_share_button_targets_photos_link(self, client, confirmed_identity):
+        """The person page Share button points at the unambiguous /photos link."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        pid = confirmed_identity["identity_id"]
+        response = client.get(f"/person/{pid}")
+        # Share button data-share-url is the person-photos gallery link.
+        assert f"/person/{pid}/photos" in response.text
+
+    def test_photos_route_invalid_id_404(self, client):
+        response = client.get("/person/nonexistent-person-xyz/photos")
+        assert response.status_code == 404
+
+
 class TestPersonPageAppearsWithSection:
     """The 'Appears with' section for co-appearing people."""
 

@@ -248,6 +248,7 @@ def public_person_page(
     user=None,
     is_admin: bool = False,
     community_slug: str = "rhodes",
+    photos_share: bool = False,
 ) -> tuple:
     """
     Build the public shareable person page.
@@ -255,6 +256,10 @@ def public_person_page(
     Shows all photos of a specific identified person — the page you share
     when you want to say "Look at all these photos of Aunt Selma!"
     No authentication required.
+
+    photos_share=True renders the dedicated "Photos of <Name>" share target
+    (PRD-065): OG/title framing is photo-centric and og:url points at the
+    /person/<id>/photos path. The gallery + viewer are otherwise identical.
     """
     registry = _main_mod.load_registry()
     nav_prefix = _main_mod.community_url_prefix(community_slug)
@@ -318,7 +323,9 @@ def public_person_page(
                 return HTMLResponse(page_html, status_code=404)
             visited.add(next_id)
             canonical_id = next_id
-        return RedirectResponse(f"{nav_prefix}/person/{canonical_id}", status_code=301)
+        # Preserve the /photos share target when redirecting merged identities (PRD-065).
+        canonical_suffix = "/photos" if photos_share else ""
+        return RedirectResponse(f"{nav_prefix}/person/{canonical_id}{canonical_suffix}", status_code=301)
 
     if not identity:
         style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
@@ -855,10 +862,24 @@ def public_person_page(
             f"{display_name} in the Rhodesli Heritage Archive. Explore photographs from the Jewish community of Rhodes."
         )
 
+    # PRD-065: the dedicated, unambiguous "Photos of <Name>" share target.
+    person_photos_url = f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}/photos"
+
     og_image_url = avatar_url or ""
     if og_image_url and not og_image_url.startswith("http"):
         og_image_url = f"{_main_mod.SITE_URL}{og_image_url}"
     og_page_url = f"{_main_mod.SITE_URL}{nav_prefix}/person/{person_id}"
+
+    # When rendered as the dedicated person-photo gallery, reframe OG/title and
+    # point og:url at the /photos path so previews read "Photos of <Name>".
+    if photos_share:
+        og_title = f"Photos of {display_name} — Rhodesli Heritage Archive"
+        og_page_url = person_photos_url
+        if photo_count > 0:
+            og_description = (
+                f"{photo_count} {'photo' if photo_count == 1 else 'photos'} of {display_name} "
+                f"in the Rhodesli Heritage Archive. Do you recognize this person?"
+            )
 
     og_meta_tags = (
         Meta(property="og:title", content=og_title),
@@ -1245,13 +1266,14 @@ def public_person_page(
         cls="px-4 py-2 min-h-[44px] min-w-[44px] bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center justify-center active:scale-95",
         type="button",
         data_action="share-photo",
-        data_share_url=og_page_url,
-        data_share_title=f"{display_name} — Jews of Rhodes Heritage Archive",
-        data_share_text=f"Do you recognize {display_name}? Help us identify people in our heritage photo archive.",
+        # PRD-065: share the unambiguous "Photos of <Name>" gallery link.
+        data_share_url=person_photos_url,
+        data_share_title=f"Photos of {display_name} — Jews of Rhodes Heritage Archive",
+        data_share_text=f"Do you recognize {display_name}? See their photos in our heritage archive and help identify more.",
     )
 
     return (
-        Title(f"{display_name} — Rhodesli Heritage Archive"),
+        Title(og_title),
         *og_meta_tags,
         page_style,
         lightbox_js,
@@ -1893,6 +1915,46 @@ def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=Non
 
     return public_person_page(
         person_id, view=view, sort_by=sort_by, user=user, is_admin=user_is_admin, community_slug=community_slug
+    )
+
+
+@rt("/person/{person_id}/photos")
+def get(person_id: str, sort_by: str = "date_asc", sess=None, request=None):
+    """
+    Dedicated shareable person-photo gallery — the "Photos of <Name>" link
+    surfaced by the person page Share button (PRD-065, FB-004).
+
+    Renders the same gallery + in-set viewer as the person page (view=photos)
+    but with photo-centric OG/title framing so a shared link is unambiguous.
+    No authentication required.
+    """
+    _main_mod.touch_user_activity()  # SWR bot guard (egress reduction)
+    user = get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
+    user_is_admin = (user.is_admin if user else False) if _main_mod.is_auth_enabled() else True
+    community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+
+    # FB-063: auto-detect the person's primary community when no explicit prefix
+    # was used, so all on-page links get the right prefix (mirrors /person/{id}).
+    community_explicit = getattr(request.state, "community_explicit", False) if request else False
+    if not community_explicit and user_is_admin:
+        detected_slug = _detect_person_community(person_id)
+        if detected_slug and detected_slug != "rhodes":
+            from starlette.responses import RedirectResponse
+
+            qs = request.url.query
+            redirect_url = f"/c/{detected_slug}/person/{person_id}/photos"
+            if qs:
+                redirect_url += f"?{qs}"
+            return RedirectResponse(redirect_url, status_code=302)
+
+    return public_person_page(
+        person_id,
+        view="photos",
+        sort_by=sort_by,
+        user=user,
+        is_admin=user_is_admin,
+        community_slug=community_slug,
+        photos_share=True,
     )
 
 

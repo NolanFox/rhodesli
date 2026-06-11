@@ -11528,6 +11528,42 @@ def public_photo_page(
     )
     context_identity_missing = bool(identity_id and context_person_name and not context_face_info)
 
+    # Public-appropriate context banner copy (Session 165, Phase 3). The
+    # "needs review / review before trusting this link" framing is ADMIN
+    # language. Anonymous/non-admin viewers get gentle, non-alarming wording and
+    # neutral (amber) styling; admins keep the review framing + rose alarm.
+    # With the Phase 1 nav fix, public viewers won't reach an off-person photo
+    # via the arrows, but a raw deep link still can — so handle it gracefully.
+    _is_review_state = context_identity_conflict or context_identity_missing
+    banner_alarm = _is_review_state and is_admin
+    banner_badge_label = "Needs review" if banner_alarm else "Viewing"
+    if context_identity_present and not context_identity_conflict:
+        banner_headline = f"Viewing {context_person_name} in this photo."
+        banner_subline = "The highlighted face card below matches the person context you came from."
+    elif context_identity_conflict:
+        if is_admin:
+            banner_headline = f"{context_person_name} is tagged on this photo, but the current assignment needs review."
+            banner_subline = (
+                "The highlighted face overlaps another assignment on this photo. "
+                "Treat it as disputed until it is reviewed."
+            )
+        else:
+            banner_headline = f"{context_person_name} may appear in this photo."
+            banner_subline = "We're still confirming who's who in this photo."
+    else:  # context_identity_missing
+        if is_admin:
+            banner_headline = f"{context_person_name} is not currently tagged on this photo."
+            banner_subline = (
+                "You reached this photo from that person's gallery, but no current face assignment "
+                "matches them here. Review before trusting this link."
+            )
+        else:
+            banner_headline = f"We haven't tagged {context_person_name} in this photo yet."
+            banner_subline = (
+                f"You came from {context_person_name}'s photos. Browse the photo below — and if you "
+                "recognize someone, help us identify them."
+            )
+
     # First unidentified face from this photo — for contextual "Help Identify" CTA
     first_unidentified_id = next(
         (fi["identity_id"] for fi in face_info_list if not fi["is_identified"] and fi["identity_id"]), None
@@ -12230,53 +12266,29 @@ def public_photo_page(
             Div(
                 Div(
                     Span(
-                        "Needs review" if (context_identity_conflict or context_identity_missing) else "Viewing",
+                        banner_badge_label,
                         cls=(
                             "text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
                             + (
                                 " text-rose-200 bg-rose-500/15 border border-rose-500/30"
-                                if (context_identity_conflict or context_identity_missing)
+                                if banner_alarm
                                 else " text-amber-200 bg-amber-500/15 border border-amber-500/30"
                             )
                         ),
                     ),
                     Div(
                         P(
-                            (
-                                f"Viewing {context_person_name} in this photo."
-                                if context_identity_present and not context_identity_conflict
-                                else (
-                                    f"{context_person_name} is tagged on this photo, but the current assignment needs review."
-                                    if context_identity_conflict
-                                    else f"{context_person_name} is not currently tagged on this photo."
-                                )
-                            ),
+                            banner_headline,
                             cls=(
                                 "text-sm leading-relaxed font-medium "
-                                + (
-                                    "text-rose-100"
-                                    if (context_identity_conflict or context_identity_missing)
-                                    else "text-amber-100"
-                                )
+                                + ("text-rose-100" if banner_alarm else "text-amber-100")
                             ),
                         ),
                         P(
-                            (
-                                "The highlighted face card below matches the person context you came from."
-                                if context_identity_present and not context_identity_conflict
-                                else (
-                                    "The highlighted face overlaps another assignment on this photo. Treat it as disputed until it is reviewed."
-                                    if context_identity_conflict
-                                    else "You reached this photo from that person's gallery, but no current face assignment matches them here. Review before trusting this link."
-                                )
-                            ),
+                            banner_subline,
                             cls=(
                                 "text-sm sm:text-xs leading-relaxed "
-                                + (
-                                    "text-rose-100/80"
-                                    if (context_identity_conflict or context_identity_missing)
-                                    else "text-amber-100/80"
-                                )
+                                + ("text-rose-100/80" if banner_alarm else "text-amber-100/80")
                             ),
                         ),
                         cls="flex-1 min-w-0",
