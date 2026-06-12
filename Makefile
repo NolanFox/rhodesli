@@ -16,3 +16,7 @@ test-ml:
 	$(PYTEST) rhodesli_ml/tests/ -x -q -n auto --timeout=60
 
 test: test-fast
+
+.PHONY: lint
+lint:
+	$(VENV)/bin/ruff check app/ core/ tests/

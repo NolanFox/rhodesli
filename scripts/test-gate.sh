@@ -24,8 +24,24 @@ if [ ! -f "$PYTEST" ]; then
     exit 1
 fi
 
+# ruff lives next to pytest in the same venv. CI runs `ruff check app/ core/
+# tests/` as a blocking Lint step — mirror it locally so lint errors (e.g.
+# F541) can't pass every local commit and only fail CI (which kept the Tests
+# workflow red for ~5 sessions; Lesson 209).
+RUFF="$(dirname "$PYTEST")/ruff"
+run_lint() {
+    if [ -x "$RUFF" ]; then
+        if ! "$RUFF" check app/ core/ tests/ 2>&1 | tail -20; then
+            echo "BLOCKED: ruff lint errors (run: ruff check --fix app/ core/ tests/)" >&2
+            return 1
+        fi
+    fi
+    return 0
+}
+
 case "$MODE" in
     fast)
+        run_lint || exit 1
         # Pre-commit gate: run core test files that cover registry, supabase,
         # and photo rendering. Full suite has pre-existing ordering flakes
         # (PERF-001) that block commits on unrelated changes.

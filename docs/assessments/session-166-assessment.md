@@ -103,3 +103,17 @@ The independent **Codex post-execution audit** (gpt-5.5/xhigh) served as the aut
 - **Dual photo-ID space** (canonical SHA256 `8346decbf2b2f8c1` vs storage `inbox_55868a49_9_IMG_1260`) cost time locating the photo across `photos` / `date_labels` (already Lesson 25/63).
 - **"No-TTL cache" surprise**: the direct Supabase write didn't appear on the live site until the deploy restarted the app (Lesson 206). The website update was gated on a deploy I'd have done anyway, but it wasn't obvious up front.
 - **Silent deferral caught late**: the GEDCOM-backfill follow-up wasn't logged to BACKLOG until the user explicitly asked "did we fix everything?" — now **ESTIMATE-BACKFILL-166** + **GEMINI-LOG-AUDIT-166**.
+
+## Post-session: CI fix (user-reported failure emails)
+
+User reported "[NolanFox/rhodesli] Run failed: Tests" emails. Root-caused: CI's
+blocking `ruff check app/ core/ tests/` Lint step had been failing since **Session 161**
+on two F541 errors (f-strings without placeholders) in `app/admin_rhodes_inbox_routes.py`
+— the "Tests" workflow has been red for ~5 sessions. The local commit gate
+(`scripts/test-gate.sh`, `make test-fast`) ran pytest but **never ruff**, so
+every local commit passed while CI stayed red.
+
+- **Fixed** (`6e1a15b2`): removed the two `f` prefixes; `ruff check app/ core/ tests/` clean.
+- **Hardened the gate**: `run_lint()` added to `scripts/test-gate.sh` (lint now
+  blocks `fast`-mode commits exactly like CI; verified an injected F541 → exit 1).
+  Added `make lint`. Lesson 209.

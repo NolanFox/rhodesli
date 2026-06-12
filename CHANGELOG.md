@@ -19,6 +19,10 @@ Interactive request: run a full date/location estimate on photo `8346decbf2b2f8c
 ### Tests
 - Schema-drift filter (drop+preserve, probe-failure passthrough), operator/experiment_id threading, GEDCOM loader 164-schema regression guard. `make test-fast`: **4341 passed**, 0 regressions.
 
+### CI (post-session, user-reported failure emails)
+- **Unblocked the "Tests" workflow** (`6e1a15b2`) — red since Session 161 on two F541 lint errors (f-strings without placeholders) in `app/admin_rhodes_inbox_routes.py`. CI's `ruff check` Lint step failed before tests ran; the local gate never ran ruff, so it stayed invisible for ~5 sessions.
+- **Hardened the local gate** — `scripts/test-gate.sh` now runs `ruff check app/ core/ tests/` in `fast` mode (blocks commits like CI does); added `make lint`. Lesson 209.
+
 ## [v0.99.85] — 2026-06-10 (Session 165: Person-Scoped Photo Navigation + Shareable Person Gallery — FB-004 / PRD-065)
 
 Fixed FB-004 (Session 135, P1): a shared person link's photo viewer cycled the **whole collection** instead of just that person's photos. Root cause was a dual photo-ID-space split-brain (Lesson 25 / Lesson 63), not the originally hypothesized client-JS guard.
