@@ -42,9 +42,12 @@ Triggers: At the start of any implementation session.
 5. Deploy: `git push origin main`, verify health 200
 6. Browser verify: landing, people grid, person page, compare, estimate, 404
 7. `git log origin/main..HEAD` must be empty
-8. Memory backup: automated by stop-gate.sh (runs `scripts/backup-memory.sh`).
+8. CI green: `gh run list --branch main --limit 1` — the "Tests" job must be
+   `success`, not `failure`. A red main emails the user on every push (Lesson 209).
+   The local gate now runs `ruff check` too, but still confirm CI.
+9. Memory backup: automated by stop-gate.sh (runs `scripts/backup-memory.sh`).
    Manually invoke if the hook reports failure.
-9. Run /session-review skill
+10. Run /session-review skill
 
 ### Skills (use without being asked)
 - /session-review — at session end
