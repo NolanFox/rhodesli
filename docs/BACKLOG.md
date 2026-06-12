@@ -18,6 +18,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **GEDCOM-SOURCES-MEDIA** (P3): sources/media_objects have no canonical current-state DB table (preserved losslessly in R2 snapshot + raw.ged.gz). If in-DB current-state is later wanted, add additive tables + importer upserts.
 - **R2-HISTORY-GC** (P3): a rolled-back atomic import leaves content-addressed orphan artifacts in R2 (harmless, dedup-reusable). Add a periodic GC that deletes artifact prefixes with no matching `applied` `gedcom_versions` row.
 
+## Session 166 Follow-ups (multi-model photo estimate + bug fixes)
+- **ESTIMATE-BACKFILL-166** (P2): the GEDCOM context loader was dead from Session 164 → Session 166 (~2 months, Lesson 205), so every date/location estimate computed in that window ran **visual-only with no genealogical enrichment**. Now that enrichment is restored, re-run estimates for GEDCOM-linked photos whose stored `date_labels` were produced visual-only in that window (filter: `reanalyzed_at` between 164 and 166, or `gemini_config.enrichment_level='none'` on a GEDCOM-linked photo). Use `scripts/multimodel_photo_estimate.py` or a batch variant. Will sharpen many estimates (age-anchoring + spouse-death ceilings).
+- **GEMINI-LOG-AUDIT-166** (P2): because `log_gemini_call` rejected the whole insert on the drifted `contract_valid`/lineage columns (Lesson 105/152, fixed `bf8ff267`), an unknown number of interactive/admin estimate calls **never logged to `gemini_api_calls`** since the lineage fields were added. Cost/usage analytics for that window are undercounted. Optionally backfill from app logs, or just note the gap in any cost report. Going forward logging self-heals.
+- **GEMINI-API-CALLS-SCHEMA-166** (P3): the proper fix is to add the missing lineage columns (`contract_valid`, `prompt_manifest_id`, `prompt_hash`, `full_response_hash`, `request_surface`, `request_mode`, `shadow_run_id`, `prompt_family`, `prompt_version`, `prompt_variant`, `prompt_contract_version`, `related_state_event_id`) to the live `gemini_api_calls` table so lineage is queryable as columns instead of buried in `gemini_config._lineage`. Migration only; the code already passes them.
+- **PHOTO-ESTIMATE-EXPERIMENTS-TABLE** (P3): if DB-queryable cross-provider experiments are wanted at scale, add an append-only `photo_estimate_experiments` table (one row per model per run) instead of the repo-artifact approach. Documented upgrade path in AD-251.
+
 ## Active Bugs
 
 ### Session 163 follow-ups (Supabase recovery)

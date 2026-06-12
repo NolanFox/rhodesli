@@ -87,3 +87,19 @@ The independent **Codex post-execution audit** (gpt-5.5/xhigh) served as the aut
 
 ## Concerns / Red Flags
 - None outstanding. The GEDCOM-loader outage (Lesson 205) means historical estimates computed during the ~2-month window were visual-only — flagged in "Next session should verify" as a candidate backfill (not a regression introduced this session).
+
+## Retrospective — what worked / what didn't
+
+### What worked
+- **Running the real production pipeline on one concrete photo** surfaced TWO silent multi-month regressions (broken Gemini logging + dead GEDCOM context) that all 4341 unit tests passed straight through. Highest-yield debugging move of the session — see Lesson 208.
+- **Driving the production route helpers locally against live Supabase** (patching only the image loader + auth) gave a byte-faithful write path without re-implementing it.
+- **Cross-provider comparison via native tooling**: Fable through an `Agent` subagent (`model: fable`), Codex through `codex exec -i image.jpg` — both saw the same image + prompt, run in parallel. Fair and cheap.
+- **GEDCOM enrichment is the dominant accuracy lever**: the spouse-death ceiling (1926) + apparent-age anchoring turned a vague "1890–1920 oval portrait" into a confident ~1912 / NYC. The model that used it best (Fable) won.
+- **Codex post-exec audit earned its keep**: caught two data-integrity risks in the new write path (full-document overwrite, cross-community GEDCOM leak) that the unit tests did not.
+
+### What didn't / friction
+- **First Gemini call returned `None`** (transient API error) and was briefly mistaken for a hard failure; a direct re-run worked. Transient ≠ broken — recheck before concluding.
+- **Python `urllib` SSL had no CA roots** (cert verify failed) — needed a `certifi` context; `curl` worked. Minor but cost a cycle.
+- **Dual photo-ID space** (canonical SHA256 `8346decbf2b2f8c1` vs storage `inbox_55868a49_9_IMG_1260`) cost time locating the photo across `photos` / `date_labels` (already Lesson 25/63).
+- **"No-TTL cache" surprise**: the direct Supabase write didn't appear on the live site until the deploy restarted the app (Lesson 206). The website update was gated on a deploy I'd have done anyway, but it wasn't obvious up front.
+- **Silent deferral caught late**: the GEDCOM-backfill follow-up wasn't logged to BACKLOG until the user explicitly asked "did we fix everything?" — now **ESTIMATE-BACKFILL-166** + **GEMINI-LOG-AUDIT-166**.
