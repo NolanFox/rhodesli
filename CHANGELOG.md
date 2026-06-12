@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.86] — 2026-06-12 (Session 166: Multi-Model Photo Estimate + 3 Production Bug Fixes — AD-251)
+
+Interactive request: run a full date/location estimate on photo `8346decbf2b2f8c1` (`IMG_1260.JPG` — Meyer Fox + Reva Heft), compare three models, write the best to the website + Supabase, and make manual runs structurally distinguishable from platform runs. Surfaced and fixed three production bugs along the way.
+
+### Fixed (production bugs)
+- **Gemini API-call logging silently broken** (`bf8ff267`, Lesson 105/152 schema drift) — `build_prompt_lineage_fields()` passed `contract_valid` + `prompt_manifest_id` + `request_surface` etc. that the live `gemini_api_calls` table lacks, so PostgREST rejected the **entire** insert (PGRST204). Every interactive/admin estimate had been failing to log. `log_gemini_call` now discovers the live column set and filters unknown columns, preserving them in `gemini_config._lineage`.
+- **GEDCOM context dead since Session 164** (`bf8ff267`, Lesson 205) — `run_combined_pipeline.load_gedcom_data()` was missed in the 164 "repoint all readers" step; it queried the dropped `current_gedcom_individuals` view + `is_current` column → returned None → **every** estimate ran visual-only with zero genealogical enrichment for ~2 months. Now reads the canonical current-state tables directly. Restored enrichment platform-wide.
+- **Manual-vs-platform provenance** (`bf8ff267`) — `_call_gemini_date_estimate` gains `operator` (default `platform`) + `experiment_id`. Manual runs tag `operator=claude-code-manual` + `experiment_id LIKE 'manual-%'`.
+
+### Shipped
+- **Multi-model photo-estimate workflow** (`d128f193`, AD-251) — `scripts/multimodel_photo_estimate.py` runs one fully-GEDCOM-enriched prompt against **Gemini 3.1 Pro**, **Fable 5.0** (Agent subagent), and **Codex gpt-5.5-xhigh** (`codex exec -i`). Chosen estimate → DB; all candidates + `DECISION.md` → repo artifact (`docs/experiments/photo-estimates/8346decbf2b2f8c1-2026-06-12/`). Schema rationale: `date_labels` is last-write-wins per photo, so only the chosen estimate is authoritative; cross-provider experiment stays reproducible in git.
+- **Estimate written** — all three converged on **decade 1910 / NYC / medium**, hard ceiling 1926 (Reva's death). Winner **Fable 5.0** (best GEDCOM age-anchoring). `date_labels` + `photo_locations` updated in Supabase with full `analysis_provenance`; live page shows "circa 1912 · Range 1906–1920 · New York, New York".
+- **Harness wiring** — `.claude/rules/multimodel-photo-estimate.md`, AD-251, Lessons 205–207.
+
+### Tests
+- Schema-drift filter (drop+preserve, probe-failure passthrough), operator/experiment_id threading, GEDCOM loader 164-schema regression guard. `make test-fast`: **4341 passed**, 0 regressions.
+
 ## [v0.99.85] — 2026-06-10 (Session 165: Person-Scoped Photo Navigation + Shareable Person Gallery — FB-004 / PRD-065)
 
 Fixed FB-004 (Session 135, P1): a shared person link's photo viewer cycled the **whole collection** instead of just that person's photos. Root cause was a dual photo-ID-space split-brain (Lesson 25 / Lesson 63), not the originally hypothesized client-JS guard.
