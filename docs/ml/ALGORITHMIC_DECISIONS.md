@@ -2923,3 +2923,20 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rationale**: A compensating version is itself an applied version (auditable, re-unwindable) and keeps the history chain continuous. The three-way check guarantees we never silently overwrite a human edit made after the change being unwound. Reconstructing from the lossless R2 snapshot (vs reverse-applying field deltas) is exact.
 - **Alternatives rejected**: reverse-replay of field deltas (can't reconstruct add/remove NULL→NULL, can clobber drift); `--force` override (removes the safety the user explicitly asked for).
 - **Affects**: `scripts/gedcom_unwind.py`. See `docs/architecture/GEDCOM_HISTORY.md` §7, PRD-064.
+
+---
+
+## AD-251: Multi-model per-photo estimate — chosen-to-DB, candidates-to-repo, structural manual/platform provenance
+
+- **Date**: 2026-06-12
+- **Session**: 166
+- **Context**: User asked to run a date/location estimate on a specific photo against three models (Gemini 3.1 Pro, Fable 5.0, Codex gpt-5.5-xhigh), update the website with the best, and keep a record of how it was decided — while making manual runs distinguishable from platform runs in the data.
+- **Decision**:
+  1. **One enriched prompt, N models.** Build a single fully-GEDCOM-enriched date+location prompt and send the identical prompt + image to every model (`scripts/multimodel_photo_estimate.py`). Gemini via the production `_call_gemini_date_estimate`; Fable via an `Agent` subagent (`model: fable`); Codex via `codex exec -i image.jpg`.
+  2. **Only the chosen estimate is written to the DB.** `date_labels` is keyed by `photo_id` (upsert = last-write-wins) and the website renders that one row, so it cannot represent competing estimates — writing all three would silently keep only the most recent. The chosen estimate goes to `date_labels` + `photo_locations` with an `analysis_provenance` block (`operator`, `chosen_model`, `decision_method`, `decision_artifact`, `candidates_compared`).
+  3. **All candidates + the decision are repo artifacts**, not DB rows: `docs/experiments/photo-estimates/<photo_id>-<date>/` holds `PROMPT.txt`, `candidate-<model>.json` for each model, and `DECISION.md`. Reproducible in git; nothing lost.
+  4. **Structural manual/platform provenance.** `_call_gemini_date_estimate` gains `operator` (default `"platform"`) + `experiment_id`. Manual runs tag `operator="claude-code-manual"` + `experiment_id LIKE 'manual-%'` (in `gemini_api_calls`) and an `analysis_provenance` block (in `date_labels`). Platform runs leave both unset.
+- **Rationale**: No schema migration; production stays clean (one authoritative answer per photo); cross-provider experiments stay fully reproducible and reviewable in version control; provenance is queryable by data shape, not by convention.
+- **Finding** (this photo, Meyer Fox + Reva Heft): all three converged on **decade 1910 / NYC / medium**, ceiling 1926. Winner **Fable 5.0** on reasoning rigor (biographical age-anchoring); Gemini a near-tie; Codex over-weighted the broad print-format range toward 1900. See Lesson 207.
+- **Alternatives rejected**: (a) write all three to `date_labels` — destroys the comparison (last-write-wins); (b) log Fable/Codex in `gemini_api_calls` — category error (Gemini-shaped table/pricing/lineage); (c) a dedicated `photo_estimate_experiments` table now — over-weight for an occasional admin workflow (documented as the upgrade path if DB-queryable experiments are needed at scale).
+- **Affects**: `scripts/multimodel_photo_estimate.py`, `app/estimate_routes.py` (`_call_gemini_date_estimate` operator/experiment_id), `app/supabase_data.py` (`log_gemini_call` schema-drift filter), `.claude/rules/multimodel-photo-estimate.md`. See Lessons 205–207.

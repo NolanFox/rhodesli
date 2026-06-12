@@ -18,7 +18,7 @@ is what you need to internalize.
 | **Local↔production data divergence** (split-brain) | 9 | 78, 144, 147, 150, 153 | Supabase single source of truth (AD-135, in progress) |
 | **Production-origin files re-added to deploy sync** | 6 | 56, 69, 78, 85, 141 | .gitignore allowlist + AD-134 safety gate |
 | **Silent Supabase writes with `except: pass`** | 3 | 123, 136, 153 | Remove fire-and-forget; surface all write failures |
-| **Schema drift between code and live Supabase tables** | 3 | 105, 134, 152 | Integration tests against live schema (mock tests insufficient) |
+| **Schema drift between code and live Supabase tables** | 4 | 105, 134, 152, 205 | Integration tests against live schema (mock tests insufficient); column-filter inserts so one drifted column can't drop the whole row |
 | **Post-write data verification missing (orphans)** | 3 | 145, 146, 154 | Post-mutation integrity checks; structural tests |
 | **Batch script outputs don't reach production read path** | 3 | 160, 161, 162 | Pre-flight: verify logging, enrichment, write target before bulk run |
 | **Heavy Supabase migrations stall on pooler / OOM** | 3 | 163, 165, 183 | Chunked-write template (≤10K rows per iteration; upsert immediately; never accumulate full dataset). Pre-flight pooler health probe. |
@@ -110,6 +110,8 @@ modes the codebase keeps regenerating.
 | 184 | **Zombie idle-in-transaction backends survive client disconnects — Session 158d found 16 backends from 158b's failed cursor backfill idle for 22h holding AccessShareLock. Pre-DDL gate must scan `pg_stat_activity` for old idle-in-transaction sessions; long cursor scripts must set `idle_in_transaction_session_timeout='5min'`.** |
 | 185 | **`pg_terminate_backend` on a hot production pool cascades into worker crashes — Session 158d killed 16 zombies, RENAME succeeded, then production went 502 with `x-railway-fallback: true`. Workers held aliases to terminated backends → query failures → crashes → Railway restart loop. Mitigation: redeploy first OR maintenance window; never terminate connections during live traffic.** |
 | 186 | **Supabase PostgREST schema cache can get stuck after RENAME + ROLLBACK — Session 158d post-rollback REST returned `PGRST002: Could not query the database for the schema cache` on 3/3 trials across `identities` and `date_labels`. App startup, deploy healthchecks, and cutover scripts ALL depend on REST. `NOTIFY pgrst, 'reload schema'` from psycopg2 did NOT recover it. Fix: restart Supabase PostgREST via dashboard (Settings → API → Restart, or Project → Pause+Resume). Pre-DDL checklist: be ready to dashboard-restart Supabase if PGRST002 appears post-cutover.** |
+| 205 | **GEDCOM context loader silently broke after the Session 164 schema redesign — `run_combined_pipeline.load_gedcom_data()` was missed in the "repoint all readers" step and kept querying the dropped `current_gedcom_individuals` view + `is_current` column → returned None → EVERY estimate ran visual-only with zero genealogical enrichment for ~2 months. Grep for every dropped table/view/column across scripts/+app/+rhodesli_ml/ after a schema change; a reader that fails closed to None is a silent quality regression, not an error (Session 166).** |
+| 206 | **Direct Supabase writes are invisible to the live app until restart — `date_labels`/`photo_locations` caches are module globals with NO TTL. Surface a direct DB write via a normal deploy (`git push` restarts the app). Never bust the cache with `/api/sync/resync-supabase` (re-upserts volume JSON, destructive) or the in-app reanalyze button (re-runs Gemini, overwrites the chosen value) (Session 166).** |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
 
@@ -202,6 +204,7 @@ modes the codebase keeps regenerating.
 | 115 | **Single-linkage union-find creates transitive snowball clusters — use complete-linkage** |
 | 171 | **Genealogical name collisions are common — always verify with primary sources (death certificates, cemetery records), not other Ancestry trees. "Abe Fader" (d.1958) was a different person from Abraham "Al" Fader (d.1984). Cascading error temporarily reversed entire identification hypothesis (Session 148c)** |
 | 172 | **Embedding kinship distance is a WEAK identification signal (0.09 gap mother vs non-blood). Event context (corsage, aisle walk, dance partners) is the STRONGEST signal. Cross-collection similarity is useless for in-laws (Session 148c)** |
+| 207 | **With rich GEDCOM context, multi-model photo dating is won by biographical-age anchoring, not material-format breadth — Gemini 3.1 Pro / Fable 5.0 / Codex gpt-5.5 all converged on decade 1910/NYC; Fable won by anchoring the lower bound on apparent-age-vs-birth-year, Codex over-weighted the broad oval-enlargement range toward 1900. Prefer the model that sharpens the wide material-format prior with biography + a spouse-death ceiling (Session 166, AD-251)** |
 
 ## Harness & Process — `tasks/lessons/harness-lessons.md`
 
