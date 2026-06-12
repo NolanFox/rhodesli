@@ -1,0 +1,45 @@
+{
+  "date_estimation": {
+    "evidence": {
+      "print_format": [
+        {"cue": "Large oval crayon/charcoal-enlargement style portrait on thick cardboard mount — a format heavily marketed to immigrant families by enlargement houses, peaking c.1895-1920", "strength": "moderate", "suggested_range": [1895, 1920]},
+        {"cue": "Heavy hand-retouching/airbrushed tonal flattening typical of solar enlargements made from a studio negative, common 1900-1925", "strength": "moderate", "suggested_range": [1900, 1925]},
+        {"cue": "Severe emulsion flaking and brittle layered cardboard consistent with a 100+ year old mounted enlargement rather than a later gelatin silver reprint", "strength": "weak", "suggested_range": [1890, 1925]}
+      ],
+      "fashion": [
+        {"cue": "Woman's high-necked dark bodice with elaborate soutache/embroidered floral appliqué and round brooch at the collar — late-Edwardian matron style, c.1905-1915", "strength": "strong", "suggested_range": [1905, 1915]},
+        {"cue": "Woman's center-parted hair drawn back without the fuller pompadour of c.1900-1905 or bobbed styles of the 1920s", "strength": "moderate", "suggested_range": [1905, 1918]},
+        {"cue": "Man's dark sack suit with high-buttoning waistcoat and patterned four-in-hand tie", "strength": "moderate", "suggested_range": [1905, 1920]},
+        {"cue": "Man's full white patriarchal beard — retained by older Eastern-European Jewish immigrants regardless of mainstream clean-shaven trend, so a weak dating cue but consistent with traditional Minsk-born elder", "strength": "weak", "suggested_range": [1890, 1925]}
+      ],
+      "environment": [
+        {"cue": "Plain studio backdrop with no props or scenery — standard commercial studio portrait convention of 1900s-1910s", "strength": "weak", "suggested_range": [1900, 1920]}
+      ],
+      "technology": [
+        {"cue": "Apparent ages of the sitters: Meyer Fox (b. abt 1853) shows a fully white beard and hair, reading as roughly 58-65 → c.1911-1918; Rebecca Heft (b. abt 1865) reads as roughly 45-55 → c.1910-1920. The overlap of both age reads centers on the early-to-mid 1910s", "strength": "strong", "suggested_range": [1910, 1918]}
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Eastern-European Jewish immigrants in New York commonly retained old-world grooming (Meyer's full beard) and conservative dress for studio portraits, so the woman's c.1905-1915 embroidered bodice could plausibly still be worn a few years past its mainstream peak. The probable range is therefore extended ~3-5 years later than the pure fashion read, but not earlier, since the sitters' apparent ages anchor the lower bound.",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1912,
+    "confidence": "medium",
+    "probable_range": [1906, 1920],
+    "decade_probabilities": {"1890": 0.02, "1900": 0.14, "1910": 0.60, "1920": 0.24},
+    "reasoning_summary": "The strongest signals are convergent: Rebecca's late-Edwardian high-collared embroidered bodice (c.1905-1915) and the sitters' apparent ages against their GEDCOM birth years (Meyer b.~1853 reading ~60, Rebecca b.~1865 reading ~50) both center on the early 1910s. The oval crayon-enlargement format (c.1895-1920) is consistent but broad, and a modest cultural-lag allowance pushes the upper tail toward 1920. The hard ceiling is Rebecca's death on 2 Aug 1926, and the 1920s receive only modest probability because neither sitter's dress nor hair shows any post-WWI styling."
+  },
+  "location": {
+    "place": "New York City, New York, USA",
+    "confidence": "medium",
+    "visual_evidence": "Plain studio backdrop with no architectural, signage, or environmental cues; the heavily retouched oval enlargement format was ubiquitous among commercial portrait/enlargement houses on the Lower East Side and in Brooklyn, but the image itself contains no location-identifying detail.",
+    "biographical_evidence": "GEDCOM residence events place the couple in Manhattan (1905, 1910 Ward 7 — Lower East Side) and Brooklyn, Kings County (1915, 1920, 1925), with New York events for the family in 1903, 1905, and 1906 marking arrival from Minsk. For the best-estimate year of ~1912 the family residence falls between Manhattan Ward 7 (1910) and Brooklyn (1915), so the photo was almost certainly taken at a New York City studio. A pre-emigration Minsk origin is possible only if the photo predates ~1903-1906, which the sitters' apparent ages argue against.",
+    "missing_child_analysis": "Only the parents appear; no children are visible, so the missing-child test cannot narrow the date. All eleven known children were born by 1901 (youngest Jack b.1901), so by the estimated 1910s date every child was a teen or adult and their absence from a formal couple portrait is expected.",
+    "source_type": "biographical",
+    "candidates": [
+      {"place": "Manhattan (Lower East Side, Ward 7), New York, USA", "confidence": "medium", "source": "biographical", "reasoning": "Documented residence 1905-1910; matches the earlier half of the probable date range"},
+      {"place": "Brooklyn, Kings County, New York, USA", "confidence": "medium", "source": "biographical", "reasoning": "Documented residence from 1915 onward; matches the later half of the probable date range, and oval enlargements were often commissioned in this period"},
+      {"place": "Minsk, Minsk, Belarus", "confidence": "low", "source": "biographical", "reasoning": "Pre-emigration residence; only plausible if the photo predates the family's ~1903-1906 arrival in New York, which conflicts with Meyer's fully white beard and both sitters' apparent ages"}
+    ]
+  },
+  "visible_text": {"detected": false, "text": "", "language": "", "script": ""}
+}

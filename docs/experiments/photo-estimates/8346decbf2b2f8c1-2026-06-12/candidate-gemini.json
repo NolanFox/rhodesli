@@ -1,0 +1,97 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "provider": "google-gemini",
+  "operator": "claude-code-manual",
+  "experiment_id": "manual-multimodel-8346decbf2b2f8c1-2026-06-12",
+  "latency_ms": 29356,
+  "gedcom_enriched": true,
+  "result": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Large oval format, likely mounted on curved board or convex glass",
+          "strength": "strong",
+          "suggested_range": [
+            1890,
+            1920
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Rebecca's dark dress with high collar and heavy soutache/braided applique",
+          "strength": "strong",
+          "suggested_range": [
+            1895,
+            1915
+          ]
+        },
+        {
+          "cue": "Meyer's conservative dark suit and wide tie/cravat",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1920
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain dark studio background",
+          "strength": "weak",
+          "suggested_range": [
+            1880,
+            1930
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Black and white studio portrait, possibly a retouched enlargement",
+          "strength": "moderate",
+          "suggested_range": [
+            1890,
+            1920
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Older immigrant couples often wore conservative styles that lagged behind current fashion trends by several years.",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1910,
+    "confidence": "medium",
+    "probable_range": [
+      1905,
+      1915
+    ],
+    "decade_probabilities": {
+      "1900": 0.3,
+      "1910": 0.6,
+      "1920": 0.1
+    },
+    "reasoning_summary": "The apparent ages of Rebecca (born ~1865, appearing ~45) and Meyer (born ~1853, appearing ~55-60) strongly point to a date around 1910. This aligns with Rebecca's Edwardian-era dress featuring heavy applique and a high collar, as well as the large oval portrait format which was highly popular among immigrant families in the early 20th century.",
+    "location": {
+      "place": "New York, New York, USA",
+      "confidence": "medium",
+      "visual_evidence": "Standard studio portrait with no geographic markers; the large oval format was a common fixture in American immigrant homes.",
+      "biographical_evidence": "Genealogical records indicate the family immigrated from Russia/Minsk around 1903-1905. During the estimated photo date range of 1905-1915, census records place their residence in Manhattan (1905, 1910) and later Brooklyn (1915 onwards).",
+      "missing_child_analysis": "N/A - Couple portrait only.",
+      "source_type": "biographical",
+      "candidates": [
+        {
+          "place": "Brooklyn, New York, USA",
+          "confidence": "medium",
+          "source": "biographical",
+          "reasoning": "The family's documented residence from 1915 onwards; possible if the photo dates to the later end of the estimated range."
+        },
+        {
+          "place": "Minsk, Belarus",
+          "confidence": "low",
+          "source": "biographical",
+          "reasoning": "Possible if the portrait was taken just prior to their emigration around 1903, though the style is very characteristic of post-arrival American portraits."
+        }
+      ]
+    }
+  }
+}

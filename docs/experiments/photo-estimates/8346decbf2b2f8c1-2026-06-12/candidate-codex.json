@@ -1,0 +1,144 @@
+{
+  "model": "codex-gpt-5.5-xhigh",
+  "provider": "openai-codex",
+  "operator": "claude-code-manual",
+  "experiment_id": "manual-multimodel-8346decbf2b2f8c1-2026-06-12",
+  "runner": "codex exec -i image.jpg (gpt-5.5, xhigh)",
+  "tokens_used": 18971,
+  "gedcom_enriched": true,
+  "result": {
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Large oval portrait mounted on rigid card, a format commonly used for formal enlargements in the early twentieth century",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1925
+          ]
+        },
+        {
+          "cue": "Warm monochrome print with a plain studio background and softly rendered enlargement",
+          "strength": "moderate",
+          "suggested_range": [
+            1895,
+            1920
+          ]
+        },
+        {
+          "cue": "Severe cracking, edge loss, and fading indicate age but do not precisely date the original print",
+          "strength": "weak",
+          "suggested_range": [
+            1890,
+            1930
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Rebecca Reva Heft Fox wears a high-necked, elaborately decorated formal bodice characteristic of late Victorian and Edwardian styling",
+          "strength": "strong",
+          "suggested_range": [
+            1900,
+            1915
+          ]
+        },
+        {
+          "cue": "Rebecca's center-parted hair is arranged close to the head without the shorter styles prevalent during the 1920s",
+          "strength": "moderate",
+          "suggested_range": [
+            1895,
+            1918
+          ]
+        },
+        {
+          "cue": "Meyer Fox wears a dark formal suit with a patterned necktie, compatible with conservative urban portrait dress of the 1900s and 1910s",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1920
+          ]
+        },
+        {
+          "cue": "Meyer's full mustache and short beard are consistent with an older immigrant man's conservative grooming and have limited independent dating value",
+          "strength": "weak",
+          "suggested_range": [
+            1890,
+            1925
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain painted studio backdrop provides no identifiable architectural, geographic, or environmental features",
+          "strength": "weak",
+          "suggested_range": [
+            1890,
+            1930
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Formal studio lighting, shallow tonal range, and retouched enlargement are consistent with commercial portrait-studio practices",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1920
+          ]
+        },
+        {
+          "cue": "No automobiles, appliances, signage, or other independently datable objects are visible",
+          "strength": "weak",
+          "suggested_range": [
+            1890,
+            1926
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "The couple's immigrant background and deliberately conservative studio attire could preserve styles several years after their mainstream peak, so the Edwardian clothing does not require a pre-1910 date.",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1910,
+    "confidence": "medium",
+    "probable_range": [
+      1906,
+      1918
+    ],
+    "decade_probabilities": {
+      "1900": 0.42,
+      "1910": 0.5,
+      "1920": 0.08
+    },
+    "reasoning_summary": "The strongest evidence is Rebecca's high-necked Edwardian bodice, supported by the oval mounted studio format and the apparent ages of Rebecca Reva Heft Fox and Meyer Fox. Their documented presence in New York by 1906 establishes a plausible lower boundary, while Rebecca's death in 1926 is absolute; conservative immigrant formal dress broadens the most likely date into the 1910s.",
+    "location": {
+      "place": "Manhattan, New York City, New York, USA",
+      "confidence": "medium",
+      "visual_evidence": "The image is an indoor studio portrait with a plain backdrop and no geographic markers. The formal commercial portrait treatment is compatible with an urban New York studio but is not location-specific.",
+      "biographical_evidence": "Rebecca Reva Heft Fox and Meyer Fox were both documented in New York by 1906 and resided in Manhattan in 1905 and 1910. This aligns closely with the estimated date around 1910; later records place them in Brooklyn by 1915.",
+      "missing_child_analysis": "Only Rebecca and Meyer were intentionally posed in this formal couple portrait. The absence of their children cannot be used as a birth-date constraint because this was not composed as a complete family group.",
+      "source_type": "biographical",
+      "candidates": [
+        {
+          "place": "Brooklyn, New York City, New York, USA",
+          "confidence": "medium",
+          "source": "biographical",
+          "reasoning": "The couple lived in Kings County by 1915 and remained there through Rebecca's death in 1926; a date in the later portion of the probable range would favor Brooklyn."
+        },
+        {
+          "place": "Minsk, Belarus",
+          "confidence": "low",
+          "source": "biographical",
+          "reasoning": "Both individuals had lived in Minsk and the clothing could reflect old-world portrait conventions, but their documented migration to New York and apparent ages make a post-1906 New York portrait more likely."
+        }
+      ]
+    },
+    "visible_text": {
+      "detected": false,
+      "text": "",
+      "language": "none",
+      "script": "none"
+    }
+  }
+}
