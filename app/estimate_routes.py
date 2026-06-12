@@ -500,6 +500,8 @@ def _call_gemini_date_estimate(
     trigger: str = "interactive_upload",
     photo_metadata: dict | None = None,
     text_hints: str | None = None,
+    operator: str = "platform",
+    experiment_id: str | None = None,
 ) -> dict | None:
     """Call Gemini Vision API for date/location estimation using the enriched prompt.
 
@@ -676,7 +678,13 @@ def _call_gemini_date_estimate(
                         "model_generation": "3.1",
                         "model_variant": "pro-preview",
                         "preset": "quick",
+                        # Provenance: who initiated this call. "platform" = the
+                        # running app (interactive upload / admin reanalyze button).
+                        # Anything else (e.g. "claude-code-manual") = a human-
+                        # directed one-off run. Pairs with the experiment_id column.
+                        "operator": operator,
                     },
+                    experiment_id=experiment_id,
                     response_summary=response_summary,
                     prompt_text=prompt_text,
                     full_response=parsed if parsed else None,

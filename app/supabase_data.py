@@ -469,6 +469,29 @@ def count_face_alignments_in_supabase():
 # =========================================================================
 
 
+_GEMINI_API_CALLS_COLUMNS: set | None = None
+
+
+def _gemini_api_calls_columns(sb) -> set | None:
+    """Discover (and cache) the live column set of gemini_api_calls.
+
+    Used to filter out columns the code knows about but the live table does
+    not (schema drift, Lesson 105/152). Returns None if discovery fails, in
+    which case the caller inserts the full row (best-effort, original behavior).
+    """
+    global _GEMINI_API_CALLS_COLUMNS
+    if _GEMINI_API_CALLS_COLUMNS is not None:
+        return _GEMINI_API_CALLS_COLUMNS
+    try:
+        probe = sb.table("gemini_api_calls").select("*").limit(1).execute()
+        if probe.data:
+            _GEMINI_API_CALLS_COLUMNS = set(probe.data[0].keys())
+            return _GEMINI_API_CALLS_COLUMNS
+    except Exception as e:  # noqa: BLE001 - discovery is best-effort
+        logger.debug(f"gemini_api_calls column discovery failed: {e}")
+    return None
+
+
 def log_gemini_call(photo_id, model_used, call_type, **kwargs):
     """Log a Gemini API call to Supabase for analysis.
 
@@ -529,6 +552,25 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
     ]:
         if field in kwargs and kwargs[field] is not None:
             row[field] = kwargs[field]
+
+    # Schema-drift guard (Lesson 105/152): the code may pass prompt-lineage
+    # columns (contract_valid, prompt_manifest_id, request_surface, ...) that
+    # don't exist in the live gemini_api_calls table. PostgREST rejects the
+    # ENTIRE insert on an unknown column (PGRST204), so a single drifted column
+    # silently drops the whole API-call log. Filter the row to columns that
+    # actually exist in the live table before inserting. Lineage data that has
+    # no dedicated column is preserved inside the gemini_config JSONB.
+    valid_cols = _gemini_api_calls_columns(sb)
+    if valid_cols:
+        dropped = [k for k in row if k not in valid_cols]
+        if dropped:
+            cfg = dict(row.get("gemini_config") or {})
+            lineage = cfg.setdefault("_lineage", {})
+            for k in dropped:
+                lineage[k] = row[k]
+            row["gemini_config"] = cfg
+            row = {k: v for k, v in row.items() if k in valid_cols}
+            logger.debug(f"gemini_api_calls: dropped non-existent columns {dropped} (preserved in gemini_config._lineage)")
 
     try:
         sb.table("gemini_api_calls").insert(row).execute()

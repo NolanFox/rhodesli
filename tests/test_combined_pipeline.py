@@ -618,3 +618,31 @@ class TestGeminiConfigLogging:
         context = build_gedcom_context("p1", faces, identities, gedcom_data)
         assert context == ""
         # When context is empty, enrichment_level should be "none"
+
+
+class TestGedcomLoaderSession164Schema:
+    """load_gedcom_data() must read the Session-164 canonical current-state
+    GEDCOM tables, not the pre-164 current_* views or is_current column
+    (both dropped). Regression guard: those queries returned None, so EVERY
+    photo estimate silently lost its GEDCOM enrichment after Session 164.
+    """
+
+    def _src(self):
+        from pathlib import Path
+
+        return (Path(__file__).resolve().parent.parent / "scripts" / "run_combined_pipeline.py").read_text()
+
+    def test_no_dropped_current_gedcom_individuals_view(self):
+        assert "current_gedcom_individuals" not in self._src()
+
+    def test_no_dropped_current_gedcom_families_or_relationships_views(self):
+        src = self._src()
+        assert "current_gedcom_families" not in src
+        assert "current_gedcom_relationships" not in src
+
+    def test_is_current_filter_disabled_for_canonical_tables(self):
+        # Session 164 tables have no is_current column; the filter set is empty.
+        assert "_RAW_TABLES_NEED_IS_CURRENT = set()" in self._src()
+
+    def test_reads_canonical_individuals_table(self):
+        assert '_load_all_rows("gedcom_individuals")' in self._src()

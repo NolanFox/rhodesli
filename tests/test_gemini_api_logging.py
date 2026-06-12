@@ -153,3 +153,87 @@ class TestGetGeminiCallSummary:
         with patch("app.supabase_data.get_supabase_client", return_value=None):
             from app.supabase_data import get_gemini_call_summary
             assert get_gemini_call_summary() is None
+
+
+class TestSchemaDriftFilter:
+    """log_gemini_call must not drop the whole insert when the code passes a
+    column the live gemini_api_calls table lacks (Lesson 105/152, Session 166).
+
+    Before this fix, build_prompt_lineage_fields() passed contract_valid +
+    prompt_manifest_id etc., and PostgREST rejected the ENTIRE insert
+    (PGRST204), so every interactive/admin estimate silently failed to log.
+    """
+
+    def _reset_cache(self):
+        import app.supabase_data as sd
+
+        sd._GEMINI_API_CALLS_COLUMNS = None
+
+    def test_unknown_columns_dropped_and_preserved_in_lineage(self):
+        self._reset_cache()
+        # Live table exposes this column set (no contract_valid / lineage cols)
+        live_cols = {
+            "id", "photo_id", "model_used", "call_type", "status",
+            "gemini_config", "experiment_id", "cost_usd",
+        }
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.select.return_value.limit.return_value.execute.return_value = MagicMock(
+            data=[{c: None for c in live_cols}]
+        )
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+
+            result = log_gemini_call(
+                photo_id="p1",
+                model_used="gemini-3.1-pro-preview",
+                call_type="re_analysis",
+                gemini_config={"operator": "claude-code-manual"},
+                contract_valid=True,
+                prompt_manifest_id="date_estimation:v3",
+                request_surface="app.estimate_routes._call_gemini_date_estimate",
+            )
+
+        assert result is True
+        row = mock_sb.table.return_value.insert.call_args[0][0]
+        # Drifted columns are NOT in the inserted row
+        assert "contract_valid" not in row
+        assert "prompt_manifest_id" not in row
+        assert "request_surface" not in row
+        # ...but they are preserved inside gemini_config._lineage (nothing lost)
+        lineage = row["gemini_config"]["_lineage"]
+        assert lineage["contract_valid"] is True
+        assert lineage["prompt_manifest_id"] == "date_estimation:v3"
+        assert lineage["request_surface"].endswith("_call_gemini_date_estimate")
+        # Known columns survive
+        assert row["photo_id"] == "p1"
+        assert row["gemini_config"]["operator"] == "claude-code-manual"
+        self._reset_cache()
+
+    def test_full_insert_when_column_discovery_fails(self):
+        """If column discovery fails (probe errors), insert the full row
+        (best-effort, original behavior) rather than dropping data."""
+        self._reset_cache()
+        mock_sb = MagicMock()
+        # Probe raises -> discovery returns None -> no filtering
+        mock_sb.table.return_value.select.return_value.limit.return_value.execute.side_effect = RuntimeError(
+            "probe failed"
+        )
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+
+            result = log_gemini_call(
+                photo_id="p2",
+                model_used="m",
+                call_type="t",
+                contract_valid=True,
+            )
+
+        assert result is True
+        row = mock_sb.table.return_value.insert.call_args[0][0]
+        # No filtering applied -> unknown column passes through unchanged
+        assert row["contract_valid"] is True
+        self._reset_cache()

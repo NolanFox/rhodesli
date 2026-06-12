@@ -299,3 +299,52 @@ class TestOldPromptRemoved:
         assert not hasattr(er, "_GEMINI_DATE_PROMPT"), (
             "_GEMINI_DATE_PROMPT should be removed — replaced by build_extraction_prompt"
         )
+
+
+class TestOperatorProvenance:
+    """Manual-vs-platform provenance tagging on Gemini calls (Session 166).
+
+    Lets the data structurally distinguish a human-directed one-off run
+    (operator='claude-code-manual', experiment_id set) from a platform run
+    (operator='platform', experiment_id NULL).
+    """
+
+    @patch("app.supabase_data.log_gemini_call", return_value=True)
+    def test_operator_defaults_to_platform(self, mock_log):
+        from app.estimate_routes import _call_gemini_date_estimate
+
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_mock_response(_MOCK_GEMINI_RESPONSE)
+        with (
+            patch("google.genai.Client", return_value=mock_client),
+            patch("rhodesli_ml.gemini_extraction.build_extraction_prompt", return_value="prompt"),
+        ):
+            _call_gemini_date_estimate(b"img", ".jpg", "key", photo_id="p1")
+
+        config = mock_log.call_args.kwargs["gemini_config"]
+        assert config["operator"] == "platform"
+        # experiment_id defaults to None -> log_gemini_call drops None values
+        assert mock_log.call_args.kwargs.get("experiment_id") is None
+
+    @patch("app.supabase_data.log_gemini_call", return_value=True)
+    def test_manual_operator_and_experiment_id_tagged(self, mock_log):
+        from app.estimate_routes import _call_gemini_date_estimate
+
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = _make_mock_response(_MOCK_GEMINI_RESPONSE)
+        with (
+            patch("google.genai.Client", return_value=mock_client),
+            patch("rhodesli_ml.gemini_extraction.build_extraction_prompt", return_value="prompt"),
+        ):
+            _call_gemini_date_estimate(
+                b"img",
+                ".jpg",
+                "key",
+                photo_id="p1",
+                operator="claude-code-manual",
+                experiment_id="manual-multimodel-p1-2026-06-12",
+            )
+
+        config = mock_log.call_args.kwargs["gemini_config"]
+        assert config["operator"] == "claude-code-manual"
+        assert mock_log.call_args.kwargs["experiment_id"] == "manual-multimodel-p1-2026-06-12"

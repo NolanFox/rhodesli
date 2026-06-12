@@ -192,16 +192,15 @@ def load_gedcom_data() -> dict | None:
         if not sb:
             return None
 
-        # Session 162 (Codex post-exec P1-4): tables that have an `is_current` column
-        # MUST be filtered on the raw-table fallback path, else we re-introduce the
-        # IO scan that the view fix closed. This list is the small set of raw tables
-        # for which the v2/v1 views filter by is_current.
-        _RAW_TABLES_NEED_IS_CURRENT = {
-            "gedcom_relationships",
-            "gedcom_individuals",
-            "gedcom_families",
-            "gedcom_events",
-        }
+        # Session 164 (PRD-064 GEDCOM storage redesign): the GEDCOM tables are now
+        # current-state-only — one row per entity, NO `is_current` column and NO
+        # `current_gedcom_*` views (both dropped). Filtering on is_current here
+        # raised "column ... does not exist" (42703) and the missing views 404'd,
+        # so load_gedcom_data() returned None and EVERY estimate silently ran
+        # visual-only (GEDCOM context lost since Session 164). The canonical tables
+        # are read directly. Empty set kept (not removed) so the _load_all_rows
+        # is_current branch is a no-op rather than a code change there.
+        _RAW_TABLES_NEED_IS_CURRENT = set()
 
         def _load_all_rows(preferred_table: str, fallback_table: str | None = None) -> list[dict]:
             rows = []
@@ -259,7 +258,8 @@ def load_gedcom_data() -> dict | None:
         if not face_links:
             return None
 
-        all_individuals = _load_all_rows("current_gedcom_individuals", "gedcom_individuals")
+        # Session 164: canonical current-state tables (no current_* views).
+        all_individuals = _load_all_rows("gedcom_individuals")
 
         if not all_individuals:
             return None
@@ -268,20 +268,20 @@ def load_gedcom_data() -> dict | None:
         all_relationships = []
         all_events = []
         try:
-            all_families = _load_all_rows("current_gedcom_families")
+            all_families = _load_all_rows("gedcom_families")
         except Exception:
             all_families = []
 
         has_rich_events = any(row.get("events_json") for row in all_individuals)
         if not has_rich_events:
             try:
-                all_events = _load_all_rows("current_gedcom_events", "gedcom_events")
+                all_events = _load_all_rows("gedcom_events")
             except Exception:
                 all_events = []
 
         if not all_families:
             try:
-                all_relationships = _load_all_rows("current_gedcom_relationships", "gedcom_relationships")
+                all_relationships = _load_all_rows("gedcom_relationships")
             except Exception:
                 all_relationships = []
 
