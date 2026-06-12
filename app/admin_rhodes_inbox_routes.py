@@ -209,7 +209,7 @@ def _render_detail_view(slug: str, entry: dict) -> Any:
         image_block_children.append(
             Div(
                 P(f"Image: {alt}", cls="text-sm font-medium mb-2"),
-                P(f"FB photo ID: ", Code(fb_photo_id, cls="font-mono text-xs"), cls="text-sm mb-2"),
+                P("FB photo ID: ", Code(fb_photo_id, cls="font-mono text-xs"), cls="text-sm mb-2"),
                 Div(
                     A("Open FB photo", href=original_url, target="_blank", cls=_BTN_NEUTRAL),
                     Button("Copy FB URL", type="button",
@@ -425,7 +425,7 @@ def register_admin_rhodes_inbox_routes(app) -> None:
         try:
             mark_rejected(slug, rejected_by=rejected_by, reason=(reason or "")[:4096])
         except AlreadyRejectedError:
-            return RedirectResponse(f"/admin/rhodes-inbox?msg=already_rejected", status_code=303)
+            return RedirectResponse("/admin/rhodes-inbox?msg=already_rejected", status_code=303)
         except FileNotFoundError:
             return Response("not found", status_code=404)
         return RedirectResponse("/admin/rhodes-inbox", status_code=303)
