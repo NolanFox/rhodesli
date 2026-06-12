@@ -304,7 +304,9 @@ class TestPersonPageOrdering:
         assert "sort_by=date_asc" in html
         assert "seq=1" in html
 
-    def test_person_gallery_flags_conflicted_photo_context(self, client, monkeypatch):
+    def test_person_gallery_flags_conflicted_photo_context(self, client, monkeypatch, auth_disabled):
+        # auth_disabled: the "Needs review"/conflict flag is admin-only (Session 165);
+        # CI enables auth so the client is non-admin and the flag is hidden (Lesson 181).
         class FakeRegistry:
             def get_identity(self, person_id):
                 return {
@@ -744,8 +746,8 @@ class TestPersonPageLifeDetails:
         assert response.status_code == 200
         assert 'data-testid="life-details"' in response.text
 
-    def test_life_details_shows_unknown_for_missing_fields(self, client, confirmed_identity):
-        """Missing birth/death fields show 'Unknown' placeholder."""
+    def test_life_details_shows_unknown_for_missing_fields(self, client, confirmed_identity, auth_disabled):
+        """Missing birth/death fields show 'Unknown' placeholder (admin view; public hides Unknown — Lesson 181)."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")

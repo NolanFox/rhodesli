@@ -21,6 +21,7 @@ Interactive request: run a full date/location estimate on photo `8346decbf2b2f8c
 
 ### CI (post-session, user-reported failure emails)
 - **Unblocked the "Tests" workflow** (`6e1a15b2`) — red since Session 161 on two F541 lint errors (f-strings without placeholders) in `app/admin_rhodes_inbox_routes.py`. CI's `ruff check` Lint step failed before tests ran; the local gate never ran ruff, so it stayed invisible for ~5 sessions.
+- **Fixed 5 CI-only test failures** — once Lint passed, the `Run fast tests` step ran for the first time in ~5 sessions and exposed latent auth-env divergence (Lesson 181: CI sets SUPABASE secrets → `is_auth_enabled()` True → test client is non-admin → admin-only UI absent). `test_compare` merge/not-same buttons, `test_public_person_page` conflict-flag + life-details, `test_reanalyze_refresh` last-analyzed indicator now force auth-disabled (via `auth_disabled` fixture / `is_auth_enabled` patch). Verified: full fast suite 4341 passing with SUPABASE creds exported (CI-sim).
 - **Hardened the local gate** — `scripts/test-gate.sh` now runs `ruff check app/ core/ tests/` in `fast` mode (blocks commits like CI does); added `make lint`. Lesson 209.
 
 ## [v0.99.85] — 2026-06-10 (Session 165: Person-Scoped Photo Navigation + Shareable Person Gallery — FB-004 / PRD-065)

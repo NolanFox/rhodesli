@@ -113,6 +113,10 @@ class TestLastAnalyzedIndicator:
             patch("app.main.load_registry", return_value=mock_registry),
             patch("app.main._check_admin", return_value=None),
             patch("app.main._check_login", return_value=None),
+            # CI enables auth (SUPABASE secrets); the admin "Last analyzed"
+            # indicator is gated on the user role via is_auth_enabled, not just
+            # _check_admin. Disable auth so the client renders as admin (Lesson 181).
+            patch("app.main.is_auth_enabled", return_value=False),
             patch("app.main.get_identity_for_face", return_value=None),
         ):
             resp = client.get("/photo/test123")

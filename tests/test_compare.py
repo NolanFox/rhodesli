@@ -720,6 +720,10 @@ def test_compare_result_merge_action(tmp_path, monkeypatch, client):
     import app.main as main_mod
     from app.main import _save_comparison_result
 
+    # CI sets SUPABASE_ANON_KEY, flipping is_auth_enabled() to True so the test
+    # client is a non-admin and the admin-only merge button never renders
+    # (Lesson 181 / Session 157b). Disable auth so the client is treated as admin.
+    monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: False)
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     main_mod._comparison_results_cache = None
 
@@ -754,6 +758,8 @@ def test_compare_result_not_same_action(tmp_path, monkeypatch, client):
     import app.main as main_mod
     from app.main import _save_comparison_result
 
+    # CI auth divergence (Lesson 181): disable auth so the client is admin.
+    monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: False)
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     main_mod._comparison_results_cache = None
 
