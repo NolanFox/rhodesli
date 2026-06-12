@@ -74,9 +74,12 @@ def get_supabase_client():
 
 def reset_client():
     """Reset client cache (for testing)."""
-    global _supabase_client, _supabase_available
+    global _supabase_client, _supabase_available, _GEMINI_API_CALLS_COLUMNS
     _supabase_client = None
     _supabase_available = None
+    # Discovered schema is per-project; clear it so a swapped client re-discovers
+    # (avoids cross-test/cross-client column-set poisoning — Codex P2-4).
+    _GEMINI_API_CALLS_COLUMNS = None
 
 
 def _is_user_modified_identity(data):
@@ -564,7 +567,11 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
     if valid_cols:
         dropped = [k for k in row if k not in valid_cols]
         if dropped:
-            cfg = dict(row.get("gemini_config") or {})
+            import copy as _copy
+
+            # Deep-copy so we never mutate the caller's gemini_config (or a
+            # nested _lineage dict it may own) — Codex P3-6.
+            cfg = _copy.deepcopy(row.get("gemini_config") or {})
             lineage = cfg.setdefault("_lineage", {})
             for k in dropped:
                 lineage[k] = row[k]

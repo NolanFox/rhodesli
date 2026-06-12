@@ -646,3 +646,11 @@ class TestGedcomLoaderSession164Schema:
 
     def test_reads_canonical_individuals_table(self):
         assert '_load_all_rows("gedcom_individuals")' in self._src()
+
+    def test_gedcom_reads_are_community_scoped(self):
+        # Codex P1-3: canonical GEDCOM tables use composite community keys;
+        # reads MUST filter by community_id or duplicate gedcom_ids across
+        # communities overwrite each other.
+        src = self._src()
+        assert 'eq("community_id", _GEDCOM_COMMUNITY_ID)' in src
+        assert '_GEDCOM_COMMUNITY_ID = "rhodesli"' in src

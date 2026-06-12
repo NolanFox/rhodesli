@@ -156,10 +156,22 @@ def finalize(photo_id: str, chosen_model: str, artifact_dir: str):
 
     warnings.filterwarnings("ignore")
     from app import estimate_routes as er
-    from app.supabase_data import sync_date_label, sync_photo_location
-    from rhodesli_ml.gemini_config import GEMINI_MODEL
+    from app.supabase_data import get_supabase_client, sync_date_label, sync_photo_location
 
     art_dir = Path(artifact_dir)
+
+    # Codex P1-1: the artifact dir must belong to THIS photo_id. A typo that
+    # targets a different valid photo would silently overwrite that photo's
+    # production rows. meta.json records the photo_id the artifact was built for.
+    meta_file = art_dir / "meta.json"
+    if meta_file.exists():
+        meta = json.loads(meta_file.read_text())
+        if meta.get("photo_id") and meta["photo_id"] != photo_id:
+            print(
+                f"ERROR: artifact dir is for photo {meta['photo_id']!r}, not {photo_id!r}. Refusing to write.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
     cand_file = {
         "gemini": "candidate-gemini.json",
         "fable": "candidate-fable.json",
@@ -209,14 +221,39 @@ def finalize(photo_id: str, chosen_model: str, artifact_dir: str):
         "prompt_version": "v3_enriched_multimodel",
         "analysis_provenance": decision,
     }
-    sync_date_label(photo_id, entry)
-    print(f"date_labels written for {photo_id} (model={model_name})")
+
+    sb = get_supabase_client()
+
+    # Codex P1-2: sync_date_label REPLACES the whole data JSONB. Read-merge-write
+    # so we never erase existing enrichment (event_context, visible_text, human
+    # corrections) — mirrors the production reanalyze route's {**old, **new}.
+    existing_label = {}
+    if sb:
+        try:
+            r = sb.table("date_labels").select("data").eq("photo_id", photo_id).execute()
+            if r.data:
+                d = r.data[0].get("data") or {}
+                existing_label = json.loads(d) if isinstance(d, str) else d
+        except Exception as e:
+            print(f"  (warning: could not read existing date_label, writing fresh: {e})")
+    merged_label = {**existing_label, **entry}
+    sync_date_label(photo_id, merged_label)
+    print(f"date_labels written for {photo_id} (model={model_name}, merged over {len(existing_label)} existing keys)")
 
     if new_location:
+        lat, lng = er._geocode_location(new_location)
+        existing_loc = {}
+        if sb:
+            try:
+                r = sb.table("photo_locations").select("data").eq("photo_id", photo_id).execute()
+                if r.data:
+                    d = r.data[0].get("data") or {}
+                    existing_loc = json.loads(d) if isinstance(d, str) else d
+            except Exception:
+                pass
         loc_entry = {
+            **existing_loc,
             "photo_id": photo_id,
-            "lat": er._geocode_location(new_location)[0],
-            "lng": er._geocode_location(new_location)[1],
             "location_name": er._geocode_display_name(new_location),
             "location_estimate": location_data.get("visual_evidence", ""),
             "biographical_evidence": location_data.get("biographical_evidence", ""),
@@ -226,6 +263,13 @@ def finalize(photo_id: str, chosen_model: str, artifact_dir: str):
             "reanalyzed_at": decided_at,
             "analysis_provenance": decision,
         }
+        # Codex P2-5: _geocode_location returns (0,0) on failure ("Null Island").
+        # Only write coordinates when geocoding actually resolved them.
+        if (lat, lng) != (0.0, 0.0):
+            loc_entry["lat"] = lat
+            loc_entry["lng"] = lng
+        else:
+            print(f"  (note: '{new_location}' did not geocode — writing location_name without coordinates)")
         sync_photo_location(photo_id, loc_entry)
         print(f"photo_locations written for {photo_id} ({loc_entry['location_name']})")
 

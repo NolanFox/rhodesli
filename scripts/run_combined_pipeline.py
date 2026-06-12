@@ -202,6 +202,20 @@ def load_gedcom_data() -> dict | None:
         # is_current branch is a no-op rather than a code change there.
         _RAW_TABLES_NEED_IS_CURRENT = set()
 
+        # Session 164 canonical GEDCOM tables use composite community-scoped keys
+        # (community_id, gedcom_id). Without a community filter, duplicate
+        # gedcom_ids across communities overwrite each other during parsing,
+        # leaking/injecting another community's genealogy into estimates. The
+        # main app readers (app/relationship_routes.py, app/gedcom_dual_read.py)
+        # all filter on community_id — match them here (Codex P1-3).
+        _GEDCOM_COMMUNITY_ID = "rhodesli"
+        _COMMUNITY_SCOPED_GEDCOM_TABLES = {
+            "gedcom_individuals",
+            "gedcom_families",
+            "gedcom_relationships",
+            "gedcom_events",
+        }
+
         def _load_all_rows(preferred_table: str, fallback_table: str | None = None) -> list[dict]:
             rows = []
             table_name = preferred_table
@@ -212,6 +226,8 @@ def load_gedcom_data() -> dict | None:
                     query = sb.table(table_name).select("*")
                     if table_name in _RAW_TABLES_NEED_IS_CURRENT:
                         query = query.eq("is_current", True)
+                    if table_name in _COMMUNITY_SCOPED_GEDCOM_TABLES:
+                        query = query.eq("community_id", _GEDCOM_COMMUNITY_ID)
                     resp = query.range(offset, offset + page_size - 1).execute()
                 except Exception:
                     if not fallback_table or table_name == fallback_table:
