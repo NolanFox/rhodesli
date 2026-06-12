@@ -62,3 +62,28 @@ are wanted at scale.
 - **Value**: STRONG — the comparison itself was the deliverable and produced a
   clear, defensible winner + a reusable methodology (AD-251). Codex audit
   findings logged in `docs/session_context/session-166-codex-audit.md`.
+
+---
+
+## Per-Act Status (session-review)
+
+| User request | Status | Evidence |
+|--------------|--------|----------|
+| Run full geo+date+API analysis on the photo | **PASS** | `gemini_api_calls` row (1, manual-tagged); 3-model run in artifact dir |
+| Update website + Supabase | **PASS** | `date_labels` 1910/1912/fable-5.0; live page "circa 1912 · New York, New York" (verified after deploy, ~440s) |
+| Log API outputs in Supabase; differentiate manual vs platform structurally | **PASS** | `experiment_id=manual-...` + `gemini_config.operator=claude-code-manual`; schema-drift filter fixed so logging works at all |
+| Run Fable 5.0 + Codex 5.5 xhigh + compare, determine best | **PASS** | candidate-fable/codex/gemini.json + DECISION.md; winner Fable 5.0 |
+| Log all 3 outputs; website gets best; record decision; schema supports it | **PASS** | chosen→DB (+provenance), all 3 + decision→repo artifact (AD-251 methodology) |
+| Meyer + Reva both GEDCOM-linked; correct if needed | **PASS (already correct)** | both linked (`@I132127405051@`/`@I132127405052@`, family `@F5091@`); no correction needed |
+| Re-run with fully-enriched prompt | **PASS** | GEDCOM loader fixed → 4876-char enriched context (Meyer+Reva residential history, 11 children, 1926 ceiling) |
+| Document learnings + wire into harness | **PASS** | rule + AD-251 + Lessons 205–207 + CHANGELOG/ROADMAP |
+
+## Auto-Fix Summary
+The independent **Codex post-execution audit** (gpt-5.5/xhigh) served as the auto-fix pass.
+- Issues found: 6 (0 P0, 3 P1, 2 P2, 1 P3)
+- Auto-fixed: 6 (all) — commit `53081ca6`
+- Deferred: 0
+- No separate auto-fix worktree subagent needed — all concerns resolved inline with tests + a community-filter regression guard. Record: `docs/session_context/session-166-codex-audit.md`.
+
+## Concerns / Red Flags
+- None outstanding. The GEDCOM-loader outage (Lesson 205) means historical estimates computed during the ~2-month window were visual-only — flagged in "Next session should verify" as a candidate backfill (not a regression introduced this session).
