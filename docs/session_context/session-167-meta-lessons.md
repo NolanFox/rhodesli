@@ -110,3 +110,33 @@ run that track's tests, and if green, commit them on the branch (preserve audit 
 too). Do NOT resume a conn-dropped agent just to get the summary — inspect the branch.
 The longer the subagent runs, the higher the end-of-run drop risk — keep track scope
 bounded, and have agents commit incrementally (not one big commit at the end).
+
+## M12 — The session's commit-hook fires on commits in OTHER repos and breaks them
+The rhodesli PreToolUse Bash hook matches the phrase "git"+"commit" on EVERY bash call
+and runs `$REPO/scripts/test-gate.sh fast` (`$REPO = git toplevel` of cwd). Committing in
+`/Users/nolanfox/rhodes-wiki` (no `scripts/test-gate.sh`) → hook errors → BLOCKS, even
+though rhodes-wiki's 249 tests pass. So you CANNOT commit a sibling repo from this session
+— which enforces the right boundary (sibling-repo commits belong to a sibling-repo
+session) but is a sharp edge. The gate should no-op when `$REPO` != the rhodesli root.
+Track E's tested work sits uncommitted-but-safe on branch `session-167/rhodes-wiki-004`;
+Nolan commits it from a rhodes-wiki session. (With M8: cross-repo guards are inconsistent —
+writes are NOT blocked, but commits ARE, by accident.)
+
+## M13 — The commit-hook's phrase-match also trips on innocent commands
+A `cat >> meta-lessons.md` heredoc whose PROSE contained the phrase "git"+"commit" was
+matched by the hook's `grep` and ran the test-gate on a non-commit command (it then failed
+under cwd/contention and blocked the write). Lesson: the hook should parse the actual git
+subcommand, not grep the whole command string. Workaround: write docs that mention
+committing via the Edit/Write tools (which bypass the Bash hook), not bash heredocs.
+
+## Parallel-experiment outcome (preliminary)
+5 tracks dispatched; all 5 produced tested work concurrently. 4 landed on rhodesli branches
+(A 7 commits, B 2, C 1, D 1); E landed tested on a rhodes-wiki branch (commit blocked by
+M12, work safe on disk). Every track ran / has a Codex audit. Orchestrator overhead = 1
+boundary plan-audit (10 catches, paid for itself) + 5 mid-flight corrections + 4 conn-drop
+branch-recoveries + filling 1 missing audit. **Throughput clearly beat overhead.** The two
+recurring hazards: coordination drift (caught by the boundary audit) and the end-of-run
+connection drop (M11) — both manageable via branch-based recovery. Net: the Opus-orchestrator
+/ Codex-coder / Codex-auditor model WORKS at 5-way parallelism, given (a) disjoint file
+ownership, (b) a boundary audit before deep work, (c) explicit shared-doc freeze in briefs,
+(d) mechanical (not behavioral) money/write caps, (e) one session PER repo.
