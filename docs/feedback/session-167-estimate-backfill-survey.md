@@ -1,6 +1,6 @@
 # Session 167 — ESTIMATE-BACKFILL-166 Survey (READ-ONLY)
 
-_Generated: 2026-06-30T13:11:25.003876+00:00 by `scripts/backfill_gedcom_estimates.py --survey`. No writes, no Gemini calls, no $ spend._
+_Generated: 2026-06-30T17:57:29.523886+00:00 by `scripts/backfill_gedcom_estimates.py --survey`. No writes, no Gemini calls, no $ spend._
 
 ## What this is
 Lesson 205: the GEDCOM-context loader was dead from the Session-164 schema
