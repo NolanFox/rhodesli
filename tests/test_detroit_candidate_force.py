@@ -325,6 +325,12 @@ def test_fresh_context_drops_harry(ctx_02068_fresh):
     assert not any("Harry" in s for s in subjects), "Harry must be gone post-156"
     assert any("Albert" in s for s in subjects)
     assert any("Irving" in s or "Israel" in s for s in subjects)
+    # Also assert Harry is gone from the confirmed-identities HEADER (not just the
+    # parsed residential blocks) — a residence-only check could miss a stray header
+    # line (Codex P3). The header lists confirmed subjects before the genealogical body.
+    header = ctx_02068_fresh.split("GENEALOGICAL CONTEXT")[0]
+    assert "Harry" not in header, "Harry must not appear in the confirmed-identities header"
+    assert "Irving Israel Fox" in header and "Albert Fox" in header
 
 
 def test_fresh_context_still_a_zero_distance_tie(ctx_02068_fresh):

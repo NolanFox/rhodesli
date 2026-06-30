@@ -44,3 +44,36 @@ is **necessary but not sufficient** — 01659 now PASSES (Detroit/high), 02068 s
 because the candidate-omission gap (top P1) bypasses the whole tie-breaker. The next
 concrete step is DETROIT-CANDIDATE-FORCE-167, then re-run the bounded eval (needs ~$0.30
 Gemini $). Nothing here blocks committing the honest-partial work.
+
+---
+
+## Fresh-context continuation audit (Session 167 cont., 2026-06-30)
+
+**Auditor**: Codex CLI v0.142.4 (gpt-5.5, xhigh) | **Agent type**: Independent (fresh context)
+**Scope**: commit `e967fa57` ONLY — new fixture `tests/fixtures/session167_gedcom_context.json`,
+3 new tests in `tests/test_detroit_candidate_force.py`, the `## Fresh-context attempt` section
+of `docs/feedback/session-167-detroit-eval.md`, and the two raw eval JSONs. No production code
+changed. **Verdict: SAFE — P0 None, P1 None.**
+
+### Findings + dispositions
+- **P2 — doc claimed Rule 2 as the deterministic decider.** REAL accuracy issue: the forced
+  table shows Detroit and Brooklyn EACH have one distinct subject at d=0 (Irving's Detroit is
+  1917 = d=1), so it is a 1-vs-1 tie and the honest decider is Rule 3 (visual). The
+  `candidate` run's Rule-2 self-report miscounted. **FIXED** — doc now labels the Rule-2 line
+  a model self-report and states the deterministic 1-vs-1 tie + Rule-3 decider (3 edits).
+- **P3 — call-count (doc "6 calls" vs raw `n_calls` 4+1).** "6 actual Gemini calls" is correct;
+  raw `n_calls = len(results)` counts result rows only (silent first pass adds no row — the
+  pre-existing artifact Codex flagged in the earlier Track-D audit). **FIXED** — doc annotates
+  the distinction.
+- **P3 — Harry-removal test only checked parsed residences.** **FIXED** — added a header
+  assertion (`"Harry" not in header`, Irving + Albert present).
+- **P2 — raw JSON 390 lines > 300-line doc cap. REJECTED:** `doc-size-enforcement.md` / the
+  `test_*_doc` checks govern `.md` documentation, not machine-generated `.json` data artifacts.
+  Consistent with the already-committed `session-167-detroit-eval-raw.json` / `-v2-raw.json`.
+- **P3 — fixture not data-minimized. REJECTED (by design):** the fixture must be the EXACT
+  context the production pipeline builds and the eval consumes; slicing it would make the
+  regression test unfaithful. Mirrors the existing full-context `session154_gedcom_context.json`.
+
+### Value assessment
+**MODERATE** — no security/correctness bug, but the Rule-2 P2 caught a genuine honesty gap in
+the writeup (deterministic tie was being narrated as a Rule-2 win). Worth the ~3-min fix.

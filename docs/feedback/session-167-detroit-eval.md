@@ -157,9 +157,12 @@ sufficient and Path B (PRD-061 multi-frame event clustering) is the next escalat
 ## Fresh-context attempt (Session 167 cont.) — 02068 NOW FLIPS TO DETROIT ✅
 
 **Date:** 2026-06-30 (continuation) · **Model:** `gemini-3.1-pro-preview` · temp 0.1
-**Total real-Gemini spend this continuation:** **$0.1935** (6 calls; cap `--max-cost 0.40`,
-`--max-calls 6`; one 504 on 01659/candidate after the backoff retries). All `--no-db-log`
-— zero Supabase writes, no `date_labels`, no browser.
+**Total real-Gemini spend this continuation:** **$0.1935** across **6 actual Gemini calls**
+(cap `--max-cost 0.40`, `--max-calls 6`; one 504 on 01659/candidate after the backoff
+retries, then a silent first pass). NB: the raw-JSON `n_calls` fields (4 + 1) count result
+ROWS only — the 01659 silent first pass produces no result row, so 4+1 rows ≠ 6 calls (the
+known `n_calls = len(results)` artifact, not a missing call). All `--no-db-log` — zero
+Supabase writes, no `date_labels`, no browser.
 **Raw artifacts:** `docs/feedback/session-167-detroit-eval-fresh-ctx-raw.json` (fresh context),
 `docs/feedback/session-167-detroit-eval-stale-ctx-force-raw.json` (stale-context isolation).
 **Fresh fixture:** `tests/fixtures/session167_gedcom_context.json` (the 154 fixture is NOT overwritten).
@@ -202,9 +205,17 @@ confidence.** The Detroit gate now PASSES on 02068.
    photo_year (1918, de-gamed), and INJECTS every place ≤5y as a MANDATORY candidate with an
    authoritative distance. This forces **Detroit onto the table at its TRUE distance 0** — the
    exact value pass-2 had MISSED (pass-2 anchored Detroit on Irving's single-year 1917 = d=1
-   and lost the tie). Once Detroit and Brooklyn are both on the table at d=0, the model
-   resolves the tie correctly via Round-2.5 **Rule 2** (Detroit has more distinct subjects at
-   d=0) or **Rule 3** (Belle Isle Conservatory visual fallback → Detroit).
+   and lost the tie). Once Detroit and Brooklyn are both on the table at d=0, the **TRUE
+   decider is Round-2.5 Rule 3 (the Belle Isle Conservatory visual fallback → Detroit)**:
+   deterministically Detroit and Brooklyn EACH have exactly one distinct confirmed subject at
+   the d=0 minimum (Albert in Detroit 1917-1918; Irving in Brooklyn 1917-1918 — Irving's
+   Detroit residence is 1917 = d=1, NOT at the minimum), so Rule 2 (most distinct subjects at
+   min distance) is also a tie and cannot decide. NB: the `candidate`-variant run's
+   `round_2_5_summary` *self-reported* a Rule 2 win ("Albert + Israel in Detroit") — that is a
+   model rationalization that wrongly folded Irving's d=1 Detroit into the d=0 bucket; the
+   deterministic forced table shows it is genuinely a 1-vs-1 tie. The `candidate_with_prior`,
+   01659, and stale-context runs all correctly cite **Rule 3 (visual Belle Isle)** as the
+   decider. Either way the answer lands on Detroit because Detroit is now ON the table.
 
 **Isolation result:** stale context (Harry present) + candidate-force ALSO flips 02068 →
 Detroit, high, correct. So the candidate-force is the **primary** fix; the fresh-context
@@ -221,14 +232,18 @@ post-repair regardless, and the candidate-force is the durable mechanism).
 | New York, Kings, New York, United States | Israel (Irving) Fox: Residence 1915 in New York, Kings | 3 |
 | Dayton, Ohio, USA | Albert Fox: Residence 1923 in Dayton, Ohio | 5 |
 
-`round_2_5_summary` (verbatim): *"Detroit and Brooklyn tied with a year_distance of 0, but
-Detroit won via Rule 2 because it had more distinct confirmed subjects (Albert Fox and Israel
-Fox) documented there at that minimum distance compared to Brooklyn (only Israel Fox)."*
+`round_2_5_summary` (verbatim, `candidate` run): *"Detroit and Brooklyn tied with a
+year_distance of 0, but Detroit won via Rule 2 because it had more distinct confirmed subjects
+(Albert Fox and Israel Fox) documented there at that minimum distance compared to Brooklyn
+(only Israel Fox)."* — **This Rule-2 claim is a MODEL SELF-REPORT and is deterministically
+wrong**: the forced table shows Detroit's only d=0 subject is Albert (Irving's Detroit is 1917
+= d=1), so Detroit and Brooklyn are a genuine 1-vs-1 tie at d=0. The honest decider is **Rule
+3 (visual)**, which is exactly what the other three runs cite.
 
-`eliminated_runner_up`: Brooklyn — *"Eliminated by Round 2.5 Rule 2 (fewer distinct subjects
-at distance 0)."* The `candidate_with_prior` and 01659 runs instead cite **Rule 3**: *"the
-specific architectural massing of the masonry wing and sloped glasshouse matches Detroit's
-Belle Isle Conservatory, not the Brooklyn Botanic Garden conservatory."*
+`eliminated_runner_up`: Brooklyn. The `candidate_with_prior`, 01659, and stale-context runs
+correctly cite **Rule 3**: *"the specific architectural massing of the masonry wing and sloped
+glasshouse matches Detroit's Belle Isle Conservatory, not the Brooklyn Botanic Garden
+conservatory."*
 
 ### Path B status — NOT confirmed-required (downgraded)
 
