@@ -32,12 +32,23 @@ from scripts.session153_shadow_eval import (
 )
 
 FIXTURE = Path("tests/fixtures/session154_gedcom_context.json")
+FIXTURE_FRESH = Path("tests/fixtures/session167_gedcom_context.json")
 PID_02068 = "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600"
 
 
 @pytest.fixture(scope="module")
 def ctx_02068() -> str:
     data = json.loads(FIXTURE.read_text())
+    return data[PID_02068]
+
+
+@pytest.fixture(scope="module")
+def ctx_02068_fresh() -> str:
+    """Post-Session-156 (Harry-repair) GEDCOM context for 02068, regenerated
+    from current production data in Session 167 cont. Harry Fox's faces were
+    detached from 02068 in Session 156, so this context lists only Irving +
+    Albert as confirmed subjects."""
+    data = json.loads(FIXTURE_FRESH.read_text())
     return data[PID_02068]
 
 
@@ -296,3 +307,38 @@ def test_canonical_year_distance_helper_substring_match():
     assert _canonical_year_distance_for_place("Detroit, Michigan", forced) == 0
     assert _canonical_year_distance_for_place("Nowhere", forced) is None
     assert _canonical_year_distance_for_place("Detroit", None) is None
+
+
+# ---------------------------------------------------------------------------
+# Fresh-context fixture (Session 167 cont.) — the post-156 cleanup lever.
+# Locks in: Harry dropped, the d=0 Detroit/Brooklyn tie survives the cleanup,
+# and the candidate-force still surfaces Detroit at its TRUE distance 0.
+# ---------------------------------------------------------------------------
+
+
+def test_fresh_context_drops_harry(ctx_02068_fresh):
+    """The Session 156 repair detached Harry's faces from 02068. The
+    regenerated context must NOT list Harry as a column-0 subject (and must
+    still carry Irving + Albert)."""
+    residences = extract_subject_residences(ctx_02068_fresh)
+    subjects = {r["subject"] for r in residences}
+    assert not any("Harry" in s for s in subjects), "Harry must be gone post-156"
+    assert any("Albert" in s for s in subjects)
+    assert any("Irving" in s or "Israel" in s for s in subjects)
+
+
+def test_fresh_context_still_a_zero_distance_tie(ctx_02068_fresh):
+    """Removing Harry's NY/Ohio noise does NOT break the tie: Irving is still
+    in Brooklyn 1917-1918 (d=0) and Albert in Detroit 1917-1918 (d=0). The data
+    alone cannot disambiguate — the candidate-force + visual rule-3 is the fix."""
+    forced = build_forced_candidates(ctx_02068_fresh, 1918)
+    keys = {r["place_key"]: r["year_distance"] for r in forced}
+    assert keys.get("detroit") == 0, "Detroit must be forced at TRUE distance 0"
+    assert keys.get("brooklyn") == 0, "Brooklyn genuinely ties at distance 0"
+
+
+def test_fresh_context_excludes_harry_only_places(ctx_02068_fresh):
+    """Randolph (Harry 1920, d=2) was a forced candidate in the STALE context;
+    in the fresh post-156 context it must be gone (it was Harry-only noise)."""
+    forced = build_forced_candidates(ctx_02068_fresh, 1918)
+    assert "randolph" not in {r["place_key"] for r in forced}

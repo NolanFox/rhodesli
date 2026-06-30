@@ -151,3 +151,107 @@ sufficient and Path B (PRD-061 multi-frame event clustering) is the next escalat
 - Mechanical double-cap held: 5 total calls / $0.30, well under `--max-cost 0.50` and
   `--max-calls 8`. The 504 retry-with-backoff on 01659/candidate worked (eventually errored
   out that one call; the silent first pass + candidate_with_prior still completed).
+
+---
+
+## Fresh-context attempt (Session 167 cont.) — 02068 NOW FLIPS TO DETROIT ✅
+
+**Date:** 2026-06-30 (continuation) · **Model:** `gemini-3.1-pro-preview` · temp 0.1
+**Total real-Gemini spend this continuation:** **$0.1935** (6 calls; cap `--max-cost 0.40`,
+`--max-calls 6`; one 504 on 01659/candidate after the backoff retries). All `--no-db-log`
+— zero Supabase writes, no `date_labels`, no browser.
+**Raw artifacts:** `docs/feedback/session-167-detroit-eval-fresh-ctx-raw.json` (fresh context),
+`docs/feedback/session-167-detroit-eval-stale-ctx-force-raw.json` (stale-context isolation).
+**Fresh fixture:** `tests/fixtures/session167_gedcom_context.json` (the 154 fixture is NOT overwritten).
+
+### TL;DR — the candidate-force closes 02068. Path B is NO LONGER required.
+
+The "one untried lever" (regenerate 02068's GEDCOM context from CURRENT production data,
+post-Session-156 Harry repair) was executed AND combined with the new
+DETROIT-CANDIDATE-FORCE-167 step (commit `5a49bfca`). Result:
+
+| photo | variant | context | predicted | conf | verdict |
+|---|---|---|---|---|---|
+| **02068** | candidate | **fresh (Harry dropped)** | **Detroit, MI** | high | ✅ **CORRECT** (d=0) |
+| **02068** | candidate_with_prior | **fresh** | **Detroit, MI** | high | ✅ **CORRECT** (d=0) |
+| **02068** | candidate | **stale (154, Harry present)** | **Detroit, MI** | high | ✅ **CORRECT** (d=0) |
+| **01659** | candidate_with_prior | fresh | **Detroit, MI** | high | ✅ **CORRECT** (d=0) |
+| 01659 | candidate | fresh | — | — | ⚠️ 504 error (transient, retried out) |
+
+**Both the AD-243 pass-1 and the Round-2.5 v2 pass-2 (documented above) had 02068 → Brooklyn.
+With the candidate-force injected, every successful 02068 run predicts Detroit at high
+confidence.** The Detroit gate now PASSES on 02068.
+
+### What changed — fresh context is the cleanup, candidate-force is the lever
+
+1. **Fresh context (the requested lever)** correctly resolved from current production data
+   (`load_gedcom_data()` returns 21,998 individuals — the Lesson 205 loader is healthy). It
+   now lists ONLY **Irving Israel Fox + Albert Fox** as confirmed subjects — **Harry Fox is
+   gone** (his faces were detached from 02068 in the Session 156 repair). Harry's stale
+   `New York/Kings 1915` (d=3) + `Randolph/Dayton 1920` (d=2) NY/Ohio noise no longer appears.
+
+2. **But the residence-distance picture is STILL a genuine d=0 tie even after the cleanup:**
+   - Detroit d=0 — Albert `1917-1918 Detroit` (+ Irving `1917 Detroit`)
+   - Brooklyn d=0 — Irving `1917-1918 Brooklyn`
+   The contradictory ground truth Track D root-caused remains: Irving is documented in
+   Brooklyn 1917-1918 AND Detroit 1917; Albert in Detroit 1917-1918. No residence-distance
+   tie-breaker can uniquely pick a city.
+
+3. **The DETROIT-CANDIDATE-FORCE-167 step is what closes it.** It deterministically parses
+   each confirmed subject's OWN dated residences, computes year_distance from the FIXED
+   photo_year (1918, de-gamed), and INJECTS every place ≤5y as a MANDATORY candidate with an
+   authoritative distance. This forces **Detroit onto the table at its TRUE distance 0** — the
+   exact value pass-2 had MISSED (pass-2 anchored Detroit on Irving's single-year 1917 = d=1
+   and lost the tie). Once Detroit and Brooklyn are both on the table at d=0, the model
+   resolves the tie correctly via Round-2.5 **Rule 2** (Detroit has more distinct subjects at
+   d=0) or **Rule 3** (Belle Isle Conservatory visual fallback → Detroit).
+
+**Isolation result:** stale context (Harry present) + candidate-force ALSO flips 02068 →
+Detroit, high, correct. So the candidate-force is the **primary** fix; the fresh-context
+regeneration is a **complementary cleanup** that removes Harry's NY/Ohio noise but is not
+strictly necessary for the flip. Best practice: ship BOTH (the context should be regenerated
+post-repair regardless, and the candidate-force is the durable mechanism).
+
+### Verbatim Round-2.5 `residence_distance_table` (02068 / candidate / fresh context)
+
+| candidate | subject_residence_match | year_distance |
+|---|---|---|
+| Brooklyn, Kings, New York, USA | Israel (Irving) Fox: Residence 1917-1918 in Brooklyn, Kings, New York, USA | 0 |
+| Detroit, Wayne, Michigan, USA | Albert Fox: Residence 1917 in Detroit \|\| Albert Fox: Residence 1917-1918 in Detroit, Wayne, Michigan \|\| Israel (Irving) Fox: Residence 1917 in Detroit | 0 |
+| New York, Kings, New York, United States | Israel (Irving) Fox: Residence 1915 in New York, Kings | 3 |
+| Dayton, Ohio, USA | Albert Fox: Residence 1923 in Dayton, Ohio | 5 |
+
+`round_2_5_summary` (verbatim): *"Detroit and Brooklyn tied with a year_distance of 0, but
+Detroit won via Rule 2 because it had more distinct confirmed subjects (Albert Fox and Israel
+Fox) documented there at that minimum distance compared to Brooklyn (only Israel Fox)."*
+
+`eliminated_runner_up`: Brooklyn — *"Eliminated by Round 2.5 Rule 2 (fewer distinct subjects
+at distance 0)."* The `candidate_with_prior` and 01659 runs instead cite **Rule 3**: *"the
+specific architectural massing of the masonry wing and sloped glasshouse matches Detroit's
+Belle Isle Conservatory, not the Brooklyn Botanic Garden conservatory."*
+
+### Path B status — NOT confirmed-required (downgraded)
+
+The earlier Track D recommendation escalated 02068 to **Path B (PRD-061 multi-frame event
+clustering: pool 02068 with its correctly-Detroit sister frame 01659)** as the ONLY remaining
+fix. **That escalation is now OBSOLETE for 02068** — the candidate-force closes it from
+single-frame data alone. Path B remains a sound *general* enhancement for genuinely
+visual-only frames (no GEDCOM-linked confirmed subjects), but it is no longer the gating fix
+for this photo and should not block deployment of the candidate-force.
+
+### Recommendation
+
+- **Promote the candidate-force from the shadow harness to production** — it is the durable
+  mechanism that converts a contradictory-residence tie into a correct, visually-grounded
+  answer. (Production deployment to `rhodesli_ml/gemini_extraction.py` is a Track-B/app-layer
+  decision, out of Track-D's file scope; flagged here as the next step.)
+- **Regenerate any cached GEDCOM-context fixture after an identity repair** (Lesson 205-adjacent):
+  a stale fixture silently re-injects detached subjects' residences. The `session167` fixture
+  is the post-156 baseline for 02068 + 01659.
+
+### Guardrail compliance (continuation)
+
+- NO `date_labels` / prod writes. Both runs `--no-db-log` — zero Supabase writes of any kind.
+- NO browser. Real Gemini used ONLY in the bounded eval, $0.1935 total < $0.40 cap, 6 calls.
+- New fixture `tests/fixtures/session167_gedcom_context.json` ADDED (154 fixture untouched).
+- Commits on branch `session-167/detroit-force` ONLY.
