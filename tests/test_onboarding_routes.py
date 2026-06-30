@@ -37,6 +37,16 @@ def _reset_rate_limits():
     reset_rate_limits()
 
 
+@pytest.fixture(autouse=True)
+def _auth_disabled_by_default():
+    """CI sets Supabase secrets -> is_auth_enabled() True -> login/admin gates fire,
+    diverging from local (Lesson 181). Default every test in this module to
+    auth-disabled; the few auth-on tests re-patch is_auth_enabled=True in their own
+    `with` blocks, which stacks over this."""
+    with patch("app.main.is_auth_enabled", return_value=False):
+        yield
+
+
 @pytest.fixture
 def flag_on(monkeypatch):
     monkeypatch.setenv("SELF_SERVICE_ARCHIVE_ENABLED", "true")
@@ -66,7 +76,10 @@ def test_get_flag_off_shows_coming_soon(client, flag_off):
 
 
 def test_get_flag_on_shows_form(client, flag_on):
-    resp = client.get("/create-archive")
+    # Force auth-disabled so this exercises the form-rendering path regardless of
+    # CI's Supabase-secrets env (Lesson 181 — auth on in CI shows Sign in instead).
+    with patch("app.main.is_auth_enabled", return_value=False):
+        resp = client.get("/create-archive")
     assert resp.status_code == 200
     assert "create-archive-form" in resp.text
     assert "create-archive-name" in resp.text
