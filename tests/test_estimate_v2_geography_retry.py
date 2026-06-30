@@ -1,12 +1,10 @@
 """
-Tests for TOOLS-005: Geography retry logic in /tools/estimate.
+Tests for TOOLS-005 / PRD-055 Flow 3: geography retry in /tools/estimate.
 
-Flow 3 from PRD-055: After receiving an initial estimate, the user can
-disagree with the location and request a re-estimate with a different
-geographic assumption. The system re-runs Gemini with the user-supplied
-location as a constraint and shows both results side by side.
-
-All tests are xfail — the feature is not yet implemented.
+After an initial estimate, the user can supply a different location. The system
+re-runs Gemini with the user-supplied location as a constraint (reusing the
+stored image, no re-upload) and shows the original + revised estimates side by
+side. Retries share the upload rate-limit budget.
 """
 
 import io
@@ -30,7 +28,7 @@ def _fake_image_bytes():
 
 
 def _upload_patches():
-    """Common patches for upload endpoint tests."""
+    """Common patches for the initial upload endpoint."""
     return [
         patch("app.main.is_auth_enabled", return_value=False),
         patch("app.main._build_caches"),
@@ -38,27 +36,36 @@ def _upload_patches():
         patch("core.storage.can_write_r2", return_value=False),
         patch("core.storage.get_upload_url", return_value="/uploads/test.jpg"),
         patch("app.estimate_routes.check_rate_limit", return_value=True),
+        patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}),
+    ]
+
+
+def _retry_patches():
+    """Common patches for the retry endpoint (image already stored)."""
+    return [
+        patch("app.main.is_auth_enabled", return_value=False),
+        patch("app.estimate_routes.check_rate_limit", return_value=True),
+        patch(
+            "app.estimate_routes._load_estimate_upload_bytes",
+            return_value=(b"\xff\xd8\xff" + b"\x00" * 64, ".jpg"),
+        ),
+        patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}),
     ]
 
 
 class TestEstimateV2GeographyRetry:
     """Tests for geography retry on the estimate results flow."""
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_results_have_retry_button(self, client):
-        """After an initial estimate, the results HTML should include a
-        'Try different location' button.
-
-        Acceptance criterion: 'Try different location' button appears on
-        the results page.
-        """
+        """After an estimate, results include a 'Try different location' control."""
         gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
         with ExitStack() as stack:
             for p in _upload_patches():
                 stack.enter_context(p)
             mock_gemini = stack.enter_context(gemini_patch)
             mock_gemini.return_value = {
-                "date_estimation": {"estimated_year": 1935, "confidence_range": [1930, 1940]},
+                "best_year_estimate": 1935,
+                "estimated_decade": 1930,
                 "location": {"primary_location": "New York, USA"},
             }
 
@@ -67,81 +74,59 @@ class TestEstimateV2GeographyRetry:
                 files={"photo": ("test.jpg", _fake_image_bytes(), "image/jpeg")},
             )
             assert resp.status_code == 200
-            assert "Try different location" in resp.text or "try-different-location" in resp.text
+            assert "Try different location" in resp.text
+            assert 'hx-post="/api/estimate/retry"' in resp.text
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_geography_retry_endpoint_exists(self, client):
-        """A POST endpoint for geography retry should exist and accept
-        an upload_id + location parameter.
-
-        The retry reuses the same uploaded image (no re-upload required).
-        """
+        """POST /api/estimate/retry exists and returns 200 (not 404)."""
         gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
         with ExitStack() as stack:
-            for p in _upload_patches():
+            for p in _retry_patches():
                 stack.enter_context(p)
             mock_gemini = stack.enter_context(gemini_patch)
             mock_gemini.return_value = {
-                "date_estimation": {"estimated_year": 1930, "confidence_range": [1925, 1935]},
+                "best_year_estimate": 1930,
+                "estimated_decade": 1930,
                 "location": {"primary_location": "Rhodes, Greece"},
             }
 
             resp = client.post(
                 "/api/estimate/retry",
-                data={
-                    "upload_id": "abc123def456",
-                    "location": "Rhodes, Greece",
-                },
+                data={"upload_id": "abc123def456", "location": "Rhodes, Greece"},
             )
-            # Endpoint should exist and not 404
-            assert resp.status_code != 404
             assert resp.status_code == 200
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_retry_passes_location_as_constraint(self, client):
-        """Geography retry should pass the user-supplied location to
-        _call_gemini_date_estimate() via photo_metadata['user_location'].
-        """
+        """Retry passes the location via photo_metadata['user_location']."""
         gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
         with ExitStack() as stack:
-            for p in _upload_patches():
+            for p in _retry_patches():
                 stack.enter_context(p)
             mock_gemini = stack.enter_context(gemini_patch)
             mock_gemini.return_value = {
-                "date_estimation": {"estimated_year": 1930, "confidence_range": [1925, 1935]},
+                "best_year_estimate": 1930,
+                "estimated_decade": 1930,
                 "location": {"primary_location": "Rhodes, Greece"},
             }
 
             resp = client.post(
                 "/api/estimate/retry",
-                data={
-                    "upload_id": "abc123def456",
-                    "location": "Rhodes, Greece",
-                },
+                data={"upload_id": "abc123def456", "location": "Rhodes, Greece"},
             )
             assert resp.status_code == 200
+            kwargs = mock_gemini.call_args.kwargs
+            assert kwargs.get("photo_metadata", {}).get("user_location") == "Rhodes, Greece"
 
-            call_args = mock_gemini.call_args
-            assert call_args is not None
-            kwargs = call_args.kwargs if call_args.kwargs else {}
-            photo_metadata = kwargs.get("photo_metadata", {})
-            assert photo_metadata.get("user_location") == "Rhodes, Greece"
-
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_retry_shows_side_by_side_results(self, client):
-        """Geography retry results should show both the original estimate
-        and the revised estimate side by side.
-
-        Acceptance criterion: New result shows alongside original with
-        'Original estimate' / 'Revised estimate' labels.
-        """
+        """Retry shows original + revised estimates side by side."""
         gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
         with ExitStack() as stack:
-            for p in _upload_patches():
+            for p in _retry_patches():
                 stack.enter_context(p)
             mock_gemini = stack.enter_context(gemini_patch)
             mock_gemini.return_value = {
-                "date_estimation": {"estimated_year": 1930, "confidence_range": [1925, 1935]},
+                "best_year_estimate": 1930,
+                "estimated_decade": 1930,
                 "location": {"primary_location": "Rhodes, Greece"},
             }
 
@@ -150,53 +135,41 @@ class TestEstimateV2GeographyRetry:
                 data={
                     "upload_id": "abc123def456",
                     "location": "Rhodes, Greece",
+                    "orig_year": "1935",
+                    "orig_location": "New York, USA",
                 },
             )
             assert resp.status_code == 200
             html = resp.text
-            assert "Original estimate" in html or "original-estimate" in html
-            assert "Revised estimate" in html or "revised-estimate" in html
+            assert "Original estimate" in html
+            assert "Revised estimate" in html
+            assert "Rhodes, Greece" in html
+            assert "New York, USA" in html
 
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_retry_logged_with_trigger_geography_retry(self, client):
-        """Geography retry Gemini call should be logged with
-        trigger='geography_retry' in the gemini_api_calls table.
-        """
+        """Retry Gemini call uses trigger='geography_retry'."""
         gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
         with ExitStack() as stack:
-            for p in _upload_patches():
+            for p in _retry_patches():
                 stack.enter_context(p)
             mock_gemini = stack.enter_context(gemini_patch)
             mock_gemini.return_value = {
-                "date_estimation": {"estimated_year": 1930, "confidence_range": [1925, 1935]},
+                "best_year_estimate": 1930,
+                "estimated_decade": 1930,
                 "location": {"primary_location": "Rhodes, Greece"},
             }
 
             resp = client.post(
                 "/api/estimate/retry",
-                data={
-                    "upload_id": "abc123def456",
-                    "location": "Rhodes, Greece",
-                },
+                data={"upload_id": "abc123def456", "location": "Rhodes, Greece"},
             )
             assert resp.status_code == 200
+            assert mock_gemini.call_args.kwargs.get("trigger") == "geography_retry"
 
-            call_args = mock_gemini.call_args
-            assert call_args is not None
-            kwargs = call_args.kwargs if call_args.kwargs else {}
-            assert kwargs.get("trigger") == "geography_retry"
-
-    @pytest.mark.xfail(reason="TOOLS-005 not implemented")
     def test_retry_respects_rate_limit(self, client):
-        """Geography retries should count toward the same IP rate limit
-        as initial uploads.
-        """
+        """Retries count toward the same IP rate limit (429 when exceeded)."""
         patches = [
             patch("app.main.is_auth_enabled", return_value=False),
-            patch("app.main._build_caches"),
-            patch("app.main._load_date_labels", return_value={}),
-            patch("core.storage.can_write_r2", return_value=False),
-            patch("core.storage.get_upload_url", return_value="/uploads/test.jpg"),
             patch("app.estimate_routes.check_rate_limit", return_value=False),
         ]
         with ExitStack() as stack:
@@ -204,9 +177,42 @@ class TestEstimateV2GeographyRetry:
                 stack.enter_context(p)
             resp = client.post(
                 "/api/estimate/retry",
-                data={
-                    "upload_id": "abc123def456",
-                    "location": "Rhodes, Greece",
-                },
+                data={"upload_id": "abc123def456", "location": "Rhodes, Greece"},
             )
             assert resp.status_code == 429
+
+    def test_retry_missing_location_prompts_user(self, client):
+        """Empty location returns a prompt and does NOT call Gemini."""
+        gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
+        with ExitStack() as stack:
+            for p in _retry_patches():
+                stack.enter_context(p)
+            mock_gemini = stack.enter_context(gemini_patch)
+            resp = client.post(
+                "/api/estimate/retry",
+                data={"upload_id": "abc123def456", "location": "  "},
+            )
+            assert resp.status_code == 200
+            assert "Please enter a location" in resp.text
+            mock_gemini.assert_not_called()
+
+    def test_retry_missing_upload_is_handled(self, client):
+        """When the stored image is gone, retry returns a friendly message."""
+        gemini_patch = patch("app.estimate_routes._call_gemini_date_estimate")
+        patches = [
+            patch("app.main.is_auth_enabled", return_value=False),
+            patch("app.estimate_routes.check_rate_limit", return_value=True),
+            patch("app.estimate_routes._load_estimate_upload_bytes", return_value=(None, "")),
+            patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}),
+        ]
+        with ExitStack() as stack:
+            for p in patches:
+                stack.enter_context(p)
+            mock_gemini = stack.enter_context(gemini_patch)
+            resp = client.post(
+                "/api/estimate/retry",
+                data={"upload_id": "abc123def456", "location": "Rhodes, Greece"},
+            )
+            assert resp.status_code == 200
+            assert "no longer available" in resp.text
+            mock_gemini.assert_not_called()
