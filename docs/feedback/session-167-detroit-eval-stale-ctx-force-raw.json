@@ -1,0 +1,134 @@
+{
+  "experiment_id": "session167_detroit_stale_ctx_force_1782847383",
+  "model": "gemini-3.1-pro-preview",
+  "variants": [
+    "candidate"
+  ],
+  "total_cost_usd": 0.04039,
+  "n_photos": 1,
+  "n_calls": 1,
+  "gedcom_context_disabled": false,
+  "generated_at": "2026-06-30T19:23:55.075504+00:00",
+  "results": [
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Wayne, Michigan, USA",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.04039,
+      "latency_ms": 42304,
+      "error": null,
+      "candidates": [
+        "Detroit, Wayne, Michigan, USA",
+        "Brooklyn, Kings, New York, USA",
+        "Randolph, Montgomery, Ohio, USA",
+        "New York, Kings, New York, United States",
+        "Dayton, Ohio, USA"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA || Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Randolph, Montgomery, Ohio, USA",
+          "subject_residence_match": "Harry ( Hyman Geshel Lazar ) Fox: Residence 1920 in Randolph, Montgomery, Ohio, USA",
+          "year_distance": "2"
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "subject_residence_match": "Harry ( Hyman Geshel Lazar ) Fox: Residence 1915 in New York, Kings, New York, United States || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States",
+          "year_distance": "3"
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA",
+          "year_distance": "5"
+        }
+      ],
+      "round_2_5_summary": "Detroit, Wayne, Michigan, USA and Brooklyn, Kings, New York, USA tied with a year_distance of 0 and 1 distinct subject at that minimum distance. Detroit was selected as the primary location using the visual fallback rule (Rule 3), as the specific architectural combination of the glass conservatory attached to a masonry building with arched windows strongly matches the Belle Isle Conservatory complex.",
+      "eliminated_runner_up": {
+        "place": "Brooklyn, Kings, New York, USA",
+        "refuting_feature": "The specific masonry attachment with arched windows does not match the Brooklyn Botanic Garden Palm House exterior as closely as the Belle Isle complex."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 22808,
+      "photo_year": 1918,
+      "forced_candidates": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "place_key": "brooklyn",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA"
+          ]
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "place_key": "detroit",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+            "Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA"
+          ]
+        },
+        {
+          "candidate": "Randolph, Montgomery, Ohio, USA",
+          "place_key": "randolph",
+          "year_distance": 2,
+          "subjects_at_min": [
+            "Harry ( Hyman Geshel Lazar ) Fox"
+          ],
+          "citations": [
+            "Harry ( Hyman Geshel Lazar ) Fox: Residence 1920 in Randolph, Montgomery, Ohio, USA"
+          ]
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "place_key": "new york",
+          "year_distance": 3,
+          "subjects_at_min": [
+            "Harry ( Hyman Geshel Lazar ) Fox",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Harry ( Hyman Geshel Lazar ) Fox: Residence 1915 in New York, Kings, New York, United States",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States"
+          ]
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "place_key": "dayton",
+          "year_distance": 5,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA"
+          ]
+        }
+      ],
+      "predicted_place_year_distance": 0
+    }
+  ]
+}

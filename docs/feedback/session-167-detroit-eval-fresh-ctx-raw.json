@@ -1,0 +1,390 @@
+{
+  "experiment_id": "session167_detroit_fresh_ctx_1782846821",
+  "model": "gemini-3.1-pro-preview",
+  "variants": [
+    "candidate",
+    "candidate_with_prior"
+  ],
+  "total_cost_usd": 0.153122,
+  "n_photos": 2,
+  "n_calls": 4,
+  "gedcom_context_disabled": false,
+  "generated_at": "2026-06-30T19:22:30.696267+00:00",
+  "results": [
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Wayne, Michigan, USA",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.034108,
+      "latency_ms": 25727,
+      "error": null,
+      "candidates": [
+        "Detroit, Wayne, Michigan, USA",
+        "Brooklyn, Kings, New York, USA",
+        "New York, Kings, New York, United States",
+        "Dayton, Ohio, USA"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA || Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States",
+          "year_distance": "3"
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA",
+          "year_distance": "5"
+        }
+      ],
+      "round_2_5_summary": "Detroit and Brooklyn tied with a year_distance of 0, but Detroit won via Rule 2 because it had more distinct confirmed subjects (Albert Fox and Israel Fox) documented there at that minimum distance compared to Brooklyn (only Israel Fox).",
+      "eliminated_runner_up": {
+        "place": "Brooklyn, Kings, New York, USA",
+        "refuting_feature": "Eliminated by Round 2.5 Rule 2 (fewer distinct subjects at distance 0)."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 15817,
+      "photo_year": 1918,
+      "forced_candidates": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "place_key": "brooklyn",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA"
+          ]
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "place_key": "detroit",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+            "Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA"
+          ]
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "place_key": "new york",
+          "year_distance": 3,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States"
+          ]
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "place_key": "dayton",
+          "year_distance": 5,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA"
+          ]
+        }
+      ],
+      "predicted_place_year_distance": 0
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Wayne, Michigan, USA",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.036346,
+      "latency_ms": 35518,
+      "error": null,
+      "candidates": [
+        "Brooklyn, Kings, New York, USA",
+        "Detroit, Wayne, Michigan, USA",
+        "New York, Kings, New York, United States",
+        "Dayton, Ohio, USA"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA || Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States",
+          "year_distance": "3"
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA",
+          "year_distance": "5"
+        }
+      ],
+      "round_2_5_summary": "CONFIRM the prior prediction. Detroit and Brooklyn tied on Rule 1 (year_distance = 0) and Rule 2 (1 distinct subject at minimum distance). Detroit wins via Rule 3 visual fallback: the architecture perfectly matches the Belle Isle Conservatory in Detroit. The prior prediction is confirmed by the exact GEDCOM event 'Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA' at a year_distance of 0.",
+      "eliminated_runner_up": {
+        "place": "Brooklyn, Kings, New York, USA",
+        "refuting_feature": "The specific architectural massing of the masonry wing and sloped glasshouse matches Detroit's Belle Isle Conservatory, not the Brooklyn Botanic Garden conservatory."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 15817,
+      "photo_year": 1918,
+      "forced_candidates": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "place_key": "brooklyn",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA"
+          ]
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "place_key": "detroit",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+            "Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA"
+          ]
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "place_key": "new york",
+          "year_distance": 3,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States"
+          ]
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "place_key": "dayton",
+          "year_distance": 5,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA"
+          ]
+        }
+      ],
+      "predicted_place_year_distance": 0
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": null,
+      "predicted_confidence": null,
+      "top1_match": false,
+      "top3_match": false,
+      "verdict": "error",
+      "cost_usd": 0.013864,
+      "latency_ms": 403279,
+      "error": "The read operation timed out [after 1 attempt(s)]",
+      "candidates": null,
+      "residence_distance_table": null,
+      "round_2_5_summary": null,
+      "eliminated_runner_up": null,
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 15817,
+      "photo_year": 1918,
+      "forced_candidates": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "place_key": "brooklyn",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA"
+          ]
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "place_key": "detroit",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+            "Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA"
+          ]
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "place_key": "new york",
+          "year_distance": 3,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States"
+          ]
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "place_key": "dayton",
+          "year_distance": 5,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA"
+          ]
+        }
+      ],
+      "predicted_place_year_distance": null
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Wayne, Michigan, USA",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.035932,
+      "latency_ms": 34165,
+      "error": null,
+      "candidates": [
+        "Detroit, Wayne, Michigan, USA",
+        "Brooklyn, Kings, New York, USA",
+        "New York, Kings, New York, United States",
+        "Dayton, Ohio, USA"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA || Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA || Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States",
+          "year_distance": "3"
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA",
+          "year_distance": "5"
+        }
+      ],
+      "round_2_5_summary": "Detroit and Brooklyn tied with a year_distance of 0 and 1 distinct subject at that minimum distance. Detroit was chosen as the primary via the Rule 3 visual fallback, specifically the large multi-paned glass and white-framed conservatory structure which strongly matches the Belle Isle Conservatory in Detroit. I CONFIRM the prior prediction based on the exact GEDCOM event 'Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA' at a year_distance of 0.",
+      "eliminated_runner_up": {
+        "place": "Brooklyn, Kings, New York, USA",
+        "refuting_feature": "Rule 3 visual fallback: the specific architectural framing of the glass conservatory is a stronger match for Detroit's Belle Isle Conservatory."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 15817,
+      "photo_year": 1918,
+      "forced_candidates": [
+        {
+          "candidate": "Brooklyn, Kings, New York, USA",
+          "place_key": "brooklyn",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1920 in Brooklyn Assembly District 19, Kings, New York, USA"
+          ]
+        },
+        {
+          "candidate": "Detroit, Wayne, Michigan, USA",
+          "place_key": "detroit",
+          "year_distance": 0,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+            "Albert ( Elia Ellis ) Fox: Residence 1917-1918 in Detroit, Wayne, Michigan, USA",
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA"
+          ]
+        },
+        {
+          "candidate": "New York, Kings, New York, United States",
+          "place_key": "new york",
+          "year_distance": 3,
+          "subjects_at_min": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks )"
+          ],
+          "citations": [
+            "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1915 in New York, Kings, New York, United States"
+          ]
+        },
+        {
+          "candidate": "Dayton, Ohio, USA",
+          "place_key": "dayton",
+          "year_distance": 5,
+          "subjects_at_min": [
+            "Albert ( Elia Ellis ) Fox"
+          ],
+          "citations": [
+            "Albert ( Elia Ellis ) Fox: Residence 1923 in Dayton, Ohio, USA"
+          ]
+        }
+      ],
+      "predicted_place_year_distance": 0
+    }
+  ]
+}
