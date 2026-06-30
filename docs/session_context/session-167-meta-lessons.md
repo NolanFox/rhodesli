@@ -97,3 +97,16 @@ the deny list at runtime (and/or subagents don't enforce the parent's deny). So:
   (e.g., a hook that hard-blocks writes outside the repo root, or drop bypassPermissions).
 - Net effect this session: BENIGN — the work is user-directed, tested, on an unmerged
   feature branch. But the boundary I described to the user as "hard-blocked" was soft.
+
+## M11 — Long subagents drop the connection at the END; recover from the BRANCH, not the message
+Tracks A (81 tool-uses, 28.5 min) and B (70 tool-uses, 28.3 min) both returned
+"API Error: Connection closed mid-response" — the final SUMMARY was lost, but the
+committed branch work survived. Track A: 6 clean commits (it even self-corrected,
+reverting a BACKLOG edit per my mid-flight message). Track B: 1 commit + UNCOMMITTED
+audit-fixes still in the worktree (dropped mid-edit, classic Lesson 166).
+**Recovery procedure (orchestrator):** for any conn-dropped subagent, (1) `git log main..branch`
+to see commits, (2) `git status --porcelain` in the worktree, (3) if dangling changes,
+run that track's tests, and if green, commit them on the branch (preserve audit artifacts
+too). Do NOT resume a conn-dropped agent just to get the summary — inspect the branch.
+The longer the subagent runs, the higher the end-of-run drop risk — keep track scope
+bounded, and have agents commit incrementally (not one big commit at the end).
