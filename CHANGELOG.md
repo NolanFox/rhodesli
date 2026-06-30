@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.87] — 2026-06-30 (Session 167: Multi-Track Autonomous Sprint — Opus-orchestrated, Codex-coded, Codex-audited)
+
+Experiment in autonomous parallel throughput: one Opus orchestrator dispatched **5 track-lead subagents** (each an Opus architect using **Codex gpt-5.5/xhigh** as coding engine + boundary auditor) across disjoint file sets. Verdict: **throughput clearly beat coordination overhead.** All four rhodesli tracks merged to main; the fifth (sibling repo) is tested on its own branch.
+
+### Shipped
+- **Track A — Ops hardening** (7 commits): `scripts/supabase_monitor.py` (health + DB-size + keep-alive, OPS-002/OD-015 — so the free-tier outage can't silently recur); `scripts/backfill_gedcom_estimates.py` (read-only survey for ESTIMATE-BACKFILL-166); `gemini_api_calls` lineage-columns migration SQL (GEMINI-API-CALLS-SCHEMA-166); Codex-pin refresh; **confirmed GEDCOM-TEST-FIX is a no-op** (the 164 atomic importer already asserts zero-rows-on-failure). +619 tests.
+- **Track B — Estimate v2** (PRD-055, TOOLS-005): `/tools/estimate` gains **GEDCOM paste + text hints + geography retry** (paste, not file-upload — corrected mid-flight to match the PRD + its xfail tests). 30 estimate tests.
+- **Track C — Self-service archive** (PRD-060): new `app/onboarding_routes.py` "Create Your Archive" flow, **feature-flagged OFF (`SELF_SERVICE_ARCHIVE_ENABLED`) = zero production change**, Codex P1 fail-open write-path fixed, decisions file for Nolan. D1 resolved → **any logged-in user** may create (capped 3/user) when enabled. +38 tests.
+- **Track D — Detroit prompt fix** (PROMPT-A-ITERATION-001): Round-2.5 GEDCOM-residence-distance tie-breaker + toothy sycophancy guard (Lesson 174). Bounded eval **$0.30/$0.50 cap held**: photo 01659 now PASSES (Detroit/high), 02068 still FAILS — Path A necessary but not sufficient (root cause: candidate-omission, the next step). 28 tests.
+- **Track E — rhodes-wiki RHODES-WIKI-004** (sibling repo, branch only): dossier auto-update from approved posts + first Menasche narrative wiki page + FB-pipeline tightenings (Lessons 192/196). 249 tests (+38). NOT merged — commits from a dedicated rhodes-wiki session (cross-repo boundary).
+
+### Orchestration findings (Codex-audited)
+- **Session-level Codex plan-audit** (gpt-5.5/xhigh) at the dispatch boundary caught **2 P0 + 4 P1 + 4 P2** coordination risks BEFORE deep work — corrected live via SendMessage (the Track B brief-vs-PRD contradiction was the load-bearing catch). Per-track Codex audits saved under `docs/session_context/session-167-track-*-codex-audit.md`.
+- **13 meta-lessons** (`docs/session_context/session-167-meta-lessons.md`): long subagents reliably drop the connection at the END (recover from the branch, not the message — M11, 4×); the cross-repo write-deny doesn't enforce under `bypassPermissions` (M8) but the commit-hook accidentally blocks sibling-repo commits (M12) and trips on the literal phrase "git commit" in doc prose (M13).
+
+### Tests
+`make test-fast`: **4471 passed**, 10 skipped, 1 xfailed (+~98 from merged tracks). Ruff clean. ML suite 722/723 — the 1 failure (`test_nl_query::test_very_long_input`, ReDoS) is **pre-existing on origin/main** (byte-identical, untouched by 167), logged NL-QUERY-REDOS-167.
+
 ## [v0.99.86] — 2026-06-12 (Session 166: Multi-Model Photo Estimate + 3 Production Bug Fixes — AD-251)
 
 Interactive request: run a full date/location estimate on photo `8346decbf2b2f8c1` (`IMG_1260.JPG` — Meyer Fox + Reva Heft), compare three models, write the best to the website + Supabase, and make manual runs structurally distinguishable from platform runs. Surfaced and fixed three production bugs along the way.
