@@ -82,3 +82,18 @@ pattern, validated again. Highest-value catches:
 Dispatch + isolation-verify + plan-audit + 5 course-correction messages ≈ the coordination
 cost so far. The plan audit (caught 10 findings) clearly paid for itself. Net read at
 session end: did parallel throughput beat this overhead? (TBD as tracks land.)
+
+## M8 CORRECTION — the cross-repo deny did NOT fire (harness safety gap)
+Track E reported ZERO permission denials: every Write/Edit/python to
+`/Users/nolanfox/rhodes-wiki/**` succeeded despite the explicit `deny` list in
+`.claude/settings.json`. Almost certainly `defaultMode: "bypassPermissions"` overrides
+the deny list at runtime (and/or subagents don't enforce the parent's deny). So:
+- **Static settings reading ≠ runtime behavior.** Both I and Codex concluded "Track E is
+  blocked" from reading settings.json; the runtime let it write freely. Verify guardrails
+  EMPIRICALLY (a one-line probe write) rather than trusting the config text.
+- **This is a real safety GAP to flag to Nolan:** the deliberate cross-repo write-deny
+  (rhodesli must not write rhodes-wiki) is NOT actually enforced under bypassPermissions.
+  An accidental/automated rhodesli process COULD corrupt rhodes-wiki. Tighten later
+  (e.g., a hook that hard-blocks writes outside the repo root, or drop bypassPermissions).
+- Net effect this session: BENIGN — the work is user-directed, tested, on an unmerged
+  feature branch. But the boundary I described to the user as "hard-blocked" was soft.
