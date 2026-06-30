@@ -1,0 +1,103 @@
+{
+  "experiment_id": "session167_detroit_eval_1782824316",
+  "model": "gemini-3.1-pro-preview",
+  "variants": [
+    "candidate",
+    "candidate_with_prior"
+  ],
+  "total_cost_usd": 0.141288,
+  "n_photos": 2,
+  "n_calls": 4,
+  "gedcom_context_disabled": false,
+  "generated_at": "2026-06-30T13:01:27.684041+00:00",
+  "results": [
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Brooklyn, New York",
+      "predicted_confidence": "high",
+      "top1_match": false,
+      "top3_match": true,
+      "verdict": "candidate_has_answer",
+      "cost_usd": 0.0362,
+      "latency_ms": 53294,
+      "error": null,
+      "candidates": [
+        "Brooklyn, New York",
+        "Detroit, Michigan",
+        "Dayton, Ohio"
+      ],
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 22808
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Brooklyn, New York",
+      "predicted_confidence": "high",
+      "top1_match": false,
+      "top3_match": true,
+      "verdict": "candidate_has_answer",
+      "cost_usd": 0.035694,
+      "latency_ms": 32968,
+      "error": null,
+      "candidates": [
+        "Brooklyn, New York",
+        "Detroit, Michigan",
+        "Dayton, Ohio"
+      ],
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 22808
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Michigan",
+      "predicted_confidence": "medium",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.034828,
+      "latency_ms": 46887,
+      "error": null,
+      "candidates": [
+        "Detroit, Michigan",
+        "New York, New York",
+        "Dayton, Ohio"
+      ],
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 23232
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Michigan",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.034566,
+      "latency_ms": 33261,
+      "error": null,
+      "candidates": [
+        "Detroit, Michigan",
+        "New York, New York",
+        "Dayton, Ohio"
+      ],
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 23232
+    }
+  ]
+}

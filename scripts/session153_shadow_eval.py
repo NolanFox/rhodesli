@@ -246,21 +246,39 @@ For each row, you MUST:
   not the photo's confirmed subject) does NOT count.
 - Immigration / port-of-entry / ship-arrival events do NOT count even if they
   list the candidate city.
-- `year_distance` = the smallest absolute integer year delta between the
-  photo's estimated date (use the lower bound of any range you would estimate)
-  and the matching event's year. If `subject_residence_match = "0 subjects"`,
-  write `"n/a"` for year_distance.
+- **DATED EVENTS ONLY.** A residence with NO determinable year (e.g.
+  "Residence ? in Brooklyn", "Residence in X" with no date) MUST NOT be
+  cited as a match and MUST NOT be counted — you cannot compute a
+  `year_distance` for it, so it carries zero weight. Drop it entirely.
+- **DATE-WINDOW.** A residence only counts as a match if its year is within
+  10 years of the photo's estimated date. A residence 11+ years away is NOT
+  a match for this photo (a 1934 residence does not anchor a ~1917 photo).
+- `year_distance` = for the candidate, the SMALLEST absolute integer year
+  delta between the photo's estimated date (use the lower bound of any range
+  you would estimate) and any one of that candidate's matching, dated events.
+  If `subject_residence_match = "0 subjects"`, write `"n/a"`.
 
-**Tie-breaker rules (apply IN STRICT ORDER, do not skip):**
-1. Highest count of `subject_residence_match` citations wins.
-2. If tied, smallest `year_distance` wins.
-3. If still tied AND no GEDCOM signal in any candidate, fall back to visual
-   evidence ONLY (Round 1 diagnostic features).
+**Tie-breaker rules (apply IN STRICT ORDER, do not skip). The key principle:
+DATE PROXIMITY beats RAW COUNT. A city where 2 subjects are documented in the
+photo's exact year outranks a city where 3 subjects have loosely-dated or
+older residences.**
+1. SMALLEST `year_distance` wins (the candidate whose closest dated residence
+   is nearest the photo's estimated year). This is the PRIMARY rule.
+2. If two or more candidates TIE on the smallest `year_distance`, the winner
+   is the one with the MOST DISTINCT confirmed subjects documented AT that
+   smallest year_distance (i.e. count only subjects whose residence sits at
+   the tying minimum distance, not every residence the candidate has).
+3. If STILL tied AND no GEDCOM signal distinguishes them, fall back to visual
+   evidence ONLY (Round 1 diagnostic features) — name the deciding feature.
 
-If ALL candidates have `subject_residence_match = "0 subjects"`: lower
-confidence to `"low"` and the response MUST explicitly include the literal
-phrase "no biographical anchoring available — visual-only" in the
-`round_2_5_summary` field.
+Do NOT pick a candidate merely because it has the longest list of residence
+citations. A long list of off-year residences loses to a short list of
+on-year ones.
+
+If ALL candidates have `subject_residence_match = "0 subjects"` (after dropping
+undated and out-of-window events): lower confidence to `"low"` and the response
+MUST explicitly include the literal phrase "no biographical anchoring available
+— visual-only" in the `round_2_5_summary` field.
 
 **ROUND 3 — Pick the primary location AS DETERMINED BY the Round 2.5 table.**
 Choose ONE candidate as primary, applying the Round 2.5 tie-breaker rules.
@@ -291,8 +309,8 @@ mechanically by Round 2.5 — relative-only matches do not count toward
 - `eliminated_runner_up` = {"place": ..., "refuting_feature": ...}
 - `confidence` = "high" only if (a) ≥2 diagnostic features support the primary
   AND (b) runner-up was eliminated via a specific feature AND (c) biographical
-  support agrees (when context provided) AND (d) the primary won Round 2.5 by
-  rule 1 with `subject_residence_match ≥ 1` AND (e) `year_distance ≤ 5`.
+  support agrees (when context provided) AND (d) the primary is the Round 2.5
+  winner with `subject_residence_match ≥ 1` AND (e) `year_distance ≤ 5`.
   Otherwise "medium" or "low". If the all-zero fallback fired, confidence
   MUST be "low".
 - `source_type` = "visual" | "biographical" | "both"
@@ -353,7 +371,7 @@ just produced.
 
 Decide ONE of the following and state which in the response:
 
-  - CONFIRM the prior prediction. To do so, you MUST satisfy BOTH of these:
+  - CONFIRM the prior prediction. To do so, you MUST satisfy ALL THREE of these:
     1. Cite the EXACT GEDCOM event (subject name + event type + date + place
        verbatim, e.g. "Albert Fox: Residence 1917 in Detroit, Michigan, USA")
        that POSITIVELY supports the prior prediction. NOT a visual feature on
@@ -363,6 +381,12 @@ Decide ONE of the following and state which in the response:
        table you just produced. If that distance is greater than 5 years
        OR the prior prediction's row had `subject_residence_match = "0 subjects"`,
        you MUST refute or lower confidence — you may NOT confirm.
+    3. The prior prediction's place MUST BE the Round 2.5 WINNER under the
+       tie-breaker rules (smallest year_distance, then most distinct subjects
+       at that distance). If a DIFFERENT candidate wins Round 2.5, you may NOT
+       confirm — you MUST REFUTE and amend `place` to the Round 2.5 winner.
+       A prior is not confirmable just because some nearby event exists for it;
+       it must actually win the table.
 
   - REFUTE the prior prediction. To do so, name the specific feature OR
     Round 2.5 row (with its citation) that REFUTES it, and propose an
@@ -569,15 +593,24 @@ def resolve_gedcom_context(photo_id: str, sb) -> str | None:
         return None
 
 
-def resolve_photo(photo_id: str, sb) -> dict | None:
-    """Pull path + collection + source for a photo from Supabase."""
+def resolve_photo(photo_id: str, sb, photo_root: Path | None = None) -> dict | None:
+    """Pull path + collection + source for a photo from Supabase.
+
+    Args:
+        photo_root: Base directory for resolving RELATIVE photo paths
+            (e.g. ``raw_photos/<file>.jpg``). Defaults to the script's repo
+            root. When the eval runs from a git worktree whose ``raw_photos/``
+            is empty (images are gitignored and live only in the main repo),
+            pass the main-repo root here so the local image bytes can be read.
+    """
     r = sb.table("photos").select("photo_id, path, collection, source").eq("photo_id", photo_id).execute()
     if not r.data:
         return None
     p = r.data[0]
+    base = photo_root or Path(__file__).resolve().parent.parent
     path = Path(p.get("path") or "")
     if not path.is_absolute():
-        path = Path(__file__).resolve().parent.parent / path
+        path = base / path
     if not path.exists():
         return None
     return {"photo_id": p["photo_id"], "path": str(path), "collection": p.get("collection"), "source": p.get("source")}
@@ -736,6 +769,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--max-cost", type=float, default=2.0)
+    ap.add_argument(
+        "--max-calls",
+        type=int,
+        default=None,
+        help=(
+            "Hard ceiling on the TOTAL number of Gemini calls (including silent "
+            "first passes). The run ABORTS the moment this many calls have been "
+            "made, even mid-photo. Use alongside --max-cost for a mechanical "
+            "double cap on bounded eval runs."
+        ),
+    )
+    ap.add_argument(
+        "--no-db-log",
+        action="store_true",
+        help=(
+            "Skip the append-only gemini_api_calls audit logging. The eval still "
+            "writes its results to the --out-path JSON. Use for bounded reruns "
+            "where the only required artifact is the docs/feedback file."
+        ),
+    )
     ap.add_argument("--limit", type=int, default=None, help="limit to first N photos (after dedup)")
     ap.add_argument(
         "--variants",
@@ -764,7 +817,38 @@ def main():
         action="store_true",
         help="Disable GEDCOM context entirely (legacy 153b behavior — use only to reproduce that run).",
     )
+    ap.add_argument(
+        "--photo-root",
+        default=None,
+        help=(
+            "Base directory for resolving RELATIVE photo paths (raw_photos/...). "
+            "Defaults to the script's repo root. When running from a git worktree "
+            "whose raw_photos/ is empty, point this at the main repo root so the "
+            "local image bytes can be read."
+        ),
+    )
+    ap.add_argument(
+        "--experiment-id",
+        default=None,
+        help=(
+            "Override the experiment_id used for gemini_api_calls logging + the "
+            "results file. Default: session154_shadow_eval_<ts>. Pass a "
+            "session-specific tag (e.g. session167_detroit_eval_<ts>) for honest "
+            "provenance so a later rerun is distinguishable from the 154 run."
+        ),
+    )
+    ap.add_argument(
+        "--out-path",
+        default=None,
+        help=(
+            "Override the raw-results JSON output path. Default is derived from "
+            "the test-set scope (Detroit-only -> session-154-...detroit-rerun.json). "
+            "Pass an explicit path to avoid clobbering a prior session's record."
+        ),
+    )
     args = ap.parse_args()
+
+    photo_root = Path(args.photo_root).resolve() if args.photo_root else None
 
     from dotenv import load_dotenv
 
@@ -798,7 +882,7 @@ def main():
     for entry in TEST_SET:
         if photo_id_filter and entry["photo_id"] not in photo_id_filter:
             continue
-        photo = resolve_photo(entry["photo_id"], sb)
+        photo = resolve_photo(entry["photo_id"], sb, photo_root=photo_root)
         if not photo:
             logger.warning(f"SKIP {entry['photo_id']} — not found or no local file")
             continue
@@ -865,14 +949,31 @@ def main():
         # Useful side-effect: dry-run still resolves+writes the fixture above.
         return
 
-    # Unique experiment ID for this run
-    experiment_id = f"session154_shadow_eval_{int(time.time())}"
+    # Unique experiment ID for this run. Honest provenance: an explicit
+    # --experiment-id keeps a later (e.g. Session 167) rerun distinguishable
+    # from the Session 154 run in gemini_api_calls.
+    experiment_id = args.experiment_id or f"session154_shadow_eval_{int(time.time())}"
     logger.info(f"Experiment ID: {experiment_id}")
 
     results = []
     total_cost = 0.0
+    call_count = 0  # every Gemini call (incl. silent first passes) counts toward --max-calls
 
+    def _cap_hit() -> str | None:
+        """Mechanical double-cap. Returns a reason string if a ceiling is hit."""
+        if total_cost >= args.max_cost:
+            return f"cost cap ${args.max_cost:.2f} (spent ${total_cost:.4f})"
+        if args.max_calls is not None and call_count >= args.max_calls:
+            return f"call cap {args.max_calls} (made {call_count})"
+        return None
+
+    if args.max_calls is not None:
+        logger.info(f"Mechanical caps: max_cost=${args.max_cost:.2f}  max_calls={args.max_calls}")
+
+    aborted = False
     for i, row in enumerate(test_rows):
+        if aborted:
+            break
         pid = row["photo_id"]
         photo_path = Path(row["_path"])
         suffix = photo_path.suffix
@@ -890,8 +991,10 @@ def main():
         first_pass_cache = None
 
         for variant in variants:
-            if total_cost >= args.max_cost:
-                logger.warning(f"Cost cap ${args.max_cost} reached — halting")
+            cap_reason = _cap_hit()
+            if cap_reason:
+                logger.warning(f"ABORT: {cap_reason} reached — halting before next call")
+                aborted = True
                 break
 
             # Build the prompt — candidate_with_prior needs a first-pass result
@@ -905,6 +1008,7 @@ def main():
                         "candidate", photo_metadata=photo_metadata, gedcom_context=photo_gedcom_context
                     )
                     logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant=candidate (silent first pass)")
+                    call_count += 1
                     fp_parsed, _, fp_usage, fp_err = call_gemini(fp_prompt, image_bytes, suffix, GEMINI_MODEL, api_key)
                     if fp_err or not fp_parsed:
                         logger.warning(f"    silent first pass failed ({fp_err}); skipping candidate_with_prior")
@@ -922,6 +1026,7 @@ def main():
                     fp_pt = (fp_usage or {}).get("prompt_token_count") or len(fp_prompt) // 4
                     fp_ct = (fp_usage or {}).get("candidates_token_count") or len(json.dumps(fp_parsed)) // 4
                     total_cost += fp_pt * pricing.get("input", 2.0) / 1_000_000 + fp_ct * pricing.get("output", 12.0) / 1_000_000
+                    logger.info(f"    LEDGER: calls={call_count}  spent=${total_cost:.4f} / cap ${args.max_cost:.2f}")
                 prompt_text = build_prompt(
                     variant,
                     photo_metadata=photo_metadata,
@@ -935,6 +1040,7 @@ def main():
 
             logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant={variant}")
 
+            call_count += 1
             parsed, latency_ms, usage, err = call_gemini(prompt_text, image_bytes, suffix, GEMINI_MODEL, api_key)
 
             # If this is the candidate variant, cache the result for any subsequent
@@ -966,6 +1072,7 @@ def main():
                 f"    result place={graded['place']!r} conf={graded['confidence']} "
                 f"verdict={graded['verdict']} cost=${cost:.4f}"
             )
+            logger.info(f"    LEDGER: calls={call_count}  spent=${total_cost:.4f} / cap ${args.max_cost:.2f}")
 
             # Log to gemini_api_calls — record gedcom_context presence + variant.
             # Sub-keys pass=1 (candidate) vs pass=2 (candidate_with_prior) per AD-242.
@@ -985,38 +1092,47 @@ def main():
                 "gedcom_context_present": photo_gedcom_context is not None,
                 "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
             }
-            try:
-                log_gemini_call(
-                    photo_id=pid,
-                    model_used=GEMINI_MODEL,
-                    call_type="experiment_location_shadow_eval",
-                    prompt_tokens=pt,
-                    completion_tokens=ct,
-                    total_tokens=pt + ct,
-                    cost_usd=round(cost, 6),
-                    latency_ms=latency_ms,
-                    status="success" if err is None else "error",
-                    error_message=err,
-                    response_summary=response_summary,
-                    gemini_config={
-                        "experiment_id": experiment_id,
-                        "variant": variant,
-                        "pass": pass_num,
-                        "attempt_label": f"{variant}_shadow_eval_pass{pass_num}",
-                        "request_surface": "scripts.session153_shadow_eval",
-                        "request_mode": "experiment",
-                        "trigger": "shadow_eval_prompt_ab",
-                        "preset": "location_only",
-                        "temperature": 0.1,
-                        "gedcom_context_present": photo_gedcom_context is not None,
-                    },
-                    prompt_text=prompt_text,
-                    full_response=parsed,
-                    experiment_id=experiment_id,
-                )
-            except Exception as log_err:
-                logger.warning(f"    failed to log to gemini_api_calls: {log_err}")
+            if args.no_db_log:
+                logger.info("    --no-db-log set: skipping gemini_api_calls audit write")
+            else:
+                try:
+                    log_gemini_call(
+                        photo_id=pid,
+                        model_used=GEMINI_MODEL,
+                        call_type="experiment_location_shadow_eval",
+                        prompt_tokens=pt,
+                        completion_tokens=ct,
+                        total_tokens=pt + ct,
+                        cost_usd=round(cost, 6),
+                        latency_ms=latency_ms,
+                        status="success" if err is None else "error",
+                        error_message=err,
+                        response_summary=response_summary,
+                        gemini_config={
+                            "experiment_id": experiment_id,
+                            "variant": variant,
+                            "pass": pass_num,
+                            "attempt_label": f"{variant}_shadow_eval_pass{pass_num}",
+                            "request_surface": "scripts.session153_shadow_eval",
+                            "request_mode": "experiment",
+                            "trigger": "shadow_eval_prompt_ab",
+                            "preset": "location_only",
+                            "temperature": 0.1,
+                            "gedcom_context_present": photo_gedcom_context is not None,
+                        },
+                        prompt_text=prompt_text,
+                        full_response=parsed,
+                        experiment_id=experiment_id,
+                    )
+                except Exception as log_err:
+                    logger.warning(f"    failed to log to gemini_api_calls: {log_err}")
 
+            # Capture the Round 2.5 audit trail in the file output so the
+            # docs/feedback artifact is independently auditable (Codex P1 —
+            # the JSON must not omit residence_distance_table / round_2_5_summary).
+            _loc = {}
+            if isinstance(parsed, dict):
+                _loc = parsed.get("location") if isinstance(parsed.get("location"), dict) else parsed
             results.append(
                 {
                     "photo_id": pid,
@@ -1033,11 +1149,17 @@ def main():
                     "latency_ms": latency_ms,
                     "error": err,
                     "candidates": graded.get("candidates"),
+                    "residence_distance_table": _loc.get("residence_distance_table"),
+                    "round_2_5_summary": _loc.get("round_2_5_summary"),
+                    "eliminated_runner_up": _loc.get("eliminated_runner_up"),
                     "gedcom_context_present": photo_gedcom_context is not None,
                     "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
                 }
             )
-        if total_cost >= args.max_cost:
+        cap_reason = _cap_hit()
+        if cap_reason:
+            logger.warning(f"ABORT: {cap_reason} reached — stopping after photo {i+1}")
+            aborted = True
             break
 
     logger.info(f"Total cost: ${total_cost:.4f}  results rows: {len(results)}")
@@ -1048,7 +1170,10 @@ def main():
         "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
         "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
     })
-    if is_detroit_only:
+    if args.out_path:
+        # Explicit override always wins — never clobber a prior session's record.
+        out_path = Path(args.out_path)
+    elif is_detroit_only:
         out_path = Path("docs/feedback/session-154-shadow-eval-detroit-rerun.json")
     elif args.no_gedcom_context:
         out_path = Path("docs/feedback/session-154-shadow-eval-no-context.json")

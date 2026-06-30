@@ -1,0 +1,162 @@
+{
+  "experiment_id": "session167_detroit_eval_v2_1782824858",
+  "model": "gemini-3.1-pro-preview",
+  "variants": [
+    "candidate",
+    "candidate_with_prior"
+  ],
+  "total_cost_usd": 0.159124,
+  "n_photos": 2,
+  "n_calls": 4,
+  "gedcom_context_disabled": false,
+  "generated_at": "2026-06-30T13:23:39.003789+00:00",
+  "results": [
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Brooklyn, New York",
+      "predicted_confidence": "high",
+      "top1_match": false,
+      "top3_match": true,
+      "verdict": "candidate_has_answer",
+      "cost_usd": 0.036674,
+      "latency_ms": 44543,
+      "error": null,
+      "candidates": [
+        "Brooklyn, New York",
+        "Detroit, Michigan",
+        "Dayton, Ohio"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, New York",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Michigan",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "1"
+        },
+        {
+          "candidate": "Dayton, Ohio",
+          "subject_residence_match": "Harry ( Hyman Geshel Lazar ) Fox: Residence 1920 in Randolph, Montgomery, Ohio, USA",
+          "year_distance": "2"
+        }
+      ],
+      "round_2_5_summary": "Brooklyn, New York wins by Rule 1 (smallest year_distance), as Irving Fox has a documented residence in Brooklyn in 1917-1918, exactly matching the estimated 1918 date of the photo, whereas Detroit's closest match is 1 year away (1917) and Dayton's is 2 years away (1920).",
+      "eliminated_runner_up": {
+        "place": "Detroit, Michigan",
+        "refuting_feature": "The Belle Isle Conservatory lacks the attached white masonry pavilion with large arched windows visible on the left side of the photo."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 22808
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Brooklyn, New York",
+      "predicted_confidence": "high",
+      "top1_match": false,
+      "top3_match": true,
+      "verdict": "candidate_has_answer",
+      "cost_usd": 0.033598,
+      "latency_ms": 35212,
+      "error": null,
+      "candidates": [
+        "Brooklyn, New York",
+        "Detroit, Michigan"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Brooklyn, New York",
+          "subject_residence_match": "Harry ( Hyman Geshel Lazar ) Fox: Residence 1 June 1915 in New York, Kings, New York, United States; Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1 June 1915 in New York, Kings, New York, United States",
+          "year_distance": "0"
+        },
+        {
+          "candidate": "Detroit, Michigan",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA; Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": "2"
+        }
+      ],
+      "round_2_5_summary": "Brooklyn, New York wins Round 2.5 by having the smallest year_distance (0 years from the estimated photo date of 1915), with two confirmed subjects (Harry and Irving) documented residing there in that exact year.",
+      "eliminated_runner_up": {
+        "place": "Detroit, Michigan",
+        "refuting_feature": "Conservatory architecture lacks the massive central dome of Detroit's Belle Isle Conservatory and features a different masonry attachment."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 22808
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate",
+      "pass": 1,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": null,
+      "predicted_confidence": null,
+      "top1_match": false,
+      "top3_match": false,
+      "verdict": "error",
+      "cost_usd": 0.016518,
+      "latency_ms": 628153,
+      "error": "The read operation timed out [after 2 attempt(s)]",
+      "candidates": null,
+      "residence_distance_table": null,
+      "round_2_5_summary": null,
+      "eliminated_runner_up": null,
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 23232
+    },
+    {
+      "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
+      "bucket": "Detroit control",
+      "variant": "candidate_with_prior",
+      "pass": 2,
+      "expected_location": "Detroit, Michigan",
+      "predicted_place": "Detroit, Michigan",
+      "predicted_confidence": "high",
+      "top1_match": true,
+      "top3_match": true,
+      "verdict": "correct",
+      "cost_usd": 0.03678,
+      "latency_ms": 27608,
+      "error": null,
+      "candidates": [
+        "Detroit, Michigan",
+        "Brooklyn, New York",
+        "Dayton, Ohio"
+      ],
+      "residence_distance_table": [
+        {
+          "candidate": "Detroit, Michigan",
+          "subject_residence_match": "Albert ( Elia Ellis ) Fox: Residence 1917 in Detroit, Michigan, USA; Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917 in Detroit, Michigan, USA",
+          "year_distance": 0
+        },
+        {
+          "candidate": "Brooklyn, New York",
+          "subject_residence_match": "Israel ( Ervin Irving Alex ) Fox ( Fuchs Fuks ): Residence 1917-1918 in Brooklyn, Kings, New York, USA",
+          "year_distance": 0
+        },
+        {
+          "candidate": "Dayton, Ohio",
+          "subject_residence_match": "Harry ( Hyman Geshel Lazar ) Fox: Residence 1920 in Randolph, Montgomery, Ohio, USA",
+          "year_distance": 3
+        }
+      ],
+      "round_2_5_summary": "Detroit wins by Rule 2 (tie-breaker): both Detroit and Brooklyn have a year_distance of 0 to the estimated photo date of 1917, but Detroit has 2 distinct confirmed subjects (Albert and Irving) documented there in that exact year, whereas Brooklyn only has 1 (Irving). I CONFIRM the prior prediction of Detroit, Michigan.",
+      "eliminated_runner_up": {
+        "place": "Brooklyn, New York",
+        "refuting_feature": "Eliminated by Round 2.5 tie-breaker Rule 2 (fewer distinct subjects present in the target year than Detroit)."
+      },
+      "gedcom_context_present": true,
+      "gedcom_context_chars": 23232
+    }
+  ]
+}
