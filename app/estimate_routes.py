@@ -362,7 +362,8 @@ def get(photo: str = "", sess=None, request=None):
                                         data_testid="estimate-gedcom-text",
                                     ),
                                     P(
-                                        "Your tree is used only for this estimate and is not stored.",
+                                        "Your family tree is used only to improve this estimate. "
+                                        "Like all estimates, the request is logged for quality and cost tracking.",
                                         cls="text-[11px] text-slate-600 mt-1",
                                     ),
                                     cls="mt-2 pl-1",
@@ -684,13 +685,20 @@ def _build_estimate_user_context(gedcom_text: str = "", text_hints: str = "") ->
     return combined, enrichment
 
 
-def _find_estimate_upload(upload_id: str) -> tuple[str, str] | None:
+# Upload validation already caps stored images at 10 MB; cap the retry read a
+# little above that as defence-in-depth against an unexpectedly large object.
+_ESTIMATE_MAX_IMAGE_BYTES = 11 * 1024 * 1024
+
+
+def _find_estimate_upload(upload_id: str, preferred_suffix: str | None = None) -> tuple[str, str] | None:
     """Resolve a stored estimate upload to (image_key, suffix) for retries.
 
     Tries known image suffixes for the `uploads/estimate/{upload_id}{suffix}`
     convention. In local mode it checks the filesystem; in R2 mode it returns
-    the most likely key (caller fetches via the public URL). Returns None when
-    the upload_id is malformed.
+    the most likely key (caller fetches via the public URL). `preferred_suffix`
+    — the suffix recorded at upload time — is tried FIRST so R2-mode retries of
+    `.png`/`.jpeg` uploads resolve to the correct key (Codex P3-1). Returns None
+    when the upload_id is malformed.
     """
     import re as _re
 
@@ -698,25 +706,31 @@ def _find_estimate_upload(upload_id: str) -> tuple[str, str] | None:
         return None
 
     from core.storage import can_write_r2
+    from pathlib import Path as _P
 
-    for suffix in (".jpg", ".jpeg", ".png"):
+    suffixes = [".jpg", ".jpeg", ".png"]
+    if preferred_suffix:
+        ps = preferred_suffix.lower()
+        if ps in suffixes:
+            suffixes = [ps] + [s for s in suffixes if s != ps]
+
+    for suffix in suffixes:
         key = f"uploads/estimate/{upload_id}{suffix}"
         if can_write_r2():
+            # Can't cheaply stat R2; trust the recorded/most-likely suffix.
             return key, suffix
-        from pathlib import Path as _P
-
         if (_P("uploads/estimate") / f"{upload_id}{suffix}").exists():
             return key, suffix
-    # Default to .jpg key even if not found locally (R2 fetch may still work).
-    return f"uploads/estimate/{upload_id}.jpg", ".jpg"
+    # Default key even if not found locally (R2 fetch may still work).
+    return f"uploads/estimate/{upload_id}{suffixes[0]}", suffixes[0]
 
 
-def _load_estimate_upload_bytes(upload_id: str) -> tuple[bytes | None, str]:
+def _load_estimate_upload_bytes(upload_id: str, preferred_suffix: str | None = None) -> tuple[bytes | None, str]:
     """Load the bytes of a previously-uploaded estimate photo for a retry.
 
     Returns (image_bytes, suffix) or (None, "") when the upload can't be found.
     """
-    resolved = _find_estimate_upload(upload_id)
+    resolved = _find_estimate_upload(upload_id, preferred_suffix=preferred_suffix)
     if not resolved:
         return None, ""
     image_key, suffix = resolved
@@ -731,7 +745,12 @@ def _load_estimate_upload_bytes(upload_id: str) -> tuple[bytes | None, str]:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Rhodesli/1.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
-                return resp.read(), suffix
+                # Bounded read — never pull more than the upload cap allows.
+                data = resp.read(_ESTIMATE_MAX_IMAGE_BYTES + 1)
+                if len(data) > _ESTIMATE_MAX_IMAGE_BYTES:
+                    logger.warning("[estimate] Retry image exceeded size cap; rejecting")
+                    return None, suffix
+                return data, suffix
         except Exception as e:
             logger.warning(f"[estimate] Failed to fetch retry image from R2: {e}")
             return None, suffix
