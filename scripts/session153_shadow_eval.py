@@ -41,6 +41,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -60,6 +61,11 @@ TEST_SET = [
         "photo_id": "inbox_fox-charlie-001_204_02068_p_13akf5twbc3600",
         "expected_location": "Detroit, Michigan",
         "expected_aliases": ["Belle Isle", "Detroit"],
+        # photo_year is the FIXED archival date (de-game: the model cannot shift
+        # it to make Brooklyn's 1917-1918 residence tie). Albert + Irving both
+        # have 1917-1918 residences; Belle Isle Conservatory dates the frame to
+        # ~1917-1918. Used by build_forced_candidates + the grader.
+        "photo_year": 1918,
         "gt_source": "Session 153 audit: Albert Fox GEDCOM 1917-1918 Detroit + Belle Isle Conservatory visual match (external Burton Historical Collection comparison needed for full certainty)",
         "bucket": "Detroit control",
     },
@@ -68,6 +74,7 @@ TEST_SET = [
         "photo_id": "inbox_fox-charlie-001_3_01659_p_13akf5twbc1045",
         "expected_location": "Detroit, Michigan",
         "expected_aliases": ["Belle Isle", "Detroit"],
+        "photo_year": 1918,
         "gt_source": "Same event as 02068 per Gemini 3.1 Pro 100%-confidence cross-frame match (Session 153 visual audit). Same 3 seated men + 2 standing women, identical outfits + conservatory backdrop.",
         "bucket": "Detroit control",
     },
@@ -354,6 +361,223 @@ CANDIDATE_LOCATION_SCHEMA = """"location": {
 }"""
 
 
+# --- Deterministic GEDCOM candidate-force (DETROIT-CANDIDATE-FORCE-167) ---
+# Root cause (Track D / Session 167 eval): Round 2.5 only SCORES the candidates
+# the model proposes. If the model never lists Detroit, the residence-distance
+# tie-breaker never fires — so an omitted city silently bypasses the whole
+# mechanism. Pass 2 even MISSED Albert's `1917-1918 Detroit` (distance 0) and
+# anchored Detroit on his single-year `1917 Detroit` (distance 1), which lost the
+# date-proximity tie to Brooklyn.
+#
+# Fix: BEFORE the model scores, deterministically parse every confirmed subject's
+# OWN dated residence from the GEDCOM context, compute year_distance against the
+# photo's FIXED date (from TEST_SET metadata, NOT the model's own estimate — this
+# is also the de-game step), and INJECT any place with year_distance <= 5 as a
+# MANDATORY candidate + authoritative residence_distance_table row. The model may
+# still pick the primary via the tie-breaker (incl. the visual rule-3 fallback on
+# a genuine tie), but it can no longer omit a city or mis-compute its distance.
+
+_RESIDENCE_WINDOW_YEARS = 5
+
+# Place-key normalization: collapse ward / assembly-district / numeric-district
+# qualifiers so "Brooklyn Assembly District 19" and "Brooklyn, Kings, NY" group
+# under one key, while keeping Detroit / Brooklyn / New York / Dayton distinct.
+_PLACE_QUALIFIER_RE = re.compile(
+    r"\b(ward\s+\d+|assembly\s+district\s+\d+|district\s+\d+|ward|assembly\s+district)\b",
+    re.IGNORECASE,
+)
+
+
+def _normalize_place_key(place: str) -> str:
+    """Coarse city/region key from a full GEDCOM place string.
+
+    Takes the first comma segment, strips ward / assembly-district / district
+    qualifiers, lowercases, and squeezes whitespace. Conservative: it never
+    merges two distinct first-segments (Brooklyn vs New York stay separate).
+    """
+    first = (place or "").split(",")[0]
+    first = _PLACE_QUALIFIER_RE.sub("", first)
+    return " ".join(first.lower().split()).strip()
+
+
+def _parse_residence_year_range(date_str: str) -> tuple[int, int] | None:
+    """Extract a (lo, hi) inclusive year range from a GEDCOM date prefix.
+
+    Handles "1917", "1917-1918", "1 June 1915", "Abt 1955". Returns None for
+    undated entries ("?", "") — those carry zero weight (Round 2.5 DATED-ONLY
+    rule) because no year_distance can be computed for them.
+    """
+    if not date_str:
+        return None
+    years = [int(y) for y in re.findall(r"\b(1[89]\d{2}|20\d{2})\b", date_str)]
+    if not years:
+        return None
+    if len(years) >= 2 and years[1] >= years[0]:
+        return (years[0], years[1])
+    return (years[0], years[0])
+
+
+def _year_distance(year_range: tuple[int, int], photo_year: int) -> int:
+    """Smallest absolute year delta from a residence range to the photo year.
+
+    In-range (lo <= photo_year <= hi) -> 0.
+    """
+    lo, hi = year_range
+    if lo <= photo_year <= hi:
+        return 0
+    return min(abs(lo - photo_year), abs(hi - photo_year))
+
+
+def extract_subject_residences(gedcom_context: str) -> list[dict]:
+    """Parse each CONFIRMED subject's OWN dated residential history.
+
+    ONLY the "Residential History:" block directly under a column-0 "Person:"
+    line is parsed — relatives' residences (indented "Parent:"/"Spouse:"/
+    "Sibling:" sub-blocks) are deliberately ignored, mirroring the Round 2.5
+    rule that a relative's residence does not count.
+
+    Returns a list of {subject, place, place_key, year_lo, year_hi}.
+    """
+    if not gedcom_context:
+        return []
+    lines = gedcom_context.split("\n")
+    out: list[dict] = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        m = re.match(r"^Person: (.+)$", lines[i])
+        if not m:
+            i += 1
+            continue
+        subject = m.group(1).strip()
+        j = i + 1
+        in_res = False
+        while j < n and not re.match(r"^Person: ", lines[j]):
+            line = lines[j]
+            if re.match(r"^  Residential History:", line):
+                in_res = True
+                j += 1
+                continue
+            if in_res:
+                # Residence rows are indented 4 spaces and are NOT a new "  Key:"
+                # section header (those start with exactly 2 leading spaces).
+                if re.match(r"^    \S", line) and not re.match(r"^  [A-Z]", line):
+                    body = line.strip()
+                    if ": " in body:
+                        date_str, place = body.split(": ", 1)
+                    else:
+                        date_str, place = body, ""
+                    yr = _parse_residence_year_range(date_str)
+                    place = place.strip()
+                    if yr and place:
+                        out.append(
+                            {
+                                "subject": subject,
+                                "place": place,
+                                "place_key": _normalize_place_key(place),
+                                "year_lo": yr[0],
+                                "year_hi": yr[1],
+                            }
+                        )
+                    j += 1
+                    continue
+                else:
+                    in_res = False
+            j += 1
+        i = j
+    return out
+
+
+def build_forced_candidates(
+    gedcom_context: str | None,
+    photo_year: int | None,
+    window: int = _RESIDENCE_WINDOW_YEARS,
+) -> list[dict]:
+    """Deterministic residence_distance_table for candidate-forcing.
+
+    Groups subject-own dated residences by normalized place key, computes the
+    SMALLEST year_distance per place against the FIXED photo_year, and returns
+    every place whose min year_distance <= window. Each row:
+        {candidate, place_key, year_distance, subjects_at_min, citations}
+    Sorted by (year_distance asc, -len(subjects_at_min)) so the most likely
+    primary appears first. Empty list if no context or no fixed photo_year.
+    """
+    if not gedcom_context or photo_year is None:
+        return []
+    residences = extract_subject_residences(gedcom_context)
+    by_key: dict[str, list[dict]] = {}
+    for r in residences:
+        dist = _year_distance((r["year_lo"], r["year_hi"]), photo_year)
+        if dist > window:
+            continue
+        rec = {**r, "year_distance": dist}
+        by_key.setdefault(r["place_key"], []).append(rec)
+
+    rows: list[dict] = []
+    for key, recs in by_key.items():
+        min_dist = min(rec["year_distance"] for rec in recs)
+        subjects_at_min = sorted({rec["subject"] for rec in recs if rec["year_distance"] == min_dist})
+        # Display place: the full string of a min-distance match (deterministic:
+        # pick the lexicographically-first to stay stable across runs).
+        display = sorted(
+            rec["place"] for rec in recs if rec["year_distance"] == min_dist
+        )[0]
+        # Verbatim citations for the model (subject + year + place).
+        citations = sorted(
+            f"{rec['subject']}: Residence "
+            f"{rec['year_lo'] if rec['year_lo'] == rec['year_hi'] else str(rec['year_lo']) + '-' + str(rec['year_hi'])} "
+            f"in {rec['place']}"
+            for rec in recs
+        )
+        rows.append(
+            {
+                "candidate": display,
+                "place_key": key,
+                "year_distance": min_dist,
+                "subjects_at_min": subjects_at_min,
+                "citations": citations,
+            }
+        )
+    rows.sort(key=lambda x: (x["year_distance"], -len(x["subjects_at_min"]), x["candidate"]))
+    return rows
+
+
+def render_forced_candidates_block(forced: list[dict], photo_year: int) -> str:
+    """Render the MANDATORY-candidate prompt block from a forced table."""
+    lines = [
+        "## GEDCOM-FORCED CANDIDATES (MANDATORY — DETROIT-CANDIDATE-FORCE-167)",
+        "",
+        f"The photo's established date is **{photo_year}** (fixed from archival",
+        "metadata — do NOT re-estimate it for the residence_distance_table).",
+        "",
+        "The following table was computed DETERMINISTICALLY from the confirmed",
+        "subjects' OWN dated residences in the Genealogical Context above. Each",
+        "`year_distance` is the smallest absolute delta between a subject's dated",
+        "residence and the photo year. Relatives' residences and undated entries",
+        "are already excluded.",
+        "",
+        "RULES (binding):",
+        "1. EVERY place below MUST appear in your `candidates[]` AND in your",
+        "   `residence_distance_table[]`. You may NOT omit any of them.",
+        "2. Use these `year_distance` values verbatim — they are authoritative.",
+        "   Do NOT recompute them from a different photo year.",
+        "3. Pick the primary with the Round 2.5 tie-breaker: smallest",
+        "   `year_distance` first; on a tie, the most distinct subjects at that",
+        "   distance; on a STILL-tie, the visual rule-3 fallback (name the",
+        "   deciding diagnostic feature from Round 1).",
+        "",
+        "| candidate | year_distance | subjects_at_min | citations |",
+        "|-----------|---------------|-----------------|-----------|",
+    ]
+    for row in forced:
+        subj = "; ".join(row["subjects_at_min"])
+        cites = " || ".join(row["citations"])
+        lines.append(
+            f"| {row['candidate']} | {row['year_distance']} | {subj} | {cites} |"
+        )
+    return "\n".join(lines)
+
+
 # --- Iterative refinement block (AD-242, Session 154 Phase A2). ---
 # Embedded into the candidate_with_prior variant on the second pass. The
 # refuting-feature requirement guards against sycophantic self-agreement.
@@ -413,6 +637,8 @@ def build_prompt(
     photo_metadata: dict | None = None,
     gedcom_context: str | None = None,
     prior_prediction: dict | None = None,
+    forced_candidates: list[dict] | None = None,
+    photo_year: int | None = None,
 ) -> str:
     """Build a minimal prompt (preamble + one task section) for A/B comparison.
 
@@ -431,6 +657,14 @@ def build_prompt(
         prior_prediction: Dict with `place`, `confidence`, `reasoning` keys.
             Required ONLY when variant == "candidate_with_prior" — embeds the
             first-pass prediction in a refute-or-confirm block per AD-242.
+        forced_candidates: Deterministic residence_distance_table rows (from
+            `build_forced_candidates`) injected as MANDATORY candidates so an
+            omitted city cannot bypass the Round 2.5 tie-breaker
+            (DETROIT-CANDIDATE-FORCE-167). Only injected for the `candidate` /
+            `candidate_with_prior` variants — the `baseline` reference variant
+            never receives it.
+        photo_year: The photo's FIXED archival date used to render the forced
+            block's de-game notice. Required when forced_candidates is non-empty.
     """
     from rhodesli_ml.gemini_extraction import _PREAMBLE, _SCHEMA_FRAGMENTS
 
@@ -463,15 +697,26 @@ def build_prompt(
             "where someone lived."
         )
 
+    # Deterministic candidate-force block — rendered once, injected for both
+    # candidate variants (NOT baseline) right before the location section so the
+    # model reads the MANDATORY table before it proposes candidates.
+    forced_block = None
+    if forced_candidates and photo_year is not None:
+        forced_block = render_forced_candidates_block(forced_candidates, photo_year)
+
     if variant == "baseline":
         parts.append(BASELINE_LOCATION_SECTION)
         schema = "{\n  " + _SCHEMA_FRAGMENTS["location"] + "\n}"
     elif variant == "candidate":
+        if forced_block:
+            parts.append(forced_block)
         parts.append(CANDIDATE_LOCATION_SECTION)
         schema = "{\n  " + CANDIDATE_LOCATION_SCHEMA + "\n}"
     elif variant == "candidate_with_prior":
         if not prior_prediction:
             raise ValueError("candidate_with_prior requires prior_prediction kwarg")
+        if forced_block:
+            parts.append(forced_block)
         parts.append(CANDIDATE_LOCATION_SECTION)
         # Inject prior-prediction values into the refinement block
         prior_block = PRIOR_PREDICTION_BLOCK
@@ -718,14 +963,59 @@ def call_gemini(prompt_text: str, image_bytes: bytes, suffix: str, model: str, a
     return None, latency_ms, None, annotated_err
 
 
-def evaluate_result(parsed: dict | None, expected_aliases: list[str], special: str | None = None) -> dict:
-    """Grade a parsed Gemini location result against expected aliases."""
+def _canonical_year_distance_for_place(
+    place: str, forced_candidates: list[dict] | None
+) -> int | None:
+    """Look up the DETERMINISTIC year_distance for a model-named place.
+
+    De-game guard: the model cannot lower a place's year_distance by shifting
+    the photo year — we report the value computed in Python from the fixed
+    photo_year. Match by normalized place key (substring-tolerant). Returns
+    None if the place is not in the forced table.
+    """
+    if not forced_candidates or not place:
+        return None
+    place_key = _normalize_place_key(place)
+    for row in forced_candidates:
+        rk = row.get("place_key", "")
+        if rk and (rk == place_key or rk in place_key or place_key in rk):
+            return row.get("year_distance")
+    return None
+
+
+def evaluate_result(
+    parsed: dict | None,
+    expected_aliases: list[str],
+    special: str | None = None,
+    forced_candidates: list[dict] | None = None,
+) -> dict:
+    """Grade a parsed Gemini location result against expected aliases.
+
+    When `forced_candidates` is supplied, the result also carries
+    `predicted_place_year_distance` — the DETERMINISTIC (de-gamed) distance for
+    the model's primary, computed in Python from the fixed photo_year, not the
+    model's self-reported table.
+    """
     if parsed is None:
-        return {"verdict": "error", "top1_match": False, "top3_match": False, "place": None, "confidence": None}
+        return {
+            "verdict": "error",
+            "top1_match": False,
+            "top3_match": False,
+            "place": None,
+            "confidence": None,
+            "predicted_place_year_distance": None,
+        }
 
     loc = parsed.get("location") if isinstance(parsed.get("location"), dict) else parsed
     if not isinstance(loc, dict):
-        return {"verdict": "error", "top1_match": False, "top3_match": False, "place": None, "confidence": None}
+        return {
+            "verdict": "error",
+            "top1_match": False,
+            "top3_match": False,
+            "place": None,
+            "confidence": None,
+            "predicted_place_year_distance": None,
+        }
 
     place = (loc.get("place") or "").strip()
     confidence = loc.get("confidence")
@@ -762,6 +1052,7 @@ def evaluate_result(parsed: dict | None, expected_aliases: list[str], special: s
         "place": place,
         "confidence": confidence,
         "candidates": [c if isinstance(c, str) else (c.get("place") if isinstance(c, dict) else None) for c in cands],
+        "predicted_place_year_distance": _canonical_year_distance_for_place(place, forced_candidates),
     }
 
 
@@ -986,6 +1277,17 @@ def main():
         photo_metadata = {"collection": row["_collection"], "source": row["_source"], "filename": photo_path.name}
         photo_gedcom_context = context_map.get(pid)
 
+        # Deterministic candidate-force (DETROIT-CANDIDATE-FORCE-167). Requires a
+        # FIXED photo_year (de-game) AND GEDCOM context. Computed ONCE per photo,
+        # injected into both candidate variants below.
+        photo_year = row.get("photo_year")
+        forced_candidates = build_forced_candidates(photo_gedcom_context, photo_year)
+        if forced_candidates:
+            logger.info(
+                f"    FORCED CANDIDATES (photo_year={photo_year}): "
+                + ", ".join(f"{r['candidate']}(d={r['year_distance']})" for r in forced_candidates)
+            )
+
         # Per-photo cache of first-pass candidate result for the candidate_with_prior variant.
         # Same photo's `candidate` run feeds the prior_prediction for `candidate_with_prior`.
         first_pass_cache = None
@@ -1005,7 +1307,11 @@ def main():
                     # so the prior-prediction has substance. Cost still bills under
                     # the same budget.
                     fp_prompt = build_prompt(
-                        "candidate", photo_metadata=photo_metadata, gedcom_context=photo_gedcom_context
+                        "candidate",
+                        photo_metadata=photo_metadata,
+                        gedcom_context=photo_gedcom_context,
+                        forced_candidates=forced_candidates,
+                        photo_year=photo_year,
                     )
                     logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant=candidate (silent first pass)")
                     call_count += 1
@@ -1032,10 +1338,16 @@ def main():
                     photo_metadata=photo_metadata,
                     gedcom_context=photo_gedcom_context,
                     prior_prediction=first_pass_cache,
+                    forced_candidates=forced_candidates,
+                    photo_year=photo_year,
                 )
             else:
                 prompt_text = build_prompt(
-                    variant, photo_metadata=photo_metadata, gedcom_context=photo_gedcom_context
+                    variant,
+                    photo_metadata=photo_metadata,
+                    gedcom_context=photo_gedcom_context,
+                    forced_candidates=forced_candidates,
+                    photo_year=photo_year,
                 )
 
             logger.info(f"[{i+1}/{len(test_rows)}] {pid[:40]} variant={variant}")
@@ -1067,10 +1379,16 @@ def main():
             cost = pt * pricing.get("input", 2.0) / 1_000_000 + ct * pricing.get("output", 12.0) / 1_000_000
             total_cost += cost
 
-            graded = evaluate_result(parsed, row["expected_aliases"], row.get("special_verdict"))
+            graded = evaluate_result(
+                parsed,
+                row["expected_aliases"],
+                row.get("special_verdict"),
+                forced_candidates=forced_candidates,
+            )
             logger.info(
                 f"    result place={graded['place']!r} conf={graded['confidence']} "
-                f"verdict={graded['verdict']} cost=${cost:.4f}"
+                f"verdict={graded['verdict']} canon_year_dist={graded.get('predicted_place_year_distance')} "
+                f"cost=${cost:.4f}"
             )
             logger.info(f"    LEDGER: calls={call_count}  spent=${total_cost:.4f} / cap ${args.max_cost:.2f}")
 
@@ -1091,6 +1409,8 @@ def main():
                 "candidates": graded.get("candidates"),
                 "gedcom_context_present": photo_gedcom_context is not None,
                 "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
+                "forced_candidates_count": len(forced_candidates),
+                "predicted_place_year_distance": graded.get("predicted_place_year_distance"),
             }
             if args.no_db_log:
                 logger.info("    --no-db-log set: skipping gemini_api_calls audit write")
@@ -1154,6 +1474,11 @@ def main():
                     "eliminated_runner_up": _loc.get("eliminated_runner_up"),
                     "gedcom_context_present": photo_gedcom_context is not None,
                     "gedcom_context_chars": len(photo_gedcom_context) if photo_gedcom_context else 0,
+                    # DETROIT-CANDIDATE-FORCE-167: the deterministic forced table
+                    # + the de-gamed canonical distance for the model's primary.
+                    "photo_year": photo_year,
+                    "forced_candidates": forced_candidates,
+                    "predicted_place_year_distance": graded.get("predicted_place_year_distance"),
                 }
             )
         cap_reason = _cap_hit()
