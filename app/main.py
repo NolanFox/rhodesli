@@ -8128,6 +8128,7 @@ _compute_correction_priority = admin_routes._compute_correction_priority
 _get_priority_reason = admin_routes._get_priority_reason
 
 from app import notification_routes  # noqa: E402, F401
+from app import onboarding_routes  # noqa: E402, F401 — Session 167 Track C, PRD-060 self-service archive
 from app import upload_routes  # noqa: E402, F401
 from app import cluster_review_routes  # noqa: E402, F401
 from app import temporal_routes  # noqa: E402, F401
