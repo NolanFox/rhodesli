@@ -1,32 +1,51 @@
-# Session 168 Assessment (IN PROGRESS)
+# Session 168 Assessment
 
 **Date:** 2026-07-01
 **Mode:** Autonomous multi-model (Opus orchestrator/designer · Fable architect/auditor · Codex coder)
-**Status:** IN PROGRESS — this file is a live skeleton, finalized at closeout.
-
-## Prompt
-`docs/prompts/session-168-prompt.md` — holistic deep dive (Fable) then implement all
-LOW-risk fixes autonomously while the user is away.
+**Prompt:** `docs/prompts/session-168-prompt.md` — holistic Fable deep-dive, then implement all
+LOW-risk fixes autonomously while the user was away.
 
 ## Baseline
-- `make test-fast`: 4510 passed, 10 skipped, 1 xfailed (62s) — clean.
-- CI green on main (run 28474962858).
-- Harness check: healthy (95 docs over 300-line cap is pre-existing, non-blocking).
+- `make test-fast`: 4510 → **4512** passed (10 skipped, 1 xfailed).
+- Full ML suite: **725** passed.
+- CI green on main; harness healthy.
 
-## Shipped
-- [ ] TBD — populated per Codex batch as work lands.
+## Shipped (10 commits, all LOW-risk, unpushed → push at end of closeout)
+- [x] **NL-QUERY-REDOS-167** (33e69c9b) — `MAX_QUERY_LEN=512` + bounded `(.{1,256})` regex kills the
+  quadratic backtracking on the semi-public `/tools/search`. Evidence: nl_query 35 pass; ReDoS input <2s.
+- [x] **F3 ruff** (0961fe2b) — 42 F541 auto-fixed in `rhodesli_ml/`; lint extended to cover it.
+- [x] **Job A CI-safety + regression tests** (6501eea7) — importorskip guards + 2 nl_query timing tests.
+- [x] **Job B test-full green** (1c241cf1) — 3 stale test groups refreshed; override suite → 29
+  anti-reintroduction guards (Lesson 153). Evidence: make test-full unit-green.
+- [x] **Job C /health + dead code** (39a2b3d8) — served photo count (1127) not stale JSON (980); dead
+  `prefill_description` removed. Evidence: 20 split-brain health tests pass.
+- [x] **F9/F11 BACKLOG sweep** (c5ce9296) — 4 stale items closed with evidence.
+- [x] **Fable P0 fix** (runtime guards, post-audit) — 5 more modules import heavy deps at runtime;
+  guarded so CI can't red-main. Evidence: `scripts/check_ml_suite_ci_safe.py` rc=0 (554 pass, 13 skip); 725 full.
+- [x] **Fable P2** (validator script) — institutionalized the runtime CI-safety check.
+- [x] Docs: CHANGELOG v0.99.88, ROADMAP, audit log, this assessment.
 
-## Deferred (logged for user, NOT executed autonomously)
-- ESTIMATE-BACKFILL-166 — production data mutation + Gemini spend.
-- DETROIT-PROMOTE-167 — bounded Gemini eval spend (gate before running).
+## Deferred (logged for user, NOT executed — correct scope discipline for an unattended run)
+- **DETROIT-PROMOTE-167** (F8) — acceptance requires a bounded Gemini eval (spend gate) + core ML file
+  + AD entry. Building dark unvalidated code was judged low-value autonomously. Spec in BACKLOG.
+- **F7b** volume-JSON backup refresh — production volume write (direction-sensitive). Ready to hand off.
+- **F12** `SELF_SERVICE_ARCHIVE_ENABLED` flag flip — exposes a write surface to all logged-in users.
+- **F13** rhodes-wiki commit — separate repo, cross-repo boundary.
+- **F6** slow-marker unmark — could turn CI red unattended; needs a supervised session.
 
 ## Red Flags
-- TBD
+- **[RESOLVED] The Batch-1 CI ML step was a landmine.** It (and the 5 runtime-import modules) would
+  have turned main red on the first push. Caught by Fable's independent audit + a runtime CI simulation.
+  Lesson: `--collect-only` proves collection, NOT that a suite passes; simulate CI deps by RUNNING.
+- **[NONE outstanding]** — all shipped code independently verified; CI-safety proven via runtime sim.
 
 ## AI Tool Usage
-- **Fable 5.0** (architect/auditor): holistic deep dive + per-batch audits.
-- **Codex CLI** (coder): implementation.
-- Full log at closeout.
+- **Fable 5.0** (architect + auditor): 13-finding holistic dive; independent pre-push audit caught 1 P0
+  (would have red-mained prod) + gave evidence-backed clean verdicts. Value: **STRONG**.
+- **Codex CLI gpt-5.5/xhigh** (coder, 4 jobs): clean, self-verified implementations. Value: **STRONG**.
+- Full log: `docs/session_context/session-168-codex-audit.md`.
 
-## Next Session Should Verify
-- TBD
+## Next Session Should Verify FIRST
+1. CI is green on the pushed commits (`gh run list --branch main --limit 1` = success).
+2. Production `/health` now reports `photos: 1127` (served) — quick curl check.
+3. If picking up DETROIT-PROMOTE-167: it needs the Gemini eval spend gate (user auth).
