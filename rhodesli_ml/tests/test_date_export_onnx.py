@@ -129,6 +129,7 @@ class TestONNXModel:
 
     def test_onnx_vs_pytorch_predictions_match(self):
         """ONNX and PyTorch produce the same decade predictions."""
+        pytest.importorskip("torch", exc_type=ImportError)  # CI lacks torch (Session 168 Fable P0)
         import onnxruntime as ort
 
         best_ckpt = _best_checkpoint()
@@ -175,6 +176,7 @@ class TestONNXModel:
 
     def test_onnx_logit_tolerance(self):
         """Raw logit differences stay within acceptable tolerance for CNN."""
+        pytest.importorskip("torch", exc_type=ImportError)  # CI lacks torch (Session 168 Fable P0)
         import onnxruntime as ort
 
         best_ckpt = _best_checkpoint()

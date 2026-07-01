@@ -11,6 +11,11 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+# CI installs requirements.txt only (no mlflow). The promote pipeline (gate/register/
+# promote) uses mlflow in a fixture + tests, imported at runtime, so --collect-only
+# can't see it; skip the module when mlflow is absent (Session 168 Fable P0).
+pytest.importorskip("mlflow", exc_type=ImportError)
+
 
 @pytest.fixture
 def tmp_mlflow_dir(tmp_path):

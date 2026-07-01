@@ -458,6 +458,7 @@ class TestMLflowTracking:
 
     def test_log_gemini_call_creates_run(self, tmp_path, monkeypatch):
         """log_gemini_call creates an MLflow run with expected params."""
+        pytest.importorskip("mlflow", exc_type=ImportError)  # CI lacks mlflow (Session 168 Fable P0)
         from rhodesli_ml.tracking import log_gemini_call, MLFLOW_DIR
         import mlflow
 
@@ -484,6 +485,7 @@ class TestMLflowTracking:
 
     def test_log_model_comparison(self, tmp_path, monkeypatch):
         """log_model_comparison creates a comparison run."""
+        pytest.importorskip("mlflow", exc_type=ImportError)  # CI lacks mlflow (Session 168 Fable P0)
         from rhodesli_ml.tracking import log_model_comparison
 
         test_mlflow_dir = str(tmp_path / "mlruns")

@@ -6,6 +6,12 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+# CI installs requirements.txt only (no torch). ONNX export + PyTorch-comparison
+# tests import torch at runtime (inside tests), so --collect-only can't see it;
+# skip the module when torch is absent (Session 168 Fable P0). onnxruntime is
+# present in CI via insightface, so pure-inference runs still work locally.
+pytest.importorskip("torch", exc_type=ImportError)
+
 from rhodesli_ml.calibration.inference import (
     calibrated_similarity,
     calibrated_similarity_batch,
