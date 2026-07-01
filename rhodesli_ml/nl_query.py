@@ -14,6 +14,8 @@ import re
 from typing import Any
 
 
+MAX_QUERY_LEN = 512
+
 # Relationship keywords mapped to relationship types
 _RELATIONSHIP_WORDS = {
     "child": "child",
@@ -95,6 +97,9 @@ def parse_query_intent(query: str) -> dict[str, Any]:
     if not query or not query.strip():
         return {"intent": "unknown", "raw_query": query or ""}
 
+    if len(query) > MAX_QUERY_LEN:
+        return {"intent": "unknown", "raw_query": query[:MAX_QUERY_LEN]}
+
     q = query.strip()
     q_lower = q.lower()
 
@@ -136,7 +141,7 @@ def _parse_person_search(query: str, q_lower: str) -> dict[str, Any] | None:
     """Extract person name from search-like queries."""
     # "Find X", "Search for X", "Who is X", "Show me X"
     patterns = [
-        r"(?:find|search\s+for|look\s+up|show\s+me|who\s+is|who\s+was)\s+(.+)",
+        r"(?:find|search\s+for|look\s+up|show\s+me|who\s+is|who\s+was)\s+(.{1,256})",
         r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)$",  # Capitalized multi-word (likely a name)
     ]
     for pattern in patterns:
@@ -152,7 +157,7 @@ def _parse_relationship(query: str, q_lower: str) -> dict[str, Any] | None:
     """Extract relationship queries like 'children of X'."""
     for word, rel_type in _RELATIONSHIP_WORDS.items():
         # "children of X", "X's children"
-        pattern1 = rf"\b{word}\s+of\s+(.+?)(?:\?|$)"
+        pattern1 = rf"\b{word}\s+of\s+(.{{1,256}}?)(?:\?|$)"
         match = re.search(pattern1, q_lower)
         if match:
             name = _extract_name(match.group(1), query)
@@ -162,7 +167,7 @@ def _parse_relationship(query: str, q_lower: str) -> dict[str, Any] | None:
                 "entities": {"name": name},
             }
 
-        pattern2 = rf"(.+?)(?:'s|s')\s+{word}"
+        pattern2 = rf"(.{{1,256}}?)(?:'s|s')\s+{word}"
         match = re.search(pattern2, q_lower)
         if match:
             name = _extract_name(match.group(1), query)
@@ -173,7 +178,7 @@ def _parse_relationship(query: str, q_lower: str) -> dict[str, Any] | None:
             }
 
         # "who are the children of X"
-        pattern3 = rf"who\s+(?:are|were)\s+(?:the\s+)?{word}\s+of\s+(.+?)(?:\?|$)"
+        pattern3 = rf"who\s+(?:are|were)\s+(?:the\s+)?{word}\s+of\s+(.{{1,256}}?)(?:\?|$)"
         match = re.search(pattern3, q_lower)
         if match:
             name = _extract_name(match.group(1), query)

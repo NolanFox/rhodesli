@@ -38,3 +38,7 @@ jobs:
         run: |
           source venv/bin/activate
           make test-fast
+      - name: Run ML tests
+        run: |
+          source venv/bin/activate
+          pytest rhodesli_ml/tests/ -q
