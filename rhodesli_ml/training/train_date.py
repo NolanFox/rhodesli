@@ -97,7 +97,7 @@ def main():
     if args.exclude_models:
         print(f"Excluded models: {args.exclude_models}")
     if training_only:
-        print(f"Training-eligible only: yes")
+        print("Training-eligible only: yes")
     print(f"Loaded {len(labels)} labels")
 
     # Load photo_index for path resolution

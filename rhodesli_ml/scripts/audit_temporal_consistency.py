@@ -422,7 +422,7 @@ def main():
         + len(people_result["potentially_missed"])
     )
     if total_flags == 0:
-        print(_green(f"\nAll checks passed. No issues found."))
+        print(_green("\nAll checks passed. No issues found."))
     else:
         print(_yellow(
             f"\nTotal flags: {total_flags} "

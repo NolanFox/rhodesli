@@ -476,7 +476,7 @@ def main():
     relationships = load_relationships()
     annotations = load_annotations()
 
-    print(f"\nData loaded:")
+    print("\nData loaded:")
     print(f"  Photos: {len(photo_index.get('photos', {}))}")
     print(f"  Identities: {len(identities)} ({sum(1 for i in identities.values() if i.get('state') == 'CONFIRMED')} confirmed)")
     print(f"  Date labels: {len(date_labels)}")
@@ -552,7 +552,7 @@ def main():
             if comp.get("has_changes"):
                 print(f"  CHANGES: {comp.get('improvements', [])}")
             else:
-                print(f"  No changes from previous estimate.")
+                print("  No changes from previous estimate.")
 
     # Save results
     if results:
@@ -565,7 +565,7 @@ def main():
     # Summary
     if results:
         changed = sum(1 for r in results if r["comparison"].get("has_changes"))
-        print(f"\n=== Summary ===")
+        print("\n=== Summary ===")
         print(f"Processed: {len(results)} photos")
         print(f"Changed: {changed}")
         print(f"Unchanged: {len(results) - changed}")

@@ -238,7 +238,7 @@ def promote(
             shutil.copy2(onnx_path, dest)
             print(f"  Copied to {dest}")
 
-        print(f"\n  Model promoted. Run `git push` to deploy to production.")
+        print("\n  Model promoted. Run `git push` to deploy to production.")
     else:
         print(f"\n  Model FAILED gate. Not promoted. v{latest.version} tagged as failed.")
 

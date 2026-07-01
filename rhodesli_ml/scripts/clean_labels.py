@@ -159,12 +159,12 @@ def clean_labels(labels_path: str | Path, dry_run: bool = False) -> dict:
 
     # Print summary
     print(f"\n{'=' * 50}")
-    print(f"  Date Labels Cleaning Summary")
+    print("  Date Labels Cleaning Summary")
     print(f"{'=' * 50}")
     print(f"  Total labels:              {total}")
 
     if invalid_tags_removed == 0:
-        print(_green(f"  Invalid tags removed:      0"))
+        print(_green("  Invalid tags removed:      0"))
     else:
         print(_red(f"  Invalid tags removed:      {invalid_tags_removed}"))
 
@@ -173,33 +173,33 @@ def clean_labels(labels_path: str | Path, dry_run: bool = False) -> dict:
         for pid, dec in suspicious_decades:
             print(f"    - {pid}: {dec}")
     else:
-        print(_green(f"  Suspicious decades:        0"))
+        print(_green("  Suspicious decades:        0"))
 
     if invalid_ages:
         print(_red(f"  Invalid ages:              {len(invalid_ages)}"))
         for pid, ages_val in invalid_ages:
             print(f"    - {pid}: {ages_val}")
     else:
-        print(_green(f"  Invalid ages:              0"))
+        print(_green("  Invalid ages:              0"))
 
     if people_count_mismatches:
         print(_yellow(f"  People count mismatches:   {len(people_count_mismatches)}"))
         for pid, pc, ac in people_count_mismatches:
             print(f"    - {pid}: people_count={pc}, ages_count={ac}")
     else:
-        print(_green(f"  People count mismatches:   0"))
+        print(_green("  People count mismatches:   0"))
 
     if missing_scene_descriptions > 0:
         print(_yellow(f"  Missing scene descriptions: {missing_scene_descriptions}"))
     else:
-        print(_green(f"  Missing scene descriptions: 0"))
+        print(_green("  Missing scene descriptions: 0"))
 
     if dry_run:
-        print(_yellow(f"\n  Mode: DRY RUN (no changes written)"))
+        print(_yellow("\n  Mode: DRY RUN (no changes written)"))
     elif modified:
-        print(_green(f"\n  File modified and saved."))
+        print(_green("\n  File modified and saved."))
     else:
-        print(_green(f"\n  Already clean. No changes needed."))
+        print(_green("\n  Already clean. No changes needed."))
 
     print(f"{'=' * 50}")
 

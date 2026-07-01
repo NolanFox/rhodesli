@@ -66,7 +66,7 @@ def parse_json_input(json_input: str) -> dict:
     except OSError:
         pass
 
-    print(f"ERROR: Could not parse JSON input.")
+    print("ERROR: Could not parse JSON input.")
     print("Input must be either a valid JSON string or a path to a JSON file.")
     sys.exit(1)
 
@@ -322,7 +322,7 @@ def main():
     print(f"  Confidence: {conf}")
     print(f"  Location: {loc}")
     print(f"  Model: {args.model}")
-    print(f"  Source method: web_manual")
+    print("  Source method: web_manual")
 
     scene = label.get("scene_description")
     if scene:

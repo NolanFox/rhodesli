@@ -117,12 +117,12 @@ def print_comparison(comp: dict, model_a: str, model_b: str, idx: int):
     print(f"    {model_b:30s}: {comp['b_decade']}s (circa {comp['b_year']}, {comp['b_confidence']}) range={comp['b_range']}")
 
     # Scene descriptions
-    print(f"\n  Scene Description:")
+    print("\n  Scene Description:")
     print(f"    {model_a:30s}: {format_value(comp['a_scene'], 100)}")
     print(f"    {model_b:30s}: {format_value(comp['b_scene'], 100)}")
 
     # Controlled tags
-    print(f"\n  Controlled Tags:")
+    print("\n  Controlled Tags:")
     print(f"    {model_a:30s}: {format_value(comp['a_tags'])}")
     print(f"    {model_b:30s}: {format_value(comp['b_tags'])}")
 
@@ -137,12 +137,12 @@ def print_comparison(comp: dict, model_a: str, model_b: str, idx: int):
     print(f"    {model_b:30s}: {format_value(comp['b_text'], 100)}")
 
     # Subject ages
-    print(f"\n  Subject Ages:")
+    print("\n  Subject Ages:")
     print(f"    {model_a:30s}: {format_value(comp['a_ages'])}")
     print(f"    {model_b:30s}: {format_value(comp['b_ages'])}")
 
     # People count
-    print(f"\n  People Count:")
+    print("\n  People Count:")
     print(f"    {model_a:30s}: {comp['a_people']}")
     print(f"    {model_b:30s}: {comp['b_people']}")
 
@@ -184,7 +184,7 @@ def print_summary(comparisons: list[dict], model_a: str, model_b: str,
     both_found = sum(1 for c in valid if c["a_has_text"] and c["b_has_text"])
     only_a = sum(1 for c in valid if c["a_has_text"] and not c["b_has_text"])
     only_b = sum(1 for c in valid if not c["a_has_text"] and c["b_has_text"])
-    print(f"\n  Visible Text Detection:")
+    print("\n  Visible Text Detection:")
     print(f"    {model_a}: found text in {a_found_text}/{len(valid)} photos")
     print(f"    {model_b}: found text in {b_found_text}/{len(valid)} photos")
     print(f"    Both found: {both_found}, Only {model_a}: {only_a}, Only {model_b}: {only_b}")
@@ -200,7 +200,7 @@ def print_summary(comparisons: list[dict], model_a: str, model_b: str,
             overlap = len(a_set & b_set) / len(a_set | b_set) * 100
             tag_overlap_pcts.append(overlap)
     avg_overlap = sum(tag_overlap_pcts) / len(tag_overlap_pcts) if tag_overlap_pcts else 0
-    print(f"\n  Controlled Tags:")
+    print("\n  Controlled Tags:")
     print(f"    {model_a}: avg {a_avg_tags:.1f} tags/photo")
     print(f"    {model_b}: avg {b_avg_tags:.1f} tags/photo")
     print(f"    Average tag overlap (Jaccard): {avg_overlap:.1f}%")
@@ -208,7 +208,7 @@ def print_summary(comparisons: list[dict], model_a: str, model_b: str,
     # Cost comparison
     avg_cost_a = cost_a / count_a if count_a else 0
     avg_cost_b = cost_b / count_b if count_b else 0
-    print(f"\n  Cost:")
+    print("\n  Cost:")
     print(f"    {model_a}: ${cost_a:.4f} total, ${avg_cost_a:.4f}/photo ({count_a} calls)")
     print(f"    {model_b}: ${cost_b:.4f} total, ${avg_cost_b:.4f}/photo ({count_b} calls)")
     print(f"    Total run cost: ${cost_a + cost_b:.4f}")
@@ -252,13 +252,13 @@ def print_summary(comparisons: list[dict], model_a: str, model_b: str,
     for p in pro_a:
         print(f"    + {p}")
     if not pro_a:
-        print(f"    (none)")
+        print("    (none)")
 
     print(f"\n  {model_b} advantages:")
     for p in pro_b:
         print(f"    + {p}")
     if not pro_b:
-        print(f"    (none)")
+        print("    (none)")
 
     # Final recommendation
     if len(pro_a) >= len(pro_b):
@@ -295,7 +295,7 @@ def main():
         est_cost_a = len(photo_names) * cost_a_info.get("per_photo", 0.037)
         est_cost_b = len(photo_names) * cost_b_info.get("per_photo", 0.010)
         est_total = est_cost_a + est_cost_b
-        print(f"\n=== DRY RUN ===")
+        print("\n=== DRY RUN ===")
         print(f"Would compare {len(photo_names)} photos:")
         for name in photo_names:
             exists = Path(args.photo_dir, name).exists()
@@ -304,8 +304,8 @@ def main():
         found = sum(1 for n in photo_names if Path(args.photo_dir, n).exists())
         print(f"\nFound: {found}/{len(photo_names)} photos")
         print(f"Estimated cost: ${est_cost_a:.3f} ({args.model_a}) + ${est_cost_b:.3f} ({args.model_b}) = ${est_total:.3f}")
-        print(f"\nTo run for real: remove --dry-run flag")
-        print(f"Requires: GEMINI_API_KEY environment variable")
+        print("\nTo run for real: remove --dry-run flag")
+        print("Requires: GEMINI_API_KEY environment variable")
         return
 
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -357,7 +357,7 @@ def main():
             conf_a = result_a.get("confidence", "?")
             print(f"    -> {decade_a}s (circa {year_a}, {conf_a})")
         else:
-            print(f"    -> FAILED")
+            print("    -> FAILED")
 
         # Brief pause between models
         time.sleep(1.0)
@@ -375,7 +375,7 @@ def main():
             conf_b = result_b.get("confidence", "?")
             print(f"    -> {decade_b}s (circa {year_b}, {conf_b})")
         else:
-            print(f"    -> FAILED")
+            print("    -> FAILED")
 
         # Compare
         comp = compare_one(photo_name, result_a, result_b, args.model_a, args.model_b)

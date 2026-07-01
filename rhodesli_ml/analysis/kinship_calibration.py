@@ -371,7 +371,7 @@ def main():
         print(f"  P5:   {stats['p5']:.4f}  P25: {stats['p25']:.4f}  P50: {stats['p50']:.4f}")
         print(f"  P75:  {stats['p75']:.4f}  P95: {stats['p95']:.4f}")
 
-    print(f"\nRECOMMENDED THRESHOLDS:")
+    print("\nRECOMMENDED THRESHOLDS:")
     t = report["recommended_thresholds"]
     print(f"  Strong Match:        < {t['strong_match']:.4f}  (same person, high confidence)")
     print(f"  Possible Match:      < {t['possible_match']:.4f}  (same person, age/pose variation)")
@@ -382,10 +382,10 @@ def main():
             print(f"\n  Cohen's d (same_person vs different): {sep['cohens_d_sp_vs_dp']:.2f}")
         if "cohens_d_sf_vs_dp" in sep:
             print(f"  Cohen's d (same_family vs different):  {sep['cohens_d_sf_vs_dp']:.2f}")
-            print(f"  (d < 0.5 = small effect — family resemblance is weak in embedding space)")
+            print("  (d < 0.5 = small effect — family resemblance is weak in embedding space)")
 
     meta = report["calibration_metadata"]
-    print(f"\nCALIBRATION DATA:")
+    print("\nCALIBRATION DATA:")
     print(f"  Confirmed identities:  {meta['n_confirmed_identities']}")
     print(f"  With embeddings:       {meta['n_with_embeddings']}")
     print(f"  Multi-face (2+ faces): {meta['n_multi_face']}")

@@ -154,12 +154,12 @@ def validate():
         # Show single-person evidence (highest quality)
         single = [e for e in leon["evidence"] if e["matching_method"] == "single_person"]
         if single:
-            print(f"\n  Single-person photos (highest quality):")
+            print("\n  Single-person photos (highest quality):")
             for ev in single:
                 print(f"    {ev['photo_year']}: age {ev['estimated_age']} → born {ev['implied_birth']}")
 
         if leon["flags"]:
-            print(f"\n  Flags:")
+            print("\n  Flags:")
             for flag in leon["flags"]:
                 print(f"    - {flag}")
     else:

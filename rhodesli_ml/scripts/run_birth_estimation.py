@@ -86,7 +86,7 @@ def main():
     if output_path:
         print(f"\nResults written to: {output_path}")
     else:
-        print(f"\n(dry-run mode — no output written)")
+        print("\n(dry-run mode — no output written)")
 
 
 if __name__ == "__main__":

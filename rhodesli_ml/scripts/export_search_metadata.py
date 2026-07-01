@@ -199,7 +199,7 @@ def print_report(summary: dict, output_path: str | Path, dry_run: bool) -> None:
     if summary["skipped"] > 0:
         print(_yellow(f"  Skipped (no photo_id): {summary['skipped']}"))
     else:
-        print(_green(f"  Skipped:               0"))
+        print(_green("  Skipped:               0"))
 
     print(f"  With searchable text:  {summary['with_searchable_text']}")
     print(f"  With controlled tags:  {summary['with_controlled_tags']}")
@@ -209,7 +209,7 @@ def print_report(summary: dict, output_path: str | Path, dry_run: bool) -> None:
     # Decade distribution
     decade_dist = summary.get("decade_distribution", {})
     if decade_dist:
-        print(f"\n  Decade distribution:")
+        print("\n  Decade distribution:")
         for decade in sorted(decade_dist.keys()):
             count = decade_dist[decade]
             bar = "#" * min(count, 40)
@@ -218,16 +218,16 @@ def print_report(summary: dict, output_path: str | Path, dry_run: bool) -> None:
     # Source method distribution
     method_dist = summary.get("source_method_distribution", {})
     if method_dist:
-        print(f"\n  Source methods:")
+        print("\n  Source methods:")
         for method, count in sorted(method_dist.items(), key=lambda x: -x[1]):
             print(f"    {method}: {count}")
 
     if dry_run:
-        print(_yellow(f"\n  Mode: DRY RUN (no file written)"))
+        print(_yellow("\n  Mode: DRY RUN (no file written)"))
     elif summary["written"]:
         print(_green(f"\n  Written to: {output_path}"))
     else:
-        print(_yellow(f"\n  No documents to write."))
+        print(_yellow("\n  No documents to write."))
 
     print(f"{'=' * 55}")
 
