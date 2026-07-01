@@ -367,7 +367,7 @@ def get(sess=None, request=None):
     Non-admin uploads go through the moderation queue (pending_uploads.json).
 
     Session 161: accepts `?prefill=<slug>` query param to pre-populate
-    collection / source / source_url / description from a rhodes-wiki inbox
+    collection / source / source_url from a rhodes-wiki inbox
     entry (after admin approve in /admin/rhodes-inbox). The prefill GET
     reads from inbox/approved/<slug>/post.json because admin already
     triggered the approval (which moved the entry from pending/ → approved/).
@@ -383,7 +383,6 @@ def get(sess=None, request=None):
     prefill_collection = ""
     prefill_source = ""
     prefill_source_url = ""
-    prefill_description = ""
     prefill_slug = ""
     if request is not None:
         prefill_slug_raw = request.query_params.get("prefill", "")
@@ -403,8 +402,6 @@ def get(sess=None, request=None):
                     prefill_collection = "FB Group Posts"
                     prefill_source = "Facebook — Jews of Rhodes group"
                     prefill_source_url = entry.get("fb_post_url") or ""
-                    cap = (entry.get("caption") or {}).get("text") or ""
-                    prefill_description = cap
             except (ValueError, FileNotFoundError) as exc:
                 # Bad slug or missing entry — render form without prefill
                 logger.warning("Prefill failed for slug %r: %s", prefill_slug_raw, exc)

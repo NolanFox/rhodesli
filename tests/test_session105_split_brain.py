@@ -268,6 +268,70 @@ class TestDataParity:
         data = response.json()
         assert "data_parity" in data
 
+    def test_health_photos_uses_served_supabase_count(self, client, tmp_path):
+        """/health photos reports the served PG count while preserving JSON parity count."""
+        from app import page_routes
+
+        (tmp_path / "photo_index.json").write_text(
+            json.dumps({"photos": {f"photo-{i}": {} for i in range(980)}})
+        )
+
+        registry = MagicMock()
+        registry.list_identities.side_effect = lambda include_merged=False: list(
+            range(775 if include_merged else 55)
+        )
+
+        mock_client = MagicMock()
+        mock_photos_result = MagicMock()
+        mock_photos_result.count = 1127
+        mock_ids_result = MagicMock()
+        mock_ids_result.count = 775
+        mock_client.table.return_value.select.return_value.execute.side_effect = [
+            mock_photos_result,
+            mock_ids_result,
+        ]
+
+        with (
+            patch.object(page_routes._main_mod, "data_path", tmp_path),
+            patch.object(page_routes._main_mod, "load_registry", return_value=registry),
+            patch.object(page_routes._main_mod, "_ping_supabase", return_value="ok"),
+            patch("app.supabase_data.get_supabase_client", return_value=mock_client),
+        ):
+            response = client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["photos"] == 1127
+        assert data["data_parity"]["photos_json"] == 980
+        assert data["data_parity"]["photos_pg"] == 1127
+
+    def test_health_photos_falls_back_to_json_count_when_supabase_unconfigured(self, client, tmp_path):
+        """/health photos falls back to JSON count when PG served count is unavailable."""
+        from app import page_routes
+
+        (tmp_path / "photo_index.json").write_text(
+            json.dumps({"photos": {f"photo-{i}": {} for i in range(980)}})
+        )
+
+        registry = MagicMock()
+        registry.list_identities.side_effect = lambda include_merged=False: list(
+            range(775 if include_merged else 55)
+        )
+
+        with (
+            patch.object(page_routes._main_mod, "data_path", tmp_path),
+            patch.object(page_routes._main_mod, "load_registry", return_value=registry),
+            patch.object(page_routes._main_mod, "_ping_supabase", return_value="not_configured"),
+            patch("app.supabase_data.get_supabase_client", return_value=None),
+        ):
+            response = client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["photos"] == 980
+        assert data["data_parity"]["photos_json"] == 980
+        assert data["data_parity"]["photos_pg"] is None
+
 
 # ---------------------------------------------------------------------------
 # Phase 5: Debug endpoint removed

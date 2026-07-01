@@ -258,11 +258,13 @@ def health():
     # Session 105: Data parity check — compare JSON and Supabase counts
     # Use include_merged=True to match Supabase which stores all identities
     data_parity = _check_data_parity(photo_count, len(registry.list_identities(include_merged=True)))
+    served_photo_count = data_parity.get("photos_pg") if data_parity.get("photos_pg") is not None else photo_count
 
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
-        "photos": photo_count,
+        # photos is the served Supabase count; JSON backup count is in data_parity["photos_json"].
+        "photos": served_photo_count,
         "processing_enabled": _main_mod.PROCESSING_ENABLED,
         "ml_pipeline": "ready" if ml_available else "unavailable",
         "date_model": date_model_status,
