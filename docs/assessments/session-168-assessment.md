@@ -45,6 +45,21 @@ LOW-risk fixes autonomously while the user was away.
 - **Codex CLI gpt-5.5/xhigh** (coder, 4 jobs): clean, self-verified implementations. Value: **STRONG**.
 - Full log: `docs/session_context/session-168-codex-audit.md`.
 
+## Session-Review Verification (per session-review skill)
+Verified on pushed main (all ✓): NL-QUERY `MAX_QUERY_LEN`; CI "Run ML tests" step; 12 ML test
+modules carry importorskip guards; `/health` `served_photo_count`; dead `prefill_description` gone;
+`scripts/check_ml_suite_ci_safe.py` present (rc=0); Lesson 210 recorded. Git clean, 0 unpushed.
+**CI green** on the pushed run 28552798217 (Lint / fast tests / **Run ML tests** all success).
+
+- **Per-phase status**: all 5 planned phases PASS (deep-dive, triage, Codex impl, Fable audit, closeout).
+- **Superficial work**: none found — every code change has passing tests + independent verification;
+  the one risk (CI ML step red-mained) was caught by Fable pre-push and proven fixed via runtime sim + live CI.
+- **Auto-fix phase**: NOT spawned as a separate worktree — Fable's independent pre-push audit already
+  served that role (found + drove the P0 fix), and the session is CI-green + pushed + clean. Spawning a
+  redundant auto-fix subagent on a clean pushed state would add risk without benefit. Decision logged here.
+- **Novel-Discovery Audit**: N/A — infrastructure/test/CI session, no genealogy facts asserted.
+- **User-Feedback Absorb**: N/A — no in-session user corrections (autonomous run; user was away).
+
 ## Next Session Should Verify FIRST
 1. CI is green on the pushed commits (`gh run list --branch main --limit 1` = success).
 2. Production `/health` now reports `photos: 1127` (served) — quick curl check.
