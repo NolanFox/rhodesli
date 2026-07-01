@@ -40,13 +40,16 @@ _SLOW_PATH_PATTERNS = [
     "test_public_photo_viewer",
     "test_identity_display",
     "test_share_download",
-    "test_data_integrity",
+    # test_data_integrity{,_audit,_report}: fast (<3.5s), fully-mocked data-integrity
+    # guards — promoted OUT of slow so CI runs the split-brain (#1 repeat-offender)
+    # regression guards. Session 168 F6 / TEST-MARKER-AUDIT-001.
     "test_auto_backup",
     "test_face_tagging",
     "test_year_estimation",
     "test_sync_api",
     "test_estimate_route",
-    "test_supabase_data",
+    # test_supabase_data: fast (<3.6s), fully-mocked split-brain / dual-write guard —
+    # promoted OUT of slow so CI runs it. Session 168 F6 / TEST-MARKER-AUDIT-001.
     "test_annotations",
     "test_session_57_coral",
     "test_session_51B",
