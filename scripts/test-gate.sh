@@ -25,14 +25,14 @@ if [ ! -f "$PYTEST" ]; then
 fi
 
 # ruff lives next to pytest in the same venv. CI runs `ruff check app/ core/
-# tests/` as a blocking Lint step — mirror it locally so lint errors (e.g.
+# tests/ rhodesli_ml/` as a blocking Lint step — mirror it locally so lint errors (e.g.
 # F541) can't pass every local commit and only fail CI (which kept the Tests
 # workflow red for ~5 sessions; Lesson 209).
 RUFF="$(dirname "$PYTEST")/ruff"
 run_lint() {
     if [ -x "$RUFF" ]; then
-        if ! "$RUFF" check app/ core/ tests/ 2>&1 | tail -20; then
-            echo "BLOCKED: ruff lint errors (run: ruff check --fix app/ core/ tests/)" >&2
+        if ! "$RUFF" check app/ core/ tests/ rhodesli_ml/ 2>&1 | tail -20; then
+            echo "BLOCKED: ruff lint errors (run: ruff check --fix app/ core/ tests/ rhodesli_ml/)" >&2
             return 1
         fi
     fi

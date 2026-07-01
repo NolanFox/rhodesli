@@ -1,7 +1,10 @@
 """Tests for CalibrationModel architecture and forward pass."""
 
-import torch
 import pytest
+
+pytest.importorskip("torch", exc_type=ImportError)
+
+import torch
 
 from rhodesli_ml.calibration.model import CalibrationModel
 

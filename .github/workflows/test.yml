@@ -33,7 +33,7 @@ jobs:
       - name: Lint
         run: |
           source venv/bin/activate
-          ruff check app/ core/ tests/
+          ruff check app/ core/ tests/ rhodesli_ml/
       - name: Run fast tests
         run: |
           source venv/bin/activate

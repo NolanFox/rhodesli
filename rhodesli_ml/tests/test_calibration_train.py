@@ -6,6 +6,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+pytest.importorskip("torch", exc_type=ImportError)
+
 import torch
 
 from rhodesli_ml.calibration.train import compute_metrics, train

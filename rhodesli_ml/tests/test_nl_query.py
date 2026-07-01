@@ -1,5 +1,7 @@
 """Tests for rhodesli_ml.nl_query — natural language archive query parser."""
 
+import time
+
 import pytest
 
 from rhodesli_ml.nl_query import parse_query_intent
@@ -178,6 +180,29 @@ class TestEdgeCases:
     def test_very_long_input(self):
         result = parse_query_intent("a " * 10000)
         assert result["intent"] == "unknown"
+
+    def test_very_long_input_returns_quickly(self):
+        start = time.monotonic()
+        result = parse_query_intent("a " * 10000)
+        elapsed = time.monotonic() - start
+
+        assert result["intent"] == "unknown"
+        assert elapsed < 2.0
+
+    def test_length_cap_is_graceful_and_under_cap_still_parses(self):
+        prefix = "Photos from 1935 "
+        over_cap_query = prefix + ("a" * (513 - len(prefix)))
+        under_cap_query = prefix + ("a" * (511 - len(prefix)))
+
+        assert len(over_cap_query) == 513
+        over_cap = parse_query_intent(over_cap_query)
+        assert over_cap["intent"] == "unknown"
+        assert over_cap["raw_query"] == over_cap_query[:512]
+
+        assert len(under_cap_query) == 511
+        under_cap = parse_query_intent(under_cap_query)
+        assert under_cap["intent"] == "photo_filter"
+        assert under_cap["filters"]["year"] == 1935
 
     def test_preserves_original_casing_in_names(self):
         result = parse_query_intent("Find Nace Capeluto")

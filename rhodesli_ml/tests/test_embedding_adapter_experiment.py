@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
+
+pytest.importorskip("torch", exc_type=ImportError)
 
 from rhodesli_ml.embedding_adapter_experiment import (
     build_identity_records,

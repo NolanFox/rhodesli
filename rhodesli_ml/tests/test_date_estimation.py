@@ -16,6 +16,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+pytest.importorskip("torch", exc_type=ImportError)
+
 import torch
 from PIL import Image
 

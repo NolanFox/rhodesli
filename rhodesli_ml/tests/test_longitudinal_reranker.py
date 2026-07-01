@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
+
+pytest.importorskip("sklearn", exc_type=ImportError)
 
 from rhodesli_ml.longitudinal_reranker import (
     build_prototype_bank,
