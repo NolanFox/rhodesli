@@ -14,9 +14,9 @@
 
 ## Progress
 - Baseline: `make test-fast` → 4510 passed, 10 skipped, 1 xfailed (62s).
-- Pre-scoped NL-QUERY-REDOS-167: quadratic backtracking in `rhodesli_ml/nl_query.py`
-  relationship patterns; fix = top-level input-length cap + bounded quantifiers.
-- Scaffolding committed.
+- **Batch 1 SHIPPED (33e69c9b):** NL-QUERY-REDOS-167 fixed by Codex — cap + bounded
+  regex + ML suite added to CI. 33 nl_query / 723 ML pass. test-fast green on commit.
+- Fable deep dive still running (Task #1).
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
