@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.88] — 2026-07-01 (Session 168: Fable-Architected Autonomous Fix Sprint — Fable dive+audit, Codex code, Opus orchestrate)
+
+Continuation of the multi-model pattern (Fable architect+auditor · Codex coder · Opus designer/orchestrator), run autonomously while the user was away. Fable did a holistic deep-dive (13 findings F1–F13); Opus triaged into a LOW-risk autonomous batch (excluding production-data mutation, schema migrations, and Gemini spend — those logged for the user); Codex implemented; Fable audited before push.
+
+### Shipped (7 commits, all LOW-risk, test-only or read-only-endpoint)
+- **NL-QUERY-REDOS-167 fixed** (`rhodesli_ml/nl_query.py`): `parse_query_intent` ran ~15 relationship words × 3 regex patterns with unbounded `(.+)`/`(.+?)` captures → quadratic backtracking (`test_very_long_input` hung >120 s; `/tools/search` is semi-public → mild DoS). Fix: `MAX_QUERY_LEN=512` early-return + all captures bounded to `(.{1,256})` (identical semantics). +2 timing-bound regression tests.
+- **ML suite now runs in CI — safely** (`.github/workflows/test.yml`, `scripts/test-gate.sh`, 7 `rhodesli_ml/tests/*`): Batch 1 added a blocking `pytest rhodesli_ml/tests/` step, but CI installs only `requirements.txt` (no torch/mlflow/onnx/sklearn) → 7 modules would ERROR at collection. Fix: `pytest.importorskip` guards (validated by a CI-simulation import-blocker, `--collect-only rc=0` — it caught **2 transitive offenders a top-level grep missed**). This closes the "CI never ran the ML suite → ReDoS stayed latent" gap. Lint (CI + local `test-gate.sh`) extended to `rhodesli_ml/`.
+- **42 ruff F541** auto-fixed across `rhodesli_ml/` scripts (f-prefix removals, zero behavior change).
+- **`make test-full` is GREEN again** (`tests/test_public_photo_viewer.py`, `test_data_integrity_audit.py`, `test_supabase_data.py`): 3 STALE test groups refreshed to current behavior — the pre-deploy gate had been red on tests asserting pre-change markup/behavior while the source was correct. The `identity_overrides` suite (29 tests preserved) was converted into **anti-reintroduction guards** (e.g. startup sync now ASSERTS it never reads the removed `identity_overrides` table — reinforces Lesson 153); the divergence test now asserts the Session-162 (OD-014) intentional no-op contract.
+- **`/health` reports the SERVED photo count** (`app/page_routes.py`): top-level `photos` was the disaster-recovery JSON count (980, ~147 stale = the Fader collection never synced back to the volume backup) while the app serves 1127 from Supabase. Now `photos` = `data_parity.photos_pg` (served) with JSON fallback; JSON count stays in `data_parity.photos_json`. (Volume-backup refresh itself, F7b, is a user-gated production write — NOT done here.)
+- **Dead-code removal** (`app/upload_routes.py`): unused `prefill_description`. Future wire-through of the FB caption to a real description field tracked as `UPLOAD-DESC-PREFILL-168`.
+- **BACKLOG hygiene** (F9/F11): closed 4 stale items with evidence (APP-MAIN-WIRE-DB-SIZE done, OPS-002 monitor shipped S167, CODEX-FINAL-PASS-157B, ESTIMATE-BACKFILL-166 no-op).
+
+### Deferred to the user / focused sessions (logged, NOT executed)
+- **DETROIT-PROMOTE-167** (F8) — production candidate-force port. L-effort, core ML file, and its acceptance REQUIRES a bounded Gemini eval (spend gate) → building dark unvalidated code was judged low-value autonomously. Full spec already in BACKLOG.
+- **F7b** volume-JSON backup refresh (production volume write). **F12** `SELF_SERVICE_ARCHIVE_ENABLED` flag flip (exposes a write surface). **F13** rhodes-wiki commit (separate repo). **F6** slow-marker unmark (could turn CI red unattended).
+
+### Tests
+`make test-fast`: **4510 → 4512 passed**. Full ML suite **725 passed**. `make test-full` unit-green (only the environmental e2e chromium launch error remains — no playwright browser installed locally). Ruff clean across `app/ core/ tests/ rhodesli_ml/`.
+
 ## [v0.99.87] — 2026-06-30 (Session 167: Multi-Track Autonomous Sprint — Opus-orchestrated, Codex-coded, Codex-audited)
 
 Experiment in autonomous parallel throughput: one Opus orchestrator dispatched **5 track-lead subagents** (each an Opus architect using **Codex gpt-5.5/xhigh** as coding engine + boundary auditor) across disjoint file sets. Verdict: **throughput clearly beat coordination overhead.** All four rhodesli tracks merged to main; the fifth (sibling repo) is tested on its own branch.
