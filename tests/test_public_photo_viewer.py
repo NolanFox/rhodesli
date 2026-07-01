@@ -185,7 +185,8 @@ class TestPhotoCarousel:
         assert "touchstart" in html
         assert "touchend" in html
         assert ".photo-hero-container" in html
-        assert "window.location.href = '/photo/photo-2'" in html
+        assert 'var prevUrl = "", nextUrl = "/photo/photo-2";' in html
+        assert "if (dx < 0 && nextUrl) window.location.href = nextUrl;" in html
 
 
 class TestFaceClickBehavior:

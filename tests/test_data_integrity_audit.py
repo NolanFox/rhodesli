@@ -297,7 +297,7 @@ class TestStateConsistency:
 
 
 class TestSupabaseDivergence:
-    """Compare identity states between JSON and Supabase."""
+    """Supabase divergence audit contract."""
 
     def test_no_supabase_is_info(self):
         """Without Supabase, reports info, not error."""
@@ -309,63 +309,30 @@ class TestSupabaseDivergence:
             assert not result.has_critical
             assert any(i.check == "supabase_divergence" for i in result.issues)
 
-    def test_state_mismatch_detected(self):
-        """Detects state mismatch between JSON and Supabase."""
+    def test_divergence_is_noop_after_session_162(self):
+        """identity_overrides was removed; configured Supabase returns the no-op contract."""
         from scripts.data_integrity_audit import AuditResult, check_supabase_divergence
 
         mock_client = MagicMock()
-        mock_resp = MagicMock()
-        mock_resp.data = [
-            {"identity_id": "id1", "state": "CONFIRMED", "name": "Test", "merged_into": None},
-        ]
-        mock_client.table.return_value.select.return_value.range.return_value.execute.return_value = mock_resp
-
-        # Second call returns empty to end pagination
-        def range_side_effect(start, end):
-            mock_exec = MagicMock()
-            if start == 0:
-                mock_exec.execute.return_value = mock_resp
-            else:
-                empty = MagicMock()
-                empty.data = []
-                mock_exec.execute.return_value = empty
-            return mock_exec
-
-        mock_client.table.return_value.select.return_value.range = range_side_effect
 
         identities = {
-            "id1": {"state": "PROPOSED", "name": "Test"},  # JSON says PROPOSED, SB says CONFIRMED
+            "id1": {"state": "PROPOSED", "name": "Test"},
         }
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
             result = AuditResult()
             div = check_supabase_divergence(identities, result)
             assert div["checked"]
-            assert len(div["mismatches"]) >= 1
-            assert result.has_critical
+            assert div["mismatches"] == []
+            assert div["override_count"] == 0
+            assert "identity_overrides removed in Session 162" in div["note"]
+            assert not result.has_critical
 
-    def test_in_sync(self):
-        """No issues when JSON and Supabase agree."""
+    def test_noop_contract_does_not_query_supabase_tables(self):
+        """Configured Supabase still avoids the removed identity_overrides table."""
         from scripts.data_integrity_audit import AuditResult, check_supabase_divergence
 
         mock_client = MagicMock()
-
-        def range_side_effect(start, end):
-            mock_exec = MagicMock()
-            if start == 0:
-                resp = MagicMock()
-                resp.data = [
-                    {"identity_id": "id1", "state": "CONFIRMED", "name": "Test", "merged_into": None},
-                ]
-                mock_exec.execute.return_value = resp
-            else:
-                empty = MagicMock()
-                empty.data = []
-                mock_exec.execute.return_value = empty
-            return mock_exec
-
-        mock_client.table.return_value.select.return_value.range = range_side_effect
-
         identities = {
             "id1": {"state": "CONFIRMED", "name": "Test"},
         }
@@ -373,8 +340,12 @@ class TestSupabaseDivergence:
         with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
             result = AuditResult()
             div = check_supabase_divergence(identities, result)
-            assert len(div["mismatches"]) == 0
+            assert div["checked"] is True
+            assert div["mismatches"] == []
+            assert div["override_count"] == 0
+            assert "Session 162" in div["note"]
             assert not result.has_critical
+            mock_client.table.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
