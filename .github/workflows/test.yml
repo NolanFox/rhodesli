@@ -39,6 +39,9 @@ jobs:
           source venv/bin/activate
           make test-fast
       - name: Run ML tests
+        # CI installs requirements.txt only (no torch/mlflow/…). Heavy-dep modules
+        # must importorskip so they skip here. Before adding an ML test, verify
+        # CI-safety locally: `python scripts/check_ml_suite_ci_safe.py` (Session 168).
         run: |
           source venv/bin/activate
           pytest rhodesli_ml/tests/ -q
