@@ -128,3 +128,8 @@ scripts/extract_routes.py
 
 # Scheduled task lock (per-session, ephemeral)
 .claude/scheduled_tasks.lock
+
+# Fable-eval stray root screenshots (belong in docs/fable-eval/screenshots/)
+/*.jpeg
+/*.jpg
+/*.png
