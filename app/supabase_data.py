@@ -1634,8 +1634,6 @@ def get_community_by_slug(slug: str) -> dict | None:
             _community_cache[slug] = community
             _community_cache_ts = now
             return community
-        _community_cache[slug] = None
-        _community_cache_ts = now
         return None
 
 

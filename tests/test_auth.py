@@ -1,7 +1,7 @@
 """Tests for auth flows: login, signup, password recovery, OAuth."""
 
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestLoginPage:
@@ -219,3 +219,26 @@ class TestLogout:
         response = client.get("/logout", follow_redirects=False)
         assert response.status_code == 303
         assert response.headers["location"] == "/"
+
+
+class TestCommunityCacheErrors:
+    """Regression tests for community lookup cache error handling."""
+
+    def test_non_rhodes_supabase_error_is_not_cached_as_missing(self):
+        """Transient Supabase errors should retry non-rhodes community lookups."""
+        import app.supabase_data as sd
+
+        sd._invalidate_community_cache()
+        mock_client = MagicMock()
+        execute = mock_client.table.return_value.select.return_value.eq.return_value.limit.return_value.execute
+        execute.side_effect = ConnectionError("transient")
+
+        try:
+            with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+                assert sd.get_community_by_slug("fox-family") is None
+                assert "fox-family" not in sd._community_cache
+
+                assert sd.get_community_by_slug("fox-family") is None
+                assert execute.call_count == 2
+        finally:
+            sd._invalidate_community_cache()
