@@ -270,6 +270,23 @@ def robots_txt():
     )
 
 
+@rt("/favicon.ico")
+def favicon_ico():
+    """Serve the brand mark so the browser's automatic /favicon.ico request does
+    not 404 on every page (Fable eval V2-10). Mirrors the inline head icon."""
+    svg = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>"
+        "<rect width='32' height='32' rx='6' fill='#4f46e5'/>"
+        "<text x='16' y='23' font-size='20' font-family='serif' font-weight='bold' "
+        "fill='white' text-anchor='middle'>R</text></svg>"
+    )
+    return Response(
+        content=svg,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @rt("/sitemap.xml")
 def sitemap_xml():
     """Public XML sitemap for organic discovery."""

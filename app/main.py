@@ -1478,6 +1478,7 @@ def _reorder_routes_atomic():
         "/photos/{filename:path}",
         "/admin/staging-preview/{job_id}/{filename:path}",
         "/api/sync/staged/download/{filepath:path}",
+        "/favicon.ico",  # must precede FastHTML's /{fname}.{ext:static} catch-all
     }
     priority_names = {"static"}
 

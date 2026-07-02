@@ -150,8 +150,8 @@ def _public_nav_links(active: str = "", user=None, community_slug: str | None = 
 
     community_url_prefix = _main_mod.community_url_prefix
 
-    _inactive = "text-amber-900/60 hover:text-amber-900 font-serif tracking-wide text-sm transition-colors duration-300"
-    _active = "text-amber-950 font-serif tracking-wide text-sm border-b border-amber-900 pb-0.5"
+    _inactive = "text-amber-200/80 hover:text-amber-100 font-serif tracking-wide text-sm transition-colors duration-300"
+    _active = "text-amber-100 font-serif tracking-wide text-sm border-b border-amber-300 pb-0.5"
 
     p = community_url_prefix(community_slug)
 
@@ -163,7 +163,7 @@ def _public_nav_links(active: str = "", user=None, community_slug: str | None = 
         A("Timeline", href=f"{p}/timeline", cls=_active if active == "timeline" else _inactive),
         A("Map", href=f"{p}/map", cls=_active if active == "map" else _inactive),
         # Visual separator for Tools
-        Span("|", cls="text-slate-700 hidden lg:inline"),
+        Span("|", cls="text-slate-500 hidden lg:inline"),
         # Tools
         A("Tree", href=f"{p}/tree", cls=_active if active == "tree" else _inactive),
         A("Connect", href=f"{p}/connect", cls=_active if active == "connect" else _inactive),
