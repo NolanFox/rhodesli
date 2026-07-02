@@ -6731,6 +6731,20 @@ def get(
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    # G10 (Session 168 self-audit): community-aware OG copy so a non-Rhodes /c/<slug>/photos
+    # gallery doesn't leak "Jewish community of Rhodes" into its share preview.
+    _photos_community = getattr(request.state, "community", None) if request else None
+    _photos_community_prefixed = getattr(request.state, "community_prefixed", False) if request else False
+    _photos_is_non_rhodes = bool(
+        _photos_community_prefixed
+        and _photos_community
+        and community_slug != "rhodes"
+        and not _photos_community.get("is_default")
+    )
+    _photos_community_name = (
+        ((_photos_community.get("name") or "").strip() if _photos_is_non_rhodes else "Jewish community of Rhodes")
+        or "Jewish community of Rhodes"
+    )
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -6927,7 +6941,7 @@ def get(
         Title("Photos — Rhodesli Heritage Archive"),
         *_main_mod.og_tags(
             "Photos — Rhodesli Heritage Archive",
-            f"{len(photos)} historical photographs from the Jewish community of Rhodes.",
+            f"{len(photos)} historical photographs from the {_photos_community_name}.",
             canonical_url="/photos",
         ),
         page_style,
