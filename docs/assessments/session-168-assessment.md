@@ -81,6 +81,22 @@ the adversarial audit against the highest-risk items: G2 fail-open (root /help =
 leak), G4 reflected-`q` is HTML-escaped (no XSS), sitemap has no /admin//login//api URLs, `_prioritize_discovery_routes`
 is regression-safe (full suite green). No P0/P1. G5 (canonical, main.py global head) + G9 (badge N+1) DEFERRED.
 
+## Methodology capture (user request — "have Fable learn the meta-lessons; build a skill")
+Fable meta-analysis of the Opus/Fable/Codex split: **verdict 7.5/10 — keep the pattern, fix the plumbing;
+the independent-audit hard gate alone justifies it.** Deliverables:
+- **`~/.claude/skills/multimodel-sprint/SKILL.md`** — user-level, cross-repo (rhodesli + fox-genealogy), role-based
+  playbook (Phases A–G + research adaptation + model-selection heuristic + exclusion list). HD-036.
+- **`docs/session_context/session-168-meta-lessons.md`** — the analysis + evidence (ML-1…7).
+- **Harness Lessons 212–218** (ML-1…7) in `tasks/lessons/harness-lessons.md`.
+- **HD-036** in `docs/HARNESS_DECISIONS.md`.
+- **Two mechanical fixes shipped** (behavioral rule → check, Lessons 102/140):
+  `scripts/bootstrap-gate-files.sh` (ML-6, idempotency-verified) and `scripts/simulate_ci_data.py`
+  (ML-4 data-subtraction via a HEAD worktree; verified — runs the CI git-tracked-only data view, catches Lesson-211).
+- **`docs/session_context/session-168-path-forward.md`** — product lane + methodology lane + user-decision list.
+
+The single biggest lesson, in one line: **an independent fresh-context audit of the actual diff is a HARD
+pre-push gate — it caught the torch/mlflow CI regression the orchestrator's own validation had cleared.**
+
 ## Next Session Should Verify FIRST
 1. CI is green on the pushed commits (`gh run list --branch main --limit 1` = success).
 2. Production `/health` now reports `photos: 1127` (served) — quick curl check.

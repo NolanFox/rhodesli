@@ -69,4 +69,5 @@
 - [agent_comparison.md](agent_comparison.md) — Claude Code vs Codex CLI vs Antigravity comparison
 
 ## Reference
+- [multimodel-sprint skill](reference_multimodel_sprint_skill.md) — architect/orchestrator/coder/auditor autonomous-sprint pattern (cross-repo). HD-036.
 - [reference_antigravity_invocation.md](reference_antigravity_invocation.md) — Paste prompt into GUI; future: `gemini -p "..." -y`

@@ -704,3 +704,25 @@ This means:
 - `docs/session_context/session-161-context.md` AD-S161-5 (historical record)
 - `docs/session_context/session-161-codex-audit.md` (pre-execution audit caught the production-safety gap, fixed in AD-RID-1)
 - Session 161 commit `576fe524` (Phase 0 — bridge applied)
+
+## HD-036: Multi-Model Sprint Pattern → `multimodel-sprint` Skill (Session 168)
+
+**Date:** 2026-07-02
+**Session:** 168
+
+**Context:** Session 168 ran two autonomous improvement rounds using a role-based three-model division of labor — **Opus** orchestrator/designer, **Fable** architect + independent auditor, **Codex CLI (gpt-5.5/xhigh)** coder. 24 commits, CI green, deployed + verified live. A Fable meta-analysis (`docs/session_context/session-168-meta-lessons.md`) assessed the split.
+
+**Decision:** Codify the pattern as a **user-level skill** — `~/.claude/skills/multimodel-sprint/SKILL.md` — shared across rhodesli + fox-genealogy + any future repo (same HD-002 promotion pattern as `photo-context`/`proof-summary`/`source-*`). The skill is **role-based, not model-name-based** (survives model churn; ports from code sprints to genealogy research sprints), with a default model mapping and a task-shape model-selection heuristic.
+
+**Load-bearing rationale (verdict 7.5/10 — keep the pattern, fix the plumbing):** the **independent-audit hard gate alone justifies the pattern.** In R1 the orchestrator's own `--collect-only` validation cleared the new CI ML-suite step as "safe"; Fable's fresh-context audit caught that 5 modules import torch/mlflow *inside test functions* → ~25 runtime failures → red main on first push. The active ingredient is **independence of context, not model identity** (corroborated by S164 IMPL-audit BLOCK + S165 pre-audit root-cause). Therefore: the AUDITOR is a blocking pre-push gate and **the orchestrator may never audit its own session's output.**
+
+**Alternatives considered / rejected:**
+- *Single-model session:* would have pushed the torch/mlflow regression (its validation IS the orchestrator's) and lost the finding-structure that made dispatch immediate.
+- *Two-model (Opus+Codex, no independent auditor):* catches less — S137 established "neither catches what the other does"; the third differently-shaped reviewer earns its place.
+- *Project-level skill (rhodesli only):* rejected — the pattern is repo-portable and fox-genealogy wants it; user-level per HD-002.
+
+**Mechanical fixes shipped with the decision (turn behavioral rules into checks — Lessons 102/140):**
+- `scripts/bootstrap-gate-files.sh <NN>` — ML-6, creates+commits the gate-file skeletons first so the Stop hook stops fighting the background-agent model.
+- `scripts/simulate_ci_data.py` — ML-4 data-subtraction check (runs a test selection in a HEAD git worktree = CI's git-tracked-only data view; catches the Lesson-211 "local crops hide a CI failure" class). Complements the existing `scripts/check_ml_suite_ci_safe.py` (dep-subtraction).
+
+**Breadcrumbs:** skill at `~/.claude/skills/multimodel-sprint/`; meta-lessons `docs/session_context/session-168-meta-lessons.md`; harness Lessons 212–218 (ML-1…7); `ai-tool-audit.md` (audit provenance logging); `worktree-enforcement.md` (parallel-coder isolation). Follow-up (top of path-forward): extend `simulate_ci_data.py` toward a full `simulate-ci.sh` (deps + data + invalid-creds in one pass) and a coder wall-clock watchdog.
