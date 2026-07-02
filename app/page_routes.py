@@ -14,11 +14,12 @@ import re
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
+from html import escape as _html_escape
 from pathlib import Path as _Path
 from urllib.parse import quote, urlencode
 
 from fasthtml.common import *
-from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
+from starlette.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse, Response, StreamingResponse
 
 from core.ui_safety import ensure_utf8_display
 
@@ -37,6 +38,11 @@ logger = logging.getLogger(__name__)
 
 _supabase_last_ping: float = 0.0
 _SUPABASE_PING_INTERVAL: int = 3600  # seconds
+_SITEMAP_CACHE_TTL_SECONDS: int = 3600
+_SITEMAP_URL_LIMIT: int = 5000
+_sitemap_cache_ts: float = 0.0
+_sitemap_cache_site_url: str = ""
+_sitemap_cache_body: str = ""
 
 
 def _ping_supabase() -> str:
@@ -180,6 +186,125 @@ def _check_data_parity(json_photo_count: int, json_identity_count: int) -> dict:
         result["error"] = str(e)
 
     return result
+
+
+def _sitemap_xml(site_url: str, paths: list[str]) -> str:
+    """Render a minimal XML sitemap from already-normalized paths."""
+    locs = []
+    for path in paths:
+        loc = f"{site_url}{path}"
+        locs.append(f"  <url><loc>{_html_escape(loc, quote=True)}</loc></url>")
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(locs)
+        + "\n</urlset>\n"
+    )
+
+
+def _build_sitemap_xml(site_url: str) -> str:
+    """Build the cached public sitemap, falling back to homepage-only on data errors."""
+    paths = ["/"]
+    seen = set(paths)
+    truncated = False
+
+    def add_path(path: str) -> bool:
+        if path in seen:
+            return True
+        if len(paths) >= _SITEMAP_URL_LIMIT:
+            return False
+        seen.add(path)
+        paths.append(path)
+        return True
+
+    try:
+        for path in ("/tools/estimate", "/tools/compare", "/help"):
+            add_path(path)
+
+        registry = _main_mod.load_registry()
+        for identity in registry.list_identities(state=_main_mod.IdentityState.CONFIRMED):
+            display_name = identity.get("display_name") or identity.get("name")
+            if identity.get("merged_into") or not _main_mod.IdentityRegistry._is_real_name(display_name):
+                continue
+            identity_id = str(identity.get("identity_id") or "")
+            if not identity_id:
+                continue
+            if not add_path(f"/person/{quote(identity_id, safe='')}"):
+                truncated = True
+                break
+
+        if not truncated:
+            if _main_mod._photo_cache is None:
+                _main_mod._build_caches()
+            for photo_id in (_main_mod._photo_cache or {}):
+                if not add_path(f"/photo/{quote(str(photo_id), safe='')}"):
+                    truncated = True
+                    break
+    except Exception:
+        logger.exception("Sitemap data access failed; returning homepage-only sitemap")
+        return _sitemap_xml(site_url, ["/"])
+
+    # Keep the sitemap under the search-engine practical limit and our route budget.
+    if truncated:
+        logger.info("Sitemap capped at %s URLs", _SITEMAP_URL_LIMIT)
+
+    return _sitemap_xml(site_url, paths)
+
+
+@rt("/robots.txt")
+def robots_txt():
+    """Public crawler policy."""
+    site_url = _main_mod.SITE_URL.rstrip("/")
+    return PlainTextResponse(
+        "\n".join(
+            [
+                "User-agent: *",
+                "Allow: /",
+                "Disallow: /admin",
+                "Disallow: /api",
+                "Disallow: /login",
+                f"Sitemap: {site_url}/sitemap.xml",
+                "",
+            ]
+        )
+    )
+
+
+@rt("/sitemap.xml")
+def sitemap_xml():
+    """Public XML sitemap for organic discovery."""
+    global _sitemap_cache_body, _sitemap_cache_site_url, _sitemap_cache_ts
+
+    site_url = _main_mod.SITE_URL.rstrip("/")
+    now = time.time()
+    if (
+        _sitemap_cache_body
+        and _sitemap_cache_site_url == site_url
+        and now - _sitemap_cache_ts < _SITEMAP_CACHE_TTL_SECONDS
+    ):
+        return Response(content=_sitemap_cache_body, media_type="application/xml")
+
+    body = _build_sitemap_xml(site_url)
+    _sitemap_cache_body = body
+    _sitemap_cache_site_url = site_url
+    _sitemap_cache_ts = now
+    return Response(content=body, media_type="application/xml")
+
+
+def _prioritize_discovery_routes():
+    """Move dotted discovery routes ahead of FastHTML's dotted static catch-all."""
+    priority_paths = {"/robots.txt", "/sitemap.xml"}
+    priority_routes = []
+    other_routes = []
+    for route in _main_mod.app.routes:
+        if getattr(route, "path", None) in priority_paths:
+            priority_routes.append(route)
+        else:
+            other_routes.append(route)
+    _main_mod.app.routes[:] = priority_routes + other_routes
+
+
+_prioritize_discovery_routes()
 
 
 @rt("/health")

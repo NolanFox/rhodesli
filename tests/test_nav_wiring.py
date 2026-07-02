@@ -49,6 +49,57 @@ def _make_identity(
     }
 
 
+def _reset_sitemap_cache():
+    import app.page_routes as page_routes
+
+    page_routes._sitemap_cache_body = ""
+    page_routes._sitemap_cache_site_url = ""
+    page_routes._sitemap_cache_ts = 0.0
+
+
+class TestDiscoveryRoutes:
+    """G6: robots.txt and sitemap.xml route smoke tests."""
+
+    def test_robots_txt_allows_public_and_lists_sitemap(self):
+        client = _get_test_client()
+
+        with patch("app.page_routes._main_mod.SITE_URL", "https://example.test"):
+            resp = client.get("/robots.txt")
+
+        assert resp.status_code == 200
+        assert resp.headers.get("content-type", "").startswith("text/plain")
+        assert "User-agent: *" in resp.text
+        assert "Disallow: /admin" in resp.text
+        assert "Disallow: /api" in resp.text
+        assert "Disallow: /login" in resp.text
+        assert "Sitemap: https://example.test/sitemap.xml" in resp.text
+
+    def test_sitemap_xml_contains_homepage_and_stays_under_url_cap(self):
+        client = _get_test_client()
+        registry = MagicMock()
+        registry.list_identities.return_value = [
+            _make_identity(identity_id="id-001", name="Albert Fox", state="CONFIRMED"),
+            _make_identity(identity_id="id-002", name="Unidentified Person 1", state="CONFIRMED"),
+        ]
+
+        _reset_sitemap_cache()
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.page_routes._main_mod.SITE_URL", "https://example.test"))
+            stack.enter_context(patch("app.page_routes._main_mod.load_registry", return_value=registry))
+            stack.enter_context(patch("app.page_routes._main_mod._photo_cache", {"photo-1": {}, "photo-2": {}}))
+            stack.enter_context(patch("app.page_routes._main_mod._build_caches"))
+            resp = client.get("/sitemap.xml")
+
+        assert resp.status_code == 200
+        assert resp.headers.get("content-type", "").startswith("application/xml")
+        assert "<urlset" in resp.text
+        assert "<loc>https://example.test/</loc>" in resp.text
+        assert "<loc>https://example.test/person/id-001</loc>" in resp.text
+        assert "<loc>https://example.test/photo/photo-1</loc>" in resp.text
+        assert "id-002" not in resp.text
+        assert resp.text.count("<url>") <= 5000
+
+
 class TestIdentifyModeButtonCode:
     """C1: Verify Identify Mode code has admin -> seq=1 link and non-admin -> toggle."""
 

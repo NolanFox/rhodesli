@@ -10,8 +10,11 @@ Tests cover:
 - Sidebar counts include named/unidentified breakdown
 """
 
-import pytest
+from contextlib import contextmanager, ExitStack
+from html.parser import HTMLParser
 from unittest.mock import patch, MagicMock
+
+import pytest
 from starlette.testclient import TestClient
 
 from app.main import app, _compute_sidebar_counts
@@ -36,6 +39,34 @@ def _make_identity(identity_id, name, state="CONFIRMED"):
         "created_at": "2026-01-01T00:00:00Z",
         "updated_at": "2026-01-01T00:00:00Z",
     }
+
+
+class _InputCollector(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.inputs = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "input":
+            self.inputs.append(dict(attrs))
+
+
+def _inputs_by_name(html):
+    parser = _InputCollector()
+    parser.feed(html)
+    return {attrs.get("name"): attrs for attrs in parser.inputs if attrs.get("name")}
+
+
+@contextmanager
+def _mock_people_page_dependencies(registry):
+    with ExitStack() as stack:
+        stack.enter_context(patch("app.main.load_registry", return_value=registry))
+        stack.enter_context(patch("app.browse_routes._main_mod.load_registry", return_value=registry))
+        stack.enter_context(patch("app.browse_routes._main_mod.get_crop_files", return_value={}))
+        stack.enter_context(patch("app.browse_routes._main_mod._get_community_identity_ids", return_value=None))
+        stack.enter_context(patch("app.browse_routes._main_mod.get_best_face_id", return_value=None))
+        stack.enter_context(patch("app.browse_routes._main_mod.resolve_face_image_url", return_value=None))
+        yield
 
 
 @pytest.fixture
@@ -179,6 +210,55 @@ class TestPeopleNameFilter:
         html = response.text
         # Filter tab links should include sort_by=photos
         assert "sort_by=photos" in html
+
+    def test_name_search_filters_people_case_insensitive(self, client, mock_registry_with_mixed):
+        """/people?q=<name> shows only display-name matches."""
+        with _mock_people_page_dependencies(mock_registry_with_mixed):
+            response = client.get("/people?q=SaRaH")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "Sarah Gukaylo" in html
+        assert "Albert Fox" not in html
+        assert "Fanny Burd" not in html
+        assert "Unidentified Person 1" not in html
+
+    def test_empty_name_search_returns_all_people(self, client, mock_registry_with_mixed):
+        """Empty q keeps the existing all-people behavior."""
+        with _mock_people_page_dependencies(mock_registry_with_mixed):
+            response = client.get("/people?q=")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "Albert Fox" in html
+        assert "Sarah Gukaylo" in html
+        assert "Unidentified Person 1" in html
+        assert "Unidentified Person 2" in html
+
+    def test_name_search_combines_with_name_filter(self, client, mock_registry_with_mixed):
+        """q is applied before name_filter, so both filters constrain results."""
+        with _mock_people_page_dependencies(mock_registry_with_mixed):
+            response = client.get("/people?q=Person+2&name_filter=needs_name")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "Unidentified Person 2" in html
+        assert "Unidentified Person 1" not in html
+        assert "Albert Fox" not in html
+
+    def test_search_input_preserves_people_filters(self, client, mock_registry_with_mixed):
+        """Search form persists q and preserves active name_filter/sort_by."""
+        with _mock_people_page_dependencies(mock_registry_with_mixed):
+            response = client.get("/people?q=Sarah&name_filter=named&sort_by=photos")
+
+        assert response.status_code == 200
+        inputs = _inputs_by_name(response.text)
+        assert inputs["q"]["data-testid"] == "people-search"
+        assert inputs["q"]["value"] == "Sarah"
+        assert inputs["name_filter"]["type"] == "hidden"
+        assert inputs["name_filter"]["value"] == "named"
+        assert inputs["sort_by"]["type"] == "hidden"
+        assert inputs["sort_by"]["value"] == "photos"
 
 
 class TestSidebarNamedBreakdown:

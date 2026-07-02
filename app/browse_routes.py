@@ -770,7 +770,7 @@ def photos_more(
 
 
 @rt("/people")
-def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None):
+def get(sort_by: str = "name", name_filter: str = "all", q: str = "", sess=None, request=None):
     """
     Public people browsing page — grid of identified people.
 
@@ -790,6 +790,7 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
     # Validate name_filter
     if name_filter not in ("all", "named", "needs_name"):
         name_filter = "all"
+    q = (q or "").strip()
 
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
@@ -812,6 +813,15 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
                 if i.get("state") != "CONFIRMED" and not i.get("merged_into") and i["identity_id"] in community_ids
             ]
         )
+
+    # Apply case-insensitive display-name search before tab filtering/sorting.
+    if q:
+        q_lc = q.lower()
+        all_confirmed = [
+            i
+            for i in all_confirmed
+            if q_lc in ensure_utf8_display(i.get("display_name") or i.get("name") or "").lower()
+        ]
 
     # Compute named/unidentified counts (before name_filter, for tab badges)
     named_count = len([i for i in all_confirmed if IdentityRegistry._is_real_name(i.get("name"))])
@@ -882,6 +892,15 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
         Option("Newest", value="newest", selected=(sort_by == "newest")),
     ]
 
+    from urllib.parse import urlencode as _url_encode
+
+    def _people_url(**overrides):
+        params = {"name_filter": name_filter, "sort_by": sort_by, "q": q}
+        params.update({k: v for k, v in overrides.items() if v is not None})
+        params = {k: v for k, v in params.items() if v}
+        qs = _url_encode(params)
+        return f"{nav_prefix}/people?{qs}" if qs else f"{nav_prefix}/people"
+
     # Build filter tabs
     def _filter_tab(label, value, count, active):
         base_cls = "px-4 py-2 text-sm font-medium rounded-lg transition-colors"
@@ -892,9 +911,30 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
         return A(
             label,
             Span(f" ({count})", cls="text-xs opacity-70") if count is not None else "",
-            href=f"{nav_prefix}/people?name_filter={value}&sort_by={sort_by}",
+            href=_people_url(name_filter=value),
             cls=cls,
         )
+
+    search_form = Form(
+        Input(type="hidden", name="name_filter", value=name_filter),
+        Input(type="hidden", name="sort_by", value=sort_by),
+        Input(
+            type="search",
+            name="q",
+            value=q,
+            placeholder="Search people by name",
+            cls="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/60 focus:border-indigo-500/60 placeholder-slate-500",
+            data_testid="people-search",
+        ),
+        Button(
+            "Search",
+            type="submit",
+            cls="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
+        ),
+        action=f"{nav_prefix}/people",
+        method="get",
+        cls="flex flex-col sm:flex-row gap-3 mb-4",
+    )
 
     filter_tabs = Div(
         _filter_tab("All", "all", len(all_confirmed), name_filter == "all"),
@@ -961,6 +1001,7 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
             ),
             Section(
                 Div(
+                    search_form,
                     # Filter tabs
                     filter_tabs,
                     Div(
@@ -968,7 +1009,7 @@ def get(sort_by: str = "name", name_filter: str = "all", sess=None, request=None
                         Select(
                             *sort_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2.5",
-                            onchange=f"window.location.href='{nav_prefix}/people?name_filter={name_filter}&sort_by=' + this.value",
+                            onchange=f"window.location.href='{nav_prefix}/people?name_filter={name_filter}&q={quote(q)}&sort_by=' + this.value",
                         ),
                         cls="flex items-center gap-2 mb-6",
                     ),
