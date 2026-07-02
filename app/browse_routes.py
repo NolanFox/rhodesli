@@ -34,6 +34,22 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
+def _community_scope_failed(community, community_photo_ids) -> bool:
+    """Fail-closed guard for community photo scoping (Lesson 151).
+
+    Returns True only when a specific community is set, its photo scope could NOT
+    be computed, AND Supabase is reachable — i.e. a transient error where rendering
+    the unscoped corpus would leak other communities' photos. Returns False when
+    community is None (root, no filter) or Supabase is absent (local dev / tests,
+    where scope is legitimately None), preserving existing no-filter behavior there.
+    """
+    if community is None or community_photo_ids is not None:
+        return False
+    from app.supabase_data import get_supabase_client
+
+    return get_supabase_client() is not None
+
+
 def _build_photo_cards(photos: list, masonry: bool = False, nav_prefix: str = "", is_admin: bool = False) -> list:
     """Build photo card elements for a list of photo dicts.
 
@@ -285,7 +301,10 @@ def get(
                 if fid:
                     _face_id_confirmed.add(fid)
 
+    _scope_failed = _community_scope_failed(community, community_photo_ids)
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
+        if _scope_failed:
+            break  # fail closed — render empty grid, never leak cross-community photos
         # Apply community filter (PRD-035)
         if community_photo_ids is not None:
             # Check both the cache ID and its alias (inbox_* ID)
@@ -681,7 +700,10 @@ def photos_more(
                 if fid:
                     _face_id_confirmed.add(fid)
 
+    _scope_failed = _community_scope_failed(community, community_photo_ids)
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
+        if _scope_failed:
+            break  # fail closed — render empty grid, never leak cross-community photos
         if community_photo_ids is not None:
             alias_id = _reverse_aliases.get(photo_id_val)
             if photo_id_val not in community_photo_ids and (alias_id is None or alias_id not in community_photo_ids):
