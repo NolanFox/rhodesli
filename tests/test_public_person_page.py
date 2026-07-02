@@ -443,12 +443,18 @@ class TestPersonPageOGTags:
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
         assert "og:description" in response.text
 
-    def test_og_image_present(self, client, confirmed_identity):
-        """OG image tag is present."""
+    def test_og_image_never_emitted_empty(self, client, confirmed_identity):
+        """G8: og:image/twitter:image are CONDITIONAL — present with a real URL when an
+        avatar resolves, omitted otherwise, but NEVER emitted with empty content (an empty
+        og:image makes FB skip image selection). This invariant holds in every environment
+        (CI may lack crop data → no avatar → tags omitted, which is correct). Deterministic
+        avatar-present / avatar-absent coverage lives in the mocked _render_mock_person_page tests.
+        """
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert "og:image" in response.text
+        assert 'property="og:image" content=""' not in response.text
+        assert 'name="twitter:image" content=""' not in response.text
 
     def test_og_url_contains_person_id(self, client, confirmed_identity):
         """OG URL points to the person page."""
