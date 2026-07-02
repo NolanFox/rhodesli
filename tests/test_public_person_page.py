@@ -362,6 +362,70 @@ class TestPersonPageOrdering:
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""
 
+    def _render_mock_person_page(self, monkeypatch, tmp_path, avatar_url):
+        """Render a mocked person page with a deterministic avatar URL."""
+        from fastcore.xml import to_xml
+
+        from app.person_routes import public_person_page
+
+        person_id = "person-og-test"
+        identity = {
+            "identity_id": person_id,
+            "name": "OG Test Person",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-og-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "metadata": {},
+        }
+
+        class FakeRegistry:
+            def get_identity(self, requested_id):
+                if requested_id == person_id:
+                    return identity
+                raise KeyError(requested_id)
+
+            def list_identities(self, state=None):
+                return [identity]
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-og-1"]
+
+        photo_meta = {
+            "photo_id": "photo-og-1",
+            "filename": "photo-og-1.jpg",
+            "collection": "OG Test Collection",
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "faces": [{"face_id": "face-og-1", "bbox": [0, 0, 50, 50]}],
+        }
+
+        monkeypatch.setattr("app.main.data_path", tmp_path)
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-og-1.jpg"})
+        monkeypatch.setattr("app.main.get_best_face_id", lambda _face_ids: "face-og-1")
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda _face_id, _crops: avatar_url)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda _face_id: "photo-og-1")
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda _photo_id: photo_meta)
+        monkeypatch.setattr("app.main.get_identity_for_face", lambda _registry, _face_id: identity)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+        monkeypatch.setattr("app.main._load_relationship_graph", lambda: {"relationships": []})
+        monkeypatch.setattr("app.main._load_annotations", lambda: {"annotations": {}})
+        monkeypatch.setattr("app.main._get_birth_year", lambda *_args, **_kwargs: (None, None, None))
+        monkeypatch.setattr("app.main._public_nav_links", lambda **_kwargs: [])
+        monkeypatch.setattr("app.main._admin_bar", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr("app.main._place_datalist", lambda: None)
+        monkeypatch.setattr("app.main._share_script", lambda: None)
+        monkeypatch.setattr("app.main.compare_modal", lambda: None)
+        monkeypatch.setattr("app.main.confirm_modal", lambda: None)
+        monkeypatch.setattr("app.main.login_modal", lambda: None)
+        monkeypatch.setattr("app.main.toast_container", lambda: None)
+        monkeypatch.setattr("app.person_routes._life_events_section", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr("app.person_routes._person_comments_section", lambda *_args, **_kwargs: None)
+
+        return to_xml(public_person_page(person_id, is_admin=False))
+
     def test_og_title_contains_person_name(self, client, confirmed_identity):
         """OG title includes the person's name."""
         if not confirmed_identity:
@@ -393,6 +457,27 @@ class TestPersonPageOGTags:
         pid = confirmed_identity["identity_id"]
         response = client.get(f"/person/{pid}")
         assert f"/person/{pid}" in response.text
+
+    def test_avatar_person_og_image_uses_large_twitter_card(self, monkeypatch, tmp_path):
+        """Person page with an avatar emits image tags and a large Twitter card."""
+        html = self._render_mock_person_page(monkeypatch, tmp_path, "/static/crops/face-og-1.jpg")
+
+        assert (
+            'property="og:image" content="https://rhodesli.nolanandrewfox.com/static/crops/face-og-1.jpg"'
+            in html
+        )
+        assert (
+            'name="twitter:image" content="https://rhodesli.nolanandrewfox.com/static/crops/face-og-1.jpg"' in html
+        )
+        assert 'name="twitter:card" content="summary_large_image"' in html
+
+    def test_person_without_avatar_omits_image_tags_and_uses_summary_card(self, monkeypatch, tmp_path):
+        """Person page without an avatar omits empty image tags so crawlers can fall back."""
+        html = self._render_mock_person_page(monkeypatch, tmp_path, "")
+
+        assert 'property="og:image"' not in html
+        assert 'name="twitter:image"' not in html
+        assert 'name="twitter:card" content="summary"' in html
 
 
 class TestPersonPhotoGalleryShareRoute:

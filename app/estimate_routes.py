@@ -257,6 +257,7 @@ def get(photo: str = "", sess=None, request=None):
         title="When Was This Photo Taken? — Date Estimator",
         description="Our AI estimates the year a photo was taken using facial age analysis and historical clues.",
         canonical_url=f"{_main_mod.SITE_URL}/tools/estimate",
+        image_url=f"{_main_mod.SITE_URL}/static/crops/landing-hero.jpg",
     )
 
     page_style = Style("""

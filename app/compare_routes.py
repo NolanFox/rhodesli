@@ -699,6 +699,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None, r
         "Compare Faces \u2014 Face Comparison Tool",
         "Find connections across photos using AI-powered face comparison",
         canonical_url="/tools/compare",
+        image_url=f"{_main_mod.SITE_URL}/static/crops/landing-hero.jpg",
     )
 
     return (

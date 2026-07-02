@@ -885,17 +885,19 @@ def public_person_page(
                 f"in the Rhodesli Heritage Archive. Do you recognize this person?"
             )
 
+    og_image_tags = (Meta(property="og:image", content=og_image_url),) if og_image_url else ()
+    twitter_image_tags = (Meta(name="twitter:image", content=og_image_url),) if og_image_url else ()
     og_meta_tags = (
         Meta(property="og:title", content=og_title),
         Meta(property="og:description", content=og_description),
-        Meta(property="og:image", content=og_image_url),
+        *og_image_tags,
         Meta(property="og:url", content=og_page_url),
         Meta(property="og:type", content="profile"),
         Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
-        Meta(name="twitter:card", content="summary"),
+        Meta(name="twitter:card", content="summary_large_image" if og_image_url else "summary"),
         Meta(name="twitter:title", content=og_title),
         Meta(name="twitter:description", content=og_description),
-        Meta(name="twitter:image", content=og_image_url),
+        *twitter_image_tags,
         Meta(name="description", content=og_description),
     )
 

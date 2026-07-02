@@ -312,6 +312,32 @@ class TestDirectToolAccess:
         assert resp.status_code == 200
         assert "Compare Faces" in resp.text
 
+    def test_tools_estimate_has_large_og_image(self, client):
+        """GET /tools/estimate has a share-preview image and large Twitter card."""
+        patches = _standard_patches()
+        patches.append(patch("app.main.is_auth_enabled", return_value=False))
+        with ExitStack(patches):
+            resp = client.get("/tools/estimate")
+        assert resp.status_code == 200
+        assert (
+            'property="og:image" content="https://rhodesli.nolanandrewfox.com/static/crops/landing-hero.jpg"'
+            in resp.text
+        )
+        assert 'name="twitter:card" content="summary_large_image"' in resp.text
+
+    def test_tools_compare_has_large_og_image(self, client):
+        """GET /tools/compare has a share-preview image and large Twitter card."""
+        patches = _standard_patches()
+        patches.append(patch("app.main.is_auth_enabled", return_value=False))
+        with ExitStack(patches):
+            resp = client.get("/tools/compare")
+        assert resp.status_code == 200
+        assert (
+            'property="og:image" content="https://rhodesli.nolanandrewfox.com/static/crops/landing-hero.jpg"'
+            in resp.text
+        )
+        assert 'name="twitter:card" content="summary_large_image"' in resp.text
+
 
 # =========================================================================
 # Helper: ExitStack for multiple context managers

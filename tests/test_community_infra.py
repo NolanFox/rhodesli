@@ -13,6 +13,7 @@ import io
 import json
 from unittest.mock import MagicMock, patch
 
+from fasthtml.common import to_xml
 import pytest
 
 
@@ -292,6 +293,9 @@ class TestCommunityMiddleware:
 class TestCommunityLandingPage:
     """Tests for community-specific landing pages."""
 
+    def _html(self, result):
+        return " ".join(to_xml(item) for item in result)
+
     def test_community_landing_page_renders(self):
         from app.page_routes import _community_landing_page
 
@@ -307,10 +311,11 @@ class TestCommunityLandingPage:
             with patch("app.supabase_data.load_identities_for_community", return_value=[]):
                 result = _community_landing_page(community, "fox-family")
 
-        # Should return a tuple (Title, Div)
-        assert len(result) == 2
-        html = repr(result[1])
+        assert len(result) > 2
+        html = self._html(result)
         assert "Fox Family Heritage" in html
+        assert 'property="og:title"' in html
+        assert 'property="og:description"' in html
         assert "community-landing" in html
         assert "fox-family" in html
 
@@ -328,7 +333,7 @@ class TestCommunityLandingPage:
             with patch("app.supabase_data.load_identities_for_community", return_value=[]):
                 result = _community_landing_page(community, "new-community")
 
-        html = repr(result[1])
+        html = self._html(result)
         assert "just getting started" in html
 
     def test_community_landing_page_with_content(self):
@@ -346,7 +351,7 @@ class TestCommunityLandingPage:
             with patch("app.main._get_community_identity_ids", return_value={"i1", "i2"}):
                 result = _community_landing_page(community, "fox-family")
 
-        html = repr(result[1])
+        html = self._html(result)
         assert "3" in html  # photo count
         assert "2" in html  # identity count
         assert "Browse Photos" in html
