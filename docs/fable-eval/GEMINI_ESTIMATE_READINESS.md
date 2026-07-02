@@ -32,3 +32,14 @@ DETROIT-CANDIDATE-FORCE-167 mechanism from the shadow harness into production
   (~$1.5–2.0) — the only way to fully de-risk the mandatory-candidate block on travel/diaspora frames.
 - **UD-3 (data, not eval):** Resolve Irving Fox's contradictory `1917-1918 Brooklyn` vs `1917 Detroit`
   GEDCOM residences — a genealogy-sourcing question that reduces reliance on the Rule-3 visual fallback.
+
+---
+
+## Track E execution note (2026-07-02, orchestrator)
+User approved a "$0.50 Detroit eval" from the summary. On reading THIS analysis, the paid eval is
+premature: verdict is NOT-READY (blocked on `photo_year`-source + production-integration design;
+zero promotion code exists yet). A **$0 dry-run** (`--dry-run --photo-ids 02068,01659 --no-db-log`)
+confirmed the harness runs but reported **"Test set: 0 photos"** — those IDs don't match the frozen
+baseline set, so a paid run would prove nothing. **Decision: HELD the $0.50** (no API spend).
+Productive path = the $0 design+implement steps 1–3 above as a focused follow-up, THEN the bounded
+eval. UD-1/UD-2/UD-3 remain user-gated.

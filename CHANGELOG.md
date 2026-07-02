@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.90] — 2026-07-02 (Session 169: Fable 5 full-evaluation + gated Phase-2 ship — Opus orchestrate · Codex code+audit · Fable evaluate)
+
+User request: run a full Fable-5 evaluation of the repo (everything the Fable-5 community playbook
+suggests + more), yielding reusable skills that teach Opus 4.8 this project's judgment before Fable
+goes pay-per-use, packaged reusably + self-improving. Ran the loop end-to-end: research (Anthropic
+Fable-5 docs + community) → independent Opus + Codex draft prompts → merge → Codex audit (BLOCK →
+all P0/P1 applied → Opus+Codex agreed) → **one autonomous Fable agent** ran the eval to Definition
+of Done (survived a mid-run connection drop via context-preserving resume) → gated Phase-2 implementation.
+
+### Fable evaluation (self-grade 8.5/10) — `docs/fable-eval/`
+- **3 verifier-gated reusable skills installed** (`.claude/skills/`): `split-brain-data-audit`,
+  `supabase-migration-safety`, `route-safety-audit` — each encodes a concrete rhodesli incident +
+  triggers + verification gates; passed a fresh-context verifier that caught real attribution errors.
+- 8 evaluation artifacts (health / vision / data-integrity / bug-recall / 10x-growth / Gemini-readiness
+  / quick-wins-queue / EVALS) + 15 desktop/mobile screenshots. $0 paid API, prod browsed logged-out.
+- Packaged the whole flow as the repo-portable, self-improving `~/.claude/skills/fable-full-eval` skill.
+
+### Phase 2 shipped (gated: independent Codex fix-audit → SHIP-WITH-FIXES → P2s applied → 4638 tests green → pushed)
+- **QW-1 (`app/browse_routes.py`)** — `/photos` + `/api/photos/more` fail CLOSED on transient
+  community-scope loss (was fail-OPEN → full multi-community photo leak, Lesson 151). Guard fires only
+  when a community is set AND scope is None AND Supabase is reachable (local dev unaffected). Fix-audit
+  P2-1: also suppresses the global decade/tag filter pills + search, not just the grid.
+- **QW-2 (`app/auth_routes.py`)** — rate limits on `/login/modal` (10/hr) + `/forgot-password` (5/hr,
+  throttle skips email, no enumeration).
+- **QW-3 (`app/supabase_data.py`)** — `get_community_by_slug` no longer caches `None` on transient
+  Supabase error (was taking archives offline 300s); fix-audit P2-2: nor on a configured-but-transient
+  client-init failure.
+- **UI (`nav.py`, `page_routes.py`, `main.py`)** — readable nav contrast (was `text-amber-900/60`
+  near-invisible on the slate-900 bar → `amber-200/80`) + a working `/favicon.ico` (was 404 on every
+  page; FastHTML static catch-all grabbed `.ico` → registered ahead of it). Verified live.
+- **Docs (`DATA_MODEL`/`OVERVIEW`/`PERMISSIONS`)** — rewritten Postgres-canonical (were @-imported
+  every session still teaching the pre-Postgres "no relational database" architecture).
+- **Infra** — reclaimed **16 GB** of stale agent worktrees (uncommitted content archived first) +
+  stripped 8 secret-bearing permission allow-rules from `settings.local.json`.
+- **Detroit paid eval HELD** — readiness analysis says NOT-READY (blocked on unbuilt production code);
+  $0 dry-run confirmed premature. $0.50 preserved.
+
+### Tests: 4638 pass, 10 skip · ruff clean · deploy verified (favicon 200, nav class live, all routes 200)
+
 ## [v0.99.89] — 2026-07-01 (Session 168 Round 2: Community growth-loop + share-preview polish — Fable product dive + audit, Codex code)
 
 Second autonomous round (user said "keep going"). Fable's first dive was infra-heavy, so this dive
