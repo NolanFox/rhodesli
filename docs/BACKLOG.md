@@ -96,6 +96,15 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
   now in `make test-fast` + CI, 4512→4616). `test_public_photo_viewer` (9.6s, renders full pages)
   correctly LEFT slow. Remaining: a timing-based structural guard ("fail if a slow-marked test runs
   <500ms") is deferred as brittle/flaky-prone; the path-list audit + promotion is the robust win.
+- **CANONICAL-COMMUNITY-URL-168** (P2, OPEN — Fable G5): FastHTML's auto-`<link rel=canonical>` uses the
+  post-CommunityMiddleware path, so `/c/<slug>/...` pages emit a canonical WITHOUT the community prefix
+  (contradicts og:url; search engines index non-Rhodes content under Rhodes URLs). Fix: `fast_app(canonical=False)`
+  in `app/main.py` + add `Link(rel="canonical", href=canonical_url)` inside `og_tags()` (nav.py). Deferred from
+  Session 168 R2: touches the global `<head>` in main.py — needs cross-page browser verification. Source: Session 168 Fable G5.
+- **SHARED-PERSON-BADGE-PUBLIC-168** (P3, OPEN — Fable G9 / COMMUNITY-004): `_cross_community_badge` is on
+  admin/ML surfaces only; add to the public people grid + person-page name block. Deferred from Session 168 R2:
+  potential N+1 (identity_communities lookup) on a hot public page — must precompute the set once per request
+  / verify caching before adding to an 88-item loop. Source: Session 168 Fable G9.
 - **UPLOAD-DESC-PREFILL-168** (P3, OPEN): wire the rhodes-wiki FB caption into a real description field on `/upload`. Session 168 (F10) removed the dead `prefill_description` variable (it was assigned from the caption but never rendered — the upload form has no description field). To realize the intended UX, add a description `Textarea` to `upload_area()`, thread a `prefill_description` param, and persist it through the upload POST. Source: Session 168 Fable dive F10.
 - **APP-MAIN-WIRE-DB-SIZE** (P2, ✅ DONE — verified wired at `app/main.py:8098` `register_admin_db_routes(app)`; closed Session 168): Add 1-line `register_admin_db_routes(app)` to `app/main.py` after the `from app import event_routes` block (line 8055) to surface `/api/admin/db-size` for OD-013 storage monitoring. Code edit blocked at Session 154 end by clear-gate hook at 700+ transcript lines; staged for follow-up after `/clear`. Source: Session 154 Track E E3.
 - **HOOK-ALLOWLIST-FIX** (P2, OPEN, partially-fixed Session 154): `pre-work-clear-gate.sh` allowlist had `$REPO/BACKLOG.md` (root) but the actual file in this repo is `$REPO/docs/BACKLOG.md`. Same gap existed for `tasks/lessons.md` and `docs/prompts/`. Session 154 patched these in commit covering this BACKLOG update; verify the patch via `pytest tests/test_hooks_clear_gate.py`. Add a structural test that asserts EVERY file path referenced from session-defaults.md as a session-end artifact is in the allowlist. Source: Session 154 closeout.

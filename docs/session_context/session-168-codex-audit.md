@@ -77,3 +77,17 @@
 **AI Tool Usage:** Fable 5.0 (architect: 13-finding dive; auditor: 1 P0 caught pre-push + clean verdicts)
 = STRONG (the P0 would have red-mained production; would NOT have been caught without a runtime sim).
 Codex CLI gpt-5.5/xhigh (coder, 4 jobs) = STRONG (clean implementations, self-verified each).
+
+## ROUND 2 — Community growth-loop batch (v0.99.89)
+- **Fable product dive** (architect): 13→ found G1–G9 user-facing gaps (multi-archive Rhodes-copy leaks + share metadata).
+- **Codex** (coder): P1 (G1/G2/G7), P2 (G3/G8), P3 (G4/G6). Note: P1 ran ~37min (looping on 65s make test-fast) → killed + Opus-finished; later specs said "targeted tests only" → P3 ~6min.
+- **Round-2 pre-push audit:** Fable audit agent STALLED (stream watchdog, no result). **Opus completed the adversarial audit** (evidence-backed):
+  - G2 community scoping: fail-open verified (root /help = global 50; no cross-community leak); scopes only when community_prefixed.
+  - G4 people search: reflected `q` is HTML-escaped (`<script>`→`&lt;script&gt;`) — no XSS.
+  - G6 sitemap: 1267 URLs, no /admin//login//api; capped 5000 + 1h cache + try/except→homepage fallback.
+  - `_prioritize_discovery_routes()`: full suite green (4628) → route reorder breaks nothing.
+  - G8 person OG: conditional (no empty og:image).
+  - Residual hardcoded-Rhodes copy: only legit platform-root/flagship paths remain; the /photos leak fixed (G10).
+  - **Verdict: no P0/P1.** Deferred G5 (canonical, main.py global head) + G9 (badge N+1) with rationale.
+- **AI Tool Usage R2:** Fable (product architect + auditor — audit run stalled, Opus substituted) = STRONG dive.
+  Codex gpt-5.5/xhigh (coder) = STRONG but over-iterates on full-suite verify → cap its test scope. Lesson: instruct Codex "targeted tests only."

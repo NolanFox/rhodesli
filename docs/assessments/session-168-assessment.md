@@ -60,6 +60,27 @@ modules carry importorskip guards; `/health` `served_photo_count`; dead `prefill
 - **Novel-Discovery Audit**: N/A — infrastructure/test/CI session, no genealogy facts asserted.
 - **User-Feedback Absorb**: N/A — no in-session user corrections (autonomous run; user was away).
 
+## Round 2 (user "keep going") — Community growth-loop + share-preview polish (v0.99.89)
+Fable product dive (G1–G9, first dive was infra-heavy). Shipped LOW-risk batch:
+- **F6 / TEST-MARKER-AUDIT-001** — promoted split-brain/data-integrity guards out of `slow` into CI
+  (+104 tests; they were invisible to CI, which is how F4/F5 breakage hid).
+- **G1/G2/G7** (page_routes.py) — `/help` queue community-scoped (fail-open for root/Rhodes), community-aware
+  landing+help copy + OG, help grid mobile fix. Regression test: no "Jewish Community of Rhodes" under non-Rhodes slug.
+- **G3/G8** — og:image on tools + conditional person og:image.
+- **G4** (browse_routes.py) — people-grid name search (XSS-safe, preserves filters; fixed onto the LIVE handler).
+- **G6** (page_routes.py) — /robots.txt + /sitemap.xml (1267 URLs, capped/cached/fallback, no private-URL leak).
+- **G10** (self-audit) — community-aware /photos OG.
+
+**Codex behavior note:** Job P1 ran ~37 min (kept invoking the 65s `make test-fast` in its verify loop);
+Opus killed it, verified the (complete, on-spec) changes, and finished. Subsequent specs instructed
+"targeted tests only, do NOT run make test-fast" → P3 finished in ~6 min. **Lesson:** cap Codex verify
+scope; the orchestrator runs the full suite.
+
+**Round-2 audit:** Fable's pre-push audit agent STALLED on a stream watchdog (no result). Opus completed
+the adversarial audit against the highest-risk items: G2 fail-open (root /help = global 50, no cross-community
+leak), G4 reflected-`q` is HTML-escaped (no XSS), sitemap has no /admin//login//api URLs, `_prioritize_discovery_routes`
+is regression-safe (full suite green). No P0/P1. G5 (canonical, main.py global head) + G9 (badge N+1) DEFERRED.
+
 ## Next Session Should Verify FIRST
 1. CI is green on the pushed commits (`gh run list --branch main --limit 1` = success).
 2. Production `/health` now reports `photos: 1127` (served) — quick curl check.

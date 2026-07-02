@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.89] — 2026-07-01 (Session 168 Round 2: Community growth-loop + share-preview polish — Fable product dive + audit, Codex code)
+
+Second autonomous round (user said "keep going"). Fable's first dive was infra-heavy, so this dive
+targeted USER-FACING / growth-loop gaps — concentrated in the multi-archive path (non-Rhodes community
+surfaces leaking Rhodes copy + missing share-preview metadata).
+
+### Shipped (5 commits)
+- **G1/G2/G7 — community-scope the growth loop** (`app/page_routes.py`): the `/help` (Help Identify) queue
+  now scopes to the community's identity set when on a `/c/<slug>/` prefix (fail-open to global for
+  Rhodes/root — verified root `/help` still shows all); community-aware hero + footer copy on the landing
+  and help pages (was hardcoded "…the Jewish Community of Rhodes. Select an archive below." on every
+  community); full OG tags (og:title/description + og:image from first community photo / first face crop);
+  help grid breakpoint dedupe (`grid-cols-2 md:3 lg:5`) + 44px mobile tap targets. Regression test guards
+  against any "Jewish Community of Rhodes" string under a non-Rhodes slug.
+- **G3/G8 — share-preview images** (`compare_routes.py`, `estimate_routes.py`, `person_routes.py`): og:image
+  on `/tools/compare` + `/tools/estimate`; person page omits og:image when no avatar resolves (empty
+  content="" made FB skip image selection) + `summary_large_image` when present.
+- **G4 — people-grid name search** (`browse_routes.py`): case-insensitive `q` search preserving
+  name_filter/sort_by (Lesson 63); `q` reflected ESCAPED (no XSS). Fixed onto the LIVE handler (the
+  `page_routes.py` `/people` dup is dead — verified via production tab markers).
+- **G6 — organic discovery** (`page_routes.py`): new `/robots.txt` + `/sitemap.xml` (homepage, tools, help,
+  CONFIRMED real-named person pages, photo pages; 1267 URLs, capped 5000, 1h cache, try/except→homepage
+  fallback, no /admin//login//api leak). `_prioritize_discovery_routes()` orders the dotted routes ahead
+  of FastHTML's static catch-all (regression-safe — full suite green).
+- **G10 — /photos gallery OG** (self-audit find): community-aware description (was leaking "Rhodes" on
+  every `/c/<slug>/photos`).
+
+### Audit
+Fable's product dive found G1–G9; the pre-push implementation audit agent stalled on a stream watchdog, so
+Opus completed the adversarial audit (G2 fail-open + no cross-community leak; G4 XSS-safe; sitemap no
+private-URL leak; route-reorder regression-safe). No P0/P1. **Deferred:** G5 canonical URL (global `<head>`
+change in main.py — needs cross-page browser verification), G9 shared-person badge (N+1 risk on hot public
+page). `make test-fast`: 4628 passed. Ruff clean.
+
 ## [v0.99.88] — 2026-07-01 (Session 168: Fable-Architected Autonomous Fix Sprint — Fable dive+audit, Codex code, Opus orchestrate)
 
 Continuation of the multi-model pattern (Fable architect+auditor · Codex coder · Opus designer/orchestrator), run autonomously while the user was away. Fable did a holistic deep-dive (13 findings F1–F13); Opus triaged into a LOW-risk autonomous batch (excluding production-data mutation, schema migrations, and Gemini spend — those logged for the user); Codex implemented; Fable audited before push.
