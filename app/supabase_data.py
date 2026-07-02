@@ -1613,8 +1613,15 @@ def get_community_by_slug(slug: str) -> dict | None:
             _community_cache[slug] = community
             _community_cache_ts = now
             return community
-        _community_cache[slug] = None
-        _community_cache_ts = now
+        # Only cache a non-rhodes miss when Supabase is genuinely UNCONFIGURED
+        # (local dev). If it is configured but the client is transiently
+        # unavailable (init failure), do NOT cache None — that would take a real
+        # archive offline for the full TTL (Fable fix-audit P2-2, Lesson 151).
+        import os as _os
+
+        if not _os.getenv("SUPABASE_URL"):
+            _community_cache[slug] = None
+            _community_cache_ts = now
         return None
 
     try:

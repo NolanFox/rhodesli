@@ -35,3 +35,22 @@ def test_supabase_absent_does_not_fail_closed():
     # Local dev / tests: Supabase absent => scope legitimately None => no filter.
     with patch("app.supabase_data.get_supabase_client", return_value=None):
         assert _community_scope_failed({"id": "c1"}, None) is False
+
+
+def test_photos_route_scope_failure_renders_without_error_or_sentinel():
+    # P3 (Fable fix-audit): route-level property — a scope-failed community page
+    # must render (no 500 from the fail-closed `break`) and must NOT emit the
+    # next-page lazy sentinel (which would loop) or leak the full corpus.
+    from starlette.testclient import TestClient
+
+    from app.main import app
+
+    fox = {"id": "fox-1", "slug": "fox-family", "name": "Fox Family"}
+    with (
+        patch("app.supabase_data.get_community_by_slug", return_value=fox),
+        patch("app.main._get_community_photo_ids", return_value=None),
+        patch("app.supabase_data.get_supabase_client", return_value=object()),
+    ):
+        r = TestClient(app).get("/c/fox-family/photos")
+    assert r.status_code == 200
+    assert "photos-lazy-sentinel" not in r.text

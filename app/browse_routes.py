@@ -261,18 +261,23 @@ def get(
     community = getattr(request.state, "community", None) if request else None
     community_photo_ids = _main_mod._get_community_photo_ids(community)
     nav_prefix = _main_mod.community_url_prefix(community_slug)
+    # Fail closed on transient scope loss (Lesson 151, QW-1): a specific community
+    # whose scope is None while Supabase is reachable => transient error. Suppress
+    # ALL cross-community output — the photo grid, collections, AND the global
+    # filter pills / search — not just the grid (Fable fix-audit P2-1).
+    _scope_failed = _community_scope_failed(community, community_photo_ids)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
 
-    # Get decade and tag counts for filter pills
-    decade_counts = _main_mod._get_decade_counts()
-    tag_counts = _main_mod._get_tag_counts()
+    # Get decade and tag counts for filter pills (skipped when failing closed)
+    decade_counts = {} if _scope_failed else _main_mod._get_decade_counts()
+    tag_counts = {} if _scope_failed else _main_mod._get_tag_counts()
 
     # Search-based filtering (uses search index for text, decade, tag)
     search_results = None
     search_photo_ids = None
-    if search_q or decade or tag:
+    if (search_q or decade or tag) and not _scope_failed:
         search_results = _main_mod._search_photos(query=search_q, decade=decade, tag=tag)
         search_photo_ids = {r.get("cache_photo_id", r["photo_id"]): r.get("match_reason") for r in search_results}
 
@@ -301,7 +306,6 @@ def get(
                 if fid:
                     _face_id_confirmed.add(fid)
 
-    _scope_failed = _community_scope_failed(community, community_photo_ids)
     for photo_id_val, photo_data in (_main_mod._photo_cache or {}).items():
         if _scope_failed:
             break  # fail closed — render empty grid, never leak cross-community photos
