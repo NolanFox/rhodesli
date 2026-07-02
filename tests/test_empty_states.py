@@ -2,6 +2,7 @@
 
 import app.main  # noqa: F401 — must import first to avoid circular import
 
+from fasthtml.common import to_xml
 from unittest.mock import patch
 
 
@@ -16,6 +17,9 @@ class TestCommunityLandingEmptyStates:
             with patch("app.supabase_data.load_identities_for_community", return_value=[]):
                 return _community_landing_page(community, slug)
 
+    def _html(self, result):
+        return " ".join(to_xml(item) for item in result)
+
     def test_empty_community_renders(self):
         """Community landing page renders for empty community."""
         community = {
@@ -24,8 +28,8 @@ class TestCommunityLandingEmptyStates:
             "name": "Test Archive",
         }
         result = self._render(community, "test-archive")
-        assert len(result) == 2
-        html = repr(result[1])
+        assert len(result) > 2
+        html = self._html(result)
         assert "just getting started" in html
 
     def test_empty_community_has_upload_cta(self):
@@ -36,7 +40,7 @@ class TestCommunityLandingEmptyStates:
             "name": "My Family Archive",
         }
         result = self._render(community, "my-family")
-        html = repr(result[1])
+        html = self._html(result)
         assert "upload-cta" in html
         assert "Upload Photos" in html
 
@@ -49,7 +53,7 @@ class TestCommunityLandingEmptyStates:
             "landing_title": "The Cohen Family",
         }
         result = self._render(community, "cohen-family")
-        html = repr(result[1])
+        html = self._html(result)
         assert "The Cohen Family" in html
 
     def test_empty_community_has_data_testid(self):
@@ -60,7 +64,7 @@ class TestCommunityLandingEmptyStates:
             "name": "New Archive",
         }
         result = self._render(community, "new-archive")
-        html = repr(result[1])
+        html = self._html(result)
         assert "community-landing" in html
 
     def test_empty_community_has_tools_links(self):
@@ -71,7 +75,7 @@ class TestCommunityLandingEmptyStates:
             "name": "Empty Archive",
         }
         result = self._render(community, "empty-archive")
-        html = repr(result[1])
+        html = self._html(result)
         assert "/tools/estimate" in html
         assert "/tools/compare" in html
 
@@ -83,7 +87,7 @@ class TestCommunityLandingEmptyStates:
             "name": "No Description",
         }
         result = self._render(community, "no-desc")
-        html = repr(result[1])
+        html = self._html(result)
         assert "community-description" in html
         assert "community photo archive" in html
 
@@ -96,5 +100,33 @@ class TestCommunityLandingEmptyStates:
             "description": "A very special archive of historical photos.",
         }
         result = self._render(community, "custom")
-        html = repr(result[1])
+        html = self._html(result)
         assert "A very special archive of historical photos" in html
+
+    def test_non_rhodes_community_copy_and_og_use_community_scope(self):
+        """Community landing page copy and OG metadata should use the community, not Rhodes."""
+        from app.page_routes import _community_landing_page
+
+        community = {
+            "id": "fox-id",
+            "slug": "fox-family",
+            "name": "Fox Family Archive",
+            "landing_subtitle": "A family photo archive",
+        }
+
+        with (
+            patch("app.main._get_community_photo_ids", return_value={"photo-fox-1"}),
+            patch("app.main._get_community_identity_ids", return_value=set()),
+            patch("app.main.get_photo_metadata", return_value={"filename": "fox-photo.jpg"}),
+            patch("app.main.storage.get_photo_url", side_effect=lambda path: f"/photos/{path}"),
+        ):
+            result = _community_landing_page(community, "fox-family")
+
+        html = self._html(result)
+        assert "Fox Family Archive" in html
+        assert "Jewish Community of Rhodes" not in html
+        assert "Select an archive below" not in html
+        assert 'property="og:title"' in html
+        assert 'property="og:description"' in html
+        assert 'property="og:image"' in html
+        assert "/photos/fox-photo.jpg" in html

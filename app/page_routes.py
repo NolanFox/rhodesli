@@ -443,8 +443,9 @@ def _community_landing_page(community: dict, slug: str):
     Shows community name, subtitle, and stats. For new communities with no content,
     shows an inviting empty state.
     """
-    title = community.get("landing_title") or community.get("name", slug.replace("-", " ").title())
-    subtitle = community.get("landing_subtitle", "A heritage photo archive")
+    community_name = community.get("name") or slug.replace("-", " ").title()
+    title = community.get("landing_title") or community_name
+    subtitle = community.get("landing_subtitle") or community.get("subtitle") or "A heritage photo archive"
     nav_prefix = _main_mod.community_url_prefix(slug)
 
     # Get community-specific stats using photo-derived identity set (AD-216)
@@ -467,6 +468,21 @@ def _community_landing_page(community: dict, slug: str):
         )
 
     has_content = photo_count > 0
+
+    og_image_url = ""
+    try:
+        if community_photo_ids:
+            first_photo_id = next(iter(sorted(community_photo_ids)))
+            first_photo = _main_mod.get_photo_metadata(first_photo_id) or {}
+            photo_path = first_photo.get("path") or first_photo.get("filename", "")
+            if not photo_path:
+                photo_registry = _main_mod.load_photo_registry()
+                photo_path = photo_registry.get_photo_path(first_photo_id) or ""
+            if photo_path:
+                get_photo_url = getattr(_main_mod, "get_photo_url", _main_mod.storage.get_photo_url)
+                og_image_url = get_photo_url(photo_path)
+    except Exception:
+        og_image_url = ""
 
     # Build stats row
     stats_row = (
@@ -611,12 +627,18 @@ def _community_landing_page(community: dict, slug: str):
 
     return (
         Title(title),
+        *_main_mod.og_tags(
+            community_name,
+            description or subtitle,
+            image_url=og_image_url,
+            canonical_url=f"/c/{slug}/",
+        ),
         Div(
             # Hero section
             Div(
                 H1(title, cls="text-4xl md:text-5xl font-serif font-bold text-amber-100 mb-4"),
                 P(
-                    "We need your help identifying faces in the Jewish Community of Rhodes. Select an archive below.",
+                    f"We need your help identifying faces in the {community_name}.",
                     cls="text-xl md:text-2xl text-amber-100/90 font-medium max-w-3xl mx-auto mb-10",
                 ),
                 description_section,
@@ -4602,7 +4624,10 @@ def get(sess=None, request=None):
     """
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
     community_slug = getattr(request.state, "community_slug", "rhodes") if request else "rhodes"
+    community = getattr(request.state, "community", None) if request else None
+    community_prefixed = getattr(request.state, "community_prefixed", False) if request else False
     nav_prefix = _main_mod.community_url_prefix(community_slug)
+    community_identity_ids = _main_mod._get_community_identity_ids(community if community_prefixed else None)
 
     _main_mod._build_caches()
     registry = _main_mod.load_registry()
@@ -4611,6 +4636,9 @@ def get(sess=None, request=None):
     # Collect unidentified identities (INBOX, PROPOSED, SKIPPED; not merged)
     unid_identities = []
     for ident in registry.list_identities():
+        identity_id = ident.get("identity_id", "")
+        if community_identity_ids is not None and identity_id not in community_identity_ids:
+            continue
         if ident.get("merged_into"):
             continue
         state = ident.get("state", "")
@@ -4636,7 +4664,7 @@ def get(sess=None, request=None):
             collection = pm.get("collection", "")
         unid_identities.append(
             {
-                "identity_id": ident["identity_id"],
+                "identity_id": identity_id,
                 "crop_url": crop_url,
                 "quality": quality,
                 "collection": collection,
@@ -4677,13 +4705,13 @@ def get(sess=None, request=None):
                     A(
                         "Similar",
                         href=f"{nav_prefix}/people/{_iid}/similar",
-                        cls="text-[10px] text-indigo-400 hover:text-indigo-300",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300 py-2 px-3 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:px-0",
                     ),
                     Span("|", cls="text-[10px] text-slate-600"),
                     A(
                         "Profile",
                         href=f"{nav_prefix}/person/{_iid}",
-                        cls="text-[10px] text-slate-400 hover:text-slate-300",
+                        cls="text-xs text-slate-400 hover:text-slate-300 py-2 px-3 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:px-0",
                     ),
                     cls="flex items-center justify-center gap-1.5 px-2.5 pb-2",
                 ),
@@ -4694,6 +4722,20 @@ def get(sess=None, request=None):
 
     nav_links = _main_mod._public_nav_links(active="help", user=user, community_slug=community_slug)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+    is_non_rhodes_community = bool(community and community_slug != "rhodes" and not community.get("is_default"))
+    community_display_name = (
+        community.get("name", "").strip()
+        if is_non_rhodes_community
+        else "Rhodes Jewish community"
+    )
+    if not community_display_name:
+        community_display_name = "this community"
+    help_og_image = unid_identities[0].get("crop_url", "") if unid_identities else ""
+    footer_description = (
+        f"Preserving the memory of {community_display_name}"
+        if is_non_rhodes_community
+        else "Preserving the memory of the Jewish community of Rhodes"
+    )
 
     empty_state = Div(
         Div(
@@ -4713,7 +4755,8 @@ def get(sess=None, request=None):
         Title("Help Identify \u2014 Rhodesli Heritage Archive"),
         *_main_mod.og_tags(
             "Help Identify People \u2014 Rhodesli",
-            f"{len(unid_identities)} faces from the Rhodes Jewish community need your help.",
+            f"{len(unid_identities)} faces from the {community_display_name} need your help.",
+            image_url=help_og_image,
             canonical_url=f"{nav_prefix}/help",
         ),
         page_style,
@@ -4736,7 +4779,7 @@ def get(sess=None, request=None):
                 Div(
                     Div(
                         *face_cards,
-                        cls="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                        cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4",
                     )
                     if face_cards
                     else empty_state,
@@ -4747,7 +4790,7 @@ def get(sess=None, request=None):
                 Div(
                     P("Rhodesli Heritage Archive", cls="text-sm sm:text-xs text-slate-500 mb-1 font-serif"),
                     P(
-                        "Preserving the memory of the Jewish community of Rhodes",
+                        footer_description,
                         cls="text-[10px] text-slate-600 italic",
                     ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",

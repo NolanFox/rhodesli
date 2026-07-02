@@ -78,6 +78,37 @@ def real_photo_id(client):
 class TestHelpNeededPage:
     """Phase 3A: Help Needed page with unidentified faces."""
 
+    def _patch_help_dependencies(self, stack, identities, community_identity_ids):
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = identities
+
+        stack.enter_context(patch("app.main.is_auth_enabled", return_value=False))
+        stack.enter_context(patch("app.main._build_caches"))
+        stack.enter_context(patch("app.main.load_registry", return_value=mock_registry))
+        stack.enter_context(patch("app.main._get_community_identity_ids", return_value=community_identity_ids))
+        stack.enter_context(patch("app.main.get_crop_files", return_value={"face-fox-1.jpg", "face-other-1.jpg"}))
+        stack.enter_context(patch("app.main.get_best_face_id", side_effect=lambda face_ids: face_ids[0] if face_ids else ""))
+        stack.enter_context(
+            patch("app.main.resolve_face_image_url", side_effect=lambda face_id, _crop_files: f"/static/crops/{face_id}.jpg")
+        )
+        stack.enter_context(patch("app.main.get_face_quality", side_effect=lambda face_id: 0.95 if "fox" in face_id else 0.7))
+        stack.enter_context(patch("app.main.get_photo_id_for_face", side_effect=lambda face_id: f"photo-{face_id}"))
+        stack.enter_context(
+            patch(
+                "app.main._photo_cache",
+                {
+                    "photo-face-fox-1": {"collection": "Fox Test Collection"},
+                    "photo-face-other-1": {"collection": "Other Test Collection"},
+                },
+            )
+        )
+        stack.enter_context(
+            patch(
+                "app.supabase_data.get_community_by_slug",
+                return_value={"id": "fox-id", "slug": "fox-family", "name": "Fox Family Archive"},
+            )
+        )
+
     def test_help_page_returns_200(self, client):
         """/help should be a public route that returns 200."""
         response = client.get("/help")
@@ -92,38 +123,72 @@ class TestHelpNeededPage:
 
     def test_community_help_cards_keep_prefix(self, client):
         """Community-scoped help cards should keep identify/profile links inside the community."""
-        mock_registry = MagicMock()
-        mock_registry.list_identities.return_value = [
+        identities = [
             {
                 "identity_id": "unknown-fox-1",
                 "name": "Unidentified Person 1",
                 "state": "INBOX",
                 "anchor_ids": ["face-fox-1"],
                 "candidate_ids": [],
-            }
+            },
+            {
+                "identity_id": "unknown-other-1",
+                "name": "Unidentified Person 2",
+                "state": "INBOX",
+                "anchor_ids": ["face-other-1"],
+                "candidate_ids": [],
+            },
         ]
 
         with ExitStack() as stack:
-            stack.enter_context(patch("app.main.is_auth_enabled", return_value=False))
-            stack.enter_context(patch("app.main._build_caches"))
-            stack.enter_context(patch("app.main.load_registry", return_value=mock_registry))
-            stack.enter_context(patch("app.main.get_crop_files", return_value={"face-fox-1.jpg"}))
-            stack.enter_context(patch("app.main.get_best_face_id", return_value="face-fox-1"))
-            stack.enter_context(patch("app.main.resolve_face_image_url", return_value="/static/crops/face-fox-1.jpg"))
-            stack.enter_context(patch("app.main.get_photo_id_for_face", return_value="photo-1"))
-            stack.enter_context(patch("app.main._photo_cache", {"photo-1": {"collection": "Fox Test Collection"}}))
-            stack.enter_context(
-                patch(
-                    "app.supabase_data.get_community_by_slug",
-                    return_value={"slug": "fox-family", "name": "Fox Family Archive"},
-                )
-            )
+            self._patch_help_dependencies(stack, identities, {"unknown-fox-1"})
             response = client.get("/c/fox-family/help")
 
         html = response.text
         assert response.status_code == 200
         assert 'href="/c/fox-family/identify/unknown-fox-1"' in html
         assert 'href="/c/fox-family/person/unknown-fox-1"' in html
+        assert "unknown-other-1" not in html
+        assert "Fox Family Archive" in html
+        assert "Jewish Community of Rhodes" not in html
+        assert "Rhodes Jewish community" not in html
+        assert "Jewish community of Rhodes" not in html
+        assert 'property="og:title"' in html
+        assert 'property="og:description"' in html
+        assert 'property="og:image"' in html
+        assert "/static/crops/face-fox-1.jpg" in html
+        assert "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" in html
+        assert "grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2" not in html
+        assert "text-xs text-indigo-400" in html
+        assert "min-h-[44px]" in html
+
+    def test_community_help_fails_open_when_identity_scope_unavailable(self, client):
+        """When community identity scoping returns None, help falls open to the global queue."""
+        identities = [
+            {
+                "identity_id": "unknown-fox-1",
+                "name": "Unidentified Person 1",
+                "state": "INBOX",
+                "anchor_ids": ["face-fox-1"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "unknown-other-1",
+                "name": "Unidentified Person 2",
+                "state": "INBOX",
+                "anchor_ids": ["face-other-1"],
+                "candidate_ids": [],
+            },
+        ]
+
+        with ExitStack() as stack:
+            self._patch_help_dependencies(stack, identities, None)
+            response = client.get("/c/fox-family/help")
+
+        html = response.text
+        assert response.status_code == 200
+        assert 'href="/c/fox-family/identify/unknown-fox-1"' in html
+        assert 'href="/c/fox-family/identify/unknown-other-1"' in html
 
 
 class TestIdentifyModeFocusState:
