@@ -7,7 +7,7 @@ All /login, /signup, /forgot-password, /reset-password, /auth/*, /logout routes.
 import logging
 
 from fasthtml.common import *
-from starlette.responses import RedirectResponse, JSONResponse, HTMLResponse
+from starlette.responses import RedirectResponse, JSONResponse, HTMLResponse, Response
 
 # Import route decorator only (bound once, never reassigned)
 from app.main import rt
@@ -212,8 +212,14 @@ async def post(email: str, password: str, sess, next: str = "", request=None):
 
 
 @rt("/login/modal")
-async def post(email: str, password: str, sess):
+async def post(email: str, password: str, sess, request=None):
     """Handle login from the modal context. Returns error text or HX-Refresh on success."""
+    from app.rate_limit import check_rate_limit
+
+    client_ip = request.client.host if request and request.client else "unknown"
+    if not check_rate_limit(client_ip, max_per_hour=10):
+        return Response("Too many login attempts. Please wait before trying again.", status_code=429)
+
     user, error = await _main_mod.login_with_supabase(email, password)
     if error:
         return error
@@ -430,12 +436,17 @@ def get(sess):
 
 
 @rt("/forgot-password")
-async def post(email: str, sess):
+async def post(email: str, sess, request=None):
     """Handle forgot password form."""
-    success, error = await _main_mod.send_password_reset(email)
-
     # Always show success message to avoid email enumeration
     msg = "If an account exists with that email, you'll receive a reset link."
+
+    from app.rate_limit import check_rate_limit
+
+    client_ip = request.client.host if request and request.client else "unknown"
+    if check_rate_limit(client_ip, max_per_hour=5):
+        await _main_mod.send_password_reset(email)
+
     return Html(
         Head(
             Meta(name="viewport", content="width=device-width, initial-scale=1"),

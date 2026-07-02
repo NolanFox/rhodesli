@@ -1,7 +1,7 @@
 """Tests for IP-based rate limiting on public upload endpoints."""
 
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -108,3 +108,34 @@ class TestRateLimitedEndpoints:
         with patch("app.compare_routes.check_rate_limit", return_value=False):
             resp = client.post("/api/compare/result/test-id/respond")
             assert resp.status_code == 429
+
+    def test_login_modal_blocks_11th_attempt(self, client):
+        """POST /login/modal should rate-limit after 10 attempts."""
+        with patch("app.main.login_with_supabase", new_callable=AsyncMock) as mock_login:
+            mock_login.return_value = (None, "Invalid login")
+
+            for _ in range(10):
+                resp = client.post("/login/modal", data={"email": "a@example.com", "password": "bad"})
+                assert resp.status_code == 200
+
+            resp = client.post("/login/modal", data={"email": "a@example.com", "password": "bad"})
+            assert resp.status_code == 429
+            assert resp.text == "Too many login attempts. Please wait before trying again."
+            assert mock_login.await_count == 10
+
+    def test_forgot_password_blocks_reset_send_on_6th_attempt(self, client):
+        """POST /forgot-password should not send reset email after 5 attempts."""
+        msg = "If an account exists with that email, you'll receive a reset link."
+
+        with patch("app.main.send_password_reset", new_callable=AsyncMock) as mock_reset:
+            mock_reset.return_value = (True, None)
+
+            for _ in range(5):
+                resp = client.post("/forgot-password", data={"email": "a@example.com"})
+                assert resp.status_code == 200
+                assert msg in resp.text
+
+            resp = client.post("/forgot-password", data={"email": "a@example.com"})
+            assert resp.status_code == 200
+            assert msg in resp.text
+            assert mock_reset.await_count == 5
