@@ -22,8 +22,10 @@ live-site findings only you can produce.
 - No live API key/secret is browser-reachable (Supabase service-role, R2, Gemini, session secret,
   ML token are all server-side; the only client-exposed key is the PUBLIC PostHog key, which is
   benign). Two REAL but limited findings were verified: (1) a path-traversal guard is missing on
-  `/photos/{filename:path}` + `/uploads/facecompare/` (defense-in-depth; on-disk data files only,
-  not env vars); (2) a real `ML_SERVICE_TOKEN` value is committed in
+  `/photos/{filename:path}` + `/uploads/facecompare/` (defense-in-depth; worst case reads
+  process-readable on-disk files in the container/volume — source/runtime files, NOT process env
+  vars directly, and `.dockerignore` likely excludes `docs/`/`.env`); (2) a real `ML_SERVICE_TOKEN`
+  value is committed in
   `docs/session_logs/session-116-log.md` (rotate; internal ML service, repo-read-access only).
 - These security fixes are for the implementation sprint, not your run. Take them as GIVEN context.
 
@@ -34,8 +36,9 @@ treat as your evidence base, VERIFY key facts against tool results, do not merel
   NOT safe multi-TENANT.
 - The blocking gaps for inviting other families:
   1. **Permission model is global-admin only.** `_check_admin` (`app/main.py:1972`) checks a global
-     `ADMIN_EMAILS` list — a new archive owner can SEE their archive but cannot upload/triage it
-     (WORKSPACE-006, open). This is THE gate.
+     `ADMIN_EMAILS` list. A logged-in archive owner CAN submit uploads into the global pending queue
+     (`/upload` is login-gated, not admin-gated), but CANNOT directly ingest/process/approve/reject/
+     triage their own archive — that's all global-admin-only (WORKSPACE-006, open). This is THE gate.
   2. **Privacy stored but not enforced.** Self-service creates archives with `privacy="unlisted"`
      (`app/onboarding_routes.py:386`) but `CommunityMiddleware` only checks slug existence, and the
      root lists all communities with no privacy filter (`app/page_routes.py:799`). Private archives
@@ -52,7 +55,7 @@ treat as your evidence base, VERIFY key facts against tool results, do not merel
 - Both drafts recommend: **concierge pilot with 1-3 known Rhodes families, NOT broad self-service**,
   after defanging compare + adding owner-scoped moderation.
 
-## YOUR differentiated job (what neither the orchestrator nor Codex could do — they only read code)
+## YOUR job (prior drafts were code-first; you add live visual evidence + synthesize the deltas)
 
 ### 1. LIVE-SITE NEWCOMER VISION-QA (your highest-value work — the owner asked for exactly this)
 Visit the LIVE site at real DESKTOP and MOBILE (~390px) viewports, as a Rhodes-descended person who
@@ -65,8 +68,16 @@ Help-Identify → /tools/compare → browsing People/Photos/Map/Tree. For each s
 - Does the find→share→recognize→contribute loop actually close, or does a contribution vanish
   silently (the failure mode that churned the one real external tester)?
 Report to `subagents/` per-scope, synthesize into `UX_NEWCOMER_AUDIT.md`. Every finding: screenshot
-path + code file:line + severity + the newcomer-impact. Prod browser automation is **READ-ONLY** —
-screenshots/reads/navigation ONLY; never click a data-mutating control (Lesson 149).
+path + code file:line + severity + the newcomer-impact.
+
+**HARD PROD-BROWSER SAFETY RULE (non-negotiable — Lesson 149):** on the live site you may ONLY do
+unauthenticated GET navigation, screenshots, scroll/hover/zoom, and read-only DOM/console/network
+inspection. You must NEVER: sign in or touch any auth flow; use a file input / file chooser / upload;
+submit any form or press Enter to submit; trigger any POST/PUT/PATCH/DELETE/XHR/fetch/beacon
+mutation; click any compare-upload, "Contribute", Help-Identify submit, upload, approve, reject,
+import, merge, confirm, edit, or delete control. To understand what a mutating control does, read the
+code (file:line), do NOT exercise it. If a page requires a mutation to proceed, stop and describe it
+from code instead.
 
 ### 2. THE SPAM/CONTRIBUTION BOUNDARY DESIGN (`SPAM_BOUNDARY_DESIGN.md`)
 Recommend ONE default design for separating ephemeral compare queries from real contributions,
@@ -85,6 +96,10 @@ storage), (iv) polish/SEO/measurement. Each item: title · why-it-blocks-growth 
 (what to do in the next few days vs the next few weeks) and a recommended concierge-pilot playbook
 (how to safely onboard the FIRST 1-3 families with the flag still mostly off). Refine — do not just
 restate — the two drafts' top-10 and 3 bets; where you disagree with them, say so with evidence.
+**Include an OUTREACH-ETHICS section:** the owner's "not spammy" worry is also about how you invite
+relatives — define invite copy, consent/expectations, notification frequency + unsubscribe,
+no-bulk-contact rules, and how a concierge pilot asks a family for help WITHOUT feeling extractive.
+Give acceptance criteria for the messaging, not just the tech.
 
 ### 4. EVALS scorecard (`EVALS.md`)
 Prove your run's Fable-LEVERAGED value: vision-delta (findings a code-only review missed, with
@@ -96,7 +111,9 @@ Evidence-backed/Proxy/Unverified label each. Never claim another model "could no
 EXCLUDED (do not touch): production-data mutation · schema/migrations · paid-API spend ($0 cap this
 run — no Gemini calls) · global head/nav/CSS · `.claude/` + `~/.claude` edits · frozen files
 (`core/neighbors.py`, `core/pfe.py`, `data/*`) · source-code implementation + commits (separate
-gated phase) · ANY data-mutating browser click on prod (READ-ONLY). Use bounded subagents (2-3 file
+gated phase) · on prod: unauthenticated GET/screenshot/read-only-DOM ONLY — no sign-in, no file
+inputs, no form submits, no POST/XHR/fetch mutations, no clicking any upload/contribute/approve/
+reject/merge/edit/delete control (see the HARD PROD-BROWSER SAFETY RULE above). Use bounded subagents (2-3 file
 reads each, context summarized inline) — you are usage-limit fragile on long unbounded runs. Write
 incremental artifacts so nothing is lost. Verify counts against tool results; do not trust this
 brief's numbers — re-verify. No fabricated status. Write everything to

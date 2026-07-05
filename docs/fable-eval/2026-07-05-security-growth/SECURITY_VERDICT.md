@@ -33,8 +33,9 @@ Safe to reject all 51.
 2. **Missing path-traversal guard** on `/photos/{filename:path}` and `/uploads/facecompare/`
    (`app/main.py:1439` builds `photos_path / filename` with no containment check). Whether it's
    live-exploitable depends on the proxy/server normalizing `..`, but the guard is missing. Worst
-   case it could read on-disk **data files** (which are largely public data anyway) — **not** env
-   vars or keys. Cheap defense-in-depth fix: require the resolved path to stay under the base dir.
+   case it could read **process-readable files on the container/volume** (source or runtime files) —
+   **not** your environment variables/keys directly (`.dockerignore` keeps `docs/`/`.env` out of the
+   image). Cheap defense-in-depth fix: require the resolved path to stay under the base dir.
 
 ## The product problem underneath the spam (this is the real lesson)
 Your public compare tool **persists** anonymous uploads (to R2 + the review queue) and conflates a
