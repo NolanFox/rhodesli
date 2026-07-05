@@ -1,2 +1,5 @@
 # Codex/Fable raw run logs — large trace output, not source of truth
 *.log
+
+# Fable live-site screenshots (large binaries; referenced by path in the .md deliverables)
+screenshots/
