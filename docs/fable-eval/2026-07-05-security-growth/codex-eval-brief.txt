@@ -1,0 +1,47 @@
+You are an independent evaluator with fresh context, drafting HALF of a brief that will later be
+given to a long-horizon evaluator model (Fable). Repo root is the CWD. READ-ONLY: do not modify
+files or commit. Your draft is DATA for an orchestrator, not a chat reply.
+
+## The product
+rhodesli — a heritage photo archive for the Jewish community of Rhodes. FastHTML + HTMX + Supabase/
+Postgres + Cloudflare R2 + Railway + InsightFace face-recognition + Gemini. Live at
+rhodesli.nolanandrewfox.com. ~4600 tests, ~1127 photos, ~1824 identities. Currently one main
+community (Fox Family / Rhodes). Read ROADMAP.md, CLAUDE.md, docs/architecture/OVERVIEW.md.
+
+## The owner's actual goal (this run's north star)
+"I want to spend more time on rhodesli in the next few days and get it to the point it's actually
+VALUABLE FOR OTHER RHODESLIS to use — but I need to make sure it's not spammy to do so."
+So the evaluation is about: (a) is the product ready to invite other Rhodes-descended families /
+other communities to use it? (b) what UX + trust + onboarding + anti-abuse work is required first?
+(c) what is the compounding growth path (the "find → share → recognize → contribute" loop) and what
+blocks it today?
+
+## Immediate live signal to factor in
+The public `/tools/compare` face-compare tool is generating ~51 anonymous "Compare Upload" pending
+entries of random (non-heritage) faces — a spam/abuse surface on the exact public front door you'd
+send new communities through. Treat the boundary between "ephemeral compare query" and "real
+contribution" as a first-class growth+trust problem.
+
+## Prior work — DO NOT REDO, build on it
+docs/fable-eval/ has a Session-169 eval (SITE_VISION_AUDIT.md, GROWTH_10X.md, QUICK_WINS_QUEUE.md,
+HEALTH_AUDIT.md, EVALS.md). Skim them. Your job is to surface what's NEW or CHANGED and what the
+prior run MISSED with respect to the multi-community/anti-spam goal, with concrete evidence.
+
+## Your draft must contain (with file:line / command evidence, not vibes):
+1. MULTI-COMMUNITY READINESS: Is the app actually multi-tenant today? Grep community scoping
+   (`/c/<slug>/`, CommunityMiddleware, community_id filters, per-community permissions). What breaks
+   if a 2nd unrelated family/community signs up? Cite the WORKSPACE-* and COMMUNITY-* roadmap items
+   and whether the code backs them. Enumerate the concrete gaps.
+2. ONBOARDING / SELF-SERVICE: Does a "create your archive" flow exist (PRD-060 / onboarding_routes.py,
+   feature-flagged)? Is it on/off? What's missing to safely turn it on?
+3. TRUST & ANTI-SPAM SURFACE: the anonymous compare/upload path, rate limits, captcha, moderation,
+   content-liability. What must exist before public invitation.
+4. UX GROWTH LOOP: the share → recognize → contribute loop. What's the weakest link (OG tags,
+   shareable person pages, mobile, help-identify)? Cite recent roadmap evidence (Session 165 person
+   gallery, Session 168 growth-loop work).
+5. TOP-10 PRIORITIZED WORK ITEMS to reach "safe to invite other Rhodeslis," each with: title,
+   why-it-blocks-growth, rough size (S/M/L), and a one-line acceptance criterion.
+6. 3 CONCRETE GROWTH BETS (compounding), each with a kill criterion.
+
+## Output
+Write to docs/fable-eval/2026-07-05-security-growth/codex-draft.md. Tight, evidence-backed, ranked.

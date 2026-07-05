@@ -1,0 +1,44 @@
+You are an independent security auditor with fresh context. Audit the PUBLIC ATTACK SURFACE of
+this FastHTML + HTMX + Supabase/Postgres + Cloudflare R2 web app (rhodesli, a heritage photo
+archive on Railway). Repo root is the current working directory. This is a READ-ONLY audit — do
+NOT modify any file, do NOT run git commits, do NOT call any network service.
+
+## The concrete trigger
+The admin sees ~51 anonymous "Pending Uploads" tagged `source: "Compare Upload"`, all
+`uploader_email: "unknown"`, submitted over ~11 days. They are photos of random people (appear to
+be social-media/selfie faces, not Rhodes heritage photos). The owner is worried about: (1) whether
+API keys or other secrets are exposed, (2) whether this is a vulnerability probe / breach, (3) the
+root cause, (4) whether any could be legitimate.
+
+## Your job — answer these with evidence (file:line):
+1. ROOT CAUSE: Trace exactly how an anonymous, unauthenticated request produces a `pending_uploads`
+   entry. Start at `app/compare_routes.py` (routes `/api/compare/upload`, `/api/compare/upload-multiple`,
+   `/api/compare/pair/upload`, `/api/compare/realtime`, `/api/compare/contribute`). Confirm/deny:
+   is this the public compare tool working as designed, or evidence of exploitation?
+2. SECRET EXPOSURE: Prove whether ANY secret (SUPABASE service-role key, SUPABASE_ANON_KEY,
+   R2_SECRET_ACCESS_KEY / R2_ACCESS_KEY_ID, GEMINI/GOOGLE API key, SESSION_SECRET, ML_SERVICE_TOKEN,
+   RESEND_API_KEY, INVITE_CODES) is reachable by an unauthenticated browser client — via rendered
+   HTML, inline JS, JSON responses, error messages, source maps, or any GET route. Grep the codebase.
+   The public PostHog key being in client JS is EXPECTED (it's a public write key) — call that out
+   as benign, don't flag it as a leak.
+3. UPLOAD ABUSE VECTORS on the anonymous path: arbitrary file write / path traversal, RCE via image
+   parsing, SSRF (source_url fetching, ML_SERVICE_URL), stored-XSS via filename/metadata rendered in
+   the admin queue, denial-of-service / storage exhaustion (R2 + Railway volume filling from
+   anonymous uploads), content-liability (illegal/abusive images persisted to your R2 and shown in
+   admin UI), and whether rate-limiting (app/rate_limit.py, 20/hr/IP, in-memory) is bypassable
+   (per-worker memory? resets on deploy? IP spoofable via X-Forwarded-For?).
+4. AUTH BOUNDARY: Verify anonymous users genuinely cannot mutate archive data — that the "queue only,
+   admin approves" boundary holds across ALL public POST routes, not just compare. Spot-check
+   app/main.py auth guards (_check_admin / _check_login) and app/*_routes.py write routes.
+5. LEGITIMACY: Given the data pattern (random selfies, "unknown" uploader, Compare Upload source),
+   assess the probability any are legitimate heritage contributions vs. bot/curiosity noise.
+
+## Output contract
+Write a markdown report to docs/fable-eval/2026-07-05-security-growth/codex-security.md with:
+- VERDICT (one paragraph): breach or not? keys exposed or not? Plain-English answer for a worried owner.
+- Findings table: P0/P1/P2/P3 | title | file:line | evidence | fix. Rank most-severe first.
+- ROOT_CAUSE section (the trace).
+- WHAT_TO_DO_NOW: immediate actions (purge the 51? how?) + structural fixes (separate ephemeral
+  compare queries from contribution queue; friction; auto-expire; captcha; require-login-to-upload).
+- Note explicitly which findings are "public-tool-working-as-designed" vs actual vulnerabilities.
+Keep it tight and evidence-backed. Do not speculate without a file:line or a data-pattern reason.
