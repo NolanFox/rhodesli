@@ -110,3 +110,23 @@ artifact's own honesty, not as its author.* Fable's most valuable finding was no
 was catching the artifact grading itself dishonestly (a "one tap" that doesn't exist, an unrecorded
 cost, a misdescribed model divergence). On a plan whose named #1 risk is "a trust-breaking first
 artifact," self-scoring honesty IS the trust surface, and only an independent judge reliably audits it.
+
+### Session 171 overnight addendum — W1-S3 assembler (autonomous, owner asleep)
+
+Owner asked to "keep going while I sleep." Continued into **W1-S3** (evidence-packet assembler) —
+the read-only enabling task, NOT more cases (the plan says don't generate cases until the review loop
+is validated). Built `rhodesli_ml/research_desk/packet_assembler.py` (Sol medium),
+**live-validated against the Belle Isle case** (reproduced the hand-built evidence + the abstention
+signal exactly), independently audited (fresh-context Claude subagent — codex xhigh stalled again),
+fixed 2 P1s + P2/P3, re-validated (sha256 seal now stable across runs), pushed, CI green. AD-252 +
+W1-S4 prompt (`docs/prompts/session-172b-w1s4-prompt.md`) written.
+
+**Two meta-lessons reinforced:** (1) *Running the real path on ONE production item catches what mocks
+can't* — the assembler's unit tests passed but the FIRST live run hit `identities.community_id does
+not exist` (schema drift, Lesson 152) and a standalone circular import; both invisible to mocks
+(Lesson 208 again). (2) *The independent audit gate keeps earning its cost even on read-only tooling*
+— it caught that the manifest sha256 was NOT reproducible (no ORDER BY → un-ordered derived lists),
+which silently defeats the immutable-seal contract the entire run pipeline is built on. Neither the
+coder nor the orchestrator's review caught it; only the adversarial pass did. **Codex xhigh stalled on
+its final report a 2nd time (Session 171) — the Claude-subagent fallback is now the reliable auditor
+for xhigh-class reviews; treat codex-xhigh audits as best-effort with a mandatory fallback.**
