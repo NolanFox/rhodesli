@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.92] — 2026-07-14 (Session 171: Research Desk W1-S1+S2 — first Morning Mystery, case/run contract, R1 tree-leak fix; Opus orchestrate · Sol code+audit · Gemini+Sol sealed verdicts · Fable architect)
+
+First execution session of the Research Desk plan. **Phase 0 / R1 (P0 security):** fixed the live
+cross-community GEDCOM leak — `/api/tree/data` + `/api/tree/expand` built the family tree from the
+global Fox GEDCOM regardless of the viewing community (community_slug used only for the nav prefix).
+Now the Fox GEDCOM is owned by `fox-family`; every other community (rhodes, fader, bare-root) sees
+only its own identities, and the route fails CLOSED (empty tree) when scope can't be computed. Coder:
+Sol (medium); 4 hermetic regression tests (`0c372aab`). **Phase 1 / W1-S1 — the product-defining
+artifact:** the first hand-built **Morning Mystery** for a real unresolved case (Belle Isle Conservatory
+young man, identity `ef39908e`). Immutable evidence packet (E1-E13, hashed manifest) + TWO independent
+**blind sealed verdicts** — Gemini 3.1 Pro and GPT-5.6-Sol both ABSTAIN and agree to DROP the weak
+(0.30, age-36) Harry Isaackovitz candidate, diverging only on family-inference strength and cheapest
+lever (the bake-off signal). Surfaced a real historical delta regardless of identity: stale DB location
+(US/NYC) vs Belle Isle/Detroit research (E9 vs E10). Binary **"worth-opening" rubric** written and
+first-applied; **Fable** reviewed the artifact vs. the rubric and its self-scoring-honesty fixes were
+applied (recorded cost, honest gate-13 downgrade, anti-degeneracy guard on the abstention lever,
+de-laundered the E11 date caveat). Mobile-first interactive artifact delivered to Nolan; Gemini call
+logged to `gemini_api_calls`; zero writes to confirmed data (`f4762898`). **Phase 2 / W1-S2 — case/run
+contract:** new `investigation_runs` table (extends `identification_investigations`) — immutable input
+manifest+hash, idempotency key (UNIQUE + CHECK formula), atomic single-upsert creation (failed write =
+ZERO rows, Lesson 199), status lifecycle, sealed-verdict envelope, ≤3-decisions CHECK, `rights_state`
+stub. 5 structural tests; additive/idempotent migration applied to Supabase and validated on the real
+Belle Isle run (`edb28ae1`; idempotent re-run → 1 row). Coder: Sol (medium) (`225b86da`). **Deferred:**
+R2 (rotate `ML_SERVICE_TOKEN`) — a Railway production-secret rotation surfaced to the owner as a user
+action. Companion session 172 (FB capture v2) unscheduled (needs Nolan present).
+
 ## [v0.99.91] — 2026-07-13 (Session 170 replan: The Rhodesli Research Desk — re-engagement pivot; Fable architect · gpt-5.6-sol architect+critic · docs-only)
 
 Owner directive: the project went quiet because the roadmap drifted from the two core loves

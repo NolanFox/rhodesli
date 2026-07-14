@@ -39,9 +39,13 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 (converged Fable×gpt-5.6-sol plan, Sol CO-SIGNED). Core product: the **Morning Mystery with sealed
 verdicts** — the desk prepares one case overnight; Nolan conducts the finale, reveals + adjudicates
 the models; every call is ground truth. WIP limit: 1 live case + 1 enabling task.
-- [ ] RESEARCH-DESK-001: W1-S1+S2 — hand-built first Morning Mystery (Belle Isle case) + case/run
-  contract + riders R1 (tree-leak data bug) + R2 (ML token rotation). Prompt:
-  `docs/prompts/session-171-prompt.md`
+- [x] 2026-07-14: RESEARCH-DESK-001: W1-S1+S2 (Session 171) — **first Morning Mystery hand-built**
+  (Belle Isle case, `docs/strategy/2026-07-reengagement/morning-mystery-belle-isle/`: immutable packet
+  E1-E13 + hashed manifest + 2 blind sealed verdicts, Gemini+Sol both ABSTAIN+DROP Harry candidate,
+  delivered to Nolan) + **"worth-opening" rubric** (Fable-reviewed) + **case/run contract**
+  (`investigation_runs` table, atomic/idempotent, migration applied + validated live run `edb28ae1`)
+  + **R1 tree-leak P0 fixed** (`/api/tree` scoped to community, fails closed). **R2 (ML token
+  rotation) = USER ACTION outstanding** (Railway secret). Companion 172 (FB capture v2) unscheduled.
 - [ ] RESEARCH-DESK-FB-172: **FB capture v2 (interactive, primary supply line)** — Nolan browses,
   Claude one-pass-extracts posts + all comments + commenter names → Rhodes corpus/inbox.
   Companion spec in session-171 prompt. Human-in-the-loop only; no unattended automation.

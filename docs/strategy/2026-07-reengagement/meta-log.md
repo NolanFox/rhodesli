@@ -68,3 +68,45 @@ Three corrections from the owner, applied immediately:
    *unattended* automation, not capture itself. Both models read the TOS constraint as broader
    than the owner's actual risk tolerance. Restored FB as the PRIMARY supply line (FB capture
    v2, companion session 172).
+
+---
+
+## Session 171 (2026-07-13/14) — Research Desk W1-S1+S2, first execution session
+
+**What each model did (role · effort · tokens/cost · verdict):**
+- **Opus 4.8 (orchestrator):** dispatched everything, assembled the Belle Isle evidence packet by
+  hand (embeddings top-20 + co-occurrence + GEDCOM + dates via scripts), authored the artifact +
+  rubric, de-slopped Fable's fixes, applied the migration, ran closeout. Never trusted a "done"
+  message without checking the artifact.
+- **Sol / gpt-5.6-sol (coder, medium):** R1 tree scoping (47k tok, 4 tests) · Phase 2 run contract
+  (40k tok, 5 tests). Both implemented to the dispatch-shaped spec on the FIRST pass, only touched
+  allowed files, ran only the bounded pytest. STRONG.
+- **Sol (sealed investigator, medium):** blind verdict on the packet+images (12k tok) → ABSTAIN + DROP.
+- **Sol (adversarial auditor, xhigh):** independent fresh-context audit of the code diff (Phase 3).
+- **Gemini 3.1 Pro (sealed investigator):** blind multimodal verdict (~$0.09, logged) → ABSTAIN + DROP.
+- **Fable 5 (architect, 1 dispatch, 135k tok):** artifact-vs-rubric review. Caught three real
+  self-scoring over-claims + a rubric-degeneracy gap. STRONG — the single highest-value dispatch.
+
+**Cost/budget:** every dispatch well under the 150k-token ceiling (Fable 135k was the max, a single
+bounded review). Case prep ≈ $0.14 of the $2/night cap. No usage-limit events on Sol; one Anthropic
+limit pause between Phase 2 and closeout (resumed cleanly). Inside "didn't do something wrong."
+
+**What worked:** (1) Dispatch-shaped specs with a bounded verify command (targeted pytest, never
+make test-fast — Lesson 213) got first-pass-correct code from Sol twice. (2) Running the REAL path on
+ONE production item (the live `create_run` + idempotent re-run) validated the whole Phase-2 contract
+against live Supabase — Lesson 208 in action. (3) Fable as artifact JUDGE (not author) is where it
+earns its cost: it found that the artifact self-scored gate-13 ("one-tap write-back") YES on a static
+file that has no write-back, and that gate-10 rewards boilerplate abstention levers — both trust-surface
+defects on the product-defining artifact.
+
+**What failed / friction:** (1) The sealed-verdict Gemini call logged with cost/tokens NULL —
+usage_metadata capture is a runner TODO; recording an *estimated* cost in-artifact was the honest
+patch. (2) R1 is a genuine design fork (the Fox GEDCOM is linked to identities across rhodes-53 and
+fox-family-9) that the prompt's acceptance criterion resolved — but the fix changes how the flagship
+root `/tree` behaves; flagged for owner confirmation rather than assumed.
+
+**One lesson:** *For a product-defining artifact, use the strong model as an adversarial JUDGE of the
+artifact's own honesty, not as its author.* Fable's most valuable finding was not a design idea — it
+was catching the artifact grading itself dishonestly (a "one tap" that doesn't exist, an unrecorded
+cost, a misdescribed model divergence). On a plan whose named #1 risk is "a trust-breaking first
+artifact," self-scoring honesty IS the trust surface, and only an independent judge reliably audits it.
