@@ -53,6 +53,37 @@ def test_rhodes_tree_does_not_leak_fox_gedcom_nodes(client, mocked_tree, monkeyp
     assert payload["focal_person"] == RHODES_ID
 
 
+def test_rhodes_tree_scrubs_cross_community_node_references(client, mocked_tree, monkeypatch):
+    monkeypatch.setattr("app.supabase_data.get_community_by_slug", lambda slug: {"slug": slug})
+    monkeypatch.setattr(page_routes._main_mod, "_get_community_identity_ids", lambda community: {RHODES_ID})
+    monkeypatch.setattr(
+        page_routes,
+        "_make_tree_node",
+        MagicMock(
+            side_effect=lambda pid, *args, **kwargs: {
+                "id": pid,
+                "data": {"shared_photos": {FOX_ONLY_ID: 3, RHODES_ID: 1}},
+                "rels": {
+                    "father": "@FOXPRIVATE@",
+                    "mother": FOX_ONLY_ID,
+                    "children": [RHODES_ID, FOX_ONLY_ID],
+                },
+            }
+        ),
+    )
+
+    response = client.get(f"/api/tree/data?person_id={FOX_ONLY_ID}")
+
+    assert response.status_code == 200
+    node = response.json()["nodes"][0]
+    assert "@FOXPRIVATE@" not in node["rels"].values()
+    assert FOX_ONLY_ID not in node["rels"].values()
+    assert "father" not in node["rels"]
+    assert "mother" not in node["rels"]
+    assert node["rels"]["children"] == [RHODES_ID]
+    assert FOX_ONLY_ID not in node["data"]["shared_photos"]
+
+
 def test_fox_family_owner_tree_is_not_filtered(client, mocked_tree, monkeypatch):
     monkeypatch.setattr("app.supabase_data.get_community_by_slug", lambda slug: {"slug": slug})
     identity_scope = MagicMock(side_effect=AssertionError("owner tree must not be scoped"))

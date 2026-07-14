@@ -10445,6 +10445,26 @@ def _scope_tree_nodes_to_community(nodes, focal_person, community_slug, request)
     if not ids:
         return [], ""
     kept = [n for n in nodes if n.get("id") in ids]
+    # Scrub intra-node references to dropped (out-of-community) nodes. A kept node's
+    # rels/shared_photos are built against the full `included` set at build time, so
+    # without this a rhodes node adjacent to a Fox person still leaks Fox UUIDs, raw
+    # @...@ GEDCOM xrefs, and the relationship structure through its edges (Session 171
+    # audit P1). Keep only references that are themselves in-community.
+    for n in kept:
+        rels = n.get("rels")
+        if isinstance(rels, dict):
+            scrubbed = {}
+            for key, val in rels.items():
+                if isinstance(val, list):
+                    filtered = [v for v in val if v in ids]
+                    if filtered:
+                        scrubbed[key] = filtered
+                elif val in ids:
+                    scrubbed[key] = val
+            n["rels"] = scrubbed
+        data = n.get("data")
+        if isinstance(data, dict) and isinstance(data.get("shared_photos"), dict):
+            data["shared_photos"] = {k: v for k, v in data["shared_photos"].items() if k in ids}
     if focal_person not in ids:
         focal_person = kept[0]["id"] if kept else ""
     return kept, focal_person

@@ -109,7 +109,10 @@ def create_run(
             )
             .execute()
         )
-        return _first_row(result) or row
+        created = _first_row(result)
+        if created is not None:
+            return created
+        return get_run(idempotency_key=row["idempotency_key"], sb=client)
     except Exception as exc:
         logger.warning("Supabase investigation run create failed: %s", exc)
         return None
@@ -184,9 +187,10 @@ def _transition_update(
             client.table("investigation_runs")
             .update(update)
             .eq("id", run_id)
+            .eq("status", current)
             .execute()
         )
-        return _first_row(result) or {**current_run, **update}
+        return _first_row(result)
     except Exception as exc:
         logger.warning("Supabase investigation run transition failed: %s", exc)
         return None
