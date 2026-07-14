@@ -8,6 +8,7 @@
 - [feedback_memory_protection.md](feedback_memory_protection.md) — Never delete topic files. Trim index entries only. Back up to git.
 
 ## CRITICAL Feedback (behavioral rules)
+- [feedback_deprioritize_consent_fb_capture.md](feedback_deprioritize_consent_fb_capture.md) — 2026-07-13: NO consent/rights ceremony; FB human-in-the-loop capture is the PRIMARY supply line. Models over-index on consent — correct for it.
 - [feedback_data_repair_protocol.md](feedback_data_repair_protocol.md) — Per-step snapshots, dry-run, restore script. User demands reversibility.
 - [feedback_merge_orphan_crisis.md](feedback_merge_orphan_crisis.md) — Never declare data fix done without browser-verifying the SPECIFIC affected page
 - [feedback_screenshot_evaluation.md](feedback_screenshot_evaluation.md) — Evaluate ALL visible issues in every screenshot, not just what user mentions
