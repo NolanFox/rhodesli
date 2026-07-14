@@ -27,11 +27,12 @@ frozen.
     spam entries). Compare should be ephemeral. `app/compare_routes.py:1571-1700`.
   - Logged-in compare uploads AUTO-APPROVE into the archive. `app/compare_routes.py:1684`.
   - **P0 cross-community leak:** `/c/rhodes/tree` renders the global/Fox GEDCOM — `/api/tree/data`
-    filters community only for nav prefix, not data. `app/page_routes.py:10950`. Map/Timeline/
-    Connect likely the same (audit them).
+    filters community only for nav prefix, not data. `app/page_routes.py:10950`. **Also unscoped
+    (Codex-confirmed): `/api/tree/expand` (`app/page_routes.py:11041`) + `/api/tree/search`
+    (`:11092`) — fix ALL THREE.** Map/Timeline/Connect likely the same (audit them).
   - Anonymous person comments publish instantly, unmoderated. `app/person_routes.py:2291-2334`.
-  - Missing path-traversal guard on `/photos/{filename:path}` + `/uploads/facecompare/`.
-    `app/main.py:1439`.
+  - Missing path-traversal guard on `/photos/{filename:path}` (`app/main.py:1439`) AND
+    `/uploads/facecompare/{filename:path}` (`app/match_facecompare_routes.py:1847` — different file).
   - No batch-reject for pending uploads (only one-at-a-time `/admin/pending/{job_id}/reject`).
 
 ## 3. Technical map / IDs the next agent needs
@@ -51,11 +52,14 @@ frozen.
   `/api/compare/contribute` route.
 - **A3** Remove logged-in auto-approve (`compare_routes.py:1684`) — non-admin contributions → pending.
 - **A4** Pending hygiene: `community_id` on every entry; 30-day expiry for anonymous sources; R2
-  lifecycle on `uploads/pending/`.
+  lifecycle on `uploads/pending/`. **Landmine (Codex):** the admin pending filter reads the legacy
+  `community` key (`app/admin_routes.py:567`), and compare-created records currently omit both —
+  standardize on `community_id`, backfill, and make the read tolerate both during transition.
 - **A5** Add batch-reject + one-time cleanup of the existing ~51 Compare-Upload entries (snapshot
   first — `split-brain-data-audit` + reversible unwind artifact).
 - **A6** Person comments pending-by-default (admin approve).
-- **A7** Security carry-overs: path-traversal guard on `/photos` + `/uploads/facecompare/`; **rotate
+- **A7** Security carry-overs: path-traversal guard on `/photos` (`app/main.py:1439`) +
+  `/uploads/facecompare/` (`app/match_facecompare_routes.py:1847`), with traversal tests for both; **rotate
   `ML_SERVICE_TOKEN`** (USER ACTION — see §7).
 - **P0 tree leak** (roadmap C3, but pull it FORWARD if it's quick): scope `/api/tree/data` (and
   Map/Timeline/Connect) to the community or show an honest empty state. This is the #1 pre-pilot bug.
