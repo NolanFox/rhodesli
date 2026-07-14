@@ -57,7 +57,8 @@
 - [reference_rhodes_wiki_paths.md](reference_rhodes_wiki_paths.md) — Quick reference for rhodes-wiki paths + commands
 
 ## Project State
-- [project_security_growth_eval_2026_07.md](project_security_growth_eval_2026_07.md) — 2026-07-05 eval: no breach; concierge-pilot roadmap; OPEN: rotate ML_SERVICE_TOKEN + reject 51 uploads; NEW P0 tree cross-community leak. Next=Session 170 Phase A.
+- [project_research_desk_pivot.md](project_research_desk_pivot.md) — ★ ACTIVE PLAN 2026-07-13: Research Desk / Morning Mystery w/ sealed verdicts; RESEARCH_DESK_PLAN.md is the constitution; next=Session 171. Growth roadmap deprioritized.
+- [project_security_growth_eval_2026_07.md](project_security_growth_eval_2026_07.md) — 2026-07-05 eval: no breach; concierge-pilot roadmap SUPERSEDED by research-desk pivot; P0s (tree leak, token rotation) → session-171 Rider R.
 - [project_supabase_egress.md](project_supabase_egress.md) — Upgraded to Pro for 1 month; TTL reductions should allow downgrade back to free
 - [project_fox_sibling_resemblance.md](project_fox_sibling_resemblance.md) — Albert/Harry indistinguishable by ML. Need temporal + co-occurrence.
 - [project_active_learning_opportunity.md](project_active_learning_opportunity.md) — PRD-038 gates closed. ~8 confirmed Fox people may suffice to test.

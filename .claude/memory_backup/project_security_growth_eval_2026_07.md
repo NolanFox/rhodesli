@@ -24,8 +24,10 @@ Fable live-site architect/evaluator (read-only). Evaluation only — no code/dat
 leak — `/c/rhodes/tree` renders the global/Fox GEDCOM. `/api/tree/data` (`app/page_routes.py:10950`)
 uses community only for nav prefix, not data scoping. Lesson-151 class. Map/Timeline/Connect likely same.
 
-**The plan = `GROWTH_ROADMAP.md`.** Headline: rhodesli is community-AWARE but not safe multi-TENANT;
-do a concierge pilot with 1-3 known families, NOT broad self-service. The gate is global-admin
-`_check_admin` (`app/main.py:1972`). Phases A(safety/days) → B(trust-loop/wk2) → C(multi-tenant/wks3-5)
-→ D(polish). Next working session = **170 = Phase A** (`docs/prompts/session-170-prompt.md`).
+**SUPERSEDED 2026-07-13** ([[project_research_desk_pivot]]): the GROWTH_ROADMAP is deprioritized —
+owner redirected to the Research Desk program. Phase A P0s (tree leak, token rotation, ephemeral
+compare) became session-171 Rider R; the concierge pilot waits until the owner uses the desk daily.
+Original plan (kept for the record): `GROWTH_ROADMAP.md` — community-AWARE but not safe
+multi-TENANT; concierge pilot, not broad self-service; gate is global-admin `_check_admin`
+(`app/main.py:1972`). Phases A→B→C→D.
 Related: [[project_upload_testing_reminder]] [[feedback_platform_reliability]].
