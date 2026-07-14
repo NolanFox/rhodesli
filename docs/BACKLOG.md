@@ -954,3 +954,8 @@ PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 - **RUN-KEY-171** (P3, low risk): `investigation_runs` idempotency key is `case_ref || ':' || hash`,
   which is ambiguous if a `:` ever appears in `case_ref` (UUIDs/slugs don't today). Switch to a NUL
   delimiter or hash-the-pair if `case_ref` format changes. Source: session-171 audit.
+- **PACKET-DECOUPLE-171** (P2): the W1-S3 evidence-packet assembler reads GEDCOM via
+  `app.relationship_routes._load_gedcom_individual`, which pulls in `app.main` and circular-imports
+  when the assembler runs standalone (e.g. an offline nightly worker). Decouple the GEDCOM read to a
+  direct `gedcom_individuals` Supabase query (community-scoped) before wiring the nightly runner
+  (W1-S8). Source: AD-252, `rhodesli_ml/research_desk/packet_assembler.py`.

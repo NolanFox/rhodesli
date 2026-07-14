@@ -2940,3 +2940,36 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Finding** (this photo, Meyer Fox + Reva Heft): all three converged on **decade 1910 / NYC / medium**, ceiling 1926. Winner **Fable 5.0** on reasoning rigor (biographical age-anchoring); Gemini a near-tie; Codex over-weighted the broad print-format range toward 1900. See Lesson 207.
 - **Alternatives rejected**: (a) write all three to `date_labels` — destroys the comparison (last-write-wins); (b) log Fable/Codex in `gemini_api_calls` — category error (Gemini-shaped table/pricing/lineage); (c) a dedicated `photo_estimate_experiments` table now — over-weight for an occasional admin workflow (documented as the upgrade path if DB-queryable experiments are needed at scale).
 - **Affects**: `scripts/multimodel_photo_estimate.py`, `app/estimate_routes.py` (`_call_gemini_date_estimate` operator/experiment_id), `app/supabase_data.py` (`log_gemini_call` schema-drift filter), `.claude/rules/multimodel-photo-estimate.md`. See Lessons 205–207.
+
+## AD-252: Research Desk evidence-packet assembler (read-only) — Session 171 W1-S3
+
+**Date:** 2026-07-14 · **Session:** 171 · **Affects:** `rhodesli_ml/research_desk/packet_assembler.py`
+
+**Context:** The Research Desk's Morning Mystery needs a reusable way to assemble the immutable
+evidence packet that feeds the multi-model investigators. Session 171 built the first packet
+(Belle Isle) BY HAND; W1-S3 generalizes it.
+
+**Decision:** `assemble_evidence_packet(case_ref) -> dict` reads only (never writes confirmed data)
+and produces: subject, anchor_faces, internal_consistency, external_match, co_occurrence,
+gedcom_context, date_location, provenance, candidates_on_file, and a sha256-sealed manifest.
+Signal thresholds reuse the existing calibration convention:
+- **same_person** when pairwise anchor L2 < **0.85** (matcher confident-match band, AD-013/149).
+- **no_confident_match** (the abstention signal) when the nearest non-self L2 >= **1.05**
+  (MODERATE/LOW boundary; a real match is typically < 0.85). This is what makes an honest ABSTAIN
+  verdict defensible — the corpus genuinely contains no confident match.
+L2 is computed on L2-normalized PFE `mu` vectors: `l2 = sqrt(max(0, 2 - 2*cos))`.
+
+**Rationale:** Reuse the calibrated distance convention already shown in the UI so the packet's
+"who the matcher thinks this is" matches what admins see elsewhere. Read-only by construction so
+case preparation can never mutate the confirmed set (the plan's hard rule; structural test enforces
+no insert/upsert/update/delete).
+
+**Validation:** live-validated against the Belle Isle case — reproduced internal L2=0.629/same_person,
+external nearest=1.209/no_confident_match, co-occurrence with the Fox brothers, and the GEDCOM/date/
+provenance evidence exactly as hand-assembled.
+
+**Known limitation (→ BACKLOG PACKET-DECOUPLE-171):** GEDCOM context is read via
+`app.relationship_routes._load_gedcom_individual`, which triggers an `app.main` circular import when
+the assembler is imported standalone. Fine inside the running app; the offline nightly runner (W1-S8)
+must load `app.main` first OR the GEDCOM read should be decoupled to a direct `gedcom_individuals`
+query.
