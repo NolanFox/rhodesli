@@ -12,16 +12,18 @@ from rhodesli_ml.research_desk.packet_assembler import (
 )
 
 
-def build_recording_client(table_rows):
+def build_recording_client(table_rows, *, honor_order=True):
     client = MagicMock()
     client.table_calls = []
     client.write_calls = []
     client.range_calls = []
+    client.order_calls = []
 
     def table(name):
         client.table_calls.append(name)
         query = MagicMock()
         filters = []
+        ordered_columns = []
         page = [None, None]
 
         def chain(*_args, **_kwargs):
@@ -30,6 +32,13 @@ def build_recording_client(table_rows):
         query.select.side_effect = chain
         query.eq.side_effect = lambda column, value: (filters.append(("eq", column, value)) or query)
         query.in_.side_effect = lambda column, values: (filters.append(("in", column, values)) or query)
+
+        def order(column):
+            client.order_calls.append((name, column))
+            ordered_columns.append(column)
+            return query
+
+        query.order.side_effect = order
 
         def range_(start, end):
             client.range_calls.append((name, start, end))
@@ -52,6 +61,9 @@ def build_recording_client(table_rows):
                     rows = [row for row in rows if row.get(column) == value]
                 else:
                     rows = [row for row in rows if row.get(column) in value]
+            if honor_order:
+                for column in reversed(ordered_columns):
+                    rows.sort(key=lambda row: (row.get(column) is None, row.get(column)))
             if page[0] is not None:
                 rows = rows[page[0] : page[1] + 1]
             response = MagicMock()
@@ -164,9 +176,116 @@ def test_assemble_packet_is_stable_paged_and_never_writes(tmp_path):
     assert first["date_location"][0]["location_low_confidence"] is True
     assert sb.write_calls == []
     assert ("identities", 0, 999) in sb.range_calls
-    assert not {"insert", "upsert", "update", "delete"}.intersection(
-        call[0] for call in sb.method_calls
+    assert ("identities", "identity_id") in sb.order_calls
+    assert ("photo_faces", "face_id") in sb.order_calls
+
+
+def test_packet_seal_is_stable_when_list_reads_are_shuffled(tmp_path):
+    rows = {
+        "identities": [
+            {
+                "identity_id": "subject",
+                "name": "Subject",
+                "state": "INBOX",
+                "anchor_ids": ["face-a"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "neighbor-a",
+                "name": "Neighbor A",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-b"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "neighbor-b",
+                "name": "Neighbor B",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-c"],
+                "candidate_ids": [],
+            },
+        ],
+        "photo_faces": [
+            {"face_id": "face-a", "photo_id": "photo-1"},
+            {"face_id": "face-b", "photo_id": "photo-1"},
+            {"face_id": "face-c", "photo_id": "photo-1"},
+        ],
+        "gedcom_face_links": [
+            {"identity_id": "subject", "gedcom_id": "@I2@", "confidence": 0.4},
+            {"identity_id": "subject", "gedcom_id": "@I1@", "confidence": 0.3},
+            {"identity_id": "neighbor-a", "gedcom_id": "@I4@", "confidence": 1.0},
+            {"identity_id": "neighbor-b", "gedcom_id": "@I3@", "confidence": 1.0},
+        ],
+        "photos": [{"photo_id": "photo-1"}],
+        "date_labels": [],
+        "photo_locations": [],
+    }
+    sb = build_recording_client(rows, honor_order=False)
+    gedcom = {gedcom_id: {"name": gedcom_id} for gedcom_id in ("@I1@", "@I2@", "@I3@", "@I4@")}
+
+    with patch("app.relationship_routes._load_gedcom_individual", side_effect=gedcom.get):
+        first = assemble_evidence_packet(
+            "subject", sb=sb, embeddings_path=str(tmp_path / "missing.npy")
+        )
+        rows["photo_faces"] = [rows["photo_faces"][2], rows["photo_faces"][0], rows["photo_faces"][1]]
+        rows["gedcom_face_links"] = list(reversed(rows["gedcom_face_links"]))
+        second = assemble_evidence_packet(
+            "subject", sb=sb, embeddings_path=str(tmp_path / "missing.npy")
+        )
+
+    assert first["manifest"]["packet_sha256"] == second["manifest"]["packet_sha256"]
+
+
+def test_json_string_anchor_ids_are_coerced_to_a_list(tmp_path):
+    rows = {
+        "identities": [
+            {
+                "identity_id": "subject",
+                "name": "Subject",
+                "state": "INBOX",
+                "anchor_ids": '["inbox_x"]',
+                "candidate_ids": ["candidate-y"],
+            }
+        ],
+        "photo_faces": [],
+        "gedcom_face_links": [],
+    }
+
+    packet = assemble_evidence_packet(
+        "subject", sb=build_recording_client(rows), embeddings_path=str(tmp_path / "missing.npy")
     )
+
+    assert packet["subject"]["anchor_ids"] == ["inbox_x"]
+
+
+def test_missing_embeddings_returns_empty_match_shapes(tmp_path):
+    rows = {
+        "identities": [
+            {
+                "identity_id": "subject",
+                "name": "Subject",
+                "state": "INBOX",
+                "anchor_ids": ["face-a"],
+                "candidate_ids": [],
+            }
+        ],
+        "photo_faces": [{"face_id": "face-a", "photo_id": "photo-1"}],
+        "gedcom_face_links": [],
+        "photos": [{"photo_id": "photo-1"}],
+        "date_labels": [],
+        "photo_locations": [],
+    }
+
+    packet = assemble_evidence_packet(
+        "subject", sb=build_recording_client(rows), embeddings_path=str(tmp_path / "missing.npy")
+    )
+
+    assert packet["internal_consistency"] == {"pairs": [], "l2": None, "same_person": None}
+    assert packet["external_match"] == {
+        "matches": [],
+        "nearest_l2": None,
+        "no_confident_match": True,
+    }
 
 
 def test_no_supabase_returns_empty_error_packet(tmp_path):

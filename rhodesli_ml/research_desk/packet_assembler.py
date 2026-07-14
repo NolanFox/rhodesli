@@ -56,7 +56,7 @@ def _rows(response) -> list[dict]:
     return list(getattr(response, "data", None) or [])
 
 
-def _select(sb, table, fields, *, equals=None, contains=None, paged=False):
+def _select(sb, table, fields, *, equals=None, contains=None, order=None, paged=False):
     """Execute a Supabase select, optionally paging in 1,000-row windows."""
     offset = 0
     output = []
@@ -66,6 +66,8 @@ def _select(sb, table, fields, *, equals=None, contains=None, paged=False):
             query = query.eq(column, value)
         for column, values in (contains or {}).items():
             query = query.in_(column, list(values))
+        for column in order or ():
+            query = query.order(column)
         if paged:
             query = query.range(offset, offset + 999)
         page = _rows(query.execute())
@@ -83,7 +85,11 @@ def _face_id(value: Any) -> str | None:
 
 def _embedding_map(path: str) -> dict[str, np.ndarray]:
     result = {}
-    for raw in np.load(path, allow_pickle=True):
+    try:
+        embeddings = np.load(path, allow_pickle=True)
+    except (FileNotFoundError, ValueError, OSError):
+        return {}
+    for raw in embeddings:
         if isinstance(raw, np.ndarray) and raw.shape == ():
             raw = raw.item()
         if isinstance(raw, np.void) and raw.dtype.names:
@@ -150,6 +156,22 @@ def _as_dict(data):
     return {}
 
 
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, list) else []
+        except (TypeError, ValueError):
+            return []
+    return []
+
+
+def _cap(value, length):
+    return value[:length] if isinstance(value, str) else value
+
+
 def assemble_evidence_packet(
     case_ref,
     *,
@@ -173,15 +195,18 @@ def assemble_evidence_packet(
         "identities",
         "identity_id,name,state,anchor_ids,candidate_ids",
         equals=identity_filters,
+        order=("identity_id",),
         paged=True,
     )
     identity_by_id = {row.get("identity_id"): row for row in identities}
     subject_row = identity_by_id.get(case_ref, {})
-    anchor_ids = [face_id for value in subject_row.get("anchor_ids", []) if (face_id := _face_id(value))]
+    anchor_ids = [
+        face_id for value in _as_list(subject_row.get("anchor_ids")) if (face_id := _face_id(value))
+    ]
     packet = _empty_packet(case_ref)
     packet["subject"] = {
         "identity_id": subject_row.get("identity_id", case_ref),
-        "name": subject_row.get("name"),
+        "name": _cap(subject_row.get("name"), 200),
         "state": subject_row.get("state"),
         "anchor_ids": anchor_ids,
     }
@@ -189,17 +214,23 @@ def assemble_evidence_packet(
     face_to_identity = {}
     for identity in identities:
         summary = {key: identity.get(key) for key in ("identity_id", "name", "state")}
-        for value in identity.get("anchor_ids", []) + identity.get("candidate_ids", []):
+        summary["name"] = _cap(summary["name"], 200)
+        identity_face_ids = _as_list(identity.get("anchor_ids")) + _as_list(
+            identity.get("candidate_ids")
+        )
+        for value in identity_face_ids:
             if face_id := _face_id(value):
                 face_to_identity[face_id] = summary
 
-    photo_faces = _select(sb, "photo_faces", "face_id,photo_id", paged=True)
+    photo_faces = _select(
+        sb, "photo_faces", "face_id,photo_id", order=("face_id", "photo_id"), paged=True
+    )
     photo_by_face = {row.get("face_id"): row.get("photo_id") for row in photo_faces}
     packet["anchor_faces"] = [
         {"face_id": face_id, "photo_id": photo_by_face.get(face_id)} for face_id in anchor_ids
     ]
 
-    emb_map = _embedding_map(embeddings_path)
+    emb_map = _embedding_map(embeddings_path) if anchor_ids else {}
     anchor_mu = {face_id: emb_map[face_id] for face_id in anchor_ids if face_id in emb_map}
     pairs = [
         {"face_id_a": left, "face_id_b": right, "l2": _pairwise_l2(anchor_mu[left], anchor_mu[right])}
@@ -224,6 +255,7 @@ def assemble_evidence_packet(
             others.append({"face_id": face_id, **{k: identity.get(k) for k in ("identity_id", "name", "state")}})
             if identity.get("state") == "CONFIRMED" and identity.get("identity_id"):
                 cooccurring_identity_ids.add(identity["identity_id"])
+        others.sort(key=lambda item: item.get("face_id") or "")
         packet["co_occurrence"].append({"photo_id": photo_id, "other_faces": others})
 
     subject_links = _select(
@@ -231,6 +263,7 @@ def assemble_evidence_packet(
         "gedcom_face_links",
         "identity_id,gedcom_id,confidence",
         equals={"identity_id": case_ref},
+        order=("gedcom_id",),
     )
     packet["candidates_on_file"] = [
         {"gedcom_id": row.get("gedcom_id"), "confidence": row.get("confidence")} for row in subject_links
@@ -241,6 +274,7 @@ def assemble_evidence_packet(
             "gedcom_face_links",
             "identity_id,gedcom_id,confidence",
             contains={"identity_id": sorted(cooccurring_identity_ids)},
+            order=("gedcom_id",),
         )
         if cooccurring_identity_ids
         else []
@@ -257,12 +291,14 @@ def assemble_evidence_packet(
         packet["gedcom_context"].append(
             {
                 "gedcom_id": gedcom_id,
-                "name": individual.get("name"),
+                "name": _cap(individual.get("name"), 200),
                 "birth_date": individual.get("birth_date"),
                 "death_date": individual.get("death_date"),
                 "confidence": link.get("confidence"),
             }
         )
+    packet["gedcom_context"].sort(key=lambda item: item.get("gedcom_id") or "")
+    packet["candidates_on_file"].sort(key=lambda item: item.get("gedcom_id") or "")
 
     photo_filters = {}
     photos = _select(
@@ -271,11 +307,28 @@ def assemble_evidence_packet(
         "photo_id,source,collection,source_url",
         equals=photo_filters,
         contains={"photo_id": anchor_photos},
+        order=("photo_id",),
     ) if anchor_photos else []
     photos_by_id = {row.get("photo_id"): row for row in photos}
-    dates = _select(sb, "date_labels", "photo_id,data", contains={"photo_id": anchor_photos}) if anchor_photos else []
+    dates = (
+        _select(
+            sb,
+            "date_labels",
+            "photo_id,data",
+            contains={"photo_id": anchor_photos},
+            order=("photo_id",),
+        )
+        if anchor_photos
+        else []
+    )
     locations = (
-        _select(sb, "photo_locations", "photo_id,data", contains={"photo_id": anchor_photos})
+        _select(
+            sb,
+            "photo_locations",
+            "photo_id,data",
+            contains={"photo_id": anchor_photos},
+            order=("photo_id",),
+        )
         if anchor_photos
         else []
     )
@@ -288,10 +341,15 @@ def assemble_evidence_packet(
         packet["date_location"].append(
             {
                 "photo_id": photo_id,
-                "reasoning": date.get("reasoning"),
+                "reasoning": _cap(date.get("reasoning"), 2000),
                 "range": _date_range(date),
                 "location": {
-                    "name": location.get("name") or location.get("location_name") or location.get("location"),
+                    "name": _cap(
+                        location.get("name")
+                        or location.get("location_name")
+                        or location.get("location"),
+                        200,
+                    ),
                     "confidence": confidence,
                 },
                 "location_low_confidence": confidence in ("low", "medium"),
@@ -299,6 +357,12 @@ def assemble_evidence_packet(
         )
         photo = photos_by_id.get(photo_id, {})
         packet["provenance"].append(
-            {"photo_id": photo_id, **{key: photo.get(key) for key in ("source", "collection", "source_url")}}
+            {
+                "photo_id": photo_id,
+                **{
+                    key: _cap(photo.get(key), 500)
+                    for key in ("source", "collection", "source_url")
+                },
+            }
         )
     return _seal(packet)
