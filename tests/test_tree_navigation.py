@@ -26,6 +26,17 @@ from app.main import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _bypass_tree_community_scoping():
+    # R1 (Session 171) scopes /api/tree/* by community; these tests exercise tree BUILDING and
+    # are isolated from R1 (covered by test_tree_community_scoping.py).
+    with patch(
+        "app.page_routes._scope_tree_nodes_to_community",
+        side_effect=lambda nodes, focal, community_slug, request: (nodes, focal),
+    ):
+        yield
+
+
 @pytest.fixture
 def client():
     return TestClient(app)

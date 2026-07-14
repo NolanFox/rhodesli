@@ -5,6 +5,18 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+
+@pytest.fixture(autouse=True)
+def _bypass_tree_community_scoping():
+    # R1 (Session 171) scopes /api/tree/* by community; these tests exercise tree BUILDING
+    # with synthetic person ids and are isolated from R1 (covered by test_tree_community_scoping.py).
+    with patch(
+        "app.page_routes._scope_tree_nodes_to_community",
+        side_effect=lambda nodes, focal, community_slug, request: (nodes, focal),
+    ):
+        yield
+
+
 # Minimal relationship graph for testing
 _TEST_GRAPH = {
     "schema_version": 1,
