@@ -1,0 +1,34 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "provider": "google",
+  "operator": "claude-code-manual",
+  "experiment_id": "manual-session171-belle-isle",
+  "sealed": true,
+  "latency_ms": 21704,
+  "status": "success",
+  "error": null,
+  "input_manifest_sha256": "eac73a605a9323928543ee7cb14c9a0f9975aed3da11f145639949fbca9b8c52",
+  "verdict": {
+    "verdict": "ABSTAIN",
+    "subject_conclusion": "The subject is a young man, visually a peer of brothers Albert and Irving Fox (E5, E6), who appears alongside them at the Belle Isle Conservatory in Detroit around 1917-1918 (E3, E4, E10, E11). However, facial recognition yields no confident matches within the corpus (E2), leaving his specific identity unknown.",
+    "confidence_tier": "NONE",
+    "decision_1_who": "The honest answer is to abstain. While he is clearly a peer and associate of Albert and Irving Fox during their time in Detroit (E3, E4, E6, E10, E11) and appears in the Charles Fox collection (E13), facial recognition fails to find a match (E2), indicating he is likely a friend or extended relative not currently represented in the confirmed database.",
+    "decision_2_harry_candidate": "DROP",
+    "decision_2_reasoning": "Harry Isaackovitz was born in 1881 (E7), which would make him 36-37 years old during this WWI-era outing (E8, E11), contradicting the visual evidence that the subject is a peer of the ~20-year-old Fox brothers (E5, E6). Furthermore, no reference photo exists for Harry (E12), making any positive identification impossible.",
+    "decision_3_decisive_missing_evidence": "A labeled reference photograph of the Fox brothers' friends or extended family members in Detroit circa 1917-1918.",
+    "contradictions_noted": [
+      "E9 (current DB locations of US/NYC) contradicts E10 (Belle Isle Conservatory, Detroit identification)."
+    ],
+    "key_evidence_ids": [
+      "E2",
+      "E3",
+      "E4",
+      "E6",
+      "E7",
+      "E10",
+      "E12"
+    ],
+    "what_would_change_my_mind": "A newly discovered, labeled photograph of this man, or a diary entry/letter from Albert or Irving Fox naming their companions at Belle Isle."
+  },
+  "raw": "{\n  \"verdict\": \"ABSTAIN\",\n  \"subject_conclusion\": \"The subject is a young man, visually a peer of brothers Albert and Irving Fox (E5, E6), who appears alongside them at the Belle Isle Conservatory in Detroit around 1917-1918 (E3, E4, E10, E11). However, facial recognition yields no confident matches within the corpus (E2), leaving his specific identity unknown.\",\n  \"confidence_tier\": \"NONE\",\n  \"decision_1_who\": \"The honest answer is to abstain. While he is clearly a peer and associate of Albert and Irving Fox during their time in Detroit (E3, E4, E6, E10, E11) and appears in the Charles Fox collection (E13), facial recognition fails to find a match (E2), indicating he is likely a friend or extended relative not currently represented in the confirmed database.\",\n  \"decision_2_harry_candidate\": \"DROP\",\n  \"decision_2_reasoning\": \"Harry Isaackovitz was born in 1881 (E7), which would make him 36-37 years old during this WWI-era outing (E8, E11), contradicting the visual evidence that the subject is a peer of the ~20-year-old Fox brothers (E5, E6). Furthermore, no reference photo exists for Harry (E12), making any positive identification impossible.\",\n  \"decision_3_decisive_missing_evidence\": \"A labeled reference photograph of the Fox brothers' friends or extended family members in Detroit circa 1917-1918.\",\n  \"contradictions_noted\": [\n    \"E9 (current DB locations of US/NYC) contradicts E10 (Belle Isle Conservatory, Detroit identification).\"\n  ],\n  \"key_evidence_ids\": [\n    \"E2\",\n    \"E3\",\n    \"E4\",\n    \"E6\",\n    \"E7\",\n    \"E10\",\n    \"E12\"\n  ],\n  \"what_would_change_my_mind\": \"A newly discovered, labeled photograph of this man, or a diary entry/letter from Albert or Irving Fox naming their companions at Belle Isle.\"\n}"
+}

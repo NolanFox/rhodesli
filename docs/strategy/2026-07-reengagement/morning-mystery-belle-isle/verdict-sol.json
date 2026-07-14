@@ -1,0 +1,37 @@
+{
+  "model": "gpt-5.6-sol",
+  "provider": "openai",
+  "effort": "medium",
+  "operator": "claude-code-manual",
+  "experiment_id": "manual-session171-belle-isle",
+  "sealed": true,
+  "input_manifest_sha256": "eac73a605a9323928543ee7cb14c9a0f9975aed3da11f145639949fbca9b8c52",
+  "verdict": {
+    "verdict": "ABSTAIN",
+    "subject_conclusion": "The subject is the same unidentified young man in both photographs and participated in an outing with confirmed brothers Albert and Irving Fox (E1, E3-E6). His repeated proximity supports a Fox-family-group association, but neither a specific identity nor a familial relationship is defensible because the corpus contains no confident external face match (E2-E4, E13).",
+    "confidence_tier": "NONE",
+    "decision_1_who": "Abstain: he is an unidentified peer associated with Albert and Irving Fox during this outing; a Fox sibling or close-relative relationship is possible but cannot be distinguished from someone outside the family (E2-E6, E13).",
+    "decision_2_harry_candidate": "DROP",
+    "decision_2_reasoning": "Harry Isaackovitz, born in 1881, would have been approximately 36-37 in the proposed 1917-18 period, while Albert and Irving were approximately 21 and 19-20; moreover, no reference photograph exists to support a positive facial comparison (E5-E7, E11-E12).",
+    "decision_3_decisive_missing_evidence": "A contemporaneous caption or album annotation that explicitly names the three men in either photograph would identify the shared subject directly (E1, E3-E4).",
+    "contradictions_noted": [
+      "The database assigns United States or New York City locations, whereas the recorded architectural research identifies Belle Isle Conservatory in Detroit and the residence/draft notes suggest a Detroit 1917-18 context (E9-E11).",
+      "The Harry Isaackovitz candidate's 1881 birth year creates substantial age tension with the approximately 1917-18 peer group formed by Albert and Irving Fox (E5-E7, E11)."
+    ],
+    "key_evidence_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E9",
+      "E10",
+      "E11",
+      "E12",
+      "E13"
+    ],
+    "what_would_change_my_mind": "A contemporaneous caption or album annotation explicitly naming the subject in either photograph would replace the abstention with a documentary identification (E1, E3-E4)."
+  }
+}

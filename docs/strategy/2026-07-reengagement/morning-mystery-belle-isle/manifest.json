@@ -1,0 +1,19 @@
+{
+  "case_id": "belle-isle-young-man",
+  "assembled": "2026-07-13",
+  "session": 171,
+  "inputs": {
+    "packet_sha256": "eac73a605a9323928543ee7cb14c9a0f9975aed3da11f145639949fbca9b8c52",
+    "prompt_sha256": "535462d3d468c936f37ce0d8431d629b1b47e71d6d1122407d497e4b4dbe3e9b",
+    "images": [
+      {
+        "photo": "01659_p_13akf5twbc1045.jpg",
+        "sha256": "ca100825bbb63deb3ed5eb5e10d1093ab70e5d1eb092ea4d763e36346607acd5"
+      },
+      {
+        "photo": "02068_p_13akf5twbc3600.jpg",
+        "sha256": "5ab23ff20a5582bf4bfcf9c689b7285e9ea42675c198661e8f0f3e556ee665a6"
+      }
+    ]
+  }
+}
