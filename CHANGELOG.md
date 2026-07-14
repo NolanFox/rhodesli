@@ -23,7 +23,12 @@ opening, review <15min, $2/night cap). Session-171 prompt written (W1-S1+S2 + se
 tree-leak P0, ML token rotation, ephemeral compare). Harness: codex pin → gpt-5.6-sol
 (effort-tiered: medium coding / xhigh audit-ideation), model-settings research logged,
 session-170 growth prompt marked SUPERSEDED. Old plan (GROWTH_ROADMAP) deprioritized to
-interrupt-lane + concierge-gated future. No code/data/prod changes.
+interrupt-lane + concierge-gated future. No code/data/prod changes. **Rev 2 (same day, owner
+feedback):** added concrete "what this is" framing (corpus → case queue → matcher on existing app
+surfaces); consent/rights ceremony DEPRIORITIZED per repeated owner directive (durable memory
+written); **FB human-in-the-loop capture restored as the PRIMARY supply line** (FB capture v2,
+companion interactive session 172 — Nolan browses, Claude one-pass-extracts posts + all comments
++ commenter names into the Rhodes corpus); ephemeral-compare rider cut to BACKLOG P3.
 
 ## [v0.99.90] — 2026-07-02 (Session 169: Fable 5 full-evaluation + gated Phase-2 ship — Opus orchestrate · Codex code+audit · Fable evaluate)
 

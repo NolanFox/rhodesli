@@ -15,14 +15,17 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ## ★ Research Desk Program (2026-07-13 pivot — Session 170 replan)
 The active program. Full plan + kill list: `docs/strategy/2026-07-reengagement/RESEARCH_DESK_PLAN.md`.
 - **RESEARCH-DESK-001** (P0, NEXT): Session 171 — first hand-built Morning Mystery (Belle Isle) +
-  case/run contract + Riders R1 (tree-leak scoping P0), R2 (ML_SERVICE_TOKEN rotation), R3
-  (ephemeral anonymous compare). Prompt: `docs/prompts/session-171-prompt.md`.
+  case/run contract + Riders R1 (tree-leak data bug), R2 (ML_SERVICE_TOKEN rotation). Prompt:
+  `docs/prompts/session-171-prompt.md`.
+- **RESEARCH-DESK-FB-172** (P0, interactive): FB capture v2 — the PRIMARY supply line. One-pass
+  extractor (Lessons 192-196 fixes), live run with Nolan browsing 5-10 posts, full comments +
+  commenter names → Rhodes corpus via `/admin/rhodes-inbox`. ≤5 min/post target.
 - **RESEARCH-DESK-SEQ** (P1): W1-S3…W2-S10 per plan — evidence-packet assembler, frozen candidate
   slate, investigator runs, sealed-verdict review page, checkpoint/resume runner, first unattended
-  run, one supply pilot (HTR 50-image triage OR screenshot Research Drop).
-- **RIGHTS-REGISTRY-001** (P1): per-source per-operation permissions (retain/model-process/
-  face-embed/quote/derivative-crop/republish + grantor + timestamp); screenshot leads default to
-  NO model processing/face embedding until authorized (Sol sign-off nit #2).
+  run, supply pilot.
+- **COMPARE-EPHEMERAL** (P3, deprioritized per owner directive 2026-07-13): ephemeral anonymous
+  compare + batch-reject of the 51 pending entries. Was GROWTH_ROADMAP A1/A5. Consent-class item —
+  do not schedule without owner ask.
 - **DEPRIORITIZED by the pivot** (do not schedule without a new decision): WORKSPACE-002..006,
   Growth Phases B/C/D beyond riders, FB DOM extraction sophistication, PRD-038 Phase 5
   as-specified (labels reuse in Retrieval 2.0), pgvector, frontend framework migration.

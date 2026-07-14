@@ -35,10 +35,9 @@ the rest of Phase A moves to the maintenance budget.
     Lesson-151 class, found by Fable eval 2026-07-05.)
 0c. **R2 — Rotate `ML_SERVICE_TOKEN`** on Railway (value committed in session-116 log). Verify
     ML service health after rotation.
-0d. **R3 — Ephemeral anonymous compare:** anonymous `/api/compare/upload` creates no
-    `pending_uploads` row / R2 object (GROWTH_ROADMAP A1; update the stale test at
-    `tests/test_community_routing_safety.py:384`).
-Commit each rider separately. These are the ONLY platform items this session.
+(R3 ephemeral-compare was cut per owner directive 2026-07-13 — consent items are deprioritized;
+it lives in BACKLOG only. R1 stays because it's a cross-community data-correctness bug, not a
+consent feature.) Commit each rider separately. These are the ONLY platform items this session.
 
 ## Phase 1 — W1-S1: Hand-build the ideal Morning Mystery (the product-defining phase)
 
@@ -81,6 +80,16 @@ token/cost per dispatch, what worked/failed, one lesson. Deploy riders (`git pus
 health 200 + browser-verify tree scoping on production (READ-ONLY). CI green.
 
 ## Anti-goals
-No nightly scheduler yet. No new UI surfaces. No embedding changes. No Research Drop. No
-public-archive adapters. No biography compiler. The WIP limit is real: one live case (Belle
+No nightly scheduler yet. No new UI surfaces. No embedding changes. No public-archive adapters.
+No biography compiler. **No consent/rights infrastructure of any kind** (owner directive —
+`feedback_deprioritize_consent_fb_capture` memory). The WIP limit is real: one live case (Belle
 Isle) + one enabling task (the contract). Everything else waits for W1-S3+.
+
+## Companion session 172 (interactive — schedule whenever Nolan has ~45-60 min)
+**FB capture v2** — the primary supply line. Build the one-pass extractor per Lessons 192-196
+(single comprehensive JS extraction; commenter-name merge via accessibility tree; nested-reply
+selectors; half-mirror dedupe), then a live run: Nolan browses the Jews of Rhodes group and
+opens 5-10 posts; Claude captures photo + caption + ALL comments + commenter names per post into
+rhodes-wiki inbox entries → `/admin/rhodes-inbox`. Target ≤5 min/post. Human-in-the-loop only —
+Nolan navigates, Claude never navigates FB. This session needs him present and does not block
+the Desk sequence.

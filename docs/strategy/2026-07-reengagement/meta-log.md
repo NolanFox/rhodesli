@@ -48,3 +48,23 @@ critique → high sign-off), all via `codex exec ... </dev/null`, zero stalls on
 3 exec runs (subscription). No usage-limit events. Well inside "didn't do something wrong."
 
 **Next session should verify first:** session-171 Rider R P0 (tree leak) before any Desk work.
+
+### Rev 2 addendum (same day, owner feedback on the delivered plan)
+
+Three corrections from the owner, applied immediately:
+1. **The plan was too abstract** — he couldn't map "Research Desk / lanes" onto the actual
+   rhodesli product. Fixed with a "What this actually is, in concrete rhodesli terms" section
+   (corpus → case queue → matcher, all writing to existing app surfaces). META-LESSON: a strategy
+   doc must open with the concrete product delta, not the operating model; name real routes,
+   tables, and pages.
+2. **Consent-first framing came back AGAIN despite repeated prior feedback.** All three models
+   (Fable, Sol, and prior Codex evals) independently over-index on consent/rights ceremony —
+   this is systematic model bias, not signal. Fixed structurally: durable memory
+   `feedback_deprioritize_consent_fb_capture` + strike-on-sight rule in the plan.
+   META-LESSON: when the owner repeats a correction across sessions, the fix is a feedback
+   memory + an adjudication rule, not just editing the current doc.
+3. **"Kill FB DOM extraction" over-rotated.** The owner wants human-in-the-loop capture (he
+   clicks, Claude extracts everything incl. comments + commenter names) — the boundary is
+   *unattended* automation, not capture itself. Both models read the TOS constraint as broader
+   than the owner's actual risk tolerance. Restored FB as the PRIMARY supply line (FB capture
+   v2, companion session 172).

@@ -40,15 +40,19 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 verdicts** — the desk prepares one case overnight; Nolan conducts the finale, reveals + adjudicates
 the models; every call is ground truth. WIP limit: 1 live case + 1 enabling task.
 - [ ] RESEARCH-DESK-001: W1-S1+S2 — hand-built first Morning Mystery (Belle Isle case) + case/run
-  contract + security riders (tree-leak P0, ML token rotation, ephemeral compare). Prompt:
+  contract + riders R1 (tree-leak data bug) + R2 (ML token rotation). Prompt:
   `docs/prompts/session-171-prompt.md`
+- [ ] RESEARCH-DESK-FB-172: **FB capture v2 (interactive, primary supply line)** — Nolan browses,
+  Claude one-pass-extracts posts + all comments + commenter names → Rhodes corpus/inbox.
+  Companion spec in session-171 prompt. Human-in-the-loop only; no unattended automation.
 - [ ] RESEARCH-DESK-002..: follow the two-week sequence in the plan (W1-S3 … W2-S10)
 - 30-day pilot bar: 6 reviewed dossiers · ≥3 "worth opening" · median review <15 min · ≥1 accepted
   historical delta per 3 cases · 2 clean unattended runs · $2/night cap
-- **Deprioritized by this pivot** (kill list in the plan): multi-tenant/self-service (Phase C),
-  growth analytics/SEO polish, FB DOM extraction, PRD-038 Phase 5 as-specified, pgvector,
-  frontend-framework rewrite. GROWTH_ROADMAP Phase A P0s ride along as session-171 Rider R;
-  security is an interrupt lane, not a phase.
+- **Deprioritized by this pivot** (kill list in the plan; Rev 2 = owner feedback 2026-07-13):
+  multi-tenant/self-service (Phase C), growth analytics/SEO polish, **consent/rights ceremony**
+  (owner directive — see `feedback_deprioritize_consent_fb_capture` memory), unattended FB
+  automation (human-in-the-loop capture is IN and primary), PRD-038 Phase 5 as-specified,
+  pgvector, frontend-framework rewrite. Security is an interrupt lane, not a phase.
 
 ### Immediate — Post-Session 92
 - [x] 2026-03-08: Deploy v0.95.0 to Railway + browser verify all features (Session 92)

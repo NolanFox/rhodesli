@@ -9,7 +9,29 @@ same brief) → adjudication (`adjudication-round1.md`) → Sol adversarial crit
 (`sol-critique.md`, AGREE-WITH-CHANGES) → this synthesis. Evidence base: `engagement-evidence.md`,
 `tech-state.md`, `model-settings-research.md`.
 
+**Revision 2 (2026-07-13, owner feedback):** consent/rights ceremony DEPRIORITIZED (owner has said
+this repeatedly; recorded as durable feedback memory); Facebook restored as the PRIMARY evidence
+supply via human-in-the-loop capture. See "What this actually is" below.
+
 ---
+
+## What this actually is, in concrete rhodesli terms
+
+Three additions to the existing app (same data model, same live site, same admin):
+
+1. **A Rhodes knowledge corpus, fed from Facebook with Nolan in the loop.** Nolan browses the
+   Jews of Rhodes group and opens posts; Claude captures each opened post in one pass — photo(s),
+   caption, every comment, commenter names, nested replies — into structured entries that flow
+   through the existing `/admin/rhodes-inbox` pipeline into rhodesli. The corpus (testimony,
+   names, kinship claims, who-knows-whom) attaches to identities and is used to identify faces,
+   decide who to reach out to, and drive genealogical research.
+2. **A case queue in the rhodesli admin (`/cases`).** Every unresolved identification becomes a
+   case page. Overnight runs assemble the evidence (embeddings + GEDCOM + date estimates + corpus
+   testimony) and models write sealed opinions. Nolan reviews on his phone in the morning; his
+   decision writes to the same `identities`/anchors the live site already renders. The visible
+   output is the existing person/photo pages getting richer every day.
+3. **A better matcher feeding that queue** — exhaustive age/kinship-constrained search over all
+   ~3K faces, evaluated against confirmed anchors, its proposals landing in the same queue.
 
 ## Why the project went quiet (converged diagnosis)
 
@@ -64,28 +86,30 @@ sealed-verdict protocol; Skeptical Historian pass; research-value scheduler (lat
 provider registry with per-run budgets (engine concern, per Sol). Kill switch + partial-artifact
 degradation.
 
-**Lane 2 — Evidence supply (consent-first, rights-aware).**
-- *Research Drop*: contributor bundles (photo front/back, context, permalink, consent) — and
-  **screenshot leads**: Nolan's own 15-second phone screenshots of FB posts enter as
-  `capture_method=screenshot, rights_state=unknown, audience=private_research` — lead quality,
-  never archive-ready, author consent required before any public use. This replaces the DOM
-  pipeline as the day-over-day capture path (unit cost: ~2h → ~1min).
-- *FB author-export importer*: parse a consenting member's official "Download Your Information"
-  archive offline. Zero automated Facebook access anywhere in the system.
+**Lane 2 — Evidence supply (Facebook-first, human-in-the-loop).**
+- *FB capture v2 — THE primary supply line.* Nolan browses the group; for each post he opens,
+  Claude extracts EVERYTHING in one pass — photo(s), caption, all comments + commenter names,
+  nested replies — and auto-builds the inbox entry. The boundary is "no unattended automation"
+  (Nolan navigates; capture happens only in his live browsing sessions — that's what avoids
+  alarm bells), NOT capture volume. Engineering targets from the Session-160 lessons: ONE
+  comprehensive JS extraction per post (Lesson 194 — kills the permission-popup storm),
+  commenter-name merge via accessibility tree (Lesson 193), nested-reply selectors (Lesson 196),
+  half-mirror dedupe (Lesson 192). Target: ≤5 min/post, 5–10 posts per sitting, batch-processed
+  into the corpus afterward without Nolan present.
+- *Screenshot drop*: phone-capture alternative for when he's away from the desktop — same corpus.
+- *FB author-export importer*: bonus bulk path (a relative's official "Download Your Information"
+  archive, parsed offline).
 - *HTR/verso extraction*: exempt from the hypothesis gate as pure evidence extraction, with Sol's
   conditions — inventory first, 50-image stratified pilot (incl. Solitreo), Gemini Flash Batch
   (~$7–20 corpus-wide), transcription-only output to an extraction ledger **idempotent on
   (asset hash, model, prompt) with a hard $20 corpus cap before scaling past the pilot**, and a
   promotion threshold so review hours stay bounded.
-- *Source discovery, not bulk connectors* (Sol's rights table stands): a **rights registry**
-  with per-source, per-operation permissions (retain / model-process / face-embed / quote /
-  **derivative-crop** / republish, each with **grantor + grant timestamp** — permission for one
-  is not permission for the others; **unknown-rights screenshot leads default to NO model
-  processing and NO face embedding until expressly authorized**); first adapters = Chronicling
-  America (real API, PD-leaning) and UW Stroum metadata; **Rhodes Jewish Museum as a partnership
-  target, not a scraper**; Yad Vashem/USHMM/JDC/ANU/JewishGen/FindAGrave = manual lead sources.
-- *One-Question Witness Packets*: end each case with one targeted, human-approved question to
-  the one person likely to know. Never auto-sent.
+- *External sources* (secondary, lead-gen): Chronicling America adapter (real API), UW Stroum
+  metadata, Rhodes Jewish Museum as a partnership target; Yad Vashem/USHMM/JDC/ANU/JewishGen/
+  FindAGrave as manual research sources when a case needs them. Sol's per-source feasibility
+  table is in `sol-critique.md` §2.1 for whenever one is picked up.
+- *One-Question Witness Packets*: end each case with one targeted question for the one person
+  likely to know (the corpus's commenter graph tells us who that is). Nolan sends personally.
 - *Session-doc lead mining*: recover cases, sources, and contradictions from the Fox/Heft corpus
   as *leads to re-verify* — not day-one publishable content.
 
@@ -111,7 +135,11 @@ the Desk lands on, which is how mobile gets fixed without a rewrite).
 
 1. No frontier pass without a named hypothesis + evidence packet + ledger destination (HTR
    extraction exempt, conditions above).
-2. Multidimensional permissions enforced in code; `rights_state` is never a prose note.
+2. **Consent/rights ceremony is DEPRIORITIZED (owner directive, 2026-07-13 — he has said it
+   repeatedly).** Two standing decencies only: captured material is private-by-default, and a
+   human gates anything published beyond the archive. No rights registries, consent flows, or
+   disclosure copy until content goes public at scale or other families join. If a model draft
+   reintroduces consent-first framing, strike it.
 3. External evidence is hostile input: data-delimited source text, read-only tools during
    research, model-authored URLs/IDs validated before storage (prompt-injection defense).
 4. **Abstention counts as value**: "no defensible identification; here's the decisive missing
@@ -144,8 +172,14 @@ material only) → W1-S4 freeze candidate slate, exhaustive local retrieval + co
 assertions → W1-S5 one investigator vs. static packet, score every claim → W2-S6 second
 investigator + conditional skeptic + $2 cap + failure degradation → W2-S7 minimal mobile review
 page → W2-S8 checkpoints/resume/idempotency + dress rehearsal + schedule ONE unattended case →
-W2-S9 review the first real Morning Mystery, measure everything → W2-S10 one supply pilot (HTR
-triage or screenshot Research Drop). Full session specs in `sol-critique.md` §4.
+W2-S9 review the first real Morning Mystery, measure everything → W2-S10 supply pilot. Full
+session specs in `sol-critique.md` §4.
+
+**Plus one interactive session in W1 (needs Nolan, ~45-60 min): FB capture v2.** Build the
+one-pass extractor from the Session-160 lessons, then a live run: Nolan browses the group and
+opens 5–10 posts, Claude captures everything (comments + commenter names included), entries land
+in the corpus/inbox. This is the supply line's proof and the most engagement-dense session in
+the plan — schedule it whenever Nolan has an evening free; it doesn't block the Desk sequence.
 
 First case candidates (seeded from open mysteries): Belle Isle Conservatory young man ·
 Bessie/3009 · person 3299 (Elizabeth Tischler?) · Nellie Kubrin confirmation.
@@ -154,9 +188,10 @@ Bessie/3009 · person 3299 (Elizabeth Tischler?) · Nellie Kubrin confirmation.
 
 Multi-tenant enablement & self-service archives (until 3 non-Fox families complete 10
 investigations through a concierge version) · growth-phase analytics/SEO/funnel polish ·
-FB DOM-extraction sophistication (frozen; consent paths only) · PRD-038 Phase 5 as-specified ·
-pgvector & scale infra · generic chatbot/NL-explorer · framework-wide frontend rewrite ·
-indiscriminate batch re-analysis.
+**unattended** FB automation (crawling/scraping while Nolan sleeps — human-in-the-loop capture
+is IN, alarm-bell automation is out) · consent/rights infrastructure (owner directive) ·
+PRD-038 Phase 5 as-specified · pgvector & scale infra · generic chatbot/NL-explorer ·
+framework-wide frontend rewrite · indiscriminate batch re-analysis.
 
 ## Model orchestration (from `model-settings-research.md` + this session's own evidence)
 
