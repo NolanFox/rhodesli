@@ -10426,6 +10426,30 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
 # --- Tree API Endpoints (AD-185: Lazy loading tree) ---
 
 
+_TREE_GEDCOM_OWNER_SLUGS = {"fox-family"}
+
+
+def _scope_tree_nodes_to_community(nodes, focal_person, community_slug, request):
+    """Scope tree nodes to the viewing community. Fox GEDCOM is owned by fox-family;
+    every other community sees only its own identities (no raw GEDCOM individuals).
+    Fails closed (empty tree) when scope is unknown, to prevent cross-community leak.
+    """
+    if community_slug in _TREE_GEDCOM_OWNER_SLUGS:
+        return nodes, focal_person
+    community = getattr(request.state, "community", None) if request else None
+    if not community and community_slug:
+        from app.supabase_data import get_community_by_slug
+
+        community = get_community_by_slug(community_slug)
+    ids = _main_mod._get_community_identity_ids(community) if community else None
+    if not ids:
+        return [], ""
+    kept = [n for n in nodes if n.get("id") in ids]
+    if focal_person not in ids:
+        focal_person = kept[0]["id"] if kept else ""
+    return kept, focal_person
+
+
 def _build_tree_adjacency(show_theory=True):
     """Build adjacency maps from relationship graph for tree API.
 
@@ -10966,6 +10990,7 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
                 )
                 for pid in included
             ]
+            nodes, focal = _scope_tree_nodes_to_community(nodes, focal, community_slug, request)
             return JSONResponse(
                 {
                     "focal_person": focal,
@@ -10990,7 +11015,8 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
             )
             for pid in included
         ]
-        return JSONResponse({"focal_person": person_id, "nodes": nodes})
+        nodes, focal = _scope_tree_nodes_to_community(nodes, person_id, community_slug, request)
+        return JSONResponse({"focal_person": focal, "nodes": nodes})
 
     ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
     lookup = _build_tree_person_lookup()
@@ -11035,7 +11061,8 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true", people: 
         )
         for pid in included
     ]
-    return JSONResponse({"focal_person": person_id, "nodes": nodes})
+    nodes, focal = _scope_tree_nodes_to_community(nodes, person_id, community_slug, request)
+    return JSONResponse({"focal_person": focal, "nodes": nodes})
 
 
 @rt("/api/tree/expand")
@@ -11086,6 +11113,7 @@ def get(person_id: str, direction: str = "parents", show_theory: str = "true", r
         )
         for pid in all_ids
     ]
+    nodes, _ = _scope_tree_nodes_to_community(nodes, person_id, community_slug, request)
     return JSONResponse({"source_person": person_id, "direction": direction, "nodes": nodes})
 
 
