@@ -34,6 +34,22 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Open Work (Prioritized)
 
+### ★ NOW — The Rhodesli Research Desk (2026-07-13 re-engagement pivot — Session 170 replan)
+**The constitution for the next 30 days: `docs/strategy/2026-07-reengagement/RESEARCH_DESK_PLAN.md`**
+(converged Fable×gpt-5.6-sol plan, Sol CO-SIGNED). Core product: the **Morning Mystery with sealed
+verdicts** — the desk prepares one case overnight; Nolan conducts the finale, reveals + adjudicates
+the models; every call is ground truth. WIP limit: 1 live case + 1 enabling task.
+- [ ] RESEARCH-DESK-001: W1-S1+S2 — hand-built first Morning Mystery (Belle Isle case) + case/run
+  contract + security riders (tree-leak P0, ML token rotation, ephemeral compare). Prompt:
+  `docs/prompts/session-171-prompt.md`
+- [ ] RESEARCH-DESK-002..: follow the two-week sequence in the plan (W1-S3 … W2-S10)
+- 30-day pilot bar: 6 reviewed dossiers · ≥3 "worth opening" · median review <15 min · ≥1 accepted
+  historical delta per 3 cases · 2 clean unattended runs · $2/night cap
+- **Deprioritized by this pivot** (kill list in the plan): multi-tenant/self-service (Phase C),
+  growth analytics/SEO polish, FB DOM extraction, PRD-038 Phase 5 as-specified, pgvector,
+  frontend-framework rewrite. GROWTH_ROADMAP Phase A P0s ride along as session-171 Rider R;
+  security is an interrupt lane, not a phase.
+
 ### Immediate — Post-Session 92
 - [x] 2026-03-08: Deploy v0.95.0 to Railway + browser verify all features (Session 92)
 - [x] 2026-03-08: Set SENTRY_DSN + POSTHOG_API_KEY + RESEND_API_KEY on Railway (Session 92)
@@ -144,6 +160,15 @@ New sibling repo `/Users/nolanfox/rhodes-wiki/` extracts Facebook group posts in
 - [ ] RHODES-WIKI-LATER: Translation pipeline (Ladino/Greek/Italian/French/Hebrew captions); Notion publish workflow with privacy redactor; mechanical FB TOS hook (TOS-HOOK-001)
 
 ## Planned Sessions
+
+- **Session 171 (NEXT)** — Research Desk W1-S1+S2: hand-build the first Morning Mystery (Belle Isle
+  Conservatory young man) + "worth opening" rubric + case/run contract on
+  `identification_investigations`, plus security riders R1-R3. Multi-model: Opus orchestrate ·
+  Sol code (medium) + audit (xhigh) · Fable architecture review (≤2 dispatches). Prompt:
+  `docs/prompts/session-171-prompt.md`. Plan: `docs/strategy/2026-07-reengagement/RESEARCH_DESK_PLAN.md`.
+
+- **Session 170 (SUPERSEDED)** — growth Phase A prompt superseded by the 2026-07-13 replan; its P0
+  items became session-171 Rider R. Session 170 itself was consumed by the replan (this pivot).
 
 - **Session 160** — rhodes-wiki: First real FB DOM end-to-end. User opens 1 Rhodes group FB post in Chrome, expands all comments manually. Claude captures DOM via Chrome MCP `read_page`, runs `python -m scripts.extract_fb_post`, iterates parser against actual selectors. Build PERSON-MATCH-001 (real NER + slug match + rhodesli identities cross-ref). First 5 Rhodes person dossiers. Codex audit + fix. Closeout. rhodes-wiki ONLY (no rhodesli code).
 

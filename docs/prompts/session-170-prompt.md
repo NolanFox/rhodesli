@@ -1,3 +1,9 @@
+> **SUPERSEDED (2026-07-13, Session 170 replan):** The owner redirected priorities to the
+> Research Desk program — see `docs/strategy/2026-07-reengagement/RESEARCH_DESK_PLAN.md` and
+> `docs/prompts/session-171-prompt.md`. This prompt's P0 items (tree scoping, ML token rotation,
+> ephemeral compare) survive as Rider R in session-171; the rest of Phase A moves to the
+> security interrupt lane / maintenance budget. Do not run this prompt as written.
+
 # Session 170 — Phase A: Make the Public Front Door Safe (security + spam boundary)
 
 **Predecessor:** Session 169b (2026-07-05 security + growth evaluation) — read

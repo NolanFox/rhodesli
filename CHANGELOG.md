@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.99.91] — 2026-07-13 (Session 170 replan: The Rhodesli Research Desk — re-engagement pivot; Fable architect · gpt-5.6-sol architect+critic · docs-only)
+
+Owner directive: the project went quiet because the roadmap drifted from the two core loves
+(documenting Rhodes Jewish history; identifying family in photos) into platform/security/growth
+work. Ran a full multi-model strategic replan: 3 parallel research agents (engagement-evidence
+mining, technical state-of-play, model-settings research) + **two independent architect drafts
+on the same brief** (Fable 5 `fable-pass1.md` × GPT-5.6-Sol `sol-pass1.md`) → Fable adjudication
+→ **Sol adversarial critique with arithmetic** (caught review-queue bankruptcy 10h vs 3.3h budget,
+$4-9/night cost drift, 0.98^12=78.5% pipeline reliability, WIP over-scoping, and the
+autonomy-boundary trap: automation that solves the mystery kills the pleasure) → converged
+synthesis → Sol **CO-SIGN-WITH-NITS** (nits folded in). **Deliverable:
+`docs/strategy/2026-07-reengagement/RESEARCH_DESK_PLAN.md`** — the Morning Mystery with
+**sealed verdicts** (desk prepares the case overnight, Nolan conducts the finale, then reveals
++ adjudicates the models; his call = ground truth), 4 lanes with WIP limit 1+1, consent-first
+evidence supply (screenshot leads, FB author-export, HTR sweep w/ $20 cap, rights registry,
+Chronicling America first adapter), Retrieval 2.0 replacing PRD-038 Phase 5, kill list
+(multi-tenant, growth phases, FB DOM extraction), 30-day pilot bar (6 dossiers, ≥3 worth
+opening, review <15min, $2/night cap). Session-171 prompt written (W1-S1+S2 + security riders:
+tree-leak P0, ML token rotation, ephemeral compare). Harness: codex pin → gpt-5.6-sol
+(effort-tiered: medium coding / xhigh audit-ideation), model-settings research logged,
+session-170 growth prompt marked SUPERSEDED. Old plan (GROWTH_ROADMAP) deprioritized to
+interrupt-lane + concierge-gated future. No code/data/prod changes.
+
 ## [v0.99.90] — 2026-07-02 (Session 169: Fable 5 full-evaluation + gated Phase-2 ship — Opus orchestrate · Codex code+audit · Fable evaluate)
 
 User request: run a full Fable-5 evaluation of the repo (everything the Fable-5 community playbook

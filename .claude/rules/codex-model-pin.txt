@@ -6,4 +6,4 @@
 # warns at session start and prompts a refresh. To refresh, see
 # .claude/rules/ai-tool-audit.md → "Staying current with model releases".
 
-gpt-5.5|xhigh|0.142.0|2026-06-30|https://developers.openai.com/codex/models|verified 2026-06-30 (Session 167) — no change, gpt-5.5 still latest per developers.openai.com/codex/models (no 5.6/6.0); CLI now 0.142.4
+gpt-5.6-sol|xhigh|0.144.0|2026-07-13|https://developers.openai.com/api/docs/models/gpt-5.6-sol|verified 2026-07-13 (Session 170 replan) — gpt-5.6-sol GA 2026-07-09, CLI 0.144.3, config.toml updated. xhigh = audits/ideation ONLY; use medium for bounded coding (Sol is strong at low efforts per OpenAI); Terra/Luna for bulk mechanical. See docs/strategy/2026-07-reengagement/model-settings-research.md

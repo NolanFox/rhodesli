@@ -10,12 +10,17 @@ case where reasoning quality matters most — never default to a weaker model
 "because it's faster." If a faster model is needed for a specific tactical task,
 state that explicitly with a one-line justification.
 
-## Current standard (set 2026-04-28, Session 154 prep)
+## Current standard (updated 2026-07-13, Session 170 replan)
 
-- **Codex CLI**: v0.125.0 or later (run `codex --version` to verify)
-- **Codex model**: `gpt-5.5` — current best available for code/audit work (per OpenAI Codex model docs, Apr 2026)
-- **Codex reasoning effort**: `xhigh` — for non-latency-sensitive audit work, xhigh is the strongest setting
-- **Config location**: `~/.codex/config.toml` (`model = "gpt-5.5"`, `model_reasoning_effort = "xhigh"`)
+- **Codex CLI**: v0.144.0 or later (run `codex --version` to verify)
+- **Codex model**: `gpt-5.6-sol` — GA 2026-07-09, current best for code/audit/research work
+- **Codex reasoning effort — TIERED (new with Sol; per OpenAI "Sol is highly capable at lower
+  reasoning efforts" + `docs/strategy/2026-07-reengagement/model-settings-research.md`):**
+  - `xhigh` (config default): adversarial audits, independent research/ideation, security review
+  - `medium` (override with `-c model_reasoning_effort="medium"`): bounded, spec'd coding
+  - Terra/Luna sibling models: bulk mechanical work (5× cheaper) — worth a pilot
+  - `max`/`ultra`: only with per-task justification (spawns internal subagents, burns limits)
+- **Config location**: `~/.codex/config.toml` (`model = "gpt-5.6-sol"`, `model_reasoning_effort = "xhigh"`)
 - **Invocation**: `codex exec "<prompt>" </dev/null` (Track 5 / Session 155 confirmed: explicit stdin redirect is the most reliable form). Alternatives that also work: `codex exec <<< "<prompt>"` (here-string) or `echo "<prompt>" | codex exec -`. **DO NOT use `--full-auto`** — stdin hangs in Sessions 152, 153, 153b, 154, 155. If `codex exec` itself stalls, fall back to a Claude subagent (general-purpose, fresh context) with the same review prompt. See `docs/feedback/session-155-codex-cli-diagnosis.md` for the working/failing matrix.
 
 ### Upgrade discipline

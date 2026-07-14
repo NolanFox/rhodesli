@@ -133,3 +133,4 @@ scripts/extract_routes.py
 /*.jpeg
 /*.jpg
 /*.png
+docs/strategy/2026-07-reengagement/*.log
