@@ -24,8 +24,33 @@ Orchestrator: Opus 4.8 · Coder/Auditor: GPT-5.6-Sol · Investigators: Gemini 3.
 - **Live contract validation:** real `create_run` for the Belle Isle case → run `edb28ae1`; idempotent
   re-run returned None; exactly 1 row for the idempotency key.
 
-## Verification gate
+## Independent audit (Phase 3) — the gate earned its keep
+Codex (gpt-5.6-sol, xhigh) ran the adversarial pass + live-tested, then stalled on final report → a
+fresh-context Claude subagent completed + CONFIRMED it (`docs/session_context/session-171-codex-audit.md`).
+**P1 (CONFIRMED, security):** R1 dropped Fox GEDCOM *nodes* but left kept nodes' `rels` +
+`shared_photos` referencing dropped Fox nodes — leaking Fox UUIDs/`@xref`s/relationship structure.
+Both the coder and my own review missed it; the original tests structurally couldn't catch it (stub
+returned `rels: {}`). FIXED + regression test (`b5e83f7b`). P2 idempotency id-less-row + P3 TOCTOU
+also FIXED. Auth-on-fox-family + key-delimiter DEFERRED → BACKLOG.
+
+## CI-red caught + fixed (Lesson 208)
+R1 made `test_tree_api.py` / `test_tree_navigation.py` (tree-building tests, synthetic ids) go red in
+CI (Supabase present → rhodes scope fails closed → empty tree) while passing locally. Isolated those
+building tests from R1 via a pass-through patch; R1 stays covered by `test_tree_community_scoping.py`.
+68 tree tests pass; CI green (`806f7dcb`, run 29319931525 success).
+
+## Verification gate — ALL PASS
 - [x] All phases re-checked against original prompt
-- [x] Zero writes to confirmed identity data (Phase 1 assembly is read-only; Phase 2 module touches only investigation_runs)
-- [x] Tests: R1 4/4, Phase 2 5/5, baseline 4638 (pre-commit hooks ran full test-fast on each commit)
-- [ ] Deploy + production browser verify (Phase 3, in progress)
+- [x] Zero writes to confirmed identity data (Phase 1 assembly read-only; Phase 2 module touches only investigation_runs)
+- [x] Tests: R1 5/5, Phase 2 5/5, tree suite 68/68, full test-fast green (pre-commit on each commit)
+- [x] Independent adversarial audit run; all P0/P1 fixed
+- [x] Deploy verified on production (READ-ONLY): health 200, root 200, `/people` `/tools/estimate` `/tree` 200;
+  **R1 confirmed live** — rhodes tree = 0 nodes / 0 Fox `@xref` (leak closed), fox-family tree = 15 nodes (Fox tree intact), fader = 0
+- [x] CI green on the final push
+- [x] `git log origin/main..HEAD` empty (all pushed)
+
+## Outstanding (user action)
+- **R2 — rotate `ML_SERVICE_TOKEN`** on Railway (Phase 0c). Not done autonomously.
+- **R1 UX confirmation:** root `/tree` now Rhodes-scoped (empty on prod since rhodes identity-scope
+  fails closed); Fox tree at `/c/fox-family/tree`. Confirm this is the desired UX.
+- **TREE-AUTH-171 / RUN-KEY-171** in BACKLOG (deferred audit items).
