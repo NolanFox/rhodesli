@@ -944,3 +944,13 @@ PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 | [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTEND.md) | Bugs + Front-End/UX items (Sections 1-2) |
 | [docs/backlog/FEATURE_MATRIX_BACKEND.md](backlog/FEATURE_MATRIX_BACKEND.md) | Backend + ML + Annotations + Infra (Sections 3-6) |
 | [docs/backlog/FEATURE_MATRIX_OPS.md](backlog/FEATURE_MATRIX_OPS.md) | Testing + Docs + Roles + Vision (Sections 7-10) |
+
+## Session 171 — deferred from independent audit
+- **TREE-AUTH-171** (P2, design decision): the family-tree API (`/api/tree/*`) has no auth; after the
+  R1 fix the full Fox GEDCOM is served to any anonymous request at `/c/fox-family/tree`. This is
+  pre-existing and consistent with the site being a public heritage archive. Decide with the owner
+  whether the Fox tree should be gated (admin/login/community-membership or `community.privacy`).
+  Do NOT gate silently — could break the public archive. Source: `docs/session_context/session-171-codex-audit.md`.
+- **RUN-KEY-171** (P3, low risk): `investigation_runs` idempotency key is `case_ref || ':' || hash`,
+  which is ambiguous if a `:` ever appears in `case_ref` (UUIDs/slugs don't today). Switch to a NUL
+  delimiter or hash-the-pair if `case_ref` format changes. Source: session-171 audit.
