@@ -57,6 +57,7 @@
 - [reference_rhodes_wiki_paths.md](reference_rhodes_wiki_paths.md) — Quick reference for rhodes-wiki paths + commands
 
 ## Project State
+- [project_security_growth_eval_2026_07.md](project_security_growth_eval_2026_07.md) — 2026-07-05 eval: no breach; concierge-pilot roadmap; OPEN: rotate ML_SERVICE_TOKEN + reject 51 uploads; NEW P0 tree cross-community leak. Next=Session 170 Phase A.
 - [project_supabase_egress.md](project_supabase_egress.md) — Upgraded to Pro for 1 month; TTL reductions should allow downgrade back to free
 - [project_fox_sibling_resemblance.md](project_fox_sibling_resemblance.md) — Albert/Harry indistinguishable by ML. Need temporal + co-occurrence.
 - [project_active_learning_opportunity.md](project_active_learning_opportunity.md) — PRD-038 gates closed. ~8 confirmed Fox people may suffice to test.
