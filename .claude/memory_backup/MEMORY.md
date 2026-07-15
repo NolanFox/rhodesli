@@ -74,3 +74,4 @@
 ## Reference
 - [multimodel-sprint skill](reference_multimodel_sprint_skill.md) — architect/orchestrator/coder/auditor autonomous-sprint pattern (cross-repo). HD-036.
 - [reference_antigravity_invocation.md](reference_antigravity_invocation.md) — Paste prompt into GUI; future: `gemini -p "..." -y`
+- [feedback_plain_language_orientation.md](feedback_plain_language_orientation.md) — End sessions with plain-language "what we did / your decisions / next move" TO Nolan, not dense technical recaps
