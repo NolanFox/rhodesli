@@ -52,3 +52,55 @@
   misdescribed model divergence) and a real rubric gap (generic-lever degeneracy). All applied.
 - **Opus 4.8:** orchestrate, evidence assembly, artifact authorship, de-slop, closeout.
 - Full meta-analysis in `docs/strategy/2026-07-reengagement/meta-log.md`.
+
+---
+
+## Session-Review Pass (final gate)
+
+### Per-deliverable status (re-verified on disk + live)
+| Deliverable | Status | Evidence |
+|---|---|---|
+| R1 tree scoping (P0) | PASS | `test_tree_community_scoping.py` (5 tests) + prod: rhodes tree 0 Fox `@xref`, fox-family 15 nodes |
+| R1 rels/shared_photos sub-leak (audit P1) | PASS | scrub in `_scope_tree_nodes_to_community` + regression test; commit `b5e83f7b` |
+| Phase 1 Morning Mystery | PASS | PACKET/verdict-gemini/verdict-sol/manifest/MORNING_MYSTERY + rubric on disk; `gemini_api_calls`=1 (Belle Isle) |
+| Phase 2 run contract | PASS | `investigation_runs.py` + migration + 5 tests; migration applied; `investigation_runs`=1 (live run `edb28ae1`) |
+| W1-S3 assembler (overnight) | PASS | `packet_assembler.py` + 7 tests; live-validated on Belle Isle; sha256 seal stable across runs |
+| Closeout docs | PASS | assessment, log, codex-audit, W1-S4 prompt, CONTINUATION, CHANGELOG v0.99.92, ROADMAP/BACKLOG, meta-log, AD-252 |
+| Deploy + CI | PASS | prod all-200, R1 live; CI green on code push `a140499a`; 0 unpushed |
+
+### Concerns / red flags
+- None outstanding. Two independent audits ran IN-session (the R1 `rels` leak + the assembler
+  non-reproducible-seal) and their P0/P1 fixes are committed + re-verified — the auto-fix role was
+  served live, so no separate auto-fix worktree was spawned (nothing left to fix).
+- Carried (not defects): R2 token rotation (user action), R1 UX confirmation (user decision),
+  TREE-AUTH-171 / RUN-KEY-171 / PACKET-DECOUPLE-171 (BACKLOG).
+
+### Novel-Discovery Audit
+This was a tooling/product session, not a research session. The one investigation (Belle Isle)
+produced an **honest double-ABSTENTION** — no identification claimed, decisive missing evidence named.
+Tally — **genuine-novel: 0 · vault-catch-up: 0 · withdrawn: 0 · methodology: 1** (the assembler
+mechanically reproduces the abstention signal). Per Lesson-50 spirit, 0 novel + honest classification
+= WIN: no over-claiming; the models correctly refused to invent a name where no reference face exists.
+
+### User-Feedback Absorb (feedback received this session)
+1. **"Use Opus/Fable/Sol with varying effort + different roles."** (a) acknowledged; (b) applied
+   throughout — Opus orchestrate, Sol code(medium)/audit(xhigh)/investigate, Gemini+Sol sealed
+   verdicts, Fable architect/judge; (c) methodology: role-based (not model-name) division survives
+   model churn; (d/e) already codified in `multimodel-sprint` skill — no new rule needed.
+2. **"Keep going while I sleep — make as much progress as you can."** (a) acknowledged; (b) continued
+   into W1-S3 (infra) but held the WIP line — did NOT generate new unreviewed cases (plan: review
+   loop must survive human review first); (c) methodology: autonomous progress = advance the enabling
+   task, not the risky/unvalidated frontier.
+3. **"I'm confused what my next steps are — write a continuation prompt that explains what we've done
+   and what's next."** (a) acknowledged my prior summaries were too technical; (b) wrote
+   `docs/prompts/session-172-CONTINUATION.md` (plain-language, menu-style, written TO Nolan); (c)
+   methodology lesson captured as durable memory `feedback_plain_language_orientation`; (d) rule:
+   end sessions with plain-language what-we-did / your-decisions / pick-your-next-move, POINT to the
+   technical detail rather than leading with it; (e) no Codex-audit-template change needed.
+4. **"Close out everything including meta analysis."** (a) acknowledged; (b) meta-log has the
+   multi-model performance analysis + 3 meta-lessons; shared-memory got 2 validated cross-repo lessons
+   (independent-audit-gate reinforced; codex-xhigh report-stall + fallback); (c/d/e) captured.
+
+### Auto-Fix Summary
+- Issues found this pass: 0 (all in-session audit findings already fixed + committed + re-verified)
+- Auto-fixed: 0 needed · Deferred: 0 (carried items are user-action/BACKLOG, not fixable here)
