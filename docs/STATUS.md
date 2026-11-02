@@ -73,8 +73,11 @@ Read-only audits of the following were launched 2026-11-02; findings to be
 filled in here when they land:
 
 - **Railway:** plan and current usage/spend. _Findings: pending._
-- **Supabase:** current plan tier and database size (see the tier question
-  under Known flags). _Findings: pending._
+- **Supabase:** see "Prior work via ChatGPT — October 2026" below. The
+  October history (recovered 2026-11-02) leaves this open: a paid
+  "Nolan Fox Projects" organization ($27.09/mo, renewing ~2026-11-11)
+  still to locate and decide on, and a separate Free-org project found
+  paused. _Findings: in that section._
 - **Cloudflare R2:** bucket costs, plus registrar/renewal status for the
   `nolanandrewfox.com` domain. _Findings: pending._
 
@@ -83,6 +86,59 @@ filled in here when they land:
 To answer "who has been using the site, and how," a PostHog usage audit and
 expanded Supabase (auth users + table activity) and Railway (traffic / last
 deploy) checks were launched 2026-11-02. _Findings: pending._
+
+## Prior work via ChatGPT — October 2026 (recovered 2026-11-02; not previously committed)
+
+- **Source:** Nolan's ChatGPT conversation "Rhodesli Restart Review"
+  (messages 2026-10-15 and 2026-10-19), reviewed read-only on 2026-11-02.
+  In those chats, "DotBot" names the site's face-recognition service role;
+  "Dots" is a separate ChatGPT launcher (GPT-6 Astra) from a 2026-10-09
+  chat that set the rules "GitHub is the source of truth; log every
+  finished task to GitHub." This October work had NOT been logged to
+  GitHub — this section is that log, added after the fact.
+- **Baseline found 2026-10-15:** Railway + Supabase baseline was
+  $46.27/month. Railway payments had risen through 2026 (May $14.20,
+  June $11.00, July $9.60, August $10.64, September $18.02, October
+  $19.18). The Supabase paid subscription was $27.09/month (invoices paid
+  2026-09-11 and 2026-10-11 — verified from Gmail on 2026-11-02; next
+  expected ~2026-11-11).
+- **Changes executed 2026-10-15 (Railway only,** by the ChatGPT assistant
+  with Nolan's integrations connected): enabled serverless mode on both
+  Railway services (the rhodesli website and ml-service); set
+  `PROCESSING_ENABLED=false` on the website; replaced a previously
+  exposed ml-service credential in both services. Result: website memory
+  dropped from 1.96 GB to 0.39 GB (~80% reduction), and both deployments
+  stayed online. It explicitly did NOT delete services, remove the
+  Railway volume, alter the database, or change the Supabase plan.
+- **Verification 2026-10-19:** serverless is enabled, but the services
+  were NOT actually sleeping, because the site receives heavy crawler
+  traffic — 44,471 requests in 72 hours (30,856 in 24 hours), with 196
+  of 201 sampled requests identifying as GPTBot, crawling public
+  family-tree/map/timeline routes (robots.txt allows it). Estimated
+  potential RAM savings ~$10.50/month — an estimate, NOT a verified
+  billing reduction.
+- **Supabase state (important, unresolved):** June 2026 work had reduced
+  the database from ~1.3 GB to 244 MB, making the Free plan plausible,
+  but (a) the size was never re-confirmed below 500 MB after June,
+  (b) free-tier projects auto-pause after inactivity — a risk flagged on
+  2026-10-15 — and (c) NO downgrade was ever executed in ChatGPT. The
+  $27.09 paid subscription belongs to an organization the chats call
+  "Nolan Fox Projects"; the Supabase organization reachable via Nolan's
+  GitHub sign-in is a DIFFERENT, Free organization. On 2026-11-02 that
+  Free org's project "Rhodesli Production" (ref `zdixmiapfjordmplyfvx`,
+  us-east-1) was found PAUSED with zero current-period usage — consistent
+  with the free-tier inactivity auto-pause. **Open items:** (1) locate /
+  sign in to the paid "Nolan Fox Projects" org and decide on the $27.09
+  subscription before its ~2026-11-11 renewal; (2) decide whether to
+  restore the paused Free-org project (needed to inspect users/tables
+  and the true database size).
+- **Gemini note from the same chat:** a Google notice requires prepaid
+  billing for paid Gemini API usage beginning 2026-10-12; the
+  recommendation recorded there was to keep auto-recharge disabled while
+  not using paid Gemini features.
+- **Follow-ups the ChatGPT side had scheduled:** a recurring monthly
+  cost audit (next 2026-11-09) and a "Rhodesli Restart Review —
+  2026-12-10" restart decision.
 
 ## Security — open item
 
