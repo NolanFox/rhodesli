@@ -186,3 +186,46 @@ In order:
 4. **Resume development** — pick up from the Session 114 state recorded in
    `SESSION_LOG.md`, with the usage analysis (PostHog / Supabase / Railway)
    as input on what to build next.
+
+## Update — 2026-11-11 (Zorro): Supabase downgrade executed; spend drawn down
+
+**Decision (Nolan, 2026-11-11):** draw Rhodesli expenses down until the
+Buki AI project is finished and Rhodesli is revisited properly. Spend can
+go back up later. The Dec 10 restart review stands.
+
+**The downgrade is now DONE.** Background: the move to Free was decided
+in June 2026 (database shrunk ~1.3 GB to ~244 MB to fit the Free plan)
+and researched/recommended by ChatGPT on 2026-10-15, but never executed
+— confirmed 2026-11-11 from three sources: this doc, the ChatGPT
+'Rhodesli Restart Review' thread (it states it made zero Supabase
+mutations in October), and Zorro's live inventory below.
+
+**Inventory (Zorro, read-only, 2026-11-11):** org 'Nolan Fox Projects'
+was on Pro, projected $27.09/mo. Projects: 'rhodesli' (us-west-2,
+ACTIVE; database 259.9 MB, storage 0 — this is the live site's
+database) and 'NolanFox's Project' (PAUSED; size not measurable while
+paused; data stated safe by Supabase). November invoice SWYQUK-00014,
+$27.09, was issued and PAID on 2026-11-10 — the downgrade did not beat
+that charge. The downgrade flow stated the unused remainder of the
+cycle would be refunded as credits (amount not shown at the time).
+
+**Action (Zorro, on Nolan's explicit approval, 2026-11-11 ~12:23 PM
+ET):** downgraded 'Nolan Fox Projects' from Pro to Free. Nolan cleared
+the sign-in hCaptcha himself; no other sign-in or spend by anyone.
+Verified after: plan shows Free, current and projected costs $0.00,
+no upcoming invoice; 'rhodesli' active, 'NolanFox's Project' still
+paused; Free usage 273/500 MB database, 0/1 GB storage. No warning in
+the flow mentioned data deletion. Free-tier caveat now in force:
+projects pause after 1 week of inactivity.
+
+**Not done, by Nolan's decision (2026-11-11):** no Gemini top-up.
+Face-matching stays down (prepaid credits depleted; Google spend is
+effectively $0) until the restart review. A help form on the upload
+path, so visitors can report breakage, is to be added — responses are
+the signal for possibly re-enabling face-matching.
+
+**Attribution:** October 2026 infrastructure changes (Railway
+serverless, processing flag, credential replacement) were ChatGPT's;
+its Supabase work was read-only. The Nov 2 cost audit, the Nov 11
+inventory and downgrade, and this entry are Zorro's. All approvals and
+the CAPTCHA were Nolan's.
