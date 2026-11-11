@@ -229,3 +229,11 @@ serverless, processing flag, credential replacement) were ChatGPT's;
 its Supabase work was read-only. The Nov 2 cost audit, the Nov 11
 inventory and downgrade, and this entry are Zorro's. All approvals and
 the CAPTCHA were Nolan's.
+
+**Watch item (added 2026-11-11, Nolan via Zorro):** on the Free plan,
+projects are paused after 1 week of inactivity, and Supabase emails
+advance warnings (Nolan has received these in the past). If a pause
+warning for the 'rhodesli' project arrives, someone needs to log in and
+use the project promptly so it does not get paused. Zorro watches
+Nolan's Gmail for Supabase inactivity/pause warnings and flags them
+the day they land.
