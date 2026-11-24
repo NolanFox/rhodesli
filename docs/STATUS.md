@@ -237,3 +237,9 @@ warning for the 'rhodesli' project arrives, someone needs to log in and
 use the project promptly so it does not get paused. Zorro watches
 Nolan's Gmail for Supabase inactivity/pause warnings and flags them
 the day they land.
+
+## Update — 2026-11-24 (Zorro): Railway usage alert — $10 in November, on pace
+
+**Alert (Railway email, 2026-11-24 3:46 PM ET):** "You have used $10.00 of usage so far" this month. Routine threshold alert, not an overage, suspension, or breach. October charges for this workspace were $19.18 (May $14.20, June $11.00, July $9.60, August $10.64, September $18.02 — Oct 15 baseline), so $10 by Nov 24 is roughly on pace, not a spike. Heavy crawler traffic (44,471 requests in 72 hours, Oct 19 check) keeps the serverless services awake, the likely driver.
+
+**Not verified:** the exact Railway plan, included usage, and per-service split — the Nov 2 Railway billing audit never completed (stalled at the Google sign-in card). No action taken; Nolan to decide whether to check the dashboard or leave it until the Dec 10 restart review.
